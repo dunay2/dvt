@@ -1,5 +1,5 @@
 /** Owned concern: prove imported logical Source identity through the real shared Canvas and API. */
-import type { WorkspaceGraphAuthoringNode } from '@dvt/contracts';
+import { workspaceNodeDefinitionId, type WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 
 import {
   clickCanvasAddCatalogAction,
@@ -77,17 +77,17 @@ describe('Shared Canvas imported Source identity', () => {
           `relation/${livePostgresDatabaseName()}/public/source_1`
         );
         cy.get('.react-flow__node[data-id="' + node.id + '"]').should('not.exist');
-        placeRegisteredSource(node.id, session, { x: 220 + index * 370, y: 160 }).then(
-          (instanceId) => {
-            persistedIds.push(instanceId);
-            cy.get('.react-flow__node[data-id="' + instanceId + '"]')
-              .should('be.visible')
-              .and('contain.text', 'Rows')
-              .and('contain.text', '3')
-              .and('contain.text', 'Size')
-              .and('contain.text', '32 KB');
-          }
-        );
+        placeRegisteredSource(node.id, session, {
+          position: { x: 220 + index * 370, y: 160 },
+        }).then((instanceId) => {
+          persistedIds.push(instanceId);
+          cy.get('.react-flow__node[data-id="' + instanceId + '"]')
+            .should('be.visible')
+            .and('contain.text', 'Rows')
+            .and('contain.text', '3')
+            .and('contain.text', 'Size')
+            .and('contain.text', '32 KB');
+        });
       }
       const bindings = sources.map((node) => JSON.stringify(node.metadata?.connectedSourceRef));
       expect(new Set(bindings).size).to.equal(2);
@@ -102,7 +102,7 @@ describe('Shared Canvas imported Source identity', () => {
         response.body as { record: { draft: { nodes: WorkspaceGraphAuthoringNode[] } } }
       ).record.draft.nodes;
       expect(
-        nodes.filter((node) => node.sourceDefinitionId != null).map((node) => node.id)
+        nodes.filter((node) => workspaceNodeDefinitionId(node) != null).map((node) => node.id)
       ).to.deep.equal(persistedIds);
       for (const id of persistedIds) {
         cy.get('.react-flow__node[data-id="' + id + '"]', { timeout: 20_000 }).should('be.visible');

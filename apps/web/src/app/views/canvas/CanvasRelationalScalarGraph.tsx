@@ -7,6 +7,8 @@ import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSes
 import { CanvasRelationalScalarGraphControls } from './CanvasRelationalScalarGraphControls';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import interactionStyles from './canvasViewportInteraction.module.css';
+import { canvasViewportScopeProps } from './canvasViewportInteraction';
 
 type ScalarGraphProps = Readonly<{
   graph: SemanticWorkbenchGraph;
@@ -43,12 +45,17 @@ function ScalarGraphView({
       data-relation-id={graph.relationId}
     >
       <div
+        {...canvasViewportScopeProps}
         ref={viewport.viewportRef}
-        className="absolute inset-x-0 top-0 bottom-9 overflow-auto p-1"
+        className={`absolute inset-x-0 top-0 bottom-9 p-1 ${interactionStyles.surface} ${interactionStyles.local}`}
+        onFocusCapture={viewport.onFocusCapture}
+        data-panning={viewport.panning}
         onPointerDown={viewport.onPointerDown}
         onPointerMove={viewport.onPointerMove}
         onPointerUp={viewport.onPointerUp}
-        onPointerCancel={viewport.onPointerUp}
+        onPointerCancel={viewport.onPointerCancel}
+        onLostPointerCapture={viewport.onLostPointerCapture}
+        onClickCapture={viewport.onClickCapture}
       >
         <div
           ref={viewport.contentRef}

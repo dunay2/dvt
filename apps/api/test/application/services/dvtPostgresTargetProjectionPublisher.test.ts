@@ -1,6 +1,8 @@
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
+  ConnectedSourceRefSchema,
+  DVT_REJECTIONS,
   createDvtPostgresOutputSchemaDigestV1,
   decodeDvtSubstraitPlanV1,
   DvtTransformAuthoringAuthorityV1Schema,
@@ -67,6 +69,37 @@ function harness(): {
 }
 
 describe('DvtPostgresTargetProjectionPublisher with canonical documents', () => {
+  it.each([false, true])(
+    'admits configured publication only with a verified schema (typed: %s)',
+    async (typed) => {
+      const request = input(typed);
+      const connectionRef = ConnectedSourceRefSchema.parse(
+        request.draft.nodes[0]!.metadata!.connectedSourceRef
+      ).connectionRef;
+      request.draft.nodes[1]!.metadata!.config = {
+        materialized: 'table',
+        resultTarget: {
+          schemaVersion: 'dvt-transform-result-target.v1',
+          connectionRef,
+          schema: 'analytics',
+          relation: 'orders_result',
+        },
+      };
+      const { publisher, publish } = harness();
+      const result = await publisher.publish(request);
+      if (typed) {
+        expect(result).toMatchObject({
+          ok: true,
+          value: { schemaDigestSha256: expect.any(String) },
+        });
+        expect(publish).toHaveBeenCalledOnce();
+      } else {
+        expect(result).toEqual({ ok: false, ...DVT_REJECTIONS.runSchemaDigestRequired });
+        expect(publish).not.toHaveBeenCalled();
+      }
+    }
+  );
+
   it('publishes exact projected bytes and fingerprints the semantic output schema', async () => {
     const request = input(true);
     const { publisher, publish } = harness();

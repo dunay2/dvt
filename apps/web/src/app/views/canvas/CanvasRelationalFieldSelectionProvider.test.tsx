@@ -3,7 +3,7 @@
 import React, { act, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { fireEvent } from '@testing-library/dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import {
@@ -281,43 +281,50 @@ describe('relational tree selection gestures', () => {
     }
   );
 
-  it('receives a background drop in the production Workbench viewport', async () => {
-    const graph = occurrenceGraph();
-    await act(async () => {
-      root.render(
-        <CanvasRelationalTreeWorkbench
-          transformNode={graph.targetNode}
-          nodes={[graph.source, graph.targetNode]}
-          edges={graph.edges}
-          copy={COPY}
-          authoring={{ canEditNode: true, onApplyNodeDraft: () => ({ outcome: 'no_changes' }) }}
-        />
-      );
-    });
-    const card = container.querySelector('[data-operator="join"]')!.closest('li')!;
-    await act(async () => {
-      fireEvent.click(card.querySelector('[data-slot="canvas-relational-node-expand"]')!);
-    });
-    const token = card.querySelector('[data-field-selection="output"]')!;
-    expect(token).not.toBeNull();
-    const count = card.querySelectorAll('[data-field-selection="output"]').length;
-    const dataTransfer = transfer();
-    await act(async () => {
-      fireEvent.dragStart(token, { dataTransfer });
-      fireEvent.dragOver(
-        container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!,
-        { dataTransfer }
-      );
-      expect(dataTransfer.dropEffect).toBe('move');
-      fireEvent.drop(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!, {
-        dataTransfer,
+  describe('production Workbench viewport', () => {
+    // Fixture preparation has its own deadline, equal to the unchanged gesture deadline.
+    beforeEach(async () => {
+      const graph = occurrenceGraph();
+      await act(async () => {
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={graph.targetNode}
+            nodes={[graph.source, graph.targetNode]}
+            edges={graph.edges}
+            copy={COPY}
+            authoring={{ canEditNode: true, onApplyNodeDraft: () => ({ outcome: 'no_changes' }) }}
+          />
+        );
       });
+      const card = container.querySelector('[data-operator="join"]')!.closest('li')!;
+      await act(async () => {
+        fireEvent.click(card.querySelector('[data-slot="canvas-relational-node-expand"]')!);
+      });
+    }, 5_000);
+
+    it('receives a background drop', async () => {
+      const card = container.querySelector('[data-operator="join"]')!.closest('li')!;
+      const token = card.querySelector('[data-field-selection="output"]')!;
+      expect(token).not.toBeNull();
+      const count = card.querySelectorAll('[data-field-selection="output"]').length;
+      const dataTransfer = transfer();
+      await act(async () => {
+        fireEvent.dragStart(token, { dataTransfer });
+        fireEvent.dragOver(
+          container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!,
+          { dataTransfer }
+        );
+        expect(dataTransfer.dropEffect).toBe('move');
+        fireEvent.drop(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!, {
+          dataTransfer,
+        });
+      });
+      expect(
+        container.querySelector('[data-slot="canvas-field-selection-error"]')?.textContent
+      ).toBeUndefined();
+      const updated = container.querySelector('[data-operator="join"]')!.closest('li')!;
+      expect(updated.querySelectorAll('[data-field-selection="output"]')).toHaveLength(count - 1);
     });
-    expect(
-      container.querySelector('[data-slot="canvas-field-selection-error"]')?.textContent
-    ).toBeUndefined();
-    const updated = container.querySelector('[data-operator="join"]')!.closest('li')!;
-    expect(updated.querySelectorAll('[data-field-selection="output"]')).toHaveLength(count - 1);
   });
 
   it('recognizes background in its own DOM realm rather than the host window', async () => {

@@ -120,6 +120,14 @@ capabilities.
 The UI MUST NOT persist a second semantic model solely to obtain friendlier
 terminology.
 
+Relational card positions are presentation metadata. The existing v1 authoring
+DTO accepts signed finite coordinates so a free camera does not create an
+invisible origin boundary. This widens coordinate admission without changing the
+DTO shape, semantic profile, relation identities or execution authority. Existing
+nonnegative snapshots remain valid. Deploy the admitting consumer before a UI
+that emits signed positions; older validators must fail closed rather than clamp
+or discard them. See the [bounded decision](https://github.com/dunay2/dvt/issues/3747#issuecomment-6662240499).
+
 ### SQL and future languages are source/target adapters
 
 The supported architecture is:

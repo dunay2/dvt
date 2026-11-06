@@ -4,12 +4,15 @@
  */
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
+  DVT_REJECTIONS,
   createDvtPostgresOutputSchemaDigestV1,
   type DvtOperationalRejection,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
 import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
+
+import type { DbtModelProducer } from '../ports/dbtModelProducer.js';
 
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
 import { projectDvtPostgresTransform } from './dvtPostgresTransformProjection.js';
@@ -31,6 +34,7 @@ export type DvtPostgresTargetProjectionPublishInput = {
   readonly draft: WorkspaceGraphAuthoringDraft;
   readonly selectedNodeIds: readonly string[];
   readonly selectedEdgeIds: readonly string[];
+  readonly externalProducers?: ReadonlyMap<string, DbtModelProducer>;
 };
 
 export class DvtPostgresTargetProjectionPublisher {
@@ -47,13 +51,15 @@ export class DvtPostgresTargetProjectionPublisher {
   public async publish(
     input: DvtPostgresTargetProjectionPublishInput
   ): Promise<DvtPostgresTargetProjectionPublishResult> {
-    const closure = resolveDvtTerminalTransformClosure(input);
+    const closure = resolveDvtTerminalTransformClosure(input, input.externalProducers);
     const publication = resolveDvtWorkloadPublication(closure);
     if (!publication.ok) return publication;
-    const semanticDocument = closure.authority.semanticDocument;
+    const semanticDocument = closure.semanticDocument;
     const projected = await projectDvtPostgresTransform(closure);
     const sql = projected.sql;
     const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);
+    if (publication.intent !== null && outputSchema === null)
+      return { ok: false, ...DVT_REJECTIONS.runSchemaDigestRequired };
     const bytes = Buffer.from(sql, 'utf8');
     const sha256 = sha256Hex(bytes);
     const storageUri = this.deps.locateArtifact({

@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { isDbtParseReuseEligible } from '../../../src/infrastructure/dbt/dbtParseReuseEligibility.js';
+import { isDbtAnalysisReuseEligible } from '../../../src/infrastructure/dbt/dbtAnalysisReuseEligibility.js';
 import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
 import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../../src/infrastructure/dbt/dbtProjectSourceSnapshot.js';
 
@@ -28,7 +28,7 @@ const ESCAPED_YAML_CASES = [
   ['other backslash escape', 'dbt_packages/helper/schema.yml', 'description: "line\\nbreak"'],
 ] as const;
 
-describe('dbt parse reuse eligibility', () => {
+describe('dbt native analysis reuse eligibility', () => {
   let snapshotDirectory: string;
 
   beforeEach(async () => {
@@ -52,7 +52,7 @@ describe('dbt parse reuse eligibility', () => {
       snapshotDirectory,
       DEFAULT_DBT_PROJECT_SOURCE_LIMITS
     );
-    return isDbtParseReuseEligible({ snapshotDirectory, contentRevision, profileContents });
+    return isDbtAnalysisReuseEligible({ snapshotDirectory, contentRevision, profileContents });
   }
 
   it('admits plain content and literal model/source references without requiring manifest owners', async () => {

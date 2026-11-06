@@ -9,6 +9,7 @@ import {
   visitWorkbenchCanvas,
   revisitWorkbenchCanvas,
   connectWorkbenchProducer,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -73,6 +74,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         };
         originalDigest = document.semanticPlan.sha256;
       });
+      revealWorkbenchCard('[data-operator="sort"]');
       cy.get('[data-operator="sort"]')
         .then(($card) => {
           sortId = $card.attr('data-relation-id')!;
@@ -178,6 +180,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       cy.get('[data-slot="canvas-model-tab-close"]').click();
       revisitWorkbenchCanvas();
       openWorkbenchModel();
+      revealWorkbenchCard('[data-operator="sort"]');
       cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
       cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get(

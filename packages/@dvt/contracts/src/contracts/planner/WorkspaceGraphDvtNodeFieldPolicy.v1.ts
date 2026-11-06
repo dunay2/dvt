@@ -10,6 +10,7 @@ import type { z } from 'zod';
 import { PostgresIdentifierV1Schema } from './CanvasAuthoringFieldPolicy.v1.js';
 import { DvtTransformResultTargetV1Schema } from './DvtTransformResultTarget.v1.js';
 import { DvtPostgresRelationTargetV1Schema } from './postgres/DvtPostgresRelationTarget.v1.js';
+import { WorkspaceDbtModelReferenceSchema } from './WorkspaceDbtModelReference.v1.js';
 import type { WorkspaceGraphAuthoringNode } from './WorkspaceGraphAuthoringDraft.v1.js';
 
 export const DVT_TRANSFORM_MATERIALIZATIONS = ['view', 'table', 'ephemeral'] as const;
@@ -64,10 +65,30 @@ export function addDvtNodeFieldPolicyIssues(
   const isSink = node.pluginId === 'dvt' && DVT_SINK_NODE_KINDS.some((kind) => node.kind === kind);
   const isTransform =
     node.pluginId === 'dvt' && (node.kind === 'transform' || node.kind === 'dvt:transform');
-  if (!isSource && !isSink && !isTransform) return;
-
   const metadata = node.metadata ?? {};
   const config = metadata['config'];
+  const reference = node.metadata?.['dbtModelReference'];
+  if (reference !== undefined) {
+    const parsed = WorkspaceDbtModelReferenceSchema.safeParse(reference);
+    if (!parsed.success)
+      for (const issue of parsed.error.issues)
+        context.addIssue({ ...issue, path: ['metadata', 'dbtModelReference', ...issue.path] });
+    if (
+      !isTransform ||
+      ['transformAuthoring', 'sql', 'compiledSql', 'dbt'].some((key) =>
+        Object.hasOwn(node.metadata ?? {}, key)
+      ) ||
+      (isRecord(config) && ['sql', 'compiledSql'].some((key) => Object.hasOwn(config, key)))
+    )
+      context.addIssue({
+        code: 'custom',
+        path: ['metadata', 'dbtModelReference'],
+        message:
+          'A file-model reference requires a DVT Model without competing authoring authority or copied SQL.',
+      });
+  }
+  if (!isSource && !isSink && !isTransform) return;
+
   if (config !== undefined && !isRecord(config)) {
     context.addIssue({
       code: 'custom',

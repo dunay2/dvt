@@ -39,34 +39,40 @@ import {
 } from './canvasInspectorAuthoringModel';
 
 describe('relational authoring draft restoration', () => {
-  it('retires terminal authority but preserves layout through inspector save and reopening', () => {
-    const { document, session } = graphJoin();
-    const model = graphModel(document);
-    const positions = { [session.rootId]: { x: 360, y: 420 } };
-    model.metadata = {
-      ...model.metadata,
-      relationalAuthoringDraft: {
-        version: 'v1',
-        sources: [],
-        operations: [],
-        outputRelationId: 'obsolete-root',
-        positions,
-      },
-    };
-    const expected = { version: 'v1', sources: [], operations: [], positions };
-    const draft = readCanvasRelationalAuthoringDraft(model);
-    expect(draft).toEqual(expected);
-    const saved = applyCanvasInspectorNodeDraft(model, createCanvasInspectorNodeDraft(model));
-    expect(saved.metadata?.relationalAuthoringDraft).toEqual(expected);
-    const restored = restoreCanvasRelationalAuthoringDraft(
-      readCanvasRelationalAuthoringDraft(saved)!,
-      [],
-      document
-    );
-    expect(restored?.outputRelationId).toBe(session.rootId);
-    expect(restored?.positions).toEqual(new Map(Object.entries(positions)));
-    expect(restored?.operations).toEqual([]);
-  });
+  it.each([
+    { x: 360, y: 420 },
+    { x: -360, y: -420 },
+  ])(
+    'retires terminal authority but preserves layout through inspector save and reopening: %j',
+    (position) => {
+      const { document, session } = graphJoin();
+      const model = graphModel(document);
+      const positions = { [session.rootId]: position };
+      model.metadata = {
+        ...model.metadata,
+        relationalAuthoringDraft: {
+          version: 'v1',
+          sources: [],
+          operations: [],
+          outputRelationId: 'obsolete-root',
+          positions,
+        },
+      };
+      const expected = { version: 'v1', sources: [], operations: [], positions };
+      const draft = readCanvasRelationalAuthoringDraft(model);
+      expect(draft).toEqual(expected);
+      const saved = applyCanvasInspectorNodeDraft(model, createCanvasInspectorNodeDraft(model));
+      expect(saved.metadata?.relationalAuthoringDraft).toEqual(expected);
+      const restored = restoreCanvasRelationalAuthoringDraft(
+        readCanvasRelationalAuthoringDraft(saved)!,
+        [],
+        document
+      );
+      expect(restored?.outputRelationId).toBe(session.rootId);
+      expect(restored?.positions).toEqual(new Map(Object.entries(positions)));
+      expect(restored?.operations).toEqual([]);
+    }
+  );
 
   it('preserves applied-card and Output positions when creating a save snapshot', () => {
     const positions = new Map([

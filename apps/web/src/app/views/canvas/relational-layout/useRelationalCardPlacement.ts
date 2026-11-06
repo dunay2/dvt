@@ -20,7 +20,10 @@ export function useRelationalCardPlacement(
   const [positions, setPositions] = useState<Positions>(() => new Map(initialPositions));
   const positionsRef = useRef(positions);
   const expansionFrame = useRef<Expansion>(null);
-  const contentSize = useRef<Extent>(null);
+  const contentSize = useRef<Pick<
+    CanvasRelationalTreeLayout,
+    'origin' | 'width' | 'height'
+  > | null>(null);
   const [extent, setExtent] = useState<Extent>(null);
   const autoFit = useRef(true);
   const provisional = useRef<{
@@ -44,7 +47,7 @@ export function useRelationalCardPlacement(
         expansionFrame.current
       );
       expansionFrame.current = next.expansionFrame ?? null;
-      contentSize.current = { width: next.width, height: next.height };
+      contentSize.current = { origin: next.origin, width: next.width, height: next.height };
       return {
         ...next,
         width: Math.max(next.width, extent?.width ?? 0),

@@ -16,6 +16,7 @@ import { useCanvasNodeRemovalHandlers } from './useCanvasNodeRemovalHandlers';
 type UseCanvasNodeAuthoringHandlersArgs = CanvasNodeAuthoringContracts;
 
 type UseCanvasNodeAuthoringHandlersResult = {
+  handleInstantiateNode: (nodeId: string, position: { x: number; y: number }) => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;

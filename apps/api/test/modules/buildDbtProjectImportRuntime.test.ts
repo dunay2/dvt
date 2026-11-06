@@ -185,6 +185,11 @@ function buildFixture(persistedAuthority = false): {
   };
   const runtime = buildDbtProjectImportRuntime({
     analyzer,
+    authorizer: {
+      authorize: vi
+        .fn()
+        .mockRejectedValue(new Error('File-model access is outside this import fixture.')),
+    },
     sourceRevisionReader,
     executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
     executionTargetResolver: {

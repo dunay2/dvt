@@ -1,5 +1,6 @@
 /** Owned concern: guard the execution-selection recovery component boundary and rail vocabulary. */
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 
@@ -79,19 +80,29 @@ describe('canvas execution-selection recovery architecture', () => {
     expect(MODEL_SOURCE).toContain("rail: 'RecoverCanvasExecutionSelection'");
   });
 
-  it('keeps recovery on the external dbt authority after the Canvas runtime hard cut', () => {
-    expect(AUTHORED_CONTROLLER_SOURCE).not.toContain('useCanvasExecutionSelectionRecovery({');
-    expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain('useCanvasExecutionSelectionRecovery({');
-    expect(AUTHORED_CONTROLLER_SOURCE).not.toContain(
-      'buildCanvasExecutionSelectionRecoveryGraph({'
+  it('keeps file execution recovery in the existing execution owner', () => {
+    const imports = (source: string): string[] =>
+      ts
+        .createSourceFile('surface.ts', source, ts.ScriptTarget.Latest, true)
+        .statements.filter(ts.isImportDeclaration)
+        .flatMap((entry) =>
+          ts.isStringLiteral(entry.moduleSpecifier) ? [entry.moduleSpecifier.text] : []
+        );
+    const execution = imports(
+      readArchitectureSiblingSource(import.meta.dirname, 'useDbtProjectFileExecution.ts')
     );
-    expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain(
-      'buildCanvasExecutionSelectionRecoveryGraph({'
-    );
-    expect(AUTHORED_CONTROLLER_SOURCE).not.toContain('refreshCanvasExecutionSelectionAuthority');
-    expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain(
-      'refreshCanvasExecutionSelectionAuthority'
-    );
+    const recoveryDependencies = [
+      './useCanvasExecutionSelectionRecovery',
+      './canvasExecutionSelectionRecovery',
+      './canvasExecutionSelectionRecoveryAuthorityAdapter',
+    ];
+    expect(execution).toEqual(expect.arrayContaining(recoveryDependencies));
+    for (const controller of [AUTHORED_CONTROLLER_SOURCE, EXTERNAL_AUTHORITY_CONTROLLER_SOURCE]) {
+      expect(
+        imports(controller).filter((dependency) => recoveryDependencies.includes(dependency))
+      ).toEqual([]);
+    }
+    expect(imports(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE)).toContain('./useDbtProjectFileExecution');
     expect(AUTHORED_CONTROLLER_SOURCE).toContain(
       'executionSelectionRecovery: { model: null, commands: null }'
     );

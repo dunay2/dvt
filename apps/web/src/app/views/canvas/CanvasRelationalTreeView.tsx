@@ -73,14 +73,11 @@ function TreeView({
             const operation = readCanvasRelationalOperationDrag(event.dataTransfer);
             if (operation != null && onDropOperation != null) {
               event.preventDefault();
-              const bounds = viewport.contentRef.current?.getBoundingClientRect();
+              const position = viewport.projectPointer(event);
               const id = onDropOperation(operation);
-              if (id != null && bounds != null) {
+              if (id != null && position != null) {
                 viewport.stopAutoFit();
-                setPosition(id, {
-                  x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
-                  y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
-                });
+                setPosition(id, position);
               }
               return;
             }
@@ -88,14 +85,11 @@ function TreeView({
             const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
             if (nodeId == null) return;
             event.preventDefault();
-            const bounds = viewport.contentRef.current?.getBoundingClientRect();
+            const position = viewport.projectPointer(event);
             const id = onDropSource(nodeId);
-            if (typeof id === 'string' && bounds != null) {
+            if (typeof id === 'string' && position != null) {
               viewport.stopAutoFit();
-              setPosition(id, {
-                x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
-                y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
-              });
+              setPosition(id, position);
             }
           }}
         >
@@ -115,7 +109,6 @@ function TreeView({
               onExpand={onExpand}
               onRemove={onRemove}
               zoom={viewport.zoom}
-              panMode={viewport.panMode || viewport.panning}
               onManualLayout={viewport.stopAutoFit}
               onOpenOutput={onOpenOutput}
               onDisconnectOutput={onDisconnectOutput}
@@ -130,8 +123,6 @@ function TreeView({
             minimumZoom={viewport.minimumZoom}
             onChange={viewport.changeZoom}
             onFit={viewport.fit}
-            panMode={viewport.panMode}
-            onTogglePan={viewport.togglePanMode}
           />
         </div>
       </div>

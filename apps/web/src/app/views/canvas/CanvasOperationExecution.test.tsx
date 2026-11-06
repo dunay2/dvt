@@ -15,11 +15,13 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 
 it.each(
   (['en', 'es'] as const).flatMap((language) =>
-    [false, true].map((strict) => ({ language, strict }))
+    [false, true].flatMap((strict) =>
+      (['join', 'read'] as const).map((operator) => ({ language, strict, operator }))
+    )
   )
 )(
-  'executes the exact card without replay after closing Properties or invalidation ($language, StrictMode: $strict)',
-  async ({ language, strict }) => {
+  'executes the exact $operator card without replay after closing Properties or invalidation ($language, StrictMode: $strict)',
+  async ({ language, strict, operator }) => {
     const previousLanguage = useApplicationLanguageStore.getState().language;
     useApplicationLanguageStore.setState({ language });
     const unappliedReason =
@@ -34,6 +36,7 @@ it.each(
     document.body.append(container, dataHost);
     const root = createRoot(container);
     const digest = 'a'.repeat(64);
+    const relationId = `${operator}-1`;
     const onOpenData = vi.fn();
     const query = {
       previewTransformRows: vi.fn().mockResolvedValue(
@@ -41,7 +44,7 @@ it.each(
           contractVersion: 1,
           canvasId: 'canvas-test',
           transformNodeId: 'model',
-          relationId: 'join-1',
+          relationId,
           semanticPlanSha256: digest,
           draftRevision: 'r7',
           columns: [{ name: 'id', type: 'integer', nullable: false }],
@@ -69,11 +72,11 @@ it.each(
       ),
     };
     const node: CanvasRelationalTreeNode = {
-      locator: 'rel:join-1',
-      relationId: 'join-1',
-      operator: 'join',
-      substraitKind: 'join',
-      operation: 'inner_join',
+      locator: `rel:${relationId}`,
+      relationId,
+      operator,
+      substraitKind: operator,
+      operation: operator === 'join' ? 'inner_join' : 'read',
       displayName: 'a+b',
       sourceRef: null,
       output: { fields: [] },
@@ -91,10 +94,16 @@ it.each(
         root.render(
           <Mode>
             <CanvasOperationPreviewProvider
-              ports={{ canvasId: 'canvas-test', query, dataHost, onOpenData }}
+              ports={{
+                canvasId: 'canvas-test',
+                query,
+                dataHost,
+                onOpenData,
+                connectedModelRelationIds: operator === 'read' ? [relationId] : [],
+              }}
               nodeId="model"
               semanticDigest={semanticDigest}
-              outputPlanRelationIds={new Set(included ? ['join-1'] : [])}
+              outputPlanRelationIds={new Set(included ? [relationId] : [])}
               canEditModel={false}
               unapplied={unapplied}
             >
@@ -108,7 +117,7 @@ it.each(
                 />
               </RelationalLayoutSession>
               <CanvasRelationalTreeEditorFrame
-                operation="inner_join"
+                operation={node.operation!}
                 relationId={node.relationId}
                 hidden={hidden}
                 onClose={() => undefined}
@@ -135,12 +144,13 @@ it.each(
       expect(query.previewTransformRows).toHaveBeenCalledExactlyOnceWith({
         canvasId: 'canvas-test',
         transformNodeId: 'model',
-        relationId: 'join-1',
+        relationId,
         semanticPlanSha256: digest,
         limit: 20,
       });
       const table = dataHost.querySelector('table');
       expect(table?.textContent).toContain('intermediate-result');
+      if (operator === 'read') expect(dataHost.textContent).toContain(node.displayName);
       expect(container.querySelector('[data-slot="canvas-operation-data-preview"]')).toBeNull();
       render(true);
       expect(dataHost.querySelector('table')).toBe(table);

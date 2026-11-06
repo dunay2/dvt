@@ -1,6 +1,7 @@
 /** Owned concern: manage Canvas context-menu open/close lifecycle and browser echo suppression. */
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
+import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 
 import type {
   CanvasContextMenuModel,
@@ -227,7 +228,7 @@ export function useCanvasContextMenuLifecycle({
       closeContextMenu();
     };
     const handleDocumentKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
+      if (resolveCanvasKeyboardAction(event) === 'dismiss') {
         closeContextMenu();
       }
     };

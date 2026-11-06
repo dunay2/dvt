@@ -318,6 +318,7 @@ function operationPayload(command) {
     return {
       designId: command.designId,
       componentId: command.componentId,
+      ...(command.componentLevel === undefined ? {} : { componentLevel: command.componentLevel }),
       status: command.status,
       childrenRequired: command.childrenRequired,
       ownedConcern: command.ownedConcern,

@@ -1,5 +1,5 @@
 /** Owned concern: adapt query refresh results to the rejecting recovery authority port. */
-type CanvasAuthorityRefreshResult<TAuthority> = Readonly<{
+export type CanvasAuthorityRefreshResult<TAuthority> = Readonly<{
   isError: boolean;
   error: unknown;
   data?: TAuthority;

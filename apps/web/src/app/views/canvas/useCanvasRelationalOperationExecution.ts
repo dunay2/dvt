@@ -1,10 +1,10 @@
-/** Bind a card to the existing selected-relation query without selecting or editing it. */
+/** Bind card Preview to its existing source or selected-relation query. */
 import { useContext } from 'react';
 import { CanvasOperationPreviewContext } from './CanvasOperationDataPreview';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
+import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import { resolveCanvasConnectedSourceDataSampleTarget } from './canvasSourceDataSample';
 
@@ -20,7 +20,7 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
       title: copy.unavailable,
       onExecute: () => undefined,
     };
-  if (node.operator === 'read') {
+  if (node.operator === 'read' && !context.connectedModelRelationIds?.includes(node.relationId)) {
     const target = resolveCanvasConnectedSourceDataSampleTarget(
       node.sourceRef,
       node.displayName ?? copy.data
@@ -57,8 +57,7 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
       onExecute: () => undefined,
     };
   }
-  const { presentation } = resolveCanvasRelationalNodePresentation(node);
-  const label = resolveCanvasViewCopy(language)[presentation.labelKey];
+  const { title: label } = resolveCanvasRelationalNodeCopy(node, resolveCanvasViewCopy(language));
   const disabled =
     context.unapplied ||
     context.unavailableRelationIds?.has(node.relationId) === true ||

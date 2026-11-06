@@ -137,6 +137,7 @@ export {
   type PostgresAstNode,
 } from './postgresAst.js';
 export { renderPostgresAst } from './renderPostgresAst.js';
+export { resolvePostgresInputDataType, sourceFieldType } from './postgresInputType.js';
 export { inspectDvtConnectedFieldProjection } from './substraitConnectedFieldReader.js';
 export type {
   DvtCalculatedExpression,
@@ -172,5 +173,9 @@ export {
   inspectDvtSubstraitAcceptedCrossDraft,
   inspectDvtSubstraitMixedCrossDraft,
 } from './substraitMixedCrossReader.js';
-export { projectSubstraitToPostgresSql } from './relationalSql/project.js';
+export {
+  projectSubstraitToPostgresSql,
+  projectExternalProducerAst,
+  type SubstraitPostgresAstProjection,
+} from './relationalSql/project.js';
 export { projectSubstraitProducerGraph } from './relationalSql/producerGraph.js';

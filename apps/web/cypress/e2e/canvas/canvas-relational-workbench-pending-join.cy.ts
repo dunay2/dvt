@@ -13,6 +13,7 @@ import {
   openWorkbenchModel,
   dragWorkbenchSource,
   connectWorkbenchProducer,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -51,7 +52,7 @@ describe('Workbench pending binary operations', () => {
       const read = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
       const join = '[data-pending-operation="true"] [data-operator="join"]';
       for (const port of [0, 1]) {
-        dragWorkbenchSource('customers');
+        dragWorkbenchSource('customers', { x: 120, y: 120 + port * 160 });
         cy.get(read)
           .last()
           .closest('li')
@@ -62,6 +63,19 @@ describe('Workbench pending binary operations', () => {
       connectWorkbenchProducer('@original0', '@join', 0);
       connectWorkbenchProducer('@original1', '@join', 1);
       connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      cy.get('@original1').find(read).focus().should('be.focused');
+      for (let step = 0; step < 4; step++) {
+        for (const type of ['keyDown', 'keyUp']) {
+          cy.then(() =>
+            Cypress.automation('remote:debugger:protocol', {
+              command: 'Input.dispatchKeyEvent',
+              // Chromium modifier bits: Alt (1) + Shift (8).
+              params: { type, key: 'ArrowDown', code: 'ArrowDown', modifiers: 9 },
+            })
+          );
+        }
+      }
+      revealWorkbenchCard('@original1');
       cy.get('@original1').find(read).rightclick();
       cy.get('[data-slot="canvas-relational-remove-source"]').click();
       cy.get('[data-slot="canvas-card-removal-confirm"]').click();

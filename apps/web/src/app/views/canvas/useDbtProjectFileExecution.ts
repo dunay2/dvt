@@ -1,6 +1,6 @@
 /** Owned concern: bind file-authoritative dbt execution to shared Canvas command rails. */
 import type { DbtProjectGraphProjection } from '@dvt/contracts';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import {
   useGraphDbtWorkspaceArtifactPublicationCommandPort,
@@ -18,6 +18,15 @@ import { resolveCanvasRunAdmission } from './canvasRuntimePolicy';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import type { CanvasStoreView } from './useCanvasStoreFacade';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import {
+  buildCanvasExecutionSelectionRecoveryGraph,
+  resolveCanvasExecutionSelectionLastPreviewRevision,
+} from './canvasExecutionSelectionRecovery';
+import {
+  refreshCanvasExecutionSelectionAuthority,
+  type CanvasAuthorityRefreshResult,
+} from './canvasExecutionSelectionRecoveryAuthorityAdapter';
+import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 
 type DbtProjectFileExecutionStore = Pick<
   CanvasStoreView,
@@ -28,6 +37,7 @@ type DbtProjectFileExecutionStore = Pick<
   | 'setCurrentPlan'
   | 'toggleBottomDrawer'
   | 'userPermissions'
+  | 'setExecutionSelectionIntent'
 >;
 
 export function useDbtProjectFileExecution(args: {
@@ -37,6 +47,7 @@ export function useDbtProjectFileExecution(args: {
   selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
   store: DbtProjectFileExecutionStore;
+  refetchProjectGraph: () => Promise<CanvasAuthorityRefreshResult<DbtProjectGraphProjection>>;
 }) {
   const plansService = usePlansService();
   const runsService = useRunsService();
@@ -83,6 +94,47 @@ export function useDbtProjectFileExecution(args: {
     toggleBottomDrawer: args.store.toggleBottomDrawer,
     onRunStarted: navigation.handleRunStarted,
   });
+  const executionSelectableNodeIds = useMemo(
+    () =>
+      new Set(
+        executionStrategy?.kind === 'dbt_project_file_preview'
+          ? executionStrategy.plannerGraphSource.nodes.map((node) => node.nodeId)
+          : []
+      ),
+    [executionStrategy]
+  );
+  const recoveryGraph = useMemo(
+    () =>
+      buildCanvasExecutionSelectionRecoveryGraph({
+        canonicalNodes: args.canonicalNodes,
+        canonicalEdges: args.canonicalEdges,
+        workspaceNodeIds: args.workspaceNodeIds,
+        plannerGraphSource:
+          executionStrategy?.kind === 'dbt_project_file_preview'
+            ? executionStrategy.plannerGraphSource
+            : null,
+      }),
+    [args.canonicalNodes, args.canonicalEdges, args.workspaceNodeIds, executionStrategy]
+  );
+  const refreshAnalysis = useCallback(
+    () =>
+      refreshCanvasExecutionSelectionAuthority(
+        args.refetchProjectGraph,
+        (projection) => projection?.freshness === 'fresh'
+      ),
+    [args.refetchProjectGraph]
+  );
+  const executionSelectionRecovery = useCanvasExecutionSelectionRecovery({
+    enabled: true,
+    selectionIntent: args.selectionIntent,
+    workspaceNodeIds: args.workspaceNodeIds,
+    executableNodeIds: recoveryGraph.executableNodeIds,
+    dependencyIdsByNodeId: recoveryGraph.dependencyIdsByNodeId,
+    lastPreviewRevision: resolveCanvasExecutionSelectionLastPreviewRevision(args.store.currentPlan),
+    canRefreshAnalysis: true,
+    setSelectionIntent: args.store.setExecutionSelectionIntent,
+    refreshAnalysis,
+  });
 
   return {
     ...actions,
@@ -90,5 +142,7 @@ export function useDbtProjectFileExecution(args: {
     canRun,
     canSelectExecution: canPlan || canRun,
     executionStrategy,
+    executionSelectableNodeIds,
+    executionSelectionRecovery,
   };
 }

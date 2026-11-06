@@ -1,6 +1,6 @@
 /** Project the existing scoped dbt query onto one accepted Code buffer. */
 import type { DbtProjectGraphProjection } from '@dvt/contracts';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type { FileContent } from '../../ports/workspace';
 import { useDbtSelectedModelAnalysisQuery } from '../../queries/dbtSelectedModelAnalysisQueries';
@@ -12,7 +12,8 @@ import {
 } from './codeInlineReferences';
 
 export type CodeInlineReferenceState =
-  Readonly<{ kind: 'inactive' | 'checking' | 'unavailable' }> | CodeInlineReferenceProjection;
+  | Readonly<{ kind: 'inactive' | 'pending' | 'checking' | 'unavailable' }>
+  | CodeInlineReferenceProjection;
 
 export function useCodeInlineReferences({
   project,
@@ -24,7 +25,7 @@ export function useCodeInlineReferences({
   file: FileContent | undefined;
   value: string;
   enabled: boolean;
-}>): CodeInlineReferenceState {
+}>) {
   const inlineEligible = isCodeInlineReferenceFile(file);
   const selectedUniqueId = useMemo(
     () => (inlineEligible ? resolveCodeSelectedModel(project, file?.path) : undefined),
@@ -39,18 +40,19 @@ export function useCodeInlineReferences({
     [binding]
   );
   const analysis = useDbtSelectedModelAnalysisQuery(acceptedBinding, selectedUniqueId, {
-    enabled: inlineEligible && enabled && project?.freshness === 'fresh',
+    enabled: false,
     revisionToken:
       project == null
         ? undefined
         : `${project.analysisSha256}:${project.projectRevision.contentSetSha256}`,
   });
-  return useMemo<CodeInlineReferenceState>(() => {
+  const state = useMemo<CodeInlineReferenceState>(() => {
     if (!inlineEligible || project == null || file == null) return { kind: 'inactive' };
     if (selectedUniqueId == null) return { kind: 'text-only', reason: 'model-unresolved' };
     if (!enabled || file.content !== value) return { kind: 'text-only', reason: 'dirty-buffer' };
+    if (analysis.isFetching) return { kind: 'checking' };
     if (analysis.isError) return { kind: 'unavailable' };
-    if (analysis.data == null) return { kind: 'checking' };
+    if (analysis.data == null) return { kind: 'pending' };
     return projectCodeInlineReferences({ project, analysis: analysis.data, file, value });
   }, [
     inlineEligible,
@@ -61,5 +63,25 @@ export function useCodeInlineReferences({
     enabled,
     analysis.data,
     analysis.isError,
+    analysis.isFetching,
   ]);
+  const canCompile =
+    inlineEligible &&
+    enabled &&
+    project?.freshness === 'fresh' &&
+    acceptedBinding != null &&
+    selectedUniqueId != null &&
+    file != null &&
+    file.content === value &&
+    !analysis.isFetching;
+  const refetch = analysis.refetch;
+  const compile = useCallback(() => {
+    if (canCompile) void refetch({ cancelRefetch: false });
+  }, [canCompile, refetch]);
+  return {
+    state,
+    canCompile,
+    compile,
+    isRecompiling: analysis.isFetching && analysis.data !== undefined,
+  };
 }

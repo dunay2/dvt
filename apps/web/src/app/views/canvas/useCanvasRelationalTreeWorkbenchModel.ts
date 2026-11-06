@@ -6,9 +6,10 @@
  * @version 1.1.0
  */
 import { useMemo } from 'react';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 
 import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
 import { projectCanvasRelationalComposition } from './canvasRelationalCompositionTruth';
@@ -23,43 +24,39 @@ import {
   unavailableCanvasRelationIds,
 } from './canvasRelationalTreeWorkbenchModel';
 import type {
-  CanvasRelationalTreeAuthoringContract,
   CanvasRelationalTreeCatalogueItem,
-  CanvasRelationalTreeWorkbenchCopy,
+  CanvasRelationalTreeWorkbenchProps,
 } from './canvasRelationalTreeWorkbench.types';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
-  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
+  return (
+    node.pluginId === 'dvt' &&
+    node.kind === 'dvt:transform' &&
+    node.role === 'transform' &&
+    readWorkspaceDbtModelReference(node) == null
+  );
 }
 
 export function useCanvasRelationalTreeWorkbenchModel(
-  args: Readonly<{
-    transformNode: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly CanonicalEdge[];
-    copy: CanvasRelationalTreeWorkbenchCopy;
-    authoring?: CanvasRelationalTreeAuthoringContract;
-  }>
+  args: Pick<
+    CanvasRelationalTreeWorkbenchProps,
+    'transformNode' | 'nodes' | 'edges' | 'copy' | 'authoring'
+  >
 ) {
   const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
   const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
   const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
   const projection = result.ok ? result.projection : null;
   const outputPlanRelationIds = useMemo(
-    () =>
-      new Set(
-        analysis.semantic?.document.sidecar.relations.map(({ relationId }) => relationId) ?? []
-      ),
+    () => new Set(analysis.semantic?.index.relations.keys()),
     [analysis.semantic]
   );
   const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
-  const { inputs } = analysis;
+  const { inputs, projectedInputs } = analysis;
   const pendingAuthoring =
     args.authoring != null &&
-    (composition?.state === 'pending' ||
-      composition?.state === 'single-input' ||
-      composition?.state === 'canonical') &&
+    ['pending', 'single-input', 'canonical'].includes(composition?.state ?? '') &&
     inputs.length >= 1;
   const session = useCanvasRelationalTreeAuthoringSession({
     enabled: pendingAuthoring,
@@ -146,9 +143,14 @@ export function useCanvasRelationalTreeWorkbenchModel(
 
   return {
     inputRevision: JSON.stringify(
-      sourceInputRecovery.inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
+      sourceInputRecovery.inputs
+        .filter(({ nodeId }) =>
+          projectedInputs.some((read) => read.sourceNodeId === nodeId && read.relationId != null)
+        )
+        .map((input) => [input.nodeId, input.fields, input.inputBindings])
     ),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
+    connectedModelRelationIds: analysis.connectedModelRelationIds,
     outputPlanRelationIds,
     authoringAvailable,
     catalogue,

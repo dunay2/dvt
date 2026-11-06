@@ -9,7 +9,7 @@ function useLayout(
   onPositionsChange?: (positions: ReadonlyMap<string, CardPosition>) => void
 ) {
   const placement = useRelationalCardPlacement(initialPositions, onPositionsChange);
-  const scroll = useRef({ left: 0, top: 0 });
+  const camera = useRef({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [minimumZoom, setMinimumZoom] = useState(CANVAS_RELATIONAL_TREE_MIN_ZOOM);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
@@ -25,7 +25,7 @@ function useLayout(
     ...placement,
     expanded,
     toggleDetail,
-    scroll,
+    camera,
     zoom,
     setZoom,
     minimumZoom,

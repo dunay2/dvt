@@ -23,7 +23,10 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
-import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import type {
+  CreateCanvasAuthoringNode,
+  CanvasNodeInstantiationHandler,
+} from './canvasGraphHandlerContracts';
 import { projectCanvasGraphFilterPresentation } from './canvasGraphFilterPresentation';
 import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
 import {
@@ -31,7 +34,9 @@ import {
   reduceCanvasNodeContextSurface,
 } from './canvasNodeContextSurfaceModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
+import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
+import { CANVAS_NODE_DROP_GRAPH_ANCHOR } from './canvasNodeDropPayload';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
@@ -51,10 +56,11 @@ import type { CanonicalNode } from '../../types/canonical';
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
   readonly canMoveNodes?: boolean;
+  readonly referencePlacementScope?: string;
   readonly canSelectNodes?: boolean;
   readonly nodesWithImpact: Node[];
   readonly sourceCatalogue?: readonly CanonicalNode[];
-  readonly onInspectSource?: (nodeId: string) => void;
+  readonly onInstantiateNode?: CanvasNodeInstantiationHandler;
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
@@ -427,7 +433,7 @@ function CanvasViewportWithPresenter({
       }
     };
     const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
+      if (resolveCanvasKeyboardAction(event) === 'dismiss') {
         closeNodeHealthPopover(true);
       }
     };
@@ -461,25 +467,53 @@ function CanvasViewportWithPresenter({
       activityRail={props.activityRail}
       nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
-      onInspectSource={props.onInspectSource}
-      canPlaceSource={props.canEditEdges}
+      canPlaceSource={props.canEditEdges && props.onInstantiateNode != null}
+      referencePlacementScope={props.referencePlacementScope}
       importedSourceIds={props.importedNodeFocusIds}
       onImportFocusComplete={props.onImportedNodeFocusComplete}
-      onSelect={(nodeId) =>
-        focusCanvasViewportNode({
+      onSelect={(nodeId, definition) => {
+        const bounds = viewportRef.current?.getBoundingClientRect();
+        if (bounds == null) return;
+        const center = reactFlow.screenToFlowPosition({
+          x: bounds.left + bounds.width / 2,
+          y: bounds.top + bounds.height / 2,
+        });
+        props.onInstantiateNode?.(
           nodeId,
-          nodes: props.nodesWithImpact,
-          selectNode: canSelectNodes,
-          port: graphSearchActivationPort,
-        })
-      }
+          {
+            x: center.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
+            y: center.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
+          },
+          definition
+        );
+      }}
       onImport={props.canOpenSourceImport ? props.onOpenSourceImport : undefined}
+      onAddModel={
+        props.canEditEdges &&
+        props.onCreateAuthoringNode != null &&
+        props.authoringNodeKinds.some((registration) => registration.role === 'transform')
+          ? (opener) => {
+              const bounds = viewportRef.current?.getBoundingClientRect();
+              if (bounds == null) return;
+              const anchor = opener.getBoundingClientRect();
+              contextMenuPresenter.openAddNodeCatalog({ x: anchor.right, y: anchor.top }, opener, {
+                roles: ['transform'],
+                flowPosition: reactFlow.screenToFlowPosition({
+                  x: bounds.left + bounds.width / 2,
+                  y: bounds.top + bounds.height / 2,
+                }),
+              });
+            }
+          : undefined
+      }
     >
       <CanvasViewportSurfaceView
         viewportRef={viewportRef}
         resolvedCanvasPalette={resolvedCanvasPalette}
         canEditEdges={props.canEditEdges}
-        canDeleteWithKeyboard={props.canEditEdges && !externalSurfaceActive}
+        canDeleteWithKeyboard={
+          (props.canEditEdges || props.referencePlacementScope != null) && !externalSurfaceActive
+        }
         canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
         canSelectNodes={canSelectNodes}
         nodesWithImpact={renderedNodes}

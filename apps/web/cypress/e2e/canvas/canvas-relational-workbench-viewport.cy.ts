@@ -3,7 +3,7 @@
  * @baseline SaveWorkspaceGraphDraft: viewport gestures do not persist draft changes.
  * @decision Measure all writes after the hydrated model has been durably synchronized.
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
 
@@ -31,12 +31,87 @@ import {
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
+import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
+  });
+  it('uses the arrow and left drag for the background and an arrowless cross for cards', () => {
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    const main = '[data-slot="canvas-workspace-surface"]';
+    const pane = `${main} .react-flow__pane`;
+    const viewport = `${main} .react-flow__viewport`;
+    const card = `${main} .react-flow__node.draggable`;
+    let cardPosition = '';
+    let camera: DOMMatrixReadOnly;
+
+    cy.get(card).first().as('movableCard').should('have.css', 'cursor', 'crosshair');
+    cy.get('@movableCard').then(($card) => {
+      cardPosition = $card[0]!.style.transform;
+    });
+    cy.get(pane).should('have.css', 'cursor', 'default');
+    cy.get(`${main} .react-flow__controls-interactive`).should('not.exist');
+    cy.get(`${main} .react-flow__controls-fitview`).click();
+    cy.get(viewport).should(($viewport) => {
+      camera = new DOMMatrixReadOnly($viewport[0]!.style.transform);
+      expect(camera.a).to.be.lessThan(1);
+    });
+    panWorkbenchViewport(pane, 48, 24, () => {
+      cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
+    });
+    cy.get(pane).should('not.have.class', 'dragging').and('have.css', 'cursor', 'default');
+    cy.get(viewport).should(($viewport) => {
+      const moved = new DOMMatrixReadOnly($viewport[0]!.style.transform);
+      expect(moved.m41).to.be.closeTo(camera.m41 + 48, 2);
+      expect(moved.m42).to.be.closeTo(camera.m42 + 24, 2);
+      expect(moved.a).to.equal(camera.a);
+    });
+    cy.get('@movableCard').should(($card) => {
+      expect($card[0]!.style.transform).to.equal(cardPosition);
+    });
+    cy.get('@movableCard').find('[data-slot="graph-node-card-header"]').as('cardDragTarget');
+    moveWorkbenchCard('@cardDragTarget', 30, 15);
+    cy.get('@movableCard')
+      .should('have.css', 'cursor', 'crosshair')
+      .and(($card) => {
+        expect($card[0]!.style.transform).not.to.equal(cardPosition);
+      });
+    cy.get(`${main} .react-flow__handle.source`)
+      .first()
+      .as('sourcePort')
+      .should('have.css', 'cursor', 'grab');
+    moveWorkbenchCard('@sourcePort', 24, -30, undefined, () => {
+      cy.get('@sourcePort')
+        .should('have.class', 'connectingfrom')
+        .and('have.css', 'cursor', 'grabbing');
+      cy.get(pane).should('have.css', 'cursor', 'default');
+      cy.get('@movableCard').should('have.css', 'cursor', 'crosshair');
+    });
+    cy.get(pane).should('have.css', 'cursor', 'default');
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+    });
+  });
+  it('uses the same pointer policy in the synthetic composition laboratory', () => {
+    cy.visit('/lab/relational-composition');
+    cy.get('.react-flow__node.draggable').first().should('have.css', 'cursor', 'crosshair');
+    cy.get('.react-flow__pane').should('have.css', 'cursor', 'default');
+    panWorkbenchViewport('.react-flow__pane', 24, 16, () => {
+      cy.get('.react-flow__pane')
+        .should('have.class', 'dragging')
+        .and('have.css', 'cursor', 'grabbing');
+    });
+    cy.get('.react-flow__pane')
+      .should('not.have.class', 'dragging')
+      .and('have.css', 'cursor', 'default');
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+    });
   });
   it('retains the Canvas while browsing Git and opening a project file', () => {
     stubE2eJsonApi('GET', '/workspace/files', [
@@ -77,8 +152,7 @@ describe('Workbench viewport', () => {
     cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
       expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
     });
-    cy.then(() => expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(0));
-    cy.get(`${main} section[aria-labelledby$="-sources-button"] input[type="search"]`).type(
+    cy.get(`${main} section[aria-labelledby$="-elements-button"] input[type="search"]`).type(
       'customers'
     );
     cy.get(`${main} .react-flow__viewport`).then(($viewport) => {
@@ -124,15 +198,14 @@ describe('Workbench viewport', () => {
       cy.get(properties).should('contain.text', 'notes/first.md');
       cy.get(`${properties} time`).should('have.attr', 'datetime', '2026-10-28T00:00:00Z');
       cy.screenshot('canvas-git-project-files');
-      for (const panel of ['elements', 'sources']) {
-        cy.get('[data-slot="canvas-workspace-tab"]').click();
+      for (const panel of ['elements']) {
         cy.get(
           `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-${panel}-toggle"]`
         ).click();
         cy.get(code).should('not.be.visible');
         assertStationary();
       }
-      cy.get(`${main} section[aria-labelledby$="-sources-button"] input`).should(
+      cy.get(`${main} section[aria-labelledby$="-elements-button"] input`).should(
         'have.value',
         'customers'
       );
@@ -195,36 +268,38 @@ describe('Workbench viewport', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
-    cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
+    cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
     cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
-    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-sources-toggle"]`)
+    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`)
       .should('be.visible')
       .click();
     cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
     cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-sources-toggle"]`
+      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`
     ).should('not.be.visible');
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="canvas-explorer-view-command"]')
       .should('have.attr', 'aria-checked', 'false')
       .click();
-    cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
-    cy.get(
-      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]'
-    ).click();
-    cy.get('[data-slot="canvas-workspace-surface"] [data-element-id]:visible')
-      .first()
-      .then(($item) => {
-        const id = $item.attr('data-element-id');
-        cy.get('.react-flow__node')
-          .its('length')
-          .then((count) => {
-            cy.wrap($item).click();
-            cy.get(`.react-flow__node[data-id="${id}"]`).should('have.class', 'selected');
-            cy.get('.react-flow__node').should('have.length', count);
-          });
+    cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
+    cy.get(`${main} .react-flow__node`)
+      .its('length')
+      .then((count) => {
+        openWorkbenchModel();
+        cy.get(`${main} .react-flow__node`).should('have.length', count);
       });
-    openWorkbenchModel();
+    cy.get('[data-slot="canvas-relational-tree-source-list"] > li').each(($row) => {
+      const [source, add] = Array.from($row[0]!.querySelectorAll('button'));
+      expect(source, 'source control').to.exist;
+      expect(add, 'instance control').to.exist;
+      const sourceBounds = source!.getBoundingClientRect();
+      const addBounds = add!.getBoundingClientRect();
+      const addCenter = addBounds.top + addBounds.height / 2;
+      expect(addCenter, 'instance control stays beside its source').to.be.within(
+        sourceBounds.top,
+        sourceBounds.bottom
+      );
+    });
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => {
       writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -232,9 +307,8 @@ describe('Workbench viewport', () => {
     verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
     revealCardDetails(1);
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-card-detail"]')
-      .scrollIntoView()
-      .should('contain.text', 'EQUAL');
+    revealWorkbenchCard('[data-slot="canvas-relational-card-detail"]');
+    cy.get('[data-slot="canvas-relational-card-detail"]').should('contain.text', 'EQUAL');
     cy.screenshot('semantic-editor-card-expressions');
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
@@ -251,7 +325,7 @@ describe('Workbench viewport', () => {
           if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
           const width = viewport.clientWidth;
           cy.get(
-            '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+            '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
           )
             .click()
             .should('have.attr', 'aria-expanded', 'false');
@@ -266,26 +340,21 @@ describe('Workbench viewport', () => {
     cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.screenshot('semantic-editor-sources-collapsed');
-    const sourcesToggle =
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]';
-    cy.get(sourcesToggle).focus();
+    const elementsToggle =
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]';
+    cy.get(elementsToggle).focus();
     cy.press(Cypress.Keyboard.Keys.ENTER);
     cy.get(
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
     ).should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-slot="canvas-relational-tree-sources"] input')
       .should('have.value', 'customers')
       .clear();
-    cy.get(
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
-    ).click();
-    cy.get('[data-slot="canvas-relational-tree-workbench"] [data-element-id]:visible').should(
-      'have.length',
-      3
-    );
+    cy.get('[data-slot="canvas-relational-tree-sources"]').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-source"]').should('have.length', 2);
     cy.get(
       '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
-    ).click();
+    ).should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,
     // independently of the graph's own zoom control.
@@ -298,6 +367,7 @@ describe('Workbench viewport', () => {
         expect(tab.right).to.be.at.most(bounds.right);
       });
     });
+    revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
     cy.get('[data-canvas-inspector="true"]:visible').should(($panel) => {
       const bounds = $panel[0]!.getBoundingClientRect();
@@ -443,8 +513,7 @@ describe('DBT project Git browsing with real file authority', () => {
     cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
     cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).then(($directory) => {
       const directory = $directory[0]!;
-      cy.get('@actualFileTree.all').then((requests) => {
-        const treeReads = requests.length;
+      cy.then(() => {
         cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
         cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
         cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
@@ -460,7 +529,8 @@ describe('DBT project Git browsing with real file authority', () => {
         });
         cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
         cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
-        cy.get('@actualFileTree.all').should('have.length', treeReads);
+        // Elements may refresh the scoped catalogue; disclosure itself retains
+        // the existing Code tree and performs no file or semantic writes.
         cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
         cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
       });

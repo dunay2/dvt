@@ -2,6 +2,7 @@
 import { getE2eApiCalls } from '../e2eApiStub';
 
 import {
+  connectWorkbenchProducer,
   editWorkbenchInspector,
   openWorkbenchModel,
   visitWorkbenchCanvas,
@@ -28,16 +29,12 @@ export function exerciseTransformFormulaAuthoring(): void {
     .click();
   cy.get('[data-pending-operation="true"]').should('have.length', 1);
   cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
-  cy.window().then((window) => {
-    const dataTransfer = new window.DataTransfer();
-    cy.get('[data-operator="join"]')
-      .closest('li')
-      .find('[data-slot="canvas-relational-output-port"]')
-      .trigger('dragstart', { dataTransfer });
-    cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]')
-      .trigger('dragover', { dataTransfer })
-      .trigger('drop', { dataTransfer });
-  });
+  cy.get('[data-operator="join"]').closest('li').as('formulaJoinProducer');
+  connectWorkbenchProducer(
+    '@formulaJoinProducer',
+    '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]',
+    null
+  );
   cy.get(inspector)
     .should('be.visible')
     .and(($panel) => {
@@ -133,16 +130,11 @@ export function exerciseTransformFormulaAuthoring(): void {
     .click()
     .should('have.attr', 'data-included', 'false')
     .and('be.focused');
-  cy.window().then((window) => {
-    const dataTransfer = new window.DataTransfer();
-    cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-output-port"]').trigger(
-      'dragstart',
-      { dataTransfer }
-    );
-    cy.get('[data-slot="canvas-relational-output-input-port"]')
-      .trigger('dragover', { dataTransfer })
-      .trigger('drop', { dataTransfer });
-  });
+  connectWorkbenchProducer(
+    '[data-pending-operation="true"]',
+    '[data-slot="canvas-relational-output-input-port"]',
+    null
+  );
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
   cy.get(card).should('have.length', 1);
   cy.get('[data-pending-operation="true"]').should('not.exist');

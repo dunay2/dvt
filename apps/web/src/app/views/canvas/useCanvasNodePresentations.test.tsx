@@ -31,6 +31,45 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
 afterEach(() => vi.restoreAllMocks());
 
 describe('Canvas asynchronous presentation ownership', () => {
+  it.each(['delete', 'disconnect'] as const)(
+    'keeps unrelated cards ready without requerying when another card is %s',
+    async (change) => {
+      const model = buildCanonicalTransform();
+      const other = { ...model, id: 'other-model', name: 'Other model' };
+      let nodes = [SOURCE, model, other];
+      let edges = [EDGE, { ...EDGE, targetId: other.id }];
+      const query = vi.spyOn(CanvasPresentationAnalysis.prototype, 'query');
+      const states: (string | undefined)[] = [];
+      let values!: ReturnType<typeof useCanvasNodePresentations>;
+      function Probe(): null {
+        values = useCanvasNodePresentations({ nodes, edges });
+        states.push(values.get(model.id)?.columns.state);
+        return null;
+      }
+      const mounted = await withTestQueryClient(createElement(Probe));
+      try {
+        const previous = values.get(model.id)!;
+        const previousOther = values.get(other.id)!;
+        expect(previous.columns.state).toBe('ready');
+        query.mockClear();
+        states.length = 0;
+        if (change === 'delete') nodes = [SOURCE, model];
+        edges = [EDGE];
+        await mounted.render(createElement(Probe));
+        expect(states).not.toContain('pending');
+        expect(values.get(model.id)).toBe(previous);
+        expect(query.mock.calls.some(([node]) => node.id === model.id)).toBe(false);
+        if (change === 'delete') expect(values.has(other.id)).toBe(false);
+        else {
+          expect(values.get(other.id)).not.toBe(previousOther);
+          expect(previousOther.inputBindings).toHaveLength(2);
+          expect(values.get(other.id)?.inputBindings).toEqual([]);
+        }
+      } finally {
+        await mounted.cleanup();
+      }
+    }
+  );
   it.each(['absent', 'first', 'last'] as const)(
     'keeps native fields ready with configuration %s while changing only materialization',
     async (position) => {

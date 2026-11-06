@@ -65,6 +65,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   canvasKind?: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph?: boolean;
+  canRemovePlacement?: boolean;
   selectedForExecution?: boolean;
   onInspectNode?: (
     nodeId: string,

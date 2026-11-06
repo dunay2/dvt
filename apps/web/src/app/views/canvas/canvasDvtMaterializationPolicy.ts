@@ -1,6 +1,6 @@
 /** Native Transform materialization admission, shared by command and presentation. */
 import type { CanonicalNode } from '../../types/canonical';
-import { DVT_TRANSFORM_MATERIALIZATIONS } from '@dvt/contracts';
+import { DVT_TRANSFORM_MATERIALIZATIONS, readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
 
@@ -28,6 +28,9 @@ export function canConfigureNativeMaterialization(
   node: CanonicalNode | undefined
 ): node is CanonicalNode {
   return (
-    node?.pluginId === 'dvt' && node.kind === 'dvt:transform' && !hasDbtCompatibilityMetadata(node)
+    node?.pluginId === 'dvt' &&
+    node.kind === 'dvt:transform' &&
+    !hasDbtCompatibilityMetadata(node) &&
+    readWorkspaceDbtModelReference(node) == null
   );
 }

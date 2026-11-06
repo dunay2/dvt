@@ -15,9 +15,12 @@ import {
   type ReactFlowProps,
   type AriaLabelConfig,
 } from '@xyflow/react';
-import type { DragEventHandler, KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
+import type { DragEventHandler, RefObject } from 'react';
 
-import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canvasNodeInteractionBoundary';
+import {
+  activateFocusedCanvasNodeFromKeyboard,
+  resolveCanvasViewportInteraction,
+} from './canvasViewportInteraction';
 import { GraphNodeHealthPopoverView } from '../../plugins/graph/GraphNodeHealthPopoverView';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
@@ -33,6 +36,7 @@ import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
 import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
 import styles from './CanvasViewportSurfaceView.module.css';
+import interactionStyles from './canvasViewportInteraction.module.css';
 
 const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
 const CANVAS_EDGE_TYPES = {
@@ -105,39 +109,6 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
   return resolveNodeKindRegistration(pluginKind).minimapColor;
 }
 
-export function activateFocusedCanvasNodeFromKeyboard(
-  event: Pick<
-    ReactKeyboardEvent<HTMLElement>,
-    'key' | 'target' | 'preventDefault' | 'stopPropagation'
-  >
-): boolean {
-  if (event.key !== 'Enter' || isCanvasNodeEmbeddedControlTarget(event.target)) {
-    return false;
-  }
-  if (!(event.target instanceof Element)) {
-    return false;
-  }
-
-  const nodeElement = event.target.closest('.react-flow__node');
-  const shell = nodeElement?.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]');
-  if (shell == null) {
-    return false;
-  }
-
-  event.preventDefault();
-  event.stopPropagation();
-  const MouseEventConstructor =
-    shell.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
-  shell.dispatchEvent(
-    new MouseEventConstructor('dblclick', {
-      bubbles: true,
-      cancelable: true,
-      detail: 2,
-    })
-  );
-  return true;
-}
-
 function CanvasViewportReactFlowSurface({
   canEditEdges,
   canDeleteWithKeyboard,
@@ -174,6 +145,7 @@ function CanvasViewportReactFlowSurface({
   | 'graphFilterController'
 >): JSX.Element {
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
+  const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeHealthPopover();
     onImpactFocusNodeChange?.(null);
@@ -236,6 +208,7 @@ function CanvasViewportReactFlowSurface({
       }}
     >
       <ReactFlow
+        {...interaction.flow}
         nodes={algebraicDrop.nodes}
         edges={edges}
         onNodesChange={canMoveNodes ? onNodesChange : undefined}
@@ -255,9 +228,6 @@ function CanvasViewportReactFlowSurface({
         edgesFocusable={canEditEdges}
         edgesReconnectable={canEditEdges}
         elementsSelectable={canSelectNodes}
-        selectNodesOnDrag
-        multiSelectionKeyCode="Shift"
-        deleteKeyCode={canDeleteWithKeyboard ? ['Backspace', 'Delete'] : null}
         disableKeyboardA11y={!canSelectNodes}
         fitView={viewport == null}
         fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
@@ -271,10 +241,10 @@ function CanvasViewportReactFlowSurface({
         onDrop={onDrop}
         onDragOver={onDragOver}
         onEdgeContextMenu={handleEdgeContextMenu}
-        className={styles.flow}
+        className={`${styles.flow} ${interactionStyles.surface}`}
         ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}
       >
-        <Controls fitViewOptions={CANVAS_FIT_VIEW_OPTIONS} />
+        <Controls {...interaction.controls} fitViewOptions={CANVAS_FIT_VIEW_OPTIONS} />
         <MiniMap
           pannable
           zoomable

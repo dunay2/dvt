@@ -26,6 +26,7 @@ import {
   toWorkspaceFileBatchReceipt,
   workspaceFileBatchPostconditionsMatch,
   workspaceFileBatchSha256,
+  DEFAULT_LOCAL_WORKSPACE_FILE_BATCH_LIMITS,
   type ResolvedWorkspaceFileBatchExpectedFile,
   type ResolvedWorkspaceFileBatchMutation,
   type StoredWorkspaceFileBatchReceipt,
@@ -35,14 +36,14 @@ import {
   type LocalWorkspaceFileMutationCoordinator,
   sharedLocalWorkspaceFileMutationCoordinator,
 } from './LocalWorkspaceFileMutationCoordinator.js';
+import { readWorkspaceRootInventory } from './LocalWorkspaceRootInventory.js';
 import {
   buildWorkspaceScopeStorageKey,
   resolveWorkspaceScopeMutationLockKey,
+  resolveWorkspaceFileStoragePath,
 } from './workspaceScopeStoragePath.js';
 
-const MAX_BATCH_FILES = 500;
-const MAX_FILE_BYTES = 1_000_000;
-const MAX_BATCH_BYTES = 5_000_000;
+export { DEFAULT_LOCAL_WORKSPACE_FILE_BATCH_LIMITS } from './localWorkspaceFileBatchMutationModel.js';
 
 export type LocalWorkspaceFileBatchMutationGatewayOptions = Readonly<{
   root: string;
@@ -64,9 +65,11 @@ export class LocalWorkspaceFileBatchMutationGateway implements IWorkspaceFileBat
   public constructor(options: LocalWorkspaceFileBatchMutationGatewayOptions) {
     this.root = path.resolve(options.root);
     this.limits = {
-      maxBatchFiles: options.maxBatchFiles ?? MAX_BATCH_FILES,
-      maxFileBytes: options.maxFileBytes ?? MAX_FILE_BYTES,
-      maxBatchBytes: options.maxBatchBytes ?? MAX_BATCH_BYTES,
+      maxBatchFiles:
+        options.maxBatchFiles ?? DEFAULT_LOCAL_WORKSPACE_FILE_BATCH_LIMITS.maxBatchFiles,
+      maxFileBytes: options.maxFileBytes ?? DEFAULT_LOCAL_WORKSPACE_FILE_BATCH_LIMITS.maxFileBytes,
+      maxBatchBytes:
+        options.maxBatchBytes ?? DEFAULT_LOCAL_WORKSPACE_FILE_BATCH_LIMITS.maxBatchBytes,
     };
     this.mutationCoordinator =
       options.mutationCoordinator ?? sharedLocalWorkspaceFileMutationCoordinator;
@@ -101,11 +104,18 @@ export class LocalWorkspaceFileBatchMutationGateway implements IWorkspaceFileBat
 
       const currentByPath = await readCurrentRevisions(resolved.expectedFiles);
       const validationOnly = resolved.writes.length === 0 && resolved.deletes.length === 0;
-      if (
+      const replay =
         previousReceipt !== null &&
         !validationOnly &&
-        workspaceFileBatchPostconditionsMatch(previousReceipt, currentByPath)
-      ) {
+        workspaceFileBatchPostconditionsMatch(previousReceipt, currentByPath);
+      const inventoryConflicts = await findWorkspaceInventoryConflicts(
+        this.root,
+        scope,
+        resolved,
+        replay
+      );
+      if (inventoryConflicts.length > 0) return { kind: 'conflict', conflicts: inventoryConflicts };
+      if (replay) {
         return toWorkspaceFileBatchReceipt(previousReceipt, true);
       }
 
@@ -173,6 +183,36 @@ export class LocalWorkspaceFileBatchMutationGateway implements IWorkspaceFileBat
       throw error;
     }
   }
+}
+
+async function findWorkspaceInventoryConflicts(
+  root: string,
+  scope: WorkspaceStorageScope,
+  mutation: ResolvedWorkspaceFileBatchMutation,
+  replay: boolean
+): Promise<readonly Readonly<{ path: string; currentContentSha256: string | null }>[]> {
+  const inventory = mutation.expectedInventory;
+  if (inventory === undefined) return [];
+  const expected = new Set(inventory.paths);
+  if (replay) {
+    for (const file of mutation.deletes) expected.delete(file.workspacePath);
+    for (const file of mutation.writes) {
+      if (inventory.root === '.' || file.workspacePath.startsWith(`${inventory.root}/`)) {
+        expected.add(file.workspacePath);
+      }
+    }
+  }
+  const actual = new Set((await readWorkspaceRootInventory(root, scope, inventory.root)).files);
+  const changed = [...new Set([...expected, ...actual])]
+    .filter((file) => expected.has(file) !== actual.has(file))
+    .sort();
+  const current = await readCurrentRevisions(
+    changed.map((file) => ({
+      ...resolveWorkspaceFileStoragePath(root, scope, file),
+      expectedContentSha256: null,
+    }))
+  );
+  return changed.map((file) => ({ path: file, currentContentSha256: current.get(file) ?? null }));
 }
 
 async function readCurrentRevisions(

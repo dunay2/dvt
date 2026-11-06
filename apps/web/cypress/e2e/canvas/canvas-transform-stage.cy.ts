@@ -12,6 +12,7 @@ import { readCanvasTransformDependencyModel } from '../../../src/app/views/canva
 import { transformExpressionDependencies } from '../../../src/app/views/canvas/canvasTransformExpressionReferences';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
+  connectWorkbenchProducer,
   visitWorkbenchCanvas,
   editWorkbenchInspector,
   openWorkbenchModel,
@@ -94,16 +95,11 @@ describe('Semantic dataset Transform', () => {
       .then(($row) => {
         fieldId = $row[0]!.dataset.fieldId!;
       });
-    cy.window().then((window) => {
-      const dataTransfer = new window.DataTransfer();
-      cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-output-port"]').trigger(
-        'dragstart',
-        { dataTransfer }
-      );
-      cy.get('[data-slot="canvas-relational-output-input-port"]')
-        .trigger('dragover', { dataTransfer })
-        .trigger('drop', { dataTransfer });
-    });
+    connectWorkbenchProducer(
+      '[data-pending-operation="true"]',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
     let writes = 0;
     cy.then(() => {
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;

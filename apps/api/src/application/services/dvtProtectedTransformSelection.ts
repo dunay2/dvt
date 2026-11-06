@@ -3,7 +3,8 @@ import {
   DVT_SINK_NODE_KINDS,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   WorkspaceGraphAuthoringDraftSchema,
-  resolveWorkspaceSourceInstances,
+  resolveWorkspaceNodeInstances,
+  readWorkspaceDbtModelReference,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -28,7 +29,7 @@ export function selectProtectedDvtTransforms(
 ): ProtectedTransformSelection {
   const draft = WorkspaceGraphAuthoringDraftSchema.parse(input.draft);
   const nodes = selectExact(
-    resolveWorkspaceSourceInstances(draft.nodes),
+    resolveWorkspaceNodeInstances(draft.nodes),
     input.selectedNodeIds,
     'node'
   );
@@ -52,15 +53,19 @@ export function selectProtectedDvtTransforms(
     throw new Error('Operational selection admits at most one explicit Sink.');
   }
   const sink = sinks[0];
-  if (input.previewTargetId == null && transforms.length !== 1) {
+  const nativeTransforms = transforms.filter(
+    (node) => readWorkspaceDbtModelReference(node) == null
+  );
+  if (input.previewTargetId == null && nativeTransforms.length !== 1) {
     throw new Error('Operational workloads require exactly one Transform authority.');
   }
   const transform =
     input.previewTargetId == null
-      ? transforms[0]
+      ? nativeTransforms[0]
       : transforms.find((node) => node.id === input.previewTargetId);
   if (
-    sources.length === 0 ||
+    (sources.length === 0 &&
+      !transforms.some((node) => readWorkspaceDbtModelReference(node) != null)) ||
     transform == null ||
     nodes.length !== sources.length + transforms.length + sinks.length
   ) {
@@ -113,9 +118,9 @@ export function selectProtectedDvtTransforms(
 function selectExact<T extends { readonly id: string }>(
   items: readonly T[],
   ids: readonly string[],
-  kind: string
+  kind: 'node' | 'edge'
 ): readonly T[] {
-  if (ids.length === 0 || new Set(ids).size !== ids.length) {
+  if ((kind === 'node' && ids.length === 0) || new Set(ids).size !== ids.length) {
     throw new Error(`Expected unique selected ${kind} identities.`);
   }
   const itemById = new Map(items.map((item) => [item.id, item]));

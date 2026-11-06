@@ -6,6 +6,8 @@ import {
   COPY,
   root,
   container,
+  sourceNode,
+  edge,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
@@ -99,5 +101,41 @@ describe('Workbench shared analysis lifecycle', () => {
     expect(await owner.query(null)).toEqual(first);
     expect(owner.work).toEqual(work);
     expect(analyze).toHaveBeenCalledTimes(1);
+  });
+
+  it('revises samples for used producer changes but not unused catalogue additions', async () => {
+    const graph = occurrenceGraph();
+    let nodes = graph.nodes;
+    let edges = graph.edges;
+    let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+    function Host(): React.JSX.Element {
+      model = useCanvasRelationalTreeWorkbenchModel({
+        transformNode: graph.targetNode,
+        nodes,
+        edges,
+        copy: COPY,
+      });
+      return <output>{model.inputRevision}</output>;
+    }
+    await act(async () => root.render(<Host />));
+    const revision = model!.inputRevision;
+    const unused = sourceNode('unused', 'unused');
+    nodes = [...nodes, unused];
+    edges = [...edges, { ...edge(unused.id), targetId: graph.targetNode.id }];
+    await act(async () => root.render(<Host />));
+    expect(model!.inputRevision).toBe(revision);
+    nodes = nodes.map((node) =>
+      node.id === graph.source.id
+        ? {
+            ...node,
+            metadata: { ...node.metadata, columns: [{ name: 'customer_id', type: 'numeric' }] },
+          }
+        : node
+    );
+    await act(async () => root.render(<Host />));
+    expect(model!.inputRevision).not.toBe(revision);
+    nodes = nodes.filter((node) => node.id !== graph.source.id);
+    await act(async () => root.render(<Host />));
+    expect(model!.projection).toBeNull();
   });
 });

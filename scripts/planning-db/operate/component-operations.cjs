@@ -35,8 +35,6 @@ const {
   readArchitectureDesignScopes,
 } = require('./architecture-design-authority.cjs');
 
-const componentEngineeringSchemaName = 'component_engineering';
-
 function assertComponentIdempotentReplayMatches(existingOperation, command) {
   const expectedPayload = operationPayload(command);
   const existingPayload = { ...normalizeExistingPayload(existingOperation.payload) };
@@ -70,15 +68,15 @@ async function readExistingComponentOperation(client, idempotencyKey) {
 async function readGovernanceUnit(client, unitId) {
   const result = await client.query(
     `select
-       component_id as unit_id,
+       unit_id,
        name,
-       component_level as level,
-       parent_component_id as parent_id,
+       level,
+       parent_id,
        root_unit,
        domain_unit,
        status
-     from ${componentEngineeringSchemaName}.component_tree_query
-     where component_id = $1`,
+     from ${schemaName}.governance_unit_query
+     where unit_id = $1`,
     [unitId]
   );
 
@@ -88,15 +86,15 @@ async function readGovernanceUnit(client, unitId) {
 async function readGovernanceUnitPath(client, unitId) {
   const result = await client.query(
     `with recursive unit_chain as (
-       select component_id as unit_id, parent_component_id as parent_id, 0 as depth
-       from ${componentEngineeringSchemaName}.component_tree_query
-       where component_id = $1
+       select unit_id, parent_id, 0 as depth
+       from ${schemaName}.governance_unit_query
+       where unit_id = $1
        union all
-       select parent.component_id as unit_id, parent.parent_component_id as parent_id,
+       select parent.unit_id, parent.parent_id,
               unit_chain.depth + 1
-       from ${componentEngineeringSchemaName}.component_tree_query parent
+       from ${schemaName}.governance_unit_query parent
        join unit_chain
-         on unit_chain.parent_id = parent.component_id
+         on unit_chain.parent_id = parent.unit_id
        where unit_chain.depth < 64
      )
      select unit_id
@@ -479,11 +477,16 @@ async function applyComponentReviseOperation(command, options = {}) {
     const designScopes = await readArchitectureDesignScopes(client, command.designId);
     const existingComponent = await readEffectiveComponentDefinition(client, command.componentId);
     const latestOperation = await readLatestComponentOperation(client, command.componentId);
+    const parentUnit =
+      command.componentLevel === undefined || existingComponent == null
+        ? undefined
+        : await readGovernanceUnit(client, existingComponent.parent_id);
     const planned = planComponentReviseOperation({
       command,
       design,
       designScopes,
       existingComponent,
+      parentUnit,
       latestOperation,
       operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
@@ -525,8 +528,8 @@ async function applyComponentReparentOperation(command, options = {}) {
     const parentUnit = await readGovernanceUnit(client, command.parentComponentId);
     const parentPathRows = await readGovernanceUnitPath(client, command.parentComponentId);
     const existingComponent =
-      (await readImportedGovernanceComponent(client, command.componentId, true)) ||
-      (await readLocalGovernanceComponent(client, command.componentId, true));
+      (await readLocalGovernanceComponent(client, command.componentId, true)) ||
+      (await readImportedGovernanceComponent(client, command.componentId, true));
     const latestOperation = await readLatestComponentOperation(client, command.componentId);
     const planned = planComponentReparentOperation({
       command,

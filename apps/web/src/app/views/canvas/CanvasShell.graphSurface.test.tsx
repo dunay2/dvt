@@ -64,7 +64,7 @@ describe('CanvasShell graph base surface', () => {
       .querySelector('[data-slot="canvas-explorer-git-toggle"]')!
       .closest('nav')!;
     expect(
-      within(activityRail).getByRole('button', { name: 'Sources' }).getAttribute('aria-expanded')
+      within(activityRail).getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')
     ).toBe('true');
     await act(async () => {
       fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
@@ -81,12 +81,9 @@ describe('CanvasShell graph base surface', () => {
     expect(viewport?.closest('[inert]')).not.toBeNull();
     expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
     expect(within(container).getByRole('navigation')).toBe(activityRail);
-    expect(within(activityRail).getByRole('button', { name: 'Sources' })).not.toBeNull();
+    expect(within(activityRail).queryByRole('button', { name: 'Sources' })).toBeNull();
     expect(within(activityRail).getByRole('button', { name: 'Elements' })).not.toBeNull();
     expect(within(activityRail).getByRole('button', { name: 'Git' })).not.toBeNull();
-    expect(
-      within(activityRail).getByRole('button', { name: 'Sources' }).getAttribute('aria-expanded')
-    ).toBe('false');
     expect(
       within(activityRail).getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')
     ).toBe('false');
@@ -125,7 +122,7 @@ describe('CanvasShell graph base surface', () => {
     expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
     expect(editor?.closest('[inert]')).toBeNull();
     expect(viewport?.closest('[inert]')).not.toBeNull();
-    for (const destination of ['Sources', 'Elements']) {
+    for (const destination of ['Elements']) {
       const button = within(activityRail).getByRole('button', { name: destination });
       await act(async () => fireEvent.keyDown(button, { key: 'Enter' }));
       expect(viewport?.closest('[inert]')).toBeNull();

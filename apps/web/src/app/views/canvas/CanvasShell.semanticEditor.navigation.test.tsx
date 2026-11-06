@@ -2,7 +2,7 @@
 /** Protect the same draft when closing or replacing the Model workspace. */
 import { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { getCanvasShellState } from './CanvasShell.testHarness';
 import {
@@ -14,9 +14,14 @@ import {
 
 describe('Canvas Model draft protection', () => {
   setupSemanticEditorShell();
+  let model: Awaited<ReturnType<typeof mountModel>>;
+  beforeEach(async () => {
+    model = await mountModel(true);
+    await act(async () => model.data.onOpenNode?.(model.fixture.transform.id));
+  }, 5000);
+
   it('guards replacement by another Model and cancels the queued replacement when staying', async () => {
-    const { data, fixture, onApplyNodeDraft } = await mountModel(true);
-    await act(async () => data.onOpenNode?.(fixture.transform.id));
+    const { fixture, onApplyNodeDraft } = model;
     await act(async () =>
       harness.container
         .querySelector<HTMLButtonElement>(
@@ -70,8 +75,7 @@ describe('Canvas Model draft protection', () => {
   });
 
   it('guards a local draft with Stay and Discard, without a canonical write', async () => {
-    const { data, fixture, onApplyNodeDraft } = await mountModel();
-    await act(async () => data.onOpenNode?.(fixture.transform.id));
+    const { onApplyNodeDraft } = model;
     await act(async () =>
       harness.container
         .querySelector<HTMLButtonElement>(

@@ -6,13 +6,19 @@ import {
   type ResolvedProducer,
   type ProducerGraph,
 } from '@dvt/substrait-analysis';
-import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
+import {
+  ConnectedSourceRefSchema,
+  resolveWorkspaceNodeInstances,
+  projectWorkspaceNodeInstanceEdges,
+  type ConnectedSourceRef,
+} from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { bindCanvasSubstraitInputs, physicalReadMatches } from './canvasSubstraitInputBinding';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 
 type Args = Readonly<{
@@ -26,14 +32,17 @@ export function resolveCanvasSubstraitGraphBindings(
 ): ResolvedProducer & Readonly<{ graph: ProducerGraph }> {
   const nodes = new Map(args.nodes.map((node) => [node.id, node]));
   nodes.set(args.node.id, args.node);
+  for (const node of resolveWorkspaceNodeInstances([...nodes.values()])) nodes.set(node.id, node);
+  const edges = projectWorkspaceNodeInstanceEdges([...nodes.values()], args.edges);
   const incoming = new Map<string, Set<string>>();
-  for (const edge of args.edges) {
+  for (const edge of edges) {
     const ids = incoming.get(edge.targetId) ?? new Set<string>();
     ids.add(edge.sourceId);
     incoming.set(edge.targetId, ids);
   }
   const documents = new Map<string, SubstraitDocument>();
   const physicalSources = new Map<string, ConnectedSourceRef>();
+  const externalProducers = new Map<string, Pick<ResolvedProducer, 'document' | 'connection'>>();
   const visited = new Set<string>();
   const pending = [args.node.id];
   while (pending.length > 0) {
@@ -47,6 +56,11 @@ export function resolveCanvasSubstraitGraphBindings(
     pending.push(...inputIds);
     const physical = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
     if (node.role === 'input' && physical.success) physicalSources.set(id, physical.data);
+    const external = resolveCanvasDbtModelSignature(node);
+    if (external != null) {
+      externalProducers.set(id, external);
+      continue;
+    }
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) {
       continue;
@@ -76,7 +90,8 @@ export function resolveCanvasSubstraitGraphBindings(
     targetId: args.node.id,
     documents,
     sources: physicalSources,
-    edges: args.edges.map((edge) => ({ ...edge, inputBindings: readCanvasInputBindings(edge) })),
+    externalProducers,
+    edges: edges.map((edge) => ({ ...edge, inputBindings: readCanvasInputBindings(edge) })),
     sourcePublications: new Map(
       [...physicalSources.keys()].map(
         (id) =>

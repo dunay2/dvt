@@ -290,6 +290,36 @@ describe('Internal operation card execution', () => {
       cy.get('[data-slot="canvas-relational-execute-operation"]').click();
       cy.wrap(null).should(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(2));
       cy.then(() => expect(semanticWrites('join-transform')).not.to.have.length(0));
+      cy.get(`${data} table`).then(($savedTable) => {
+        const writesBefore = semanticWrites('join-transform').length;
+        dragWorkbenchSource('customers');
+        cy.get('[data-pending="true"][data-operator="read"]').should('have.length', 1);
+        cy.get(card).closest('li').find('[data-slot="canvas-node-execute"]').should('be.enabled');
+        cy.get(`${data} table`).should(($currentTable) => {
+          expect($currentTable[0]).to.equal($savedTable[0]);
+        });
+        cy.then(() => {
+          expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(2);
+          expect(semanticWrites('join-transform')).to.have.length(writesBefore);
+        });
+        cy.get('[data-slot="canvas-relational-output-input-port"]').focus().trigger('keydown', {
+          eventConstructor: 'KeyboardEvent',
+          key: 'Delete',
+        });
+        cy.get(card).closest('li').find('[data-slot="canvas-node-execute"]').should('be.disabled');
+        cy.get(`${data} table`).should('not.exist');
+        cy.then(() => {
+          expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(2);
+          expect(semanticWrites('join-transform')).to.have.length(writesBefore);
+        });
+        cy.get('[data-slot="canvas-relational-tree-cancel"]').should('be.visible').click();
+        cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+        cy.get('[data-slot="canvas-model-tab-close"]').click();
+        cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+        cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+        cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
+        cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBefore));
+      });
     });
   }
 });

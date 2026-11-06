@@ -62,7 +62,6 @@ vi.mock('./CanvasViewport', async () => {
       shellState.canvasViewportProps = props;
       return (
         <CanvasExplorer
-          sources={<p>Source catalogue</p>}
           elements={<p>Canvas elements</p>}
           projectFiles={props.projectFiles as Parameters<typeof CanvasExplorer>[0]['projectFiles']}
           activityRail={props.activityRail as Parameters<typeof CanvasExplorer>[0]['activityRail']}

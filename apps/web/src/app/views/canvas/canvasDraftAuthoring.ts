@@ -8,6 +8,7 @@
 import {
   WorkspaceGraphAuthoringDraftSchema,
   withWorkspaceGraphAuthoringEdgeExecutionGate,
+  workspaceNodeDefinitionId,
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringEdge,
   type WorkspaceGraphAuthoringNode,
@@ -46,6 +47,7 @@ export function projectCanonicalNodeToAuthoringNode(
   const authoringNode: WorkspaceGraphAuthoringNode = {
     id: node.id,
     ...(node.sourceDefinitionId == null ? {} : { sourceDefinitionId: node.sourceDefinitionId }),
+    ...(node.definitionId == null ? {} : { definitionId: node.definitionId }),
     name: node.name,
     pluginId: node.pluginId,
     kind: toWorkspaceGraphAuthoringNodeKind(node),
@@ -54,7 +56,7 @@ export function projectCanonicalNodeToAuthoringNode(
     tags: [...node.tags],
   };
 
-  if (node.path != null && node.sourceDefinitionId == null) {
+  if (node.path != null && workspaceNodeDefinitionId(node) == null) {
     authoringNode.path = node.path;
   }
   if (node.description != null) {
@@ -67,7 +69,7 @@ export function projectCanonicalNodeToAuthoringNode(
     authoringNode.lastCost = node.lastCost;
   }
   const metadata = toCanvasAuthoringMetadata(node.metadata);
-  if (metadata != null && node.sourceDefinitionId == null) {
+  if (metadata != null && workspaceNodeDefinitionId(node) == null) {
     authoringNode.metadata = metadata;
   }
 
@@ -127,17 +129,18 @@ function resolveAuthoringEdgeMetadata(args: {
 function projectDraftEdgeToAuthoringEdge(
   edge: CanvasDraftEdge,
   canonicalEdgeLookup: ReadonlyMap<string, CanonicalEdge>,
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
+  preserveExecutionGate = false
 ): WorkspaceGraphAuthoringEdge {
   const canonicalEdge = canonicalEdgeLookup.get(`${edge.sourceId}::${edge.targetId}`);
-  const gateMetadata = withWorkspaceGraphAuthoringEdgeExecutionGate(
-    resolveAuthoringEdgeMetadata({
-      canonicalEdge,
-      sourceNode: canonicalNodesById.get(edge.sourceId),
-      targetNode: canonicalNodesById.get(edge.targetId),
-    }),
-    edge.executionGate ?? 'open'
-  );
+  const canonicalMetadata = resolveAuthoringEdgeMetadata({
+    canonicalEdge,
+    sourceNode: canonicalNodesById.get(edge.sourceId),
+    targetNode: canonicalNodesById.get(edge.targetId),
+  });
+  const gateMetadata = preserveExecutionGate
+    ? canonicalMetadata
+    : withWorkspaceGraphAuthoringEdgeExecutionGate(canonicalMetadata, edge.executionGate ?? 'open');
   const metadata =
     edge.inputBindings == null
       ? gateMetadata
@@ -187,9 +190,29 @@ export function buildCanvasAuthoringDraft(
     ...new Set([
       ...input.nodeIds,
       ...input.canonicalNodes
-        .filter((node) => node.role === 'input' && node.sourceDefinitionId == null)
+        .filter(
+          (node) =>
+            (node.role === 'input' || node.role === 'transform') &&
+            workspaceNodeDefinitionId(node) == null
+        )
         .map((node) => node.id),
     ]),
+  ];
+  const visibleIds = new Set(input.nodeIds);
+  const semanticIds = new Set(semanticNodeIds);
+  const hiddenDefinitionEdges = input.canonicalEdges.filter(
+    (edge) =>
+      semanticIds.has(edge.sourceId) &&
+      semanticIds.has(edge.targetId) &&
+      (!visibleIds.has(edge.sourceId) || !visibleIds.has(edge.targetId))
+  );
+  const edges = [
+    ...new Map(
+      [...hiddenDefinitionEdges, ...input.visibleEdges].map((edge) => [
+        `${edge.sourceId}::${edge.targetId}`,
+        edge,
+      ])
+    ).values(),
   ];
 
   return {
@@ -212,8 +235,13 @@ export function buildCanvasAuthoringDraft(
 
       return projectCanonicalNodeToAuthoringNode(node);
     }),
-    edges: input.visibleEdges.map((edge) =>
-      projectDraftEdgeToAuthoringEdge(edge, canonicalEdgeLookup, canonicalNodesById)
+    edges: edges.map((edge) =>
+      projectDraftEdgeToAuthoringEdge(
+        edge,
+        canonicalEdgeLookup,
+        canonicalNodesById,
+        !visibleIds.has(edge.sourceId) || !visibleIds.has(edge.targetId)
+      )
     ),
   };
 }

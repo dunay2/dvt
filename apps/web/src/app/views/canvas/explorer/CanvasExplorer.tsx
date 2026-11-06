@@ -10,6 +10,7 @@ import {
   useId,
   useState,
   type KeyboardEvent,
+  type DragEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -21,14 +22,25 @@ import {
   type CanvasExplorerPanel,
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import type { CanonicalNode } from '../../../types/canonical';
+
+export type CanvasProjectElementsInput = Readonly<{
+  enabled: boolean;
+  items: readonly CanvasExplorerItem[];
+  canCreateInstances?: boolean;
+  onSelect: (id: string, definition?: CanonicalNode) => void;
+  onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
+  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
+}>;
 
 export type CanvasExplorerProjectWorkspace = Readonly<{
   onActivate: () => Promise<boolean>;
   onCanvas: () => void;
+  renderElements?: (input: CanvasProjectElementsInput) => ReactNode;
 }>;
 
 export function CanvasExplorer({
-  sources,
   elements,
   projectFiles,
   children,
@@ -36,18 +48,15 @@ export function CanvasExplorer({
   workspaceTask,
   activityRail,
 }: Readonly<{
-  sources: ReactNode;
-  elements: ReactNode;
+  elements: ReactNode | ((enabled: boolean) => ReactNode);
   projectFiles?: CanvasExplorerProjectWorkspace;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
   workspaceTask?: ReactNode;
   activityRail?: CanvasExplorerActivityRail;
 }>): JSX.Element {
-  const [selected, setSelected] = useState<CanvasExplorerPanel>('sources');
   const [expanded, setExpanded] = useState(true);
   const hasProjectFiles = projectFiles != null;
-  const selectedPanel = selected;
   const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
   const close = useUiLayoutStore((state) => state.hideCanvasExplorer);
   // An explicit View-menu reopen must expand even a previously collapsed dock.
@@ -62,10 +71,7 @@ export function CanvasExplorer({
       return;
     }
     projectFiles?.onCanvas();
-    setExpanded((current) =>
-      activityRail?.codeVisible === true || selectedPanel !== key ? true : !current
-    );
-    setSelected(key);
+    setExpanded((current) => activityRail?.codeVisible === true || !current);
   };
   const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -76,21 +82,24 @@ export function CanvasExplorer({
   return (
     <CanvasExplorerTemplate
       id={id}
-      active={visible && expanded ? selectedPanel : null}
+      active={visible && expanded ? 'elements' : null}
       visible={visible}
       copy={copy}
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       activityRail={activityRail}
-      sources={sources}
-      elements={elements}
+      elements={
+        typeof elements === 'function'
+          ? elements(visible && expanded && activityRail?.codeVisible !== true)
+          : elements
+      }
       hasProjectFiles={hasProjectFiles}
       onToggle={toggle}
       onKeyToggle={onKeyToggle}
       onCollapse={() => {
         projectFiles?.onCanvas();
         setExpanded(false);
-        document.getElementById(`${id}-${selectedPanel}-button`)?.focus();
+        document.getElementById(`${id}-elements-button`)?.focus();
       }}
       onClose={() => {
         projectFiles?.onCanvas();

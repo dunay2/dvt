@@ -1,10 +1,12 @@
 /** Owned concern: adapt one graph-owned generated file to the shared read-only Code surface. */
 import type { CanonicalNode } from '../../types/canonical';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { WorkspaceFileCodeEditor } from '../code/WorkspaceFileCodeEditor';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import type { CanvasShellGraph, CanvasShellPanels } from './canvasShell.types';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { resolveWorkspaceFilePath } from './canvasWorkspaceFilePath';
+import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
 
 export function buildCanvasInspectorCodeContributions(
   {
@@ -21,13 +23,21 @@ export function buildCanvasInspectorCodeContributions(
     return inspectorWorkbenchContributions;
   }
   const path = inspectorNode == null ? null : resolveWorkspaceFilePath(inspectorNode);
-  if (path == null) return inspectorWorkbenchContributions;
+  const fileReference =
+    inspectorNode == null ? undefined : readWorkspaceDbtModelReference(inspectorNode);
+  if (path == null && fileReference == null) return inspectorWorkbenchContributions;
   const graphOwnedPaths = new Set(
     nodes.flatMap((node) => {
+      if (readWorkspaceDbtModelReference(node.data) != null) return [];
       const file = resolveWorkspaceFilePath(node.data as DbtNodeData);
       return file == null ? [] : [file];
     })
   );
+  if (inspectorNode != null && fileReference != null)
+    return [
+      ...inspectorWorkbenchContributions,
+      ...buildDbtWorkspaceFileCodeContributions({ node: inspectorNode, graphOwnedPaths }),
+    ];
   return [
     ...inspectorWorkbenchContributions,
     ...buildGraphDraftWorkspaceFileCodeContributions({

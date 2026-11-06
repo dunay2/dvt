@@ -41,6 +41,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     visibleEdges: draftSession.workingSet.visibleEdges,
     draftSemanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
     localCanonicalNodes,
+    localDefinitionEdges: draftSession.localDefinitionEdges,
     columnLevelLineageEnabled,
     persistedNodePositions,
     frozenNodeIds,

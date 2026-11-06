@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasNodeShell } from './CanvasNodeShell';
 import type { CanvasNodeContextMenuModel } from './canvasNodeContextMenuModel';
 import { canvasNodeEmbeddedControlProps } from './canvasNodeInteractionBoundary';
+import { activateFocusedCanvasNodeFromKeyboard } from '../../views/canvas/canvasViewportInteraction';
 
 const CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders model' },
@@ -83,21 +84,23 @@ describe('CanvasNodeShell', () => {
     expect(openNode).toHaveBeenCalledOnce();
   });
 
-  it('opens from Enter on the card without intercepting controls or repeated keys', () => {
+  it('delegates Enter to the viewport without fallback activation for modifiers or repeated keys', () => {
     const openNode = vi.fn();
     act(() => {
       root.render(
-        <CanvasNodeShell
-          contextMenuModel={CONTEXT_MENU_MODEL}
-          shouldShowSourceHandle={false}
-          shouldShowTargetHandle={false}
-          onContextMenuAction={vi.fn()}
-          onOpenNode={openNode}
-        >
-          <button type="button" {...canvasNodeEmbeddedControlProps}>
-            View data
-          </button>
-        </CanvasNodeShell>
+        <div className="react-flow__node" onKeyDownCapture={activateFocusedCanvasNodeFromKeyboard}>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle={false}
+            shouldShowTargetHandle={false}
+            onContextMenuAction={vi.fn()}
+            onOpenNode={openNode}
+          >
+            <button type="button" {...canvasNodeEmbeddedControlProps}>
+              View data
+            </button>
+          </CanvasNodeShell>
+        </div>
       );
     });
     const shell = container.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]')!;
@@ -105,6 +108,8 @@ describe('CanvasNodeShell', () => {
     act(() => {
       fireEvent.keyDown(shell, { key: 'Enter' });
       fireEvent.keyDown(shell, { key: 'Enter', repeat: true });
+      fireEvent.keyDown(shell, { key: 'Enter', ctrlKey: true });
+      fireEvent.keyDown(shell, { key: 'Enter', metaKey: true });
       fireEvent.keyDown(container.querySelector('button')!, { key: 'Enter' });
     });
     expect(openNode).toHaveBeenCalledOnce();
@@ -416,19 +421,5 @@ describe('CanvasNodeShell', () => {
     expect(themeCss).toContain('--canvas-node-port-test-ring');
     expect(themeCss).toContain('--canvas-node-port-output-ring');
     expect(themeCss).toContain('--canvas-node-port-control-ring');
-  });
-
-  it('uses grab cursors for graph connection ports', () => {
-    const componentCss = readFileSync(canvasNodeShellCssPath, 'utf8');
-
-    expect(componentCss).toMatch(/\.portHandle\s*\{[^}]*cursor:\s*grab\s*!important;/su);
-    expect(componentCss).toMatch(/\.portHandle:active\s*\{[^}]*cursor:\s*grabbing\s*!important;/su);
-    expect(componentCss).toMatch(
-      /react-flow:has\(\.react-flow__handle\.connectingfrom\)\s+\.react-flow__pane[^}]*cursor:\s*grabbing\s*!important;/su
-    );
-    expect(componentCss).toMatch(
-      /react-flow:has\(\.react-flow__handle\.connectingfrom\)\s+\.react-flow__pane\s+\*[^}]*cursor:\s*grabbing\s*!important;/su
-    );
-    expect(componentCss).not.toContain('cursor: crosshair;');
   });
 });

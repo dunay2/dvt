@@ -24,6 +24,7 @@ import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
 import { buildDbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
+import { buildDbtProjectRootRelocationRuntime } from './dbtProjectRootRelocation/buildDbtProjectRootRelocationRuntime.js';
 import { buildLocalDataCaptureRuntime } from './localData/buildLocalDataCaptureRuntime.js';
 import { buildProtectedAdmissionRuntime } from './protectedRuntime/buildProtectedAdmissionRuntime.js';
 import { buildProtectedExecutionCapacityPort } from './protectedRuntime/buildProtectedExecutionCapacityPort.js';
@@ -152,6 +153,7 @@ export async function buildProtectedRuntimeModule(
     }
   );
   const dbtProjectImport = buildDbtProjectImportRuntime({
+    authorizer: securityRuntime.commandAuthorizer,
     analyzer: dbtProjectAnalyzer,
     sourceRevisionReader: dbtProjectAnalyzer,
     executionConnectionBindingVerifier: dbtExecutionConnectionBindingVerifier,
@@ -250,6 +252,11 @@ export async function buildProtectedRuntimeModule(
     canvasAuthoringAuthorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
     canvasAuthoringAuthorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
     dbtProjectImport,
+    dbtProjectRootRelocation: buildDbtProjectRootRelocationRuntime({
+      workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
+      authorities: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
+      authorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
+    }),
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     contentAddressedArtifactRuntime: storageRuntime.contentAddressedArtifactRuntime,
     warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,

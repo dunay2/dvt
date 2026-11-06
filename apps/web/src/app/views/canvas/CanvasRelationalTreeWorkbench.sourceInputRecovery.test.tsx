@@ -2,7 +2,7 @@
 /** Prove the real Source inspector restores one self-JOIN contribution through Model Apply. */
 import { act, useState } from 'react';
 import { fireEvent } from '@testing-library/dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import {
   occurrenceGraph,
@@ -34,9 +34,9 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 
 describe('Source Input and Output Model transaction', () => {
   setupWorkbenchTest();
-  it('preserves the recovery row and focus, cancels both changes, then applies only the selected occurrence', async () => {
+  let initialDocument: Awaited<ReturnType<typeof changeSelectedRelationOutputs>>;
+  beforeEach(async () => {
     useApplicationLanguageStore.setState({ language: 'en' });
-    const graph = occurrenceGraph();
     const complete = createSourceJoin({
       left: occurrenceInput,
       right: occurrenceInput,
@@ -45,13 +45,20 @@ describe('Source Input and Output Model transaction', () => {
       targetNodeId: 'model',
     });
     const preparation = new CanvasRelationAnalysisSession('self-join-input-recovery');
-    preparation.receive(complete);
-    const initialDocument = await changeSelectedRelationOutputs(preparation, {
-      relationId: preparation.rootId,
-      expectedRevision: 0,
-      outputs: [0, 2].map((slot) => ({ slot })),
-    });
-    preparation.dispose();
+    try {
+      preparation.receive(complete);
+      initialDocument = await changeSelectedRelationOutputs(preparation, {
+        relationId: preparation.rootId,
+        expectedRevision: 0,
+        outputs: [0, 2].map((slot) => ({ slot })),
+      });
+    } finally {
+      preparation.dispose();
+    }
+  }, 5000);
+
+  it('preserves the recovery row and focus, cancels both changes, then applies only the selected occurrence', async () => {
+    const graph = occurrenceGraph();
     const model = applyDvtSubstraitSemanticDocument(
       graph.targetNode,
       encodeDvtSubstraitSemanticDocument(initialDocument)

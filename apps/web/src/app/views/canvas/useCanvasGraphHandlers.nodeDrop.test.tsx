@@ -17,9 +17,135 @@ import {
   toastState,
 } from './useCanvasGraphHandlers.test.support';
 import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
-import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
+import { sourceNode, projectedModel } from './canvasColumnOutputAuthoring.test-support';
+import { readWorkspaceDbtModelReference, resolveWorkspaceNodeInstances } from '@dvt/contracts';
 
 describe('useCanvasGraphHandlers node drop', () => {
+  it('registers one file definition for rapid click and drop placements without copying it or connecting cards', async () => {
+    const definition = {
+      ...buildCanonicalNode('dbt-definition', 'transform'),
+      metadata: {
+        dbtModelReference: {
+          schemaVersion: 'workspace-dbt-model-reference.v1',
+          canvasId: 'files',
+          uniqueId: 'model.demo.clientes',
+          relationId: 'assigned-relation',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            provider: 'postgres',
+            connectionId: 'warehouse',
+          },
+          fields: [
+            { fieldId: 'assigned-client', name: 'client_id', dataType: 'text', nullable: true },
+          ],
+        },
+      },
+    };
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const setEdges = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      canonicalNodes: [],
+      setNodes,
+      setDraftSession,
+      setEdges,
+    });
+    await harness.render();
+    act(() => {
+      harness.latest()?.handleInstantiateNode(definition.id, { x: 30, y: 60 }, definition);
+      harness.latest()?.handleDrop(buildCanonicalDropEvent(definition));
+    });
+    const placed = setNodes.mock.calls[1]?.[0] as Node[];
+    expect(placed).toHaveLength(2);
+    expect(new Set(placed.map((node) => node.id)).size).toBe(2);
+    expect(placed.map((node) => node.data.name)).toEqual(['dbt-definition', 'dbt-definition 2']);
+    const persisted = setDraftSession.mock.calls.reduce(
+      (session, [update]) => applyStateUpdater(update, session),
+      buildDraftSession()
+    );
+    expect(
+      Object.keys(persisted.localNodeCatalog ?? {}).filter((id) => id === definition.id)
+    ).toHaveLength(1);
+    expect(persisted.workingSet.visibleNodeIds).not.toContain(definition.id);
+    const resolved = resolveWorkspaceNodeInstances(Object.values(persisted.localNodeCatalog ?? {}));
+    expect(
+      placed.every(
+        (node) =>
+          readWorkspaceDbtModelReference(resolved.find((item) => item.id === node.id)!)?.fields[0]
+            ?.fieldId === 'assigned-client'
+      )
+    ).toBe(true);
+    expect(setEdges).not.toHaveBeenCalled();
+    expect(toastState.error).not.toHaveBeenCalled();
+    harness.cleanup();
+  });
+  it.each(['input', 'transform'] as const)(
+    'creates independent %s cards through shared click and drop admission',
+    async (role) => {
+      const source = sourceNode();
+      const definition = role === 'input' ? source : projectedModel(source, ['order_id', 'amount']);
+      const sourceEdge = { sourceId: source.id, targetId: definition.id };
+      const draftSession = buildDraftSession();
+      draftSession.workingSet = {
+        visibleNodeIds: [source.id, definition.id],
+        visibleEdges: role === 'transform' ? [sourceEdge] : [],
+        pendingExplicitNodeIds: [],
+      };
+      const before = JSON.stringify(definition);
+      const setNodes = vi.fn();
+      const setDraftSession = vi.fn();
+      const setEdges = vi.fn();
+      const harness = renderGraphHandlersHook({
+        canEditEdges: true,
+        nodes: [],
+        canonicalNodes: role === 'input' ? [definition] : [source, definition],
+        draftSession,
+        setNodes,
+        setDraftSession,
+        setEdges,
+      });
+      await harness.render();
+      const event = buildCanonicalDropEvent(definition);
+      Object.assign(event.dataTransfer, {
+        types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+        getData: () => JSON.stringify({ id: definition.id }),
+      });
+      act(() => {
+        harness.latest()?.handleInstantiateNode(definition.id, { x: 30, y: 60 });
+        harness.latest()?.handleDrop(event);
+        harness.latest()?.handleInstantiateNode('missing', { x: 0, y: 0 });
+      });
+      const placed = setNodes.mock.calls[1]?.[0] as Node[];
+      expect(placed).toHaveLength(2);
+      expect(new Set(placed.map((node) => node.id)).size).toBe(2);
+      expect(placed.every((node) => node.id !== definition.id)).toBe(true);
+      expect(placed[0]!.position).toEqual({ x: 30, y: 60 });
+      expect(setEdges).not.toHaveBeenCalled();
+      expect(setDraftSession).toHaveBeenCalledTimes(2);
+      expect(JSON.stringify(definition)).toBe(before);
+      harness.cleanup();
+    }
+  );
+  it('rejects readonly activation before any draft or viewport effect', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: false,
+      canonicalNodes: [buildCanonicalNode('source', 'input')],
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+    act(() => harness.latest()?.handleInstantiateNode('source', { x: 0, y: 0 }));
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
+    harness.cleanup();
+  });
   it.each([
     { targetName: 'pane', left: 300, top: 200 },
     { targetName: 'nested card child', left: 650, top: 440 },
@@ -102,8 +228,9 @@ describe('useCanvasGraphHandlers node drop', () => {
     graphHandlerScreenToFlowPosition.mockReturnValue({ x: 800, y: 600 });
     const event = buildCanonicalDropEvent(source);
     Object.assign(event.dataTransfer, {
-      types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
-      getData: (type: string) => (type === CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE ? source.id : ''),
+      types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+      getData: (type: string) =>
+        type === CANVAS_CATALOG_NODE_DRAG_MIME_TYPE ? JSON.stringify({ id: source.id }) : '',
     });
     act(() => {
       harness.latest()?.handleDrop(event);
@@ -141,8 +268,9 @@ describe('useCanvasGraphHandlers node drop', () => {
       await harness.render();
       const event = buildCanonicalDropEvent(source);
       Object.assign(event.dataTransfer, {
-        types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
-        getData: (type: string) => (type === CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE ? source.id : ''),
+        types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+        getData: (type: string) =>
+          type === CANVAS_CATALOG_NODE_DRAG_MIME_TYPE ? JSON.stringify({ id: source.id }) : '',
       });
       act(() => {
         harness.latest()?.handleDrop(event);
@@ -417,8 +545,10 @@ describe('useCanvasGraphHandlers node drop', () => {
 
   it.each([
     { canEditEdges: true, types: [], effect: 'move' },
-    { canEditEdges: true, types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE], effect: 'copy' },
-    { canEditEdges: false, types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE], effect: 'none' },
+    { canEditEdges: true, types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE], effect: 'copy' },
+    { canEditEdges: true, types: [CANONICAL_NODE_DRAG_MIME_TYPE], effect: 'copy' },
+    { canEditEdges: false, types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE], effect: 'none' },
+    { canEditEdges: false, types: [CANONICAL_NODE_DRAG_MIME_TYPE], effect: 'none' },
   ])(
     'marks drag-over as $effect for the admitted payload',
     async ({ canEditEdges, types, effect }) => {

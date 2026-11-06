@@ -19,6 +19,19 @@ function actionById(
 }
 
 describe('canvasNodeContextMenuModel', () => {
+  it('admits only backed placement removal without granting semantic mutations', () => {
+    const model = buildCanvasNodeModelerActionModel({
+      target: { kind: 'node', nodeId: 'instance', nodeName: 'Orders 2' },
+      selectedForExecution: false,
+      canMutateGraph: false,
+      canRemovePlacement: true,
+      canInspectNode: true,
+      canDuplicateNode: true,
+      canToggleNodeSelection: false,
+      canRemoveNode: true,
+    });
+    expect(actionIds(model)).toEqual(['open-properties', 'remove-node']);
+  });
   it('projects only backed node operations', () => {
     const model = buildCanvasNodeModelerActionModel({
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },

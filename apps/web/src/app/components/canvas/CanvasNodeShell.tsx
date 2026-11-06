@@ -14,7 +14,10 @@ import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
-import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
+import {
+  isCanvasElement,
+  isCanvasNodeEmbeddedControlTarget,
+} from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
 type CanvasNodeShellProps = Readonly<{
@@ -70,7 +73,7 @@ export function CanvasNodeShell({
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
     if (
-      !(event.target instanceof Element) ||
+      !isCanvasElement(event.target) ||
       event.target.closest('[data-canvas-context-menu-owner="column"]') == null
     )
       return;
@@ -90,18 +93,6 @@ export function CanvasNodeShell({
           className={cn(styles.root, 'relative group/canvas-node')}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
-          onKeyDown={(event) => {
-            if (
-              event.key !== 'Enter' ||
-              event.repeat ||
-              event.target !== event.currentTarget ||
-              onOpenNode == null
-            )
-              return;
-            event.preventDefault();
-            event.stopPropagation();
-            onOpenNode();
-          }}
           onContextMenu={handleContextMenu}
           onDragOver={onDragOver}
           onDrop={onDrop}

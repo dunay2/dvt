@@ -1,6 +1,6 @@
 /** Owned concern: project the protected workspace-graph-draft boundary into route-facing draft and semantic graph models. */
 import {
-  resolveWorkspaceSourceInstances,
+  resolveWorkspaceNodeInstances,
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
@@ -29,10 +29,11 @@ function toPluginNodeKind(node: WorkspaceGraphAuthoringNode): CanonicalNode['kin
   return `${node.pluginId}:${node.kind}`;
 }
 
-function projectAuthoringNodeToCanonical(node: WorkspaceGraphAuthoringNode): CanonicalNode {
+export function projectAuthoringNodeToCanonical(node: WorkspaceGraphAuthoringNode): CanonicalNode {
   const canonicalNode: CanonicalNode = {
     id: node.id,
     ...(node.sourceDefinitionId == null ? {} : { sourceDefinitionId: node.sourceDefinitionId }),
+    ...(node.definitionId == null ? {} : { definitionId: node.definitionId }),
     name: node.name,
     pluginId: node.pluginId,
     kind: toPluginNodeKind(node),
@@ -82,7 +83,7 @@ export function projectWorkspaceGraphAuthoringDraftSemanticGraph(
 ): CanvasAuthoringSemanticGraph {
   return {
     canonicalNodes: migrateWorkspaceProducerInputs(
-      resolveWorkspaceSourceInstances(draft.nodes).map((node) =>
+      resolveWorkspaceNodeInstances(draft.nodes).map((node) =>
         projectAuthoringNodeToCanonical(node)
       ),
       draft.edges

@@ -421,21 +421,34 @@ describe('workspaceFilesRoutes', () => {
     });
   });
 
-  it('fails closed when required scope is missing', async () => {
-    const { app } = buildApp();
+  it.each([
+    ['', 'missing_tenant_id', 'tenantId'],
+    ['tenantId=', 'invalid_tenant_id', 'tenantId'],
+    ['tenantId=tenant-a', 'missing_project_id', 'projectId'],
+    ['tenantId=tenant-a&projectId=', 'invalid_project_id', 'projectId'],
+    ['tenantId=tenant-a&projectId=project-a', 'missing_environment_id', 'environmentId'],
+    [
+      'tenantId=tenant-a&projectId=project-a&environmentId=',
+      'invalid_environment_id',
+      'environmentId',
+    ],
+    ['tenantId=&projectId=&environmentId=', 'invalid_tenant_id', 'tenantId'],
+  ])('rejects invalid required scope before authorization: %s', async (query, reason, target) => {
+    const { app, authorize } = buildApp();
 
     const response = await app.inject({
       method: 'GET',
-      url: '/workspace/files?tenantId=tenant-a&projectId=project-a',
+      url: `/workspace/files?${query}`,
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       error: {
         type: 'bad_request',
-        reason: 'missing_environment_id',
-        target: 'environmentId',
+        reason,
+        target,
       },
     });
+    expect(authorize).not.toHaveBeenCalled();
   });
 });

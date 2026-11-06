@@ -48,6 +48,99 @@ Canonical local C&Q catalog:
 - Fowler mailbox:
   [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
 
+## Viewport input policy
+
+`SYS-WEB-CANVAS-VIEWPORT` owns the shared `canvasViewportInteraction` policy.
+The empty Canvas shows the normal pointer; holding the left mouse button and
+moving pans the viewport. Movable cards show the arrowless `crosshair` cursor
+and retain their existing card-drag behavior. The viewport CSS Module owns these
+cursor states; the old global card pointer rule is removed.
+
+React Flow receives explicit pointer and keyboard options from this policy.
+Space does not enable a second pan mode, and Shift does not enable a background
+selection rectangle. Shift still adds cards to a selection. The interaction-mode
+toggle is hidden so it cannot change these rules independently. Native Tab and
+arrow-key accessibility, permission-gated deletion and settled layout callbacks
+retain their existing owners.
+
+The same module maps Enter, Ctrl/Cmd+F, Escape and ContextMenu/Shift+F10 to the
+existing node, search, popup and menu intents. Text fields and embedded controls
+retain their own input handling. Consumers own their state and actions; they do
+not define competing key bindings. The
+[prospective design and finite scope](https://github.com/dunay2/dvt/issues/3747#issuecomment-6563740702)
+govern the change and its behavioral/browser evidence.
+The [cursor clarification](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564196807)
+uses the native thin cross without adding a cursor asset.
+
+The [Model viewport extension](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564364345)
+applies the same policy inside the relational editor. The existing relational
+adapter consumes the shared pointer/control boundary and interaction CSS Module;
+it keeps its own layout, pointer capture, local camera position and zoom.
+The camera translates content independently of its extent, so background drag
+also works when the complete diagram fits below 100% zoom. Pointer deltas, wheel
+anchoring, explicit Fit and keyboard focus reveal use the same position owner;
+native Canvas scrolling is clipped rather than retained as a second camera.
+Card and drop positions are signed finite world coordinates. Pointer movement,
+keyboard movement and both relational views use the same coordinate policy;
+visible space left or above the origin must remain usable. Detail expansion is
+an invertible offset, and explicit Fit measures the signed content origin and
+extent through the existing session camera. Movement does not shift unrelated
+cards or create semantic writes. Persistence uses the same admitted v1 position
+contract, with non-finite values still rejected.
+Nested viewports consume only their own gestures. Pointer property activation
+does not reveal or recenter a card. The session retains camera and zoom across
+inspection/editing; camera movement never changes card world coordinates.
+
+`useCanvasRelationalTreeViewport` owns measured fit and zoom orchestration.
+`useRelationalViewportCamera` adapts the existing session camera to content
+translation, pan deltas and guarded keyboard-focus reveal. Pointer pan remains
+in its input adapter. This split keeps one camera and the original viewport
+size boundary; it adds no scroll owner, persistence path or keyboard mode.
+
+```mermaid
+flowchart LR
+  Pointer[Background pointer delta] --> Camera[Local viewport camera]
+  Wheel[Wheel anchor correction] --> Camera
+  Fit[Explicit Fit] --> Camera
+  Focus[Keyboard focus reveal] --> Camera
+  Camera --> Projection[Content translation and zoom]
+  Cards[Card world positions] --> Projection
+```
+
+The [signed-coordinate rationale and test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6662240499)
+retire the old nonnegative gesture/drop floors and origin-dependent expansion
+state. The camera adapter owns one screen-to-world conversion shared by source
+and operation drops in both relational views.
+
+Canvas viewports have no native scrollbars and pan directly from empty background
+with the left button. Cards remain independently movable. The separate Hand mode,
+middle-button pan, mode-dependent card disabling and local card cursor rules are
+retired. Arrange, Fit, zoom, fields, ports and form controls retain their existing
+owners. Inspector and result panels retain their own scrolling.
+
+The [competition audit](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564633401)
+also covers synthetic and inactive consumers. The laboratory renderer consumes
+the same pure input policy. Node shells delegate keyboard entry to the viewport;
+they do not define a fallback Enter action. Repeated or modified activation keys
+do not reopen cards. Connection ports keep local cursor feedback without forcing
+a cursor across the pane or unrelated cards.
+
+Shared target predicates identify text editing, local controls and owned
+background. Context menus add their menu/popover exclusions, wheel zoom preserves
+wheel-over-card behavior, and field drops retain their existing command admission.
+These effects remain separate; only their equivalent target checks are shared.
+The shared DOM boundary resolves `Element` from each node's own window, preserving
+iframe/portal presentation while rejecting targets outside the owning surface.
+
+Planning DB separates the existing relational local-layout implementation as
+`SYS-CANVAS-RELATIONAL-VIEWPORT`, a child of the relational Workbench. It owns
+pointer capture, local placement, fit, zoom and settled layout callbacks. The
+parent owns graph/inspector composition and delegates semantic changes through
+its existing command adapters. The zero-binding proposed tree-composition
+responsibility is retired as a duplicate of the implemented composition concern.
+The [ownership review](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564854173)
+records the concrete source boundary; it does not declare the feature implemented.
+
 ## Public API
 
 | API                                          | Owner                                 | Responsibility                                                                               |

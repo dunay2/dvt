@@ -118,7 +118,7 @@ describe('Relational card movement', () => {
     pointer('pointerup', 130, 120);
     expect(card().dataset.dragging).toBeUndefined();
     act(() => {
-      card().click();
+      card().dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
     });
     expect(position()).toEqual({ x: before.x + 60, y: before.y + 40 });
     expect(paths()).not.toEqual(edges);
@@ -128,6 +128,16 @@ describe('Relational card movement', () => {
     expect(manual).toHaveBeenCalled();
     render('editing');
     expect(position()).toEqual({ x: before.x + 60, y: before.y + 40 });
+  });
+
+  it('preserves keyboard activation when the preceding drag produced no pointer click', () => {
+    pointer('pointerdown', 100, 100);
+    pointer('pointermove', 130, 120);
+    pointer('pointerup', 130, 120);
+    act(() => {
+      card().click();
+    });
+    expect(select).toHaveBeenCalledExactlyOnceWith('employee');
   });
 
   it('restores the position on pointer cancellation', () => {
@@ -154,13 +164,31 @@ describe('Relational card movement', () => {
     expect(select).toHaveBeenCalledExactlyOnceWith('employee');
   });
 
-  it('cancels lost capture and never moves a card outside the drawable area', () => {
+  it('crosses the world origin and restores the original position on lost capture', () => {
     const before = position();
     pointer('pointerdown', 100, 100);
     pointer('pointermove', -1000, -1000);
-    expect(position()).toEqual({ x: 0, y: 0 });
+    expect(position()).toEqual({ x: before.x - 2200, y: before.y - 2200 });
     pointer('lostpointercapture', -1000, -1000);
     expect(position()).toEqual(before);
+  });
+
+  it('moves left and above the world origin with the same keyboard policy', async () => {
+    const before = position();
+    for (const key of ['ArrowLeft', 'ArrowLeft', 'ArrowUp', 'ArrowUp']) {
+      await act(async () => {
+        card().dispatchEvent(
+          new KeyboardEvent('keydown', {
+            bubbles: true,
+            altKey: true,
+            shiftKey: true,
+            key,
+          })
+        );
+      });
+    }
+    expect(position()).toEqual({ x: before.x - 80, y: before.y - 80 });
+    expect(select).not.toHaveBeenCalled();
   });
 
   it('keeps a simple click and supports keyboard movement without semantic edits', () => {

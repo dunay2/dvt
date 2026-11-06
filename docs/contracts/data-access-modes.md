@@ -155,6 +155,15 @@ ES/EN explanation of this limit. The protected query independently rejects an
 outside-plan relation with a typed reason before querying the provider. Source
 cards retain their separate source query. Preview never connects a detached
 branch to the output, rewrites the model or executes an independent branch.
+Staging a disconnected Source or operation does not invalidate the unchanged
+saved output plan or clear its current preview. Apply/Cancel/navigation still
+track the whole authoring transaction. Preview admission separately compares
+output semantics and terminal identity with the saved baseline; output-affecting
+changes, pending active edits and an in-flight Apply remain blocked until settled.
+The sample input revision follows the saved plan's projected dependencies, not
+the complete catalogue of available inputs. Adding an unused declared Source
+preserves the saved sample; changing or withdrawing a used input still invalidates
+it. Available Sources remain independently usable for explicit JOIN authoring.
 `bounded-first-page` promises no stable cursor or continuation, even when the
 selected relation has an explicit sort. Empty results retain provenance and
 column headers.

@@ -33,6 +33,51 @@ The implementation keeps exactly two mutually exclusive modes:
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md`
 
+## One Project Root
+
+An imported project and graph-generated source YAML can otherwise occupy two
+independent directory trees inside the same scoped workspace. Renaming the
+Explorer entries cannot repair the persisted file-authority root reference.
+
+`PreviewDbtProjectRootRelocation` describes a lossless move to `.`;
+`RelocateDbtProjectRoot` performs that move without changing authoring mode.
+The root then contains `dbt_project.yml` and one `models` hierarchy. Unrelated
+root files remain untouched, and imported SQL and YAML retain their bytes.
+
+```mermaid
+flowchart LR
+  Preview[Read-only relocation plan] --> Revision[Authority and file revisions]
+  Revision --> Command[Protected relocation command]
+  Command --> Snapshot[Private recovery snapshot]
+  Snapshot --> Batch[Existing scoped CAS batch]
+  Batch --> Binding[Conditional root reference update]
+  Binding --> Projection[Fresh native dbt projection]
+```
+
+The plan is not authorization. Both routes preserve authenticated tenant,
+project and environment scope; mutation requires the existing workspace-file
+write capability. The command rechecks the file authority and complete source
+inventory before publication. Different destination bytes, concurrent source
+changes, multiple owners, unsafe or private paths and symlinks cause a refusal.
+Identical existing destination bytes may be retained without replacing content.
+
+The application component owns plan, recovery and completion policy. The local
+batch adapter owns conditional file mechanics and strict inventory checks; the
+authority store owns ordered locks and revision-guarded root persistence. The
+HTTP adapter shares workspace-file request authorization and owns no filesystem
+or migration decisions. Recovery snapshots are server-managed metadata outside
+the project file tree and any dbt bundle.
+
+Retries preserve later user edits. Proven completed file moves can finish an
+interrupted binding update; an ambiguous state remains an explicit conflict with
+its snapshot retained. Completion never means that Git was committed or that SQL
+executed successfully. Native dbt parse, compile and execution evidence remain
+separate checks. Graph-native model publication and Git lifecycle are not added
+by root relocation.
+
+The finite design and negative-test admission is recorded in
+[GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6585557351).
+
 ## Recovery Drift Being Removed
 
 ```mermaid
@@ -512,6 +557,13 @@ rather than represented by duplicate adapter-level logs.
 12. Contracts, API, web, architecture, lint, typecheck, governance,
     feature-mechanization, and `pnpm verify:prepush` pass with no disabled rule,
     stub, fake adapter, placeholder, or hidden skipped check.
+
+The protected workspace-file and Source Import adapters share required
+tenant/project/environment parsing through `routeParserPrimitives.ts`. Its
+existing typed scalar parsers own ID validation; the shared scope projection
+preserves missing versus invalid reasons and tenant-first error precedence.
+Each route retains its own authorization action and application port. The dbt
+project parser keeps its distinct combined-query error contract.
 
 ## Explicit Non-Goals
 

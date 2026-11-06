@@ -4,6 +4,7 @@ import {
   deriveSubstraitSchemas,
   resolveProducerInput,
   type SubstraitDocument,
+  type IndexedRelation,
 } from '@dvt/substrait-analysis';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
@@ -22,20 +23,37 @@ import {
 } from './canvasSourceRelation';
 import { canvasInputRequiresProjection } from './canvasInputComposition';
 
+function matchesProducerRead(
+  read: IndexedRelation,
+  producer: NonNullable<CanvasDvtCompositionInput['producer']>
+): boolean {
+  if (read.binding.producerRef?.nodeId !== producer.nodeId) return false;
+  try {
+    resolveProducerInput(read, producer.document);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Execution closure checks provenance; physical schema admission belongs to authoring. */
 export function hasConnectedRelationSources(
   document: SubstraitDocument,
-  sources: readonly Pick<CanvasDvtCompositionInput, 'sourceRef'>[]
+  sources: readonly (Pick<CanvasDvtCompositionInput, 'sourceRef'> & {
+    producer?: CanvasDvtCompositionInput['producer'];
+  })[]
 ): boolean {
   const { index } = deriveSubstraitSchemas(document);
   const reads = [...index.relations.values()].filter(
     (entry) => entry.relation.relType.case === 'read'
   );
   const matches = (read: (typeof reads)[number], source: (typeof sources)[number]) =>
-    source.sourceRef != null &&
-    read.binding.sourceRef != null &&
-    read.binding.sourceRef.sourceObjectId === source.sourceRef.sourceObjectId &&
-    hasSameConnectionRef(read.binding.sourceRef.connectionRef, source.sourceRef.connectionRef);
+    source.producer != null
+      ? matchesProducerRead(read, source.producer)
+      : source.sourceRef != null &&
+        read.binding.sourceRef != null &&
+        read.binding.sourceRef.sourceObjectId === source.sourceRef.sourceObjectId &&
+        hasSameConnectionRef(read.binding.sourceRef.connectionRef, source.sourceRef.connectionRef);
   return (
     reads.length > 0 &&
     reads.every((read) => sources.filter((source) => matches(read, source)).length === 1) &&
@@ -53,13 +71,7 @@ export function hasConnectedRelationInputs(
   );
   const matches = (read: (typeof reads)[number], source: CanvasDvtCompositionInput): boolean => {
     if (source.producer != null) {
-      if (read.binding.producerRef?.nodeId !== source.nodeId) return false;
-      try {
-        resolveProducerInput(read, source.producer.document);
-        return true;
-      } catch {
-        return false;
-      }
+      return matchesProducerRead(read, source.producer);
     }
     return (
       source.sourceRef != null &&

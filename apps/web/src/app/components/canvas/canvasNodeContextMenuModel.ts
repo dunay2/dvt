@@ -1,6 +1,6 @@
 /** Owned concern: derive explicit Canvas node operations without owning node mutation. */
 
-export type CanvasNodeContextMenuTarget = Readonly<{
+type CanvasNodeContextMenuTarget = Readonly<{
   kind: 'node';
   nodeId: string;
   nodeName: string;
@@ -13,9 +13,7 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeModelerActionId = CanvasNodeContextMenuActionId;
-
-export type CanvasNodeContextMenuAction = Readonly<{
+type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
   label: string;
   intent: 'command' | 'query';
@@ -24,7 +22,7 @@ export type CanvasNodeContextMenuAction = Readonly<{
   disabledReason?: string;
 }>;
 
-export type CanvasNodeContextMenuActionGroup = Readonly<{
+type CanvasNodeContextMenuActionGroup = Readonly<{
   id: string;
   label: string;
   actions: readonly CanvasNodeContextMenuAction[];
@@ -55,24 +53,11 @@ const DEFAULT_COPY: CanvasNodeContextMenuCopy = {
   deleteLabel: 'Delete',
 };
 
-export type CanvasNodeModelerAction = CanvasNodeContextMenuAction &
-  Readonly<{ id: CanvasNodeModelerActionId }>;
-
-export type CanvasNodeModelerActionGroup = Readonly<{
-  id: string;
-  label: string;
-  actions: readonly CanvasNodeModelerAction[];
-}>;
-
-export type CanvasNodeModelerActionModel = Readonly<{
-  target: CanvasNodeContextMenuTarget;
-  actionGroups: readonly CanvasNodeModelerActionGroup[];
-}>;
-
 type BuildCanvasNodeModelerActionModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
   canMutateGraph: boolean;
+  canRemovePlacement?: boolean;
   canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
@@ -84,14 +69,15 @@ export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
   canMutateGraph,
+  canRemovePlacement = false,
   canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
   copy = DEFAULT_COPY,
-}: BuildCanvasNodeModelerActionModelArgs): CanvasNodeModelerActionModel {
-  const groups: CanvasNodeModelerActionGroup[] = [];
-  const editActions: CanvasNodeModelerAction[] = [];
+}: BuildCanvasNodeModelerActionModelArgs): CanvasNodeContextMenuModel {
+  const groups: CanvasNodeContextMenuActionGroup[] = [];
+  const editActions: CanvasNodeContextMenuAction[] = [];
 
   if (canInspectNode) {
     editActions.push({
@@ -128,7 +114,7 @@ export function buildCanvasNodeModelerActionModel({
     });
   }
 
-  if (canMutateGraph && canRemoveNode) {
+  if ((canMutateGraph || canRemovePlacement) && canRemoveNode) {
     groups.push({
       id: 'danger',
       label: copy.dangerGroupLabel,
@@ -149,7 +135,7 @@ export function buildCanvasNodeModelerActionModel({
     actionGroups: groups,
   };
 }
-export type CanvasColumnContextMenuTarget = Readonly<{
+type CanvasColumnContextMenuTarget = Readonly<{
   kind: 'column';
   nodeId: string;
   columnId: string;
@@ -180,7 +166,7 @@ export type CanvasColumnContextMenuAction =
       disabled: true;
     }>;
 
-export type CanvasColumnContextMenuModel = Readonly<{
+type CanvasColumnContextMenuModel = Readonly<{
   target: CanvasColumnContextMenuTarget;
   label: string;
   actions: readonly CanvasColumnContextMenuAction[];

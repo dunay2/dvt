@@ -1,6 +1,6 @@
 /** Owned concern: manage measured fit, zoom and pointer panning for the tree viewport. */
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import type { RefObject } from 'react';
+import type { FocusEventHandler, RefObject } from 'react';
 import { useCanvasRelationalTreeWheelZoom } from './useCanvasRelationalTreeWheelZoom';
 import {
   CANVAS_RELATIONAL_TREE_MIN_ZOOM,
@@ -9,6 +9,7 @@ import {
 } from './canvasRelationalTreeViewport';
 import { useRelationalViewportPan } from './relational-layout/useRelationalViewportPan';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
+import { useRelationalViewportCamera } from './relational-layout/useRelationalViewportCamera';
 export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   contentRef: RefObject<HTMLDivElement>;
@@ -17,13 +18,20 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   changeZoom: (delta: number) => void;
   fit: () => void;
   stopAutoFit: () => void;
+  projectPointer: ReturnType<typeof useRelationalViewportCamera>['projectPointer'];
+  onFocusCapture: FocusEventHandler<HTMLDivElement>;
 }> &
   ReturnType<typeof useRelationalViewportPan> {
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { autoFit, scroll, zoom, setZoom, minimumZoom, setMinimumZoom, contentSize, setExtent } =
+  const { autoFit, zoom, setZoom, minimumZoom, setMinimumZoom, contentSize, setExtent } =
     useRelationalLayout();
-  const pan = useRelationalViewportPan();
+  const { panBy, onFocusCapture, projectPointer, center } = useRelationalViewportCamera(
+    viewportRef,
+    contentRef,
+    zoom
+  );
+  const pan = useRelationalViewportPan(panBy);
   const setManualZoom = useCallback(
     (value: number) => {
       autoFit.current = false;
@@ -31,21 +39,14 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     },
     [autoFit, setZoom]
   );
-  useCanvasRelationalTreeWheelZoom(viewportRef, contentRef, zoom, setManualZoom, minimumZoom);
-  const center = useCallback(
-    (nextZoom: number) => {
-      const viewport = viewportRef.current;
-      const content = contentRef.current;
-      if (viewport == null || content == null) return;
-      viewport.scrollLeft = Math.max(
-        0,
-        ((contentSize.current?.width ?? content.offsetWidth) * nextZoom - viewport.clientWidth) / 2
-      );
-      viewport.scrollTop = 0;
-    },
-    [contentSize]
+  useCanvasRelationalTreeWheelZoom(
+    viewportRef,
+    contentRef,
+    zoom,
+    setManualZoom,
+    minimumZoom,
+    panBy
   );
-
   const fit = useCallback(() => {
     const viewport = viewportRef.current;
     const content = contentRef.current;
@@ -70,16 +71,6 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     setMinimumZoom(Math.min(CANVAS_RELATIONAL_TREE_MIN_ZOOM, nextZoom));
     requestAnimationFrame(() => center(nextZoom));
   }, [autoFit, center, contentSize, fitPadding, setExtent, setMinimumZoom, setZoom]);
-
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    if (viewport == null) return;
-    viewport.scrollLeft = scroll.current.left;
-    viewport.scrollTop = scroll.current.top;
-    return () => {
-      scroll.current = { left: viewport.scrollLeft, top: viewport.scrollTop };
-    };
-  }, [scroll]);
 
   useLayoutEffect(() => {
     const refresh = (): void => {
@@ -113,6 +104,8 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     stopAutoFit: () => {
       autoFit.current = false;
     },
+    onFocusCapture,
+    projectPointer,
     ...pan,
   };
 }

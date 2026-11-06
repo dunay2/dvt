@@ -119,10 +119,12 @@ export type {
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 export * from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
 export {
-  resolveWorkspaceSourceInstances,
-  WorkspaceSourceInstanceError,
-  WORKSPACE_SOURCE_INSTANCE_ERROR,
-} from './contracts/planner/WorkspaceSourceInstance.v1.js';
+  resolveWorkspaceNodeInstances,
+  workspaceNodeDefinitionId,
+  projectWorkspaceNodeInstanceEdges,
+  WorkspaceNodeInstanceError,
+  WORKSPACE_NODE_INSTANCE_ERROR,
+} from './contracts/planner/WorkspaceNodeInstance.v1.js';
 export * from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
 export * from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
 export * from './contracts/planner/DvtRelationalOperationInputs.js';
@@ -210,3 +212,4 @@ export { CommonStepTypeConfigSchema } from './step-registry/CommonStepTypeConfig
 export * from './step-registry/StepTypeRegistry.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';
+export * from './contracts/planner/WorkspaceDbtModelReference.v1.js';

@@ -1,29 +1,43 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 
 const LAB_COMPONENT_PATH = join(import.meta.dirname, 'RelationalCompositionLab.tsx');
-const LAB_DOCUMENT_PATH = join(
+const POLICY_PATH = resolve(import.meta.dirname, '../views/canvas/canvasViewportInteraction.ts');
+const STYLE_PATH = resolve(
   import.meta.dirname,
-  '../../../../../docs/planning/proposals/mandatory/frontend-and-ux/relational-composition-lab-20260916.md'
+  '../views/canvas/canvasViewportInteraction.module.css'
+);
+const MARKER_PATH = resolve(
+  import.meta.dirname,
+  '../components/canvas/canvasNodeInteractionBoundary.ts'
 );
 
 describe('RelationalCompositionLab architecture', () => {
-  it('does not present an unadmitted relational operation as canonical', () => {
-    const source = readFileSync(LAB_COMPONENT_PATH, 'utf8');
-    const profile = readFileSync(LAB_DOCUMENT_PATH, 'utf8');
-
-    expect(profile).toContain('Offer only `UNION ALL`');
-    expect(source).not.toContain("label: 'LEFT JOIN'");
-    expect(source).not.toContain("label: 'WINDOW'");
-    expect(source).toContain("label: 'ROW_NUMBER'");
-  });
-
-  it('remains a synthetic presentation without Canvas mutation authority', () => {
-    const source = readFileSync(LAB_COMPONENT_PATH, 'utf8');
-
-    expect(source).toContain('synthetic presentation only');
-    expect(source).not.toContain("from '../views/canvas/");
-    expect(source).not.toContain('ConfigureCanvasDvtNode');
+  it('keeps its complete local dependency closure within the declared pure UI boundary', () => {
+    const allowed = new Set([POLICY_PATH, STYLE_PATH, MARKER_PATH]);
+    const visited = new Set<string>();
+    const pending = [LAB_COMPONENT_PATH];
+    while (pending.length > 0) {
+      const path = pending.pop()!;
+      if (visited.has(path)) continue;
+      visited.add(path);
+      for (const imported of ts.preProcessFile(readFileSync(path, 'utf8'), true, true)
+        .importedFiles) {
+        const dependency = imported.fileName;
+        if (!dependency.startsWith('.')) {
+          expect(['react', '@xyflow/react']).toContain(dependency);
+          continue;
+        }
+        const target = resolve(
+          path,
+          '..',
+          dependency.endsWith('.css') ? dependency : dependency + '.ts'
+        );
+        expect(allowed.has(target), `Unadmitted laboratory dependency: ${dependency}`).toBe(true);
+        if (!target.endsWith('.css')) pending.push(target);
+      }
+    }
   });
 });

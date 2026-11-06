@@ -2,13 +2,44 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-10-30
+last_reviewed: 2026-11-05
 planning_type: architecture
 ---
 
 # Code Workbench Workspace Files Component
 
 ## Purpose
+
+Properties Code for a placed dbt model reference uses the existing file-authority
+contribution and `WorkspaceFileCodeEditor`, including its inline reference cards.
+Placement does not make the referenced SQL graph-owned. Such references are
+excluded from graph-owned path discovery; actual graph-generated paths retain
+their existing conflict guard. The classifier validates the existing typed model
+reference schema; malformed metadata retains graph-owned protection. It does not
+infer ownership from a shared SQL path. See the [real-admission correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6658545036).
+A placed reference is resolved by its file-owner Canvas ID and model unique ID.
+Its captured workspace path is display metadata, not permanent file authority.
+Elements and Properties Code share the current project-context query composition:
+the authorized file tree identifies the configuration, its accepted binding must
+match the reference owner, and the fresh project projection supplies the model's
+current `originalFilePath`. The shared qualifier combines that relative path
+with the current root. A missing, ambiguous, stale or different-owner context
+cannot fall back to the captured path. Opening the file neither rewrites the
+native definition nor invokes selected-model compilation.
+While the file tree, configuration or graph is revalidated, reference Code waits
+for the current context rather than authorizing a file through cached authority.
+The catalogue retains its definitions during that read; the query cache and keys
+remain shared.
+
+```mermaid
+flowchart LR
+  Reference[Placed file-model identity] --> Project[Current scoped project context]
+  Project --> Adapter[Existing dbt file Code contribution]
+  FileGraph[File-graph node and project root] --> Adapter
+  Adapter --> Editor[Shared read-only workspace editor]
+  Editor --> Context[Accepted file authority and version]
+  Context --> Cards[Existing native inline-reference query and cards]
+```
 
 Code presents authorized project files, verified model references and accepted-file
 metadata through the existing shared Monaco surface. Project Code and node
@@ -30,6 +61,43 @@ Governing sources:
 
 ## Owned Concern
 
+### Resource placements in Canvas
+
+`PersistCanvasLayout` and `GetCanvasLayout` own repeated visual placements of
+file-owned Sources and Models. Each placement contains a secure instance ID and
+the referenced resource ID; coordinates remain in the existing position map.
+The scoped, fresh project query supplies the definition. Local persistence
+contains no copied SQL, metadata, edges or executable graph.
+
+```mermaid
+flowchart LR
+  Before[Catalogue drop tied to edge editing] --> Block[All drops rejected]
+  Catalogue[Authorized project definitions] --> Drop[Validate ID and fresh analysis]
+  Drop --> Layout[Existing layout: instance and resource IDs]
+  Layout --> Card[Independent card position and removal]
+  Definition[Current file-owned definition] --> Card
+  Card --> Inspector[Inspect original resource]
+  Card --> Selection[Select original execution identity once]
+```
+
+The former adapter rejected every drop because it treated layout placement as
+semantic graph editing. Placement admission now has its own capability within
+the existing layout rail. It never enables `canEditEdges`. Source and Model
+placements resolve inspection and execution to the original definition. Removing
+a placement preserves its definition, sibling placements and files. Missing
+references are not rendered, and stale analysis, incomplete hydration, unknown
+IDs and resources outside Sources/Models reject new drops. Layout keys retain
+workspace, Canvas, authority and project-root scope.
+
+The store owns atomic reference/position persistence. A bounded placement
+adapter owns drop validation and reference projection; the file controller only
+composes it. Existing node menus and keyboard interaction remove admitted
+placements through that adapter. File-defined lineage remains file-owned.
+The shared catalogue envelope carries the resource ID and, for file placements,
+the scoped layout identity. A namesake resource in another project cannot accept
+an earlier drag. Layout setters use one patch constructor to preserve all other
+layout fields when viewport, coordinates, freeze state or list order change.
+
 The component owns accepted scoped file selection, the shared Code file surface,
 reference inspection and presentation access. It does not own authorization,
 project creation, native semantic editing, Git lifecycle or analysis semantics.
@@ -39,6 +107,15 @@ publication and recovery of edits accepted before the read-only restriction.
 ## Public API
 
 ### Queries
+
+Native dbt `original_file_path` values and their Canvas node projections are
+project-relative. The shared path qualifier prepends the project root once to
+those values; matching directory names are preserved. A project named `models`
+can therefore contain `models/orders.sql` at workspace path
+`models/models/orders.sql`. Initial Code selection accepts an already qualified
+preference only through exact membership in the authorized workspace file tree,
+before trying a project-relative preference. A string prefix cannot establish a
+path's base or authorization.
 
 | Query                     | Input                              | Read model           | Negative paths                                                |
 | ------------------------- | ---------------------------------- | -------------------- | ------------------------------------------------------------- |
@@ -54,6 +131,16 @@ Stale revisions are rejected. The read-only Code entry points do not accept new
 edits or invoke this command from browsing. Existing artifact publishers and
 previously accepted pending edits retain their command boundary. There is no Save
 button or second persistence lifecycle.
+
+`useDbtProjectFileWorkbenchSession` owns the refs and guarded handoff between
+project Code and node inspection. Unknown identities are refused before either
+editor is touched; a refused flush preserves the existing workbench. The shell's
+existing `useCanvasCodeWorkbench` owns tabs and focus, rather than another file
+session. The file-authority controller composes these owners with its projection
+and layout. Execution selection and recovery belong to the existing
+`useDbtProjectFileExecution`, which reuses the shared recovery query, command and
+fresh-authority adapter. Neither presentation boundary generates SQL or creates
+a second semantic graph.
 
 ### HTTP Adapter
 
@@ -105,6 +192,136 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 
 ## Inline Model References
 
+### Explicit compilation
+
+Opening an eligible template SQL file does not start selected-model compilation.
+Code and Properties Code share the existing `WorkspaceFileCodeEditor` action:
+**Compile** invokes `AnalyzeSelectedDbtModel`, with visible pending, compiling,
+compiled and failure states. Matching retained query evidence is reused on return
+and after a full browser reload. The selected-model resolver uses native dbt parse
+and semantic-region analysis; this action does not introduce a Jinja compiler.
+A changed accepted project revision withholds old cards and waits for an explicit
+request. Ordinary SQL without template references and YAML remain passive text.
+
+The controlled Code browser spec and presentation unit tests share the pure,
+schema-validated `codeWorkspaceFileContext.test-support.ts` fixture. The public
+browser journey checks pending/progress/compiled states, scope, single-request
+compilation, retained cards across navigation and zero file writes. It uses the
+existing controlled transport; native dbt compilation remains covered by the
+analyzer tests and real-system evidence.
+
+```mermaid
+flowchart LR
+  Open[Accepted Code file] --> Evidence{Matching retained evidence?}
+  Evidence -->|Yes| Compiled[Compiled and verified cards]
+  Evidence -->|No| Pending[Pending compilation]
+  Pending --> Action[Explicit Compile]
+  Action --> Query[Existing selected-model query]
+  Query --> Busy[Visible compilation progress]
+  Busy --> Compiled
+  Revision[Changed project revision] --> Pending
+```
+
+The existing scope/root/selection/revision query key and native analyzer evidence
+remain the sole owners. A SQL AST alone cannot establish equivalence after a
+macro, Jinja, profile or environment change; this cut retains conservative full
+input identities and adds no parser, compiler or persisted status authority.
+`dbtSelectedModelAnalysisCache` is the bounded durable backing of the existing
+selected-model query: at most eight ready results / 4 MiB in browser storage,
+without a time-based expiry. It stores evidence, never a compiled boolean, other
+query data, row samples or credentials. Schema, binding, selection and revision
+must match the complete scoped query key on write and recovery. Fresh authorized
+file/project reads and the existing byte/hash projector still admit every card;
+storage cannot grant authority or revive stale evidence. Corrupt, unsupported or
+unavailable storage is a cache miss. The
+[reload rationale](https://github.com/dunay2/dvt/issues/3747#issuecomment-6663362701)
+defines the negative paths and full reload proof.
+Preview remains its existing explicit protected sampling query, sharing native
+compilation evidence. See the [prospective rationale and negative test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6657808041).
+
+### Project Models In Elements
+
+Elements presents registered definitions by category, excluding placed source
+instances. Catalogue clicks and drops reuse the same guarded placement command;
+clicks use the visible Canvas center without changing its camera. Sources create
+fresh identities referencing the same definition. Models use that same
+definition-reference mechanism, retaining their own name and position without
+copying operations or creating a dependency on the original card. Query-time
+input context resolves from the definition; no automatic connection is drawn or
+persisted for an instance. References exclude occurrences from the
+definition catalogue. File-owned placements use the
+existing scoped local reference command.
+Main Canvas and the Model editor share the single Elements activity. Fuentes /
+Models are independently collapsible categories, each with an accessible addition
+action even before definitions exist. The source action reuses the existing
+importer; the model action filters the existing node-kind creation catalogue to
+transformations. Menu anchoring and placement at the visible Canvas center are
+separate coordinates. Read-only capabilities cannot enable these actions. The
+Model editor reuses its existing occurrence actions. The obsolete
+placed-row projection and its automatic
+scroll-on-selection behavior are removed.
+
+File-owned model rows come from the existing file-authoritative project graph.
+Click and drag create independent native instances through `CreateCanvasNode`.
+A registered definition retains the scoped file Canvas, dbt unique ID,
+connection reference and assigned output identities. Placements retain their
+own identity, name and position. They neither copy SQL nor connect the original
+Model to the new card. Code's file explorer remains the file-navigation surface.
+File-defined inputs and SQL remain under their original authority; the native
+semantic editor cannot replace them.
+The bounded project-elements adapter enables
+the existing scoped queries only while Elements is open. It discovers the actual
+configuration in ListWorkspaceFiles, reads its persisted authority through
+GetWorkspaceFileContent, then reuses ProjectDbtGraphFromFiles and its cache.
+Filenames never establish model identity. Missing or ambiguous configuration,
+unresolved authority, errors and stale analysis cannot admit external model rows.
+
+```mermaid
+flowchart LR
+  T[Scoped file tree] --> A[Configuration persisted authority]
+  A --> G[Existing cached dbt graph query]
+  G --> E[Shared Elements list]
+  N[Registered definitions] --> E
+  E -->|Admitted click or drag| S[Existing guarded instance command]
+  S --> R[Scoped definition reference and independent placement]
+  R --> P[Existing producer Read composition]
+  P --> V[Authorized native dbt compilation and protected Preview]
+```
+
+`PreviewCanvasTransformRows` and protected `PreviewPlan` resolve external
+producers through the existing native analyzer and its revision cache. The
+application port checks file-view permission independently of graph-view
+permission and revalidates current authority, revision, output schema and
+connection. Compilation is selected and shared across repeated instances of the
+same model within a request. Placement and rendering do not compile models.
+The provider projection binds the compiled read-only SELECT to the existing
+producer graph; a logical model name is never treated as a physical table.
+Missing bindings, changed fields/types, stale revisions and non-read-only SQL
+fail before a data probe. PostgreSQL remains responsible for execution and
+availability of the model's compiled upstream relations.
+
+Model-only samples carry `modelRefs` with the actual file Canvas, dbt identity
+and analyzed revision, while `sourceRefs` contains only real physical Sources.
+New response readers and writers must be deployed together: older strict
+readers do not accept this provenance extension. Source sample contracts retain
+their existing nonempty physical-source requirement.
+
+Rows are deduplicated by node identity, preserving distinct same-name elements.
+Properties Code navigation uses the existing workbench handoff guards and shared
+project path resolver. It does not
+copy models into GraphDraft or change semantic ownership. The passive list retains
+the shared typography, search and selection behavior. The split Sources panel,
+card-only variant and their unused styles are retired; no transport, analyzer or
+parallel authoring command is introduced.
+
+Connection availability, project definitions and placed instances are separate:
+a definition may have no uses, while each source placement has its own identity.
+The categories list project definitions; they do not infer definitions from every
+placed card. See the [single-catalogue design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
+
+The prospective scope, rationale and negative tests are recorded in
+[GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6588421440).
+
 Code consumes ProjectDbtGraphFromFiles and AnalyzeSelectedDbtModel through their
 existing scoped ports. codeInlineReferences owns projection policy;
 useCodeInlineReferences joins it to accepted file evidence. There is no frontend
@@ -113,9 +330,9 @@ directory names.
 
 ### Inspection Eligibility And Stable Status
 
-The shared predicate in codeInlineReferences admits automatic reference work only
-for accepted SQL content containing a Jinja opening (`{{` or `{%`). Both
-file-context and selected-model hooks use it. Plain or empty SQL, YAML, JSON and
+The shared predicate in codeInlineReferences admits project-context discovery and
+the explicit Compile action only for accepted SQL content containing a Jinja
+opening (`{{` or `{%`). Selected-model analysis does not run on mount. Plain or empty SQL, YAML, JSON and
 Markdown remain readable without either inline reference query, cards or a
 reference-verification message. Custom model paths and case-insensitive SQL
 language names retain their existing scope, revision, hash and range checks.
@@ -126,41 +343,17 @@ dependency comments. Only the existing dbt analysis can authorize a supported
 region. Canvas, lineage, Preview and Run retain their own analysis behavior;
 plain SQL is not a claim of dependency absence or SQL validity.
 
-The previous flow started project analysis for every accepted file and inserted
-or removed a checking paragraph above Monaco:
-
-```mermaid
-flowchart LR
-  F[Accepted file] --> B[Authorized binding]
-  B --> G[Project query for every file SHA]
-  G --> P[Conditional status paragraph]
-  P --> J[Editor moves when the paragraph disappears]
-```
-
-The admitted flow separates eligibility from authority and uses the existing
-status band:
-
-```mermaid
-flowchart LR
-  F[Accepted file] --> E[SQL with a Jinja opening]
-  E -->|No| V[Read-only content without inline reference queries]
-  E -->|Yes| G[Existing revision-bound reference queries]
-  V --> S[Existing stable status band]
-  G --> S
-  P[Previously accepted pending edit] --> R[Explicit authorized reconciliation]
-  R --> G
-```
-
-Read-only checking, unavailable and ready messages share CodeWorkingTreeStatus;
+The flow separates eligibility from authority and uses the existing status band.
+Read-only pending, compiling, unavailable and ready messages share CodeWorkingTreeStatus;
 they do not create an extra layout row. Its existing global text utilities keep
 the band stable at narrow widths while retaining the full accessible message and
 title. File loading must not relabel old content as the newly requested file.
 
-Eligibility disables only automatic reference work. The accepted binding and
+Eligibility bounds context discovery and explicit compilation. The accepted binding and
 explicit reconciliation callback remain available for recovery of a previously
 accepted edit, including YAML or plain SQL. Navigating to noncandidate content
 must ignore late or cached reference evidence even when cache keys share a
-content hash; returning to candidate SQL retains revalidation.
+content hash; returning to candidate SQL reuses only matching retained analysis.
 
 This correction removes unused analysis and presentation movement. It introduces
 no parser, timer, stylesheet, cache or project-admission workflow. Global analysis

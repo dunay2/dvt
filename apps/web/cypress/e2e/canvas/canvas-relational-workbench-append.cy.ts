@@ -73,7 +73,9 @@ describe('Workbench append', () => {
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
       .closest('li')
       .as('existingJoin', { type: 'static' });
-    cy.get('[data-slot="canvas-relational-output-edge-action"]').focus().type('{del}');
+    cy.get('[data-slot="canvas-relational-output-edge-action"]').focus();
+    cy.focused().should('have.attr', 'data-slot', 'canvas-relational-output-edge-action');
+    cy.press(Cypress.Keyboard.Keys.DELETE);
     dragWorkbenchSource('shipments');
     cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', 'shipments')
       .closest('li')

@@ -5,17 +5,17 @@ import { sha256HexUtf8 } from '@dvt/crypto';
 
 import { buildSanitizedProcessEnvironment } from './dbtAnalyzerProcess.js';
 
-export type DbtParseAnalysisContext = Readonly<{
+export type DbtAnalysisContext = Readonly<{
   identity: string;
   profiles: readonly Readonly<{ name: string; contents: Buffer }>[];
   environment: NodeJS.ProcessEnv;
 }>;
 
 /** Private execution inputs; neither credential bytes nor their identity leave the adapter. */
-export async function readDbtParseAnalysisContext(
+export async function readDbtAnalysisContext(
   profilesDirectory: string,
   processEnvironment: NodeJS.ProcessEnv
-): Promise<DbtParseAnalysisContext> {
+): Promise<DbtAnalysisContext> {
   const profiles: { name: string; contents: Buffer }[] = [];
   for (const name of ['profiles.yml', 'profiles.yaml']) {
     try {
@@ -36,9 +36,9 @@ export async function readDbtParseAnalysisContext(
 }
 
 /** Execute the bytes used in the reuse identity, independent of concurrent profile edits. */
-export async function writeDbtParseProfilesSnapshot(
+export async function writeDbtProfilesSnapshot(
   analysisRoot: string,
-  context: DbtParseAnalysisContext
+  context: DbtAnalysisContext
 ): Promise<string> {
   const directory = path.join(analysisRoot, 'profiles');
   await mkdir(directory, { mode: 0o700 });

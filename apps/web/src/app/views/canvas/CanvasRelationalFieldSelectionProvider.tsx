@@ -16,6 +16,7 @@ import {
 } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { isCanvasBackgroundTarget } from './canvasViewportInteraction';
 import { useRelationCommand } from './useRelationCommand';
 import {
   canvasRelationalFieldConsumers,
@@ -117,14 +118,8 @@ export function CanvasRelationalFieldSelectionProvider({
       }
     );
   };
-  const background = (event: DragEvent<HTMLDivElement>) => {
-    const view = event.currentTarget.ownerDocument.defaultView;
-    if (view == null || !(event.target instanceof view.Element)) return false;
-    const control = event.target.closest(
-      '[data-slot="canvas-relational-card"], button, input, textarea, [role="button"]'
-    );
-    return control == null || !event.currentTarget.contains(control);
-  };
+  const background = (event: DragEvent<HTMLDivElement>) =>
+    isCanvasBackgroundTarget(event.target, event.currentTarget);
   const actions: FieldSelectionActions = {
     enabled: editable,
     begin: (reference) => {

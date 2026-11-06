@@ -20,6 +20,8 @@ export const RUNTIME_ROUTE_PATH = {
   dbtYamlDescriptionEditReverts: '/workspace/dbt/description-edits/reverts',
   dbtProjectImportValidate: '/workspace/dbt/import/validate',
   dbtProjectImport: '/workspace/dbt/import',
+  dbtProjectRootRelocationPreview: '/workspace/dbt/root-relocation/preview',
+  dbtProjectRootRelocation: '/workspace/dbt/root-relocation',
   workspaceDiffChanges: '/workspace/diff/changes',
   warehouseConnections: '/workspace/warehouse/connections',
   warehouseConnection: '/workspace/warehouse/connections/:connectionId',

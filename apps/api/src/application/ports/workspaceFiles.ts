@@ -85,6 +85,7 @@ export type WorkspaceFileBatchWrite = Readonly<{
 }>;
 
 export type WorkspaceFileBatchMutation = Readonly<{
+  expectedInventory?: Readonly<{ root: string; paths: readonly string[] }>;
   expectedFiles: readonly WorkspaceFileBatchExpectedFile[];
   writes: readonly WorkspaceFileBatchWrite[];
   deletes: readonly string[];

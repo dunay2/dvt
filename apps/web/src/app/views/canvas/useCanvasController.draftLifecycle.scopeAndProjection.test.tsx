@@ -9,6 +9,10 @@ import {
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
 import type { UseCanvasExecutionActionsParams } from './canvasExecutionActions.types';
+import { projectCanonicalNodeToAuthoringNode } from './canvasDraftAuthoring';
+import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
+import { createCanvasNodeInstance } from './canvasNodeInstance';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 
 function readLatestExecutionCall(
   harness: CanvasControllerHarness
@@ -107,6 +111,68 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
   afterEach(() => {
     harness?.cleanup();
     harness = null;
+  });
+
+  it('plans a placed Source reference while keeping its definition outside executable scope', async () => {
+    const graph = occurrenceGraph();
+    const instance = createCanvasNodeInstance(graph.source, new Set(), 'placed-source');
+    const nodes = [graph.source, instance, graph.targetNode];
+    const edge = { ...graph.edges[0]!, sourceId: instance.id };
+    const nodeIds = [instance.id, graph.targetNode.id];
+    const baseline = buildRemoteDraftRecord({
+      nodeIds,
+      nodePositions: { [instance.id]: { x: 0, y: 0 }, [graph.targetNode.id]: { x: 240, y: 0 } },
+      edges: [edge],
+    });
+    const authoringNodes = nodes.map(projectCanonicalNodeToAuthoringNode);
+    harness = createUnrenderedHarness();
+    harness.state.canonicalNodes = nodes;
+    harness.state.canonicalEdges = [edge];
+    setHarnessRemoteDraftRecord(harness, {
+      ...baseline,
+      draft: {
+        ...baseline.draft,
+        nodes: authoringNodes,
+        canvases: baseline.draft.canvases!.map((canvas) => ({ ...canvas, nodes: authoringNodes })),
+      },
+    });
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: [graph.targetNode.id],
+    });
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    const execution = readLatestExecutionCall(harness)!;
+    const input = { ...execution, canvasId: baseline.draft.canvas.id ?? null };
+    expect(buildProtectedDvtPreviewProjection(input)).toMatchObject({
+      ok: true,
+      selection: { mode: 'upstream', nodeIds: [graph.targetNode.id] },
+      scopedNodeIds: [...nodeIds].sort(),
+    });
+    expect(execution.workspaceNodeIds).toEqual(nodeIds);
+    expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(nodeIds);
+    expect(execution.canonicalEdges).toEqual([
+      expect.objectContaining({
+        sourceId: instance.id,
+        targetId: graph.targetNode.id,
+        relation: 'lineage',
+      }),
+    ]);
+    expect(
+      buildProtectedDvtPreviewProjection({ ...input, workspaceNodeIds: [instance.id] }).ok
+    ).toBe(false);
+    expect(
+      buildProtectedDvtPreviewProjection({
+        ...input,
+        canonicalNodes: input.canonicalNodes.filter((node) => node.id !== graph.source.id),
+      }).ok
+    ).toBe(false);
+    await waitForAutosaveDebounce();
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
   });
 
   it('scopes execution and prunes hidden selection when bootstrapping from a persisted draft subset', async () => {

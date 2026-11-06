@@ -1,5 +1,10 @@
 /** Resolve dependency ownership once for presentation, authoring and execution adapters. */
-import type { ConnectedSourceRef, ConnectionRef, DvtInputBindingsV1 } from '@dvt/contracts';
+import {
+  ConnectionRefSchema,
+  type ConnectedSourceRef,
+  type ConnectionRef,
+  type DvtInputBindingsV1,
+} from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import { SubstraitAnalysisError, type SubstraitDocument } from './document.js';
@@ -18,6 +23,10 @@ export type ProducerGraph = Readonly<{
     inputBindings?: DvtInputBindingsV1;
   }>[];
   sourcePublications?: ReadonlyMap<string, ReadonlySet<string>>;
+  externalProducers?: ReadonlyMap<
+    string,
+    Readonly<{ document: SubstraitDocument; connection: ConnectionRef }>
+  >;
 }>;
 export type ResolvedProducer = Readonly<{
   document: SubstraitDocument;
@@ -26,7 +35,16 @@ export type ResolvedProducer = Readonly<{
 }>;
 
 export function resolveProducerGraph(graph: ProducerGraph): ReadonlyMap<string, ResolvedProducer> {
-  const documents = resolveProducerDocuments(graph.targetId, graph.documents);
+  const available = new Map(graph.documents);
+  for (const [id, producer] of graph.externalProducers ?? []) {
+    if (available.has(id) || graph.sources.has(id))
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'An external producer cannot replace another authority.'
+      );
+    available.set(id, producer.document);
+  }
+  const documents = resolveProducerDocuments(graph.targetId, available);
   const incoming = new Map<string, Set<string>>();
   for (const edge of graph.edges) {
     const ids = incoming.get(edge.targetId) ?? new Set<string>();
@@ -46,6 +64,24 @@ export function resolveProducerGraph(graph: ProducerGraph): ReadonlyMap<string, 
     if (document == null) reject('Producer authority is outside the authorized closure.');
     const indexed = indexSubstraitRelations(document!);
     if (!indexed.ok) throw indexed.error;
+    const external = graph.externalProducers?.get(item.id);
+    if (external != null) {
+      const root = indexed.index.relations.get(indexed.index.rootId)!;
+      if (
+        indexed.index.relations.size !== 1 ||
+        root.relation.relType.case !== 'read' ||
+        root.binding.sourceRef != null ||
+        root.binding.producerRef != null ||
+        (incoming.get(item.id)?.size ?? 0) !== 0
+      )
+        reject('An external publication must be a resolved leaf Read signature.');
+      resolved.set(item.id, {
+        document: document!,
+        index: indexed.index,
+        connection: ConnectionRefSchema.parse(external.connection),
+      });
+      continue;
+    }
     const reads = [...indexed.index.relations.values()].filter(
       (entry) => entry.relation.relType.case === 'read'
     );

@@ -1,4 +1,4 @@
-/** Owned concern: observable identity, concurrency and retention of native parse evidence. */
+/** Owned concern: identity, concurrency and retention of eligible native analysis evidence. */
 import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -9,8 +9,8 @@ import { DbtProjectFileAuthorityRequiredError } from '../../../src/application/p
 import { AnalyzeSelectedDbtModelQuery } from '../../../src/application/services/analyzeSelectedDbtModelQuery.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 import { SelectedDbtModelAnalysisResolver } from '../../../src/application/services/selectedDbtModelAnalysisResolver.js';
+import { DbtAnalysisReuse } from '../../../src/infrastructure/dbt/dbtAnalysisReuse.js';
 import type { DbtCliProjectAnalyzerOptions } from '../../../src/infrastructure/dbt/DbtCliProjectAnalyzer.js';
-import { DbtParseAnalysisReuse } from '../../../src/infrastructure/dbt/dbtParseAnalysisReuse.js';
 import { resolveWorkspaceScopeStorageRoot } from '../../../src/infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 
 import {
@@ -21,7 +21,7 @@ import {
   type DbtAnalysisReuseFixture,
 } from './dbtAnalysisReuseFixtures.js';
 
-describe('native dbt parse analysis reuse', () => {
+describe('native dbt analysis reuse', () => {
   let fixture: DbtAnalysisReuseFixture;
   beforeEach(async () => {
     fixture = await createDbtAnalysisReuseFixture();
@@ -123,7 +123,7 @@ describe('native dbt parse analysis reuse', () => {
       await release.promise;
       return evidence;
     });
-    const reuse = new DbtParseAnalysisReuse(8, 0);
+    const reuse = new DbtAnalysisReuse(8, 0);
     const first = reuse.getOrAnalyze('same-revision', analyze);
     const second = reuse.getOrAnalyze('same-revision', analyze);
     await started.promise;
@@ -146,7 +146,7 @@ describe('native dbt parse analysis reuse', () => {
       return evidence;
     });
     const overflow = vi.fn(async () => evidence);
-    const reuse = new DbtParseAnalysisReuse(1);
+    const reuse = new DbtAnalysisReuse(1);
     const pending = reuse.getOrAnalyze('first-revision', held);
     await started.promise;
     const overflowResult = await reuse
@@ -174,7 +174,7 @@ describe('native dbt parse analysis reuse', () => {
           if (failure === 'rejected') throw new Error('Analysis failed');
           return { ...evidence, status: failure, resources: [], dependencies: [] };
         });
-      const reuse = new DbtParseAnalysisReuse();
+      const reuse = new DbtAnalysisReuse();
       const pending = Promise.allSettled([
         reuse.getOrAnalyze('same-revision', analyze),
         reuse.getOrAnalyze('same-revision', analyze),
@@ -265,50 +265,62 @@ describe('native dbt parse analysis reuse', () => {
     expect(fixture.run).toHaveBeenCalledTimes(2);
   });
 
-  it.each(['source', 'profile', 'environment'] as const)(
-    'refuses old evidence when %s changes while native analysis is in flight',
-    async (dimension) => {
-      const started = deferredSignal();
-      const release = deferredSignal();
-      fixture.run.mockImplementationOnce(async (input) => {
-        started.resolve();
-        await release.promise;
-        return fixture.complete(input);
-      });
-      const analyzer = fixture.analyzer();
-      const pending = analyzer.analyze(fixture.input);
-      await started.promise;
-      if (dimension === 'source')
-        await fixture.writeSource('models/clients.sql', 'select 3 as client_id\n');
-      if (dimension === 'profile')
-        await fixture.writeProfile(REUSE_PROFILE.replace('public', 'changed'));
-      if (dimension === 'environment') fixture.processEnvironment.PATH = 'changed-path';
-      release.resolve();
-      expect(await pending).toMatchObject({
-        status: 'unavailable',
-        diagnostics: [expect.objectContaining({ code: 'dbt_project_changed_during_analysis' })],
-      });
-      expect((await analyzer.analyze(fixture.input)).status).toBe('valid');
-      expect(fixture.run).toHaveBeenCalledTimes(2);
-    }
-  );
+  it.each(
+    (['parse', 'compile'] as const).flatMap((kind) =>
+      (['source', 'profile', 'environment'] as const).map((dimension) => [kind, dimension] as const)
+    )
+  )('refuses old %s evidence when %s changes during native analysis', async (kind, dimension) => {
+    const input = {
+      ...fixture.input,
+      operation: kind === 'parse' ? { kind } : { kind, selectors: ['orders'] },
+    };
+    const started = deferredSignal();
+    const release = deferredSignal();
+    fixture.run.mockImplementationOnce(async (input) => {
+      started.resolve();
+      await release.promise;
+      return fixture.complete(input);
+    });
+    const analyzer = fixture.analyzer();
+    const pending = analyzer.analyze(input);
+    await started.promise;
+    if (dimension === 'source')
+      await fixture.writeSource('models/clients.sql', 'select 3 as client_id\n');
+    if (dimension === 'profile')
+      await fixture.writeProfile(REUSE_PROFILE.replace('public', 'changed'));
+    if (dimension === 'environment') fixture.processEnvironment.PATH = 'changed-path';
+    release.resolve();
+    expect(await pending).toMatchObject({
+      status: 'unavailable',
+      diagnostics: [expect.objectContaining({ code: 'dbt_project_changed_during_analysis' })],
+    });
+    expect((await analyzer.analyze(input)).status).toBe('valid');
+    expect(fixture.run).toHaveBeenCalledTimes(2);
+  });
 
-  it.each(['tenantId', 'projectId', 'environmentId', 'projectRoot'] as const)(
-    'does not share evidence across a different %s',
-    async (dimension) => {
-      const other =
-        dimension === 'projectRoot'
-          ? { ...fixture.input, projectRoot: 'other' }
-          : { ...fixture.input, scope: { ...fixture.input.scope, [dimension]: 'other' } };
-      await fixture.seedProject(other);
-      const analyzer = fixture.analyzer();
-      await analyzer.analyze(fixture.input);
-      const result = await analyzer.analyze(other);
-      expect(result.status).toBe('valid');
-      expect(result.projectRevision.projectRoot).toBe(other.projectRoot);
-      expect(fixture.run).toHaveBeenCalledTimes(2);
-    }
-  );
+  it.each(
+    (['parse', 'compile'] as const).flatMap((kind) =>
+      (['tenantId', 'projectId', 'environmentId', 'projectRoot'] as const).map(
+        (dimension) => [kind, dimension] as const
+      )
+    )
+  )('does not share %s evidence across a different %s', async (kind, dimension) => {
+    const input = {
+      ...fixture.input,
+      operation: kind === 'parse' ? { kind } : { kind, selectors: ['orders'] },
+    };
+    const other =
+      dimension === 'projectRoot'
+        ? { ...input, projectRoot: 'other' }
+        : { ...input, scope: { ...input.scope, [dimension]: 'other' } };
+    await fixture.seedProject(other);
+    const analyzer = fixture.analyzer();
+    await analyzer.analyze(input);
+    const result = await analyzer.analyze(other);
+    expect(result.status).toBe('valid');
+    expect(result.projectRevision.projectRoot).toBe(other.projectRoot);
+    expect(fixture.run).toHaveBeenCalledTimes(2);
+  });
 
   it('does not serve retained success when the authorized project disappears', async () => {
     const analyzer = fixture.analyzer();
@@ -354,21 +366,26 @@ describe('native dbt parse analysis reuse', () => {
     }
   );
 
-  it.each(['model', 'profile'] as const)(
-    'bypasses reuse for dynamic Jinja in the %s',
-    async (location) => {
-      if (location === 'model')
-        await fixture.writeSource('models/orders.sql', 'select {{ run_started_at }}\n');
-      else
-        await fixture.writeProfile(
-          REUSE_PROFILE.replace('schema: public', 'schema: "{{ env_var(\'DBT_SCHEMA\') }}"')
-        );
-      const analyzer = fixture.analyzer();
-      expect((await analyzer.analyze(fixture.input)).status).toBe('valid');
-      expect((await analyzer.analyze(fixture.input)).status).toBe('valid');
-      expect(fixture.run).toHaveBeenCalledTimes(2);
-    }
-  );
+  it.each(
+    (['parse', 'compile'] as const).flatMap((kind) =>
+      (['model', 'profile'] as const).map((location) => [kind, location] as const)
+    )
+  )('bypasses %s reuse for dynamic Jinja in the %s', async (kind, location) => {
+    const input = {
+      ...fixture.input,
+      operation: kind === 'parse' ? { kind } : { kind, selectors: ['orders'] },
+    };
+    if (location === 'model')
+      await fixture.writeSource('models/orders.sql', 'select {{ run_started_at }}\n');
+    else
+      await fixture.writeProfile(
+        REUSE_PROFILE.replace('schema: public', 'schema: "{{ env_var(\'DBT_SCHEMA\') }}"')
+      );
+    const analyzer = fixture.analyzer();
+    expect((await analyzer.analyze(input)).status).toBe('valid');
+    expect((await analyzer.analyze(input)).status).toBe('valid');
+    expect(fixture.run).toHaveBeenCalledTimes(2);
+  });
 
   it('executes compilation independently from retained parse evidence', async () => {
     const analyzer = fixture.analyzer();
@@ -377,13 +394,59 @@ describe('native dbt parse analysis reuse', () => {
       ...fixture.input,
       operation: { kind: 'compile' as const, selectors: ['orders'] },
     };
-    await analyzer.analyze(compile);
-    await analyzer.analyze(compile);
+    const compiled = await analyzer.analyze(compile);
+    expect(compiled.resources.find((resource) => resource.name === 'orders')?.compiledSql).toBe(
+      'select client_id from "public"."clients"'
+    );
+    expect(await analyzer.analyze(compile)).toEqual(compiled);
     await analyzer.analyze(fixture.input);
-    expect(fixture.run).toHaveBeenCalledTimes(3);
+    expect(fixture.run).toHaveBeenCalledTimes(2);
     expect(fixture.run.mock.calls.slice(1).every(([input]) => input.args[0] === 'compile')).toBe(
       true
     );
+  });
+
+  it('separates model selections and shares reordered equivalent compilation selections', async () => {
+    const analyzer = fixture.analyzer();
+    const compile = (selectors: readonly string[]): ReturnType<typeof analyzer.analyze> =>
+      analyzer.analyze({ ...fixture.input, operation: { kind: 'compile', selectors } });
+    const orders = await compile(['orders']);
+    const clients = await compile(['clients']);
+    expect(
+      orders.resources.find((resource) => resource.name === 'clients')?.compiledSql
+    ).toBeUndefined();
+    expect(
+      clients.resources.find((resource) => resource.name === 'orders')?.compiledSql
+    ).toBeUndefined();
+    const both = await compile(['orders', 'clients']);
+    expect(await compile(['clients', 'orders', 'clients'])).toEqual(both);
+    expect(fixture.run).toHaveBeenCalledTimes(3);
+  });
+
+  it('joins concurrent static compilations without borrowing parse evidence', async () => {
+    const analyzer = fixture.analyzer();
+    await analyzer.analyze(fixture.input);
+    const started = deferredSignal();
+    const release = deferredSignal();
+    fixture.run.mockImplementation(async (input) => {
+      started.resolve();
+      await release.promise;
+      return fixture.complete(input);
+    });
+    const input = {
+      ...fixture.input,
+      operation: { kind: 'compile' as const, selectors: ['orders'] },
+    };
+    const pending = [1, 2, 3].map(() => analyzer.analyze(input));
+    await started.promise;
+    release.resolve();
+    const results = await Promise.all(pending);
+    expect(results[1]).toEqual(results[0]);
+    expect(results[2]).toEqual(results[0]);
+    expect(
+      results[0]?.resources.find((resource) => resource.name === 'orders')?.compiledSql
+    ).toBeDefined();
+    expect(fixture.run).toHaveBeenCalledTimes(2);
   });
 
   it('keeps recently read evidence and evicts the least recently used entry at capacity', async () => {

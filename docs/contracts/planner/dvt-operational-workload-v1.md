@@ -77,7 +77,11 @@ extra effective dependencies, non-terminal Sink, unsupported write modes,
 mixed connections and stale identities before dispatch. Unsupported selections
 must not silently drop a publication or revert to a terminal Transform workload.
 Shared publication-intent validation runs before publishing the derived SQL
-artifact as well as before lowering. PreviewPlan does not publish rows, and
+artifact as well as before lowering. Configured publication also requires a
+canonical output-schema fingerprint before artifact storage. Unsupported or
+unresolved output types reject without publishing SQL; repeating Preview does
+not resolve an unsupported type. Unconfigured row sampling may still project
+these outputs without inventing a publication fingerprint. PreviewPlan does not publish rows, and
 Transform row sampling does not change authored disposition or destination.
 
 Compatibility is an additive bounded V1 case, not a parallel V2 or migration.

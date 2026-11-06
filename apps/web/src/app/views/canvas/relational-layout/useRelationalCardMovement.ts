@@ -1,21 +1,18 @@
 /** Owned concern: translate pointer/keyboard gestures to local card positions only. */
 import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import type { CardPosition } from '../canvasRelationalTreeGeometry';
+import { consumeCanvasDragClick } from '../canvasViewportInteraction';
 import type { useRelationalCardPlacement } from './useRelationalCardPlacement';
 
 export type RelationalMovableCard = Readonly<
   CardPosition & {
     id: string;
     offset?: CardPosition;
-    expansionOrigin?: CardPosition;
   }
 >;
 
-function authoredCoordinate(value: number, origin = 0, offset = 0): number {
-  return Math.max(
-    0,
-    origin > 0 && value < origin + offset ? (value * origin) / (origin + offset) : value - offset
-  );
+function authoredCoordinate(value: number, offset = 0): number {
+  return value - offset;
 }
 
 type Drag = {
@@ -34,8 +31,7 @@ export function useRelationalCardMovement(
     ReturnType<typeof useRelationalCardPlacement>,
     'setPosition' | 'previewPosition' | 'finishMovement'
   >,
-  onManualLayout?: () => void,
-  enabled = true
+  onManualLayout?: () => void
 ) {
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
@@ -46,8 +42,8 @@ export function useRelationalCardMovement(
         return [
           card.id,
           {
-            x: authoredCoordinate(displayed.x, card.expansionOrigin?.x, card.offset?.x),
-            y: authoredCoordinate(displayed.y, card.expansionOrigin?.y, card.offset?.y),
+            x: authoredCoordinate(displayed.x, card.offset?.x),
+            y: authoredCoordinate(displayed.y, card.offset?.y),
           },
         ];
       })
@@ -75,7 +71,7 @@ export function useRelationalCardMovement(
   useEffect(() => () => cancelOnUnmount.current(true), []);
   return {
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
-      if (!enabled || event.button !== 0 || drag.current != null) return;
+      if (event.button !== 0 || drag.current != null) return;
       suppressClick.current = false;
       const hit = locate(event.target);
       if (hit == null) return;
@@ -103,8 +99,8 @@ export function useRelationalCardMovement(
       setPosition(
         current.id,
         {
-          x: Math.max(0, current.origin.x + dx / current.zoom),
-          y: Math.max(0, current.origin.y + dy / current.zoom),
+          x: current.origin.x + dx / current.zoom,
+          y: current.origin.y + dy / current.zoom,
         },
         true
       );
@@ -121,10 +117,12 @@ export function useRelationalCardMovement(
       if (drag.current?.pointerId === event.pointerId) finish(true);
     },
     onClickCapture: (event: MouseEvent<HTMLDivElement>) => {
-      if (!suppressClick.current || locate(event.target) == null) return;
-      suppressClick.current = false;
-      event.preventDefault();
-      event.stopPropagation();
+      consumeCanvasDragClick(
+        event,
+        suppressClick,
+        event.currentTarget.contains(event.target as Node) &&
+          locate(event.target)?.element === event.target
+      );
     },
     onKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Escape' && drag.current != null) {
@@ -135,7 +133,6 @@ export function useRelationalCardMovement(
       }
       suppressClick.current = false;
       if (
-        !enabled ||
         drag.current != null ||
         !event.altKey ||
         !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
@@ -148,14 +145,8 @@ export function useRelationalCardMovement(
       onManualLayout?.();
       const step = event.shiftKey ? 40 : 10;
       setPosition(hit.card.id, {
-        x: Math.max(
-          0,
-          hit.card.x + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0)
-        ),
-        y: Math.max(
-          0,
-          hit.card.y + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0)
-        ),
+        x: hit.card.x + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0),
+        y: hit.card.y + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0),
       });
     },
   };

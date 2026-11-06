@@ -9,10 +9,61 @@ import {
   resolveGraphScopedCodeWorkspaceFileTree,
   resolveInitialCodeFilePath,
   resolveInitialDbtProjectFilePath,
+  resolveDbtProjectWorkspaceFilePath,
   resolveProjectRootScopedCodeWorkspaceFileTree,
 } from './codeViewFileSelection';
 
 describe('codeViewFileSelection', () => {
+  it.each([false, true])(
+    'exempts only valid file-model references from graph file ownership (malformed=%s)',
+    (malformed) => {
+      const reference = {
+        schemaVersion: 'workspace-dbt-model-reference.v1',
+        canvasId: 'file-owner',
+        uniqueId: 'model.demo.clientes',
+        relationId: 'reference-relation',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse',
+        },
+        fields: [{ fieldId: 'client-field', name: 'client_id', dataType: 'text', nullable: true }],
+      };
+      const paths = deriveCodeGraphFilePaths({
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
+        nodes: [
+          {
+            id: 'placed-model',
+            name: 'clientes',
+            type: 'MODEL',
+            package: 'dbt',
+            path: 'models/clientes.sql',
+            tags: [],
+            status: 'idle',
+            dependencies: [],
+            metadata: { dbtModelReference: malformed ? { ...reference, fields: [] } : reference },
+          },
+        ],
+        edges: [],
+      });
+      if (malformed) {
+        expect(paths.has('models/clientes.sql')).toBe(true);
+        expect(paths.has('dbt_project.yml')).toBe(true);
+      } else {
+        expect([...paths]).toEqual([]);
+      }
+    }
+  );
+
+  it.each([
+    ['.', 'models/orders.sql', 'models/orders.sql'],
+    ['analytics/dbt', 'models/orders.sql', 'analytics/dbt/models/orders.sql'],
+    ['models', 'models/orders.sql', 'models/models/orders.sql'],
+    ['analytics/dbt/', './models/orders.sql', 'analytics/dbt/models/orders.sql'],
+  ])('qualifies a project-relative resource path (%s, %s)', (root, path, expected) => {
+    expect(resolveDbtProjectWorkspaceFilePath(root, path)).toBe(expected);
+  });
+
   it.each([
     { name: ' OrderItems / v2 ', expected: 'order_items_v2' },
     { name: 'Métric 名', expected: 'm_tric' },
@@ -88,6 +139,21 @@ describe('codeViewFileSelection', () => {
         preferredPath: 'models/orders.sql',
       })
     ).toBe('analytics/dbt/models/orders.sql');
+  });
+
+  it('preserves an authorized workspace preference when a project-relative namesake also exists', () => {
+    const tree: WorkspaceFileEntry[] = [
+      { path: 'models/dbt_project.yml', name: 'dbt_project.yml', kind: 'file' },
+      { path: 'models/orders.sql', name: 'orders.sql', kind: 'file' },
+      { path: 'models/models/orders.sql', name: 'orders.sql', kind: 'file' },
+    ];
+
+    expect(
+      resolveInitialDbtProjectFilePath(tree, {
+        projectRoot: 'models',
+        preferredPath: 'models/orders.sql',
+      })
+    ).toBe('models/orders.sql');
   });
 
   it('opens dbt_project.yml when a file-backed resource has no original path', () => {

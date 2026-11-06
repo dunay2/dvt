@@ -1,9 +1,33 @@
-import { createRef, isValidElement } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+import { act, createRef, isValidElement } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { screen } from '@testing-library/dom';
 
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQueryHarness';
+import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
+import { contextFixture } from '../code/codeWorkspaceFileContext.test-support';
 import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
+
+vi.mock('../code/WorkspaceFileCodeEditor', async () => {
+  const { useWorkspaceFileContentQuery } = await import('../../queries/workspaceQueries');
+  return {
+    WorkspaceFileCodeEditor: ({ path }: { path?: string }) => {
+      const file = useWorkspaceFileContentQuery(path);
+      return (
+        <output data-file-path={path}>{file.isSuccess ? file.data.content : 'Loading'}</output>
+      );
+    },
+  };
+});
+
+let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
+afterEach(async () => {
+  await mounted?.cleanup();
+  mounted = undefined;
+});
 
 const NODE: CanonicalNode = {
   id: 'model.analytics.orders',
@@ -20,7 +44,234 @@ const NODE: CanonicalNode = {
   },
 };
 
+function referencedNode(path: string | undefined, canvasId: string): CanonicalNode {
+  return {
+    ...NODE,
+    path,
+    metadata: {
+      dbtModelReference: {
+        schemaVersion: 'workspace-dbt-model-reference.v1',
+        canvasId,
+        uniqueId: 'model.demo.ventas',
+        relationId: 'placed-output',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse',
+        },
+        fields: [{ fieldId: 'placed-id', name: 'id', dataType: 'text', nullable: true }],
+      },
+    },
+  };
+}
+
 describe('buildDbtWorkspaceFileCodeContributions', () => {
+  it.each(['file-tree', 'configuration', 'project-graph'] as const)(
+    'withholds cached Code while %s authority is revalidated',
+    async (dependency) => {
+      const current = contextFixture('select 9 as current_model', 'current');
+      const config = {
+        ...current.file,
+        name: 'dbt_project.yml',
+        path: 'current/dbt_project.yml',
+        language: 'yaml',
+        content: 'name: demo',
+      };
+      let revalidating = false;
+      let finishCheck: (() => void) | undefined;
+      const check = async (kind: typeof dependency): Promise<void> => {
+        if (revalidating && dependency === kind)
+          await new Promise<void>((resolve) => {
+            finishCheck = resolve;
+          });
+      };
+      const listFiles = vi.fn(async () => {
+        await check('file-tree');
+        return [{ name: config.name, path: config.path, kind: 'file' as const }];
+      });
+      const getFileContent = vi.fn(async (path: string) => {
+        if (path === config.path) {
+          await check('configuration');
+          return config;
+        }
+        return current.file;
+      });
+      const getProjectGraph = vi.fn(async () => {
+        await check('project-graph');
+        return current.project;
+      });
+      const node = referencedNode(
+        'historic/models/ventas.sql',
+        current.project.authorityBinding.canvasId
+      );
+      mounted = await withTestQueryClient(
+        <AppServicesProvider
+          overrides={{
+            ...createAppServicesTestOverrides(),
+            workspaceFilesQuery: { listFiles, getFileContent },
+            dbtProjectGraphQueryPort: { getProjectGraph },
+          }}
+        >
+          {buildDbtWorkspaceFileCodeContributions({ node })[0]?.content}
+        </AppServicesProvider>
+      );
+      await waitForReactQuery(() => screen.queryByText(current.file.content) != null);
+      revalidating = true;
+      const queryKind =
+        dependency === 'configuration'
+          ? 'file-content'
+          : dependency === 'project-graph'
+            ? 'dbt-project-graph'
+            : 'file-tree';
+      await act(async () => {
+        void mounted?.queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[1] === queryKind &&
+            (dependency !== 'configuration' || query.queryKey.at(-1) === config.path),
+        });
+      });
+      await waitForReactQuery(() => finishCheck != null);
+      try {
+        await waitForReactQuery(() => screen.queryByText(current.file.content) == null, {
+          timeoutMs: 1_000,
+        });
+        expect(screen.queryByText(current.file.content)).toBeNull();
+      } finally {
+        await act(async () => {
+          finishCheck?.();
+        });
+      }
+      await waitForReactQuery(() => screen.queryByText(current.file.content) != null);
+      expect(getFileContent).not.toHaveBeenCalledWith(node.path);
+    }
+  );
+
+  it('opens a persisted model instance using current authority after relocation and a fresh mount', async () => {
+    const old = contextFixture('select 1', 'old-root');
+    const current = contextFixture('select 2 as relocated', 'models');
+    current.project.authorityBinding.canvasId = old.project.authorityBinding.canvasId;
+    current.file.authoringAuthority = {
+      kind: 'resolved',
+      binding: current.project.authorityBinding,
+    };
+    const node = referencedNode(old.file.path, old.project.authorityBinding.canvasId);
+    const listFiles = vi
+      .fn()
+      .mockResolvedValue([
+        { name: 'dbt_project.yml', path: 'models/dbt_project.yml', kind: 'file' },
+      ]);
+    const getFileContent = vi.fn(async (path: string) => {
+      if (path === 'models/dbt_project.yml')
+        return {
+          ...current.file,
+          name: 'dbt_project.yml',
+          path,
+          language: 'yaml',
+          content: 'name: demo',
+        };
+      if (path === current.file.path) return current.file;
+      throw new Error(`Unexpected historic file read: ${path}`);
+    });
+    const getProjectGraph = vi.fn().mockResolvedValue(current.project);
+    const saveFileContent = vi.fn();
+    for (let reload = 0; reload < 2; reload += 1) {
+      const contributions = buildDbtWorkspaceFileCodeContributions({ node });
+      mounted = await withTestQueryClient(
+        <AppServicesProvider
+          overrides={{
+            ...createAppServicesTestOverrides(),
+            workspaceFilesQuery: { listFiles, getFileContent },
+            dbtProjectGraphQueryPort: { getProjectGraph },
+            workspaceFileContentCommand: { saveFileContent },
+          }}
+        >
+          {contributions[0]?.content}
+        </AppServicesProvider>
+      );
+      expect(getFileContent).not.toHaveBeenCalledWith(old.file.path);
+      await waitForReactQuery(() => screen.queryByText(current.file.content) != null);
+      expect(screen.getByRole('status').getAttribute('data-file-path')).toBe(
+        'models/models/ventas.sql'
+      );
+      await mounted.cleanup();
+      mounted = undefined;
+    }
+    expect(getProjectGraph).toHaveBeenCalledWith(current.project.authorityBinding);
+    expect(getFileContent).not.toHaveBeenCalledWith(old.file.path);
+    expect(saveFileContent).not.toHaveBeenCalled();
+    expect(node.path).toBe(old.file.path);
+  });
+
+  it.each([
+    'different-canvas',
+    'stale-projection',
+    'missing-model',
+    'ambiguous-project',
+    'unavailable-authority',
+  ] as const)('never falls back to a historic path for %s', async (reason) => {
+    const current = contextFixture('select 1', 'current');
+    const config = {
+      ...current.file,
+      name: 'dbt_project.yml',
+      path: 'current/dbt_project.yml',
+      language: 'yaml',
+      content: 'name: demo',
+    };
+    const node = referencedNode(
+      'old/models/ventas.sql',
+      reason === 'different-canvas' ? 'other-canvas' : current.project.authorityBinding.canvasId
+    );
+    const listFiles = vi
+      .fn()
+      .mockResolvedValue([
+        { name: config.name, path: config.path, kind: 'file' },
+        ...(reason === 'ambiguous-project'
+          ? [{ name: config.name, path: 'other/dbt_project.yml', kind: 'file' }]
+          : []),
+      ]);
+    const getFileContent = vi
+      .fn()
+      .mockResolvedValue(
+        reason === 'unavailable-authority'
+          ? { ...config, authoringAuthority: { kind: 'unresolved', reason: 'missing_authority' } }
+          : config
+      );
+    const getProjectGraph = vi.fn().mockResolvedValue({
+      ...current.project,
+      freshness: reason === 'stale-projection' ? 'stale' : 'fresh',
+      nodes: reason === 'missing-model' ? [] : current.project.nodes,
+    });
+    const saveFileContent = vi.fn();
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          workspaceFilesQuery: { listFiles, getFileContent },
+          dbtProjectGraphQueryPort: { getProjectGraph },
+          workspaceFileContentCommand: { saveFileContent },
+        }}
+      >
+        {buildDbtWorkspaceFileCodeContributions({ node })[0]?.content}
+      </AppServicesProvider>
+    );
+    await waitForReactQuery(() => screen.queryByRole('alert') != null);
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(getFileContent.mock.calls.every(([path]) => path === config.path)).toBe(true);
+    expect(saveFileContent).not.toHaveBeenCalled();
+    if (
+      reason === 'different-canvas' ||
+      reason === 'ambiguous-project' ||
+      reason === 'unavailable-authority'
+    )
+      expect(getProjectGraph).not.toHaveBeenCalled();
+  });
+
+  it('keeps reference identity independent of a captured path', () => {
+    expect(
+      buildDbtWorkspaceFileCodeContributions({ node: referencedNode(undefined, 'owner') })
+    ).toHaveLength(1);
+  });
+
   it('binds a file-backed dbt node to shared read-only Code without changing its authority', () => {
     const editorRef = createRef<WorkspaceFileCodeEditorHandle>();
     const reconcilePersistedFile = vi.fn();

@@ -96,6 +96,6 @@ export function useCanvasRelationalGraphAuthoring(
           );
       },
     },
-    output: createCanvasRelationalOutputActions({ ...args, canonicalConsumers }),
+    output: createCanvasRelationalOutputActions({ ...args, producerIds, canonicalConsumers }),
   } as const;
 }

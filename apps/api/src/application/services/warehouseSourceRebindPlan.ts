@@ -9,6 +9,7 @@ import {
   SourceObjectColumnSchema,
   WorkspaceGraphAuthoringDraftSchema,
   isRelationalSourceObject,
+  workspaceNodeDefinitionId,
   type ConnectedSourceRef,
   type RelationalSourceObject,
   type SourceObjectColumn,
@@ -155,9 +156,8 @@ function locateSourceDefinition(
   nodeId: string
 ): WorkspaceGraphAuthoringNode | undefined {
   const node = nodes.find((candidate) => candidate.id === nodeId);
-  return node?.sourceDefinitionId == null
-    ? node
-    : nodes.find((candidate) => candidate.id === node.sourceDefinitionId);
+  const definitionId = workspaceNodeDefinitionId(node);
+  return definitionId == null ? node : nodes.find((candidate) => candidate.id === definitionId);
 }
 
 function assertImportedSource(located: LocatedSource): LocatedSource {
@@ -399,7 +399,7 @@ function collectReachableNodeIds(
   const reachable = new Set<string>([
     sourceNodeId,
     ...canvas.nodes
-      .filter((node) => node.sourceDefinitionId === sourceNodeId)
+      .filter((node) => workspaceNodeDefinitionId(node) === sourceNodeId)
       .map((node) => node.id),
   ]);
   let changed = true;

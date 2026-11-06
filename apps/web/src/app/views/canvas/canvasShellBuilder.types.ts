@@ -112,7 +112,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'onSetEdgeExecutionGate'
     | 'handleViewportChange'
     | 'handleDrop'
-    | 'handleInspectNode'
+    | 'handleInstantiateNode'
     | 'handleDragOver'
     | 'handleToggleFrozenNode'
     | 'handleCreateAuthoringNode'

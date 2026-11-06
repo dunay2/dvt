@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
-import { projectViewportNodes, resolveVisibleCanonicalNodes } from './canvasViewportNodeProjection';
+import { projectViewportNodes } from './canvasViewportNodeProjection';
 import { viewportNodesEqual } from './canvasViewportNodeEquality';
 import { useCanvasNodePresentations } from './useCanvasNodePresentations';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -38,8 +38,13 @@ export function useCanvasViewportGraphModel({
 }: UseCanvasViewportGraphModelArgs) {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const presentationByNodeId = useCanvasNodePresentations({
-    nodes: resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById),
-    edges: visibleEdges,
+    nodes: [...canonicalNodesById.values()],
+    edges: [
+      ...[...canonicalEdgeBySignature.values()].filter(
+        (edge) => !visibleNodeIds.includes(edge.sourceId) || !visibleNodeIds.includes(edge.targetId)
+      ),
+      ...visibleEdges,
+    ],
   });
   const portCompatibilityByNodeId = useMemo(
     () =>

@@ -5,26 +5,32 @@
  * @consequence No duplicate drag engine, optional legacy path or seeded-created node hides failure.
  * @version 1.0.0
  */
-import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
+import {
+  DbtProjectGraphProjectionSchema,
+  WorkspaceGraphAuthoringDraftSchema,
+} from '@dvt/contracts';
 
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   clickCanvasContextMenuItem,
+  openCanvasNodeOperations,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
+  openWorkbenchProperties,
   revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
+import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../../support/workspaceSession';
 
 describe('Canvas happy path remains writable after create/save', () => {
   beforeEach(() => {
     stubShellBootstrapApis({
-      scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
+      scopes: ['workspace:files:view', 'workspace:graph-draft:view', 'workspace:graph-draft:save'],
     });
     stubE2eJsonApi('GET', '/capabilities', {
       apiVersion: '1.0.0',
@@ -36,6 +42,180 @@ describe('Canvas happy path remains writable after create/save', () => {
       availableWorkspaces: [E2E_PROJECT_WORKSPACE],
     });
     stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
+  });
+
+  it('creates independent file-model references through Elements without navigating to Code or creating SQL files', () => {
+    const binding = {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: 'file-owner',
+      authority: { kind: 'dbt-project-files', projectRoot: '.' },
+    } as const;
+    let currentRoot = '.';
+    stubE2eApi('GET', '/workspace/files', () => ({
+      body: [
+        {
+          name: 'dbt_project.yml',
+          path: currentRoot === '.' ? 'dbt_project.yml' : 'models/dbt_project.yml',
+          kind: 'file',
+        },
+      ],
+    }));
+    stubE2eApi('GET', /\/workspace\/files\/.*dbt_project.yml$/, () => ({
+      body: {
+        name: 'dbt_project.yml',
+        path: currentRoot === '.' ? 'dbt_project.yml' : 'models/dbt_project.yml',
+        language: 'yaml',
+        content: 'name: demo',
+        contentSha256: 'c'.repeat(64),
+        lastModified: '2026-11-04T00:00:00.000Z',
+        authoringAuthority: {
+          kind: 'resolved',
+          binding: { ...binding, authority: { ...binding.authority, projectRoot: currentRoot } },
+        },
+      },
+    }));
+    const project = DbtProjectGraphProjectionSchema.parse({
+      schemaVersion: 'dbt-project-graph-projection.v1',
+      authorityBinding: binding,
+      freshness: 'fresh',
+      adapterType: 'postgres',
+      analysisSha256: 'a'.repeat(64),
+      projectRevision: {
+        projectRoot: '.',
+        projectName: 'demo',
+        contentSetSha256: 'b'.repeat(64),
+        analyzedAt: '2026-11-04T00:00:00.000Z',
+        analyzerVersion: 'native-dbt',
+        dbtVersion: '1.10.0',
+      },
+      nodes: [
+        {
+          uniqueId: 'model.demo.clientes',
+          resourceType: 'model',
+          name: 'clientes',
+          packageName: 'demo',
+          originalFilePath: 'models/clientes.sql',
+          columns: [{ name: 'client_id', dataType: 'text' }],
+          tags: [],
+          visualEditability: { status: 'code_only', reasons: ['File authority'] },
+        },
+      ],
+      edges: [],
+      diagnostics: [],
+      capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 1 },
+      executionTarget: {
+        provider: 'temporal',
+        adapter: 'postgres',
+        targetName: 'dev',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse',
+        },
+        credentialRef: 'env:DBT_PROFILES_DIR',
+        resolutionSource: 'environment-default',
+      },
+    });
+    let currentProject = project;
+    stubE2eApi('GET', '/workspace/dbt/graph', () => ({ body: currentProject }));
+    visitWorkbenchCanvas('en');
+    const modelRow =
+      '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:file-owner:model.demo.clientes"]';
+    cy.get(modelRow)
+      .should('be.visible')
+      .and('not.be.disabled')
+      .and('contain.text', 'models/clientes.sql');
+    dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('.react-flow__node').invoke('attr', 'data-id').as('firstFileInstance');
+    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
+    cy.get(modelRow).click();
+    cy.get('.react-flow__node').should('have.length', 2);
+    cy.get('#canvas-code-main-tab').should('have.attr', 'aria-selected', 'false');
+    cy.wrap(null).should(() => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft: unknown } | undefined;
+      const draft = WorkspaceGraphAuthoringDraftSchema.parse(saved?.draft);
+      const instances = draft.nodes.filter((node) => node.definitionId != null);
+      expect(instances).to.have.length(2);
+      expect(new Set(instances.map((node) => node.id)).size).to.equal(2);
+      expect(new Set(instances.map((node) => node.definitionId)).size).to.equal(1);
+      const definition = draft.nodes.find((node) => node.id === instances[0]!.definitionId)!;
+      expect(definition.metadata?.dbtModelReference).to.include({
+        canvasId: binding.canvasId,
+        uniqueId: 'model.demo.clientes',
+      });
+      expect(instances.every((node) => node.metadata == null)).to.equal(true);
+      expect(draft.edges).to.have.length(0);
+      expect(JSON.stringify(draft)).not.to.contain('compiledSql');
+      expect(getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST')).to.have.length(
+        0
+      );
+      expect(getE2eApiCalls('/workspace/files/models%2Fclientes.sql', 'GET')).to.have.length(0);
+    });
+    revisitWorkbenchCanvas();
+    cy.get('.react-flow__node').should('have.length', 2);
+    cy.get<string>('@firstFileInstance').then((nodeId) => {
+      cy.get(`.react-flow__node[data-id="${nodeId}"]`).should(
+        'contain.text',
+        'models/clientes.sql'
+      );
+      dragCanvasNodeByViewportDelta('clientes', { x: 110, y: 80 }, { nodeId });
+    });
+    revisitWorkbenchCanvas();
+    cy.get('.react-flow__node').should('have.length', 2);
+    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
+    openCanvasNodeOperations('clientes 2');
+    clickCanvasContextMenuItem('Delete');
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.wrap(null).should(() => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft: unknown } | undefined;
+      expect(
+        WorkspaceGraphAuthoringDraftSchema.parse(saved?.draft).nodes.filter(
+          (node) => node.definitionId != null
+        )
+      ).to.have.length(1);
+    });
+    const relocatedBinding = {
+      ...binding,
+      authority: { ...binding.authority, projectRoot: 'models' },
+    };
+    cy.then(() => {
+      // The relocation result changes file authority; already placed definitions remain untouched.
+      currentRoot = 'models';
+      currentProject = {
+        ...project,
+        authorityBinding: relocatedBinding,
+        projectRevision: { ...project.projectRevision, projectRoot: 'models' },
+      };
+      stubE2eJsonApi('GET', '/workspace/files/models%2Fmodels%2Fclientes.sql', {
+        name: 'clientes.sql',
+        path: 'models/models/clientes.sql',
+        language: 'sql',
+        content: 'select 7 as relocated_client',
+        contentSha256: 'e'.repeat(64),
+        lastModified: '2026-11-06T00:00:00.000Z',
+        authoringAuthority: { kind: 'resolved', binding: relocatedBinding },
+      });
+    });
+    for (let reload = 0; reload < 2; reload += 1) {
+      revisitWorkbenchCanvas();
+      cy.get('.react-flow__node').should('have.length', 1);
+      cy.get<string>('@firstFileInstance').then((nodeId) => openWorkbenchProperties(nodeId));
+      cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+      cy.get('[data-slot="canvas-node-workbench-panel"] [data-slot="workspace-file-code-editor"]')
+        .should('have.attr', 'data-file-path', 'models/models/clientes.sql')
+        .find('.view-lines')
+        .should('contain.text', 'relocated_client');
+      cy.then(() => {
+        expect(getE2eApiCalls('/workspace/files/models%2Fclientes.sql', 'GET')).to.have.length(0);
+        expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0);
+        expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+      });
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    }
   });
 
   it('creates and saves a model, reopens without a projection gap, and allows drag', () => {
@@ -74,6 +254,37 @@ describe('Canvas happy path remains writable after create/save', () => {
         cy.contains(copy.draftProjectionGapTitle).should('not.exist');
         cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
         cy.screenshot('canvas-happy-path-after-drag');
+        cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($button) => {
+          if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
+        });
+        cy.get(`[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`)
+          .should('be.visible')
+          .click();
+        cy.get('.react-flow__node').should('have.length', 2);
+        cy.wrap(null).should(() => {
+          const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+            { draft: unknown } | undefined;
+          const graph = WorkspaceGraphAuthoringDraftSchema.parse(saved?.draft);
+          const instance = graph.nodes.find((node) => node.definitionId === nodeId);
+          expect(instance, 'independent reference to the original model').to.exist;
+          expect(instance!.id).not.to.equal(nodeId);
+          expect(instance!.metadata, 'configuration is owned by the definition').to.be.undefined;
+          expect(graph.edges, 'creating an instance adds no dependency').to.have.length(0);
+        });
+        revisitWorkbenchCanvas();
+        cy.get('.react-flow__node').should('have.length', 2);
+        cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+        openCanvasNodeOperations('Model 1 2');
+        clickCanvasContextMenuItem('Delete');
+        cy.get('.react-flow__node').should('have.length', 1).and('have.attr', 'data-id', nodeId);
+        cy.wrap(null).should(() => {
+          const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+            { draft: unknown } | undefined;
+          const graph = WorkspaceGraphAuthoringDraftSchema.parse(saved?.draft);
+          expect(graph.nodeIds).to.deep.equal([nodeId]);
+          expect(graph.nodes.map((node) => node.id)).to.deep.equal([nodeId]);
+          expect(graph.edges).to.have.length(0);
+        });
       });
   });
 });

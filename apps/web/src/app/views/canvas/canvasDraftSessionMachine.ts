@@ -8,6 +8,7 @@ import type {
   CanvasDraftSession,
   CanvasDraftSyncState,
   CanvasDraftWorkingSet,
+  CanvasDraftEdge,
 } from './canvasDraftSession.types';
 
 type BaselineTransitionArgs = {
@@ -36,7 +37,23 @@ function transition(
     savingBaseRevision: undefined,
     savingLocalNodeCatalog: undefined,
     localNodeCatalog,
+    localDefinitionEdges: retainUnpublishedDefinitionEdges(session, record),
   };
+}
+
+function retainUnpublishedDefinitionEdges(
+  session: CanvasDraftSession,
+  record: CanvasAuthoringDraftRecord | null
+): CanvasDraftEdge[] | undefined {
+  const published = new Set(
+    record?.draft.edges.map((edge) =>
+      JSON.stringify(canvasDraftEdgeExecutionGate.fromAuthoringEdge(edge))
+    )
+  );
+  const retained = session.localDefinitionEdges?.filter(
+    (edge) => !published.has(JSON.stringify(edge))
+  );
+  return retained?.length ? retained : undefined;
 }
 
 function createBootstrapping(): CanvasDraftSession {
@@ -184,7 +201,12 @@ function reloadFromRemote(
     return transitionWithRecord(session, 'editing', record, remoteWorkingSet);
   }
   if (!hasDirtyLocalAuthoring(session)) {
-    return transitionWithRecord(session, 'editing', record, remoteWorkingSet);
+    return transitionWithRecord(
+      { ...session, localDefinitionEdges: undefined },
+      'editing',
+      record,
+      remoteWorkingSet
+    );
   }
 
   return transitionWithRecord(

@@ -39,6 +39,7 @@ export function admitSqlSources(
   )
     unsupported('Extension identities must be unambiguous function declarations.');
   const sources: SqlSource[] = [];
+  let hasResolvedProducer = false;
   const physical = new Map<string, string>();
   for (const id of analysis.index.postorder) {
     const entry = analysis.index.relations.get(id)!;
@@ -51,6 +52,7 @@ export function admitSqlSources(
       const producer = producers.get(id);
       if (producer == null)
         unsupported('A producer input requires its authorized connected result.');
+      hasResolvedProducer = true;
       sources.push(...producer.projection.projection.inputs);
       continue;
     }
@@ -96,7 +98,8 @@ export function admitSqlSources(
     physical.set(sourceRef.sourceObjectId, signature);
     sources.push({ relationId: id, sourceRef, ...identity });
   }
-  if (sources.length === 0) unsupported('A physical PostgreSQL source is required.');
+  if (sources.length === 0 && !hasResolvedProducer)
+    unsupported('A physical source or an authorized producer result is required.');
   if (
     sources.some(
       (source) =>

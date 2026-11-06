@@ -6,6 +6,11 @@ import {
 } from './appRouteErrorBoundaryCopy';
 import { createBootstrapFailureCommand } from './bootstrap/appBootstrapCommands';
 import { isBootstrapScreenVisible, showBootstrapFailure } from './bootstrap/appBootstrapScreen';
+import {
+  publishRouteBootstrapPresentation,
+  resetRouteBootstrapPresentation,
+} from './bootstrap/routeBootstrapRegistry';
+import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
 import {
   createBootstrapFailureEvent,
@@ -39,6 +44,7 @@ export default function AppRouteErrorBoundary() {
   const copy = resolveAppRouteErrorBoundaryCopy(applicationLanguage);
   const message = getErrorMessage(error, copy);
   const bootstrapScreenVisible = isBootstrapScreenVisible();
+  const bootstrapRegistration = useActiveRouteBootstrapRegistration();
   const routeId = normalizeFrontendOperabilityRouteId(matches[matches.length - 1]?.id);
   const routeFailureEvent = useMemo(
     () => createRouteFailureEvent(routeId, 'route-boundary-activated'),
@@ -64,10 +70,21 @@ export default function AppRouteErrorBoundary() {
   );
 
   useEffect(() => {
-    if (bootstrapScreenVisible) {
-      showBootstrapFailure(createBootstrapFailureCommand(message));
+    if (!bootstrapScreenVisible) {
+      return;
     }
-  }, [bootstrapScreenVisible, message]);
+
+    if (!bootstrapRegistration) {
+      showBootstrapFailure(createBootstrapFailureCommand(message));
+      return;
+    }
+
+    publishRouteBootstrapPresentation(bootstrapRegistration, { status: 'error', detail: message });
+
+    return () => {
+      resetRouteBootstrapPresentation(bootstrapRegistration);
+    };
+  }, [bootstrapRegistration, bootstrapScreenVisible, message]);
 
   if (bootstrapScreenVisible) {
     return null;

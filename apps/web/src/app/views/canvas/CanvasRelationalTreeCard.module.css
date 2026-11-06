@@ -29,18 +29,6 @@
   height: 76px;
 }
 
-.nodeButton[data-movable='true'] {
-  cursor: grab;
-}
-
-.nodeButton[data-movable='true'][data-dragging='true'] {
-  cursor: grabbing;
-}
-
-.nodeButton[data-movable='false'] {
-  cursor: inherit;
-}
-
 .nodeButton[data-category='read'] {
   border-color: rgb(7 89 133 / 90%);
   background: rgb(8 47 73 / 25%);

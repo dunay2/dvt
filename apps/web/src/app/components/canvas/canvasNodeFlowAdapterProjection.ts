@@ -137,6 +137,7 @@ export function projectCanvasNodeFlowAdapter({
       target: { kind: 'node', nodeId, nodeName: data.name },
       selectedForExecution,
       canMutateGraph: canMutateNodeCommands,
+      canRemovePlacement: data.canRemovePlacement === true,
       canInspectNode: typeof data.onInspectNode === 'function',
       canDuplicateNode: typeof data.onDuplicateNode === 'function',
       canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',

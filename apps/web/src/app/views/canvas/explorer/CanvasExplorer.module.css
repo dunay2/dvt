@@ -48,8 +48,8 @@
 }
 .activity:focus-visible,
 .headerAction:focus-visible,
-.item:focus-visible,
-.importAction:focus-visible {
+.categoryHeading button:focus-visible,
+.item:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: -2px;
 }
@@ -87,6 +87,26 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.categoryHeading {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.categoryHeading button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
 .headerAction {
   display: grid;
   place-items: center;
@@ -99,7 +119,7 @@
   color: var(--text-muted);
   cursor: pointer;
 }
-.headerAction:hover {
+.headerAction:not(:disabled):hover {
   background: var(--surface-subtle);
   color: var(--text-strong);
 }
@@ -136,8 +156,7 @@
 .search:focus-within {
   border-color: var(--focus-ring);
 }
-.search svg,
-.importAction svg {
+.search svg {
   flex-shrink: 0;
   width: 14px;
   height: 14px;
@@ -158,6 +177,10 @@
   padding: 0;
   margin: 8px 0 0;
   list-style: none;
+}
+.list .list {
+  margin: 0;
+  overflow: visible;
 }
 .item {
   display: flex;
@@ -180,7 +203,8 @@
   border-color: var(--status-info);
   background: var(--surface-selected);
 }
-.item:disabled {
+.item:disabled,
+.headerAction:disabled {
   cursor: default;
   opacity: 0.5;
 }
@@ -191,46 +215,11 @@
   flex-direction: column;
   gap: 2px;
 }
-.itemIcon {
-  display: flex;
-  flex: 0 0 16px;
-  color: var(--status-info);
-}
-.itemIcon svg {
-  width: 16px;
-  height: 16px;
-}
-.list[data-presentation='cards'] {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.list[data-presentation='cards'] .item {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 5px 8px;
-  border-color: var(--border-subtle);
-  border-radius: 6px;
-  background: var(--surface-subtle);
-}
-.list[data-presentation='cards'] .item:hover,
-.list[data-presentation='cards'] .item[aria-pressed='true'] {
-  border-color: var(--status-info);
-  background: var(--surface-selected);
-}
-.list[data-presentation='cards'] .item[draggable='true'] {
+.item[draggable='true'] {
   cursor: grab;
 }
-.list[data-presentation='cards'] .item[draggable='true']:active {
+.item[draggable='true']:active {
   cursor: grabbing;
-}
-.list[data-presentation='cards'] .name {
-  line-height: 14px;
-}
-.list[data-presentation='cards'] .description {
-  line-height: 12px;
 }
 .name,
 .description {
@@ -252,19 +241,6 @@
   padding: 8px;
   color: var(--text-muted);
   font-size: 12px;
-}
-.importAction {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px;
-  margin-top: 6px;
-  border: 0;
-  border-radius: 4px;
-  background: var(--surface-subtle);
-  color: var(--text-default);
-  font-size: 12px;
-  cursor: pointer;
 }
 .sourceRow {
   display: flex;

@@ -15,6 +15,7 @@ Open technical and delivery risks that still need mitigation or explicit accepta
 - [Quality](quality/index.md)
 - [Candidate security boundary is not end-to-end enforcement](local-authorization-consumer-gap-20261017.md)
 - [Canvas Save And Readiness Risks](canvas-save-readiness-20261023.md)
+- [dbt Project Root Relocation](dbt-project-root-relocation-20261102.md)
 - [Derived Execution Reuse And SQL Composition Must Preserve Authority](redundant-runtime-work-20261022.md)
 - [Explicit Sink Identity Across Authoring And Publication Admission](explicit-postgres-sink-20261015.md)
 - [LOCAL generation persistence admission risks](local-generation-persistence-20261017.md)

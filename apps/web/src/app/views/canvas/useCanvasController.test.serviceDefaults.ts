@@ -51,27 +51,17 @@ function buildDefaultCanvasHarnessSaveResult(): WorkspaceGraphDraftAuthoringSave
 export function buildDefaultCanvasHarnessServices(
   currentPlan: PlanViewModel
 ): CanvasHarnessState['services'] {
+  const workspaceScope = {
+    tenantId: 'tenant-a',
+    projectId: 'project-a',
+    environmentId: 'dev',
+    targetAdapter: 'temporal',
+  } as const;
   const sessionContext: SessionContextPort = {
-    getWorkspaceScope: () => ({
-      tenantId: 'tenant-a',
-      projectId: 'project-a',
-      environmentId: 'dev',
-      targetAdapter: 'temporal',
-    }),
-    getWorkspaceScopeSnapshot: () => ({
-      tenantId: 'tenant-a',
-      projectId: 'project-a',
-      environmentId: 'dev',
-      targetAdapter: 'temporal',
-    }),
+    getWorkspaceScope: () => workspaceScope,
+    getWorkspaceScopeSnapshot: () => workspaceScope,
     subscribeWorkspaceScope: () => () => undefined,
-    buildRunContext: (runId: string) =>
-      makeRunContext(runId, {
-        tenantId: 'tenant-a',
-        projectId: 'project-a',
-        environmentId: 'dev',
-        targetAdapter: 'temporal',
-      }),
+    buildRunContext: (runId: string) => makeRunContext(runId, workspaceScope),
   };
 
   const workspaceFilesQuery: IWorkspaceFilesQueryPort = {

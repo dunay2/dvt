@@ -14,9 +14,15 @@ const en = {
   empty: 'No elements yet.',
   noMatches: 'No matching elements.',
   importSources: 'Import sources',
+  addModel: 'Add model',
   resize: 'Resize explorer',
   collapse: 'Collapse explorer',
   close: 'Close explorer',
+  dbtModel: 'dbt model',
+  models: 'Models',
+  projectModelsLoading: 'Loading project models…',
+  modelSchemaUnavailable: 'The model output schema or execution connection is unavailable.',
+  projectModelsUnavailable: 'Project models are unavailable. Canvas elements remain accessible.',
 };
 const es: typeof en = {
   navigation: 'Explorador del Canvas',
@@ -27,9 +33,17 @@ const es: typeof en = {
   empty: 'Todavía no hay elementos.',
   noMatches: 'No hay coincidencias.',
   importSources: 'Importar fuentes',
+  addModel: 'Añadir modelo',
   resize: 'Ajustar ancho del explorador',
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',
+  dbtModel: 'Modelo dbt',
+  models: 'Modelos',
+  projectModelsLoading: 'Cargando modelos del proyecto…',
+  modelSchemaUnavailable:
+    'El esquema de salida o la conexión de ejecución del modelo no están disponibles.',
+  projectModelsUnavailable:
+    'Los modelos del proyecto no están disponibles. Puedes seguir consultando los elementos del Canvas.',
 };
 export function resolveCanvasExplorerCopy(language: string): typeof en {
   return language === 'es' ? es : en;

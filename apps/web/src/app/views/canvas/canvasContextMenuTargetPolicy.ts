@@ -6,9 +6,11 @@
  */
 import type { ContextMenuEvent } from './canvasContextMenuPresenter.types';
 import type { CanvasContextMenuPosition } from './canvasInteractionCommandSurface';
+import { isCanvasInteractionControlTarget } from './canvasViewportInteraction';
+import { isCanvasElement } from '../../components/canvas/canvasNodeInteractionBoundary';
 
 export function isCanvasViewportContextTarget(target: EventTarget | null): target is Element {
-  if (!(target instanceof Element)) {
+  if (!isCanvasElement(target) || isCanvasInteractionControlTarget(target)) {
     return false;
   }
 
@@ -20,12 +22,6 @@ export function isCanvasViewportContextTarget(target: EventTarget | null): targe
         '.react-flow__edge',
         '.react-flow__controls',
         '.react-flow__minimap',
-        'button',
-        'input',
-        'textarea',
-        'select',
-        '[contenteditable]:not([contenteditable="false"])',
-        '[data-canvas-node-control]',
         '[data-slot="canvas-graph-search-control"]',
         '[data-slot="canvas-graph-filter-control"]',
         '[data-slot="graph-node-health-popover"]',

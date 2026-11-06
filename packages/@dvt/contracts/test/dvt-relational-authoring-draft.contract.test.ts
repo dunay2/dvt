@@ -261,6 +261,18 @@ describe('DVT relational authoring draft v1', () => {
 
   it.each([
     { x: -1, y: 0 },
+    { x: 0, y: -20.5 },
+    { x: -420.25, y: -180 },
+  ])('round-trips signed finite presentation coordinates %j', (position) => {
+    const key = Object.keys(relationalDraft.positions)[0]!;
+    const positions = { ...relationalDraft.positions, [key]: position };
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.parse({ ...relationalDraft, positions }).positions
+    ).toEqual(positions);
+  });
+
+  it.each([
+    { x: 0, y: -Infinity },
     { x: 0, y: Infinity },
     { x: NaN, y: 0 },
   ])('rejects invalid layout-only coordinates %j', (position) => {

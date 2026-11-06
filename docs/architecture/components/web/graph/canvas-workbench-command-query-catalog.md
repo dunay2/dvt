@@ -2,13 +2,33 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-10-24
+last_reviewed: 2026-11-04
 planning_type: architecture
 ---
 
 # Canvas Workbench Command And Query Catalog
 
 ## Purpose
+
+File-owned Sources and Models may have repeated visual placements through
+`PersistCanvasLayout` / `GetCanvasLayout`. The layout stores instance/resource
+IDs and coordinates, never a copied semantic graph. The existing contextual
+graph query resolves current definitions; inspection and execution use the
+original resource identity. A fresh authorized project query and completed
+layout hydration admit drops; stale, missing, unsupported and foreign resource
+IDs reject. Removing one placement cannot remove a definition or a sibling.
+This layout capability does not grant edge editing or SQL writes. The rationale
+and current/target diagram are in the Code workspace component guide.
+
+Native file-model instances use the existing `CreateCanvasNode` and
+`SaveWorkspaceGraphDraft` rails, distinct from resource layout placements.
+Definitions retain scoped references and assigned output IDs; placements are
+independent cards with no automatic dependencies. Protected
+`PreviewCanvasTransformRows` and `PreviewPlan` collaborate with the existing
+native dbt analyzer through a model-producer application port. File-view
+authorization, current authority/revision/schema and the provider connection
+must resolve before compiling selected producers. This adds no SQL write rail,
+file mutation, endpoint or second graph authority.
 
 This catalog is the Web Graph bounded-context C&Q list for the Canvas
 workbench, Canvas route placement, project resource discovery, route-local
@@ -25,7 +45,6 @@ product semantics.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
-- `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
 - `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
 - `docs/architecture/components/web/graph/canvas-shell-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
@@ -93,6 +112,38 @@ flowchart LR
   Code --> Focus
 ```
 
+## Single project catalogue
+
+The single Elements activity presents project definitions under independently
+collapsible Sources and Models categories. Category additions delegate to the
+existing `ImportWarehouseSources` and `CreateCanvasAuthoringNode` adapters; they do not
+introduce a catalogue writer. Available connection objects, registered definitions
+and placed instances remain distinct. Repeated source placement uses the same
+guarded instance command and never creates a SQL file per placement.
+
+Activation in Elements requests creation, never file navigation or camera focus.
+Click uses the visible Canvas center and drag uses the dropped graph position;
+both reuse native node admission or the existing local reference-placement rail.
+Instances reference one registered definition and retain their own placement
+identity, name and position. They do not create a consumer Read, copy the model
+document or add a dependency edge to the original. The shared contract resolves
+configuration and query-time input context from the definition. Derived input
+context is neither persisted nor displayed as automatic Canvas connections.
+Occurrence references are excluded from definition discovery.
+
+Presentation invalidation follows changed nodes and their consumers through the
+previous and current dependency graph, including shared-definition references.
+Deleting or editing an unrelated card preserves the existing presentation object
+and does not query its schema again. Affected cards retain their displayed fields
+while pending; cancelled revisions cannot publish. This is local reuse within the
+existing contextual graph query, not a new cache or mutation rail.
+`ListWorkspaceFiles`, `GetWorkspaceFileContent` and `ProjectDbtGraphFromFiles`
+remain scoped queries. File models without native instance admission are visible
+but disabled in the native catalogue; the Code explorer still opens their files.
+General external-model instantiation is not granted by this correction.
+The existing shared list and creation catalogue own search, category disclosure,
+capability gating and focus. [Prospective design and negative tests](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
+
 ## C&Q Summary
 
 ### Existing transform preview projection boundary
@@ -102,6 +153,13 @@ query declared by [GH-3237](https://github.com/dunay2/dvt/issues/3237). PostgreS
 producer composition is internal to that rail and its existing `PreviewPlan`,
 `CompilePlan`, and `StartRun` consumers; it introduces no new command, query,
 authorization path, or public package API.
+
+Inside a native Model, Read cards in the existing canonical
+`connectedModelRelationIds` inventory use that same selected-relation query. This
+includes dbt model inputs. They retain the displayed model name and the existing
+saved-revision, output-plan, readiness and permission guards. Physical Source
+cards keep their governed physical-source query; missing source references never
+become guessed model inputs. Selecting a card does not execute either query.
 
 Producer composition builds AST and projection metadata first. Internal producer
 bindings carry AST, ordering, output, and source metadata without SQL text. SQL
@@ -686,10 +744,12 @@ authoring presentation state. Cancel removes them without a semantic write.
 After admission, pending lines are discarded and the tree is rendered only from
 the canonical projection. Occupied-port replacement, cycles, incompatible
 arity, producer fan-out and read-only mutation fail closed. The terminal Model
-Output accepts one operation output, never a direct source/input card, and
-remains a passive publication boundary. Existing direct source-to-Output wires
-remain visible and removable; disconnecting preserves both cards and frees the
-producer without inserting an operation. This authoring admission change does
+Output accepts one admitted producer, including a Source occurrence or a dbt
+model reference, and remains a passive publication boundary. A complete direct
+publication uses its existing consumer-owned canonical Read and producer
+reference. It does not copy upstream operations or SQL, create a dependency on
+another placement, or require a visible intermediate operation. Disconnecting
+preserves both cards and frees the producer. This authoring admission change does
 not rewrite saved drafts or alter outer Canvas dependency rules. The old
 operation-drop behavior that mutated whichever relation happened to be selected
 is retired rather than kept as a fallback.
@@ -697,8 +757,10 @@ is retired rather than kept as a fallback.
 The connection command counts canonical tree consumers, staged operation ports
 and the terminal Output together; separate handlers must not admit a second
 consumer. Negative tests cover fan-out across operations and Output, reuse of
-one instance on both JOIN ports, direct source-to-Output admission and occupied
-ports. Disconnect/reconnect and two aliased instances remain positive cases.
+one instance on both JOIN ports, unknown producers and occupied ports. Direct
+source/model publication, disconnect/reconnect and two aliased instances remain
+positive cases. Apply and reopening retain the canonical producer identity and
+the protected Preview consumes that same publication.
 
 Once Apply absorbs every pending source and operation into the canonical tree,
 retire the completed authoring draft. A non-null terminal snapshot with no

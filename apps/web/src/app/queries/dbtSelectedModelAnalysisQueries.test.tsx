@@ -3,13 +3,14 @@
 import { DbtSelectedModelAnalysisSchema, type DbtSelectedModelAnalysis } from '@dvt/contracts';
 import { QueryClient } from '@tanstack/react-query';
 import { act, createElement } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import type { DbtProjectFilesAuthorityBinding } from '../ports/dbtProjectGraph';
 import type { SessionContextPort, WorkspaceScope } from '../ports/sessionContext';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import { contextFixture } from '../views/code/codeWorkspaceFileContext.test-support';
 import { useDbtSelectedModelAnalysisQuery } from './dbtSelectedModelAnalysisQueries';
 import { queryKeys } from './queryKeys';
 
@@ -61,6 +62,50 @@ function analysisWithRevision(digest: string): DbtSelectedModelAnalysis {
 }
 
 describe('selected dbt model analysis query', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('recovers verified evidence into a fresh query client without another analysis request', async () => {
+    const { project, analysis } = contextFixture();
+    const acceptedBinding = {
+      ...project.authorityBinding,
+      authority: { kind: 'dbt-project-files' as const, projectRoot: 'inline_code_demo' },
+    };
+    const analyzeSelectedModel = vi.fn(async () => analysis);
+    let observed: ReturnType<typeof useDbtSelectedModelAnalysisQuery> | undefined;
+    function Probe(): null {
+      observed = useDbtSelectedModelAnalysisQuery(acceptedBinding, analysis.selectedUniqueId, {
+        enabled: false,
+        revisionToken: `${project.analysisSha256}:${project.projectRevision.contentSetSha256}`,
+      });
+      return null;
+    }
+    const ui = (): ReturnType<typeof createElement> =>
+      createElement(AppServicesProvider, {
+        overrides: {
+          ...createAppServicesTestOverrides(),
+          dbtSelectedModelAnalysisQueryPort: { analyzeSelectedModel },
+        },
+        children: createElement(Probe),
+      });
+    const first = await withTestQueryClient(ui());
+    try {
+      expect(observed?.data).toBeUndefined();
+      await act(async () => {
+        await observed?.refetch();
+      });
+      await waitForReactQuery(() => observed?.isSuccess === true);
+    } finally {
+      await first.cleanup();
+    }
+    const reloaded = await withTestQueryClient(ui());
+    try {
+      expect(observed?.data).toEqual(analysis);
+      expect(analyzeSelectedModel).toHaveBeenCalledTimes(1);
+    } finally {
+      await reloaded.cleanup();
+    }
+  });
+
   it('does not retry a rejected analysis automatically and permits explicit recovery', async () => {
     const result = analysisWithRevision('1'.repeat(64));
     const failure = new Error('Selected model analysis request failed.');

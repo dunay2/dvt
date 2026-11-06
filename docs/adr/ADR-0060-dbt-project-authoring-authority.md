@@ -112,6 +112,32 @@ Authority resolution is exhaustive and fail-closed:
 Missing and mixed authority are typed refusals. Absence is never interpreted as
 an implicit graph-draft default.
 
+### Lossless root relocation
+
+`RelocateDbtProjectRoot` may move an existing file-authoritative project to the
+scoped workspace root `.`. This changes its location reference, not its authority
+mode. It preserves the Canvas ID, dbt project name, project-relative paths and
+file bytes. Native graph models retain their Substrait authority.
+
+`PreviewDbtProjectRootRelocation` is a read-only query. Its plan identifies the
+current authority revision, source and destination paths, and file revisions.
+The command repeats authorization and revision checks on the server. Multiple
+project owners, mixed authority, conflicting destination content, unsafe paths,
+symlinks, private files and unaccounted source files are refusals.
+
+The existing workspace batch gateway owns conditional file publication. Its
+complete-subtree precondition is checked under the mutation lock. A private
+recovery snapshot precedes destructive publication; a conditional authority
+update follows proven file publication under ordered authority locks. Retries
+must prove current file postconditions before completing the root reference.
+Changed files are conflicts, not permission to overwrite user edits. Ambiguous
+interruption states retain the snapshot and fail closed for operator recovery.
+Only empty former source directories may be removed.
+
+This operation does not admit graph/file authority conversion, regeneration of
+imported SQL, publication into a file-owned root by another authoring mode, or
+Git lifecycle operations. Those boundaries retain their existing rules.
+
 ## Command And Query Rails
 
 The following existing rails remain canonical and are extended in place:

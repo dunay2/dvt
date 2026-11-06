@@ -189,10 +189,6 @@ body {
     var(--canvas-grid-gap, 20px) var(--canvas-grid-gap, 20px);
 }
 
-.react-flow__node {
-  cursor: pointer;
-}
-
 .react-flow__node.canvas-graph-search-active-node {
   border-radius: var(--radius);
   outline: 3px solid var(--canvas-search-active-ring);

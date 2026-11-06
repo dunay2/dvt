@@ -66,31 +66,21 @@ function DraftViewport({
           event.preventDefault();
           const droppedOperation = readCanvasRelationalOperationDrag(event.dataTransfer);
           if (droppedOperation != null) {
-            const bounds =
-              viewport.contentRef.current?.getBoundingClientRect() ??
-              event.currentTarget.getBoundingClientRect();
+            const position = viewport.projectPointer(event);
             const id = actions.stageOperation(droppedOperation);
-            if (id != null) {
+            if (id != null && position != null) {
               viewport.stopAutoFit();
-              setPosition(id, {
-                x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
-                y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
-              });
+              setPosition(id, position);
             }
             return;
           }
           const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
           if (nodeId != null) {
-            const bounds =
-              viewport.contentRef.current?.getBoundingClientRect() ??
-              event.currentTarget.getBoundingClientRect();
+            const position = viewport.projectPointer(event);
             const id = actions.dropSource(nodeId);
-            if (id != null) {
+            if (id != null && position != null) {
               viewport.stopAutoFit();
-              setPosition(id, {
-                x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
-                y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
-              });
+              setPosition(id, position);
             }
           }
         }}
@@ -124,7 +114,6 @@ function DraftViewport({
             selectedLocator={selectedLocator}
             copy={copy}
             zoom={viewport.zoom}
-            panMode={viewport.panMode || viewport.panning}
             onManualLayout={viewport.stopAutoFit}
             semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
             onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
@@ -140,8 +129,6 @@ function DraftViewport({
           minimumZoom={viewport.minimumZoom}
           onChange={viewport.changeZoom}
           onFit={viewport.fit}
-          panMode={viewport.panMode}
-          onTogglePan={viewport.togglePanMode}
         />
       </div>
     </div>

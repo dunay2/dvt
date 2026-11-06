@@ -117,6 +117,27 @@ describe('LocalWorkspaceFileBatchMutationGateway', () => {
     await expect(read('analytics/models/sources/new.yml')).rejects.toThrow();
   });
 
+  it('rejects a source file added after a complete relocation inventory was observed', async () => {
+    await seed('imported/dbt_project.yml', 'name: project\n');
+    await seed('imported/models/later.sql', 'select 2\n');
+    const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
+    const mutation = {
+      idempotencyKey: 'root-relocation-inventory',
+      expectedInventory: { root: 'imported', paths: ['imported/dbt_project.yml'] },
+      expectedFiles: [
+        { path: 'imported/dbt_project.yml', expectedContentSha256: sha256('name: project\n') },
+        { path: 'dbt_project.yml' },
+      ],
+      writes: [{ path: 'dbt_project.yml', content: 'name: project\n' }],
+      deletes: ['imported/dbt_project.yml'],
+    };
+
+    expect((await gateway.apply(SCOPE, mutation)).kind).toBe('conflict');
+    await expect(read('dbt_project.yml')).rejects.toThrow();
+    await expect(read('imported/dbt_project.yml')).resolves.toBe('name: project\n');
+    await expect(read('imported/models/later.sql')).resolves.toBe('select 2\n');
+  });
+
   it('restores every original and removes new files when publication fails midway', async () => {
     await seed('analytics/models/sources/a.yml', 'a: original\n');
     await seed('analytics/models/sources/b.yml', 'b: original\n');

@@ -6,6 +6,8 @@ import { flushSync } from 'react-dom';
 
 import type { ContextMenuEvent } from './canvasContextMenuPresenter.types';
 import { resolveCanvasViewportContextMenuRequest } from './canvasContextMenuTargetPolicy';
+import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
+import { isCanvasElement } from '../../components/canvas/canvasNodeInteractionBoundary';
 import {
   buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
@@ -101,9 +103,17 @@ export function useCanvasContextMenuPresenter({
     ]
   );
 
-  const openAddNodeCatalog = useCallback(
-    (screenPosition: CanvasContextMenuPosition, opener?: HTMLElement) => {
-      const flowPosition = screenToFlowPosition(screenPosition);
+  const openAddNodeCatalog = useCallback<UseCanvasContextMenuPresenterResult['openAddNodeCatalog']>(
+    (screenPosition, opener, options) => {
+      const flowPosition = options?.flowPosition ?? screenToFlowPosition(screenPosition);
+      const roles = options?.roles;
+      const kinds =
+        roles == null
+          ? authoringNodeKinds
+          : authoringNodeKinds.filter((registration) => roles.includes(registration.role));
+      const offersSourceImport = Boolean(
+        canOpenSourceImport && onOpenSourceImport && (roles == null || roles.includes('input'))
+      );
       setKeyboardMenuOpen(false);
       const sourceModel = buildCanvasContextMenuModel({
         target: {
@@ -112,9 +122,9 @@ export function useCanvasContextMenuPresenter({
           flowPosition,
         },
         canMutateGraph: canEditEdges,
-        canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+        canOpenSourceImport: offersSourceImport,
         canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
-        authoringNodeKinds,
+        authoringNodeKinds: kinds,
       });
 
       markContextMenuOpened({ targetKind: 'pane', screenPosition, opener });
@@ -122,8 +132,8 @@ export function useCanvasContextMenuPresenter({
         setModel(
           buildCanvasAddNodeCatalogMenuModel({
             sourceModel,
-            authoringNodeKinds,
-            canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+            authoringNodeKinds: kinds,
+            canOpenSourceImport: offersSourceImport,
             canCreateAuthoringNodes: canEditEdges,
           })
         );
@@ -143,8 +153,7 @@ export function useCanvasContextMenuPresenter({
 
   const handleViewportContextMenuKeyDown = useCallback(
     (event: ContextMenuKeyboardEvent) => {
-      const opensContextMenu =
-        event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
+      const opensContextMenu = resolveCanvasKeyboardAction(event) === 'context-menu';
       if (!opensContextMenu || event.target !== event.currentTarget) {
         return;
       }
@@ -171,7 +180,7 @@ export function useCanvasContextMenuPresenter({
   const handleViewportContextMenuEvent = useCallback(
     (event: ContextMenuEvent) => {
       const targetsNodeShell =
-        event.target instanceof Element &&
+        isCanvasElement(event.target) &&
         event.target.closest('[data-slot="canvas-node-shell"]') != null;
       if (targetsNodeShell) {
         return;
@@ -184,7 +193,7 @@ export function useCanvasContextMenuPresenter({
       }
 
       const targetsEdge =
-        event.target instanceof Element && event.target.closest('.react-flow__edge') != null;
+        isCanvasElement(event.target) && event.target.closest('.react-flow__edge') != null;
       if (targetsEdge) {
         return;
       }

@@ -10,6 +10,7 @@ import {
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
   WorkspaceGraphAuthoringDraftSchema,
+  workspaceNodeDefinitionId,
   type CanvasAuthoringAuthorityBinding,
   type ConnectedSourceRef,
   type WorkspaceGraphAuthoringDraft,
@@ -312,7 +313,8 @@ function indexImportedSourceDefinitions(
 ): ReadonlyMap<string, string> {
   const definitionIdsByBinding = new Map<string, string>();
   for (const node of nodes) {
-    if (node.pluginId !== 'dvt.warehouse-source' || node.sourceDefinitionId != null) continue;
+    if (node.pluginId !== 'dvt.warehouse-source' || workspaceNodeDefinitionId(node) != null)
+      continue;
     const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
       node.metadata?.connectedSourceRef
     );

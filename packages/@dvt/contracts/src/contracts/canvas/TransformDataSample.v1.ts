@@ -17,6 +17,24 @@ export const TRANSFORM_DATA_SAMPLE_MAX_LIMIT = 50 as const;
 export const TRANSFORM_DATA_SAMPLE_MAX_COLUMNS = 512 as const;
 
 const NonBlankStringSchema = z.string().trim().min(1);
+const TransformLiveProvenanceSchema = LiveDataPreviewProvenanceSchema.safeExtend({
+  sourceRefs: z.array(LiveDataPreviewProvenanceSchema.shape.sourceRefs.element),
+  modelRefs: z
+    .array(
+      z
+        .object({
+          canvasId: NonBlankStringSchema,
+          uniqueId: NonBlankStringSchema,
+          contentSetSha256: NonBlankStringSchema.refine(isSha256HexString),
+          analysisSha256: NonBlankStringSchema.refine(isSha256HexString),
+        })
+        .strict()
+    )
+    .min(1)
+    .optional(),
+}).refine((value) => value.sourceRefs.length > 0 || (value.modelRefs?.length ?? 0) > 0, {
+  message: 'LIVE Transform provenance requires a physical source or an authorized model revision.',
+});
 
 export const TransformDataSampleRequestSchema = z
   .object({
@@ -57,7 +75,7 @@ export const TransformDataSampleResponseSchema = z
     rows: z.array(TransformDataSampleRowSchema).max(TRANSFORM_DATA_SAMPLE_MAX_LIMIT),
     limit: z.number().int().positive().max(TRANSFORM_DATA_SAMPLE_MAX_LIMIT),
     truncated: z.boolean(),
-    provenance: LiveDataPreviewProvenanceSchema,
+    provenance: TransformLiveProvenanceSchema,
   })
   .strict()
   .superRefine((sample, context) => {

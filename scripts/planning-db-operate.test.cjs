@@ -9,6 +9,8 @@ require('./planning-db-operate-tests/catalog-current-document.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization-retirement.test.cjs');
 require('./planning-db-operate-tests/fowler-analysis.test.cjs');
 require('./planning-db-operate-tests/component-create.test.cjs');
+require('./planning-db-operate-tests/component-reclassification.test.cjs');
+require('./planning-db-operate-tests/component-parent-authority.test.cjs');
 require('./planning-db-operate-tests/architecture-parse.test.cjs');
 require('./planning-db-operate-tests/architecture-plan.test.cjs');
 require('./planning-db-operate-tests/architecture-fitness.test.cjs');

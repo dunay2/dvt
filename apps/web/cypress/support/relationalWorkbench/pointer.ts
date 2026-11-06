@@ -1,7 +1,8 @@
 /** Owned concern: drive real browser pointer capture, including the Cypress iframe scale. */
 function browserPoint(
   element: HTMLElement | undefined,
-  verticalFraction = 0.5
+  verticalFraction = 0.5,
+  horizontalFraction = 0.5
 ): { x: number; y: number; scale: number } {
   if (element === undefined) throw new Error('Expected a browser pointer target.');
   const bounds = element.getBoundingClientRect();
@@ -9,7 +10,7 @@ function browserPoint(
   const frame = window.parent.document.querySelector('iframe.aut-iframe')!.getBoundingClientRect();
   const scale = frame.width / window.innerWidth;
   return {
-    x: frame.left + (bounds.left + bounds.width / 2) * scale,
+    x: frame.left + (bounds.left + bounds.width * horizontalFraction) * scale,
     y: frame.top + (bounds.top + bounds.height * verticalFraction) * scale,
     scale,
   };
@@ -30,17 +31,18 @@ export function moveWorkbenchCard(
   dx: number,
   dy: number,
   observe?: (element: HTMLElement, dx: number, dy: number) => void,
-  beforeRelease?: () => void
+  beforeRelease?: () => void,
+  at: Readonly<{ x?: number; y?: number }> = {}
 ): void {
   cy.get(selector)
     .should('be.visible')
     .then(($card) => {
-      const { x, y, scale } = browserPoint($card[0]);
+      const { x, y, scale } = browserPoint($card[0], at.y, at.x);
       const events = [
         { type: 'mouseMoved', x, y, buttons: 0 },
         { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },
-        ...Array.from({ length: observe == null ? 1 : 10 }, (_, index) => {
-          const fraction = (index + 1) / (observe == null ? 1 : 10);
+        ...Array.from({ length: 10 }, (_, index) => {
+          const fraction = (index + 1) / 10;
           return {
             type: 'mouseMoved',
             x: x + dx * fraction * scale,
@@ -76,6 +78,33 @@ export function moveWorkbenchCard(
         }
       });
     });
+}
+
+/** Locate visible background before using the same native drag driver as cards. */
+export function panWorkbenchViewport(
+  selector: string,
+  dx: number,
+  dy: number,
+  beforeRelease?: () => void
+): void {
+  cy.get(selector).then(($surface) => {
+    const surface = $surface[0]!;
+    const bounds = surface.getBoundingClientRect();
+    const background = new Set<Element | null>([
+      surface,
+      surface.firstElementChild,
+      surface.querySelector('[data-slot="canvas-relational-tree-layout"]'),
+    ]);
+    let at: { x: number; y: number } | undefined;
+    for (let y = 8; y < bounds.height && at == null; y += 24) {
+      for (let x = 8; x < bounds.width && at == null; x += 24) {
+        const hit = surface.ownerDocument.elementFromPoint(bounds.left + x, bounds.top + y);
+        if (hit != null && background.has(hit)) at = { x: x / bounds.width, y: y / bounds.height };
+      }
+    }
+    if (at == null) throw new Error('Expected visible Canvas background for a native pan.');
+    moveWorkbenchCard(selector, dx, dy, undefined, beforeRelease, at);
+  });
 }
 
 /** Native HTML drag: capture the real writer, never synthesize a field reference. */

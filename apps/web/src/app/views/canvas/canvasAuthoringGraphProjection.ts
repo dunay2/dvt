@@ -1,6 +1,10 @@
 /** Owned concern: compose semantic authoring truth from protected draft semantics and explicit route-local additions. */
 import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
-import { resolveWorkspaceSourceInstances } from '@dvt/contracts';
+import {
+  resolveWorkspaceNodeInstances,
+  workspaceNodeDefinitionId,
+  withWorkspaceGraphAuthoringEdgeExecutionGate,
+} from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftEdge } from './canvasDraftSession.types';
 
@@ -12,6 +16,7 @@ type BuildCanvasAuthoringGraphProjectionArgs = {
   visibleEdges: readonly CanvasAuthoringVisibleEdge[];
   draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
+  localDefinitionEdges?: readonly CanvasDraftEdge[];
 };
 
 export type CanvasAuthoringGraphProjection = {
@@ -48,7 +53,7 @@ function mergeDraftSemanticNodes(args: {
     scopedNodeIds,
   });
 
-  return resolveWorkspaceSourceInstances(selectScopedMergedNodes({ mergedNodes, scopedNodeIds }));
+  return resolveWorkspaceNodeInstances(selectScopedMergedNodes({ mergedNodes, scopedNodeIds }));
 }
 
 function indexScopedDraftSemanticNodes(args: {
@@ -116,27 +121,37 @@ function mergeDraftSemanticEdges(args: {
   draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   visibleEdges: readonly CanvasAuthoringVisibleEdge[];
   knownNodeIds: ReadonlySet<string>;
+  visibleNodeIds: ReadonlySet<string>;
 }): CanonicalEdge[] {
-  const { draftSemanticGraph, visibleEdges, knownNodeIds } = args;
+  const { draftSemanticGraph, visibleEdges, knownNodeIds, visibleNodeIds } = args;
+  const visibleSignatures = new Set(visibleEdges.map(edgeSignature));
   const mergedEdges = new Map<string, CanonicalEdge>();
 
   for (const edge of draftSemanticGraph?.canonicalEdges ?? []) {
-    if (hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds }))
+    if (
+      hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds }) &&
+      (!visibleNodeIds.has(edge.sourceId) ||
+        !visibleNodeIds.has(edge.targetId) ||
+        visibleSignatures.has(edgeSignature(edge)))
+    )
       mergedEdges.set(edgeSignature(edge), edge);
   }
   for (const edge of visibleEdges) {
     if (!hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds })) continue;
     const signature = edgeSignature(edge);
     const canonical = mergedEdges.get(signature) ?? buildVisibleFallbackCanonicalEdge(edge);
-    mergedEdges.set(
-      signature,
-      edge.inputBindings == null
-        ? canonical
-        : {
-            ...canonical,
-            metadata: { ...canonical.metadata, inputBindings: edge.inputBindings },
-          }
+    const metadata = withWorkspaceGraphAuthoringEdgeExecutionGate(
+      canonical.metadata,
+      edge.executionGate ?? 'open'
     );
+    const projected = { ...canonical };
+    if (metadata == null && edge.inputBindings == null) delete projected.metadata;
+    else
+      projected.metadata = {
+        ...metadata,
+        ...(edge.inputBindings == null ? {} : { inputBindings: edge.inputBindings }),
+      };
+    mergedEdges.set(signature, projected);
   }
 
   return [...mergedEdges.values()];
@@ -147,15 +162,24 @@ export function buildCanvasAuthoringGraphProjection({
   visibleEdges,
   draftSemanticGraph,
   localCanonicalNodes,
+  localDefinitionEdges = [],
 }: BuildCanvasAuthoringGraphProjectionArgs): CanvasAuthoringGraphProjection {
   const scopedNodeIds = [
     ...new Set([
       ...visibleNodeIds,
       ...(draftSemanticGraph?.canonicalNodes ?? [])
-        .filter((node) => node.role === 'input' && node.sourceDefinitionId == null)
+        .filter(
+          (node) =>
+            (node.role === 'input' || node.role === 'transform') &&
+            workspaceNodeDefinitionId(node) == null
+        )
         .map((node) => node.id),
       ...localCanonicalNodes
-        .filter((node) => node.role === 'input' && node.sourceDefinitionId == null)
+        .filter(
+          (node) =>
+            (node.role === 'input' || node.role === 'transform') &&
+            workspaceNodeDefinitionId(node) == null
+        )
         .map((node) => node.id),
     ]),
   ];
@@ -165,13 +189,12 @@ export function buildCanvasAuthoringGraphProjection({
     scopedNodeIds,
   });
   const visibleIds = new Set(visibleNodeIds);
-  const knownNodeIds = new Set(
-    canonicalNodes.filter((node) => visibleIds.has(node.id)).map((node) => node.id)
-  );
+  const knownNodeIds = new Set(canonicalNodes.map((node) => node.id));
   const canonicalEdges = mergeDraftSemanticEdges({
     draftSemanticGraph,
-    visibleEdges,
+    visibleEdges: [...localDefinitionEdges, ...visibleEdges],
     knownNodeIds,
+    visibleNodeIds: visibleIds,
   });
 
   return {

@@ -8,6 +8,11 @@ export const canvasNodeEmbeddedControlProps: Readonly<
 
 const CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR = `[${CANVAS_NODE_EMBEDDED_CONTROL_ATTRIBUTE}]`;
 
+export function isCanvasElement(target: EventTarget | null): target is Element {
+  const view = (target as Element | null)?.ownerDocument?.defaultView;
+  return view != null && target instanceof view.Element;
+}
+
 export function isCanvasNodeEmbeddedControlTarget(target: EventTarget | null): boolean {
-  return target instanceof Element && target.closest(CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR) != null;
+  return isCanvasElement(target) && target.closest(CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR) != null;
 }

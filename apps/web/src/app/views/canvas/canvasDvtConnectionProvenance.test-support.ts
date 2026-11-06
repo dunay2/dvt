@@ -1,3 +1,4 @@
+import type { ConnectionRef } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 export const connectionRef = {
@@ -21,6 +22,25 @@ export const source: CanonicalNode = {
   role: 'input',
   metadata: { connectionRef },
 };
+export function dbtModel(
+  connection: ConnectionRef = connectionRef,
+  id = 'dbt-model'
+): CanonicalNode {
+  return {
+    ...transform,
+    id,
+    metadata: {
+      dbtModelReference: {
+        schemaVersion: 'workspace-dbt-model-reference.v1',
+        canvasId: 'file-canvas',
+        uniqueId: 'model.project.input',
+        relationId: 'model-relation',
+        connectionRef: connection,
+        fields: [{ fieldId: 'model-id', name: 'id', dataType: 'text', nullable: true }],
+      },
+    },
+  };
+}
 export function edge(sourceId: string, targetId: string): CanonicalEdge {
   return { id: `${sourceId}-${targetId}`, sourceId, targetId, relation: 'lineage' };
 }

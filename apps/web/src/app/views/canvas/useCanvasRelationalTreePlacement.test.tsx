@@ -33,7 +33,6 @@ describe('relational tree placement disclosure', () => {
         semanticContext: { transformNode, draft: document },
         stagedOperations: [staged],
         zoom,
-        panMode: false,
       });
       return null;
     }

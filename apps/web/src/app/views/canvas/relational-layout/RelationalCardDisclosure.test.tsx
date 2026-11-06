@@ -26,7 +26,7 @@ describe('Relational card disclosure', () => {
     act(() =>
       root.render(
         <RelationalLayoutSession initialPositions={positions}>
-          <RelationalNavigationControls panMode={false} onTogglePan={vi.fn()} />
+          <RelationalNavigationControls />
           <CanvasRelationalTreeLayout
             key={view}
             root={fixture.projection.root}

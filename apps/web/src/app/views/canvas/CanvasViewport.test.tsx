@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act } from 'react';
+import { fireEvent, screen } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
@@ -9,10 +10,10 @@ vi.mock(
   () => import('./canvasViewportNodeTypeRegistryTestAdapter')
 );
 
+import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';
-import styles from './CanvasViewportSurfaceView.module.css';
 import {
   buildCanvasViewportProps,
   createCanvasViewportHarness,
@@ -46,6 +47,114 @@ describe('CanvasViewport', () => {
     unmountViewport();
     vi.useRealTimers();
   });
+
+  it.each([true, false])(
+    'delegates model addition at the Canvas center only when writable=%s',
+    async (writable) => {
+      const registration = {
+        ...buildTestNodeKind('dvt:transform', 'Model'),
+        role: 'transform' as const,
+        allowsIncoming: true,
+      };
+      const props = await renderViewport({
+        canEditEdges: writable,
+        authoringNodeKinds: [registration],
+      });
+      const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]')!;
+      vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 50, 800, 600));
+      xyflowState.fitView.mockClear();
+      const add = screen.getByRole<HTMLButtonElement>('button', { name: 'Add model' });
+      expect(add.disabled).toBe(!writable);
+      await act(async () => fireEvent.click(add));
+      const item = document.querySelector<HTMLButtonElement>(
+        '[data-registration-kind="dvt:transform"]'
+      );
+      if (writable) {
+        expect(item).not.toBeNull();
+        expect(document.querySelector('[data-registration-kind="dvt:source"]')).toBeNull();
+        await act(async () => fireEvent.click(item!));
+        expect(props.onCreateAuthoringNode).toHaveBeenCalledExactlyOnceWith(registration, {
+          x: 600,
+          y: 310,
+        });
+      } else {
+        expect(item).toBeNull();
+        expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+      }
+      expect(xyflowState.fitView).not.toHaveBeenCalled();
+    }
+  );
+
+  it('keeps reference placement independent of edge authoring', async () => {
+    await renderViewport({
+      canEditEdges: false,
+      referencePlacementScope: 'scope',
+      sourceCatalogue: [
+        {
+          id: 'source',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+          metadata: { authority: 'dbt-project-files', resourceType: 'source' },
+        },
+        {
+          id: 'model',
+          name: 'Revenue',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: { authority: 'dbt-project-files', resourceType: 'model' },
+        },
+      ],
+      onInstantiateNode: vi.fn(),
+    });
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' }).draggable).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add model' }).disabled).toBe(
+      true
+    );
+  });
+
+  it.each([true, false])(
+    'creates at the visible center without focusing or opening a card (writable=%s)',
+    async (writable) => {
+      const onInstantiateNode = vi.fn();
+      await renderViewport({
+        canEditEdges: writable,
+        onInstantiateNode,
+        sourceCatalogue: [
+          {
+            id: 'orders',
+            name: 'Orders',
+            pluginId: 'dvt',
+            kind: 'dvt:source',
+            role: 'input',
+            status: 'idle',
+            tags: [],
+          },
+        ],
+      });
+      const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]')!;
+      vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 50, 800, 600));
+      xyflowState.fitView.mockClear();
+      xyflowState.setViewport.mockClear();
+      await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
+      if (writable)
+        expect(onInstantiateNode).toHaveBeenCalledExactlyOnceWith(
+          'orders',
+          { x: 500, y: 270 },
+          undefined
+        );
+      else expect(onInstantiateNode).not.toHaveBeenCalled();
+      expect(xyflowState.fitView).not.toHaveBeenCalled();
+      expect(xyflowState.setViewport).not.toHaveBeenCalled();
+    }
+  );
 
   it('does not render fixed panel restore controls when side panels are hidden', async () => {
     await renderViewport();
@@ -100,7 +209,6 @@ describe('CanvasViewport', () => {
       fitView: true,
       fitViewOptions: { padding: 0.32, maxZoom: 0.82 },
       minZoom: 0.35,
-      className: styles.flow,
       nodesDraggable: true,
       nodesConnectable: true,
       snapToGrid: false,
@@ -114,7 +222,6 @@ describe('CanvasViewport', () => {
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
-    expect(xyflowState.miniMapClassName).toBe(styles.minimap);
     const minimapDataset = (
       container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null
     )?.dataset;
@@ -249,12 +356,16 @@ describe('CanvasViewport', () => {
     });
   });
 
-  it('preserves the governed Shift multi-selection gesture for canvas node selection', async () => {
+  it('uses left-button pan without alternate pointer modes and retains Shift card selection', async () => {
     await renderViewport();
 
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       multiSelectionKeyCode: 'Shift',
       selectNodesOnDrag: true,
+      panOnDrag: [0],
+      panActivationKeyCode: null,
+      selectionOnDrag: false,
+      selectionKeyCode: null,
     });
   });
 

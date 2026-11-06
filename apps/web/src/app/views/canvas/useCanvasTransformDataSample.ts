@@ -7,6 +7,7 @@ import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { queryCanvasModelDataSample } from './useCanvasModelDataQuery';
 import { canvasNodeQueryMetadata } from './canvasNodeQueryMetadata';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export function useCanvasTransformDataSample({
   canvasId,
@@ -52,6 +53,7 @@ export function useCanvasTransformDataSample({
           if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return [];
           try {
             const digest =
+              resolveCanvasDbtModelSignature(node)?.document.sidecar.semanticPlanSha256 ??
               readDvtTransformAuthoringAuthority(node)?.semanticDocument.semanticPlan.sha256;
             return digest == null ? [] : [[node.id, { name: node.name, digest }] as const];
           } catch {

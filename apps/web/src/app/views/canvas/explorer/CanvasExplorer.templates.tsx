@@ -5,10 +5,15 @@
  * @consequence Switching a panel cannot recreate the graph or lose a search input.
  * @version 1.0.0
  */
-import { Database, Workflow, Search, Plus, ChevronLeft, X } from 'lucide-react';
+import { Workflow, Search, Plus, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
 import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from '../../../components/ui/collapsible';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -16,11 +21,10 @@ import {
 } from '../../../components/ui/resizable';
 import type { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import styles from './CanvasExplorer.module.css';
-import type { CanvasExplorerItem } from './canvasExplorerItems';
+import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
 
 type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
 const panels = [
-  { key: 'sources', icon: <Database aria-hidden="true" /> },
   { key: 'elements', icon: <Workflow aria-hidden="true" /> },
   {
     key: 'git',
@@ -48,7 +52,6 @@ export function CanvasExplorerTemplate(
     visible: boolean;
     copy: Copy;
     rootRef?: RefObject<HTMLDivElement>;
-    sources: ReactNode;
     elements: ReactNode;
     hasProjectFiles: boolean;
     children: ReactNode;
@@ -190,28 +193,54 @@ export function CanvasExplorerMenuTemplate({
 }
 
 export function CanvasExplorerListTemplate({
-  items,
+  categories,
+  collapsedCategories,
+  onCategoryOpenChange,
   query,
   copy,
   disabled,
   onQuery,
   onSelect,
-  onImport,
   onDragStart,
-  presentation = 'list',
-  itemIcon,
+  categoryActions,
 }: Readonly<{
-  items: readonly CanvasExplorerItem[];
+  categories: ReadonlyMap<string | undefined, readonly CanvasExplorerItem[]>;
+  collapsedCategories: ReadonlySet<string>;
+  onCategoryOpenChange: (category: string, open: boolean) => void;
   query: string;
   copy: Copy;
   disabled?: boolean;
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
-  onImport?: () => void;
   onDragStart?: (id: string, event: React.DragEvent<HTMLButtonElement>) => void;
-  presentation?: 'list' | 'cards';
-  itemIcon?: ReactNode;
+  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
 }>): JSX.Element {
+  const renderItem = (item: CanvasExplorerItem) => {
+    const unavailable = disabled || item.disabled;
+    const draggable = !unavailable && item.draggable !== false && onDragStart != null;
+    return (
+      <li key={item.id}>
+        <button
+          type="button"
+          className={styles.item}
+          aria-pressed={item.selected === true}
+          title={item.description == null ? item.label : `${item.label} · ${item.description}`}
+          data-element-id={item.id}
+          disabled={unavailable}
+          onClick={() => onSelect(item.id)}
+          draggable={draggable}
+          onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
+        >
+          <span className={styles.itemText}>
+            <span className={styles.name}>{item.label}</span>{' '}
+            {item.description == null ? null : (
+              <span className={styles.description}>{item.description}</span>
+            )}
+          </span>
+        </button>
+      </li>
+    );
+  };
   return (
     <div className={styles.listPanel}>
       <label className={styles.search}>
@@ -224,38 +253,53 @@ export function CanvasExplorerListTemplate({
           placeholder={copy.search}
         />
       </label>
-      {onImport == null ? null : (
-        <button type="button" className={styles.importAction} onClick={() => onImport()}>
-          <Plus aria-hidden="true" />
-          {copy.importSources}
-        </button>
-      )}
-      <ul className={styles.list} data-presentation={presentation}>
-        {items.map((item) => (
-          <li key={item.id}>
-            <button
-              type="button"
-              className={styles.item}
-              aria-pressed={item.selected === true}
-              title={item.description == null ? item.label : `${item.label} · ${item.description}`}
-              data-element-id={item.id}
-              disabled={disabled}
-              onClick={() => onSelect(item.id)}
-              draggable={!disabled && onDragStart != null}
-              onDragStart={onDragStart == null ? undefined : (event) => onDragStart(item.id, event)}
-            >
-              {itemIcon == null ? null : <span className={styles.itemIcon}>{itemIcon}</span>}
-              <span className={styles.itemText}>
-                <span className={styles.name}>{item.label}</span>{' '}
-                {item.description == null ? null : (
-                  <span className={styles.description}>{item.description}</span>
-                )}
-              </span>
-            </button>
-          </li>
-        ))}
+      <ul className={styles.list}>
+        {Array.from(categories, ([category, items]) => {
+          if (category == null) return items.map(renderItem);
+          const open = !collapsedCategories.has(category);
+          const action = categoryActions?.get(category);
+          return (
+            <li key={category}>
+              <Collapsible
+                open={open}
+                onOpenChange={(nextOpen) => onCategoryOpenChange(category, nextOpen)}
+              >
+                <div className={styles.categoryHeader}>
+                  <h4 className={styles.categoryHeading}>
+                    <CollapsibleTrigger
+                      className={styles.heading}
+                      aria-label={`${copy.elements}: ${category}`}
+                    >
+                      {open ? (
+                        <ChevronDown size={12} aria-hidden="true" />
+                      ) : (
+                        <ChevronRight size={12} aria-hidden="true" />
+                      )}
+                      {category}
+                    </CollapsibleTrigger>
+                  </h4>
+                  {action == null ? null : (
+                    <button
+                      type="button"
+                      className={styles.headerAction}
+                      aria-label={action.label}
+                      title={action.label}
+                      disabled={disabled || action.onAdd == null}
+                      onClick={(event) => action.onAdd?.(event.currentTarget)}
+                    >
+                      <Plus aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                <CollapsibleContent>
+                  <ul className={styles.list}>{items.map(renderItem)}</ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </li>
+          );
+        })}
       </ul>
-      {items.length === 0 ? (
+      {Array.from(categories.values()).every((items) => items.length === 0) ? (
         <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>
       ) : null}
     </div>

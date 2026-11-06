@@ -12,6 +12,7 @@ import type {
   ICanvasAuthoringAuthorityStore,
 } from '../../application/ports/canvasAuthoringAuthority.js';
 import { serializeCanvasAuthoringAuthorityKey } from '../../application/ports/canvasAuthoringAuthority.js';
+import type { IDbtProjectRootAuthorityPort } from '../../application/ports/dbtProjectRootRelocation.js';
 
 interface Config {
   readonly pool: Pool;
@@ -40,7 +41,9 @@ interface DraftPayloadRow extends QueryResultRow {
   readonly draft_json: unknown;
 }
 
-export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAuthorityStore {
+export class PostgresCanvasAuthoringAuthorityStore
+  implements ICanvasAuthoringAuthorityStore, IDbtProjectRootAuthorityPort
+{
   public constructor(private readonly config: Config) {}
 
   public async migrate(): Promise<void> {
@@ -163,6 +166,7 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
       await client.query('BEGIN');
       await this.lockResources(client, [
         serializeCanvasAuthoringAuthorityKey(input.key),
+        serializeProjectRootAuthorityKey(input.key, '.'),
         ...(binding.authority.kind === 'dbt-project-files'
           ? [serializeProjectRootAuthorityKey(input.key, binding.authority.projectRoot)]
           : []),
@@ -255,7 +259,10 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
     const client = await this.config.pool.connect();
     try {
       await client.query('BEGIN');
-      await this.lockResources(client, [serializeCanvasAuthoringAuthorityKey(input.key)]);
+      await this.lockResources(client, [
+        serializeCanvasAuthoringAuthorityKey(input.key),
+        serializeProjectRootAuthorityKey(input.key, '.'),
+      ]);
       const idempotency = await this.readIdempotency(client, input.key, input.idempotencyKey);
       if (!idempotency) {
         await client.query('ROLLBACK');
@@ -310,11 +317,109 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
       await client.query('BEGIN');
       await this.lockResources(client, [
         serializeCanvasAuthoringAuthorityKey(input.key),
+        serializeProjectRootAuthorityKey(input.key, '.'),
         serializeProjectRootAuthorityKey(input.key, input.projectRoot),
       ]);
       const result = await operation();
       await client.query('COMMIT');
       return result;
+    } catch (error) {
+      await rollbackPreservingError(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  public async readProjectFileAuthorities(
+    scope: Parameters<IDbtProjectRootAuthorityPort['readProjectFileAuthorities']>[0]
+  ): Promise<readonly CanvasAuthoringAuthorityStoredRecord[]> {
+    const result = await this.config.pool.query<AuthorityRow>(
+      withTimeout(this.config.queryTimeoutMs, {
+        text: `SELECT tenant_id, project_id, environment_id, canvas_id, binding_json, revision, updated_at
+        FROM ${quoteIdentifier(this.config.schema)}.canvas_authoring_authorities
+        WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3
+          AND binding_json->'authority'->>'kind' = 'dbt-project-files'
+        ORDER BY canvas_id LIMIT 2`,
+        values: [scope.tenantId, scope.projectId, scope.environmentId],
+      })
+    );
+    return result.rows.map(mapAuthorityRow);
+  }
+
+  public async commitRootRelocation(
+    input: Parameters<IDbtProjectRootAuthorityPort['commitRootRelocation']>[0],
+    publishFiles: () => Promise<void>
+  ): ReturnType<IDbtProjectRootAuthorityPort['commitRootRelocation']> {
+    const client = await this.config.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await this.lockResources(client, [
+        serializeCanvasAuthoringAuthorityKey(input.key),
+        serializeProjectRootAuthorityKey(input.key, '.'),
+        serializeProjectRootAuthorityKey(input.key, input.sourceRoot),
+      ]);
+      const owners = await client.query<AuthorityRow>(
+        withTimeout(this.config.queryTimeoutMs, {
+          text: `SELECT tenant_id, project_id, environment_id, canvas_id, binding_json, revision, updated_at
+          FROM ${quoteIdentifier(this.config.schema)}.canvas_authoring_authorities
+          WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3
+            AND binding_json->'authority'->>'kind' = 'dbt-project-files'
+          ORDER BY canvas_id LIMIT 2 FOR UPDATE`,
+          values: keyValues(input.key).slice(0, 3),
+        })
+      );
+      if (owners.rows.length !== 1) {
+        await client.query('ROLLBACK');
+        return { kind: 'refused', reason: 'multiple_projects' };
+      }
+      const current = mapAuthorityRow(owners.rows[0]!);
+      if (
+        current.key.canvasId !== input.key.canvasId ||
+        current.binding.authority.kind !== 'dbt-project-files'
+      ) {
+        await client.query('ROLLBACK');
+        return { kind: 'refused', reason: 'stale_authority' };
+      }
+      if (await this.isCanvasOccupiedByGraphDraft(client, input.key)) {
+        await client.query('ROLLBACK');
+        return { kind: 'refused', reason: 'mixed_authority' };
+      }
+      if (current.binding.authority.projectRoot === '.' && current.revision === input.newRevision) {
+        await client.query('COMMIT');
+        return { kind: 'relocated', record: current, deduplicated: true };
+      }
+      if (
+        current.binding.authority.projectRoot !== input.sourceRoot ||
+        current.revision !== input.expectedRevision
+      ) {
+        await client.query('ROLLBACK');
+        return { kind: 'refused', reason: 'stale_authority' };
+      }
+      await publishFiles();
+      const binding = CanvasAuthoringAuthorityBindingSchema.parse({
+        ...current.binding,
+        authority: { kind: 'dbt-project-files', projectRoot: '.' },
+      });
+      const result = await client.query<AuthorityRow>(
+        withTimeout(this.config.queryTimeoutMs, {
+          text: `UPDATE ${quoteIdentifier(this.config.schema)}.canvas_authoring_authorities
+          SET binding_json = $5::jsonb, revision = $6, updated_at = $7::timestamptz
+          WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3 AND canvas_id = $4 AND revision = $8
+          RETURNING tenant_id, project_id, environment_id, canvas_id, binding_json, revision, updated_at`,
+          values: [
+            ...keyValues(input.key),
+            JSON.stringify(binding),
+            input.newRevision,
+            input.nowIso,
+            input.expectedRevision,
+          ],
+        })
+      );
+      if (result.rows.length !== 1)
+        throw new Error('Root relocation lost its locked authority revision.');
+      await client.query('COMMIT');
+      return { kind: 'relocated', record: mapAuthorityRow(result.rows[0]!), deduplicated: false };
     } catch (error) {
       await rollbackPreservingError(client);
       throw error;

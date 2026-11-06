@@ -1,4 +1,4 @@
-/** Project the exact node draft submitted by the relational authoring transaction. */
+/** Project the submitted draft and compare semantic edits independently of layout. */
 import {
   DvtRelationalAuthoringDraftV1Schema,
   type DvtRelationalAuthoringDraftV1,
@@ -20,6 +20,19 @@ import {
   retainIncompleteCanvasRelationalAuthoringDraft,
 } from './canvasRelationalAuthoringDraft';
 
+function semanticInspectorDraft(draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraft {
+  const pending = draft.relationalAuthoringDraft;
+  return pending == null
+    ? draft
+    : {
+        ...draft,
+        relationalAuthoringDraft: retainIncompleteCanvasRelationalAuthoringDraft({
+          ...pending,
+          positions: {},
+        }),
+      };
+}
+
 /** Decide what Apply means before a React coordinator dispatches the existing command. */
 export function prepareCanvasRelationalTreeApply(
   args: Readonly<{
@@ -31,6 +44,7 @@ export function prepareCanvasRelationalTreeApply(
     pending: Parameters<typeof createCanvasRelationalAuthoringDraft>[0];
     baselineOutputId: string | null;
     semanticRootId: string | null;
+    baselineAuthoringDraft?: DvtRelationalAuthoringDraftV1;
   }>
 ) {
   const { pending } = args;
@@ -60,13 +74,26 @@ export function prepareCanvasRelationalTreeApply(
         : undefined,
   };
   const draft = createCanvasRelationalTreeApplyDraft(request);
+  const baseline = {
+    ...createCanvasInspectorNodeDraft(args.transformNode),
+    ...(args.baselineAuthoringDraft == null
+      ? {}
+      : { relationalAuthoringDraft: args.baselineAuthoringDraft }),
+  };
+  const current = canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft);
   return {
     request,
     cleared,
     hasIncompleteGraph,
+    hasOutputChanges:
+      outputChanged ||
+      !areCanvasInspectorNodeDraftsEqual(
+        { ...baseline, relationalAuthoringDraft: undefined },
+        { ...current, relationalAuthoringDraft: undefined }
+      ),
     hasDraftChanges: !areCanvasInspectorNodeDraftsEqual(
-      createCanvasInspectorNodeDraft(args.transformNode),
-      canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft)
+      semanticInspectorDraft(baseline),
+      semanticInspectorDraft(current)
     ),
   };
 }
@@ -79,6 +106,18 @@ function resolveAppliedSemantic(args: {
   document: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
 }> {
+  const direct = args.relationalAuthoringDraft?.sources.some(
+    (source) => source.relationId === args.relationalAuthoringDraft?.outputRelationId
+  );
+  if (direct && args.joinDraft != null) {
+    const indexed = indexSubstraitRelations(args.joinDraft);
+    if (
+      indexed.ok &&
+      indexed.index.rootId === args.relationalAuthoringDraft?.outputRelationId &&
+      indexed.index.relations.get(indexed.index.rootId)?.relation.relType.case === 'read'
+    )
+      return { document: args.joinDraft, operation: 'projection' };
+  }
   const output = args.relationalAuthoringDraft?.operations.find(
     (candidate) =>
       candidate.relationId === args.relationalAuthoringDraft?.outputRelationId &&

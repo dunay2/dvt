@@ -10,7 +10,41 @@ import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
 import { workbenchOperation } from './operationMenu';
-import { hoverWorkbenchCard } from './pointer';
+import { hoverWorkbenchCard, panWorkbenchViewport } from './pointer';
+
+/** Reveal through keyboard focus and native background pan, preserving pending inspectors. */
+export function revealWorkbenchCard(selector: string): void {
+  cy.get(selector)
+    .first()
+    .then(($card) => {
+      const focusable = 'button, input, select, textarea, [tabindex="0"], a[href]';
+      const target = $card.is(focusable) ? $card : $card.find(focusable).first();
+      expect(target.length, 'existing keyboard target on the card').to.equal(1);
+      cy.wrap(target).focus();
+      cy.press(Cypress.Keyboard.Keys.TAB);
+      cy.wrap(target).focus().should('be.visible');
+    });
+  cy.get(selector)
+    .first()
+    .then(($target) => {
+      const target = $target[0]!;
+      const bounds = target.getBoundingClientRect();
+      const x = bounds.left + bounds.width / 2;
+      const y = bounds.top + bounds.height / 2;
+      const hit = target.ownerDocument.elementFromPoint(x, y);
+      if (hit != null && target.contains(hit)) return;
+      const viewport =
+        '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]';
+      cy.get(viewport).then(($viewport) => {
+        const frame = $viewport[0]!.getBoundingClientRect();
+        panWorkbenchViewport(
+          viewport,
+          frame.left + frame.width / 2 - x,
+          frame.top + frame.height / 2 - y
+        );
+      });
+    });
+}
 
 export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
   visitWithE2eWorkspaceSession('/canvas', {
@@ -150,12 +184,18 @@ export function connectWorkbenchProducer(
     const dataTransfer = new window.DataTransfer();
     cy.get(producer)
       .find('[data-slot="canvas-relational-output-port"]')
-      .trigger('dragstart', { dataTransfer });
+      .as('workbenchProducerPort');
+    revealWorkbenchCard('@workbenchProducerPort');
+    cy.get('@workbenchProducerPort').trigger('dragstart', { dataTransfer });
     const target =
       port == null
         ? cy.get(consumer)
         : cy.get(consumer).find('[data-slot="canvas-relational-input-port"]').eq(port);
-    target.trigger('dragover', { dataTransfer }).trigger('drop', { dataTransfer });
+    target.as('workbenchConsumerPort');
+    revealWorkbenchCard('@workbenchConsumerPort');
+    cy.get('@workbenchConsumerPort')
+      .trigger('dragover', { dataTransfer })
+      .trigger('drop', { dataTransfer });
   });
 }
 

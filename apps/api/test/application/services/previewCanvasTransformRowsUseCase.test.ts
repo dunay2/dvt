@@ -3,7 +3,10 @@ import {
   TransformDataSampleRequestSchema,
   type TransformDataSampleRequest,
   type WarehouseConnection,
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -18,6 +21,7 @@ import type {
   WarehouseConnectionCatalogEntry,
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
+import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import {
   buildDvtCrossPreviewDraft,
@@ -133,6 +137,55 @@ function harness(
 }
 
 describe('PreviewCanvasTransformRowsUseCase', () => {
+  it('previews a saved model instance through its shared definition without a persisted edge to it', async () => {
+    const original = harness();
+    await original.useCase.execute(request, context());
+    const resolved = await original.executeWithAuthorizedDraft();
+    const draft: WorkspaceGraphAuthoringDraft = globalThis.structuredClone(
+      resolved.value.authorizedDraft.draft
+    );
+    const definition = draft.nodes.find((node) => node.id === request.transformNodeId)!;
+    const instance = {
+      ...definition,
+      id: 'model-instance',
+      definitionId: definition.id,
+      metadata: undefined,
+      path: undefined,
+    };
+    draft.nodes.push(instance);
+    draft.nodeIds = draft.nodeIds.map((id) => (id === definition.id ? instance.id : id));
+    draft.nodePositions[instance.id] = draft.nodePositions[definition.id]!;
+    delete draft.nodePositions[definition.id];
+    const before = JSON.stringify(draft);
+    const resolver = new ResolveAuthorizedExecutableSubgraphService({
+      planner: new PlannerFacade(),
+      workspaceGraphDraftStore: {
+        read: vi.fn(async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          revision: 'instance-revision',
+          draftPayload: draft,
+        })),
+      } as never,
+    });
+    const useCase = new PreviewCanvasTransformRowsUseCase({
+      graphDraftResolver: resolver,
+      connectionCatalog: catalog(),
+      probe: { previewTransformRows: original.previewTransformRows },
+    });
+    const result = await useCase.execute({ ...request, transformNodeId: instance.id }, context());
+    expect(result.transformNodeId).toBe(instance.id);
+    expect(result.semanticPlanSha256).toBe(original.semanticPlanSha256);
+    expect(original.previewTransformRows.mock.calls[1]?.[0].sql).toBe(
+      original.previewTransformRows.mock.calls[0]?.[0].sql
+    );
+    expect(JSON.stringify(draft)).toBe(before);
+    expect(draft.edges.every((edge) => edge.targetId !== instance.id)).toBe(true);
+    instance.definitionId = 'foreign-definition';
+    await expect(
+      useCase.execute({ ...request, transformNodeId: instance.id }, context())
+    ).rejects.toMatchObject({ reason: 'selection_unavailable' });
+    expect(original.previewTransformRows).toHaveBeenCalledTimes(2);
+  });
   it('rejects a retained operation whose connected Input no longer admits its fields before probing data', async () => {
     const { useCase, previewTransformRows, executeWithAuthorizedDraft } = harness();
     const resolved = await executeWithAuthorizedDraft();

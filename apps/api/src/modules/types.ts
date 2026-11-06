@@ -39,6 +39,7 @@ import type { SaveWorkspaceGraphDraftUseCase } from '../application/services/sav
 import type { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 
 import type { DbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
+import type { DbtProjectRootRelocationRuntime } from './dbtProjectRootRelocation/buildDbtProjectRootRelocationRuntime.js';
 import type { ContentAddressedArtifactRuntime } from './protectedRuntime/buildProtectedRuntimeStorage.js';
 import type { StateStoreRoleBindings } from './stateStoreRoles.js';
 
@@ -81,6 +82,7 @@ export interface ProtectedRuntimeModule {
   canvasAuthoringAuthorityStore: ICanvasAuthoringAuthorityStore;
   canvasAuthoringAuthorityPolicy: CanvasAuthoringAuthorityPolicy;
   dbtProjectImport: DbtProjectImportRuntime;
+  dbtProjectRootRelocation: DbtProjectRootRelocationRuntime;
   workspaceFilesRoot: string;
   contentAddressedArtifactRuntime: ContentAddressedArtifactRuntime | undefined;
   warehouseConnectionCatalog: IWarehouseConnectionCatalog;

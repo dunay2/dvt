@@ -18,6 +18,7 @@ const {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofWebEnv,
   buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
@@ -428,6 +429,48 @@ test('buildLiveProofCypressNativeInvocation opens Chrome only when headed is exp
     'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
     '--headed',
   ]);
+});
+
+test('Cypress adapters forward only an explicitly declared file-project fixture environment', () => {
+  const args = {
+    apiPort: 3300,
+    webPort: 4174,
+    apiBearerToken: 'proof-token',
+    specPaths: ['/repo/apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts'],
+    workspaceScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' },
+  };
+  assert.equal(
+    buildLiveProofCypressNativeInvocation(args).env.CYPRESS_projectFilesEnvironmentId,
+    undefined
+  );
+  assert.equal(
+    buildLiveProofCypressDockerInvocation(args).includes('CYPRESS_projectFilesEnvironmentId'),
+    false
+  );
+  const isolated = { ...args, projectFilesEnvironmentId: 'project-files-proof' };
+  assert.equal(
+    buildLiveProofCypressNativeInvocation(isolated).env.CYPRESS_projectFilesEnvironmentId,
+    'project-files-proof'
+  );
+  assert.ok(
+    buildLiveProofCypressDockerInvocation(isolated).includes('CYPRESS_projectFilesEnvironmentId')
+  );
+});
+
+test('compiled proof web admits both declared fixture environments and retains the base default', () => {
+  const env = buildLiveProofWebEnv({
+    apiBaseUrl: 'http://127.0.0.1:3300',
+    webEnv: { VITE_API_BEARER_TOKEN: 'proof-token', VITE_ENVIRONMENT_OPTIONS: 'ungranted' },
+    workspaceScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'proof' },
+    projectFilesEnvironmentId: 'project-files-proof',
+  });
+  assert.equal(env.VITE_DEFAULT_ENVIRONMENT_ID, 'proof');
+  assert.deepEqual(
+    new Set(env.VITE_ENVIRONMENT_OPTIONS.split(',')),
+    new Set(['proof', 'project-files-proof'])
+  );
+  assert.equal(env.VITE_API_BASE_URL, 'http://127.0.0.1:3300');
+  assert.equal(env.VITE_API_BEARER_TOKEN, 'proof-token');
 });
 
 test('native and manual Docker browser children are registered before awaiting and keep tokens out of argv', async () => {

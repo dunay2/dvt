@@ -18,7 +18,6 @@ export function CanvasRelationalTreeNodes({
   selectedStagedOperationId,
   selectedLocator,
   selectedConnectionSource,
-  panMode,
   copy,
   actions,
 }: Readonly<{
@@ -34,7 +33,6 @@ export function CanvasRelationalTreeNodes({
   selectedStagedOperationId: string | null;
   selectedLocator: string;
   selectedConnectionSource: string | null;
-  panMode: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   actions: Readonly<{
     select: (locator: string) => void;
@@ -112,7 +110,7 @@ export function CanvasRelationalTreeNodes({
             onToggleDetail={
               zoomRevealsDetail ? undefined : () => toggleDetail(relationId ?? placed.node.locator)
             }
-            movable={!panMode}
+            movable
             selectedConnectionSource={selectedConnectionSource}
             onSelectConnectionSource={actions.selectConnectionSource}
             onConnectOperation={actions.connectOperation}

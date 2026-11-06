@@ -114,12 +114,13 @@ export function useWorkspaceGraphForViewQuery(
   });
 }
 
-export function useWorkspaceFileTreeQuery() {
+export function useWorkspaceFileTreeQuery(options: Readonly<{ enabled?: boolean }> = {}) {
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
     queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
     queryFn: () => workspaceFilesQuery.listFiles(),
+    enabled: options.enabled ?? true,
   });
 }
 

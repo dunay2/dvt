@@ -125,10 +125,62 @@ describe.each(['available', 'controlled'] as const)('%s browser partition', (cap
   });
 });
 
-it('leaves every unpartitioned local obligation unchanged', () => {
+it('preserves explicit unpartitioned policy requests', () => {
   for (const command of resolveWebCypressChangedPlan([], true).commands) {
     expect(selectWebCypressShard(command)).toBe(command);
   }
+});
+
+it.each([1, 2, WEB_CYPRESS_SPECS.controlled.length])(
+  'executes all %s local controlled consumers once through the existing sequential partitions',
+  (count) => {
+    const files = WEB_CYPRESS_SPECS.controlled.slice(0, count);
+    const command = resolveWebCypressChangedPlan(files).commands[0]!;
+    const expected = [1, 2, 3]
+      .map((index) => selectWebCypressShard(command, index))
+      .filter((entry) => entry !== undefined);
+    const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+    main(['--plan', '--files', ...files]);
+    const plan = JSON.parse(String(output.mock.calls[0]![0]));
+    expect(plan.browserCommands).toEqual(expected);
+    expect(spawnSync).not.toHaveBeenCalled();
+    main(['--files', ...files]);
+    const executed = vi
+      .mocked(spawnSync)
+      .mock.calls.filter(
+        ([command]) =>
+          typeof command === 'string' && command.startsWith('pnpm run test:e2e:native ')
+      );
+    expect(executed.map(([command]) => command)).toEqual(expected.map((entry) => entry.command));
+    expect(new Set(expected.flatMap((entry) => entry.specPaths))).toEqual(new Set(files));
+  }
+);
+
+it('preserves an explicit unsharded controlled browser request', () => {
+  const files = WEB_CYPRESS_SPECS.controlled;
+  const command = resolveWebCypressChangedPlan(files).commands[0]!;
+  const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+  const args = ['--phase=browser', '--browser-capability=controlled', '--files', ...files];
+  main(['--plan', ...args]);
+  expect(JSON.parse(String(output.mock.calls[0]![0])).browserCommands).toEqual([command]);
+  main(args);
+  expect(spawnSync).toHaveBeenCalledExactlyOnceWith(
+    command.command,
+    expect.objectContaining({ env: expect.objectContaining(command.env) })
+  );
+});
+
+it('preserves the other local capability commands', () => {
+  const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+  main(['--plan', '--files', 'apps/web/cypress.config.ts']);
+  const plan: { browserCommands: WebCypressCommand[] } = JSON.parse(
+    String(output.mock.calls[0]![0])
+  );
+  expect(plan.browserCommands.filter((entry) => entry.capability !== 'controlled')).toEqual(
+    resolveWebCypressChangedPlan(['apps/web/cypress.config.ts']).commands.filter(
+      (entry) => entry.capability !== 'controlled'
+    )
+  );
 });
 
 it('rejects unavailable and empty available partitions', () => {

@@ -35,6 +35,8 @@ export function openCanvasNodeOperations(nodeName: string): void {
     .should('be.visible')
     .focus()
     .should('be.focused')
+    .find('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]')
+    .should('be.visible')
     .rightclick('center');
   cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
 }
@@ -46,13 +48,16 @@ function filterVisibleCanvasNodes(
   const normalizedNodeIdentity = nodeIdentity.toLocaleLowerCase();
 
   return $nodes.filter((_, element) => {
-    const text = (element.textContent ?? '').toLocaleLowerCase();
+    const nodeName = element
+      .querySelector('[data-slot="canvas-node-shell"]')
+      ?.getAttribute('aria-label')
+      ?.toLocaleLowerCase();
     const nodeId = element.getAttribute('data-id')?.toLocaleLowerCase();
     const rect = element.getBoundingClientRect();
     const style = getComputedStyle(element);
 
     return (
-      (nodeId === normalizedNodeIdentity || text.includes(normalizedNodeIdentity)) &&
+      (nodeId === normalizedNodeIdentity || nodeName === normalizedNodeIdentity) &&
       rect.width > 0 &&
       rect.height > 0 &&
       style.visibility !== 'hidden' &&
@@ -71,7 +76,10 @@ export function openCanvasContextMenuAt(x = 96, y = 220): void {
 }
 
 export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
-  cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
+  cy.contains(
+    '[data-slot="canvas-context-menu"] [role="menuitem"], [data-slot="canvas-node-context-menu"] [role="menuitem"]',
+    label
+  )
     .should('be.visible')
     .should(($item) => {
       expect($item.attr('data-disabled')).to.be.undefined;

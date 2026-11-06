@@ -93,32 +93,37 @@ describe('Canvas card projection without shell or DOM', () => {
   });
 
   it.each([
-    [undefined, 'code'],
-    [false, 'general'],
-  ] as const)('preserves file-model authority with Code permission %s', (permission, section) => {
-    const inspect = vi.fn();
-    const openModel = vi.fn();
-    const original = node('file-model', {
-      pluginKind: 'dvt:transform',
-      role: 'transform',
-      canOpenNodeCode: permission,
-      onInspectNode: inspect,
-      presentationTruth: {
-        columns: canvasColumnTruth([], []),
-        code: { kind: 'workspace-file', path: 'models/model.sql', language: 'sql' },
-      },
-    });
-    const data = projectCanvasShellNodes([original], {
-      ...projection,
-      modelIds: new Set(['file-model']),
-      openModel,
-    })[0]!.data as DbtNodeData;
-    data.onOpenNode?.('file-model');
-    expect(inspect).toHaveBeenCalledExactlyOnceWith('file-model', section);
-    expect(openModel).not.toHaveBeenCalled();
-    expect(data.canOpenNodeCode).toBe(permission !== false);
-    expect(original.data.onOpenNode).toBeUndefined();
-  });
+    [undefined, 'code', true],
+    [false, 'general', true],
+    [undefined, 'code', false],
+    [false, 'general', false],
+  ] as const)(
+    'preserves file-model authority with Code permission %s, direct identity=%s',
+    (permission, section, directIdentity) => {
+      const inspect = vi.fn();
+      const openModel = vi.fn();
+      const original = node('file-model', {
+        pluginKind: 'dvt:transform',
+        role: 'transform',
+        canOpenNodeCode: permission,
+        onInspectNode: inspect,
+        presentationTruth: {
+          columns: canvasColumnTruth([], []),
+          code: { kind: 'workspace-file', path: 'models/model.sql', language: 'sql' },
+        },
+      });
+      const data = projectCanvasShellNodes([original], {
+        ...projection,
+        modelIds: new Set(directIdentity ? ['file-model'] : []),
+        openModel,
+      })[0]!.data as DbtNodeData;
+      data.onOpenNode?.('file-model');
+      expect(inspect).toHaveBeenCalledExactlyOnceWith('file-model', section);
+      expect(openModel).not.toHaveBeenCalled();
+      expect(data.canOpenNodeCode).toBe(permission !== false);
+      expect(original.data.onOpenNode).toBeUndefined();
+    }
+  );
 
   it('does not fabricate a semantic editor when a file model has no inspector', () => {
     const openModel = vi.fn();

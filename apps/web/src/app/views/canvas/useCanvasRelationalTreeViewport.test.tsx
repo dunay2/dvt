@@ -5,11 +5,22 @@ import { createPortal } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
-import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import {
+  RelationalLayoutSession,
+  useRelationalLayout,
+} from './relational-layout/RelationalLayoutSession';
+import type { CanvasRelationalTreeLayout } from './canvasRelationalTreeGeometry';
+import { canvasViewportScopeProps } from './canvasViewportInteraction';
 
 function ViewportHarness({
   semanticRevision = 'initial',
-}: Readonly<{ semanticRevision?: string }>): JSX.Element {
+  bounds,
+}: Readonly<{
+  semanticRevision?: string;
+  bounds?: Pick<CanvasRelationalTreeLayout, 'origin' | 'width' | 'height'>;
+}>): JSX.Element {
+  const layout = useRelationalLayout();
+  if (bounds != null) layout.contentSize.current = bounds;
   const viewport = useCanvasRelationalTreeViewport();
   return (
     <>
@@ -18,18 +29,25 @@ function ViewportHarness({
         Fit
       </button>
       <div
+        {...canvasViewportScopeProps}
         data-testid="viewport"
         data-semantic-revision={semanticRevision}
         ref={viewport.viewportRef}
         onPointerDown={viewport.onPointerDown}
         onPointerMove={viewport.onPointerMove}
         onPointerUp={viewport.onPointerUp}
+        onFocusCapture={viewport.onFocusCapture}
       >
         <div data-testid="content" ref={viewport.contentRef} style={{ zoom: viewport.zoom }}>
           <button type="button">JOIN</button>
           <input aria-label="Value" />
         </div>
-        {createPortal(<div role="menuitem">Open operation</div>, document.body)}
+        {createPortal(
+          <div role="menuitem" tabIndex={0}>
+            Open operation
+          </div>,
+          document.body
+        )}
       </div>
     </>
   );
@@ -94,15 +112,47 @@ describe('relational-tree mouse navigation', () => {
     );
     viewport = container.querySelector('[data-testid="viewport"]')!;
     content = container.querySelector('[data-testid="content"]')!;
-    vi.spyOn(content, 'getBoundingClientRect').mockImplementation(
-      () => ({ left: 20 - viewport.scrollLeft, top: 20 - viewport.scrollTop }) as DOMRect
-    );
+    vi.spyOn(content, 'getBoundingClientRect').mockImplementation(() => {
+      const [x, y] = content.style.translate.split(' ').map(Number.parseFloat);
+      return { left: 20 + (x || 0) * zoom(), top: 20 + (y || 0) * zoom() } as DOMRect;
+    });
   });
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it('fits negative world bounds through the same camera without native scrolling', () => {
+    const bounds = { origin: { x: -400, y: -200 }, width: 1000, height: 600 };
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <ViewportHarness bounds={bounds} />
+        </RelationalLayoutSession>
+      )
+    );
+    Object.defineProperties(viewport, {
+      clientWidth: { value: 800 },
+      clientHeight: { value: 400 },
+    });
+    Object.defineProperties(content, {
+      offsetWidth: { value: 1000 },
+      offsetHeight: { value: 600 },
+    });
+    act(() => container.querySelector<HTMLButtonElement>('[data-testid="fit"]')!.click());
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+    const [tx, ty] = content.style.translate.split(' ').map(Number.parseFloat);
+    const left = (bounds.origin.x + tx!) * zoom();
+    const top = (bounds.origin.y + ty!) * zoom();
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(top).toBeGreaterThanOrEqual(0);
+    expect(left + bounds.width * zoom()).toBeLessThanOrEqual(800);
+    expect(top + bounds.height * zoom()).toBeLessThanOrEqual(400);
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
   });
 
   it('zooms in and out with the wheel and cancels native scrolling', () => {
@@ -112,12 +162,11 @@ describe('relational-tree mouse navigation', () => {
     expect(zoom()).toBeCloseTo(1, 1);
   });
   it('keeps the point under the cursor anchored when changing scale', () => {
-    viewport.scrollLeft = 100;
-    viewport.scrollTop = 50;
     wheel(-120);
     expect(zoom()).toBeGreaterThan(1);
-    expect(viewport.scrollLeft).toBeCloseTo(100 + 280 * (zoom() - 1));
-    expect(viewport.scrollTop).toBeCloseTo(50 + 150 * (zoom() - 1));
+    const bounds = content.getBoundingClientRect();
+    expect(bounds.left + 180 * zoom()).toBeCloseTo(200);
+    expect(bounds.top + 100 * zoom()).toBeCloseTo(120);
   });
   it('does not overwrite a wheel gesture with a queued initial fit', () => {
     wheel(-120);
@@ -144,6 +193,92 @@ describe('relational-tree mouse navigation', () => {
   it('removes its native wheel listener when the viewport unmounts', () => {
     act(() => root.render(null));
     expect(wheel(-120).defaultPrevented).toBe(false);
+  });
+  it('leaves nested or already handled wheel input under its own owner', () => {
+    const nested = document.createElement('div');
+    nested.setAttribute('data-canvas-viewport', '');
+    content.append(nested);
+    expect(wheel(-120, {}, nested).defaultPrevented).toBe(false);
+    const event = new WheelEvent('wheel', { deltaY: -120, bubbles: true, cancelable: true });
+    event.preventDefault();
+    act(() => {
+      viewport.dispatchEvent(event);
+    });
+    expect(zoom()).toBe(1);
+  });
+  it('reveals keyboard focus through the camera while leaving native scroll at zero', () => {
+    const button = content.querySelector('button')!;
+    vi.spyOn(button, 'matches').mockReturnValue(true);
+    vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      width: 200,
+      height: 100,
+    } as DOMRect);
+    vi.spyOn(button, 'getBoundingClientRect').mockReturnValue({
+      left: 250,
+      top: 150,
+      right: 300,
+      bottom: 175,
+      width: 50,
+      height: 25,
+    } as DOMRect);
+    act(() => {
+      button.focus();
+    });
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+    expect(content.style.translate).toBe('-100px -75px');
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
+  });
+  it('keeps camera position when a portalled menu receives keyboard focus', () => {
+    const menu = document.querySelector<HTMLElement>('[role="menuitem"]')!;
+    vi.spyOn(menu, 'matches').mockReturnValue(true);
+    vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      width: 200,
+      height: 100,
+    } as DOMRect);
+    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue({
+      left: 250,
+      top: 150,
+      right: 300,
+      bottom: 175,
+      width: 50,
+      height: 25,
+    } as DOMRect);
+    const before = content.style.translate;
+    act(() => {
+      menu.focus();
+    });
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+    expect(document.activeElement).toBe(menu);
+    expect(content.style.translate).toBe(before);
+  });
+  it('restores the same camera and zoom when inspection remounts inside its layout session', () => {
+    wheel(-120);
+    const beforeCamera = content.style.translate;
+    const beforeZoom = zoom();
+    act(() => root.render(<RelationalLayoutSession>{null}</RelationalLayoutSession>));
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <ViewportHarness />
+        </RelationalLayoutSession>
+      )
+    );
+    expect(zoom()).toBe(beforeZoom);
+    expect(container.querySelector<HTMLElement>('[data-testid="content"]')!.style.translate).toBe(
+      beforeCamera
+    );
   });
   it('preserves manual zoom on panel resizing and restores complete framing on Fit', () => {
     Object.defineProperties(viewport, {
@@ -175,7 +310,7 @@ describe('relational-tree mouse navigation', () => {
     });
     expect(zoom()).toBeCloseTo(0.084);
   });
-  it('keeps scroll and zoom when only semantic identity changes', () => {
+  it('keeps camera and zoom when only semantic identity changes', () => {
     Object.defineProperties(viewport, {
       clientWidth: { value: 800 },
       clientHeight: { value: 400 },
@@ -187,8 +322,8 @@ describe('relational-tree mouse navigation', () => {
     act(() => {
       while (frames.length > 0) frames.shift()!(0);
     });
-    viewport.scrollLeft = 180;
-    viewport.scrollTop = 90;
+    wheel(-120);
+    const beforeCamera = content.style.translate;
     const beforeZoom = zoom();
 
     act(() =>
@@ -203,32 +338,39 @@ describe('relational-tree mouse navigation', () => {
     });
 
     expect(zoom()).toBe(beforeZoom);
-    expect(viewport.scrollLeft).toBe(180);
-    expect(viewport.scrollTop).toBe(90);
+    expect(content.style.translate).toBe(beforeCamera);
   });
-  it('pans with the middle button over a card without capturing right-click', () => {
+  it('moves fitting content in both axes without relying on native scroll or capturing alternate buttons', () => {
     viewport.setPointerCapture = vi.fn();
     viewport.releasePointerCapture = vi.fn();
     viewport.hasPointerCapture = () => true;
-    viewport.scrollLeft = 200;
-    viewport.scrollTop = 100;
+    // A fitting viewport cannot scroll: this reproduces the reported 72% case.
+    Object.defineProperties(viewport, {
+      scrollLeft: { get: () => 0, set: () => {} },
+      scrollTop: { get: () => 0, set: () => {} },
+    });
     const event = (name: string, button: number, x: number, y: number): MouseEvent =>
       new MouseEvent(name, { button, clientX: x, clientY: y, bubbles: true, cancelable: true });
-    const start = event('pointerdown', 1, 100, 100);
+    const start = event('pointerdown', 0, 100, 100);
     act(() => {
-      content.querySelector('button')!.dispatchEvent(start);
+      viewport.dispatchEvent(start);
     });
     expect(start.defaultPrevented).toBe(true);
     act(() => {
-      viewport.dispatchEvent(event('pointermove', 1, 70, 60));
+      viewport.dispatchEvent(event('pointermove', 0, 70, 60));
     });
-    expect(viewport.scrollLeft).toBe(230);
-    expect(viewport.scrollTop).toBe(140);
+    expect(content.style.translate).toBe('-30px -40px');
     act(() => {
-      viewport.dispatchEvent(event('pointerup', 1, 70, 60));
+      viewport.dispatchEvent(event('pointermove', 0, 120, 130));
+    });
+    expect(content.style.translate).toBe('20px 30px');
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
+    act(() => {
+      viewport.dispatchEvent(event('pointerup', 0, 70, 60));
     });
     expect(viewport.releasePointerCapture).toHaveBeenCalledOnce();
     act(() => {
+      viewport.dispatchEvent(event('pointerdown', 1, 100, 100));
       viewport.dispatchEvent(event('pointerdown', 2, 100, 100));
     });
     expect(viewport.setPointerCapture).toHaveBeenCalledOnce();

@@ -13,6 +13,7 @@ import {
 import type { CanvasDraftLifecycle } from './canvasDraftLifecycle.types';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export type CanvasModelDataQueryOptions = Readonly<{
   canvasId: string;
@@ -58,7 +59,8 @@ export async function queryCanvasModelDataSample(
     const savedNode = saved.canonicalNodes.find((node) => node.id === nodeId);
     if (
       savedNode == null ||
-      readDvtTransformAuthoringAuthority(savedNode)?.semanticDocument.semanticPlan.sha256 !==
+      (resolveCanvasDbtModelSignature(savedNode)?.document.sidecar.semanticPlanSha256 ??
+        readDvtTransformAuthoringAuthority(savedNode)?.semanticDocument.semanticPlan.sha256) !==
         semanticDigest
     ) {
       throw new CanvasModelDataQueryError('stale');

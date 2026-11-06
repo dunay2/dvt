@@ -5,7 +5,6 @@
  * @consequence Output actions do not configure operations or duplicate input-connection commands.
  * @version 1.0.0
  */
-import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 
 export function createCanvasRelationalOutputActions(
@@ -13,26 +12,21 @@ export function createCanvasRelationalOutputActions(
     editable: boolean;
     start: () => boolean;
     outputRelationId: string | null;
+    producerIds: readonly string[];
     canonicalConsumers: readonly string[];
-    analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
     state: Pick<
       ReturnType<typeof useCanvasRelationalTreeDraftState>,
       'stagedOperations' | 'setOutputRelationId'
     >;
   }>
 ) {
-  const { editable, start, outputRelationId, canonicalConsumers, analysis, state } = args;
+  const { editable, start, outputRelationId, producerIds, canonicalConsumers, state } = args;
   return {
     relationId: outputRelationId,
     connect: (relationId: string) => {
-      const isOperation =
-        state.stagedOperations.some((operation) => operation.id === relationId) ||
-        (analysis?.document != null &&
-          relationId === analysis.session.rootId &&
-          analysis.session.locate(relationId, analysis.revision).relation.relType.case !== 'read');
       if (
         editable &&
-        isOperation &&
+        producerIds.includes(relationId) &&
         !canonicalConsumers.includes(relationId) &&
         !state.stagedOperations.some((operation) => operation.inputs.includes(relationId)) &&
         (outputRelationId == null || outputRelationId === relationId) &&

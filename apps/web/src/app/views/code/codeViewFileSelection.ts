@@ -1,5 +1,6 @@
 /** Owned concern: project workspace file trees into Code route file-selection state. */
 import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
+import { WorkspaceDbtModelReferenceSchema } from '@dvt/contracts';
 import type { WorkspaceFileEntry, WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { DbtNode } from '../../types/dbt';
 
@@ -10,7 +11,9 @@ const DEFAULT_TRANSFORMATION_WORKFLOW_ARTIFACT_PATH =
 const DBT_PROJECT_FILE_PATH = 'dbt_project.yml';
 const DBT_SCHEMA_FILE_PATH = 'models/schema.yml';
 
-function flattenCodeWorkspaceFiles(entries: readonly WorkspaceFileEntry[]): WorkspaceFileEntry[] {
+export function flattenCodeWorkspaceFiles(
+  entries: readonly WorkspaceFileEntry[]
+): WorkspaceFileEntry[] {
   return entries.flatMap((entry) => {
     if (entry.kind === 'file') {
       return [entry];
@@ -72,9 +75,14 @@ export function deriveCodeGraphFilePaths(
     return paths;
   }
 
-  const hasDbtNodes = graph.nodes.some(isDbtNode);
+  const ownedNodes = graph.nodes.filter(
+    (node) =>
+      !WorkspaceDbtModelReferenceSchema.safeParse(node.metadata?.['dbtModelReference']).success
+  );
+  if (ownedNodes.length === 0) return paths;
+  const hasDbtNodes = ownedNodes.some(isDbtNode);
 
-  for (const node of graph.nodes) {
+  for (const node of ownedNodes) {
     addGraphNodeFilePath(paths, node);
   }
 
@@ -110,11 +118,16 @@ function filterCodeWorkspaceFilesByPathScope(
   });
 }
 
-function resolveProjectPath(projectRoot: string, path: string): string {
-  if (projectRoot === '.' || path === projectRoot || path.startsWith(`${projectRoot}/`)) {
-    return path;
+export function resolveDbtProjectWorkspaceFilePath(
+  projectRoot: string,
+  projectRelativePath: string
+): string {
+  const root = projectRoot.replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  const relativePath = projectRelativePath.replaceAll('\\', '/').replace(/^\.\//, '');
+  if (!root || root === '.') {
+    return relativePath;
   }
-  return `${projectRoot}/${path}`;
+  return `${root}/${relativePath}`;
 }
 
 function filterCodeWorkspaceFilesByProjectRoot(
@@ -159,11 +172,15 @@ export function resolveInitialDbtProjectFilePath(
 ): string | undefined {
   const files = flattenCodeWorkspaceFiles(entries);
   const preferredPath = options.preferredPath
-    ? resolveProjectPath(options.projectRoot, options.preferredPath)
+    ? resolveDbtProjectWorkspaceFilePath(options.projectRoot, options.preferredPath)
     : undefined;
-  const projectFilePath = resolveProjectPath(options.projectRoot, DBT_PROJECT_FILE_PATH);
+  const projectFilePath = resolveDbtProjectWorkspaceFilePath(
+    options.projectRoot,
+    DBT_PROJECT_FILE_PATH
+  );
 
   return (
+    files.find((entry) => entry.path === options.preferredPath) ??
     files.find((entry) => entry.path === preferredPath) ??
     files.find((entry) => entry.path === projectFilePath) ??
     files.find((entry) => entry.path.toLowerCase().endsWith('.sql')) ??

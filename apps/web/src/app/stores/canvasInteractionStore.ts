@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { isRecord } from '../types/canonicalGuards';
 
 import {
   createCanvasExecutionSelectionIntent,
@@ -17,7 +18,9 @@ type CanvasViewportState = CanvasPosition & {
   zoom: number;
 };
 
-export type CanvasContextualWorkbenchId = 'project-code';
+export type CanvasResourceInstance = Readonly<{ id: string; resourceId: string }>;
+
+type CanvasContextualWorkbenchId = 'project-code';
 export type CanvasInspectorListId = 'columns' | 'outputs';
 
 type CanvasInspectorListOrders = Partial<Record<CanvasInspectorListId, string[]>>;
@@ -27,23 +30,16 @@ type WorkspaceCanvasLayout = {
   nodePositions: Record<string, CanvasPosition>;
   frozenNodeIds?: string[];
   inspectorListOrdersByNode?: Record<string, CanvasInspectorListOrders>;
+  resourceInstances?: CanvasResourceInstance[];
 };
 
 const EMPTY_NODE_POSITIONS: Record<string, CanvasPosition> = {};
 
-function buildWorkspaceCanvasLayout(args: {
-  viewport: CanvasViewportState | null;
-  nodePositions: Record<string, CanvasPosition>;
-  frozenNodeIds?: string[];
-  inspectorListOrdersByNode?: Record<string, CanvasInspectorListOrders>;
-}): WorkspaceCanvasLayout {
-  const { viewport, nodePositions, frozenNodeIds, inspectorListOrdersByNode } = args;
-  return {
-    viewport,
-    nodePositions,
-    ...(frozenNodeIds === undefined ? {} : { frozenNodeIds }),
-    ...(inspectorListOrdersByNode === undefined ? {} : { inspectorListOrdersByNode }),
-  };
+function buildWorkspaceCanvasLayout(
+  current: WorkspaceCanvasLayout | undefined,
+  patch: Partial<WorkspaceCanvasLayout>
+): WorkspaceCanvasLayout {
+  return { viewport: null, nodePositions: EMPTY_NODE_POSITIONS, ...current, ...patch };
 }
 
 function areCanvasNodePositionsEqual(
@@ -62,10 +58,6 @@ function areCanvasNodePositionsEqual(
 
     return nextPosition != null && position.x === nextPosition.x && position.y === nextPosition.y;
   });
-}
-
-function areSelectedNodeIdsEqual(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((nodeId, index) => nodeId === right[index]);
 }
 
 function areOrderedIdsEqual(left: readonly string[], right: readonly string[]): boolean {
@@ -96,6 +88,12 @@ interface CanvasInteractionState {
   toggleColumnLevelLineage: () => void;
   setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
   setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
+  placeCanvasResourceInstance: (
+    workspaceKey: string,
+    instance: CanvasResourceInstance,
+    position: CanvasPosition
+  ) => void;
+  removeCanvasResourceInstance: (workspaceKey: string, instanceId: string) => void;
   toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
   setCanvasInspectorListOrder: (
     workspaceKey: string,
@@ -116,10 +114,6 @@ type CanvasInteractionPersistedState = Partial<
 >;
 
 export type { CanvasPosition, CanvasViewportState, WorkspaceCanvasLayout };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 function mergeCanvasInteractionPersistedState(
   persistedState: unknown,
@@ -164,7 +158,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
         set((state) => {
           const executionSelectionIntent = createCanvasExecutionSelectionIntent(nodes);
 
-          return areSelectedNodeIdsEqual(
+          return areOrderedIdsEqual(
             state.executionSelectionIntent.nodeIds,
             executionSelectionIntent.nodeIds
           ) && state.executionSelectionIntent.mode === executionSelectionIntent.mode
@@ -178,7 +172,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             intent.mode
           );
 
-          return areSelectedNodeIdsEqual(
+          return areOrderedIdsEqual(
             state.executionSelectionIntent.nodeIds,
             executionSelectionIntent.nodeIds
           ) && state.executionSelectionIntent.mode === executionSelectionIntent.mode
@@ -193,12 +187,8 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
         set((state) => ({
           canvasLayouts: {
             ...state.canvasLayouts,
-            [workspaceKey]: buildWorkspaceCanvasLayout({
+            [workspaceKey]: buildWorkspaceCanvasLayout(state.canvasLayouts[workspaceKey], {
               viewport,
-              nodePositions: state.canvasLayouts[workspaceKey]?.nodePositions ?? {},
-              frozenNodeIds: state.canvasLayouts[workspaceKey]?.frozenNodeIds,
-              inspectorListOrdersByNode:
-                state.canvasLayouts[workspaceKey]?.inspectorListOrdersByNode,
             }),
           },
         })),
@@ -206,19 +196,23 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
         set((state) => {
           const currentLayout = state.canvasLayouts[workspaceKey];
           const currentPositions = currentLayout?.nodePositions ?? EMPTY_NODE_POSITIONS;
+          // A renderer may report its previous frame before a new placement appears.
+          const nextPositions = { ...positions };
+          for (const instance of currentLayout?.resourceInstances ?? []) {
+            if (nextPositions[instance.id] == null && currentPositions[instance.id] != null) {
+              nextPositions[instance.id] = currentPositions[instance.id]!;
+            }
+          }
 
-          if (areCanvasNodePositionsEqual(currentPositions, positions)) {
+          if (areCanvasNodePositionsEqual(currentPositions, nextPositions)) {
             return state;
           }
 
           return {
             canvasLayouts: {
               ...state.canvasLayouts,
-              [workspaceKey]: buildWorkspaceCanvasLayout({
-                viewport: currentLayout?.viewport ?? null,
-                nodePositions: positions,
-                frozenNodeIds: currentLayout?.frozenNodeIds,
-                inspectorListOrdersByNode: currentLayout?.inspectorListOrdersByNode,
+              [workspaceKey]: buildWorkspaceCanvasLayout(currentLayout, {
+                nodePositions: nextPositions,
               }),
             },
           };
@@ -231,14 +225,9 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
           return {
             canvasLayouts: {
               ...state.canvasLayouts,
-              [workspaceKey]: {
-                viewport: currentLayout?.viewport ?? null,
-                nodePositions: currentLayout?.nodePositions ?? EMPTY_NODE_POSITIONS,
+              [workspaceKey]: buildWorkspaceCanvasLayout(currentLayout, {
                 frozenNodeIds: toggleFrozenNodeId(currentFrozenNodeIds, nodeId),
-                ...(currentLayout?.inspectorListOrdersByNode == null
-                  ? {}
-                  : { inspectorListOrdersByNode: currentLayout.inspectorListOrdersByNode }),
-              },
+              }),
             },
           };
         }),
@@ -253,10 +242,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
           return {
             canvasLayouts: {
               ...state.canvasLayouts,
-              [workspaceKey]: buildWorkspaceCanvasLayout({
-                viewport: currentLayout?.viewport ?? null,
-                nodePositions: currentLayout?.nodePositions ?? EMPTY_NODE_POSITIONS,
-                frozenNodeIds: currentLayout?.frozenNodeIds,
+              [workspaceKey]: buildWorkspaceCanvasLayout(currentLayout, {
                 inspectorListOrdersByNode: {
                   ...currentOrders,
                   [nodeId]: {
@@ -264,6 +250,49 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
                     [listId]: [...orderedIds],
                   },
                 },
+              }),
+            },
+          };
+        }),
+      placeCanvasResourceInstance: (workspaceKey, instance, position) =>
+        set((state) => {
+          const current = state.canvasLayouts[workspaceKey];
+          if (
+            !instance.id ||
+            !instance.resourceId ||
+            !Number.isFinite(position.x) ||
+            !Number.isFinite(position.y) ||
+            current?.resourceInstances?.some((entry) => entry.id === instance.id) ||
+            current?.nodePositions[instance.id] != null
+          )
+            return state;
+          return {
+            canvasLayouts: {
+              ...state.canvasLayouts,
+              [workspaceKey]: buildWorkspaceCanvasLayout(current, {
+                nodePositions: { ...current?.nodePositions, [instance.id]: position },
+                resourceInstances: [...(current?.resourceInstances ?? []), instance],
+              }),
+            },
+          };
+        }),
+      removeCanvasResourceInstance: (workspaceKey, instanceId) =>
+        set((state) => {
+          const current = state.canvasLayouts[workspaceKey];
+          if (!current?.resourceInstances?.some((entry) => entry.id === instanceId)) return state;
+          const nodePositions = { ...current.nodePositions };
+          delete nodePositions[instanceId];
+          return {
+            canvasLayouts: {
+              ...state.canvasLayouts,
+              [workspaceKey]: buildWorkspaceCanvasLayout(current, {
+                nodePositions,
+                resourceInstances: current.resourceInstances.filter(
+                  (entry) => entry.id !== instanceId
+                ),
+                ...(current.frozenNodeIds == null
+                  ? {}
+                  : { frozenNodeIds: current.frozenNodeIds.filter((id) => id !== instanceId) }),
               }),
             },
           };

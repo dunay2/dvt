@@ -6,7 +6,7 @@ Owned concern: orchestrate the read-only external dbt project-file authority rea
 @version 1.0.1
  */
 import type { Node, NodeTypes } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
@@ -31,17 +31,11 @@ import {
   applyDbtExecutionSelectionToggle,
   canOfferDbtExecutionSelectionToggle,
 } from './dbtExecutionScopePolicy';
-import {
-  buildCanvasExecutionSelectionRecoveryGraph,
-  resolveCanvasExecutionSelectionLastPreviewRevision,
-} from './canvasExecutionSelectionRecovery';
-import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
-import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliation';
-import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { useDbtProjectFileInspector } from './useDbtProjectFileInspector';
-import type { SqlContextWorkbenchHandle, SqlContextWorkbenchProps } from './SqlContextWorkbench';
+import { useDbtProjectFileWorkbenchSession } from './useDbtProjectFileWorkbenchSession';
+import { useDbtProjectFilePlacements } from './useDbtProjectFilePlacements';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -135,11 +129,6 @@ export function useDbtProjectFilesAuthorityController(
     toggleImpactOverlay,
     workspaceLayoutKey,
   } = store;
-  const [projectCodeWorkbenchOpen, setProjectCodeWorkbenchOpen] = useState(false);
-  const [projectCodeFileSelectionRequest, setProjectCodeFileSelectionRequest] =
-    useState<SqlContextWorkbenchProps['fileSelectionRequest']>();
-  const nodeCodeEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
-  const projectCodeEditorRef = useRef<SqlContextWorkbenchHandle>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
     () => buildLayoutKey(workspaceLayoutKey, authorityBinding),
@@ -156,6 +145,18 @@ export function useDbtProjectFilesAuthorityController(
   );
   const canonicalNodes = projection?.nodes ?? EMPTY_CANONICAL_NODES;
   const canonicalEdges = projection?.edges ?? EMPTY_CANONICAL_EDGES;
+  const analysisFresh = query.isSuccess && query.data.freshness === 'fresh';
+  const canPlaceReferences = _hasHydrated && analysisFresh;
+  const placements = useDbtProjectFilePlacements({
+    layoutKey,
+    resources: canonicalNodes,
+    canPlaceReferences,
+  });
+  const placedNodesById = useMemo(
+    () => buildCanonicalNodeMap(placements.nodes),
+    [placements.nodes]
+  );
+  const placedNodeIds = useMemo(() => placements.nodes.map((node) => node.id), [placements.nodes]);
   const initialNodePositions = useMemo(
     () => buildDbtProjectFileInitialNodePositions(canonicalNodes, canonicalEdges),
     [canonicalEdges, canonicalNodes]
@@ -165,7 +166,13 @@ export function useDbtProjectFilesAuthorityController(
     [initialNodePositions, persistedNodePositions]
   );
   const canonicalNodesById = useMemo(() => buildCanonicalNodeMap(canonicalNodes), [canonicalNodes]);
-  const analysisFresh = query.isSuccess && query.data.freshness === 'fresh';
+  const workbenchSession = useDbtProjectFileWorkbenchSession({
+    nodesById: canonicalNodesById,
+    setInspectorNode,
+    showInspectorPanel,
+    hideInspectorPanel,
+  });
+  const { openNodeWorkbench } = workbenchSession;
   const inspectorNode = useDbtProjectFileInspector({
     authorityKey: layoutKey,
     inspectorNodeId,
@@ -204,9 +211,9 @@ export function useDbtProjectFilesAuthorityController(
     [canonicalEdges]
   );
   const graphModel = useCanvasViewportGraphModel({
-    visibleNodeIds,
+    visibleNodeIds: placedNodeIds,
     visibleEdges,
-    canonicalNodesById,
+    canonicalNodesById: placedNodesById,
     canonicalEdgeIdBySignature,
     columnLevelLineageEnabled,
     persistedNodePositions: viewportNodePositions,
@@ -229,29 +236,9 @@ export function useDbtProjectFilesAuthorityController(
     selectionIntent: executionSelectionIntent,
     workspaceNodeIds: visibleNodeIds,
     store,
+    refetchProjectGraph: query.refetch,
   });
-  const executionSelectableNodeIds = useMemo(
-    () =>
-      new Set(
-        execution.executionStrategy?.kind === 'dbt_project_file_preview'
-          ? execution.executionStrategy.plannerGraphSource.nodes.map((node) => node.nodeId)
-          : []
-      ),
-    [execution.executionStrategy]
-  );
-  const executionSelectionRecoveryGraph = useMemo(
-    () =>
-      buildCanvasExecutionSelectionRecoveryGraph({
-        canonicalNodes,
-        canonicalEdges,
-        workspaceNodeIds: visibleNodeIds,
-        plannerGraphSource:
-          execution.executionStrategy?.kind === 'dbt_project_file_preview'
-            ? execution.executionStrategy.plannerGraphSource
-            : null,
-      }),
-    [canonicalEdges, canonicalNodes, execution.executionStrategy, visibleNodeIds]
-  );
+  const { executionSelectableNodeIds, executionSelectionRecovery } = execution;
   const refetchProjectGraph = query.refetch;
   const refreshProjectGraphSource = useCallback(async () => {
     const result = await refetchProjectGraph();
@@ -283,70 +270,6 @@ export function useDbtProjectFilesAuthorityController(
     },
     [refreshProjectGraph]
   );
-  const refreshExecutionSelectionAnalysis = useCallback(
-    () =>
-      refreshCanvasExecutionSelectionAuthority(
-        refetchProjectGraph,
-        (projection) => projection?.freshness === 'fresh'
-      ),
-    [refetchProjectGraph]
-  );
-  const executionSelectionRecovery = useCanvasExecutionSelectionRecovery({
-    enabled: true,
-    selectionIntent: executionSelectionIntent,
-    workspaceNodeIds: visibleNodeIds,
-    executableNodeIds: executionSelectionRecoveryGraph.executableNodeIds,
-    dependencyIdsByNodeId: executionSelectionRecoveryGraph.dependencyIdsByNodeId,
-    lastPreviewRevision: resolveCanvasExecutionSelectionLastPreviewRevision(store.currentPlan),
-    canRefreshAnalysis: true,
-    setSelectionIntent: store.setExecutionSelectionIntent,
-    refreshAnalysis: refreshExecutionSelectionAnalysis,
-  });
-
-  const flushActiveNodeCode = useCallback(
-    async (): Promise<boolean> => (await nodeCodeEditorRef.current?.flush()) ?? true,
-    []
-  );
-
-  const openNodeWorkbench = useCallback(
-    async (
-      nodeId: string,
-      preferredTabId?: 'general' | 'columns' | 'inputs-outputs' | 'tests' | 'code' | null
-    ) => {
-      if (!canonicalNodesById.has(nodeId)) {
-        return;
-      }
-      if (!(await flushActiveNodeCode())) {
-        return;
-      }
-      if ((await projectCodeEditorRef.current?.flush()) === false) {
-        return;
-      }
-
-      setProjectCodeWorkbenchOpen(false);
-      setInspectorNode(nodeId, preferredTabId ?? 'general');
-      showInspectorPanel();
-    },
-    [canonicalNodesById, flushActiveNodeCode, setInspectorNode, showInspectorPanel]
-  );
-  const openProjectCode = useCallback(
-    async (initialPath?: string): Promise<boolean> => {
-      if (!(await flushActiveNodeCode())) {
-        return false;
-      }
-      if (initialPath !== undefined || !projectCodeWorkbenchOpen) {
-        setProjectCodeFileSelectionRequest(
-          initialPath === undefined ? undefined : { path: initialPath }
-        );
-      }
-      setProjectCodeWorkbenchOpen(true);
-      return true;
-    },
-    [flushActiveNodeCode, projectCodeWorkbenchOpen]
-  );
-  const closeCodeWorkbench = useCallback(() => {
-    setProjectCodeWorkbenchOpen(false);
-  }, []);
   const graphNodeCardStrategies = useMemo(
     () => getGraphNodeCardStrategies(runtimeCapabilities),
     [runtimeCapabilities]
@@ -354,45 +277,52 @@ export function useDbtProjectFilesAuthorityController(
   const nodesWithCommands = useMemo<Node[]>(
     () =>
       graphModel.nodes.map((node) => {
+        const resourceId = placements.definitionIdByInstanceId.get(node.id) ?? node.id;
+        const isInstance = placements.definitionIdByInstanceId.has(node.id);
+        const placedNode = { ...node, deletable: isInstance };
         const data: DbtNodeData = {
           ...(node.data as DbtNodeData),
           runtimeCapabilities,
           canMutateGraph: false,
-          selectedForExecution: selectedNodeIds.includes(node.id),
-          onInspectNode: (nodeId, preferredTabId) => {
-            void openNodeWorkbench(nodeId, preferredTabId);
+          canRemovePlacement: isInstance,
+          onRemoveNode: isInstance ? placements.removeInstance : undefined,
+          selectedForExecution: selectedNodeIds.includes(resourceId),
+          onInspectNode: (_nodeId, preferredTabId) => {
+            void openNodeWorkbench(resourceId, preferredTabId);
           },
           canOpenNodeCode: node.data.path != null,
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
-              isExecutableRoot: executionSelectableNodeIds.has(node.id),
-              selectedForExecution: selectedNodeIds.includes(node.id),
+              isExecutableRoot: executionSelectableNodeIds.has(resourceId),
+              selectedForExecution: selectedNodeIds.includes(resourceId),
             })
-              ? (nodeId: string, shouldSelect: boolean) => {
+              ? (_nodeId: string, shouldSelect: boolean) => {
                   store.setExecutionSelectionIntent(
                     applyDbtExecutionSelectionToggle({
                       requestedNodeIds: executionScope.requestedNodeIds,
-                      nodeId,
+                      nodeId: resourceId,
                       shouldSelect,
                     })
                   );
                 }
               : undefined,
         };
-        const canonicalNode = canonicalNodesById.get(node.id);
+        const canonicalNode = placedNodesById.get(node.id);
 
         return canonicalNode == null
-          ? { ...node, data }
+          ? { ...placedNode, data }
           : projectCanvasNodeAccessibleHealth({
-              node,
+              node: placedNode,
               canonicalNode,
               data,
               graphNodeCardStrategies,
             });
       }),
     [
-      canonicalNodesById,
+      placedNodesById,
+      placements.definitionIdByInstanceId,
+      placements.removeInstance,
       execution.canSelectExecution,
       executionSelectableNodeIds,
       executionScope.requestedNodeIds,
@@ -412,13 +342,6 @@ export function useDbtProjectFilesAuthorityController(
     }
   }, [analysisFresh, hideInspectorPanel, inspectorNode, inspectorNodeId, setInspectorNode]);
 
-  const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
-    event.dataTransfer.dropEffect = 'none';
-  }, []);
-  const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'none';
-  }, []);
   const handleSourceImportComplete = useCallback(
     (result: ImportSourcesResult) => {
       const nextFocusIds = resolveDbtProjectFileSourceImportFocus(authorityBinding, result);
@@ -436,18 +359,13 @@ export function useDbtProjectFilesAuthorityController(
   );
 
   return {
+    ...workbenchSession,
     authorityBinding,
     workspaceLayoutKey,
     query,
     projection,
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,
     layoutKey,
-    nodeCodeEditorRef,
-    projectCodeEditorRef,
-    projectCodeWorkbenchOpen,
-    projectCodeFileSelectionRequest,
-    openProjectCode,
-    closeCodeWorkbench,
     refreshProjectGraphAfterMutation,
     reconcileCodeFilePersistence,
     reloadNodeDescription,
@@ -459,6 +377,7 @@ export function useDbtProjectFilesAuthorityController(
     nodeTypes: DBT_PROJECT_FILE_NODE_TYPES,
     persistedViewport,
     frozenNodeIds,
+    referencePlacementScope: canPlaceReferences ? layoutKey : undefined,
     importedNodeFocusIds,
     presentation: {
       focusMode,
@@ -480,25 +399,26 @@ export function useDbtProjectFilesAuthorityController(
     registeredPlugins: getRegisteredPluginIds(runtimeCapabilities),
     runtimeCapabilities,
     graphCommands: {
-      onNodesChange: graphModel.onNodesChange,
+      onInstantiateNode: placements.placeResource,
+      onNodesChange: (changes: Parameters<typeof graphModel.onNodesChange>[0]) => {
+        const accepted = placements.applyNodeChanges(changes);
+        if (accepted.length > 0) graphModel.onNodesChange(accepted);
+      },
       onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,
-      onEdgesChange: graphModel.onEdgesChange,
+      onEdgesChange: (changes: Parameters<typeof graphModel.onEdgesChange>[0]) => {
+        const accepted = changes.filter((change) => change.type !== 'remove');
+        if (accepted.length > 0) graphModel.onEdgesChange(accepted);
+      },
       onViewportChange: persistence.handleViewportChange,
-      onDrop: handleDrop,
-      onDragOver: handleDragOver,
+      onDrop: placements.onDrop,
+      onDragOver: placements.onDragOver,
       onToggleFrozenNode: (nodeId: string) => toggleFrozenCanvasNode(layoutKey, nodeId),
       onSourceImportComplete: handleSourceImportComplete,
       onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),
     },
     chromeCommands: {
-      onHideInspector: () => {
-        void flushActiveNodeCode().then((persisted) => {
-          if (persisted) {
-            hideInspectorPanel();
-          }
-        });
-      },
+      onHideInspector: workbenchSession.closeNodeWorkbench,
       onShowInspector: showInspectorPanel,
       onToggleImpact: toggleImpactOverlay,
       onToggleColumns: toggleColumnLevelLineage,

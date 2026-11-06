@@ -112,6 +112,14 @@ export async function createDbtAnalysisReuseFixture(): Promise<DbtAnalysisReuseF
           name,
           package_name: 'analytics',
           original_file_path: `models/${name}.sql`,
+          ...(input.args[0] === 'compile' && input.args.includes(name)
+            ? {
+                compiled_code:
+                  name === 'orders'
+                    ? 'select client_id from "public"."clients"'
+                    : 'select 1 as client_id',
+              }
+            : {}),
           depends_on: { nodes: name === 'orders' ? ['model.analytics.clients'] : [] },
           config: { materialized: 'view' },
           columns: { client_id: { name: 'client_id', data_type: 'integer' } },

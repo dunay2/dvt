@@ -9,6 +9,8 @@ import {
   type NodeProps,
   type NodeTypes,
 } from '@xyflow/react';
+import { resolveCanvasViewportInteraction } from '../views/canvas/canvasViewportInteraction';
+import interactionStyles from '../views/canvas/canvasViewportInteraction.module.css';
 
 const surface = '#040712';
 const panel = '#09111f';
@@ -360,6 +362,7 @@ const EDGES: readonly Edge[] = [
 ];
 
 function RelationalCompositionLab(): ReactElement {
+  const interaction = resolveCanvasViewportInteraction(false);
   const [scenarioId, setScenarioId] = useState<ScenarioId>('join');
   const [compositionOpen, setCompositionOpen] = useState(false);
   const scenario = SCENARIOS.find((candidate) => candidate.id === scenarioId) ?? SCENARIOS[0]!;
@@ -429,6 +432,8 @@ function RelationalCompositionLab(): ReactElement {
 
       <section style={{ position: 'relative', minHeight: 0 }}>
         <ReactFlow
+          {...interaction.flow}
+          className={interactionStyles.surface}
           nodes={nodes}
           edges={[...EDGES]}
           nodeTypes={NODE_TYPES}

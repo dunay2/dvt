@@ -7,6 +7,7 @@ import {
 } from './canvasNodePresentationBase';
 import { canvasColumnTruth } from './canvasPresentationColumns';
 import { projectCanvasPresentationNode } from './canvasPresentationNode';
+import { projectWorkspaceNodeInstanceEdges } from '@dvt/contracts';
 
 type Graph = Pick<CanvasPresentationQuery, 'nodes' | 'edges'>;
 
@@ -14,8 +15,10 @@ export async function projectCanvasGraphPresentation(
   graph: Graph,
   analysis: CanvasPresentationAnalysis,
   signal?: AbortSignal,
-  targets: readonly string[] = graph.nodes.map((node) => node.id)
+  targets: readonly string[] = graph.nodes.map((node) => node.id),
+  retained: ReadonlyMap<string, CanvasNodePresentationTruth> = new Map()
 ): Promise<ReadonlyMap<string, CanvasNodePresentationTruth>> {
+  graph = { ...graph, edges: projectWorkspaceNodeInstanceEdges(graph.nodes, graph.edges) };
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   const inputs = new Map<string, Set<string>>();
   const consumers = new Map<string, Set<string>>();
@@ -36,7 +39,7 @@ export async function projectCanvasGraphPresentation(
   }
   const remaining = new Map([...selected].map((id) => [id, inputs.get(id)?.size ?? 0]));
   let ready = [...remaining].filter(([, count]) => count === 0).map(([id]) => id);
-  const projected = new Map<string, CanvasNodePresentationTruth>();
+  const projected = new Map(retained);
   while (ready.length > 0) {
     signal?.throwIfAborted();
     const wave = ready;
@@ -46,13 +49,14 @@ export async function projectCanvasGraphPresentation(
         async (id) =>
           [
             id,
-            await projectCanvasPresentationNode(
-              { ...graph, node: nodes.get(id)! },
-              analysis,
-              signal,
-              [...(inputs.get(id) ?? [])].map((input) => nodes.get(input)!),
-              projected
-            ),
+            retained.get(id) ??
+              (await projectCanvasPresentationNode(
+                { ...graph, node: nodes.get(id)! },
+                analysis,
+                signal,
+                [...(inputs.get(id) ?? [])].map((input) => nodes.get(input)!),
+                projected
+              )),
           ] as const
       )
     );

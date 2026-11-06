@@ -6,6 +6,7 @@ import {
   DvtTransformAuthoringAuthorityV1Schema,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type DvtSubstraitSemanticDocumentV1,
+  readWorkspaceDbtModelReference,
 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -85,6 +86,8 @@ export function applyDvtSubstraitSemanticDocument(
   documentInput: unknown
 ): CanonicalNode {
   assertDvtSemanticNode(node);
+  if (readWorkspaceDbtModelReference(node) != null)
+    throw new Error('File-model semantics remain owned by the referenced dbt files.');
   const semanticDocument = canonicalizeDvtSubstraitSemanticDocumentV1(documentInput);
   return {
     ...node,

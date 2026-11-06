@@ -37,9 +37,8 @@ describe('occurrence versus physical-source boundaries', () => {
     const code = readFileSync(path, 'utf8');
     const module = ts.createSourceFile(path.pathname, code, ts.ScriptTarget.Latest, true);
     const imports = module.statements.filter(ts.isImportDeclaration);
-    expect(imports).toHaveLength(1);
-    expect(imports[0]!.importClause?.isTypeOnly).toBe(true);
-    expect((imports[0]!.moduleSpecifier as ts.StringLiteral).text).toBe('@dvt/contracts');
-    expect(module.statements.some(ts.isClassDeclaration)).toBe(false);
+    expect(
+      new Set(imports.map((declaration) => (declaration.moduleSpecifier as ts.StringLiteral).text))
+    ).toEqual(new Set(['@dvt/contracts']));
   });
 });

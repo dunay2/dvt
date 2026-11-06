@@ -12,7 +12,7 @@ import {
   type SubstraitRelationIndex,
   type RelationPublication,
 } from '@dvt/substrait-analysis';
-import type { ConnectionRef } from '@dvt/contracts';
+import { projectWorkspaceNodeInstanceEdges, type ConnectionRef } from '@dvt/contracts';
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -20,6 +20,7 @@ import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindi
 import { resolveCanvasDvtJoinDataType } from './canvasDvtJoinTypeAdmission';
 import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export type CanvasModelCompositionPublication = Readonly<{
   nodeId: string;
@@ -40,11 +41,15 @@ export function readCanvasModelCompositionPublication(
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform' || node.role !== 'transform')
     return null;
   try {
-    const { document, connection, index } = resolveCanvasSubstraitGraphBindings({
-      node,
-      nodes,
-      edges,
-    });
+    const contextEdges = projectWorkspaceNodeInstanceEdges(nodes, edges);
+    const external = resolveCanvasDbtModelSignature(node);
+    const { document, connection, index } =
+      external ??
+      resolveCanvasSubstraitGraphBindings({
+        node,
+        nodes,
+        edges: contextEdges,
+      });
     const { schemas } = deriveSubstraitSchemas(document);
     const root = index.relations.get(index.rootId)!;
     const schema = schemas.get(index.rootId)!;
@@ -64,7 +69,15 @@ export function readCanvasModelCompositionPublication(
             type.value.nullability !== Type_Nullability.REQUIRED,
         };
       });
-    const denied = resolveUnmappedCanvasReadFields({ nodeId: node.id, nodes, edges, document });
+    const denied =
+      external == null
+        ? resolveUnmappedCanvasReadFields({
+            nodeId: node.id,
+            nodes,
+            edges: contextEdges,
+            document,
+          })
+        : new Set<string>();
     const publication = deriveSubstraitPublication(document, denied).get(index.rootId)!;
     const unavailable = new Set(publication.unavailableFieldIds);
     const publishedFieldIds = new Set(

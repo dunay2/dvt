@@ -3,9 +3,41 @@ import { describe, expect, it } from 'vitest';
 import { useAuthoringFieldsHarness } from './DvtAuthoringFields.test-support';
 import { buildDvtNode, buildJoinWarehouseSourceNode } from './DvtAuthoringFields.test-fixtures';
 import type { CanonicalEdge } from '../../types/canonical';
+import { dbtModel, connectionRef } from './canvasDvtConnectionProvenance.test-support';
 
 describe('DVT authoring consumes complete connection provenance', () => {
   const view = useAuthoringFieldsHarness();
+  it.each(['warehouse-main', 'other'])(
+    'offers the shared dbt/Source destination only when connections agree: %s',
+    (connectionId) => {
+      const transform = buildDvtNode('dvt:transform');
+      const source = buildJoinWarehouseSourceNode({ id: 'a', table: 'a', columns: ['id'] });
+      const model = dbtModel({ ...connectionRef, connectionId });
+      const edges: CanonicalEdge[] = [source, model].map(({ id }) => ({
+        id,
+        sourceId: id,
+        targetId: transform.id,
+        relation: 'lineage',
+      }));
+      view.renderFields(
+        transform,
+        undefined,
+        undefined,
+        [source, model, transform],
+        edges,
+        'general'
+      );
+      const select = view.container.querySelector<HTMLSelectElement>(
+        'select[name="dvt-transform-result-connection"]'
+      )!;
+      expect(select.disabled).toBe(connectionId !== 'warehouse-main');
+      expect([...select.options].map(({ value }) => value)).toEqual(
+        connectionId === 'warehouse-main' ? ['', 'warehouse-main'] : ['']
+      );
+      expect(select.value).toBe('');
+      expect(view.draftJson()).not.toContain('resultTarget');
+    }
+  );
   it.each(['warehouse-main', 'other'])(
     'only offers a common Sink connection for explicit confirmation: %s',
     (connectionId) => {

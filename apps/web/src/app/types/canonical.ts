@@ -81,6 +81,8 @@ export interface CanonicalNode {
   id: string;
   /** Independent placement referencing a registered source configuration. */
   sourceDefinitionId?: string;
+  /** Independent instance referencing a registered Source or Model definition. */
+  definitionId?: string;
   name: string;
   pluginId: string;
   kind: PluginNodeKind;

@@ -11,7 +11,7 @@ const { spawnSync } = require('node:child_process');
 const { existsSync, readdirSync } = require('node:fs');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
 const path = require('node:path');
-const readline = require('node:readline');
+const { pipePrefixedOutput } = require('./prefixed-process-output.cjs');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
 const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
@@ -66,14 +66,6 @@ const LOCAL_TEMPORAL_TEST_SERVER_ROOT = path.resolve(__dirname, '../.dvt/tempora
 
 function allocateLiveProofSchema() {
   return `dvt_live_selected_closure_${Date.now()}_${process.pid}`;
-}
-
-function pipePrefixedOutput(stream, prefix) {
-  const lineReader = readline.createInterface({ input: stream });
-  lineReader.on('line', (line) => {
-    console.log(`${prefix} ${line}`);
-  });
-  return lineReader;
 }
 
 function spawnProcess(name, args, envOverrides = {}) {
@@ -286,6 +278,9 @@ function buildLiveProofCypressDockerInvocation(
     'CYPRESS_workspaceProjectId',
     '-e',
     'CYPRESS_workspaceEnvironmentId',
+    ...(args.projectFilesEnvironmentId === undefined
+      ? []
+      : ['-e', 'CYPRESS_projectFilesEnvironmentId']),
     ...(args.postgresTargetSchema === undefined ? [] : ['-e', 'CYPRESS_postgresTargetSchema']),
     ...(args.postgresDatabaseName === undefined ? [] : ['-e', 'CYPRESS_postgresDatabaseName']),
     CYPRESS_IMAGE,
@@ -330,6 +325,9 @@ function buildLiveProofCypressNativeInvocation(args) {
       CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
       CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
       CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
+      ...(args.projectFilesEnvironmentId === undefined
+        ? {}
+        : { CYPRESS_projectFilesEnvironmentId: args.projectFilesEnvironmentId }),
       ...(args.postgresTargetSchema === undefined
         ? {}
         : { CYPRESS_postgresTargetSchema: args.postgresTargetSchema }),
@@ -503,6 +501,22 @@ function buildLiveProofApiEnv({
     ...temporalEnv,
     ...artifactEnv,
     ...oidcEnv,
+  };
+}
+
+function buildLiveProofWebEnv({ apiBaseUrl, webEnv, workspaceScope, projectFilesEnvironmentId }) {
+  return {
+    ...webEnv,
+    VITE_API_BASE_URL: apiBaseUrl,
+    VITE_DEFAULT_TENANT_ID: workspaceScope.tenantId,
+    VITE_DEFAULT_PROJECT_ID: workspaceScope.projectId,
+    VITE_DEFAULT_ENVIRONMENT_ID: workspaceScope.environmentId,
+    VITE_ENVIRONMENT_OPTIONS: [workspaceScope.environmentId, projectFilesEnvironmentId].join(','),
+    VITE_GIT_BRANCH: 'main',
+    VITE_GIT_SHA: 'local',
+    VITE_GIT_REPO: 'dunay2/dvt',
+    VITE_GRAPH_ARTIFACT_PATH: 'pipelines/sales_pipeline.yaml',
+    VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
   };
 }
 
@@ -759,12 +773,17 @@ async function main() {
       apiHandle
     );
 
+    const projectFilesEnvironmentId =
+      localProtectedRuntimeAuth.workspaceScope.environmentId === 'project-files-proof'
+        ? 'project-files-proof-isolated'
+        : 'project-files-proof';
     await seedLocalProtectedRuntimeGrant({
       databaseUrl,
       schema: liveProofSchema,
       principalId: localProtectedRuntimeAuth.principalId,
       tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+      additionalEnvironmentIds: [projectFilesEnvironmentId],
     });
     await seedLocalProtectedRuntimeGrant({
       databaseUrl,
@@ -774,15 +793,21 @@ async function main() {
         (action) => action !== 'run:start'
       ),
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+      additionalEnvironmentIds: [projectFilesEnvironmentId],
     });
 
-    await ensureLocalWarehouseConnectionViaApi({
-      databaseUrl,
-      apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
-      bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
-      workspaceScope: localProtectedRuntimeAuth.workspaceScope,
-      commandTimeoutMs: DEFAULT_READY_TIMEOUT_MS,
-    });
+    for (const environmentId of [
+      localProtectedRuntimeAuth.workspaceScope.environmentId,
+      projectFilesEnvironmentId,
+    ]) {
+      await ensureLocalWarehouseConnectionViaApi({
+        databaseUrl,
+        apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
+        bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+        workspaceScope: { ...localProtectedRuntimeAuth.workspaceScope, environmentId },
+        commandTimeoutMs: DEFAULT_READY_TIMEOUT_MS,
+      });
+    }
 
     const temporalWorkerReadyzUrl = readNonEmptyEnv(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL);
     if (temporalWorkerReadyzUrl === undefined) {
@@ -816,20 +841,14 @@ async function main() {
         port: DEFAULT_WEB_PORT,
         timeout: DEFAULT_READY_TIMEOUT_MS,
         interval: DEFAULT_POLL_INTERVAL_MS,
-        environment: {
-          VITE_API_BASE_URL: `http://${
+        environment: buildLiveProofWebEnv({
+          apiBaseUrl: `http://${
             cypressRuntime === 'native' ? '127.0.0.1' : 'host.docker.internal'
           }:${DEFAULT_API_PORT}`,
-          ...localProtectedRuntimeAuth.webEnv,
-          VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,
-          VITE_DEFAULT_PROJECT_ID: localProtectedRuntimeAuth.workspaceScope.projectId,
-          VITE_DEFAULT_ENVIRONMENT_ID: localProtectedRuntimeAuth.workspaceScope.environmentId,
-          VITE_GIT_BRANCH: 'main',
-          VITE_GIT_SHA: 'local',
-          VITE_GIT_REPO: 'dunay2/dvt',
-          VITE_GRAPH_ARTIFACT_PATH: 'pipelines/sales_pipeline.yaml',
-          VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
-        },
+          webEnv: localProtectedRuntimeAuth.webEnv,
+          workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+          projectFilesEnvironmentId,
+        }),
       },
       processHandles,
       { spawnProcess, waitForUrlOrProcessExit }
@@ -862,6 +881,7 @@ async function main() {
         apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
         restrictedApiBearerToken: restrictedPrincipalToken.bearerToken,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+        projectFilesEnvironmentId,
         postgresTargetSchema: liveProofSchema,
         postgresDatabaseName: lease.name,
         specPaths,
@@ -888,6 +908,7 @@ module.exports = {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofWebEnv,
   buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
