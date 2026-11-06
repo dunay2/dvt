@@ -344,3 +344,16 @@ contract. The UI now explains unsupported/unresolved types instead of asking for
 an ineffective Preview retry. No numeric-to-float conversion, invented digest,
 target write or successful Execution Preview is claimed. The complete committed
 prepush and main integration remain separate, pending acceptance evidence.
+
+The [operation-session closure correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6689544902)
+completes the existing Preview proof before native browser teardown. The complete
+gate passes 723 manifests, 6,482 Web cases and 150 controlled browser cases, then
+stalls after the direct JOIN case passes. An unchanged-source isolated run stalls
+at the same boundary. Browser protocol reads respond while page reads do not;
+no visible JavaScript dialog is reported. Both attempts remain failed completion
+evidence. The preceding case deliberately leaves a disconnected Output and an
+unused Source as local edits. After retaining every semantic, row-call and
+invalidation assertion, the corrected journey uses public Cancel and Close,
+asserts editor/tab absence and Canvas activation, and requires no additional
+draft write. The existing navigation guard and runner isolation remain intact;
+focused completion and the final committed gate are still required.

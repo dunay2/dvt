@@ -312,6 +312,13 @@ describe('Internal operation card execution', () => {
           expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(2);
           expect(semanticWrites('join-transform')).to.have.length(writesBefore);
         });
+        cy.get('[data-slot="canvas-relational-tree-cancel"]').should('be.visible').click();
+        cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+        cy.get('[data-slot="canvas-model-tab-close"]').click();
+        cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+        cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+        cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
+        cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBefore));
       });
     });
   }

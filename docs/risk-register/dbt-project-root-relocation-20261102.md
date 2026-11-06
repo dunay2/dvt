@@ -173,3 +173,12 @@ requires a coherent provider/profile contract extension; silently converting to
 floating point or inventing a digest would risk precision and CAS correctness.
 This is an exposed existing limitation, not newly accepted debt or delivered
 numeric publication support.
+
+Native operation-preview evidence must complete its local Model session before
+returning browser lifetime to Cypress. A proof that intentionally disconnects
+Output must retain its admission/sample assertions, then cancel through the
+public action and observe Model closure without another graph write. The
+reproduced native completion wait does not authorize removing draft protection,
+globally dismissing dialogs, weakening isolation or increasing test deadlines.
+Focused and full-gate outcomes remain separate; partial passing cases cannot
+certify a completed browser run.
