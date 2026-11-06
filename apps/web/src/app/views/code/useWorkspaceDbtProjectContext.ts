@@ -61,7 +61,8 @@ export function useWorkspaceDbtProjectContext({
     enabled &&
     !unavailable &&
     (tree.isPending ||
-      (configPath != null && config.isPending) ||
-      (binding != null && graph.isPending));
+      tree.isFetching ||
+      (configPath != null && (config.isPending || config.isFetching)) ||
+      (binding != null && (graph.isPending || graph.isFetching)));
   return { binding, projection, unavailable, loading };
 }

@@ -377,7 +377,7 @@ addresses PR #3805's current-authority review. A placed model retains its Canvas
 and model identities while its historic path becomes invalid after relocation.
 The regression first fails on a read of `old-root/models/ventas.sql`. Code now
 shares Elements' scoped project-context composition and resolves the original
-model path under the current accepted root. Twelve Code contribution cases and
+model path under the current accepted root. Fifteen Code contribution cases and
 three ownership cases pass, including fresh mounts, repeated `models` directory
 names, other-owner authority, stale projection, missing model and ambiguous
 project rejection. The existing sixteen Elements cases also pass. No file save,
@@ -387,9 +387,15 @@ cases, strict lint, contract typecheck and `pnpm traceability:adr0`.
 The controlled native Chrome journey retains independent placement, drag,
 deletion and persisted instance assertions, then inspects the surviving instance
 under the relocated authority across two full navigations. Both cases complete
-in 19 seconds with normal runner cleanup. The journey observes the deletion's
+in 21 seconds with normal runner cleanup. The journey observes the deletion's
 real saved draft before navigation and closes the read-only inspector through
 its public action. Relocated Code shows `models/models/clientes.sql`, makes no
 historic SQL read, file write or selected-model compilation, and leaves the
 persisted reference untouched. Web typecheck and strict touched-surface lint
 pass; the new committed-head prepush and PR checks remain required.
+Three warm-cache regressions fail before the final guard and pass afterwards:
+reference Code waits while the file tree, configuration or graph is revalidated,
+then resumes through the accepted current context. The catalogue retains its
+definitions and all consumers keep the existing scoped query keys. The final
+focused run passes all 34 Code/ownership/catalogue cases; no timeout, isolation,
+retry or validation rule is relaxed.

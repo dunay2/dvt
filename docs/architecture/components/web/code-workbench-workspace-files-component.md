@@ -26,6 +26,10 @@ current `originalFilePath`. The shared qualifier combines that relative path
 with the current root. A missing, ambiguous, stale or different-owner context
 cannot fall back to the captured path. Opening the file neither rewrites the
 native definition nor invokes selected-model compilation.
+While the file tree, configuration or graph is revalidated, reference Code waits
+for the current context rather than authorizing a file through cached authority.
+The catalogue retains its definitions during that read; the query cache and keys
+remain shared.
 
 ```mermaid
 flowchart LR

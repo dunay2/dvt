@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createRef, isValidElement } from 'react';
+import { act, createRef, isValidElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/dom';
 
@@ -66,6 +66,86 @@ function referencedNode(path: string | undefined, canvasId: string): CanonicalNo
 }
 
 describe('buildDbtWorkspaceFileCodeContributions', () => {
+  it.each(['file-tree', 'configuration', 'project-graph'] as const)(
+    'withholds cached Code while %s authority is revalidated',
+    async (dependency) => {
+      const current = contextFixture('select 9 as current_model', 'current');
+      const config = {
+        ...current.file,
+        name: 'dbt_project.yml',
+        path: 'current/dbt_project.yml',
+        language: 'yaml',
+        content: 'name: demo',
+      };
+      let revalidating = false;
+      let finishCheck: (() => void) | undefined;
+      const check = async (kind: typeof dependency): Promise<void> => {
+        if (revalidating && dependency === kind)
+          await new Promise<void>((resolve) => {
+            finishCheck = resolve;
+          });
+      };
+      const listFiles = vi.fn(async () => {
+        await check('file-tree');
+        return [{ name: config.name, path: config.path, kind: 'file' as const }];
+      });
+      const getFileContent = vi.fn(async (path: string) => {
+        if (path === config.path) {
+          await check('configuration');
+          return config;
+        }
+        return current.file;
+      });
+      const getProjectGraph = vi.fn(async () => {
+        await check('project-graph');
+        return current.project;
+      });
+      const node = referencedNode(
+        'historic/models/ventas.sql',
+        current.project.authorityBinding.canvasId
+      );
+      mounted = await withTestQueryClient(
+        <AppServicesProvider
+          overrides={{
+            ...createAppServicesTestOverrides(),
+            workspaceFilesQuery: { listFiles, getFileContent },
+            dbtProjectGraphQueryPort: { getProjectGraph },
+          }}
+        >
+          {buildDbtWorkspaceFileCodeContributions({ node })[0]?.content}
+        </AppServicesProvider>
+      );
+      await waitForReactQuery(() => screen.queryByText(current.file.content) != null);
+      revalidating = true;
+      const queryKind =
+        dependency === 'configuration'
+          ? 'file-content'
+          : dependency === 'project-graph'
+            ? 'dbt-project-graph'
+            : 'file-tree';
+      await act(async () => {
+        void mounted?.queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[1] === queryKind &&
+            (dependency !== 'configuration' || query.queryKey.at(-1) === config.path),
+        });
+      });
+      await waitForReactQuery(() => finishCheck != null);
+      try {
+        await waitForReactQuery(() => screen.queryByText(current.file.content) == null, {
+          timeoutMs: 1_000,
+        });
+        expect(screen.queryByText(current.file.content)).toBeNull();
+      } finally {
+        await act(async () => {
+          finishCheck?.();
+        });
+      }
+      await waitForReactQuery(() => screen.queryByText(current.file.content) != null);
+      expect(getFileContent).not.toHaveBeenCalledWith(node.path);
+    }
+  );
+
   it('opens a persisted model instance using current authority after relocation and a fresh mount', async () => {
     const old = contextFixture('select 1', 'old-root');
     const current = contextFixture('select 2 as relocated', 'models');
@@ -156,13 +236,11 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
           ? { ...config, authoringAuthority: { kind: 'unresolved', reason: 'missing_authority' } }
           : config
       );
-    const getProjectGraph = vi
-      .fn()
-      .mockResolvedValue({
-        ...current.project,
-        freshness: reason === 'stale-projection' ? 'stale' : 'fresh',
-        nodes: reason === 'missing-model' ? [] : current.project.nodes,
-      });
+    const getProjectGraph = vi.fn().mockResolvedValue({
+      ...current.project,
+      freshness: reason === 'stale-projection' ? 'stale' : 'fresh',
+      nodes: reason === 'missing-model' ? [] : current.project.nodes,
+    });
     const saveFileContent = vi.fn();
     mounted = await withTestQueryClient(
       <AppServicesProvider

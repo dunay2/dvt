@@ -38,7 +38,7 @@ function ReferencedModelCode({
     model?.originalFilePath == null || binding == null
       ? undefined
       : resolveDbtProjectWorkspaceFilePath(binding.authority.projectRoot, model.originalFilePath);
-  if (path == null)
+  if (loading || path == null)
     return (
       <p role={loading ? 'status' : 'alert'}>
         {loading ? copy.previewLoadingMessage : copy.previewErrorMessage}
