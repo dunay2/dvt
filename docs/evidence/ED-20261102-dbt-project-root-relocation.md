@@ -355,5 +355,10 @@ evidence. The preceding case deliberately leaves a disconnected Output and an
 unused Source as local edits. After retaining every semantic, row-call and
 invalidation assertion, the corrected journey uses public Cancel and Close,
 asserts editor/tab absence and Canvas activation, and requires no additional
-draft write. The existing navigation guard and runner isolation remain intact;
-focused completion and the final committed gate are still required.
+draft write. The existing navigation guard and runner isolation remain intact.
+The hook-normalized correction `cce5aab3398b416f5e78d0717e030c54d630cd90`
+passes all three operation cases and all three cases of the following chain
+persistence spec: six native cases in 38 seconds. Cypress exits normally and
+both disposable leases are retired. Strict touched-spec lint and Web typecheck
+pass. This establishes completed user navigation without changing the production
+guard; the final committed prepush and integration remain required.
