@@ -1,4 +1,10 @@
-/** Owned concern: version the lossless, revision-bound dbt root-relocation protocol. */
+/**
+ * Owned concern: version the lossless, revision-bound dbt root-relocation protocol.
+ * @baseline ADR-0060: Preserve file-owned dbt project authority during relocation.
+ * @decision Bind byte-preserving moves to the source revision and plan identity.
+ * @consequence Requests carry verifiable source hashes without regenerating project files.
+ * @version 1.0.0
+ */
 import { sha256HexUtf8 } from '@dvt/crypto';
 import { z } from 'zod';
 

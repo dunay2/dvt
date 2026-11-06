@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-10-22",
+  "generated": "2026-11-06",
   "repo": {
     "sha": "local"
   },
@@ -945,7 +945,7 @@
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDvtNodeFieldPolicy.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/WorkspaceSourceInstance.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceNodeInstance.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/index.ts",
         "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
@@ -1221,6 +1221,7 @@
     {
       "number": "ADR-0060",
       "decisions": [
+        "Bind byte-preserving moves to the source revision and plan identity.",
         "Compile only already-published Graph Draft artifacts through native DBT.",
         "Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.",
         "Expose stable content revisions and compare-and-swap writes at the workspace-file port.",
@@ -1228,6 +1229,7 @@
         "Native dbt analysis owns semantics; this contract exposes only",
         "Publish the complete graph-derived dbt artifact set through one specific atomic command.",
         "Re-export only versioned dbt project published language",
+        "Refer to the selected model and scoped connection without copying executable SQL.",
         "Resolve authority on the server and return a discriminated outcome for the one mutated authority.",
         "Serialize mutations per scoped path and publish writes through atomic replacement.",
         "The client names semantic identities; the server owns source patches.",
@@ -1242,6 +1244,7 @@
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectRootRelocation.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
@@ -1250,6 +1253,7 @@
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanPreviewProvenance.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceDbtModelReference.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts"
       ],
       "title": "ADR-0060: dbt Project Authoring Authority"
@@ -1307,6 +1311,7 @@
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
         "Re-export only governed Canvas contracts from this narrow barrel.",
         "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
+        "Refer to the selected model and scoped connection without copying executable SQL.",
         "Require typed standard-first evidence before semantic admission.",
         "Resolve existing bindings and messages; never infer groups from adjacency.",
         "Retain product gaps separately from standard semantic identities.",
@@ -1346,6 +1351,7 @@
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceDbtModelReference.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresPublicationBoundary.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresWorkloadConstraints.ts",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",

@@ -17,12 +17,20 @@ excluded from graph-owned path discovery; actual graph-generated paths retain
 their existing conflict guard. The classifier validates the existing typed model
 reference schema; malformed metadata retains graph-owned protection. It does not
 infer ownership from a shared SQL path. See the [real-admission correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6658545036).
-A reference path is already workspace-qualified,
-whereas a file-graph node path is project-relative and uses the explicit root.
+A placed reference is resolved by its file-owner Canvas ID and model unique ID.
+Its captured workspace path is display metadata, not permanent file authority.
+Elements and Properties Code share the current project-context query composition:
+the authorized file tree identifies the configuration, its accepted binding must
+match the reference owner, and the fresh project projection supplies the model's
+current `originalFilePath`. The shared qualifier combines that relative path
+with the current root. A missing, ambiguous, stale or different-owner context
+cannot fall back to the captured path. Opening the file neither rewrites the
+native definition nor invokes selected-model compilation.
 
 ```mermaid
 flowchart LR
-  Reference[Placed file-model reference] --> Adapter[Existing dbt file Code contribution]
+  Reference[Placed file-model identity] --> Project[Current scoped project context]
+  Project --> Adapter[Existing dbt file Code contribution]
   FileGraph[File-graph node and project root] --> Adapter
   Adapter --> Editor[Shared read-only workspace editor]
   Editor --> Context[Accepted file authority and version]

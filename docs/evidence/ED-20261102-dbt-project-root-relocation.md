@@ -362,3 +362,34 @@ persistence spec: six native cases in 38 seconds. Cypress exits normally and
 both disposable leases are retired. Strict touched-spec lint and Web typecheck
 pass. This establishes completed user navigation without changing the production
 guard; the final committed prepush and integration remain required.
+
+PR #3805 identifies two missing normative headers through ADR-0000 validation:
+`DbtProjectRootRelocation.v1.ts` and `WorkspaceDbtModelReference.v1.ts`. The bounded
+correction records their existing ADR-0060 file-authority baseline and the model
+reference's ADR-0064 identity baseline. Public types, version-one schemas,
+validators, functions and runtime behavior are unchanged. The traceability
+configuration and legacy issue baseline remain enforced. Existing contract tests,
+strict lint, package typecheck and the same traceability gate provide the local
+validation before new-head prepush and PR acceptance.
+
+The [reference Code relocation correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6692187384)
+addresses PR #3805's current-authority review. A placed model retains its Canvas
+and model identities while its historic path becomes invalid after relocation.
+The regression first fails on a read of `old-root/models/ventas.sql`. Code now
+shares Elements' scoped project-context composition and resolves the original
+model path under the current accepted root. Twelve Code contribution cases and
+three ownership cases pass, including fresh mounts, repeated `models` directory
+names, other-owner authority, stale projection, missing model and ambiguous
+project rejection. The existing sixteen Elements cases also pass. No file save,
+SQL copy, native-definition rewrite or automatic selected-model compilation is
+introduced. The two provenance headers separately pass 27 existing contract
+cases, strict lint, contract typecheck and `pnpm traceability:adr0`.
+The controlled native Chrome journey retains independent placement, drag,
+deletion and persisted instance assertions, then inspects the surviving instance
+under the relocated authority across two full navigations. Both cases complete
+in 19 seconds with normal runner cleanup. The journey observes the deletion's
+real saved draft before navigation and closes the read-only inspector through
+its public action. Relocated Code shows `models/models/clientes.sql`, makes no
+historic SQL read, file write or selected-model compilation, and leaves the
+persisted reference untouched. Web typecheck and strict touched-surface lint
+pass; the new committed-head prepush and PR checks remain required.

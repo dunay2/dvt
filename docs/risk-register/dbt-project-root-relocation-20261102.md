@@ -182,3 +182,17 @@ reproduced native completion wait does not authorize removing draft protection,
 globally dismissing dialogs, weakening isolation or increasing test deadlines.
 Focused and full-gate outcomes remain separate; partial passing cases cannot
 certify a completed browser run.
+
+Normative contract provenance must satisfy ADR-0000 with the accepted authoring
+and semantic-identity ADRs. Adding the two missing contract headers does not
+change their wire version or implementation. The traceability issue baseline,
+scope and CI gate must not be weakened to admit missing provenance; the existing
+contract suites remain the behavioral evidence for the unchanged declarations.
+
+A placed file-model's captured path must not survive relocation as authoritative
+Code identity. Current file-tree/configuration authority and a fresh model
+projection resolve its stable Canvas/model reference; missing, ambiguous, stale
+or other-owner context rejects inspection without a historic-path fallback.
+Elements and Properties Code share this composition and the existing scoped query
+keys. This correction does not expand the catalogue's multi-project discovery or
+alter native model persistence, dbt execution or explicit compilation.

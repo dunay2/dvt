@@ -23,7 +23,9 @@ export function buildCanvasInspectorCodeContributions(
     return inspectorWorkbenchContributions;
   }
   const path = inspectorNode == null ? null : resolveWorkspaceFilePath(inspectorNode);
-  if (path == null) return inspectorWorkbenchContributions;
+  const fileReference =
+    inspectorNode == null ? undefined : readWorkspaceDbtModelReference(inspectorNode);
+  if (path == null && fileReference == null) return inspectorWorkbenchContributions;
   const graphOwnedPaths = new Set(
     nodes.flatMap((node) => {
       if (readWorkspaceDbtModelReference(node.data) != null) return [];
@@ -31,7 +33,7 @@ export function buildCanvasInspectorCodeContributions(
       return file == null ? [] : [file];
     })
   );
-  if (inspectorNode != null && readWorkspaceDbtModelReference(inspectorNode) != null)
+  if (inspectorNode != null && fileReference != null)
     return [
       ...inspectorWorkbenchContributions,
       ...buildDbtWorkspaceFileCodeContributions({ node: inspectorNode, graphOwnedPaths }),

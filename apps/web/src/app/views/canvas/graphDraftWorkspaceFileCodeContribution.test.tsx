@@ -52,7 +52,8 @@ describe('buildGraphDraftWorkspaceFileCodeContributions', () => {
       expect(contributions).toHaveLength(1);
       const content = contributions[0]?.content;
       if (!isValidElement(content)) throw new Error('Expected the shared file editor.');
-      expect(content.props).toMatchObject({ authority: 'dbt-project-files', path: NODE.path });
+      expect(content.props.reference).toEqual(readWorkspaceDbtModelReference(reference));
+      expect(content.props).not.toHaveProperty('path');
       expect(content.props.graphOwnedPaths.has(NODE.path)).toBe(hasConflict);
     }
   );

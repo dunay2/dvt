@@ -1,4 +1,11 @@
-/** File authority and assigned publication identities; never executable SQL or credentials. */
+/**
+ * File authority and assigned publication identities; never executable SQL or credentials.
+ * @baseline ADR-0060: Model references retain project-file authoring authority.
+ * @baseline ADR-0064: Native references preserve assigned relation and field identities.
+ * @decision Refer to the selected model and scoped connection without copying executable SQL.
+ * @consequence Placed instances retain their producer and output identities.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { CompileGraphDbtModelsRequestSchema } from '../dbt-project/GraphDbtModelCompilation.v1.js';
