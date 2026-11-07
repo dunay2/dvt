@@ -22,6 +22,7 @@ import {
 import {
   projectCanvasSourceOccurrencePublication,
   unavailableCanvasRelationIds,
+  canAuthorCanvasRelationalTree,
 } from './canvasRelationalTreeWorkbenchModel';
 import type {
   CanvasRelationalTreeCatalogueItem,
@@ -56,8 +57,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
   const { inputs, projectedInputs } = analysis;
   const pendingAuthoring =
     args.authoring != null &&
-    ['pending', 'single-input', 'canonical'].includes(composition?.state ?? '') &&
-    inputs.length >= 1;
+    canAuthorCanvasRelationalTree(analysis, projection, composition, args.transformNode);
   const session = useCanvasRelationalTreeAuthoringSession({
     enabled: pendingAuthoring,
     transformNode: args.transformNode,

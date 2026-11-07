@@ -12,7 +12,7 @@ import {
   deriveSubstraitPublication,
   type RelationPublication,
 } from '@dvt/substrait-analysis';
-import type { ConnectedSourceRef } from '@dvt/contracts';
+import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInputBindingEdge } from './canvasInputBindings';
 import {
@@ -46,6 +46,12 @@ type RelationalDocument = Readonly<{
   (
     | Readonly<{ state: 'resolved' }>
     | Readonly<{ state: 'retained'; missingProducerFields: readonly CanvasMissingProducerField[] }>
+    | Readonly<{
+        state: 'disconnected';
+        missingProducerFields: readonly CanvasMissingProducerField[];
+        missingProducerNodeIds: ReadonlySet<string>;
+        missingProducerRelationIds: ReadonlySet<string>;
+      }>
   );
 export type CanvasRelationalAnalysis = Readonly<{
   transformNodeId: string;
@@ -66,10 +72,17 @@ export function canvasSourceReferenceKey(ref: ConnectedSourceRef): string {
   ]);
 }
 
+export function canvasPhysicalSourceReferenceKey(node: CanonicalNode): string | null {
+  if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
+  const ref = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
+  return ref.success ? canvasSourceReferenceKey(ref.data) : null;
+}
+
 function projectInputs(
   index: SubstraitRelationIndex,
   inputs: readonly CanvasDvtCompositionInput[],
-  producers: ReadonlyMap<string, CanonicalNode>
+  producers: ReadonlyMap<string, CanonicalNode>,
+  nodes: readonly CanonicalNode[]
 ): readonly CanvasRelationalTreeInput[] {
   const connected = new Map<string, CanvasDvtCompositionInput>();
   for (const input of inputs) {
@@ -97,9 +110,11 @@ function projectInputs(
       const key = canvasSourceReferenceKey(sourceRef);
       participating.add(key);
       const input = connected.get(key);
+      const candidates =
+        input == null ? nodes.filter((node) => canvasPhysicalSourceReferenceKey(node) === key) : [];
       return {
         sourceRef,
-        sourceNodeId: input?.nodeId ?? null,
+        sourceNodeId: input?.nodeId ?? (candidates.length === 1 ? candidates[0]!.id : null),
         relationId: binding.relationId,
         state: input == null ? ('missing' as const) : ('participating' as const),
       };
@@ -172,8 +187,12 @@ export function analyzeCanvasRelations(
     }
     const recovery = readCanvasProducerInputRecovery(args, catalog);
     if (recovery.kind === 'rejected') return { ...base, failure: recovery.failure };
-    const retained = recovery.kind === 'retained' ? recovery : null;
-    const recoverableProducers = new Set(retained?.missing.map((field) => field.producerNodeId));
+    const retained =
+      recovery.kind === 'retained' || recovery.kind === 'disconnected' ? recovery : null;
+    const recoverableProducers = new Set([
+      ...(retained?.missing.map((field) => field.producerNodeId) ?? []),
+      ...(retained?.kind === 'disconnected' ? retained.missingProducerNodeIds : []),
+    ]);
     if (
       inputs.length !== connectedInputCount &&
       [...incomingIds].some(
@@ -197,13 +216,28 @@ export function analyzeCanvasRelations(
       semantic: {
         ...(retained == null
           ? { state: 'resolved' as const }
-          : { state: 'retained' as const, missingProducerFields: retained.missing }),
+          : retained.kind === 'disconnected'
+            ? {
+                state: 'disconnected' as const,
+                missingProducerFields: retained.missing,
+                missingProducerNodeIds: retained.missingProducerNodeIds,
+                missingProducerRelationIds: retained.missingProducerRelationIds,
+              }
+            : { state: 'retained' as const, missingProducerFields: retained.missing }),
         index: indexed.index,
         digest: authority.semanticDocument.semanticPlan.sha256,
         document,
-        ...(denied.size === 0 ? {} : { publication: deriveSubstraitPublication(document, denied) }),
+        ...(denied.size === 0 && retained?.kind !== 'disconnected'
+          ? {}
+          : {
+              publication: deriveSubstraitPublication(
+                document,
+                denied,
+                retained?.kind === 'disconnected' ? retained.missingProducerRelationIds : undefined
+              ),
+            }),
       },
-      projectedInputs: projectInputs(indexed.index, inputs, producers),
+      projectedInputs: projectInputs(indexed.index, inputs, producers, args.nodes),
     };
   } catch {
     return { ...base, failure: 'invalid-semantic-authority' };

@@ -42,7 +42,8 @@ function rowExpressions(entry: IndexedRelation): readonly Expression[] {
 
 export function deriveSubstraitPublication(
   document: SubstraitDocument,
-  unavailableReadFieldIds: ReadonlySet<string>
+  unavailableReadFieldIds: ReadonlySet<string>,
+  unavailableReadRelationIds: ReadonlySet<string> = new Set()
 ): ReadonlyMap<string, RelationPublication> {
   const { index, schemas } = deriveSubstraitSchemas(document);
   const publication = new Map<string, RelationPublication>();
@@ -52,6 +53,7 @@ export function deriveSubstraitPublication(
     const missing = (ids: readonly string[]): boolean =>
       ids.some((fieldId) => unavailableReadFieldIds.has(fieldId));
     const rowUnavailable =
+      (entry.relation.relType.case === 'read' && unavailableReadRelationIds.has(id)) ||
       entry.inputs.some((inputId) => publication.get(inputId)!.rowUnavailable) ||
       (entry.relation.relType.case === 'set' &&
         entry.relation.relType.value.op !== SetRel_SetOp.UNION_ALL &&

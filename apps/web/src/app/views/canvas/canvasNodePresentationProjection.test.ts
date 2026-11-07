@@ -101,6 +101,23 @@ function buildCanonicalTransform(): CanonicalNode {
 }
 
 describe('projectCanvasNodePresentationTruth', () => {
+  it('preserves current Input columns but grants no Output or field-repair capability for a disconnected producer', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const args = {
+      node: graph.consumer,
+      nodes: graph.nodes,
+      edges: graph.edges.filter((edge) => edge.sourceId !== graph.producer.id),
+    };
+    const before = structuredClone(args);
+    const truth = await projectCanvasNodePresentationTruth(args);
+    expect(truth.relationalComposition?.state).toBe('incomplete');
+    expect(truth.columns.state).toBe('unavailable');
+    expect(truth.columns.visible).toEqual([]);
+    expect(truth.columns.inherited.map((column) => column.name)).toEqual(['order_id', 'country']);
+    expect(truth.inputBindingPosture).toBe('unavailable');
+    expect(truth.code.kind).toBe('unavailable');
+    expect(args).toEqual(before);
+  });
   it('does not publish a refreshed Output when retained input recovery rejects a valid producer type change', async () => {
     const graph = await createIncompatibleRetainedModelFixture();
     const args = { node: graph.consumer, nodes: graph.nodes, edges: graph.edges };

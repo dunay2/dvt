@@ -13,6 +13,7 @@ import {
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
+import { projectWorkspaceNodeInstanceEdges } from '@dvt/contracts';
 import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
@@ -39,6 +40,12 @@ export type CanvasProducerInputRecovery = Readonly<{
 export type CanvasProducerInputRecoveryRead =
   | Readonly<{ kind: 'not-needed' }>
   | (Readonly<{ kind: 'retained' }> & CanvasProducerInputRecovery)
+  | (Readonly<{
+      kind: 'disconnected';
+      missingProducerNodeIds: ReadonlySet<string>;
+      missingProducerRelationIds: ReadonlySet<string>;
+    }> &
+      CanvasProducerInputRecovery)
   | Readonly<{
       kind: 'rejected';
       failure: 'invalid-semantic-authority' | 'input-identity-unavailable';
@@ -139,20 +146,41 @@ export function readCanvasProducerInputRecovery(
       });
     const fields = new Map(sidecar.fields.map((field) => [field.fieldId, field]));
     const missing: CanvasMissingProducerField[] = [];
+    const missingProducerNodeIds = new Set<string>();
+    const missingProducerRelationIds = new Set<string>();
+    const incoming = new Set(
+      projectWorkspaceNodeInstanceEdges(args.nodes, args.edges)
+        .filter((edge) => edge.targetId === args.node.id)
+        .map((edge) => edge.sourceId)
+    );
+    const present = new Set(args.nodes.map((node) => node.id));
     for (const binding of references) {
-      const publication = catalog.publicationsByProducerId.get(binding.producerRef!.nodeId);
+      const producerId = binding.producerRef!.nodeId;
+      if (!incoming.has(producerId) || !present.has(producerId)) {
+        missingProducerNodeIds.add(producerId);
+        missingProducerRelationIds.add(binding.relationId);
+        missing.push(...readMissingFields(binding, fields, new Set()));
+        continue;
+      }
+      const publication = catalog.publicationsByProducerId.get(producerId);
       if (publication == null || publication.rootPublication.rowUnavailable)
         return { kind: 'rejected', failure: 'input-identity-unavailable' };
       missing.push(...readMissingFields(binding, fields, publication.publishedFieldIds));
     }
-    if (missing.length === 0) return { kind: 'not-needed' };
+    const disconnected = missingProducerNodeIds.size > 0;
+    if (missing.length === 0 && !disconnected) return { kind: 'not-needed' };
     const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
     const denied = new Set(missing.map((field) => field.fieldId));
-    if (!canonicalInputFieldsAreRequired(document, denied)) return { kind: 'not-needed' };
+    if (!disconnected && !canonicalInputFieldsAreRequired(document, denied))
+      return { kind: 'not-needed' };
     if (
       canonicalInputFieldsAreRequired(
         document,
-        readUnrepairableMissingFields(args, fields, missing)
+        readUnrepairableMissingFields(
+          args,
+          fields,
+          missing.filter((field) => !missingProducerNodeIds.has(field.producerNodeId))
+        )
       )
     )
       return { kind: 'rejected', failure: 'input-identity-unavailable' };
@@ -160,6 +188,7 @@ export function readCanvasProducerInputRecovery(
     for (const binding of references) {
       const entry: IndexedRelation = index.relations.get(binding.relationId)!;
       const reference = binding.producerRef!;
+      if (missingProducerNodeIds.has(reference.nodeId)) continue;
       const publication = catalog.publicationsByProducerId.get(reference.nodeId)!;
       resolveProducerInput(
         {
@@ -177,7 +206,16 @@ export function readCanvasProducerInputRecovery(
         publication.document
       );
     }
-    return { kind: 'retained', document, missing, denied };
+    return disconnected
+      ? {
+          kind: 'disconnected',
+          document,
+          missing,
+          denied,
+          missingProducerNodeIds,
+          missingProducerRelationIds,
+        }
+      : { kind: 'retained', document, missing, denied };
   } catch {
     return { kind: 'rejected', failure: 'invalid-semantic-authority' };
   }

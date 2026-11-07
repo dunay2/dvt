@@ -25,7 +25,7 @@ export function resolveCanvasRelationalTreeExistingDraft(
   while (entry.children.length === 1) entry = entry.children[0]!.node;
   const operation = entry.operation ?? null;
   const inputIds = args.projection.inputs
-    .filter((input) => input.state === 'participating')
+    .filter((input) => input.relationId != null)
     .map((input) => input.sourceNodeId);
   if (inputIds.some((nodeId) => nodeId == null)) return null;
   return {
