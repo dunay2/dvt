@@ -138,12 +138,12 @@ export {
 } from './postgresAst.js';
 export { renderPostgresAst } from './renderPostgresAst.js';
 export {
-  fusePostgresProjectionOnce,
-  fusePostgresProjections,
-  renderFusedPostgresProjections,
-  type ProjectionFusionResult,
-  type ProjectionFusionStep,
-} from './relationalSql/projectionFusion.js';
+  rewritePostgresSqlOnce,
+  simplifyPostgresSqlAst,
+  type PostgresSqlSimplificationOptions,
+  type PostgresSqlSimplificationResult,
+  type PostgresSqlSimplificationStep,
+} from './sqlPresentation/simplify.js';
 export { resolvePostgresInputDataType, sourceFieldType } from './postgresInputType.js';
 export { inspectDvtConnectedFieldProjection } from './substraitConnectedFieldReader.js';
 export type {
