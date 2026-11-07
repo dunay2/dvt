@@ -47,12 +47,9 @@ export async function projectDvtPostgresTransform(
     ),
     ...(relationId == null ? {} : { relationId }),
   });
-  if (result.projection.inputs.length > 0 || closure.sources.length > 0)
-    requireDvtProjectedSourceCoverage(
-      result.projection.inputs,
-      closure.sources,
-      relationId === undefined && !closure.preview
-    );
+  const requireAllSources = relationId === undefined && !closure.preview;
+  if (result.projection.inputs.length > 0 || (requireAllSources && closure.sources.length > 0))
+    requireDvtProjectedSourceCoverage(result.projection.inputs, closure.sources, requireAllSources);
   return {
     sql: result.sql,
     ast: result.ast,

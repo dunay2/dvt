@@ -161,6 +161,17 @@ saved-revision, output-plan, readiness and permission guards. Physical Source
 cards keep their governed physical-source query; missing source references never
 become guessed model inputs. Selecting a card does not execute either query.
 
+Selected-relation PostgreSQL projection validates the physical inputs actually
+used by that projection. An authorized dbt-model Read can have no physical
+inputs of its own while another branch of the enclosing Model uses a physical
+Source. That unrelated available Source does not create a physical-input
+requirement for the selected Read. Complete operational publication retains its
+existing full-source coverage check; used physical inputs retain the same exact
+reference, schema and table checks. Producer authorization, current compilation,
+field identity, connection and saved/output-plan admission remain upstream
+requirements. This decision belongs to the existing API projection caller,
+not to a weaker coverage predicate or another preview rail.
+
 Producer composition builds AST and projection metadata first. Internal producer
 bindings carry AST, ordering, output, and source metadata without SQL text. SQL
 serialization occurs once for the requested target at the existing public async
