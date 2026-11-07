@@ -137,6 +137,13 @@ export {
   type PostgresAstNode,
 } from './postgresAst.js';
 export { renderPostgresAst } from './renderPostgresAst.js';
+export {
+  fusePostgresProjectionOnce,
+  fusePostgresProjections,
+  renderFusedPostgresProjections,
+  type ProjectionFusionResult,
+  type ProjectionFusionStep,
+} from './relationalSql/projectionFusion.js';
 export { resolvePostgresInputDataType, sourceFieldType } from './postgresInputType.js';
 export { inspectDvtConnectedFieldProjection } from './substraitConnectedFieldReader.js';
 export type {
