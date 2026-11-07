@@ -12,6 +12,7 @@ import { AppServicesProvider } from '../../../services/AppServicesContext';
 import type { AppServicesOverrides } from '../../../services/composition/appServices';
 import type { IWorkspaceFilesQueryPort } from '../../../ports/workspace';
 import type { IDbtProjectGraphQueryPort } from '../../../ports/dbtProjectGraph';
+import { queryKeys } from '../../../queries/queryKeys';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasProjectElementsExplorer } from './CanvasProjectElementsExplorer';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
@@ -274,14 +275,34 @@ it('deduplicates by identity while preserving a distinct native element with the
 
 it('does no discovery while closed and reuses graph analysis across close and reopen', async () => {
   await render(false);
+  // Exercise the browser cache lifetime; the shared harness otherwise collects inactive queries immediately.
+  mounted!.queryClient.setQueryDefaults(queryKeys.workspace.dbtProjectGraphRoot(), {
+    gcTime: 5 * 60 * 1000,
+  });
   expect(listFiles).not.toHaveBeenCalled();
   expect(getFileContent).not.toHaveBeenCalled();
   expect(getProjectGraph).not.toHaveBeenCalled();
   await render(true);
   await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
-  await render(false);
-  await render(true);
-  expect(getProjectGraph).toHaveBeenCalledTimes(1);
+  const graphQuery = mounted!.queryClient
+    .getQueryCache()
+    .findAll({
+      queryKey: queryKeys.workspace.dbtProjectGraphRoot(),
+    })
+    .find((query) => query.state.data === project);
+  expect(graphQuery).toBeDefined();
+  vi.useFakeTimers();
+  try {
+    await render(false);
+    await act(async () => vi.advanceTimersByTimeAsync(1));
+    expect(mounted!.queryClient.getQueryData(graphQuery!.queryKey)).toBe(project);
+    await render(true);
+    await act(async () => vi.advanceTimersByTimeAsync(1));
+    expect(screen.getByRole('button', { name: /pedidos/ })).toBeTruthy();
+    expect(getProjectGraph).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 it.each(['unresolved', 'ambiguous', 'stale', 'wrong-owner', 'denied'] as const)(
