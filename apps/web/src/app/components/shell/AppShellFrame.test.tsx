@@ -1,8 +1,16 @@
 // @vitest-environment jsdom
 
 import React, { act } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '../ui/context-menu';
 
 import { AppShellFrame } from './AppShellFrame';
 
@@ -36,6 +44,96 @@ describe('AppShellFrame', () => {
       root.unmount();
     });
     container.remove();
+  });
+
+  it('cancels native context menus across shell slots and portals after child handlers', () => {
+    const childHandler = vi.fn((event: React.MouseEvent) => {
+      expect(event.defaultPrevented).toBe(false);
+    });
+    act(() =>
+      root.render(
+        <AppShellFrame
+          bottomDrawer={<input aria-label="Data search" onContextMenu={childHandler} />}
+          bottomDrawerHeight={360}
+          focusMode={false}
+          leftNavigation={<button onContextMenu={childHandler}>Elements</button>}
+          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+          showBottomDrawer
+          skipToMainContentLabel="Skip"
+          topBar={<button onContextMenu={childHandler}>Project</button>}
+        >
+          <textarea aria-label="Description" onContextMenu={childHandler} />
+          {createPortal(
+            <div data-testid="owned-portal" onContextMenu={childHandler}>
+              Inspector
+            </div>,
+            document.body
+          )}
+        </AppShellFrame>
+      )
+    );
+    const targets = [
+      ...container.querySelectorAll('button, input, textarea'),
+      document.querySelector('[data-testid="owned-portal"]')!,
+    ];
+    for (const button of [2, 0]) {
+      for (const target of targets) {
+        const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button });
+        act(() => {
+          target.dispatchEvent(event);
+        });
+        expect(event.defaultPrevented).toBe(true);
+      }
+    }
+    expect(childHandler).toHaveBeenCalledTimes(targets.length * 2);
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    targets[0]!.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(false);
+    const outside = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    container.dispatchEvent(outside);
+    expect(outside.defaultPrevented).toBe(false);
+  });
+
+  it('preserves one app-owned menu, dismissal and reopening without invoking an action', async () => {
+    const action = vi.fn();
+    await act(async () =>
+      root.render(
+        <AppShellFrame
+          bottomDrawer={null}
+          bottomDrawerHeight={0}
+          focusMode={false}
+          leftNavigation={null}
+          navigationDisposition={MENU_NAVIGATION_DISPOSITION}
+          showBottomDrawer={false}
+          skipToMainContentLabel="Skip"
+          topBar={null}
+        >
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              <div data-testid="menu-target">Card</div>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem onSelect={action}>Inspect</ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        </AppShellFrame>
+      )
+    );
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+      await act(async () => {
+        container.querySelector('[data-testid="menu-target"]')!.dispatchEvent(event);
+      });
+      expect(event.defaultPrevented).toBe(true);
+      const menus = document.querySelectorAll('[role="menu"]');
+      expect(menus).toHaveLength(1);
+      expect(menus[0]!.textContent).toBe('Inspect');
+      await act(async () => {
+        menus[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      });
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    }
+    expect(action).not.toHaveBeenCalled();
   });
 
   it('renders the shell frame regions when navigation and bottom drawer are visible', async () => {

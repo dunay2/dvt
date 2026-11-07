@@ -51,6 +51,8 @@ export function AppShellFrame({
     <div
       data-slot="app-shell-frame"
       className="app-shell-background h-screen w-screen overflow-hidden text-foreground"
+      // Bubble after component-owned menus; capture would prevent Radix from opening.
+      onContextMenu={(event) => event.preventDefault()}
     >
       <a
         data-slot="app-shell-skip-link"

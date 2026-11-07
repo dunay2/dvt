@@ -474,6 +474,14 @@ default without opening background actions or performing a mutation. Do not
 blanket-call `preventDefault` in capture before Radix handles an accepted target,
 intercept `document` globally, or add a second pane route for the same intent.
 
+The shared `AppShellFrame` cancels any remaining native context-menu default in
+the bubbling phase, after component-owned handlers. This presentation boundary
+covers shell chrome, Elements, workbenches, inspector, drawer and their React
+portals without creating another menu query or command. It does not stop
+propagation, preempt Radix/Monaco, or intercept events outside the shell. Local
+target admission remains responsible for preventing a child gesture from also
+opening its parent menu; it is distinct from the shared browser fallback.
+
 Evidence starts with the application menu closed and dispatches a real cancelable
 context event. It asserts both the single rendered application menu and
 `defaultPrevented`, including close and reopen; default cancellation alone does
