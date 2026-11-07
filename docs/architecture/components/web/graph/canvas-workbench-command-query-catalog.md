@@ -579,11 +579,12 @@ An already incomplete consumer retains its own semantic document. The existing
 inspect a structurally valid retained tree whose connected producer no longer
 publishes referenced FieldIds. They mark the exact local Read fields denied;
 this inspection is not successful producer resolution or execution admission.
-Malformed authority, cycles, foreign producers and incompatible present types
-do not qualify. Missing Input slots remain visible even on implicit edges.
+Malformed authority, cycles and incompatible present types do not qualify.
+Retaining an authored reference never resolves or grants access to a foreign
+producer. Missing Input slots remain visible even on implicit edges.
 
 The owning query classifies retained required producer references before normal
-schema refresh: `not-needed`, `retained` or `rejected`. A rejected recovery never
+schema refresh: `not-needed`, `retained`, `disconnected` or `rejected`. A rejected recovery never
 falls through as a healthy read. Missing required fields combined with an
 incompatible still-published type cannot silently prune the consumer Output.
 The connected publication catalog retains valid producer documents even when
@@ -593,6 +594,28 @@ The read model exposes Input interaction posture explicitly; adapters do not
 infer repair admission from Output, composition and slot symptoms or reparse
 semantic authority. Normal healthy schema refresh, permissions and CAS remain
 owned by their existing rails.
+
+An absent producer node or exact dependency edge is `disconnected`, not an
+invalid connected publication. The existing structural query preserves the
+validated saved document, Read identities and unavailable producer references
+so the workbench can reopen and edit them. It also retains current admitted
+Inputs as candidates. A connected producer with an invalid publication still
+rejects; missing fields of a valid connected producer retain the separate
+same-producer field-repair posture described below. The shared publication
+owner propagates unavailable Read rows through their consumers, including
+constant projections and row-count aggregates, without denying independent
+relations.
+
+The existing authoring session admits incomplete structural graphs and retains
+one exact provenance identity per canonical Read. A physical Read can obtain
+editor provenance from a unique exact scoped `ConnectedSourceRef` match while
+remaining disconnected; names, ordinals and schema similarity cannot establish
+identity. Incomplete draft persistence preserves unavailable occurrences as
+authoring state, without presenting them as available publications. Explicit
+disconnect, connect and removal gestures use `ConfigureCanvasDvtNode` and the
+existing Apply/CAS boundary. Opening, Cancel and reload do not rewrite producer
+references. Preview and Run continue to require their real connected closure;
+structural repairability grants no execution capability.
 
 Recovery reuses the existing exact Input-slot mapping gesture and serialized
 draft command. Only an unresolved slot may be explicitly rebound to a compatible

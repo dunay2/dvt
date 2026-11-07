@@ -1,8 +1,11 @@
 import {
+  AggregateFunctionSchema,
   ExpressionSchema,
   SetRel_SetOp,
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
@@ -104,4 +107,82 @@ describe('publication after withdrawing an admitted input field', () => {
       ).toMatchObject({ unavailableFieldIds: ['f4'], rowUnavailable: true });
     }
   );
+});
+
+describe('publication after losing an entire Read', () => {
+  it.each(['constant projection', 'COUNT(*)'] as const)(
+    'propagates missing rows through %s without requiring a denied field',
+    (kind) => {
+      const g = relationsFixture();
+      const read = g.read();
+      const consumer =
+        kind === 'COUNT(*)' ? g.unary('aggregate', read) : g.unary('project', read, [1]);
+      if (consumer.relType.case === 'aggregate') {
+        consumer.relType.value.measures = [
+          {
+            $typeName: 'substrait.AggregateRel.Measure',
+            measure: create(AggregateFunctionSchema, {
+              functionReference: 1,
+              outputType: {
+                kind: { case: 'i64', value: { nullability: Type_Nullability.REQUIRED } },
+              },
+            }),
+          },
+        ];
+      } else if (consumer.relType.case === 'project') {
+        consumer.relType.value.expressions = [
+          create(ExpressionSchema, {
+            rexType: {
+              case: 'literal',
+              value: { literalType: { case: 'string', value: 'constant' } },
+            },
+          }),
+        ];
+      }
+      const independentRead = g.read();
+      const document = g.document(g.combine('cross', [consumer, independentRead], [0, 1]));
+      if (kind === 'COUNT(*)') {
+        const functions = create(PlanSchema, {
+          extensionUrns: [
+            { extensionUrnAnchor: 1, urn: 'extension:io.substrait:functions_aggregate_generic' },
+          ],
+          extensions: [
+            {
+              mappingType: {
+                case: 'extensionFunction',
+                value: {
+                  extensionUrnReference: 1,
+                  functionAnchor: 1,
+                  name: 'count',
+                },
+              },
+            },
+          ],
+        });
+        document.plan.extensionUrns = functions.extensionUrns;
+        document.plan.extensions = functions.extensions;
+      }
+      const before = globalThis.structuredClone(document);
+      const result = deriveSubstraitPublication(document, new Set(), new Set(['r1']));
+      expect(result.get('r1')).toEqual({ rowUnavailable: true, unavailableFieldIds: ['f1'] });
+      expect(result.get('r2')).toEqual({ rowUnavailable: true, unavailableFieldIds: ['f2'] });
+      expect(result.get('r3')).toEqual({ rowUnavailable: false, unavailableFieldIds: [] });
+      expect(result.get('r4')).toEqual({
+        rowUnavailable: true,
+        unavailableFieldIds: ['f4', 'f4_1'],
+      });
+      expect(document).toEqual(before);
+    }
+  );
+
+  it('preserves existing callers and ignores unavailable identities which are not Reads', () => {
+    const g = relationsFixture();
+    const document = g.document(g.unary('project', g.read()));
+    const existing = deriveSubstraitPublication(document, new Set(['f1']));
+    expect(deriveSubstraitPublication(document, new Set(['f1']), new Set())).toEqual(existing);
+    expect(
+      deriveSubstraitPublication(document, new Set(['f1']), new Set(['r2', 'absent']))
+    ).toEqual(existing);
+    expect(existing.get('r2')).toEqual({ rowUnavailable: false, unavailableFieldIds: ['f2'] });
+  });
 });

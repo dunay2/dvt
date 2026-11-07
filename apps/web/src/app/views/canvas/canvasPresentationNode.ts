@@ -122,19 +122,20 @@ export async function projectCanvasPresentationNode(
     ...(composition == null ? {} : { relationalComposition: composition }),
   };
   const retained = structural?.semantic?.state === 'retained';
+  const disconnected = structural?.semantic?.state === 'disconnected';
   const rejected =
     structural?.failure != null && structural.failure !== 'missing-semantic-authority';
-  if (retained || rejected)
+  if (retained || disconnected || rejected)
     return {
       ...truth,
       inputBindingPosture: retained ? 'repair-only' : 'unavailable',
       code: { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' },
       columns: {
-        ...canvasColumnTruth([], retained ? inherited : [], []),
+        ...canvasColumnTruth([], retained || disconnected ? inherited : [], []),
         state: 'unavailable',
         diagnostic: retained
           ? resolveCanvasViewCopy().relationalTreeProducerFieldsUnavailableMessage
-          : structural?.failure === 'input-identity-unavailable'
+          : disconnected || structural?.failure === 'input-identity-unavailable'
             ? resolveCanvasViewCopy().relationalTreeInputIdentityUnavailableMessage
             : resolveCanvasViewCopy().relationalTreeInvalidMessage,
       },

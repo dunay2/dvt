@@ -58,17 +58,17 @@ export function createPendingSourceOccurrence(
   };
 }
 export function restorePendingSourceOccurrence(
-  input: CanvasDvtCompositionInput,
+  input: CanvasDvtCompositionInput | undefined,
   source: DvtRelationalAuthoringDraftV1['sources'][number],
   outputOwnedByConfiguration = false
 ): PendingSourceOccurrence | null {
   try {
-    if (input.nodeId !== source.sourceNodeId) return null;
+    if (input != null && input.nodeId !== source.sourceNodeId) return null;
     const document = decodeDvtSubstraitSemanticDocument(source.semanticDocument);
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok || indexed.index.relations.size !== 1) return null;
     const read = indexed.index.relations.get(source.relationId);
-    if (read == null || !validatePendingSourceInput(read, input)) return null;
+    if (read == null || !validatePendingSourceInput(read, input, source.sourceNodeId)) return null;
     deriveRelationSchema(read, []);
     const occurrence: PendingSourceOccurrence = {
       sourceNodeId: source.sourceNodeId,
@@ -78,12 +78,13 @@ export function restorePendingSourceOccurrence(
         fields: read.fields,
       },
     };
-    if (source.initialOutputFieldIds == null && outputOwnedByConfiguration) return occurrence;
+    if (source.initialOutputFieldIds == null && (outputOwnedByConfiguration || input == null))
+      return occurrence;
     return {
       ...occurrence,
       initialOutputFieldIds:
         source.initialOutputFieldIds == null
-          ? pendingSourceOccurrencePublishedFieldIds(occurrence, input)
+          ? pendingSourceOccurrencePublishedFieldIds(occurrence, input!)
           : [...source.initialOutputFieldIds],
     };
   } catch {
@@ -93,9 +94,22 @@ export function restorePendingSourceOccurrence(
 
 function validatePendingSourceInput(
   read: IndexedRelation,
-  input: CanvasDvtCompositionInput
+  input: CanvasDvtCompositionInput | undefined,
+  sourceNodeId: string
 ): boolean {
   if (read.relation.relType.case !== 'read') return false;
+  if (input == null) {
+    // The saved occurrence owns editor provenance, not current connectivity or publication.
+    if (read.binding.producerRef != null)
+      return read.binding.producerRef.nodeId === sourceNodeId && read.binding.sourceRef == null;
+    const table = read.relation.relType.value.readType;
+    return (
+      read.binding.sourceRef != null &&
+      table.case === 'namedTable' &&
+      table.value.names.length === 2 &&
+      table.value.names.every((name) => name.trim().length > 0)
+    );
+  }
   if (input.sourceRef == null) {
     if (read.binding.producerRef?.nodeId !== input.nodeId) return false;
     resolveProducerInput(read, input.producer.document);

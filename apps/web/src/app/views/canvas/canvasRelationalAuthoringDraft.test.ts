@@ -37,8 +37,64 @@ import {
   applyCanvasInspectorNodeDraft,
   createCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
+import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
+import { projectCanvasCanonicalGraphEditing } from './canvasCanonicalGraphEditing';
 
 describe('relational authoring draft restoration', () => {
+  it('reopens the same mixed Read graph when all incoming edges are absent', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const editable = projectCanvasCanonicalGraphEditing(graph.consumerDocument, [
+      graph.producer.id,
+      graph.right.id,
+    ])!;
+    const persisted = createCanvasRelationalAuthoringDraft({
+      ...editable,
+      outputRelationId: null,
+      positions: new Map(),
+    });
+    const restored = restoreCanvasRelationalAuthoringDraft(
+      JSON.parse(JSON.stringify(persisted)),
+      []
+    );
+    expect(restored?.sources).toEqual(editable.sources);
+    expect(restored?.operations).toEqual(editable.operations);
+    expect(restored?.sources.every((source) => source.initialOutputFieldIds == null)).toBe(true);
+  });
+
+  it('retains a missing producer occurrence for structural repair without inventing publication', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const indexed = indexSubstraitRelations(graph.consumerDocument);
+    if (!indexed.ok) throw indexed.error;
+    const read = [...indexed.index.relations.values()].find(
+      (entry) => entry.binding.producerRef?.nodeId === graph.producer.id
+    )!;
+    const occurrence: PendingSourceOccurrence = {
+      sourceNodeId: graph.producer.id,
+      read: {
+        relation: read.relation,
+        fields: read.fields,
+        binding: { ...read.binding, displayName: read.binding.displayName! },
+      },
+    };
+    const draft = createCanvasRelationalAuthoringDraft({
+      sources: [occurrence],
+      operations: [],
+      outputRelationId: null,
+      positions: new Map([[read.binding.relationId, { x: 120, y: 240 }]]),
+    });
+    const restored = restoreCanvasRelationalAuthoringDraft(JSON.parse(JSON.stringify(draft)), []);
+    expect(restored?.sources).toEqual([occurrence]);
+    expect(restored?.sources[0]).not.toHaveProperty('initialOutputFieldIds');
+    expect(restored?.outputRelationId).toBeNull();
+    expect(restored?.positions.get(read.binding.relationId)).toEqual({ x: 120, y: 240 });
+    expect(
+      restoreCanvasRelationalAuthoringDraft(
+        { ...draft, sources: [{ ...draft.sources[0]!, sourceNodeId: 'different-producer' }] },
+        []
+      )
+    ).toBeNull();
+  });
+
   it.each([
     { x: 360, y: 420 },
     { x: -360, y: -420 },

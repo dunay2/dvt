@@ -101,13 +101,11 @@ export function restoreCanvasRelationalAuthoringDraft(
     .filter((source) => !appliedRelationIds?.has(source.relationId))
     .map((source) => {
       const input = inputs.find((candidate) => candidate.nodeId === source.sourceNodeId);
-      return input == null
-        ? null
-        : restorePendingSourceOccurrence(
-            input,
-            source,
-            configuredRelationIds.has(source.relationId)
-          );
+      return restorePendingSourceOccurrence(
+        input,
+        source,
+        configuredRelationIds.has(source.relationId)
+      );
     });
   if (sources.some((source) => source == null)) return null;
   return {

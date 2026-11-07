@@ -2,8 +2,52 @@ import { describe, expect, it } from 'vitest';
 import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
 import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
 import { analysisChain, withdrawChainSource } from './canvasRelationalAnalysisMemo.test-support';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 
 describe('relational analysis dependency closure', () => {
+  it('tracks exact physical provenance candidates without invalidating for unrelated sources', () => {
+    const fixture = occurrenceGraph();
+    const graph = { node: fixture.targetNode, nodes: [fixture.targetNode], edges: [] };
+    const read = createCanvasRelationalAnalysisReader();
+    const absent = read(graph);
+    expect(absent.projectedInputs.map((input) => input.sourceNodeId)).toEqual([null, null]);
+    const available = { ...graph, nodes: [...graph.nodes, fixture.source] };
+    const unique = read(available);
+    expect(unique).not.toBe(absent);
+    expect(unique).toEqual(analyzeCanvasRelations(available));
+    expect(unique.projectedInputs.map((input) => [input.state, input.sourceNodeId])).toEqual([
+      ['missing', fixture.source.id],
+      ['missing', fixture.source.id],
+    ]);
+    const ambiguous = {
+      ...available,
+      nodes: [...available.nodes, { ...fixture.source, id: 'second-exact-source' }],
+    };
+    expect(read(ambiguous).projectedInputs.map((input) => input.sourceNodeId)).toEqual([
+      null,
+      null,
+    ]);
+    expect(read(available)).toEqual(unique);
+    const unrelated = {
+      ...available,
+      nodes: [...available.nodes, { ...fixture.source, id: 'unrelated', metadata: {} }],
+    };
+    expect(read(unrelated)).toBe(read(available));
+    for (const identity of [
+      { kind: 'dvt:transform', role: 'input' },
+      { kind: 'dvt:source', role: 'transform' },
+    ] as const) {
+      const nonSource = {
+        ...available,
+        nodes: [
+          ...available.nodes,
+          { ...fixture.source, ...identity, id: 'not-a-physical-source' },
+        ],
+      };
+      expect(read(nonSource)).toBe(read(available));
+      expect(read(nonSource)).toEqual(analyzeCanvasRelations(nonSource));
+    }
+  });
   it('invalidates a three-model consumer when Source publication is withdrawn and restored', () => {
     const graph = analysisChain();
     const before = structuredClone(graph);
@@ -70,7 +114,8 @@ describe('relational analysis dependency closure', () => {
     const graph = { ...analysisChain(), edges: [] };
     const read = createCanvasRelationalAnalysisReader();
     const initial = read(graph);
-    expect(initial.failure).toBe('input-identity-unavailable');
+    expect(initial.failure).toBeNull();
+    expect(initial.semantic?.state).toBe('disconnected');
     const changed = {
       ...graph,
       nodes: graph.nodes.map((node) =>
@@ -80,7 +125,8 @@ describe('relational analysis dependency closure', () => {
       ),
     };
     const fresh = analyzeCanvasRelations(changed);
-    expect(fresh.failure).toBe('input-identity-unavailable');
+    expect(fresh.failure).toBeNull();
+    expect(fresh.semantic?.state).toBe('disconnected');
     expect(read(changed)).not.toBe(initial);
     expect(read(changed)).toEqual(fresh);
     expect(read(graph)).toEqual(initial);

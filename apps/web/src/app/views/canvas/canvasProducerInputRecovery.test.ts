@@ -30,6 +30,38 @@ import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructu
 import { createSourceDocument } from './canvasSourceDocument';
 
 describe('retained producer input inspection', () => {
+  it.each(['missing-node', 'missing-edge'] as const)(
+    'retains exact disconnected producer structure for editing without granting resolution (%s)',
+    async (absence) => {
+      const graph = await createModelOutputDependencyFixture();
+      const args = {
+        node: graph.consumer,
+        nodes:
+          absence === 'missing-node'
+            ? graph.nodes.filter((node) => node.id !== graph.producer.id)
+            : graph.nodes,
+        edges:
+          absence === 'missing-node'
+            ? graph.edges
+            : graph.edges.filter((edge) => edge.sourceId !== graph.producer.id),
+      };
+      const before = structuredClone(args);
+      const recovery = readCanvasProducerInputRecovery(args);
+      expect(recovery.kind).toBe('disconnected');
+      if (recovery.kind !== 'disconnected') throw new Error('Expected disconnected structure');
+      const read = graph.consumerDocument.sidecar.relations.find(
+        (binding) => binding.producerRef != null
+      )!;
+      expect(recovery.document).toEqual(graph.consumerDocument);
+      expect(recovery.missingProducerNodeIds).toEqual(new Set([graph.producer.id]));
+      expect(recovery.missingProducerRelationIds).toEqual(new Set([read.relationId]));
+      expect(recovery.denied).toEqual(
+        new Set(read.producerRef!.fields.map((field) => field.fieldId))
+      );
+      expect(() => resolveCanvasSubstraitGraphBindings(args)).toThrow();
+      expect(args).toEqual(before);
+    }
+  );
   it('rejects a required missing publication combined with an incompatible present type', async () => {
     const graph = await createIncompatibleRetainedModelFixture();
     const args = { node: graph.consumer, nodes: graph.nodes, edges: graph.edges };
@@ -42,6 +74,49 @@ describe('retained producer input inspection', () => {
       failure: 'invalid-semantic-authority',
     });
     expect(args).toEqual(before);
+  });
+  it('still validates a connected producer when another retained Read is disconnected', async () => {
+    const graph = await createIncompatibleRetainedModelFixture();
+    const document = modelDependencyDocument(graph.consumer);
+    const physical = document.sidecar.relations.find((binding) => binding.sourceRef != null)!;
+    delete physical.sourceRef;
+    physical.producerRef = {
+      nodeId: 'missing-other-producer',
+      fields: document.sidecar.fields
+        .filter((field) => field.relationId === physical.relationId)
+        .map((field) => ({ fieldId: field.fieldId, producerFieldId: field.fieldId })),
+    };
+    const consumer = applyDvtSubstraitSemanticDocument(
+      graph.consumer,
+      encodeDvtSubstraitSemanticDocument(document)
+    );
+    const args = {
+      node: consumer,
+      nodes: graph.nodes.map((node) => (node.id === consumer.id ? consumer : node)),
+      edges: graph.edges,
+    };
+    const before = structuredClone(args);
+    expect(readCanvasProducerInputRecovery(args)).toEqual({
+      kind: 'rejected',
+      failure: 'invalid-semantic-authority',
+    });
+    expect(args).toEqual(before);
+  });
+
+  it('rejects malformed saved identities even when the producer is absent', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const consumer = structuredClone(graph.consumer);
+    const authority = consumer.metadata!.transformAuthoring as {
+      semanticDocument: { sidecar: typeof graph.consumerDocument.sidecar };
+    };
+    authority.semanticDocument.sidecar.relations[0]!.relAnchor = 9999;
+    expect(
+      readCanvasProducerInputRecovery({
+        node: consumer,
+        nodes: graph.nodes.filter((node) => node.id !== graph.producer.id),
+        edges: graph.edges.filter((edge) => edge.sourceId !== graph.producer.id),
+      })
+    ).toEqual({ kind: 'rejected', failure: 'invalid-semantic-authority' });
   });
   it('keeps the saved consumer plan and identities while denying removed producer fields', async () => {
     const graph = await createModelOutputDependencyFixture();
@@ -157,24 +232,10 @@ describe('retained producer input inspection', () => {
     ).toEqual({ kind: 'rejected', failure: 'input-identity-unavailable' });
   });
 
-  it('does not recover a foreign or disconnected producer from a retained document', async () => {
+  it('does not recover a connected producer whose upstream dependency is unavailable', async () => {
     const graph = await createModelOutputDependencyFixture();
     const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);
     const nodes = graph.nodes.map((node) => (node.id === producer.id ? producer : node));
-    expect(
-      readCanvasProducerInputRecovery({
-        node: graph.consumer,
-        nodes: nodes.filter((node) => node.id !== producer.id),
-        edges: graph.edges,
-      })
-    ).toEqual({ kind: 'rejected', failure: 'input-identity-unavailable' });
-    expect(
-      readCanvasProducerInputRecovery({
-        node: graph.consumer,
-        nodes,
-        edges: graph.edges.filter((edge) => edge.sourceId !== producer.id),
-      })
-    ).toEqual({ kind: 'rejected', failure: 'input-identity-unavailable' });
     expect(
       readCanvasProducerInputRecovery({
         node: graph.consumer,

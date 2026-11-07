@@ -14,10 +14,86 @@ import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTree
 import * as analysis from './canvasRelationalAnalysis';
 import { analysisChain, withdrawChainSource } from './canvasRelationalAnalysisMemo.test-support';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
+import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import { projectCanvasCanonicalGraphEditing } from './canvasCanonicalGraphEditing';
 
 describe('Workbench shared analysis lifecycle', () => {
   setupWorkbenchTest();
   afterEach(() => vi.restoreAllMocks());
+
+  it('reopens a persisted mixed disconnected graph for editing with no available inputs', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const editable = projectCanvasCanonicalGraphEditing(graph.consumerDocument, [
+      graph.producer.id,
+      graph.right.id,
+    ])!;
+    const metadata = { ...graph.consumer.metadata };
+    delete metadata.transformAuthoring;
+    const target = {
+      ...graph.consumer,
+      metadata: {
+        ...metadata,
+        relationalAuthoringDraft: createCanvasRelationalAuthoringDraft({
+          ...editable,
+          outputRelationId: null,
+          positions: new Map(),
+        }),
+      },
+    };
+    let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+    const apply = vi.fn();
+    function Host(): React.JSX.Element {
+      model = useCanvasRelationalTreeWorkbenchModel({
+        transformNode: target,
+        nodes: [target],
+        edges: [],
+        copy: COPY,
+        authoring: { canEditNode: true, onApplyNodeDraft: apply },
+      });
+      return <output>{model.selectedLocator}</output>;
+    }
+    await act(async () => root.render(<Host />));
+    expect(model!.inputs).toHaveLength(0);
+    expect(model!.authoringAvailable).toBe(true);
+    expect(model!.session.active).toBe(true);
+    expect(model!.session.restorationUnavailable).toBe(false);
+    expect(model!.session.occurrences.pending).toEqual(editable.sources);
+    expect(model!.session.staged.operations).toEqual(editable.operations);
+    expect(model!.session.joinDraft).toBeNull();
+    expect(model!.outputPlanRelationIds.size).toBe(0);
+    expect(model!.sourceOutputFieldsByRelationId.size).toBe(0);
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('keeps an exact canonical identity seed editable with every incoming edge absent', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const nodes = graph.nodes.filter((node) => node.id !== graph.producer.id);
+    let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+    const apply = vi.fn();
+    function Host(): React.JSX.Element {
+      model = useCanvasRelationalTreeWorkbenchModel({
+        transformNode: graph.consumer,
+        nodes,
+        edges: [],
+        copy: COPY,
+        authoring: { canEditNode: true, onApplyNodeDraft: apply },
+      });
+      return <output>{model.selectedLocator}</output>;
+    }
+    await act(async () => root.render(<Host />));
+    expect(model!.inputs).toHaveLength(0);
+    expect(model!.projection?.inputs.map((input) => input.sourceNodeId)).toEqual([
+      graph.producer.id,
+      graph.right.id,
+    ]);
+    expect(model!.authoringAvailable).toBe(true);
+    await act(async () => model!.session.start());
+    expect(model!.session.active).toBe(true);
+    expect(model!.session.joinDraft).toEqual(graph.consumerDocument);
+    expect(model!.session.selectedInputIds).toEqual([graph.producer.id, graph.right.id]);
+    expect(apply).not.toHaveBeenCalled();
+  });
 
   it('removes the mounted consumer tree on indirect withdrawal and restores it without reopening', async () => {
     const graph = analysisChain();

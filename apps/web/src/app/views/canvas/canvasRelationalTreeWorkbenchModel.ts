@@ -4,9 +4,41 @@ import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasIn
 import type {
   CanvasRelationalTreeInput,
   CanvasRelationalTreeNode,
+  CanvasRelationalTreeProjection,
 } from './canvasRelationalTreeProjection';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
+import type { CanvasRelationalAnalysis } from './canvasRelationalAnalysis';
+import type { CanvasRelationalCompositionTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { resolveCanvasRelationalTreeExistingDraft } from './canvasRelationalTreeExistingDraft';
+import { readCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+
+/** Structural editability is independent of current publication and command authorization. */
+export function canAuthorCanvasRelationalTree(
+  analysis: CanvasRelationalAnalysis,
+  projection: CanvasRelationalTreeProjection | null,
+  composition: CanvasRelationalCompositionTruth | null,
+  transformNode: CanonicalNode
+): boolean {
+  if (
+    analysis.semantic?.state === 'disconnected' &&
+    resolveCanvasRelationalTreeExistingDraft({
+      document: analysis.semantic.document,
+      projection,
+    }) != null
+  )
+    return true;
+  const persistedDraft = readCanvasRelationalAuthoringDraft(transformNode);
+  if (
+    (analysis.failure == null || analysis.failure === 'missing-semantic-authority') &&
+    persistedDraft?.outputRelationId !== undefined
+  )
+    return true;
+  return (
+    ['pending', 'single-input', 'canonical'].includes(composition?.state ?? '') &&
+    analysis.inputs.length >= 1
+  );
+}
 
 export function projectCanvasSourceOccurrencePublication(
   inputs: readonly CanvasRelationalTreeInput[],

@@ -13,6 +13,54 @@ import {
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 
 describe('shared Canvas relational analysis', () => {
+  it('retains a missing producer UUID and exposes a new same-name producer as a separate pending input', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const replacement = { ...graph.producer, id: 'new-producer' };
+    const args = {
+      node: graph.consumer,
+      nodes: [...graph.nodes.filter((node) => node.id !== graph.producer.id), replacement],
+      edges: graph.edges.map((edge) => ({
+        ...edge,
+        sourceId: edge.sourceId === graph.producer.id ? replacement.id : edge.sourceId,
+        targetId: edge.targetId === graph.producer.id ? replacement.id : edge.targetId,
+      })),
+    };
+    const before = structuredClone(args);
+    const analysis = analyzeCanvasRelations(args);
+    expect(analysis.failure).toBeNull();
+    expect(analysis.semantic?.state).toBe('disconnected');
+    expect(analysis.semantic?.document).toEqual(graph.consumerDocument);
+    expect(analysis.projectedInputs).toContainEqual(
+      expect.objectContaining({ sourceNodeId: graph.producer.id, state: 'missing' })
+    );
+    expect(analysis.projectedInputs).toContainEqual(
+      expect.objectContaining({ sourceNodeId: replacement.id, state: 'pending', relationId: null })
+    );
+    expect(projectAnalyzedCanvasRelationalTree(analysis).ok).toBe(true);
+    expect(
+      analysis.semantic?.publication?.get(analysis.semantic.index.rootId)?.rowUnavailable
+    ).toBe(true);
+    expect(projectCanvasRelationalComposition(analysis)?.state).toBe('incomplete');
+    expect(() => resolveCanvasSubstraitGraphBindings(args)).toThrow();
+    expect(args).toEqual(before);
+  });
+
+  it('retains editor provenance only for a unique exact disconnected physical source', () => {
+    const graph = occurrenceGraph();
+    const args = { ...graph, node: graph.targetNode, edges: [] };
+    expect(
+      analyzeCanvasRelations(args).projectedInputs.map((input) => [input.state, input.sourceNodeId])
+    ).toEqual([
+      ['missing', graph.source.id],
+      ['missing', graph.source.id],
+    ]);
+    const duplicate = { ...graph.source, id: 'ambiguous-source' };
+    expect(
+      analyzeCanvasRelations({ ...args, nodes: [...graph.nodes, duplicate] }).projectedInputs.map(
+        (input) => input.sourceNodeId
+      )
+    ).toEqual([null, null]);
+  });
   it('rejects incompatible retained inputs without refreshing away a required consumer Output', async () => {
     const graph = await createIncompatibleRetainedModelFixture();
     const args = { node: graph.consumer, nodes: graph.nodes, edges: graph.edges };
