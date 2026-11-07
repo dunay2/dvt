@@ -11,6 +11,7 @@ import {
   buildEnvironmentAccessScope,
 } from '../../../src/application/ports/accessDecision.js';
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/authContract.js';
+import type { DbtModelProducer } from '../../../src/application/ports/dbtModelProducer.js';
 import { projectDvtPostgresTransform } from '../../../src/application/services/dvtPostgresTransformProjection.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import {
@@ -18,6 +19,7 @@ import {
   type DvtTerminalTransformClosure,
 } from '../../../src/application/services/resolveDvtTerminalTransformClosure.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { buildDbtInputPreviewFixture } from '../../fixtures/dvtDbtInputPreviewFixture.js';
 import {
   buildProducerPreviewDraft,
   consumerNode,
@@ -62,7 +64,8 @@ function withVisiblePositions(draft: WorkspaceGraphAuthoringDraft): WorkspaceGra
 
 function harness(
   input = buildProducerPreviewDraft(),
-  targetId = 'downstream'
+  targetId = 'downstream',
+  externalProducers?: ReadonlyMap<string, DbtModelProducer>
 ): Readonly<{
   draft: WorkspaceGraphAuthoringDraft;
   previewTransformRows: ReturnType<typeof vi.fn>;
@@ -103,6 +106,9 @@ function harness(
     graphDraftResolver: { executeWithAuthorizedDraft } as never,
     connectionCatalog: { getConnection } as never,
     probe: { previewTransformRows },
+    ...(externalProducers == null
+      ? {}
+      : { modelProducers: { resolve: async () => externalProducers } }),
   });
   return {
     draft,
@@ -127,6 +133,35 @@ function closure(
 }
 
 describe('protected producer/consumer row preview', () => {
+  it.each(['model', 'physical', 'join', 'whole'] as const)(
+    'previews the %s target of a mixed dbt-model/physical-source JOIN',
+    async (selection) => {
+      const fixture = buildDbtInputPreviewFixture();
+      const before = globalThis.structuredClone(fixture.draft);
+      const h = harness(fixture.draft, fixture.targetId, fixture.externalProducers);
+      const relationId = {
+        model: fixture.modelRelationId,
+        physical: fixture.physicalRelationId,
+        join: fixture.joinRelationId,
+        whole: undefined,
+      }[selection];
+      const result = await h.useCase.execute(
+        TransformDataSampleRequestSchema.parse({
+          ...h.request,
+          semanticPlanSha256: fixture.semanticPlanSha256,
+          ...(relationId == null ? {} : { relationId }),
+        }),
+        context
+      );
+      expect(result.relationId).toBe(relationId);
+      expect(result.provenance.sourceRefs).toHaveLength(selection === 'model' ? 0 : 1);
+      expect(h.previewTransformRows).toHaveBeenCalledOnce();
+      const sql = h.previewTransformRows.mock.calls[0]![0].sql;
+      expect(/\bJOIN\b/.test(sql)).toBe(selection === 'join' || selection === 'whole');
+      expect(fixture.draft).toEqual(before);
+    }
+  );
+
   it('reports a repeated physical input once without removing either logical JOIN input', async () => {
     const projection = await projectDvtPostgresTransform(
       resolveDvtTerminalTransformClosure(repeatedSourceInput())
