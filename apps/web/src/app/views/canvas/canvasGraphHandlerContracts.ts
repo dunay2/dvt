@@ -136,6 +136,7 @@ export type CanvasNodeDropContracts = {
 };
 
 export type CanvasAuthoringNodeCreationState = {
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   draftSession: CanvasDraftSession;
   nodes: Node[];
 };

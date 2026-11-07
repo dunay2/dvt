@@ -121,6 +121,13 @@ introduce a catalogue writer. Available connection objects, registered definitio
 and placed instances remain distinct. Repeated source placement uses the same
 guarded instance command and never creates a SQL file per placement.
 
+New authoring definitions reserve identities from the canonical catalogue,
+including unplaced definitions, and from immediately admitted placements. The
+existing `CreateCanvasAuthoringNode` allocator must not reuse a registered
+definition ID. Visible cards determine placement only; they do not determine
+which identities are available. Placing an existing definition remains a
+separate instance action and preserves the registered definition.
+
 Activation in Elements requests creation, never file navigation or camera focus.
 Click uses the visible Canvas center and drag uses the dropped graph position;
 both reuse native node admission or the existing local reference-placement rail.
@@ -138,9 +145,9 @@ and does not query its schema again. Affected cards retain their displayed field
 while pending; cancelled revisions cannot publish. This is local reuse within the
 existing contextual graph query, not a new cache or mutation rail.
 `ListWorkspaceFiles`, `GetWorkspaceFileContent` and `ProjectDbtGraphFromFiles`
-remain scoped queries. File models without native instance admission are visible
-but disabled in the native catalogue; the Code explorer still opens their files.
-General external-model instantiation is not granted by this correction.
+remain scoped queries. Governed dbt file models use the existing instance
+admission when the current Canvas permits creation; read-only or unavailable
+admission remains disabled. The Code explorer owns file navigation.
 The existing shared list and creation catalogue own search, category disclosure,
 capability gating and focus. [Prospective design and negative tests](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
 
@@ -160,6 +167,16 @@ includes dbt model inputs. They retain the displayed model name and the existing
 saved-revision, output-plan, readiness and permission guards. Physical Source
 cards keep their governed physical-source query; missing source references never
 become guessed model inputs. Selecting a card does not execute either query.
+
+Model samples use a revision of their own effective query context: the target,
+its shared definition, and its upstream inputs and bindings. An unrelated
+placement, another branch, or a downstream consumer does not invalidate ready
+rows or an in-flight response and does not issue another query. Changes to that
+query context, target removal, or a Canvas change still invalidate the sample;
+the existing saved-digest and response-admission guards remain mandatory.
+Context revisions are resolved only for requested samples and reused within the
+current graph snapshot. An unavailable current context opens the existing error
+state without saving or querying; an obsolete action cannot open it.
 
 Selected-relation PostgreSQL projection validates the physical inputs actually
 used by that projection. An authorized dbt-model Read can have no physical

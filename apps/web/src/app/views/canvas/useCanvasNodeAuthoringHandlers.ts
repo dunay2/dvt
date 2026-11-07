@@ -42,6 +42,7 @@ export function useCanvasNodeAuthoringHandlers({
   const nodeDropHandlers = useCanvasNodeDropHandlers(nodeDropContracts);
   const nodeCreationContracts: CanvasAuthoringNodeCreationContracts = {
     state: {
+      canonicalNodesById: state.canonicalNodesById,
       draftSession: state.draftSession,
       nodes: state.nodes,
     },

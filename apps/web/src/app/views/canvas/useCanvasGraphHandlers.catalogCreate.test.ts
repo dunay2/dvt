@@ -6,7 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node } from '@xyflow/react';
 
 import { canvasViewCopy } from './copy';
+import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
+import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
+import { projectedModel, sourceNode } from './canvasColumnOutputAuthoring.test-support';
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import {
+  buildCanonicalNode,
   buildDraftSession,
   renderGraphHandlersHook,
   resetGraphHandlersTestDoubles,
@@ -177,6 +182,69 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       })
     );
 
+    harness.cleanup();
+  });
+
+  it('reserves unplaced persisted and local definitions across consecutive creations', async () => {
+    const retainedModels = [1, 2].map((index) => ({
+      ...buildCanonicalNode(`dvt-transform-${index}`, 'transform'),
+      metadata: {
+        ...projectedModel(sourceNode(), ['order_id']).metadata,
+        config: { materialized: 'table', description: `Retained model ${index}` },
+      },
+    }));
+    const [persistedModel, localModel] = retainedModels;
+    const draft = buildCanvasAuthoringDraft({
+      canvas: { kind: 'dvt', title: 'Canvas' },
+      nodeIds: [],
+      nodePositions: {},
+      visibleEdges: [],
+      canonicalNodes: [persistedModel!],
+      canonicalEdges: [],
+    });
+    const initialSession: DraftSession = {
+      ...buildDraftSession(),
+      baseline: { record: { draft, revision: 'rev-1', savedAt: '2026-11-07T00:00:00Z' } },
+      localNodeCatalog: { [localModel!.id]: localModel! },
+      workingSet: { visibleNodeIds: [], visibleEdges: [], pendingExplicitNodeIds: [] },
+    };
+    const graph = buildCanvasAuthoringGraphProjection({
+      ...initialSession.workingSet,
+      draftSemanticGraph: projectWorkspaceGraphAuthoringDraftSemanticGraph(draft),
+      localCanonicalNodes: [localModel!],
+    });
+    const before = JSON.stringify(initialSession);
+    let currentNodes: Node[] = [];
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: graph.canonicalNodes,
+      nodes: [],
+      draftSession: initialSession,
+      setNodes: vi.fn((nodes) => {
+        currentNodes = nodes;
+      }),
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:transform'));
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:transform'));
+    });
+
+    expect(currentNodes.map((node) => node.id)).toEqual(['dvt-transform-3', 'dvt-transform-4']);
+    expect(currentNodes[0]?.position).toEqual({ x: 160, y: 120 });
+    const nextSession = applyDraftSessionUpdates(
+      setDraftSession.mock.calls as [DraftSessionUpdate][],
+      initialSession
+    );
+    expect(nextSession.workingSet.visibleNodeIds).toEqual(['dvt-transform-3', 'dvt-transform-4']);
+    expect(nextSession.workingSet.visibleEdges).toEqual([]);
+    expect(nextSession.baseline).toEqual(initialSession.baseline);
+    expect(nextSession.localNodeCatalog?.[persistedModel!.id]).toBeUndefined();
+    expect(nextSession.localNodeCatalog?.[localModel!.id]).toEqual(localModel);
+    expect(JSON.stringify(initialSession)).toBe(before);
     harness.cleanup();
   });
 
