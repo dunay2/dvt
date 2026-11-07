@@ -21,7 +21,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
   effects,
   policy,
 }: UseCanvasAuthoringNodeCreationHandlersArgs): UseCanvasAuthoringNodeCreationHandlersResult {
-  const { draftSession, nodes } = state;
+  const { canonicalNodesById, draftSession, nodes } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
   const { canEditEdges, columnLevelLineageEnabled, allowsCanonicalNode } = policy;
   const latestNodesRef = useRef(nodes);
@@ -51,6 +51,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
       const { canonicalNode, position } = buildAuthoringNodeCommand(
         registration,
         latestNodesRef.current,
+        canonicalNodesById.keys(),
         positionOverride,
         seed
       );
@@ -70,7 +71,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
         latestNodesRef.current = transaction.nodes;
       }
     },
-    [canEditEdges, runAdmissionCommand, setInspectorNode, setSelectedNodes]
+    [canEditEdges, canonicalNodesById, runAdmissionCommand, setInspectorNode, setSelectedNodes]
   );
 
   return { handleCreateAuthoringNode };

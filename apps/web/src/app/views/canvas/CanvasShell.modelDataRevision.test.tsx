@@ -4,6 +4,7 @@ import { asIsoUtcString } from '@dvt/contracts';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   useOperationalDrawerContributionStore,
   type OperationalDrawerDataSample,
@@ -23,6 +24,9 @@ import {
   createDvtTransformAuthoringMetadata,
 } from './canvasDvtTransformAuthoring';
 import { withDvtTransformMaterialization } from './canvasDvtMaterializationPolicy';
+import { dbtModel, edge } from './canvasDvtConnectionProvenance.test-support';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
+import * as sampleQueryMetadata from './canvasNodeQueryMetadata';
 
 describe('Canvas Model card revision-safe execution', () => {
   const model = node(fixture());
@@ -72,17 +76,21 @@ describe('Canvas Model card revision-safe execution', () => {
     prepare.mockReset().mockResolvedValue(saved);
   });
   afterEach(() => harness.unmount());
-  async function mount(editable = true, prepared = true, shown = model): Promise<CanvasShellProps> {
+  async function mount(
+    editable = true,
+    prepared = true,
+    shown = model,
+    context: { nodes: CanonicalNode[]; edges: CanonicalEdge[] } = { nodes: [shown], edges: [] }
+  ): Promise<CanvasShellProps> {
     const presentationTruth = await projectCanvasNodePresentationTruth({
       node: shown,
-      nodes: [shown],
-      edges: [],
+      ...context,
     });
     const data = { ...shown, pluginKind: shown.kind, presentationTruth };
     return harness.render({
       panels: {
-        inspectorGraphNodes: [shown],
-        inspectorGraphEdges: [],
+        inspectorGraphNodes: context.nodes,
+        inspectorGraphEdges: context.edges,
         relationalTreeAuthoring: { canEditNode: editable, onApplyNodeDraft: vi.fn() },
       },
       graph: {
@@ -106,6 +114,237 @@ describe('Canvas Model card revision-safe execution', () => {
   async function execute(): Promise<void> {
     await act(async () => card().onOpenSourceDataSample?.(model.id));
   }
+  async function renderGraph(
+    props: CanvasShellProps,
+    nodes: CanonicalNode[],
+    edges: CanonicalEdge[] = []
+  ): Promise<void> {
+    await harness.renderProps({
+      ...props,
+      panels: { ...props.panels, inspectorGraphNodes: nodes, inspectorGraphEdges: edges },
+    });
+  }
+
+  it('reports unavailable context when current Preview has a missing upstream input', async () => {
+    await mount(true, true, model, {
+      nodes: [model],
+      edges: [edge('missing-input', model.id)],
+    });
+    expect(card().onOpenSourceDataSample).toBeTypeOf('function');
+    await execute();
+    expect(result()).toMatchObject({
+      status: 'error',
+      nodeName: model.name,
+      reason: 'unavailable',
+    });
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe(`data:${model.id}`);
+    expect(prepare).not.toHaveBeenCalled();
+    expect(query.previewTransformRows).not.toHaveBeenCalled();
+  });
+  it('keeps an obsolete unavailable context callback from replacing a current sample', async () => {
+    const props = await mount(true, true, model, {
+      nodes: [model],
+      edges: [edge('missing-input', model.id)],
+    });
+    const obsoletePreview = card().onOpenSourceDataSample!;
+    await renderGraph(props, [model]);
+    await execute();
+    const ready = result();
+    expect(ready?.status).toBe('ready');
+    await act(async () => obsoletePreview(model.id));
+    expect(result()).toBe(ready);
+    expect(prepare).toHaveBeenCalledOnce();
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+  });
+
+  it('does not inspect sample context for unrequested models when another branch changes', async () => {
+    const props = await mount();
+    const branch = Array.from({ length: 8 }, (_, index) => ({ ...model, id: `other-${index}` }));
+    const edges = branch.slice(1).map((node, index) => edge(branch[index]!.id, node.id));
+    const inspect = vi.spyOn(sampleQueryMetadata, 'canvasNodeQueryMetadata');
+    try {
+      await renderGraph(props, [model, ...branch], edges);
+      expect(inspect).not.toHaveBeenCalled();
+      await execute();
+      expect(result()?.status).toBe('ready');
+      expect(inspect.mock.calls.map(([node]) => node.id)).toEqual([model.id]);
+      await renderGraph(props, [model, ...branch.slice(0, -1)], edges.slice(0, -1));
+      expect(result()?.status).toBe('ready');
+      expect(inspect.mock.calls.every(([node]) => node.id === model.id)).toBe(true);
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
+    } finally {
+      inspect.mockRestore();
+    }
+  });
+
+  it.each(['native', 'dbt'] as const)(
+    'retains the exact %s sample through unrelated placements, branch edits and downstream consumers',
+    async (kind) => {
+      const definition = dbtModel();
+      const shown =
+        kind === 'native' ? model : { ...definition, id: model.id, definitionId: definition.id };
+      const nodes = kind === 'native' ? [shown] : [definition, shown];
+      const rows = {
+        ...sample,
+        semanticPlanSha256:
+          resolveCanvasDbtModelSignature(shown)?.document.sidecar.semanticPlanSha256 ??
+          semanticPlanSha256,
+      };
+      prepare.mockResolvedValue({ ...saved, canonicalNodes: nodes });
+      query.previewTransformRows.mockResolvedValue(rows);
+      const props = await mount(true, true, shown, { nodes, edges: [] });
+      await execute();
+      const ready = result();
+      expect(ready).toMatchObject({ status: 'ready', sample: rows });
+
+      const unrelated = { ...model, id: 'unrelated-model' };
+      const instance = { ...unrelated, id: 'unrelated-placement', definitionId: unrelated.id };
+      const producer = dbtModel(undefined, 'unrelated-input');
+      const branch = [producer, unrelated, instance];
+      const branchEdge = edge(producer.id, unrelated.id);
+      await renderGraph(props, [...nodes, ...branch], [branchEdge]);
+      expect(result()).toBe(ready);
+      await renderGraph(
+        props,
+        [...nodes, producer, { ...changedModel, id: unrelated.id }, instance],
+        [branchEdge]
+      );
+      expect(result()).toBe(ready);
+      const downstream = edge(shown.id, unrelated.id);
+      await renderGraph(props, [...nodes, ...branch].reverse(), [downstream, branchEdge]);
+      expect(result()).toBe(ready);
+      await renderGraph(props, nodes);
+      expect(result()).toBe(ready);
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
+      expect(prepare).toHaveBeenCalledOnce();
+    }
+  );
+  it.each(['saving', 'querying'] as const)(
+    'accepts an in-flight sample after unrelated and downstream edits while %s',
+    async (phase) => {
+      let finish!: () => void;
+      if (phase === 'saving')
+        prepare.mockReturnValueOnce(
+          new Promise((resolve) => {
+            finish = () => resolve(saved);
+          })
+        );
+      else
+        query.previewTransformRows.mockReturnValueOnce(
+          new Promise((resolve) => {
+            finish = () => resolve(sample);
+          })
+        );
+      const props = await mount();
+      await execute();
+      const loading = result();
+      expect(loading?.status).toBe('loading');
+      const unrelated = { ...model, id: 'unrelated' };
+      await renderGraph(props, [unrelated, model], [edge(model.id, unrelated.id)]);
+      expect(result()).toBe(loading);
+      await act(async () => finish());
+      expect(result()).toMatchObject({ status: 'ready', sample });
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
+      expect(prepare).toHaveBeenCalledOnce();
+    }
+  );
+  it.each([
+    'definition',
+    'producer',
+    'schema',
+    'binding',
+    'missing input',
+    'missing definition',
+  ] as const)(
+    'invalidates a shared instance sample when its inherited %s changes',
+    async (change) => {
+      const definition = { ...model, id: 'shared-definition' };
+      const shown = { ...model, definitionId: definition.id };
+      const producer = dbtModel();
+      const input = edge(producer.id, definition.id);
+      const nodes = [shown, definition, producer];
+      prepare.mockResolvedValue({ ...saved, canonicalNodes: nodes });
+      const props = await mount(true, true, shown, { nodes, edges: [input] });
+      await execute();
+      expect(result()?.status).toBe('ready');
+      const staleRefresh = useOperationalDrawerContributionStore
+        .getState()
+        .contribution!.tabs.find((tab) => tab.id === `data:${model.id}`)!.onRefresh!;
+      const reference = resolveCanvasDbtModelSignature(producer)!.reference;
+      const changes = {
+        definition: [shown, { ...changedModel, id: definition.id }, producer],
+        producer: [
+          shown,
+          definition,
+          dbtModel({
+            schemaVersion: 'connection-ref.v1',
+            provider: 'postgres',
+            connectionId: 'other-warehouse',
+          }),
+        ],
+        schema: [
+          shown,
+          definition,
+          {
+            ...producer,
+            metadata: {
+              dbtModelReference: {
+                ...reference,
+                fields: reference.fields.map((field) => ({ ...field, dataType: 'integer' })),
+              },
+            },
+          },
+        ],
+        binding: nodes,
+        'missing input': [shown, definition],
+        'missing definition': [shown, producer],
+      };
+      const changedEdges =
+        change === 'binding'
+          ? [{ ...input, metadata: { inputBindings: { version: 'v1', fields: [] } } }]
+          : [input];
+      await renderGraph(props, changes[change], changedEdges);
+      expect(result()).toMatchObject({ status: 'error', reason: 'unavailable' });
+      await act(async () => staleRefresh());
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
+    }
+  );
+  it('retains a sample when an instance owns its inputs and only unused definition inputs change', async () => {
+    const definition = { ...model, id: 'shared-definition' };
+    const shown = { ...model, definitionId: definition.id };
+    const producer = dbtModel();
+    const unused = dbtModel(undefined, 'unused-definition-input');
+    const nodes = [shown, definition, producer, unused];
+    const edges = [edge(producer.id, shown.id), edge(unused.id, definition.id)];
+    prepare.mockResolvedValue({ ...saved, canonicalNodes: nodes });
+    const props = await mount(true, true, shown, { nodes, edges });
+    await execute();
+    const ready = result();
+    expect(ready?.status).toBe('ready');
+    await renderGraph(props, [shown, definition, producer], [edges[0]!]);
+    expect(result()).toBe(ready);
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+  });
+  it('rejects an in-flight response after its transitive producer changes', async () => {
+    const producer = dbtModel();
+    const intermediate = { ...model, id: 'intermediate' };
+    const nodes = [model, intermediate, producer];
+    const edges = [edge(producer.id, intermediate.id), edge(intermediate.id, model.id)];
+    prepare.mockResolvedValue({ ...saved, canonicalNodes: nodes });
+    let finish!: (value: typeof sample) => void;
+    query.previewTransformRows.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+    );
+    const props = await mount(true, true, model, { nodes, edges });
+    await execute();
+    expect(result()?.status).toBe('loading');
+    await renderGraph(props, [model, intermediate], edges);
+    await act(async () => finish(sample));
+    expect(result()).toMatchObject({ status: 'error', reason: 'unavailable' });
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+  });
 
   it('waits for saving to finish and binds the request to the displayed digest', async () => {
     let finish!: (value: typeof saved) => void;

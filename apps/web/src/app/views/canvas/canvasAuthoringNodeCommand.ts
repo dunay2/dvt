@@ -65,8 +65,7 @@ function isAsciiAlphaNumeric(character: string): boolean {
   );
 }
 
-function resolveNextAuthoringNodeIndex(baseId: string, existingNodes: readonly Node[]): number {
-  const existingIds = new Set(existingNodes.map((node) => node.id));
+function resolveNextAuthoringNodeIndex(baseId: string, existingIds: ReadonlySet<string>): number {
   let nextIndex = 1;
 
   while (existingIds.has(`${baseId}-${nextIndex}`)) {
@@ -159,11 +158,15 @@ function mergeSeedMetadata(
 export function buildAuthoringNodeCommand(
   registration: NodeKindRegistration,
   existingNodes: readonly Node[],
+  canonicalNodeIds: Iterable<string>,
   requestedPosition?: CanvasAuthoringNodePosition,
   seed?: CanvasAuthoringNodeSeed
 ): CanvasAuthoringNodeCommand {
   const baseId = `${registration.pluginId}-${slugifyNodeKind(registration.kind)}`;
-  const nextIndex = resolveNextAuthoringNodeIndex(baseId, existingNodes);
+  const nextIndex = resolveNextAuthoringNodeIndex(
+    baseId,
+    new Set([...canonicalNodeIds, ...existingNodes.map((node) => node.id)])
+  );
   const id = `${baseId}-${nextIndex}`;
   const baseMetadata = {
     typeLabel: registration.label,

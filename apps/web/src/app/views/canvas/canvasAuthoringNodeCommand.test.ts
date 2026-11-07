@@ -6,7 +6,11 @@ import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
 
 describe('buildAuthoringNodeCommand', () => {
   it('starts empty canvases from the first visible authoring slot', () => {
-    const command = buildAuthoringNodeCommand(buildTestNodeKind('dvt:transform', 'Transform'), []);
+    const command = buildAuthoringNodeCommand(
+      buildTestNodeKind('dvt:transform', 'Transform'),
+      [],
+      []
+    );
 
     expect(command.position).toEqual({ x: 160, y: 120 });
   });
@@ -32,14 +36,15 @@ describe('buildAuthoringNodeCommand', () => {
 
     const command = buildAuthoringNodeCommand(
       buildTestNodeKind('dvt:transform', 'Transform'),
-      existingNodes
+      existingNodes,
+      []
     );
 
     expect(command.position).toEqual({ x: 320, y: 360 });
   });
 
   it('uses a caller-owned viewport position for context-menu node creation', () => {
-    const command = buildAuthoringNodeCommand(buildTestNodeKind('dvt:source', 'Source'), [], {
+    const command = buildAuthoringNodeCommand(buildTestNodeKind('dvt:source', 'Source'), [], [], {
       x: 960,
       y: 420,
     });
@@ -54,6 +59,7 @@ describe('buildAuthoringNodeCommand', () => {
         role: 'transform',
         allowsIncoming: true,
       },
+      [],
       [],
       undefined,
       {
@@ -95,6 +101,7 @@ describe('buildAuthoringNodeCommand', () => {
         allowsIncoming: true,
         allowsOutgoing: false,
       },
+      [],
       [],
       undefined,
       {
