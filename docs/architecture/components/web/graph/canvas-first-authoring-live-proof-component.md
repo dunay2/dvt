@@ -95,6 +95,22 @@ may issue protected `GET /workspace/graph/draft` reads and inspect
 `dvt-web-canvas-interaction`; they must not mutate authoritative graph state
 outside the UI-owned command flow.
 
+## Tenant-Only Proof Bootstrap
+
+The first-authoring and Source Import runners prepare their principal through
+`seedInitialTenantGrant` in `scripts/live-governed-project.cjs`. The existing
+module owns tenant-only access and the governed CreateProject client; the runners
+do not keep separate SQL writers or identifier-quoting methods. The focused
+`SYS-CI-LIVE-PROJECT-BOOTSTRAP` component owns this shared fixture adapter under
+the existing native browser-proof rail.
+
+The initial grant contains no project or environment access. Projects still come
+from CreateProject and its returned workspace. The development-stack seeder is
+different: it also prepares an existing project referent and must not replace
+this tenant-only bootstrap. Grant values remain bound SQL parameters, identifiers
+remain quoted, and connection cleanup applies to successful and failed attempts.
+The runner retains its disposable database lease and process lifetime.
+
 ## Command And Query Rails
 
 | Rail                                 | Type    | DDD owner                                | Component rule                                                                     |
