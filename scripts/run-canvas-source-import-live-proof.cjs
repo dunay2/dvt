@@ -8,13 +8,12 @@ const { once } = require('node:events');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
-const { Client } = require('pg');
 const { pipePrefixedOutput } = require('./prefixed-process-output.cjs');
 const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
 const { buildLiveCypressInvocation } = require('./live-cypress-invocation.cjs');
-const { buildInitialTenantAccess, createGovernedProject } = require('./live-governed-project.cjs');
+const { seedInitialTenantGrant, createGovernedProject } = require('./live-governed-project.cjs');
 const {
   allocateDisposablePostgresDatabase,
   installDisposablePostgresInterruptCleanup,
@@ -56,10 +55,6 @@ class CanvasSourceImportLiveProofRunner {
     this.apiBindHost = '0.0.0.0';
     this.webBindHost = '0.0.0.0';
     this.processHandles = [];
-  }
-
-  quoteIdentifier(identifier) {
-    return `"${identifier.replaceAll('"', '""')}"`;
   }
 
   allocateLiveProofSchema() {
@@ -235,30 +230,6 @@ class CanvasSourceImportLiveProofRunner {
     processHandle.stderrReader.close();
   }
 
-  async seedProtectedRuntimeGrants(args) {
-    const tenantAccess = JSON.stringify(
-      buildInitialTenantAccess(args.tenantId, args.tenantActions)
-    );
-    const client = new Client({ connectionString: args.databaseUrl });
-
-    await client.connect();
-
-    try {
-      await client.query(
-        `INSERT INTO ${this.quoteIdentifier(args.schema)}.principal_grants
-           (principal_id, principal_type, suspended, tenant_access)
-         VALUES ($1, 'user', FALSE, $2::jsonb)
-         ON CONFLICT (principal_id, principal_type)
-         DO UPDATE SET tenant_access = EXCLUDED.tenant_access,
-                       suspended = FALSE,
-                       updated_at = NOW()`,
-        [args.principalId, tenantAccess]
-      );
-    } finally {
-      await client.end();
-    }
-  }
-
   buildCypressInvocation(args, platform = process.platform) {
     const host = platform === 'win32' ? '127.0.0.1' : 'host.docker.internal';
     return buildLiveCypressInvocation({
@@ -377,7 +348,7 @@ class CanvasSourceImportLiveProofRunner {
         'API version'
       );
 
-      await this.seedProtectedRuntimeGrants({
+      await seedInitialTenantGrant({
         databaseUrl,
         schema: liveProofSchema,
         principalId: processContext.localProtectedRuntimeAuth.principalId,
