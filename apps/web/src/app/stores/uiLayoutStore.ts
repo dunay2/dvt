@@ -9,9 +9,69 @@ import {
   type CanvasPaletteId,
 } from '../views/canvas/canvasPalette';
 
+export const CANVAS_EXPLORER_WIDTH = { default: 22, min: 15, max: 40 } as const;
+
+export type CanvasExplorerState = Readonly<{
+  mode: 'expanded' | 'collapsed' | 'closed';
+  widthPercent: number;
+}>;
+
+export type CanvasExplorerEvent =
+  | Readonly<{ type: 'expand' | 'collapse' | 'toggle' | 'close' }>
+  | Readonly<{ type: 'resize'; widthPercent: number }>;
+
+function normalizeCanvasExplorerWidth(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(CANVAS_EXPLORER_WIDTH.max, Math.max(CANVAS_EXPLORER_WIDTH.min, value))
+    : CANVAS_EXPLORER_WIDTH.default;
+}
+
+function hydrateCanvasExplorer(value: unknown, legacyVisible: unknown): CanvasExplorerState {
+  if (value === undefined) {
+    return {
+      mode: legacyVisible === false ? 'closed' : 'expanded',
+      widthPercent: CANVAS_EXPLORER_WIDTH.default,
+    };
+  }
+  const persisted =
+    typeof value === 'object' && value !== null ? (value as Partial<CanvasExplorerState>) : {};
+  return {
+    mode:
+      persisted.mode === 'closed' || persisted.mode === 'collapsed' ? persisted.mode : 'expanded',
+    widthPercent: normalizeCanvasExplorerWidth(persisted.widthPercent),
+  };
+}
+
+function transitionCanvasExplorer(
+  state: CanvasExplorerState,
+  event: CanvasExplorerEvent
+): CanvasExplorerState {
+  let mode = state.mode;
+  switch (event.type) {
+    case 'expand':
+      mode = 'expanded';
+      break;
+    case 'collapse':
+      if (mode === 'expanded') mode = 'collapsed';
+      break;
+    case 'toggle':
+      mode = mode === 'expanded' ? 'collapsed' : 'expanded';
+      break;
+    case 'close':
+      mode = 'closed';
+      break;
+    case 'resize': {
+      if (!Number.isFinite(event.widthPercent)) return state;
+      const widthPercent = normalizeCanvasExplorerWidth(event.widthPercent);
+      return widthPercent === state.widthPercent ? state : { ...state, widthPercent };
+    }
+  }
+  return mode === state.mode ? state : { ...state, mode };
+}
+
 interface UiLayoutState {
   leftNavCollapsed: boolean;
-  canvasExplorerVisible: boolean;
+  canvasExplorer: CanvasExplorerState;
   inspectorPanelWidth: number;
   inspectorPanelVisible: boolean;
   bottomDrawerHeight: number;
@@ -24,8 +84,7 @@ interface UiLayoutState {
   canvasSnapToGrid: boolean;
 
   toggleLeftNav: () => void;
-  showCanvasExplorer: () => void;
-  hideCanvasExplorer: () => void;
+  dispatchCanvasExplorer: (event: CanvasExplorerEvent) => void;
   setInspectorPanelWidth: (width: number) => void;
   setBottomDrawerHeight: (height: number) => void;
   toggleFocusMode: () => void;
@@ -46,7 +105,7 @@ type PersistedUiLayoutState = Partial<
   Pick<
     UiLayoutState,
     | 'leftNavCollapsed'
-    | 'canvasExplorerVisible'
+    | 'canvasExplorer'
     | 'inspectorPanelWidth'
     | 'bottomDrawerHeight'
     | 'bottomDrawerVisible'
@@ -57,13 +116,13 @@ type PersistedUiLayoutState = Partial<
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
   >
->;
+> & { canvasExplorerVisible?: unknown };
 
 export const useUiLayoutStore = create<UiLayoutState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       leftNavCollapsed: false,
-      canvasExplorerVisible: true,
+      canvasExplorer: { mode: 'expanded', widthPercent: CANVAS_EXPLORER_WIDTH.default },
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
       bottomDrawerHeight: 0,
@@ -76,8 +135,11 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       canvasSnapToGrid: false,
 
       toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
-      showCanvasExplorer: () => set({ canvasExplorerVisible: true }),
-      hideCanvasExplorer: () => set({ canvasExplorerVisible: false }),
+      dispatchCanvasExplorer: (event) => {
+        const current = get().canvasExplorer;
+        const canvasExplorer = transitionCanvasExplorer(current, event);
+        if (canvasExplorer !== current) set({ canvasExplorer });
+      },
       setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
       setBottomDrawerHeight: (height) => set({ bottomDrawerHeight: height }),
       toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
@@ -112,10 +174,10 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         return {
           ...currentState,
           leftNavCollapsed: persistedLayoutState.leftNavCollapsed ?? currentState.leftNavCollapsed,
-          canvasExplorerVisible:
-            typeof persistedLayoutState.canvasExplorerVisible === 'boolean'
-              ? persistedLayoutState.canvasExplorerVisible
-              : currentState.canvasExplorerVisible,
+          canvasExplorer: hydrateCanvasExplorer(
+            persistedLayoutState.canvasExplorer,
+            persistedLayoutState.canvasExplorerVisible
+          ),
           inspectorPanelWidth:
             persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
           inspectorPanelVisible: currentState.inspectorPanelVisible,
@@ -144,7 +206,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       },
       partialize: (state) => ({
         leftNavCollapsed: state.leftNavCollapsed,
-        canvasExplorerVisible: state.canvasExplorerVisible,
+        canvasExplorer: state.canvasExplorer,
         inspectorPanelWidth: state.inspectorPanelWidth,
         bottomDrawerHeight: state.bottomDrawerHeight,
         bottomDrawerVisible: state.bottomDrawerVisible,

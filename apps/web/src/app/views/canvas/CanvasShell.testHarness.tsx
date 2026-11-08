@@ -316,7 +316,7 @@ export function createCanvasShellHarness(): {
     contextualWorkbenchOwnerKey: null,
   });
   useUiLayoutStore.setState({
-    canvasExplorerVisible: true,
+    canvasExplorer: { mode: 'expanded', widthPercent: 22 },
     bottomDrawerHeight: 0,
     bottomDrawerVisible: false,
   });

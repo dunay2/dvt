@@ -18,7 +18,7 @@ import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 let root: Root;
 let container: HTMLDivElement;
 beforeEach(() => {
-  useUiLayoutStore.setState({ canvasExplorerVisible: true });
+  useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 22 } });
   useApplicationLanguageStore.setState({ language: 'en' });
 });
 function render(element: React.ReactNode): void {
@@ -40,6 +40,103 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('restores the saved dock width on mount and remount under StrictMode', () => {
+    // GH-3818: mount observations could replace the saved width with the panel's default size.
+    const view = (key: string): JSX.Element => (
+      <React.StrictMode>
+        <CanvasExplorer key={key} elements={<input aria-label="Panel search" />}>
+          <input aria-label="Graph state" defaultValue="camera" />
+        </CanvasExplorer>
+      </React.StrictMode>
+    );
+    useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 15 } });
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      render(view('canvas'));
+      const dock = container.querySelector('[data-panel-id$="-dock"]');
+      expect(Number(dock?.getAttribute('data-panel-size'))).toBe(15);
+      act(() => root.render(view('model')));
+      expect(
+        Number(container.querySelector('[data-panel-id$="-dock"]')?.getAttribute('data-panel-size'))
+      ).toBe(15);
+      expect(write).not.toHaveBeenCalled();
+    } finally {
+      write.mockRestore();
+    }
+  });
+
+  it('synchronizes width and disclosure across retained explorers without replacing content', () => {
+    // defaultSize only runs at mount; retained Canvas/Model panels also need later size updates.
+    render(
+      <>
+        <CanvasExplorer elements={<input aria-label="Canvas search" />}>
+          <input aria-label="Canvas graph" />
+        </CanvasExplorer>
+        <CanvasExplorer elements={<input aria-label="Model search" />}>
+          <input aria-label="Model graph" />
+        </CanvasExplorer>
+      </>
+    );
+    const graphs = [screen.getByLabelText('Canvas graph'), screen.getByLabelText('Model graph')];
+    const searches = [
+      screen.getByLabelText('Canvas search'),
+      screen.getByLabelText('Model search'),
+    ];
+    act(() => {
+      fireEvent.change(searches[1]!, { target: { value: 'orders' } });
+      useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 32 } });
+    });
+    const sizes = (): number[] =>
+      Array.from(container.querySelectorAll('[data-panel-id$="-dock"]'), (panel) =>
+        Number(panel.getAttribute('data-panel-size'))
+      );
+    expect(sizes()).toEqual([32, 32]);
+    act(() => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Collapse explorer' })[0]!);
+    });
+    expect(
+      screen
+        .getAllByRole('button', { name: 'Elements' })
+        .map((button) => button.getAttribute('aria-expanded'))
+    ).toEqual(['false', 'false']);
+    act(() => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Elements' })[1]!);
+    });
+    expect(sizes()).toEqual([32, 32]);
+    expect(screen.getByLabelText('Canvas graph')).toBe(graphs[0]);
+    expect(screen.getByLabelText('Model graph')).toBe(graphs[1]);
+    expect(screen.getByLabelText('Canvas search')).toBe(searches[0]);
+    expect(screen.getByLabelText('Model search')).toBe(searches[1]);
+    expect((searches[1] as HTMLInputElement).value).toBe('orders');
+  });
+
+  it('restores a collapsed explorer and its width after hydration and remount', async () => {
+    // Local expansion state used to reopen the dock even when its saved preference was collapsed.
+    const view = (key: string): JSX.Element => (
+      <CanvasExplorer key={key} elements={<input aria-label="Panel search" />}>
+        <input aria-label="Graph state" />
+      </CanvasExplorer>
+    );
+    useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 32 } });
+    render(view('canvas'));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse explorer' }));
+    });
+    await act(async () => {
+      await useUiLayoutStore.persist.rehydrate();
+    });
+    act(() => root.render(view('model')));
+    expect(screen.getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')).toBe(
+      'false'
+    );
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
+    expect(
+      Number(container.querySelector('[data-panel-id$="-dock"]')?.getAttribute('data-panel-size'))
+    ).toBe(32);
+  });
+
   it('keeps the file path on a registered model definition after placement', () => {
     const model: CanonicalNode = {
       id: 'file-model-definition',
@@ -359,7 +456,7 @@ describe('Canvas explorer', () => {
     expect(search.dataset.enabled).toBe('true');
     expect(screen.getByLabelText('Retained project search')).toBe(search);
     expect(screen.getByLabelText('Retained graph')).toBe(graph);
-    act(() => useUiLayoutStore.getState().hideCanvasExplorer());
+    act(() => useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'close' }));
     expect(search.dataset.enabled).toBe('false');
   });
 
@@ -397,9 +494,9 @@ describe('Canvas explorer', () => {
       );
       expect(screen.getByLabelText('Retained graph')).toBe(graph);
       expect(screen.getByLabelText('Retained source search')).toBe(search);
-      act(() => useUiLayoutStore.getState().hideCanvasExplorer());
+      act(() => useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'close' }));
       expect(screen.queryByRole('navigation')).toBeNull();
-      act(() => useUiLayoutStore.getState().showCanvasExplorer());
+      act(() => useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' }));
       expect(screen.getByRole('navigation')).toBe(rail);
     } finally {
       host.remove();
@@ -649,6 +746,8 @@ describe('Canvas explorer', () => {
     );
     const graph = screen.getByLabelText('Graph state');
     const search = screen.getByRole('searchbox');
+    const separator = screen.getByRole('separator', { name: 'Resize explorer' });
+    expect(separator.getAttribute('aria-orientation')).toBe('vertical');
     act(() => {
       fireEvent.change(search, { target: { value: 'ord' } });
     });
@@ -656,6 +755,7 @@ describe('Canvas explorer', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Collapse explorer' }));
     });
     expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(separator.tabIndex).toBe(-1);
     expect(screen.getByRole('navigation', { name: 'Canvas explorer' })).toBeTruthy();
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
@@ -671,6 +771,7 @@ describe('Canvas explorer', () => {
       fireEvent.click(menu);
     });
     expect(screen.getByRole('searchbox')).toBe(search);
+    expect(separator.tabIndex).toBe(0);
     expect((search as HTMLInputElement).value).toBe('ord');
     expect(screen.getByLabelText('Graph state')).toBe(graph);
   });

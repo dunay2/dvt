@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-08
 planning_type: architecture
 ---
 
@@ -62,6 +62,12 @@ contract validation, or engine determinism tests.
   and Canvas focus routes. Presentation, mixed Canvas, other focus suites, and
   the aggregate watch config retain jsdom. Environment selection does not
   change file ownership or changed-suite routing.
+- Configs whose default environment is jsdom select the `browser` package
+  export condition. Presentation tests must exercise real browser registration
+  and interaction effects rather than a package's server-rendering entry.
+  Node suite configs retain their default resolution conditions. This belongs
+  to `createWebVitestConfig`, without package aliases, dependency mocks or a
+  separate test configuration; suite ownership and worker isolation stay intact.
 - Tests using `installWorkspaceScopeHarness` explicitly declare jsdom because
   the harness updates the real persisted session store. The catalog architecture
   guard checks this dependency. Localized presentation-model tests likewise keep

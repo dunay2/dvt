@@ -8,14 +8,15 @@
 import {
   useEffect,
   useId,
-  useState,
+  useRef,
   type KeyboardEvent,
   type DragEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
+import { CANVAS_EXPLORER_WIDTH, useUiLayoutStore } from '../../../stores/uiLayoutStore';
+import type { ImperativePanelHandle } from '../../../components/ui/resizable';
 import {
   CanvasExplorerTemplate,
   type CanvasExplorerActivityRail,
@@ -55,14 +56,17 @@ export function CanvasExplorer({
   workspaceTask?: ReactNode;
   activityRail?: CanvasExplorerActivityRail;
 }>): JSX.Element {
-  const [expanded, setExpanded] = useState(true);
+  const { mode, widthPercent } = useUiLayoutStore((state) => state.canvasExplorer);
+  const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
+  const expanded = mode === 'expanded';
+  const visible = mode !== 'closed';
+  const panelRef = useRef<ImperativePanelHandle>(null);
   const hasProjectFiles = projectFiles != null;
-  const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
-  const close = useUiLayoutStore((state) => state.hideCanvasExplorer);
-  // An explicit View-menu reopen must expand even a previously collapsed dock.
+  // defaultSize only initializes a panel; retained Canvas/Model panels must also converge.
   useEffect(() => {
-    if (visible) setExpanded(true);
-  }, [visible]);
+    const panel = panelRef.current;
+    if (panel != null && panel.getSize() !== widthPercent) panel.resize(widthPercent);
+  }, [widthPercent]);
   const id = useId();
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const toggle = (key: CanvasExplorerPanel): void => {
@@ -71,7 +75,7 @@ export function CanvasExplorer({
       return;
     }
     projectFiles?.onCanvas();
-    setExpanded((current) => activityRail?.codeVisible === true || !current);
+    dispatch({ type: activityRail?.codeVisible === true ? 'expand' : 'toggle' });
   };
   const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -84,6 +88,18 @@ export function CanvasExplorer({
       id={id}
       active={visible && expanded ? 'elements' : null}
       visible={visible}
+      dock={{
+        panelRef,
+        widthPercent,
+        minSize: CANVAS_EXPLORER_WIDTH.min,
+        maxSize: CANVAS_EXPLORER_WIDTH.max,
+        onResize: (size, previousSize) => {
+          // Mount observations and hidden panels must not overwrite the saved preference.
+          if (previousSize !== undefined && expanded) {
+            dispatch({ type: 'resize', widthPercent: size });
+          }
+        },
+      }}
       copy={copy}
       rootRef={rootRef}
       workspaceTask={workspaceTask}
@@ -98,12 +114,12 @@ export function CanvasExplorer({
       onKeyToggle={onKeyToggle}
       onCollapse={() => {
         projectFiles?.onCanvas();
-        setExpanded(false);
+        dispatch({ type: 'collapse' });
         document.getElementById(`${id}-elements-button`)?.focus();
       }}
       onClose={() => {
         projectFiles?.onCanvas();
-        close();
+        dispatch({ type: 'close' });
       }}
     >
       {children}

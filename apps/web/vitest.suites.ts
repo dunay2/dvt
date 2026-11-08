@@ -189,17 +189,19 @@ const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
 
 export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig {
   const suite = WEB_VITEST_SUITES[suiteName];
+  const environment =
+    suiteName === 'unit' ||
+    suiteName === 'architecture' ||
+    suiteName === 'canvas-unit' ||
+    suiteName === 'canvas-architecture'
+      ? 'node'
+      : 'jsdom';
 
   return {
+    ...(environment === 'jsdom' ? { resolve: { conditions: ['browser'] } } : {}),
     test: {
       globals: true,
-      environment:
-        suiteName === 'unit' ||
-        suiteName === 'architecture' ||
-        suiteName === 'canvas-unit' ||
-        suiteName === 'canvas-architecture'
-          ? 'node'
-          : 'jsdom',
+      environment,
       include: [...suite.include],
       exclude: [...suite.exclude],
       ...createWebVitestWorkerConfig(),
