@@ -518,7 +518,13 @@ describe('app routes', () => {
     expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
     expect(container.textContent).not.toContain('Unexpected Application Error!');
     expect(container.querySelector('[data-slot="shell-active-surface"]')).toBeNull();
-    expect(readLeftNavigationCaptions(container)).toEqual([]);
+    expect(readLeftNavigationCaptions(container)).toEqual([
+      'Canvas',
+      'Runs',
+      'Templates',
+      'Plugins',
+      'Admin',
+    ]);
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 

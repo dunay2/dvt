@@ -1,6 +1,6 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
 import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
@@ -210,8 +210,6 @@ function CanvasShellMainSurface({
   | 'workspaceTask'
   | 'projectFiles'
 > & { inspector: ReactNode }): JSX.Element {
-  // Mounting the portal target must rerender its consumer; a ref alone would not.
-  const [activityRailTarget, setActivityRailTarget] = useState<HTMLDivElement | null>(null);
   const codeVisible = workspaceTask == null && projectFiles?.active === true;
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
@@ -237,7 +235,7 @@ function CanvasShellMainSurface({
     <CanvasShellViewport
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
-      activityRail={{ target: activityRailTarget, codeVisible }}
+      activityRail={{ codeVisible }}
       externalNodeSurfaceActive={externalNodeSurfaceActive}
       inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
@@ -252,7 +250,6 @@ function CanvasShellMainSurface({
 
   const baseSurface = (
     <CanvasShellWorkspaceSurfaces
-      activityRailRef={setActivityRailTarget}
       viewport={
         modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
       }

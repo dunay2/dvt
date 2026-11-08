@@ -46,12 +46,9 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
     '[data-slot="shell-menu-trigger"]'
   );
 
-  const appMenu = requireElement<HTMLButtonElement>(
-    shellTopBar,
-    '[data-slot="shell-app-menu-trigger"]'
-  );
-  expect(appMenu.getAttribute('aria-label')).toBe('Raven');
-  expect(appMenu.textContent).toBe('');
+  const brand = requireElement<HTMLElement>(shellTopBar, '[data-slot="shell-brand-identity"]');
+  expect(brand.getAttribute('aria-label')).toBe('Raven');
+  expect(brand.textContent).toBe('');
   expect(shellTopBar.textContent).toContain('View');
   expect(shellTopBar.className).toBe(topBarStyles.shellBar);
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
@@ -151,7 +148,7 @@ export function expectRootShellWorkbenchFrameChrome(
   const appShellOutlet = requireElement<HTMLElement>(container, '[data-slot="app-shell-outlet"]');
 
   expect(appShellFrame).toBeTruthy();
-  expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).toBeNull();
+  expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).not.toBeNull();
   expect(appShellOutlet.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
   expect(appShellOutlet.textContent).toContain(expectedOutletText);
   expectRootShellHeaderChrome(container, 'workbench');
@@ -193,6 +190,6 @@ export function expectActiveRootShellNavigationLink(
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
 
-  expect(activeNavigationLink.classList).toContain(navigationStyles.linkActive);
+  expect(activeNavigationLink.getAttribute('aria-current')).toBe('page');
   expect(activeNavigationLink.className).not.toContain('isActive');
 }

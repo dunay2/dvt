@@ -1,5 +1,6 @@
 /** Owned concern: render Canvas main panel frame and layout-only presentation slots. */
-import type { ReactNode, RefCallback } from 'react';
+import type { ReactNode } from 'react';
+import { ShellActivityRailScope } from '../../components/shell/ShellActivityRail';
 
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
@@ -25,7 +26,6 @@ export function CanvasShellWorkspaceSurfaces({
   hasWorkspaceTabs,
   code,
   codeVisible = false,
-  activityRailRef,
 }: Readonly<{
   viewport: ReactNode;
   editor: ReactNode;
@@ -33,7 +33,6 @@ export function CanvasShellWorkspaceSurfaces({
   hasWorkspaceTabs: boolean;
   code?: ReactNode;
   codeVisible?: boolean;
-  activityRailRef?: RefCallback<HTMLDivElement>;
 }>): JSX.Element {
   const modelVisible = editorVisible && !codeVisible;
   return (
@@ -41,14 +40,6 @@ export function CanvasShellWorkspaceSurfaces({
       data-slot="canvas-workspace-surfaces"
       className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}
     >
-      <div
-        ref={activityRailRef}
-        data-slot="canvas-activity-rail-host"
-        className={modelVisible ? 'hidden' : 'contents'}
-        hidden={modelVisible}
-        aria-hidden={modelVisible}
-        {...(modelVisible ? { inert: '' } : {})}
-      />
       <div className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}>
         {(
           [
@@ -75,7 +66,9 @@ export function CanvasShellWorkspaceSurfaces({
                 visible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
               }`}
             >
-              {content}
+              <ShellActivityRailScope active={kind === 'canvas' ? !modelVisible : visible}>
+                {content}
+              </ShellActivityRailScope>
             </div>
           )
         )}

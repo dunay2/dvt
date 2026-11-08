@@ -24,15 +24,17 @@ Primary code anchors:
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
 - [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
-- [ShellAppMenu.tsx](../../../../../apps/web/src/app/components/shell/ShellAppMenu.tsx)
+- [ShellAbout.tsx](../../../../../apps/web/src/app/components/shell/ShellAbout.tsx)
+- [ShellActivityRail.tsx](../../../../../apps/web/src/app/components/shell/ShellActivityRail.tsx)
 - [appBuildMetadata.ts](../../../../../apps/web/src/app/components/shell/appBuildMetadata.ts)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
 - [BottomOperationalDrawer.tsx](../../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx)
 - [bottomOperationalDrawerLogModel.ts](../../../../../apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts)
 
-`LeftNavigation.tsx` is a current implementation anchor, not the target Canvas
-workbench direction. `F-28` governs the next Canvas shell sequence and requires
-Canvas to render without a fixed left navigation rail.
+The explicit [#3765 navigation direction](https://github.com/dunay2/dvt/issues/3765#issuecomment-6724940225)
+uses one direct left rail on all routes. It supersedes the older hidden-rail and
+Raven-menu placement without changing route or command authority. Shared visual
+roles come from the bounded #3035 foundations delivery.
 
 Current shell regions:
 
@@ -40,7 +42,9 @@ Current shell regions:
 flowchart TB
   Root["Root shell"] --> Frame["AppShellFrame"]
   Frame --> TopBar["TopAppBar"]
-  TopBar --> AppMenu["ShellAppMenu"]
+  TopBar --> Identity["Raven identity only"]
+  Nav --> Activity["Current route activity host"]
+  Nav --> About["ShellAbout"]
   Frame --> Health["ShellHealthBanner"]
   Frame --> Body["Shell body"]
   Body --> Nav["LeftNavigation"]
@@ -59,16 +63,18 @@ instances for views and plugins through hooks.
 This prevents route-level components from constructing transports or selecting
 a second product data authority.
 
-## Shell Application Menu
+## Brand Identity And About
 
-The Raven brand in the top bar is the application-level menu surface. It owns
-small app-wide commands that should not consume persistent toolbar width.
+The Raven brand is noninteractive identity. Global navigation is directly visible
+in the left shell rail; About has a separate Info button at its bottom. The
+existing dialog opens with keyboard or pointer and restores focus to that button
+on dismissal. No menu, metadata endpoint or navigation catalogue is added.
 
 Current command/query rail:
 
-| Rail                             | Type  | Owner         | Surface                     |
-| -------------------------------- | ----- | ------------- | --------------------------- |
-| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAppMenu` About dialog |
+| Rail                             | Type  | Owner         | Surface             |
+| -------------------------------- | ----- | ------------- | ------------------- |
+| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAbout` dialog |
 
 `GetCompiledApplicationMetadata` reads compile-time bundle metadata from
 `import.meta.env.VITE_APP_VERSION` and `VITE_APP_BUILD_DATE`. It does not call
@@ -79,8 +85,8 @@ bundle is running in the browser, not which API build is reachable.
 flowchart LR
   Vite["vite.config.ts"] --> Env["VITE_APP_VERSION / VITE_APP_BUILD_DATE"]
   Env --> Query["resolveCompiledApplicationMetadata"]
-  Query --> Menu["ShellAppMenu"]
-  Menu --> Dialog["About Raven dialog"]
+  Query --> About["ShellAbout direct Info button"]
+  About --> Dialog["About Raven dialog"]
 ```
 
 ## Shell Navigation Ownership
@@ -93,20 +99,39 @@ the rest of the shell:
 - the rail renders plain navigation items and does not know plugin manifest
   structure, label resolution, or shell footer ownership.
 
-Target direction for Canvas workbench:
+Direct rail contract:
 
-- top menus and command palette provide command discovery;
-- Canvas view strip owns route-local projections;
-- fixed left navigation must not occupy the Canvas workbench surface;
-- on-demand context surfaces, drawers, and pinned user presentation preferences
-  must not become a second permanent navigation rail.
+- Elements/Git remain at the top when owned by the active route surface;
+- global destinations follow in their existing model order below a divider;
+- About remains at the bottom, with constrained navigation scrolling;
+- `Root` supplies the existing capability-derived model once to `LeftNavigation`;
+- global links use Router and `aria-current`; Elements/Git retain disclosure
+  `aria-expanded`/`aria-controls` and their existing command owners;
+- the existing shell footer contributions are not a new permission predicate;
+  route/session guards continue to decide authorization;
+- a shell-owned DOM host and explicit active-surface scope compose contextual
+  controls without moving global authority into CanvasExplorer.
+
+Canvas activity remains available while Code is visible, even though the Canvas
+tabpanel is inert. Model activity is present only while Model is visible. A
+portal cannot rely on its source panel's hidden/inert attributes. An absent
+host provider means legitimate standalone inline mode; a present provider with
+a null target means no rail, including Focus mode. Moving controls must retain
+graph/editor identity and must not write layout preferences or semantics.
+
+Use the existing Lucide family at 20px/stroke 2 in 44px targets, with a 52px rail,
+4px inline padding and an inset divider. Only consumed navigation control/icon
+roles extend the existing spacing scale. Selection, focus and execution health
+remain different visual meanings. Preserve forced colors, reduced motion and
+hover/focus tooltip equivalence. See the
+[disposition contract](../shell-navigation-disposition-component.md) for the
+state diagram, active-surface rules and required browser evidence.
 
 Current flow:
 
 ```mermaid
 flowchart LR
-  Query["useCapabilitiesQuery()"] --> Runtime["useShellRuntime()"]
-  Runtime --> State["buildShellRuntimeState(capabilities)"]
+  Query["Root useCapabilitiesQuery()"] --> State["buildShellRuntimeState(capabilities)"]
   State --> Views["getShellNavigationViews(capabilities)"]
   Views --> Model["buildShellNavigationModel(navigationViews)"]
   Model --> Primary["primaryItems"]
@@ -501,7 +526,7 @@ multi-language ready, and style-consistent.
 rendering to small UI components:
 
 - `ShellWorkspaceContextMenu` and `ShellProjectIdentityBadge`
-- `ShellAppMenu`
+- `AppBrandMark` as noninteractive identity
 - `ShellGitRef`
 - `ShellConnectionStatus`
 - `ShellMenu`
@@ -513,7 +538,7 @@ flowchart LR
   A[TopAppBar Composition Root] --> B[Session Store Selectors]
   A --> C[UI Layout Store Selectors]
   A --> D[resolveShellTopBarCopy locale]
-  A --> E[ShellAppMenu]
+  Rail[LeftNavigation] --> E[ShellAbout]
   E --> I[resolveCompiledApplicationMetadata]
   A --> F[ShellWorkspaceContextMenu]
   A --> G[ShellGitRef]
@@ -521,10 +546,11 @@ flowchart LR
   A --> J[ShellMenu]
 ```
 
-### Application Menu
+### About
 
-`ShellAppMenu` owns brand-level application commands. The current command is
-`About Raven`, backed by the `GetCompiledApplicationMetadata` query rail.
+`ShellAbout` owns the direct rail trigger and About dialog, backed by the existing
+`GetCompiledApplicationMetadata` query. The logo has no activation lifecycle.
+Global links belong to `LeftNavigation`, not this dialog or TopBar.
 
 The About dialog shows the compiled browser bundle version from
 `VITE_APP_VERSION` and the optional build date from `VITE_APP_BUILD_DATE`. It

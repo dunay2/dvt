@@ -9,6 +9,7 @@ import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAutho
 import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
+import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
@@ -91,13 +92,75 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
   cy.get('[data-slot="app-shell-outlet"]').should('exist');
 }
 
+function assertActiveActivityRail(hasGit: boolean): void {
+  const host = '[data-slot="canvas-activity-rail-host"]';
+  cy.get(host).should('have.length', 1).and('be.visible');
+  cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('have.length', 1);
+  cy.get('[data-slot="canvas-explorer-git-toggle"]').should('have.length', hasGit ? 1 : 0);
+  cy.get(`${host} button`).each(($button) => {
+    const button = $button[0]!;
+    expect(
+      button.closest('[hidden], [inert], [aria-hidden="true"]'),
+      'active portal is operable'
+    ).to.equal(null);
+    expect(
+      button.hasAttribute('aria-current'),
+      'disclosure is distinct from route selection'
+    ).to.equal(false);
+    expect(button.getAttribute('aria-expanded')).to.be.oneOf(['true', 'false']);
+    expect(
+      Array.from(button.ownerDocument.querySelectorAll('[id]')).filter(
+        (node) => node.id === button.id
+      ),
+      'one control identity'
+    ).to.have.length(1);
+    // A closed Code session has no panel; only an expanded disclosure requires its mounted target.
+    if (button.getAttribute('aria-expanded') === 'true') {
+      expect(
+        button.ownerDocument.getElementById(button.getAttribute('aria-controls')!)
+      ).not.to.equal(null);
+    }
+    cy.wrap($button).should('be.visible').focus().should('be.focused');
+  });
+  cy.get('[data-slot="canvas-explorer"]')
+    .find('[data-slot="canvas-explorer-elements-toggle"], [data-slot="canvas-explorer-git-toggle"]')
+    .should('not.exist');
+}
+
+function assertNavigationTargetGeometry(): void {
+  // Measure the actual hit target and glyph, not class strings or mocked rectangles.
+  cy.get('[data-slot="left-navigation-rail"]')
+    .should('be.visible')
+    .and(($rail) => expect($rail[0]!.getBoundingClientRect().width).to.be.closeTo(52, 1));
+  cy.get('[data-slot="left-navigation-rail"] a, [data-slot="left-navigation-rail"] button').each(
+    ($control) => {
+      const control = $control[0]!;
+      const rect = control.getBoundingClientRect();
+      const rail = control.closest('[data-slot="left-navigation-rail"]')!.getBoundingClientRect();
+      const icon = control.querySelector('svg')!;
+      const glyph = icon.getBoundingClientRect();
+      expect(rect.width, 'navigation hit width').to.be.closeTo(44, 1);
+      expect(rect.height, 'navigation hit height').to.be.closeTo(44, 1);
+      expect(rect.left - rail.left, 'outline clearance').to.be.closeTo(4, 1);
+      expect(glyph.width).to.be.closeTo(20, 0.5);
+      expect(glyph.height).to.be.closeTo(20, 0.5);
+      expect(glyph.left + glyph.width / 2).to.be.closeTo(rect.left + rect.width / 2, 0.5);
+      expect(glyph.top + glyph.height / 2).to.be.closeTo(rect.top + rect.height / 2, 0.5);
+      expect(icon.getAttribute('aria-hidden')).to.equal('true');
+      expect(parseFloat(getComputedStyle(icon).strokeWidth)).to.equal(2);
+      expect(control.getAttribute('aria-label')).to.be.a('string').and.not.equal('');
+    }
+  );
+}
+
 describe('Shell layout contract', () => {
   beforeEach(() => {
     cy.viewport(1400, 900);
     stubShellApis();
   });
 
-  it('keeps the footer navigation pinned to the bottom of the full-height rail', () => {
+  it('keeps direct destinations aligned and About pinned within the full-height rail', () => {
+    // The rail stays narrow on global routes while its information action remains reachable.
     visitShellRouteWithUiLayout('/cost');
 
     cy.get('[data-slot="app-shell-outlet"]')
@@ -122,8 +185,8 @@ describe('Shell layout contract', () => {
       const bodyRect = body!.getBoundingClientRect();
       const wrapperRect = wrapper!.getBoundingClientRect();
       const railRect = rail!.getBoundingClientRect();
-      const navRect = nav!.getBoundingClientRect();
-      const lastFooterLinkRect = links.at(-1)!.getBoundingClientRect();
+      const about = window.document.querySelector('[data-slot="shell-about-command"]')!;
+      const aboutRect = about.getBoundingClientRect();
 
       expect(
         Math.abs(wrapperRect.height - bodyRect.height),
@@ -134,22 +197,134 @@ describe('Shell layout contract', () => {
         'rail stretches to wrapper height'
       ).to.be.lessThan(2);
       expect(
-        navRect.bottom - lastFooterLinkRect.bottom,
-        'footer link stays pinned near nav bottom'
-      ).to.be.lessThan(24);
+        railRect.bottom - aboutRect.bottom,
+        'About stays pinned near the rail bottom'
+      ).to.be.within(0, 12);
+      expect(links.at(-1)!.getBoundingClientRect().bottom).to.be.at.most(aboutRect.top);
     });
+    assertNavigationTargetGeometry();
+    cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
+    cy.viewport(640, 400);
+    cy.get('[data-slot="left-navigation-link"]')
+      .last()
+      .scrollIntoView()
+      .focus()
+      .should('be.focused');
+    cy.get('[data-slot="shell-about-command"]')
+      .should('be.visible')
+      .and(($about) => {
+        const rect = $about[0]!.getBoundingClientRect();
+        expect(rect.top).to.be.at.least(0);
+        expect(rect.bottom).to.be.at.most(400);
+      })
+      .focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="shell-about-dialog"]').should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[data-slot="shell-about-command"]').should('be.focused');
+    cy.document().its('documentElement.scrollWidth').should('be.at.most', 640);
   });
 
   it('hides the left navigation rail in focus mode while keeping the main shell route visible', () => {
+    // Focus mode removes the rail from interaction without inventing a hidden brand menu.
     visitShellRouteWithUiLayout('/plugins', { focusMode: true });
 
     cy.get('[data-slot="app-shell-left-navigation"]').should('not.exist');
     cy.get('[data-slot="left-navigation-rail"]').should('not.exist');
+    cy.get('[data-slot="shell-app-menu-trigger"]').should('not.exist');
     cy.get('[data-slot="app-shell-main"]').should('exist');
     cy.get('[data-slot="app-shell-outlet"]').should('exist');
     cy.get('[data-slot="app-shell-outlet"]')
       .contains(/^Plugins$/)
       .should('be.visible');
+  });
+
+  it('keeps one active contextual rail across retained surfaces and respects pending Model edits', () => {
+    // Portals escape hidden tabpanels, but only the active surface may contribute controls.
+    stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
+    stubE2eJsonApi('GET', '/workspace/files', [
+      { path: 'notes.md', name: 'notes.md', kind: 'file' },
+    ]);
+    stubE2eJsonApi('GET', '/workspace/files/notes.md', {
+      path: 'notes.md',
+      name: 'notes.md',
+      language: 'markdown',
+      content: '# Rail session',
+      contentSha256: 'a'.repeat(64),
+      lastModified: '2026-10-28T00:00:00Z',
+    });
+    stubE2eJsonApi('GET', /^\/workspace\/file-history\/.+/, []);
+    visitShellRouteWithUiLayout('/canvas');
+    const canvas = '[data-slot="canvas-workspace-surface"]';
+    const code = '[data-slot="canvas-code-workspace-surface"]';
+    const model = '[data-slot="canvas-model-editor"]';
+    const modelViewport = `${model} [data-slot="canvas-relational-tree-viewport"], ${model} [data-slot="canvas-relational-tree-draft-viewport"]`;
+    cy.get(`${canvas} [data-testid="canvas-viewport"]`).as('retainedCanvas', { type: 'static' });
+    assertActiveActivityRail(true);
+    assertNavigationTargetGeometry();
+    cy.get('[data-slot="canvas-activity-rail-host"]').then(($host) => {
+      const hostBottom = $host[0]!.getBoundingClientRect().bottom;
+      cy.get('[data-slot="left-navigation-link"]')
+        .first()
+        .should(($link) => {
+          expect(
+            $link[0]!.getBoundingClientRect().top,
+            'route group follows contextual controls'
+          ).to.be.greaterThan(hostBottom);
+        });
+    });
+    cy.get('[data-slot="canvas-explorer-git-toggle"]').click();
+    cy.get(code).should('be.visible');
+    cy.get(`${code} [data-workspace-path="notes.md"]`).click();
+    cy.get(`${code} .monaco-editor`).should('be.visible').as('retainedCode', { type: 'static' });
+    cy.get(canvas).should('have.attr', 'inert');
+    assertActiveActivityRail(true);
+    cy.get('[data-slot="canvas-explorer-git-toggle"]').should('have.attr', 'aria-expanded', 'true');
+    cy.get('[data-slot="canvas-explorer-elements-toggle"]').click();
+    cy.get(canvas).should('be.visible');
+    openWorkbenchModel();
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.get(modelViewport).as('retainedModel', { type: 'static' });
+    assertActiveActivityRail(false);
+    let initialWrites = 0;
+    cy.then(() => {
+      initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
+    assertActiveActivityRail(true);
+    cy.get('[data-slot="canvas-code-main-tab"]').click();
+    assertActiveActivityRail(true);
+    cy.get<JQuery<HTMLElement>>('@retainedCode').then(($original) => {
+      cy.get(`${code} .monaco-editor`).should(($current) =>
+        expect($current[0]).to.equal($original[0])
+      );
+    });
+    cy.get('[data-slot="canvas-model-main-tab"]').click();
+    assertActiveActivityRail(false);
+    workbenchOperation('filter').scrollIntoView().click();
+    cy.get('[data-pending-operation="true"]').should('exist');
+    cy.get('[data-slot="left-navigation-link"][href="/plugins"]').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[role="alertdialog"]').should('be.visible');
+    cy.location('pathname').should('eq', '/canvas');
+    cy.contains('[role="alertdialog"] button', 'Keep editing').click();
+    cy.get('[data-pending-operation="true"]').should('exist');
+    cy.get<JQuery<HTMLElement>>('@retainedModel').then(($original) => {
+      cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
+    });
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-pending-operation="true"]').should('not.exist');
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
+    assertActiveActivityRail(true);
+    cy.get<JQuery<HTMLElement>>('@retainedCanvas').then(($original) => {
+      cy.get(`${canvas} [data-testid="canvas-viewport"]`).should(($current) =>
+        expect($current[0]).to.equal($original[0])
+      );
+    });
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(initialWrites);
+      expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
+    });
   });
 
   it('resizes the operational drawer without losing the selected expression or saving a draft', () => {

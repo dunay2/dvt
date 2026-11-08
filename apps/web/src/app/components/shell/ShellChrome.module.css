@@ -5,7 +5,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 @consequence Shell controllers consume named classes without embedding utility CSS.
 @version 1.0.0
  */
-.appMenuButton {
+.brandIdentity {
   display: flex;
   height: 2rem;
   flex-shrink: 0;
@@ -16,20 +16,10 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   color: var(--text-default);
 }
 
-.appMenuButton:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--focus-ring);
-}
-
-.applicationMenuContent,
 .contextMenuContent {
   max-width: calc(100vw - 1rem);
   font-size: 0.75rem;
   line-height: 1rem;
-}
-
-.applicationMenuContent {
-  width: 14rem;
 }
 
 .contextMenuContent {
@@ -209,12 +199,6 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   flex-shrink: 0;
 }
 
-.aboutIcon {
-  margin-right: 0.5rem;
-  width: 1rem;
-  height: 1rem;
-}
-
 .aboutDialog {
   border-color: var(--border-default);
 }
@@ -242,7 +226,6 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 }
 
 @media (hover: hover) {
-  .appMenuButton:hover,
   .menuButton:hover {
     background: var(--surface-selected);
     color: var(--text-strong);
@@ -250,7 +233,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 }
 
 @media (min-width: 40rem) {
-  .appMenuButton {
+  .brandIdentity {
     margin-right: 0.25rem;
   }
 }

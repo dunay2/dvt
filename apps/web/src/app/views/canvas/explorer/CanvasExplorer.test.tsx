@@ -11,6 +11,11 @@ import { DropdownMenu, DropdownMenuContent } from '../../../components/ui/dropdo
 import { CanvasExplorerViewMenu } from './CanvasExplorerViewMenu';
 import { CanvasGraphExplorer } from './CanvasGraphExplorer';
 import { CanvasExplorer } from './CanvasExplorer';
+import {
+  ShellActivityRailProvider,
+  ShellActivityRailHost,
+  ShellActivityRailScope,
+} from '../../../components/shell/ShellActivityRail';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
@@ -18,6 +23,15 @@ import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 let root: Root;
 let container: HTMLDivElement;
 beforeEach(() => {
+  // DOM capability only: jsdom cannot observe the real Tooltip's geometry.
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe(): void {}
+      unobserve(): void {}
+      disconnect(): void {}
+    }
+  );
   useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 22 } });
   useApplicationLanguageStore.setState({ language: 'en' });
 });
@@ -37,6 +51,7 @@ afterEach(() => {
     root?.unmount();
   });
   container?.remove();
+  vi.unstubAllGlobals();
 });
 
 describe('Canvas explorer', () => {
@@ -461,27 +476,30 @@ describe('Canvas explorer', () => {
   });
 
   it('waits for the shared rail host without moving retained content or creating an inline rail', () => {
-    const host = document.createElement('div');
-    document.body.append(host);
-    const view = (target: HTMLElement | null): JSX.Element => (
-      <div aria-hidden="true" {...{ inert: '' }}>
-        <CanvasExplorer
-          elements={<input aria-label="Retained source search" defaultValue="orders" />}
-          activityRail={{ target, codeVisible: true }}
-          projectFiles={{ onActivate: async () => true, onCanvas: () => undefined }}
-        >
-          <input aria-label="Retained graph" defaultValue="camera" />
-        </CanvasExplorer>
-      </div>
+    const view = (mounted: boolean, active = true): JSX.Element => (
+      <ShellActivityRailProvider>
+        {mounted ? <ShellActivityRailHost /> : null}
+        <div aria-hidden="true" {...{ inert: '' }}>
+          <ShellActivityRailScope active={active}>
+            <CanvasExplorer
+              elements={<input aria-label="Retained source search" defaultValue="orders" />}
+              activityRail={{ codeVisible: true }}
+              projectFiles={{ onActivate: async () => true, onCanvas: () => undefined }}
+            >
+              <input aria-label="Retained graph" defaultValue="camera" />
+            </CanvasExplorer>
+          </ShellActivityRailScope>
+        </div>
+      </ShellActivityRailProvider>
     );
-    try {
-      render(view(null));
+    {
+      render(view(false));
       const graph = screen.getByLabelText('Retained graph');
       const search = screen.getByLabelText('Retained source search');
       expect(container.querySelector('nav')).toBeNull();
-      expect(host.childElementCount).toBe(0);
-      act(() => root.render(view(host)));
-      expect(container.querySelector('nav')).toBeNull();
+      expect(container.querySelector('[data-slot="canvas-activity-rail-host"]')).toBeNull();
+      act(() => root.render(view(true)));
+      const host = container.querySelector('[data-slot="canvas-activity-rail-host"]')!;
       expect(screen.getAllByRole('navigation')).toHaveLength(1);
       const rail = screen.getByRole('navigation');
       expect(host.contains(rail)).toBe(true);
@@ -498,8 +516,15 @@ describe('Canvas explorer', () => {
       expect(screen.queryByRole('navigation')).toBeNull();
       act(() => useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' }));
       expect(screen.getByRole('navigation')).toBe(rail);
-    } finally {
-      host.remove();
+      act(() => root.render(view(true, false)));
+      expect(screen.queryByRole('navigation')).toBeNull();
+      expect(rail.closest('[hidden][inert]')).not.toBeNull();
+      act(() => root.render(view(true)));
+      expect(screen.getByRole('navigation')).toBe(rail);
+      expect(screen.getByLabelText('Retained graph')).toBe(graph);
+      act(() => root.render(view(false)));
+      expect(container.querySelector('nav')).toBeNull();
+      expect(screen.getByLabelText('Retained graph')).toBe(graph);
     }
   });
 

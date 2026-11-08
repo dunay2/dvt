@@ -27,11 +27,6 @@ it('retains drawer DOM, local input and focus when resize is followed by a shell
     bottomDrawerHeight: 320,
     focusMode: false,
     leftNavigation: null,
-    navigationDisposition: {
-      railMode: 'hidden',
-      footerMode: 'menu',
-      reason: 'workbench_route',
-    } as const,
     showBottomDrawer: true,
     skipToMainContentLabel: 'Skip',
     topBar: null,

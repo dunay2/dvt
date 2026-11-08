@@ -44,10 +44,7 @@ import {
 } from './rootOperabilityModel';
 import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
 import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
-import {
-  isCanvasRoute,
-  resolveShellNavigationDisposition,
-} from './shell/shellNavigationDisposition';
+import { isCanvasRoute } from './shell/shellNavigationDisposition';
 import { buildShellRuntimeState } from './shell/shellRuntimeModel';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
@@ -123,10 +120,6 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     createInitialRouteBootstrapStartupReadinessState()
   );
   const bootstrapOperabilityActiveRef = useRef(true);
-  const navigationDisposition = useMemo(
-    () => resolveShellNavigationDisposition(location.pathname),
-    [location.pathname]
-  );
   const navigationModel = useMemo(
     () => buildShellRuntimeState(capabilitiesQuery.data, applicationLanguage).navigationModel,
     [applicationLanguage, capabilitiesQuery.data]
@@ -306,8 +299,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
           }}
         />
       }
-      leftNavigation={<LeftNavigation />}
-      navigationDisposition={navigationDisposition}
+      leftNavigation={<LeftNavigation navigationModel={navigationModel} copy={shellCopy} />}
       showBottomDrawer={bottomDrawerVisible && bottomDrawerHeight > 0}
       skipToMainContentLabel={shellCopy.skipToMainContent}
       topBar={
@@ -315,7 +307,6 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
           connectionDetail={shellHealth.connectionDetail}
           connectionStateOverride={shellHealth.connectionState}
           isConnectionChecking={shellHealth.isInitialHealthCheckPending}
-          navigationModel={navigationModel}
         />
       }
     >

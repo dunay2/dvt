@@ -5,9 +5,19 @@
  * @consequence Switching a panel cannot recreate the graph or lose a search input.
  * @version 1.0.0
  */
-import { Workflow, Search, Plus, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
+import {
+  Workflow,
+  GitBranch,
+  Search,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  X,
+} from 'lucide-react';
 import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import { createPortal } from 'react-dom';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
   Collapsible,
@@ -27,22 +37,10 @@ import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasE
 type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
 const panels = [
   { key: 'elements', icon: <Workflow aria-hidden="true" /> },
-  {
-    key: 'git',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-        <path d="m12 2 10 10-10 10L2 12Z" strokeLinejoin="round" />
-        <path d="m8 8 8 8M8 8v8" />
-        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-        <circle cx="8" cy="16" r="1.5" fill="currentColor" />
-        <circle cx="16" cy="16" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
+  { key: 'git', icon: <GitBranch aria-hidden="true" /> },
 ] as const;
 export type CanvasExplorerPanel = (typeof panels)[number]['key'];
 export type CanvasExplorerActivityRail = Readonly<{
-  target: HTMLElement | null;
   codeVisible: boolean;
 }>;
 
@@ -65,6 +63,8 @@ export function CanvasExplorerTemplate(
     children: ReactNode;
     workspaceTask?: ReactNode;
     activityRail?: CanvasExplorerActivityRail;
+    railTarget?: HTMLElement | null;
+    railActive?: boolean;
     onToggle: (key: CanvasExplorerPanel) => void;
     onKeyToggle: (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>) => void;
     onCollapse: () => void;
@@ -72,38 +72,48 @@ export function CanvasExplorerTemplate(
   }>
 ): JSX.Element {
   const availablePanels = panels.filter(({ key }) => key !== 'git' || props.hasProjectFiles);
+  const railVisible = props.visible && props.railActive !== false;
   const activityRail = (
-    <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
+    <nav
+      className={styles.rail}
+      aria-label={props.copy.navigation}
+      hidden={!railVisible}
+      aria-hidden={!railVisible}
+      {...(railVisible ? {} : { inert: '' })}
+    >
       {availablePanels.map(({ key, icon }) => (
-        <button
-          key={key}
-          type="button"
-          id={`${props.id}-${key}-button`}
-          className={styles.activity}
-          data-slot={`canvas-explorer-${key}-toggle`}
-          aria-label={props.copy[key]}
-          title={props.copy[key]}
-          aria-expanded={
-            key === 'git'
-              ? props.activityRail?.codeVisible
-              : props.activityRail?.codeVisible !== true && props.active === key
-          }
-          aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
-          onClick={() => props.onToggle(key)}
-          onKeyDown={(event) => props.onKeyToggle(key, event)}
-        >
-          {icon}
-        </button>
+        <Tooltip key={key}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              id={`${props.id}-${key}-button`}
+              className={styles.activity}
+              data-slot={`canvas-explorer-${key}-toggle`}
+              aria-label={props.copy[key]}
+              aria-expanded={
+                key === 'git'
+                  ? props.activityRail?.codeVisible
+                  : props.activityRail?.codeVisible !== true && props.active === key
+              }
+              aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
+              onClick={() => props.onToggle(key)}
+              onKeyDown={(event) => props.onKeyToggle(key, event)}
+            >
+              {icon}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{props.copy[key]}</TooltipContent>
+        </Tooltip>
       ))}
     </nav>
   );
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
-      {props.activityRail === undefined
+      {props.railTarget === undefined
         ? activityRail
-        : props.activityRail.target === null
+        : props.railTarget === null
           ? null
-          : createPortal(activityRail, props.activityRail.target)}
+          : createPortal(activityRail, props.railTarget)}
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
           ref={props.dock.panelRef}

@@ -14,18 +14,6 @@ import {
 
 import { AppShellFrame } from './AppShellFrame';
 
-const PINNED_NAVIGATION_DISPOSITION = {
-  railMode: 'visible',
-  footerMode: 'pinned',
-  reason: 'global_route',
-} as const;
-
-const MENU_NAVIGATION_DISPOSITION = {
-  railMode: 'hidden',
-  footerMode: 'menu',
-  reason: 'workbench_route',
-} as const;
-
 describe('AppShellFrame', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -57,7 +45,7 @@ describe('AppShellFrame', () => {
           bottomDrawerHeight={360}
           focusMode={false}
           leftNavigation={<button onContextMenu={childHandler}>Elements</button>}
-          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+
           showBottomDrawer
           skipToMainContentLabel="Skip"
           topBar={<button onContextMenu={childHandler}>Project</button>}
@@ -103,7 +91,7 @@ describe('AppShellFrame', () => {
           bottomDrawerHeight={0}
           focusMode={false}
           leftNavigation={null}
-          navigationDisposition={MENU_NAVIGATION_DISPOSITION}
+
           showBottomDrawer={false}
           skipToMainContentLabel="Skip"
           topBar={null}
@@ -145,7 +133,7 @@ describe('AppShellFrame', () => {
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
-          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+
           showBottomDrawer
           skipToMainContentLabel="Skip to main content"
           topBar={<div data-testid="top-bar">Top bar</div>}
@@ -212,7 +200,7 @@ describe('AppShellFrame', () => {
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
-          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+
           showBottomDrawer
           skipToMainContentLabel="Skip to main content"
           topBar={<div>Top bar</div>}
@@ -233,7 +221,7 @@ describe('AppShellFrame', () => {
     expect(outlet?.textContent).toContain('Route outlet');
   });
 
-  it('hides permanent navigation when route posture uses menu navigation', async () => {
+  it('keeps direct navigation beside the outlet outside explicit focus mode', async () => {
     await act(async () => {
       root.render(
         <AppShellFrame
@@ -242,7 +230,7 @@ describe('AppShellFrame', () => {
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
-          navigationDisposition={MENU_NAVIGATION_DISPOSITION}
+
           showBottomDrawer={false}
           skipToMainContentLabel="Skip to main content"
           topBar={<div>Top bar</div>}
@@ -252,7 +240,9 @@ describe('AppShellFrame', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).toBeNull();
+    expect(container.querySelector('[data-slot="app-shell-left-navigation"]')?.textContent).toBe(
+      'Left nav'
+    );
     expect(container.querySelector('[data-slot="app-shell-outlet"]')?.textContent).toContain(
       'Route outlet'
     );

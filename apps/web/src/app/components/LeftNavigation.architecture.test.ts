@@ -49,10 +49,11 @@ describe('LeftNavigation stylesheet ownership', () => {
     const focus = NAVIGATION_STYLESHEET.match(
       /\.linkInteractive:focus-visible\s*\{([^}]+)\}/u
     )?.[1];
-    const active = NAVIGATION_STYLESHEET.match(/\.linkActive\s*\{([^}]+)\}/u)?.[1];
+    const active = NAVIGATION_STYLESHEET.match(/\.link\[aria-current='page'\]\s*\{([^}]+)\}/u)?.[1];
     const hover = NAVIGATION_STYLESHEET.match(/\.linkInteractive:hover\s*\{([^}]+)\}/u)?.[1];
     expect(focus).toContain('var(--focus-ring)');
-    expect(active).toContain('var(--status-running)');
+    expect(active).toContain('var(--primary)');
+    expect(active).not.toMatch(/--status-/u);
     expect(active).toContain('var(--surface-selected)');
     expect(hover).toContain('var(--surface-selected)');
     expect(hover).toContain('var(--text-strong)');

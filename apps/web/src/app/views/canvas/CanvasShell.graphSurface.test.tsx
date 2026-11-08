@@ -36,6 +36,15 @@ describe('CanvasShell graph base surface', () => {
   let unmountShell: () => void;
 
   beforeEach(() => {
+    // DOM capability only: jsdom cannot observe the real Tooltip's geometry.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+    );
     const harness = createCanvasShellHarness();
     container = harness.container;
     navigation = harness.navigation;
@@ -45,6 +54,7 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
+    vi.unstubAllGlobals();
   });
 
   it.each(['button', 'Delete'] as const)(

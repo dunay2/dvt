@@ -490,7 +490,12 @@ describe('Canvas workbench screen composition', () => {
     });
   });
 
-  it('keeps Canvas startup commands route-local and exposes global navigation in the menu', () => {
+  afterEach(() => {
+    clearBrowserEmulation();
+  });
+
+  it('keeps Canvas startup commands route-local and global navigation directly visible on the left', () => {
+    // Moving global navigation must preserve route-local commands and the existing workspace scope.
     visitWithE2eWorkspaceSession('/canvas', {
       onBeforeLoad(window) {
         Object.defineProperty(window.navigator, 'language', {
@@ -508,12 +513,18 @@ describe('Canvas workbench screen composition', () => {
 
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
-    cy.get('[data-slot="app-shell-left-navigation"]').should('not.exist');
+    cy.get('[data-slot="app-shell-left-navigation"]').should('be.visible');
     cy.get('[data-slot="shell-top-bar"]').as('topBar');
+    cy.get('[data-slot="shell-app-menu-trigger"]').should('not.exist');
     cy.get('@topBar')
-      .find('[data-slot="shell-app-menu-trigger"]')
+      .find('[aria-label="Raven"]')
       .should('be.visible')
-      .and('have.attr', 'aria-label', 'Raven');
+      .and(($brand) => {
+        expect($brand[0]!.closest('button, a, [role="button"]'), 'brand is identity only').to.equal(
+          null
+        );
+        expect($brand[0]!.getAttribute('tabindex')).not.to.equal('0');
+      });
     cy.get('@topBar').should('contain.text', 'Vista');
     cy.get('@topBar').should('contain.text', 'Proyecto: E2E Project');
     cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
@@ -556,8 +567,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
     cy.get('body').type('{esc}');
 
-    cy.get('[data-slot="shell-app-menu-trigger"]').focus().type('{enter}');
-    cy.get('[data-slot="shell-menu-navigation-link"]').then(($links) => {
+    cy.get('[data-slot="left-navigation-link"]').then(($links) => {
       expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
         '/canvas',
         '/runs',
@@ -566,16 +576,41 @@ describe('Canvas workbench screen composition', () => {
         '/admin',
       ]);
     });
-    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Plugins').should('be.visible');
-    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Administración').should('be.visible');
+    cy.get('[data-slot="left-navigation-link"][href="/plugins"]').should('be.visible');
+    cy.get('[data-slot="left-navigation-link"][href="/admin"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Administración');
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').should(
+      'have.attr',
+      'aria-current',
+      'page'
+    );
+    // About owns a real dialog and returns keyboard focus to its visible trigger.
+    cy.get('[data-slot="shell-about-command"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Acerca de Raven')
+      .focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="shell-about-dialog"]')
+      .should('be.visible')
+      .and('contain.text', 'Acerca de Raven')
+      .and('contain.text', 'Versión');
+    assertNoSeriousAccessibilityViolations('[data-slot="shell-about-dialog"]');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
+    cy.get('[data-slot="shell-about-command"]').should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('[data-slot="shell-about-dialog"]').should('be.visible').find('button').last().click();
+    cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
+    cy.get('[data-slot="shell-about-command"]').should('be.focused');
     cy.contains('Contexto del proyecto').should('not.exist');
     cy.contains('Contexto Git').should('not.exist');
-    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
+    cy.get('[data-slot="left-navigation-link"][href="/runs"]').click();
     cy.location('pathname').should('eq', '/runs');
     waitForE2eApiCall('/runs', 'GET');
     cy.get('[data-slot="run-operational-table"]').should('contain.text', 'run_primary_project');
-    cy.get('[data-slot="shell-app-menu-trigger"]').click();
-    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
+    cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
 
@@ -711,8 +746,7 @@ describe('Canvas workbench screen composition', () => {
       .should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
 
-    cy.get('[data-slot="shell-app-menu-trigger"]').click();
-    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
+    cy.get('[data-slot="left-navigation-link"][href="/runs"]').click();
     cy.location('pathname').should('eq', '/runs');
     waitForE2eApiCall('/runs', 'GET');
     cy.get('[data-slot="run-operational-table"]', { timeout: 20_000 })
@@ -728,8 +762,7 @@ describe('Canvas workbench screen composition', () => {
       .should('contain.text', 'run_primary_project')
       .and('not.contain.text', 'run_alternate_project');
 
-    cy.get('[data-slot="shell-app-menu-trigger"]').click();
-    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="shell-active-canvas-identity"]')
       .should('contain.text', 'Canvas')
@@ -784,6 +817,10 @@ describe('Canvas workbench screen composition', () => {
       expect(rect.left).to.be.at.least(0);
       expect(rect.right).to.be.at.most(390);
     });
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-current', 'page');
+    cy.get('[data-slot="shell-about-command"]').should('be.visible');
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 390);
     cy.get('[data-slot="shell-run-status-label"]')
       .should('have.text', 'Vista previa obligatoria')
@@ -894,6 +931,20 @@ describe('Canvas workbench screen composition', () => {
           expect(rect.bottom).to.be.at.most(844);
         });
       assertViewportHasNoGlobalHorizontalOverflow(390);
+      cy.get('[data-slot="canvas-explorer-git-toggle"]')
+        .should('have.length', 1)
+        .and('be.visible')
+        .and('have.attr', 'aria-expanded', 'true')
+        .and(($control) => {
+          expect($control[0]!.closest('[inert], [hidden], [aria-hidden="true"]')).to.equal(null);
+        });
+      cy.get('[data-slot="left-navigation-link"][href="/admin"]')
+        .scrollIntoView()
+        .focus()
+        .should('be.focused')
+        .and('have.attr', 'aria-label', 'Administración');
+      cy.get('[role="tooltip"]').should('contain.text', 'Administración');
+      cy.get('[data-slot="shell-about-command"]').should('be.visible');
     }
     cy.get(
       '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"] textarea.inputarea'
@@ -1261,5 +1312,22 @@ describe('Canvas workbench screen composition', () => {
     cy.get('.react-flow__node[data-id="model_orders"]').should(($node) => {
       expect(getComputedStyle($node.get(0)).outlineStyle).not.to.equal('none');
     });
+    // System contrast and reduced motion must also preserve the newly direct shell controls.
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').focus();
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]')
+      .focus()
+      .should('be.focused')
+      .and(($link) => {
+        const style = getComputedStyle($link[0]!);
+        expect(style.outlineStyle).not.to.equal('none');
+        expect(parseFloat(style.outlineWidth)).to.be.greaterThan(0);
+        expect(style.transitionDuration).to.equal('0s');
+      });
+    cy.get('[data-slot="shell-about-command"]').focus().should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="shell-about-dialog"]').should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[data-slot="shell-about-command"]').should('be.focused');
   });
 });

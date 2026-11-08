@@ -5,7 +5,6 @@
  * @consequence Controllers dispatch; templates render localized labels and semantic styles.
  * @version 1.0.0
  */
-import { NavLink } from 'react-router';
 import type { RefObject } from 'react';
 import {
   Activity,
@@ -18,7 +17,6 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
-import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
 import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { CanvasExplorerViewMenu } from '../../views/canvas/explorer/CanvasExplorerViewMenu';
 import { Button } from '../ui/button';
@@ -43,41 +41,6 @@ type MenuLifecycle = Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }>;
-
-export function ShellNavigationEntriesTemplate({
-  navigationModel,
-  label,
-  onNavigate,
-}: Readonly<{
-  navigationModel: ShellNavigationModel;
-  label: string;
-  onNavigate: (to: string) => void;
-}>) {
-  return (
-    <>
-      <DropdownMenuLabel>{label}</DropdownMenuLabel>
-      {[...navigationModel.primaryItems, ...navigationModel.footerItems].map((item) => {
-        const Icon = item.icon;
-        return (
-          <DropdownMenuItem key={item.to} asChild>
-            <NavLink
-              data-slot="shell-menu-navigation-link"
-              to={item.to}
-              onClick={(event) => {
-                event.preventDefault();
-                onNavigate(item.to);
-              }}
-            >
-              <Icon aria-hidden="true" className={topAppBarClasses.menuItemIcon} />
-              {item.label}
-            </NavLink>
-          </DropdownMenuItem>
-        );
-      })}
-      <DropdownMenuSeparator />
-    </>
-  );
-}
 
 export function ShellProjectMenuTemplate({
   open,

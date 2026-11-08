@@ -1,3 +1,7 @@
+import {
+  ShellActivityRailProvider,
+  ShellActivityRailHost,
+} from '../../components/shell/ShellActivityRail';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -329,7 +333,10 @@ export function createCanvasShellHarness(): {
       await act(async () => {
         root.render(
           <QueryClientProvider client={queryClient}>
-            <CanvasShell {...props} />
+            <ShellActivityRailProvider>
+              <ShellActivityRailHost />
+              <CanvasShell {...props} />
+            </ShellActivityRailProvider>
           </QueryClientProvider>
         );
       });
@@ -339,7 +346,10 @@ export function createCanvasShellHarness(): {
       await act(async () => {
         root.render(
           <QueryClientProvider client={queryClient}>
-            <CanvasShell {...props} />
+            <ShellActivityRailProvider>
+              <ShellActivityRailHost />
+              <CanvasShell {...props} />
+            </ShellActivityRailProvider>
           </QueryClientProvider>
         );
       });

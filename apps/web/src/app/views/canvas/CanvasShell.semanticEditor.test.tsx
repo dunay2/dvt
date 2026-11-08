@@ -180,7 +180,13 @@ describe('Canvas Model inspection', () => {
         expect(visibleRails).toHaveLength(1);
         if (target === model) {
           expect(activityRail.closest('[hidden][inert]')).not.toBeNull();
-          expect(modelPanel.contains(visibleRails[0]!)).toBe(true);
+          expect(modelPanel.contains(visibleRails[0]!)).toBe(false);
+          expect(
+            harness.container
+              .querySelector('[data-slot="canvas-activity-rail-host"]')
+              ?.contains(visibleRails[0]!)
+          ).toBe(true);
+          expect(visibleRails[0]?.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
         } else {
           expect(visibleRails[0]).toBe(activityRail);
           expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();

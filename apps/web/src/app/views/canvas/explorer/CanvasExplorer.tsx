@@ -14,6 +14,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { useShellActivityRail } from '../../../components/shell/ShellActivityRail';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CANVAS_EXPLORER_WIDTH, useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import type { ImperativePanelHandle } from '../../../components/ui/resizable';
@@ -56,6 +57,7 @@ export function CanvasExplorer({
   workspaceTask?: ReactNode;
   activityRail?: CanvasExplorerActivityRail;
 }>): JSX.Element {
+  const activityHost = useShellActivityRail();
   const { mode, widthPercent } = useUiLayoutStore((state) => state.canvasExplorer);
   const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const expanded = mode === 'expanded';
@@ -104,6 +106,8 @@ export function CanvasExplorer({
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       activityRail={activityRail}
+      railTarget={activityHost?.target}
+      railActive={activityHost?.active ?? true}
       elements={
         typeof elements === 'function'
           ? elements(visible && expanded && activityRail?.codeVisible !== true)
