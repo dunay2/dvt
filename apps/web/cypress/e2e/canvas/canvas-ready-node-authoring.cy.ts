@@ -129,11 +129,12 @@ function assertCanvasComputedAppearance(): void {
     .should('be.visible')
     .and('have.css', 'font-size', '14px')
     .and('have.css', 'line-height', '20px')
-    .and('have.css', 'width', '384px')
     .and('have.css', 'border-top-width', '1px')
     .and('have.css', 'border-top-style', 'solid');
   cy.get(sourceCard).should(($card) => {
     const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
+    // jQuery's width hook may report the transformed box; the layout width stays fixed.
+    expect(style.width, 'card layout width before React Flow scaling').to.equal('384px');
     expect(style.fontFamily).to.contain('IBM Plex Sans');
     expect(style.boxShadow, 'raised cards retain low elevation').not.to.equal('none');
   });

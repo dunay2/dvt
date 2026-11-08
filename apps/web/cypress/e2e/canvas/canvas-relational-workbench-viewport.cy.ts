@@ -462,6 +462,14 @@ describe('Workbench viewport', () => {
       });
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       assertModelCardTypography();
+      // Verify the exact focus token at native scale before exercising fractional graph zoom.
+      cy.get(modelZoom).should('have.text', '100%');
+      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+        .should('be.focused')
+        .and('have.css', 'outline-style', 'solid')
+        .and('have.css', 'outline-width', '2px')
+        .and('have.css', 'outline-offset', '2px');
       cy.then(() => {
         writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
@@ -545,8 +553,12 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
         .should('be.focused')
         .and('have.css', 'outline-style', 'solid')
-        .and('have.css', 'outline-width', '2px')
-        .and('have.css', 'outline-offset', '2px');
+        .should(($node) => {
+          // CSS zoom snaps outlines to device pixels; reflow must preserve a visible focus cue.
+          const style = $node[0]!.ownerDocument.defaultView!.getComputedStyle($node[0]!);
+          expect(Number.parseFloat(style.outlineWidth)).to.be.greaterThan(0);
+          expect(Number.parseFloat(style.outlineOffset)).to.be.greaterThan(0);
+        });
       cy.get('[data-slot="canvas-model-toolbar"]').should(($footer) => {
         expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
       });
