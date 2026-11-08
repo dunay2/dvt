@@ -364,12 +364,12 @@ describe('Producer fields enter Input; Output is passive', () => {
     visitInputs(true, false, 'en', true);
     cy.viewport(1280, 720);
     node('source-orders').find('[data-slot="canvas-node-shell"]').click(40, 18);
-    cy.get('.react-flow__controls-fitview').click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
       'have.attr',
       'aria-selected',
       'true'
     );
+    cy.get('.react-flow__controls-fitview').click();
     const field = '[data-slot="source-column-row"][data-column-name="customer"]';
     cy.get(field).should('be.visible').and('have.attr', 'draggable', 'true');
     const drop = (): Cypress.Chainable<Cypress.AUTWindow> =>
