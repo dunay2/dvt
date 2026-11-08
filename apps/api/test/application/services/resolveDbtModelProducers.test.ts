@@ -347,10 +347,16 @@ describe('scoped dbt model producer binding', () => {
       'FROM raw.client'
     );
     expect(result.get(node.id)?.projection.projection.inputs).toEqual([]);
-    expect(result.get(node.id)?.provenance).toMatchObject({
+    // Provenance belongs to the compiled native analysis, not the earlier parse-only publication.
+    expect(f.projectValidatedAnalysis).toHaveBeenCalledWith(
+      { scope, canvasId: binding.canvasId },
+      { scope, analysis: await f.analyze.mock.results[0]!.value }
+    );
+    expect(result.get(node.id)?.provenance).toEqual({
       canvasId: binding.canvasId,
       uniqueId: reference.uniqueId,
       contentSetSha256: 'a'.repeat(64),
+      analysisSha256: 'b'.repeat(64),
     });
   });
   it('does no analyzer work for native-only selections', async () => {

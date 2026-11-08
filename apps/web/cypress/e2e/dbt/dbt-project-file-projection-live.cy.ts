@@ -677,6 +677,7 @@ describe('dbt project file projection live vertical', () => {
     let draftRevision: string;
     let semanticPlanSha256: string;
     let projection: DbtProjectGraphProjection;
+    let compiledProjection: ReturnType<typeof TransformSqlProjectionResponseSchema.parse>;
     let sourceRef: ReturnType<typeof ConnectedSourceRefSchema.parse>;
     const graphWrites: string[] = [];
     const fileWrites: string[] = [];
@@ -740,26 +741,44 @@ describe('dbt project file projection live vertical', () => {
         semanticPlanSha256,
       });
       expect(sql.provenance.sourceRefs).to.deep.equal([sourceRef]);
-      expect(sql.provenance.modelRefs).to.deep.equal([
-        {
-          canvasId: CANVAS_ID,
-          uniqueId: 'model.analytics.orders',
-          contentSetSha256: projection.projectRevision.contentSetSha256,
-          analysisSha256: projection.analysisSha256,
-        },
-      ]);
+      expect(sql.provenance.modelRefs).to.have.length(1);
+      const { analysisSha256, ...modelIdentity } = sql.provenance.modelRefs![0]!;
+      expect(modelIdentity).to.deep.equal({
+        canvasId: CANVAS_ID,
+        uniqueId: 'model.analytics.orders',
+        contentSetSha256: projection.projectRevision.contentSetSha256,
+      });
+      // Native compilation includes compiled SQL in the analysis identity; parse is a different phase.
+      expect(
+        analysisSha256,
+        'compiled analysis differs from the parse-only resource snapshot'
+      ).not.to.equal(projection.analysisSha256);
       expect(sql.sql)
         .to.match(/\bjoin\b/i)
         .and.contain('customer-1');
       expect(sql.sql)
         .to.match(/raw"?\."?orders/)
         .and.match(/public"?\."?orders/);
+      compiledProjection = sql;
     });
     cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines', { timeout: 20_000 })
       .should('contain.text', 'customer-1')
       .and(($lines) => {
         expect($lines.text(), 'Monaco displays the protected SQL projection').to.match(/\bjoin\b/i);
       });
+    // This deterministic fixture must revalidate the same complete compiled result on explicit reselect.
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
+    cy.wait('@mixedModelSql', { timeout: 60_000 }).then(({ request, response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(Object.fromEntries(new URL(request.url).searchParams)).to.deep.equal({
+        ...resolveLiveWorkspaceSession(),
+        semanticPlanSha256,
+      });
+      expect(TransformSqlProjectionResponseSchema.parse(response?.body)).to.deep.equal(
+        compiledProjection
+      );
+    });
     cy.then(() => {
       expect(graphWrites, 'inspection does not save native semantics').to.deep.equal([]);
       expect(fileWrites, 'inspection does not write project artifacts').to.deep.equal([]);
