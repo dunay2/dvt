@@ -198,7 +198,6 @@ govern this boundary repair.
 | `CanvasModelLayoutSession`                   | `CanvasModelLayoutSession.tsx`        | Restore and persist Model card coordinates under the hydrated workspace, Canvas and Model key. |
 | `useCanvasLayoutPersistence(...)`            | `useCanvasLayoutPersistence.ts`       | Return node-position, node-drag, and viewport persistence handlers.                            |
 | `handleNodePositionsSave`                    | `useCanvasLayoutPersistence.ts`       | Persist a complete node-position map for the active layout key.                                |
-| `handleNodeDrag`                             | `useCanvasLayoutPersistence.ts`       | Preserve the current viewport callback seam without persisting active drag frames.             |
 | `handleNodeDragStop`                         | `useCanvasLayoutPersistence.ts`       | Persist the final drag-stop event payload over stale React Flow arrays.                        |
 | `handleViewportChange`                       | `useCanvasLayoutPersistence.ts`       | Persist viewport only after hydration and graph readiness.                                     |
 | `shouldSeedCanvasLayoutFromRemoteDraft(...)` | `canvasDraftLayoutHydrationPolicy.ts` | Allow remote draft coordinates to seed local layout only when no local card positions exist.   |

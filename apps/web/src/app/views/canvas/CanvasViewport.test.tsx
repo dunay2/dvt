@@ -410,7 +410,6 @@ describe('CanvasViewport', () => {
   });
 
   it('keeps algebraic drag completion on the existing command path exactly once', async () => {
-    const onNodeDrag = vi.fn();
     const onNodeDragStop = vi.fn();
     const onComposeCanvasNodes = vi.fn();
     const source = {
@@ -433,7 +432,6 @@ describe('CanvasViewport', () => {
 
     await renderViewport({
       nodesWithImpact: [source, target],
-      onNodeDrag,
       onNodeDragStop,
     });
 
@@ -449,7 +447,6 @@ describe('CanvasViewport', () => {
       reactFlowOnNodeDragStop?.({}, source, [source]);
     });
 
-    expect(onNodeDrag).toHaveBeenCalledTimes(1);
     expect(onNodeDragStop).toHaveBeenCalledTimes(1);
     expect(onComposeCanvasNodes).toHaveBeenCalledTimes(1);
     expect(onComposeCanvasNodes).toHaveBeenCalledWith({

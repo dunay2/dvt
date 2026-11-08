@@ -75,7 +75,6 @@ type CanvasViewportProps = {
   readonly onConnect?: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   readonly onReconnect?: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
-  readonly onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   readonly onDrop: DragEventHandler<HTMLDivElement>;
   readonly onDragOver: DragEventHandler<HTMLDivElement>;
@@ -527,7 +526,6 @@ function CanvasViewportWithPresenter({
         {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
         {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
         onViewportChange={props.onViewportChange}
-        onNodeDrag={props.onNodeDrag}
         onNodeDragStop={props.onNodeDragStop}
         onDrop={props.onDrop}
         onDragOver={props.onDragOver}

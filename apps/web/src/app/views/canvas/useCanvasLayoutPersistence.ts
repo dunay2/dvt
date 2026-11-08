@@ -190,11 +190,6 @@ function useCanvasNodePositionPersistence({
     saveNodePositions: saveOrQueueNodePositions,
   });
 
-  const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(
-    () => undefined,
-    []
-  );
-
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
     (_event, draggedNode, draggedNodes) => {
       saveOrQueueNodePositions(
@@ -206,7 +201,6 @@ function useCanvasNodePositionPersistence({
 
   return {
     handleNodePositionsSave: saveOrQueueNodePositions,
-    handleNodeDrag,
     handleNodeDragStop,
   };
 }
@@ -250,14 +244,13 @@ export function useCanvasLayoutPersistence({
 }: UseCanvasLayoutPersistenceArgs) {
   const canPersistNodePositions = hasHydrated;
   const canPersistViewport = hasHydrated && !isGraphQueryPending;
-  const { handleNodePositionsSave, handleNodeDrag, handleNodeDragStop } =
-    useCanvasNodePositionPersistence({
-      canPersistNodePositions,
-      workspaceLayoutKey,
-      nodes,
-      persistedNodePositions,
-      setCanvasNodePositions,
-    });
+  const { handleNodePositionsSave, handleNodeDragStop } = useCanvasNodePositionPersistence({
+    canPersistNodePositions,
+    workspaceLayoutKey,
+    nodes,
+    persistedNodePositions,
+    setCanvasNodePositions,
+  });
   const handleViewportChange = useCanvasViewportPersistenceHandler({
     canPersistLayout: canPersistViewport,
     workspaceLayoutKey,
@@ -267,7 +260,6 @@ export function useCanvasLayoutPersistence({
 
   return {
     handleNodePositionsSave,
-    handleNodeDrag,
     handleNodeDragStop,
     handleViewportChange,
   };

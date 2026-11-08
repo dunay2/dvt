@@ -165,7 +165,6 @@ function CanvasShellViewport({
       frozenNodeIds={graph.frozenNodeIds}
       onToggleFrozenNode={graphCommands.onToggleFrozenNode}
       onNodesChange={graphCommands.onNodesChange}
-      onNodeDrag={graphCommands.onNodeDrag}
       onNodeDragStop={graphCommands.onNodeDragStop}
       onEdgesChange={graphCommands.onEdgesChange}
       onConnect={graphCommands.onConnect}

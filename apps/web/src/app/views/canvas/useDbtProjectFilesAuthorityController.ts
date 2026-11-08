@@ -404,7 +404,6 @@ export function useDbtProjectFilesAuthorityController(
         const accepted = placements.applyNodeChanges(changes);
         if (accepted.length > 0) graphModel.onNodesChange(accepted);
       },
-      onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,
       onEdgesChange: (changes: Parameters<typeof graphModel.onEdgesChange>[0]) => {
         const accepted = changes.filter((change) => change.type !== 'remove');

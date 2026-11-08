@@ -14,10 +14,6 @@ import { setCanvasHarnessGraphQueryPending } from './useCanvasController.test.gr
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 
 type LayoutPersistenceArgs = Parameters<typeof useCanvasLayoutPersistence>[0];
-type NodeDragController = {
-  handleNodeDrag?: (event: never, draggedNode: never, allNodes: never) => void;
-};
-
 function LayoutPersistenceProbe({ args }: Readonly<{ args: LayoutPersistenceArgs }>): null {
   useCanvasLayoutPersistence(args);
   return null;
@@ -187,7 +183,18 @@ describe('useCanvasController persistence guards', () => {
   });
 
   it('does not persist an in-flight drag frame and persists the final drag-stop payload', async () => {
-    const controller = harness.getLatestResult() as NodeDragController | null;
+    harness.cleanup();
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [],
+      })
+    );
+    harness.state.store.setCanvasNodePositions.mockClear();
     const draggedNode = { id: 'node_1', position: { x: 225, y: 210 } } as never;
     const allNodes = [
       { id: 'node_1', position: { x: 0, y: 0 } },
@@ -195,9 +202,16 @@ describe('useCanvasController persistence guards', () => {
     ] as never;
 
     await act(async () => {
-      controller?.handleNodeDrag?.({} as never, draggedNode, allNodes);
+      harness
+        .getLatestResult()
+        ?.onNodesChange?.([
+          { id: 'node_1', type: 'position', dragging: true, position: { x: 225, y: 210 } },
+        ]);
     });
 
+    expect(
+      harness.getLatestResult()?.nodesWithImpact.find((node) => node.id === 'node_1')
+    ).toMatchObject({ dragging: true, position: { x: 225, y: 210 } });
     expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalled();
 
     await act(async () => {

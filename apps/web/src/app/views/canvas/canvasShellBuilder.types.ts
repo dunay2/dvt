@@ -104,7 +104,6 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
   graphCommands: Pick<
     CanvasRouteController,
     | 'onNodesChange'
-    | 'handleNodeDrag'
     | 'handleNodeDragStop'
     | 'onEdgesChange'
     | 'onConnect'

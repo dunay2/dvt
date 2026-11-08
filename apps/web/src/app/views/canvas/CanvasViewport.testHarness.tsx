@@ -38,7 +38,6 @@ export function buildCanvasViewportProps(
     canvasSnapToGrid: false,
     viewport: null,
     onNodesChange: vi.fn(),
-    onNodeDrag: vi.fn(),
     onNodeDragStop: vi.fn(),
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
