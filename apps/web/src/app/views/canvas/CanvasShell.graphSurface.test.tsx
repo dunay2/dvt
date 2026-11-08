@@ -88,6 +88,7 @@ describe('CanvasShell graph base surface', () => {
         expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBeNull();
         expect(container.querySelector('[data-slot="canvas-code-workspace-surface"]')).toBeNull();
         expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+        expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
         const reopen =
           useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode;
         expect(reopen).toBeTypeOf('function');
@@ -266,6 +267,7 @@ describe('CanvasShell graph base surface', () => {
     expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBeNull();
     expect(container.querySelector('[data-slot="canvas-code-workspace-surface"]')).toBeNull();
     expect(container.querySelector('[data-testid="project-files-explorer"]')).toBeNull();
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
     const activityRail = container
       .querySelector('[data-slot="canvas-explorer-git-toggle"]')!
@@ -287,6 +289,7 @@ describe('CanvasShell graph base surface', () => {
     expect(codePanel?.getAttribute('role')).toBe('tabpanel');
     expect(codePanel?.getAttribute('aria-labelledby')).toBe(codeTab?.id);
     expect(codePanel?.contains(editor)).toBe(true);
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(true);
     expect(container.querySelectorAll('[data-testid="project-files-explorer"]')).toHaveLength(1);
     expect(viewport?.closest('[inert]')).not.toBeNull();
     expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
@@ -324,6 +327,7 @@ describe('CanvasShell graph base surface', () => {
     expect(viewport?.closest('[inert]')).toBeNull();
     expect(editor?.closest('[inert]')).not.toBeNull();
     expect(codeTab?.getAttribute('aria-selected')).toBe('false');
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
     const revealCode =
       useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode;
     expect(revealCode).toBeTypeOf('function');
@@ -332,6 +336,7 @@ describe('CanvasShell graph base surface', () => {
     expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
     expect(editor?.closest('[inert]')).toBeNull();
     expect(viewport?.closest('[inert]')).not.toBeNull();
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(true);
     for (const destination of ['Elements']) {
       const button = within(activityRail).getByRole('button', { name: destination });
       await act(async () => fireEvent.keyDown(button, { key: 'Enter' }));
@@ -864,6 +869,7 @@ describe('CanvasShell graph base surface', () => {
     });
 
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(true);
     const baseSurface = container.querySelector(
       '[data-slot="canvas-contextual-workbench-base-surface"]'
     );

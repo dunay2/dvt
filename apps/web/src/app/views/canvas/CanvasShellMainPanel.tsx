@@ -69,6 +69,7 @@ function CanvasShellMenuContributionRegistrars({
   | 'projectFiles'
   | 'workspaceTask'
 >): JSX.Element {
+  // The Code owner handles admission, flush failures and current-intent checks.
   return (
     <CanvasWorkspaceMenuContributionRegistrar
       activeCanvas={panels.activeCanvas}
@@ -77,12 +78,8 @@ function CanvasShellMenuContributionRegistrars({
       canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
       canOpenProjectCode={typeof onOpenProjectCode === 'function'}
       canImportDbtProject={typeof onImportDbtProject === 'function'}
-      {...(chromeCommands.onExportProjectSnapshot == null
-        ? {}
-        : { onExportProjectSnapshot: chromeCommands.onExportProjectSnapshot })}
-      {...(chromeCommands.onImportProjectSnapshotFile == null
-        ? {}
-        : { onImportProjectSnapshotFile: chromeCommands.onImportProjectSnapshotFile })}
+      onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
+      onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
       onOpenProjectExplorer={onOpenProjectExplorer}
       onOpenProjectCode={onOpenProjectCode}
       onImportDbtProject={onImportDbtProject}
@@ -119,6 +116,7 @@ function CanvasShellViewport({
   projectFiles,
   inspector,
   activityRail,
+  externalNodeSurfaceActive,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -133,14 +131,8 @@ function CanvasShellViewport({
 > & {
   inspector: ReactNode;
   activityRail: CanvasExplorerActivityRail;
+  externalNodeSurfaceActive: boolean;
 }): JSX.Element {
-  const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
-    focusMode: layout.focusMode,
-    inspectorPanelVisible: layout.inspectorPanelVisible,
-    surfaceStrategy: layout.surfaceStrategy,
-    hasInspectorNode: panels.inspectorNode != null,
-  });
-
   return (
     <CanvasViewport
       workspaceTask={workspaceTask}
@@ -190,14 +182,7 @@ function CanvasShellViewport({
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
-      externalNodeSurfaceActive={
-        projectFiles?.active === true ||
-        workspaceTask != null ||
-        nodeWorkbenchVisible ||
-        (layout.contextualWorkbench != null &&
-          !(projectFiles != null && layout.contextualWorkbench.id === 'project-code')) ||
-        layout.centerSurfaceVisible === true
-      }
+      externalNodeSurfaceActive={externalNodeSurfaceActive}
     />
   );
 }
@@ -225,6 +210,7 @@ function CanvasShellMainSurface({
   | 'workspaceTask'
   | 'projectFiles'
 > & { inspector: ReactNode }): JSX.Element {
+  // Mounting the portal target must rerender its consumer; a ref alone would not.
   const [activityRailTarget, setActivityRailTarget] = useState<HTMLDivElement | null>(null);
   const codeVisible = workspaceTask == null && projectFiles?.active === true;
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
@@ -233,12 +219,26 @@ function CanvasShellMainSurface({
     projectFiles != null && layout.contextualWorkbench?.id === 'project-code'
       ? undefined
       : layout.contextualWorkbench;
+  const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
+    focusMode: layout.focusMode,
+    inspectorPanelVisible: layout.inspectorPanelVisible,
+    surfaceStrategy: layout.surfaceStrategy,
+    hasInspectorNode: panels.inspectorNode != null,
+  });
+  // Suspend transient node surfaces and global Delete while another surface is active.
+  const externalNodeSurfaceActive =
+    projectFiles?.active === true ||
+    workspaceTask != null ||
+    nodeWorkbenchVisible ||
+    contextualWorkbench != null ||
+    layout.centerSurfaceVisible === true;
   const nodeInspector = workspaceTask == null && contextualWorkbench == null ? inspector : null;
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={{ target: activityRailTarget, codeVisible }}
+      externalNodeSurfaceActive={externalNodeSurfaceActive}
       inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
       panels={panels}
@@ -334,7 +334,7 @@ export function CanvasShellMainPanel({
             layout={layout}
             panels={panels}
             onHide={chromeCommands.onHideInspector}
-            {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
+            onOpenModelEditor={onOpenModelEditor}
           />
         }
       />
