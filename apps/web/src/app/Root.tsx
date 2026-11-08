@@ -12,6 +12,7 @@ import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame, { APP_SHELL_MAIN_CONTENT_ID } from './components/shell/AppShellFrame';
 import BottomOperationalDrawer from './components/shell/BottomOperationalDrawer';
+import { ShellRouteHeadingProvider } from './components/shell/ShellRouteHeading';
 import { AuthRouteSurface } from './bootstrap/AuthRouteGate';
 import { resolveShellTopBarCopy } from './components/shell/copy';
 import {
@@ -127,6 +128,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     () => buildShellRuntimeState(capabilitiesQuery.data, applicationLanguage).navigationModel,
     [applicationLanguage, capabilitiesQuery.data]
   );
+  const routeHeading = resolveShellRouteHeading(navigationModel, location.pathname);
   const bootstrapOperabilityTransition = useMemo(
     () =>
       buildRootBootstrapOperabilityTransition({
@@ -308,16 +310,18 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       skipToMainContentLabel={shellCopy.skipToMainContent}
       topBar={
         <TopAppBar
-          routeHeading={resolveShellRouteHeading(navigationModel, location.pathname)}
+          routeHeading={routeHeading}
           connectionDetail={shellHealth.connectionDetail}
           connectionStateOverride={shellHealth.connectionState}
           isConnectionChecking={shellHealth.isInitialHealthCheckPending}
         />
       }
     >
-      <AuthRouteSurface>
-        <Outlet />
-      </AuthRouteSurface>
+      <ShellRouteHeadingProvider heading={routeHeading}>
+        <AuthRouteSurface>
+          <Outlet />
+        </AuthRouteSurface>
+      </ShellRouteHeadingProvider>
     </AppShellFrame>
   );
 }

@@ -81,13 +81,19 @@ export function buildShellNavigationModel(
   }
 
   return {
-    primaryItems: navigationViews.map((view) => ({
-      to: view.path,
-      icon: view.placement.icon,
-      label: resolveString(view.placement.label, locale),
-      level: view.placement.level,
-      source: 'runtime',
-    })),
+    primaryItems: navigationViews.map<ShellNavigationItem>((view) => {
+      const label = resolveString(view.placement.label, locale);
+      return {
+        to: view.path,
+        icon: view.placement.icon,
+        label,
+        level: view.placement.level,
+        source: 'runtime',
+        ...(view.placement.showRouteHeading
+          ? { heading: { title: label, icon: view.placement.icon } }
+          : {}),
+      };
+    }),
     footerItems: SHELL_NAV.map((item) => ({ ...item, label: resolveString(item.label, locale) })),
   };
 }

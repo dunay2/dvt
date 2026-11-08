@@ -1217,3 +1217,31 @@ aborts startup; a previous local build is not a runtime prerequisite.
   output. It returns the readline handle to the caller, which retains reader
   closure and process lifetime ownership. Chunked, blank and trailing lines keep
   the same formatting; output adaptation does not own process termination.
+
+## Controlled Shell Bootstrap Variants
+
+`stubShellBootstrapApis` owns the controlled session and health bootstrap
+responses. Configure health variants through its `health` options before
+registration; provide `capabilities` explicitly when the scenario owns that
+response. Each owned endpoint is registered once. The existing healthy/ready
+defaults and absent default capabilities registration remain unchanged.
+
+The controlled fetch registry uses first-match semantics. Registering a second
+response for the same method and path does not override the bootstrap default.
+Do not change registry priority, infer expected results from the DOM, or copy the
+session/probe bootstrap into individual scenarios to work around that boundary.
+Fixture tests exercise the actual registry with real HTTP request/response
+primitives, including error status, headers, null bodies, reset and fallthrough.
+
+Reload creates a new browser Window. Reinstall the existing controlled fetch
+transport through the established `window:before:load` hook; let the application
+perform its normal protected admission again. Assert the new session read,
+retained route position and absence of unintended graph writes rather than
+suppressing startup requests or treating cached state as admission.
+
+Optional-probe expectations follow explicit build inputs. The ordinary client
+default enables the probes; a separate build with an explicitly empty
+`VITE_PLATFORM_HEALTH_OPTIONAL_PROBES` and an explicit
+`PLATFORM_HEALTH_EXPECT_OPTIONAL_DISABLED` Cypress expectation proves the
+not-requested posture. Keep the enabled/disabled expectations independent of
+observed DOM output and preserve their actual request assertions.

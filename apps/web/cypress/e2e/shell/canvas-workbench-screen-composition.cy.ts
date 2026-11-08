@@ -32,6 +32,7 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
@@ -588,13 +589,13 @@ describe('Canvas workbench screen composition', () => {
       .should('be.visible')
       .and('have.attr', 'aria-label', 'Acerca de Raven')
       .focus();
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.get('[data-slot="shell-about-dialog"]')
       .should('be.visible')
       .and('contain.text', 'Acerca de Raven')
       .and('contain.text', 'Versión');
     assertNoSeriousAccessibilityViolations('[data-slot="shell-about-dialog"]');
-    cy.press(Cypress.Keyboard.Keys.ESC);
+    pressNativeKey('Escape');
     cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
     cy.get('[data-slot="shell-about-command"]').should('be.focused');
     cy.press(Cypress.Keyboard.Keys.SPACE);
@@ -1323,9 +1324,9 @@ describe('Canvas workbench screen composition', () => {
         expect(style.transitionDuration).to.equal('0s');
       });
     cy.get('[data-slot="shell-about-command"]').focus().should('be.focused');
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.get('[data-slot="shell-about-dialog"]').should('be.visible');
-    cy.press(Cypress.Keyboard.Keys.ESC);
+    pressNativeKey('Escape');
     cy.get('[data-slot="shell-about-command"]').should('be.focused');
   });
 });

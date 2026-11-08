@@ -5,6 +5,7 @@
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown } from 'lucide-react';
 import { useMemo } from 'react';
+import { Link } from 'react-router';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -19,7 +20,6 @@ import {
 } from '../../components/ui/table';
 import { cn } from '../../components/ui/utils';
 import { routeWorkbenchDenseTableClasses } from '../../components/workbench/routeWorkbenchTableTokens';
-import { routeWorkbenchMutedTextClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { getRunStatusTone } from './runStatesModel';
 import {
   type RunOperationalRow,
@@ -29,6 +29,7 @@ import {
 } from './runOperationalTableModel';
 import { useRunStatesCopy } from './runStatesCopy';
 import type { RunControlCommandController } from './useRunControlCommands';
+import styles from './RunOperationalTable.module.css';
 
 type RunOperationalTableProps = {
   rows: RunOperationalRow[];
@@ -36,7 +37,6 @@ type RunOperationalTableProps = {
   sort: RunOperationalTableSort;
   onFiltersChange: (filters: RunOperationalTableFilters) => void;
   onSortChange: (sort: RunOperationalTableSort) => void;
-  onOpenRun: (runId: string) => void;
   runControls?: RunControlCommandController;
   isLoading?: boolean;
 };
@@ -58,7 +58,6 @@ export function RunOperationalTable({
   sort,
   onFiltersChange,
   onSortChange,
-  onOpenRun,
   runControls,
   isLoading,
 }: RunOperationalTableProps) {
@@ -68,18 +67,21 @@ export function RunOperationalTable({
       {
         accessorKey: 'runId',
         header: copy.runTableHeaders.runId,
-        cell: ({ row }) => <span className="font-mono text-xs">{row.original.runId}</span>,
-      },
-      {
-        accessorKey: 'status',
-        header: copy.runTableHeaders.status,
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Badge className={cn(getRunStatusTone(row.original.status))}>
-              {copy.statusLabels[row.original.status]}
-            </Badge>
-            {row.original.substatus ? (
-              <Badge variant="outline">{row.original.substatus}</Badge>
+          <div className={styles.identity}>
+            <Link className={styles.runLink} to={`/runs/${encodeURIComponent(row.original.runId)}`}>
+              {row.original.runId}
+            </Link>
+            {runControls ? (
+              <RunControlActions
+                runId={row.original.runId}
+                availability={row.original.controls}
+                activity={runControls.activity}
+                outcome={runControls.outcome}
+                failure={runControls.failure}
+                onCancel={() => runControls.cancelRun(row.original.runId)}
+                onRecover={() => runControls.recoverRun(row.original.runId)}
+              />
             ) : null}
           </div>
         ),
@@ -102,32 +104,26 @@ export function RunOperationalTable({
       {
         accessorKey: 'gitSha',
         header: copy.runTableHeaders.gitSha,
-        cell: ({ row }) => <span className="font-mono text-xs">{row.original.gitSha ?? '-'}</span>,
+        cell: ({ row }) => <span className={styles.identifier}>{row.original.gitSha ?? '-'}</span>,
       },
       {
-        id: 'action',
-        header: '',
+        accessorKey: 'status',
+        header: copy.runTableHeaders.status,
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => onOpenRun(row.original.runId)}>
-              {copy.viewDetails}
-            </Button>
-            {runControls ? (
-              <RunControlActions
-                runId={row.original.runId}
-                availability={row.original.controls}
-                activity={runControls.activity}
-                outcome={runControls.outcome}
-                failure={runControls.failure}
-                onCancel={() => runControls.cancelRun(row.original.runId)}
-                onRecover={() => runControls.recoverRun(row.original.runId)}
-              />
+          <div className={styles.status}>
+            <Badge className={cn(getRunStatusTone(row.original.status), styles.statusBadge)}>
+              {copy.statusLabels[row.original.status]}
+            </Badge>
+            {row.original.substatus ? (
+              <Badge variant="outline" className={styles.statusBadge}>
+                {row.original.substatus}
+              </Badge>
             ) : null}
           </div>
         ),
       },
     ],
-    [copy, onOpenRun, runControls]
+    [copy, runControls]
   );
   const table = useReactTable({
     data: rows,
@@ -145,20 +141,21 @@ export function RunOperationalTable({
   };
 
   return (
-    <div data-slot="run-operational-table" className="space-y-3">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <label className="min-w-0 flex-1">
+    <div data-slot="run-operational-table" className={styles.surface}>
+      <div className={styles.filters}>
+        <label className={styles.search}>
           <span className="sr-only">{copy.runTableSearchLabel}</span>
           <input
             name="run-query-filter"
             value={filters.query}
             onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
             placeholder={copy.runTableSearchPlaceholder}
-            className={cn(routeWorkbenchDenseTableClasses.field, 'w-full')}
+            className={cn(routeWorkbenchDenseTableClasses.field, styles.field)}
           />
         </label>
         <select
           name="run-status-filter"
+          aria-label={copy.runTableStatusFilterLabel}
           value={filters.status}
           onChange={(event) =>
             onFiltersChange({
@@ -166,7 +163,7 @@ export function RunOperationalTable({
               status: event.target.value as RunOperationalTableFilters['status'],
             })
           }
-          className={routeWorkbenchDenseTableClasses.field}
+          className={cn(routeWorkbenchDenseTableClasses.field, styles.field)}
         >
           <option value="all">{copy.runTableAllStatuses}</option>
           <option value="pending">{copy.statusLabels.pending}</option>
@@ -178,27 +175,37 @@ export function RunOperationalTable({
         </select>
       </div>
 
-      {isLoading ? (
-        <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.loadingRuns}</p>
-      ) : null}
+      {isLoading ? <p className={styles.loading}>{copy.loadingRuns}</p> : null}
 
-      <Table className="min-w-[760px]">
+      <Table className={styles.table}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 const sortableColumn = sortableHeaders[header.column.id];
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    scope="col"
+                    data-column={header.column.id}
+                    className={styles.heading}
+                    aria-sort={
+                      sortableColumn === sort.columnId
+                        ? sort.direction === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : undefined
+                    }
+                  >
                     {sortableColumn ? (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 px-1"
+                        className={styles.sortButton}
                         onClick={() => onSortChange(nextSort(sort, sortableColumn))}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        <ArrowUpDown className="ml-1 size-3" aria-hidden="true" />
+                        <ArrowUpDown className={styles.sortIcon} aria-hidden="true" />
                       </Button>
                     ) : (
                       flexRender(header.column.columnDef.header, header.getContext())
@@ -214,7 +221,7 @@ export function RunOperationalTable({
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} data-column={cell.column.id} className={styles.cell}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

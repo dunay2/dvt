@@ -7,7 +7,7 @@
  */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
-import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { getE2eApiCalls, installE2eApiFetchStub, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
@@ -632,12 +632,17 @@ describe('Shell layout contract', () => {
           ).to.be.closeTo(rememberedHeight, 2);
           expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
         });
+        // Reload creates a new Window; retain the controlled API transport without reseeding layout.
+        const sessionReads = getE2eApiCalls('/session', 'GET').length;
+        cy.on('window:before:load', installE2eApiFetchStub);
         cy.reload();
         cy.get(drawer).should(($reloaded) => {
           expect(
             $reloaded[0]!.getBoundingClientRect().height,
             'reload retains the resized height'
           ).to.be.closeTo(rememberedHeight, 2);
+          expect(getE2eApiCalls('/session', 'GET').length).to.be.greaterThan(sessionReads);
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
         });
       });
     });

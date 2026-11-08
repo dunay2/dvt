@@ -5,6 +5,40 @@ import { createPublishedRouteBootstrapHandle } from '../bootstrap/routeBootstrap
 import { buildShellNavigationModel, resolveShellRouteHeading } from './shellNavigationModel';
 
 describe('buildShellNavigationModel', () => {
+  it.each(['en', 'es-ES'])('projects only opted-in localized runtime headings (%s)', (locale) => {
+    // Runs previously spent a second title band while the shared shell row stayed empty.
+    const view = {
+      pluginId: 'monitoring',
+      id: 'monitoring.runs',
+      path: '/runs',
+      component: (() => null) as never,
+      handle: {
+        routeBootstrap: createPublishedRouteBootstrapHandle({ pendingDetail: 'Preparing runs' }),
+      },
+      placement: {
+        kind: 'shell-nav' as const,
+        label: { key: 'navigation.runs', fallback: 'Runs', translations: { es: 'Ejecuciones' } },
+        icon: FileCode2,
+        order: 20,
+        level: 'core' as const,
+        showRouteHeading: true,
+      },
+    };
+    const model = buildShellNavigationModel([view], locale);
+    const expected = locale.startsWith('es') ? 'Ejecuciones' : 'Runs';
+    expect(resolveShellRouteHeading(model, '/runs')).toEqual({ title: expected, icon: FileCode2 });
+    expect(resolveShellRouteHeading(model, '/runs/run_1')?.title).toBe(expected);
+    expect(resolveShellRouteHeading(model, '/runs-extra')).toBeNull();
+    expect(
+      resolveShellRouteHeading(
+        buildShellNavigationModel(
+          [{ ...view, placement: { ...view.placement, showRouteHeading: false } }],
+          locale
+        ),
+        '/runs'
+      )
+    ).toBeNull();
+  });
   it('projects opted-in headings and section destinations without another route-title state', () => {
     const model = buildShellNavigationModel([]);
     expect(resolveShellRouteHeading(model, '/admin')?.title).toBe('Admin & RBAC');

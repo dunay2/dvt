@@ -48,7 +48,7 @@ describe('RunStates list states', () => {
     expect(harness.container.textContent).toContain('Environment');
     expect(harness.container.textContent).toContain('dev');
     expect(harness.container.textContent).toContain('prod');
-    expect(harness.container.textContent).toContain('View Details');
+    expect(harness.container.querySelector('a[href="/runs/run_123"]')?.textContent).toBe('run_123');
   });
 
   it('renders the governed empty state with canvas guidance', async () => {
@@ -76,7 +76,8 @@ describe('RunStates list states', () => {
     expect(content).toContain('Entorno');
     expect(content).toContain('En ejecución');
     expect(content).toContain('Fallida');
-    expect(content).toContain('Ver detalles');
+    expect(harness.container.querySelector('a[href="/runs/run_123"]')?.textContent).toBe('run_123');
+    expect(content).not.toContain('Ver detalles');
     expect(content).not.toContain('View Details');
     expect(content).not.toContain('Environment');
   });

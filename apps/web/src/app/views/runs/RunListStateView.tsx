@@ -3,7 +3,7 @@
  * navigation while delegating dense row semantics to the Runs table component.
  */
 import { useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
 import type { RunSummaryItem } from '../../ports/runs';
@@ -19,6 +19,7 @@ import {
 } from './runOperationalTableModel';
 import { useRunStatesCopy } from './runStatesCopy';
 import type { RunControlCommandController } from './useRunControlCommands';
+import styles from './RunOperationalTable.module.css';
 
 type RunListStateProps = {
   runs: RunSummaryItem[];
@@ -28,7 +29,6 @@ type RunListStateProps = {
 
 export function RunListStateView({ runs, isLoading, runControls }: RunListStateProps) {
   const { copy, language } = useRunStatesCopy();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tableState = useMemo(
     () => parseRunOperationalTableSearchParams(searchParams),
@@ -45,16 +45,13 @@ export function RunListStateView({ runs, isLoading, runControls }: RunListStateP
 
   return (
     <WorkbenchStateFrame title={copy.runsTitle} slotPrefix="runs-state">
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className={styles.listContent}>
         <RunOperationalTable
           rows={rows}
           filters={tableState.filters}
           sort={tableState.sort}
           onFiltersChange={(filters) => updateTableState(filters, tableState.sort)}
           onSortChange={(sort) => updateTableState(tableState.filters, sort)}
-          onOpenRun={(runId) => {
-            void navigate(`/runs/${runId}`);
-          }}
           runControls={runControls}
           isLoading={isLoading}
         />

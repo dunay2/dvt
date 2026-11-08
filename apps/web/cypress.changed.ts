@@ -48,6 +48,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/canvasFirstAuthoring.ts': ['available'],
   'apps/web/cypress/support/dbtProjectLive.ts': ['available'],
   'apps/web/cypress/support/e2eApiStub.ts': CAPABILITIES,
+  'apps/web/cypress/support/nativeKeyboard.ts': ['controlled'],
   'apps/web/cypress/support/workspaceSession.ts': CAPABILITIES,
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',

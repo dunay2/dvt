@@ -24,6 +24,7 @@ import {
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import navigationStyles from './components/LeftNavigation.module.css';
+import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 
 describe('RootShell chrome', () => {
   let previousResizeObserver: typeof ResizeObserver | undefined;
@@ -62,6 +63,42 @@ describe('RootShell chrome', () => {
       await mounted.cleanup();
     }
   });
+
+  it.each([
+    ['en', 'Runs'],
+    ['es', 'Ejecuciones'],
+  ] as const)(
+    'uses the existing localized Runs identity in shell chrome (%s)',
+    async (language, title) => {
+      // The runtime contribution must opt in; Root must not own a separate route-title list.
+      useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+      const mounted = await withTestQueryClient(
+        createRootShellNode(createHealthyPlatformCapability(), ['/runs'], {
+          loadCapabilities: vi
+            .fn()
+            .mockResolvedValue({
+              apiVersion: '1.0.0',
+              minFrontendVersion: '0.0.1',
+              plugins: { monitoring: { available: true } },
+            }),
+        })
+      );
+      try {
+        await waitForHealthyShellChrome(mounted);
+        expect(mounted.container.querySelector('[data-slot="shell-top-bar"] h1')?.textContent).toBe(
+          title
+        );
+        expect(
+          mounted.container
+            .querySelector('[data-slot="left-navigation-link"][href="/runs"]')
+            ?.getAttribute('aria-label')
+        ).toBe(title);
+      } finally {
+        await mounted.cleanup();
+        useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+      }
+    }
+  );
 
   it('preserves owned rail styles, labels and keyboard focus on a global route', async () => {
     const mounted = await withTestQueryClient(

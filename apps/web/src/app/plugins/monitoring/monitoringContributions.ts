@@ -58,6 +58,7 @@ export const monitoringContributions: PluginContributions = {
         icon: Activity,
         order: 20,
         level: 'core',
+        showRouteHeading: true,
       },
     },
     {

@@ -81,38 +81,46 @@ export interface IRunsPort {
   listRunSummaries: () => Promise<RunSummaryItem[]>;
   getRunSnapshot: (runId: string) => Promise<RunSnapshot | null>;
   startRun: (input: StartRunInput) => Promise<RunStartReceipt>;
+  cancelRun: (runId: string) => Promise<CancelRunReceipt>;
+  recoverRun: (runId: string) => Promise<RecoverRunReceipt>;
   listRunEvents: (runId: string, afterSeq?: number) => Promise<RunEventTimelinePage>;
 }
 ```
 
 ### Method Semantics
 
-| Method             | Rail type | Idempotent | Runtime surface           | Description                                                              |
-| ------------------ | --------- | ---------- | ------------------------- | ------------------------------------------------------------------------ |
-| `listRunSummaries` | Query     | Yes        | `GET /runs`               | Returns runs visible to the current tenant/project/environment scope.    |
-| `getRunSnapshot`   | Query     | Yes        | `GET /runs/:runId`        | Returns one run snapshot by ID, or `null` when the API returns HTTP 404. |
-| `startRun`         | Command   | No         | `POST /runs/start`        | Submits a run request; the API owns admission and run identity.          |
-| `listRunEvents`    | Query     | Yes        | `GET /runs/:runId/events` | Returns an ordered page of run events, optionally after a sequence.      |
+| Method             | Rail type | Idempotent      | Runtime surface             | Description                                                                                  |
+| ------------------ | --------- | --------------- | --------------------------- | -------------------------------------------------------------------------------------------- |
+| `listRunSummaries` | Query     | Yes             | `GET /runs`                 | Returns runs visible to the current tenant/project/environment scope.                        |
+| `getRunSnapshot`   | Query     | Yes             | `GET /runs/:runId`          | Returns one run snapshot by ID, or `null` when the API returns HTTP 404.                     |
+| `startRun`         | Command   | No              | `POST /runs/start`          | Submits a run request; the API owns admission and run identity.                              |
+| `cancelRun`        | Command   | Repeat-safe     | `POST /runs/:runId/cancel`  | Requests cancellation through the existing `CancelRun` boundary and returns its disposition. |
+| `recoverRun`       | Command   | By retained key | `POST /runs/:runId/recover` | Reuses the existing `RecoverRun` boundary and adapter-owned recovery idempotency key.        |
+| `listRunEvents`    | Query     | Yes             | `GET /runs/:runId/events`   | Returns an ordered page of run events, optionally after a sequence.                          |
 
 ### DTO Vocabulary
 
-All presentation DTOs are defined locally in
-[ports/runs.ts](../../../../../apps/web/src/app/ports/runs.ts). They are not
-wire contracts and are not re-exported from `@dvt/contracts`.
+Presentation read DTOs are defined locally in
+[ports/runs.ts](../../../../../apps/web/src/app/ports/runs.ts). Command receipts
+and control availability reuse their versioned `@dvt/contracts` definitions;
+the browser does not maintain competing command contracts.
 
-| DTO                    | Purpose                                               |
-| ---------------------- | ----------------------------------------------------- |
-| `StartRunInput`        | Command input: `PlanRef`, `WorkspaceScope`, selection |
-| `RunStartReceipt`      | Command result: server-owned run ID and admission     |
-| `UiRunStatus`          | Presentation-level run status union                   |
-| `RunSummaryItem`       | List item projection with `startedAt` authority       |
-| `RunSnapshot`          | Run lifecycle snapshot and optional evidence fields   |
-| `RunDiagnostics`       | Run trace/log pointer projection                      |
-| `RunEventTimelinePage` | Paginated event feed                                  |
+| DTO                      | Purpose                                                  |
+| ------------------------ | -------------------------------------------------------- |
+| `StartRunInput`          | Command input: `PlanRef`, `WorkspaceScope`, selection    |
+| `RunStartReceipt`        | Command result: server-owned run ID and admission        |
+| `UiRunStatus`            | Presentation-level run status union                      |
+| `RunSummaryItem`         | List item projection with `startedAt` authority          |
+| `RunSnapshot`            | Run lifecycle snapshot and optional evidence fields      |
+| `RunDiagnostics`         | Run trace/log pointer projection                         |
+| `RunEventTimelinePage`   | Paginated event feed                                     |
+| `CancelRunReceipt`       | Existing cancellation disposition contract               |
+| `RecoverRunReceipt`      | Existing recovery acceptance and identity contract       |
+| `RunControlAvailability` | Existing command availability and denial-reason contract |
 
 ## Invariants
 
-1. `IRunsPort` has four public methods. Views, hooks, and facades consume the
+1. `IRunsPort` has six public methods. Views, hooks, and facades consume the
    interface instead of importing adapter implementations directly.
 2. `startRun` sends `planRef`, `workspaceScope`, and `selection`. The web client
    does not send a canonical `runId`; the API returns the run identity.
@@ -951,6 +959,51 @@ Canonical runtime contract baseline docs:
 
 ## Runs Dense Operational Tables Component
 
+### Identity navigation and shared heading ownership
+
+The [#3765 presentation contract](https://github.com/dunay2/dvt/issues/3765#issuecomment-6727179845)
+keeps the existing query, URL-state, row-projection and command owners. The Run ID
+is the semantic Router link to the existing detail route; there is no separate
+View Details callback or navigation column. Real Cancel/Recover controls remain
+siblings of that identity link and continue to use `useRunControlCommands`.
+Status and optional substatus occupy the final, right-aligned column. Sort state
+is exposed through `aria-sort`; text and status filters remain URL-owned.
+
+The general shell rule applies before this specific route. A route contribution
+may opt into `ShellNavigationPlacement.showRouteHeading`. The existing navigation
+projection derives the heading from its localized label and icon. Root supplies
+that same resolved heading to the top bar and the read-only `ShellRouteHeading`
+presentation context. `WorkbenchStateFrame` omits only an identical localized
+title. Standalone and Canvas-embedded surfaces retain their own heading, as does
+a different Run-detail title. This adds no title store, second capability query,
+route-name switch or change to the user's persisted Focus mode.
+
+```mermaid
+flowchart LR
+  Contribution[Existing monitoring contribution] --> Navigation[Localized shell navigation model]
+  Navigation --> Heading[Root resolved heading]
+  Heading --> TopBar[Existing top bar]
+  Heading --> Context[Read-only presentation context]
+  Context --> Frame[Generic state frame]
+  Frame --> Match[Suppress only an identical title]
+  Model[Existing Runs row and URL model] --> Table[Full-width dense table]
+  Table --> Link[Semantic Run ID link]
+  Link --> Detail[Existing detail route and GetRunSnapshot]
+  Commands[Existing Cancel and Recover owner] --> Table
+```
+
+The table's CSS Module consumes the shared IBM Plex Sans/Mono, body/meta/mono,
+surface, text, spacing and focus roles. Narrow screens scroll the table inside
+its own container without widening the page or hiding the shell navigation.
+Identifiers retain their full accessible text. The table does not own runtime
+reads, filtering/sorting semantics or command admission. The governing rails
+remain `listRunSummaries`, `GetRunSnapshot` and `ListShellNavigationItems`.
+
+Negative coverage includes EN/ES headings, no opt-in/provider, embedded content,
+different detail titles, retained body identity, malformed URL filters,
+deterministic sorting, keyboard links, existing command controls and responsive
+containment. Port, query and snapshot/timeline authority remain unchanged.
+
 This local component owns table-oriented presentation semantics for Runs and
 run event chronology. It does not own runtime authority, event fetching, run
 start admission, or shell console streaming.
@@ -1048,7 +1101,8 @@ can scan many executions without opening each run.
 
 Acceptance:
 
-- Rows show run ID, status, started time, environment, git SHA, and action.
+- Rows show linked run ID, started time, duration, environment, git SHA, and final status.
+- Actual runtime command controls remain beside identity; navigation has no separate action column.
 - Unknown optional fields do not render as authoritative values.
 - Row identity uses `RunSummaryItem.runId`.
 
@@ -1088,13 +1142,13 @@ Acceptance:
 
 #### US-F16-05: Open Run From Row
 
-**As** an operator, **I want** a row action to open a run workspace, **so that**
+**As** an operator, **I want** the Run ID link to open a run workspace, **so that**
 I can move from list scanning to detail inspection.
 
 Acceptance:
 
-- The action navigates to `/runs/:runId`.
-- Keyboard and button activation work independently of row hover.
+- The semantic Run ID link navigates to the existing `/runs/:runId` route.
+- Keyboard and modified/new-tab activation use normal link semantics independently of row hover.
 
 #### US-F16-06: Dense Timeline Events
 

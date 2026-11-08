@@ -80,6 +80,8 @@ export type ShellNavigationPlacement = Readonly<{
   icon: LucideIcon;
   order: number;
   level: 'core' | 'extended' | 'admin';
+  /** Present this already-localized navigation identity in the shared shell heading. */
+  showRouteHeading?: boolean;
 }>;
 
 export interface ViewContribution {

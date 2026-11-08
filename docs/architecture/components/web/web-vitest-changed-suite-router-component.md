@@ -178,6 +178,35 @@ flowchart LR
 
 ## Browser Evidence Boundary — GH-3540
 
+### Native keyboard support admission — GH-3765
+
+The shared `cypress/support/nativeKeyboard.ts` adapter belongs to the controlled
+runtime. Its five current import consumers are the Model output toggle, shell
+layout, route workbench slots, Canvas screen composition and Runs runtime specs; all five have
+exact controlled ownership in the existing browser catalog. They exercise real
+Chromium keyboard default actions with controlled application API responses.
+Native input alone does not make a consumer an available-provider proof.
+
+```mermaid
+flowchart LR
+  Path[Exact nativeKeyboard support change] --> Policy[Existing support capability map]
+  Closure[Real five-consumer import closure] --> Guard[Existing browser routing guard]
+  Policy --> Plan[Complete controlled browser baseline]
+  Guard --> Plan
+  Plan --> Runner[Existing native command and strict result validation]
+  Unknown[Unknown browser path, alone or mixed] --> Reject[Reject before execution]
+```
+
+`SUPPORT_CAPABILITIES` registers this exact helper as `['controlled']`. A shared
+helper change selects the complete current controlled inventory, preserving the
+existing baseline rather than narrowing execution to the five consumers.
+The existing architecture guard checks their real transitive import closure and
+runtime ownership, the resulting plan and rejection of an unregistered adjacent
+helper even when mixed with this admitted path. Reuse
+`RouteChangedWebVitestSuites` and `RunWebCypressNative`; no wildcard admission,
+catalog parser change, new runtime, nightly reclassification or unknown-path
+fallback is permitted.
+
 ### Large-graph browser cadence — GH-3604
 
 Issue #3604 admits a bounded cadence change under design

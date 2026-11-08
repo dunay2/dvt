@@ -1,7 +1,9 @@
 /** Owned concern: prove route workbench slots render correctly in browser UX flows. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
+  getE2eApiCalls,
   getLastE2eApiCall,
+  installE2eApiFetchStub,
   stubE2eApi,
   stubE2eJsonApi,
   waitForE2eApiCall,
@@ -9,6 +11,7 @@ import {
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   E2E_PROJECT_WORKSPACE,
+  type ShellBootstrapApiOptions,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -28,16 +31,20 @@ const WORKSPACE_FILE_TREE = [
   },
 ];
 
-function stubRouteWorkbenchBootstrapApis(): void {
-  stubShellBootstrapApis();
-  stubE2eJsonApi('GET', '/capabilities', {
-    apiVersion: '1.0.0',
-    minFrontendVersion: '1.0.0',
-    plugins: {
-      dbt: { available: true },
-      dvt: { available: true },
-      monitoring: { available: true },
-      cost: { available: true },
+function stubRouteWorkbenchBootstrapApis(options: ShellBootstrapApiOptions = {}): void {
+  stubShellBootstrapApis({
+    ...options,
+    capabilities: options.capabilities ?? {
+      body: {
+        apiVersion: '1.0.0',
+        minFrontendVersion: '1.0.0',
+        plugins: {
+          dbt: { available: true },
+          dvt: { available: true },
+          monitoring: { available: true },
+          cost: { available: true },
+        },
+      },
     },
   });
   stubE2eJsonApi('GET', '/workspace/context', {
@@ -133,7 +140,10 @@ describe('Route workbench semantic slots', () => {
     cy.get('[data-slot="left-navigation-section-trigger"][data-route="/admin"]').click();
     cy.get('[data-slot="shell-route-section-link"][data-section="roles"]').click();
     cy.location('search').should('contain', 'tab=roles');
-    cy.get('[data-slot="route-workbench-primary-surface"]').contains('Roles').should('be.visible');
+    cy.get('[data-slot="route-workbench-primary-surface"] [data-slot="admin-section"]')
+      .should('have.attr', 'data-section', 'roles')
+      .and('have.attr', 'aria-label', 'Roles')
+      .and('be.visible');
   });
 
   it('keeps the contextual Code explorer left and read-only file viewer primary', () => {
@@ -186,20 +196,25 @@ describe('Admin operational observations', () => {
   it('shows observed readiness, optional version absence and exact plugin reasons', () => {
     // Missing probes previously appeared amber while the summary called them healthy.
     const optionalDisabled = Cypress.env('PLATFORM_HEALTH_EXPECT_OPTIONAL_DISABLED') === true;
-    stubRouteWorkbenchBootstrapApis();
-    stubE2eJsonApi('GET', '/capabilities', {
-      apiVersion: '1.0.0',
-      minFrontendVersion: '1.0.0',
-      plugins: {
-        dbt: { available: true },
-        dvt: { available: true },
-        monitoring: { available: true },
-        cost: { available: false, reason: 'Disabled by the operator policy.' },
+    stubRouteWorkbenchBootstrapApis({
+      capabilities: {
+        body: {
+          apiVersion: '1.0.0',
+          minFrontendVersion: '1.0.0',
+          plugins: {
+            dbt: { available: true },
+            dvt: { available: true },
+            monitoring: { available: true },
+            cost: { available: false, reason: 'Disabled by the operator policy.' },
+          },
+        },
+      },
+      health: {
+        readyz: { body: { ok: true, status: 'ready' } },
+        dbReady: { body: { ok: true } },
+        version: { body: { error: 'not exposed' }, statusCode: 404 },
       },
     });
-    stubE2eJsonApi('GET', '/readyz', { ok: true, status: 'ready' });
-    stubE2eJsonApi('GET', '/db/ready', { ok: true });
-    stubE2eJsonApi('GET', '/version', { error: 'not exposed' }, { statusCode: 404 });
     visitWithE2eWorkspaceSession('/admin');
     const readyz = '[data-slot="admin-health-summary"][data-probe="readyz"]';
     const version = '[data-slot="admin-health-summary"][data-probe="version"]';
@@ -236,20 +251,16 @@ describe('Admin operational observations', () => {
   it('keeps access denial and backend not-ready reasons distinct from optional absence', () => {
     // Available transport with an HTTP failure must never produce a successful version badge.
     const optionalDisabled = Cypress.env('PLATFORM_HEALTH_EXPECT_OPTIONAL_DISABLED') === true;
-    stubRouteWorkbenchBootstrapApis();
-    stubE2eJsonApi('GET', '/readyz', { error: 'forbidden' }, { statusCode: 403 });
-    stubE2eJsonApi(
-      'GET',
-      '/db/ready',
-      { ok: false, reason: 'Database diagnostics unavailable.' },
-      { statusCode: 503 }
-    );
-    stubE2eJsonApi(
-      'GET',
-      '/version',
-      { name: 'dvt-api', version: 'untrusted-error-version' },
-      { statusCode: 500 }
-    );
+    stubRouteWorkbenchBootstrapApis({
+      health: {
+        readyz: { body: { error: 'forbidden' }, statusCode: 403 },
+        dbReady: {
+          body: { ok: false, reason: 'Database diagnostics unavailable.' },
+          statusCode: 503,
+        },
+        version: { body: { name: 'dvt-api', version: 'untrusted-error-version' }, statusCode: 500 },
+      },
+    });
     visitWithE2eWorkspaceSession('/admin');
     cy.get('[data-slot="admin-health-summary"][data-probe="readyz"]')
       .should('contain.text', optionalDisabled ? 'Not requested' : 'Access denied')
@@ -315,8 +326,20 @@ describe('Admin shell sections', () => {
     cy.get('@adminTrigger').should('be.visible');
     cy.go('back');
     cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'permissions');
+    let sessionReads = 0;
+    let draftWrites = 0;
+    cy.then(() => {
+      sessionReads = getE2eApiCalls('/session', 'GET').length;
+      draftWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    // A new Window needs the same controlled transport; the application still performs admission.
+    cy.on('window:before:load', installE2eApiFetchStub);
     cy.reload();
     cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'permissions');
+    cy.then(() => {
+      expect(getE2eApiCalls('/session', 'GET').length).to.be.greaterThan(sessionReads);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(draftWrites);
+    });
     cy.viewport(640, 768);
     cy.get(trigger).should('be.visible').click();
     cy.get('[data-slot="shell-route-section-link"][data-section="platform"]').click();

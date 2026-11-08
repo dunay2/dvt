@@ -34,6 +34,13 @@ describe('monitoringContributions', () => {
   it('declares route, command palette, diagnostics, overlay, and badge contributions', () => {
     expect(monitoringContributions.id).toBe('monitoring');
     expect(monitoringContributions.views?.map((view) => view.id)).toContain('monitoring.runs');
+    expect(
+      monitoringContributions.views?.find((view) => view.id === 'monitoring.runs')?.placement
+        ?.showRouteHeading
+    ).toBe(true);
+    expect(
+      monitoringContributions.views?.find((view) => view.id === 'monitoring.run-detail')?.placement
+    ).toBeUndefined();
     expect(monitoringContributions.commandPaletteContributions?.map((item) => item.id)).toContain(
       'monitoring.open-runs'
     );
