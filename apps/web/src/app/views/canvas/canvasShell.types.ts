@@ -73,7 +73,8 @@ export type CanvasShellContextualWorkbench = Readonly<{
   moveLabel?: string;
   description?: string;
   panel: React.ReactNode;
-  requestClose: () => Promise<boolean>;
+  /** Check the caller's navigation intent after flushing and before closing the editor. */
+  requestClose: (isCurrent?: () => boolean) => Promise<boolean>;
 }>;
 
 export type CanvasShellPanels = {

@@ -27,6 +27,7 @@ import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/shar
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { createRunPublicationSnapshot } from '../runs/test/runPublicationFixture';
 import styles from './CanvasShell.module.css';
+import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -44,6 +45,172 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
+  });
+
+  it('closes Code through its flush guard and keeps the Code entry available to reopen', async () => {
+    const frames: FrameRequestCallback[] = [];
+    const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    try {
+      const props = await renderShell();
+      const code = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-code-main-tab"]'
+      )!;
+      expect(navigation.querySelector('[data-slot="canvas-code-tab-close"]')).toBeNull();
+      await act(async () => code.focus());
+      await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+      const close = within(navigation).getByRole('button', { name: 'Close: Code' });
+      expect(close.getAttribute('data-slot')).toBe('canvas-code-tab-close');
+      expect(close.closest('[role="tab"]')).toBeNull();
+      expect(close.getAttribute('tabindex')).toBe('-1');
+      expect(code.getAttribute('aria-keyshortcuts')).toBe('Delete');
+      await act(async () => fireEvent.click(close));
+      await act(async () => frames.splice(0).forEach((callback) => callback(0)));
+      expect(getCanvasShellState().codeFlush).toHaveBeenCalledOnce();
+      expect(document.activeElement).toBe(
+        navigation.querySelector('[data-slot="canvas-workspace-tab"]')
+      );
+      expect(code.getAttribute('aria-selected')).toBe('false');
+      expect(
+        container.querySelector('[data-testid="canvas-viewport"]')?.closest('[inert]')
+      ).toBeNull();
+      expect(navigation.querySelector('[data-slot="canvas-code-tab-close"]')).toBeNull();
+      expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBe(code);
+      await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+      expect(code.getAttribute('aria-selected')).toBe('true');
+      expect(container.querySelectorAll('[data-testid="sql-context-workbench"]')).toHaveLength(1);
+      expect(props.chromeCommands.onPreviewExecutionPlan).not.toHaveBeenCalled();
+      expect(props.panels.inspectorAuthoring?.onApplyNodeDraft).not.toHaveBeenCalled();
+    } finally {
+      schedule.mockRestore();
+    }
+  });
+
+  it.each(['rejected', 'failed'] as const)('retains Code when its flush is %s', async (outcome) => {
+    await renderShell();
+    const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
+    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    const flush = getCanvasShellState().codeFlush;
+    if (outcome === 'rejected') flush.mockResolvedValue(false);
+    else flush.mockRejectedValue(new Error('File flush failed'));
+    await act(async () =>
+      fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
+    );
+    expect(flush).toHaveBeenCalledOnce();
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(editor?.closest('[inert]')).toBeNull();
+  });
+
+  it('keeps pending Code open and rejects a stale close after a newer Code activation', async () => {
+    await renderShell();
+    const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
+    const canvas = navigation.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-workspace-tab"]'
+    )!;
+    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    let settle!: (accepted: boolean) => void;
+    getCanvasShellState().codeFlush.mockImplementation(
+      () =>
+        new Promise<boolean>((resolve) => {
+          settle = resolve;
+        })
+    );
+    await act(async () =>
+      fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
+    );
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    expect(editor?.closest('[inert]')).toBeNull();
+    await act(async () => fireEvent.mouseDown(canvas, { button: 0 }));
+    expect(canvas.getAttribute('aria-selected')).toBe('true');
+    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+    await act(async () => settle(true));
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(editor?.closest('[inert]')).toBeNull();
+  });
+
+  it.each([false, true])(
+    'delegates Code close to its external owner (accepted: %s)',
+    async (accepted) => {
+      const requestClose = vi.fn(async () => accepted);
+      await renderShell({
+        workspaceCommands: { onOpenProjectCode: async () => true },
+        layout: {
+          contextualWorkbench: {
+            id: 'project-code',
+            title: 'Files',
+            closeLabel: 'Close',
+            panel: <div data-testid="authority-owned-code" />,
+            requestClose,
+          },
+        },
+      });
+      const code = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-code-main-tab"]'
+      )!;
+      await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+      await act(async () =>
+        fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
+      );
+      expect(requestClose).toHaveBeenCalledOnce();
+      expect(getCanvasShellState().codeFlush).not.toHaveBeenCalled();
+      expect(code.getAttribute('aria-selected')).toBe(String(!accepted));
+      expect(
+        container.querySelector('[data-testid="authority-owned-code"]')?.closest('[inert]') != null
+      ).toBe(accepted);
+    }
+  );
+
+  it('prevents the actual dbt owner from committing an obsolete close after Code is reopened', async () => {
+    const onClose = vi.fn();
+    const workbench = buildDbtProjectFileCodeWorkbench({
+      copy: canvasViewCopy,
+      workbenchRef: { current: null },
+      onClose,
+      reconcilePersistedFile: vi.fn(async () => ({
+        kind: 'fresh' as const,
+        analysisSha256: 'a'.repeat(64),
+        projectContentSetSha256: 'b'.repeat(64),
+      })),
+      projectRoot: 'analytics',
+      open: true,
+    });
+    await renderShell({
+      workspaceCommands: { onOpenProjectCode: async () => true },
+      layout: { contextualWorkbench: workbench },
+    });
+    const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
+    const canvas = navigation.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-workspace-tab"]'
+    )!;
+    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    expect(editor?.getAttribute('data-file-scope')).toBe('dbt-project-files');
+    let settle!: (accepted: boolean) => void;
+    getCanvasShellState().codeFlush.mockImplementation(
+      () =>
+        new Promise<boolean>((resolve) => {
+          settle = resolve;
+        })
+    );
+    await act(async () =>
+      fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
+    );
+    expect(getCanvasShellState().codeFlush).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    await act(async () => fireEvent.mouseDown(canvas, { button: 0 }));
+    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+    await act(async () => settle(true));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(editor?.closest('[inert]')).toBeNull();
   });
 
   it('enters one retained project Code workspace from Git and the File menu', async () => {

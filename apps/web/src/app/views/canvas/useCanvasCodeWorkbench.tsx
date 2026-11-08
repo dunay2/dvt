@@ -66,10 +66,11 @@ export function useCanvasCodeWorkbench(
             closeLabel: copy.nodeWorkbenchCloseLabel,
             moveLabel: copy.sqlContextWorkbenchMoveLabel,
             description: copy.sqlContextWorkbenchProjectDescription,
-            requestClose: async () => {
+            requestClose: async (isCurrent) => {
               const flushed = (await editorRef.current?.flush()) ?? true;
-              if (flushed) close();
-              return flushed;
+              if (!flushed || isCurrent?.() === false) return false;
+              close();
+              return true;
             },
             panel: (
               <SqlContextWorkbench
@@ -99,14 +100,24 @@ export function useCanvasCodeWorkbench(
             ...layout,
             contextualWorkbench: {
               ...selected,
-              requestClose: async () => {
-                const closed = await selected.requestClose();
-                if (closed) restore();
-                return closed;
+              requestClose: async (isCurrent?: () => boolean) => {
+                const intent = ++activationIntent.current;
+                const canClose = (): boolean =>
+                  intent === activationIntent.current && isCurrent?.() !== false;
+                try {
+                  const closed = await selected.requestClose(canClose);
+                  if (!closed || !canClose()) return false;
+                  setActiveOwnerKey(null);
+                  if (selected.id === 'project-code') enter(`#${canvasWorkspaceTabs.canvas.tabId}`);
+                  else restore();
+                  return true;
+                } catch {
+                  return false;
+                }
               },
             },
           },
-    [layout, selected, restore]
+    [layout, selected, enter, restore]
   );
   const openProjectCode = useCallback(
     async (path?: string): Promise<boolean> => {

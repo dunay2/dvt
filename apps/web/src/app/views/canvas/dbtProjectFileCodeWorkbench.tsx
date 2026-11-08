@@ -50,12 +50,11 @@ export function buildDbtProjectFileCodeWorkbench({
     moveLabel: copy.sqlContextWorkbenchMoveLabel,
     title: copy.sqlContextWorkbenchProjectTitle,
     description: projectRoot,
-    requestClose: async () => {
+    requestClose: async (isCurrent) => {
       const flushed = (await workbenchRef.current?.flush()) ?? true;
-      if (flushed) {
-        onClose();
-      }
-      return flushed;
+      if (!flushed || isCurrent?.() === false) return false;
+      onClose();
+      return true;
     },
     panel: (
       <SqlContextWorkbench

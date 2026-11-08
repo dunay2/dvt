@@ -11,6 +11,42 @@ const copy = {
 };
 
 describe('buildDbtProjectFileCodeWorkbench', () => {
+  it.each([false, true])(
+    'checks close ownership after the pending flush (current: %s)',
+    async (currentAfterFlush) => {
+      let settle!: (accepted: boolean) => void;
+      const flush = vi.fn(
+        () =>
+          new Promise<boolean>((resolve) => {
+            settle = resolve;
+          })
+      );
+      const onClose = vi.fn();
+      const workbench = buildDbtProjectFileCodeWorkbench({
+        copy,
+        workbenchRef: { current: { flush } },
+        onClose,
+        reconcilePersistedFile: vi.fn(async () => ({
+          kind: 'fresh' as const,
+          analysisSha256: 'a'.repeat(64),
+          projectContentSetSha256: 'b'.repeat(64),
+        })),
+        projectRoot: 'analytics',
+        open: true,
+      })!;
+      let current = true;
+      const isCurrent = vi.fn(() => current);
+      const closing = workbench.requestClose(isCurrent);
+      expect(flush).toHaveBeenCalledOnce();
+      expect(onClose).not.toHaveBeenCalled();
+      current = currentAfterFlush;
+      settle(true);
+      await expect(closing).resolves.toBe(currentAfterFlush);
+      expect(isCurrent).toHaveBeenCalled();
+      expect(onClose).toHaveBeenCalledTimes(currentAfterFlush ? 1 : 0);
+    }
+  );
+
   it.each([undefined, 'analytics/models/marts/orders.sql'])(
     'opens the actual project root with the requested path %s',
     (initialPath) => {

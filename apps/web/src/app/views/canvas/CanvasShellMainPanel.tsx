@@ -41,7 +41,12 @@ type CanvasShellMainPanelProps = Readonly<{
   contextMenuPresenter: CanvasContextMenuPresenter;
   workspaceTask?: ReactNode;
   projectFiles?: CanvasExplorerProjectWorkspace &
-    Readonly<{ tree: ReactNode; panel?: ReactNode; active: boolean }>;
+    Readonly<{
+      tree: ReactNode;
+      panel?: ReactNode;
+      active: boolean;
+      onClose?: () => Promise<boolean>;
+    }>;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
@@ -90,6 +95,12 @@ function CanvasShellMenuContributionRegistrars({
                 void projectFiles.onActivate();
               },
               onCanvas: projectFiles.onCanvas,
+              onClose:
+                projectFiles.onClose == null
+                  ? undefined
+                  : () => {
+                      void projectFiles.onClose?.();
+                    },
             }
       }
     />

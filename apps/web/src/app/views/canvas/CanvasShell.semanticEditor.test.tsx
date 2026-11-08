@@ -15,6 +15,31 @@ import {
 
 describe('Canvas Model inspection', () => {
   setupSemanticEditorShell();
+  it('closes only Code while preserving the retained Model without preview or Apply', async () => {
+    const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
+    await act(async () => data.onOpenNode?.(fixture.transform.id));
+    const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
+    const model = navigation.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-model-main-tab"]'
+    )!;
+    const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
+    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    await act(async () =>
+      fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
+    );
+    expect(
+      navigation.querySelector('[data-slot="canvas-workspace-tab"]')?.getAttribute('aria-selected')
+    ).toBe('true');
+    expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).toBe(model);
+    expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
+    expect(editor?.closest('[inert]')).not.toBeNull();
+    await act(async () => fireEvent.mouseDown(model, { button: 0 }));
+    expect(model.getAttribute('aria-selected')).toBe('true');
+    expect(editor?.closest('[inert]')).toBeNull();
+    expect(previewTransformRows).not.toHaveBeenCalled();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
   it.each([false, true])('hands off entry focus unless the user moved it (%s)', async (moved) => {
     const { data, fixture } = await mountModel();
     const frames: FrameRequestCallback[] = [];
@@ -102,11 +127,12 @@ describe('Canvas Model inspection', () => {
       )!;
       let codePanel: HTMLElement | undefined;
       let codeEditor: Element | null | undefined;
-      expect(
-        model
-          .closest('[role="tablist"]')
-          ?.contains(navigation.querySelector('[data-slot="canvas-model-tab-close"]'))
-      ).toBe(false);
+      const modelClose = navigation.querySelector('[data-slot="canvas-model-tab-close"]');
+      expect(modelClose?.tagName).toBe('BUTTON');
+      expect(modelClose?.closest('[role="tab"]')).toBeNull();
+      expect(modelClose?.getAttribute('tabindex')).toBe('-1');
+      expect(model.getAttribute('aria-keyshortcuts')).toBe('Delete');
+      expect(model.contains(modelClose)).toBe(false);
       expect(
         modelPanel.contains(harness.container.querySelector('[data-slot="canvas-model-editor"]'))
       ).toBe(true);

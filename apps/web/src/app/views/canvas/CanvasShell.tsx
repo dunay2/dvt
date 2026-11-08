@@ -227,6 +227,7 @@ export default function CanvasShell({
                 active: code.active,
                 onActivate: openProjectCode,
                 onCanvas: code.showCanvas,
+                onClose: code.active ? code.layout.contextualWorkbench?.requestClose : undefined,
                 renderElements: (input) => (
                   <CanvasProjectElementsExplorer
                     {...input}

@@ -19,6 +19,7 @@ export type CanvasWorkspaceMenuContribution = Readonly<{
     active: boolean;
     onSelect: () => void;
     onCanvas: () => void;
+    onClose?: () => void;
   }>;
 }>;
 
