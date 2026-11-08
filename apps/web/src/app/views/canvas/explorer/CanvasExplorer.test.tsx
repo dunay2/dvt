@@ -89,13 +89,17 @@ describe('Canvas explorer', () => {
         Number(panel.getAttribute('data-panel-size'))
       );
     expect(sizes()).toEqual([32, 32]);
-    act(() => fireEvent.click(screen.getAllByRole('button', { name: 'Collapse explorer' })[0]!));
+    act(() => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Collapse explorer' })[0]!);
+    });
     expect(
       screen
         .getAllByRole('button', { name: 'Elements' })
         .map((button) => button.getAttribute('aria-expanded'))
     ).toEqual(['false', 'false']);
-    act(() => fireEvent.click(screen.getAllByRole('button', { name: 'Elements' })[1]!));
+    act(() => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Elements' })[1]!);
+    });
     expect(sizes()).toEqual([32, 32]);
     expect(screen.getByLabelText('Canvas graph')).toBe(graphs[0]);
     expect(screen.getByLabelText('Model graph')).toBe(graphs[1]);
@@ -112,7 +116,9 @@ describe('Canvas explorer', () => {
     );
     useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 32 } });
     render(view('canvas'));
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Collapse explorer' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse explorer' }));
+    });
     await act(async () => {
       await useUiLayoutStore.persist.rehydrate();
     });
@@ -120,7 +126,9 @@ describe('Canvas explorer', () => {
     expect(screen.getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')).toBe(
       'false'
     );
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
     expect(
       Number(container.querySelector('[data-panel-id$="-dock"]')?.getAttribute('data-panel-size'))
     ).toBe(32);
