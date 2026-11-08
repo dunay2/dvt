@@ -8,6 +8,17 @@ const CANVAS_INTERACTION_STORAGE_KEY = 'dvt-web-canvas-interaction';
 const WORKSPACE_KEY = 'tenant-a::project-a::dev';
 
 describe('useCanvasInteractionStore', () => {
+  it('retains an explicit empty layout once so legacy positions cannot return', () => {
+    const command = useCanvasInteractionStore.getState().setCanvasNodePositions;
+    command(WORKSPACE_KEY, {});
+    expect(
+      useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]?.nodePositions
+    ).toEqual({});
+    const first = useCanvasInteractionStore.getState();
+    command(WORKSPACE_KEY, {});
+    expect(useCanvasInteractionStore.getState()).toBe(first);
+  });
+
   it('persists independent references atomically and retains them through every layout command', async () => {
     localStorage.clear();
     useCanvasInteractionStore.setState({ canvasLayouts: {} });

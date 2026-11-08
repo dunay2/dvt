@@ -62,7 +62,6 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onConnect?: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect?: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
-  onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onDrop: DragEventHandler<HTMLDivElement>;
   onDragOver: DragEventHandler<HTMLDivElement>;
@@ -125,7 +124,6 @@ function CanvasViewportReactFlowSurface({
   onConnect,
   onReconnect,
   onViewportChange,
-  onNodeDrag,
   onNodeDragStop,
   onDrop,
   onDragOver,
@@ -152,13 +150,12 @@ function CanvasViewportReactFlowSurface({
     contextMenuPresenter.handlePaneClick(event);
   };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
-    event,
+    _event,
     node,
     nodes
   ) => {
     contextMenuPresenter.closeContextMenu();
     onCloseNodeHealthPopover();
-    onNodeDrag(event, node, nodes);
     algebraicDrop.handleNodeDrag(node, nodes);
   };
   const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (

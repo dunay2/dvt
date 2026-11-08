@@ -1,5 +1,5 @@
 /** Owned concern: render the React Flow node shell around a precomputed Canvas node body. */
-import { type DragEventHandler, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import type { DragEventHandler, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
@@ -14,10 +14,8 @@ import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
-import {
-  isCanvasElement,
-  isCanvasNodeEmbeddedControlTarget,
-} from './canvasNodeInteractionBoundary';
+import { isCanvasElement } from './canvasNodeInteractionBoundary';
+import { useCanvasNodeActivation } from './useCanvasNodeActivation';
 import styles from './CanvasNodeShell.module.css';
 
 type CanvasNodeShellProps = Readonly<{
@@ -55,23 +53,14 @@ export function CanvasNodeShell({
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
-  const handleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    if (isCanvasNodeEmbeddedControlTarget(event.target)) {
-      return;
-    }
-
-    onSelectNode?.();
-  };
-
-  const handleDoubleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    if (isCanvasNodeEmbeddedControlTarget(event.target)) {
-      return;
-    }
-
-    onOpenNode?.();
-  };
+  const { activation, onClick, onDoubleClick, cancelPendingClick } = useCanvasNodeActivation(
+    contextMenuModel.target.nodeId,
+    onSelectNode,
+    onOpenNode
+  );
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
+    cancelPendingClick();
     if (
       !isCanvasElement(event.target) ||
       event.target.closest('[data-canvas-context-menu-owner="column"]') == null
@@ -86,13 +75,14 @@ export function CanvasNodeShell({
       <ContextMenuTrigger asChild>
         <div
           data-slot="canvas-node-shell"
-          tabIndex={onOpenNode == null ? undefined : 0}
+          data-canvas-node-activation={activation}
+          tabIndex={activation == null ? undefined : 0}
           role="group"
           aria-label={contextMenuModel.target.nodeName}
-          aria-keyshortcuts={onOpenNode == null ? undefined : 'Enter'}
+          aria-keyshortcuts={activation == null ? undefined : 'Enter'}
           className={cn(styles.root, 'relative group/canvas-node')}
-          onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
+          onClick={onClick}
+          onDoubleClick={onDoubleClick}
           onContextMenu={handleContextMenu}
           onDragOver={onDragOver}
           onDrop={onDrop}

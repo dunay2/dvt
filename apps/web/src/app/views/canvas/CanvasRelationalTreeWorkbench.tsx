@@ -6,7 +6,7 @@
  * @version 1.1.0
  */
 import { forwardRef, useEffect, useState } from 'react';
-import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import { CanvasModelLayoutSession } from './CanvasModelLayoutSession';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import type { CanvasRelationalTreeWorkbenchProps } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessionActions';
@@ -29,18 +29,22 @@ export type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalT
 export const CanvasRelationalTreeWorkbench = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
   CanvasRelationalTreeWorkbenchProps
->(function CanvasRelationalTreeWorkbench(
-  { transformNode, nodes, edges, copy, authoring, actionsHost, preview },
-  ref
-) {
+>(function CanvasRelationalTreeWorkbench(props, ref) {
+  return (
+    <CanvasRelationalTreeWorkbenchSession
+      key={props.layoutKey ?? props.transformNode.id}
+      {...props}
+      ref={ref}
+    />
+  );
+});
+const CanvasRelationalTreeWorkbenchSession = forwardRef<
+  CanvasRelationalTreeWorkbenchHandle,
+  CanvasRelationalTreeWorkbenchProps
+>(function CanvasRelationalTreeWorkbenchSession(props, ref) {
+  const { transformNode, nodes, edges, copy, authoring, actionsHost, preview, layoutKey } = props;
   const focus = useCanvasWorkbenchFocusRecovery();
-  const model = useCanvasRelationalTreeWorkbenchModel({
-    transformNode,
-    nodes,
-    edges,
-    copy,
-    authoring,
-  });
+  const model = useCanvasRelationalTreeWorkbenchModel(props);
   const [pendingCondition, setPendingCondition] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const modelOutput = useCanvasModelOutputInspectorState();
@@ -89,7 +93,8 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       canEditModel={model.authoringAvailable}
       unapplied={pending || model.session.hasOutputChanges}
     >
-      <RelationalLayoutSession
+      <CanvasModelLayoutSession
+        layoutKey={layoutKey}
         initialPositions={model.session.positions}
         onPositionsChange={model.session.setPositions}
       >
@@ -127,7 +132,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             </CanvasCardRemovalContext.Provider>
           </CanvasRelationalExplorer>
         </div>
-      </RelationalLayoutSession>
+      </CanvasModelLayoutSession>
     </CanvasOperationPreviewProvider>
   );
 });

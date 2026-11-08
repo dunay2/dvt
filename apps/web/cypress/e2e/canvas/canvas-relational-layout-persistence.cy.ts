@@ -3,11 +3,12 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { getE2eApiCalls, installE2eApiFetchStub } from '../../support/e2eApiStub';
 import { verifyCompleteTreeFit } from '../../support/relationalWorkbench/geometry';
 import {
   connectWorkbenchProducer,
   openWorkbenchModel,
+  revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
@@ -19,6 +20,56 @@ import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationa
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Completed relational layout persistence', () => {
+  it('restores moved sources, JOIN and output after close and reload without Apply', () => {
+    stubWorkbenchScenario('saved-join');
+    cy.viewport(1200, 680);
+    visitWorkbenchCanvas();
+    openWorkbenchModel();
+    const selectors = [
+      '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
+      '[data-slot="canvas-relational-tree-node"][data-operator="join"]',
+      '[data-slot="canvas-relational-tree-output"]',
+    ];
+    const placed = new Map<string, { x: number; y: number }>();
+    for (const selector of selectors) {
+      verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+      moveWorkbenchCard(selector, 35, 40);
+      cy.get(selector)
+        .first()
+        .then(($card) => {
+          const host = $card[0]!.closest<HTMLElement>('[data-relational-card-id]')!;
+          const position = host.style.left === '' ? host.parentElement! : host;
+          placed.set(host.dataset.relationalCardId!, {
+            x: parseFloat(position.style.left),
+            y: parseFloat(position.style.top),
+          });
+        });
+    }
+    const assertRetained = (): void => {
+      cy.then(() => {
+        expect(placed.size).to.equal(3);
+        for (const [id, position] of placed) {
+          cy.get(`[data-relational-card-id="${id}"]`).should(($card) => {
+            const host = $card[0]!.style.left === '' ? $card[0]!.parentElement! : $card[0]!;
+            expect(parseFloat(host.style.left)).to.be.closeTo(position.x, 0.001);
+            expect(parseFloat(host.style.top)).to.be.closeTo(position.y, 0.001);
+          });
+        }
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+        expect(getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/)).to.have.length(0);
+      });
+    };
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    openWorkbenchModel();
+    assertRetained();
+    cy.on('window:before:load', installE2eApiFetchStub);
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
+    openWorkbenchModel();
+    assertRetained();
+  });
+
   for (const signed of [false, true]) {
     it(`keeps ${signed ? 'signed' : 'nonnegative'} moved cards through Apply, reload and a later canonical root insertion`, () => {
       stubWorkbenchScenario('saved-join');

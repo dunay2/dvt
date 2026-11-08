@@ -699,7 +699,8 @@ describe('DBT project Git browsing with real file authority', () => {
         expect($viewport[0]).to.equal(viewport);
         expect($viewport.attr('style')).to.equal(transform);
       });
-    cy.get(target).find('[data-slot="graph-node-card-title"]').dblclick();
+    cy.get(target).find('[data-slot="graph-node-card-title"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible').click();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-panel"] [data-slot="workspace-file-code-editor"]')
       .should('be.visible')

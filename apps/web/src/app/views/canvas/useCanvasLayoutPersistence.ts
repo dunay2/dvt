@@ -2,10 +2,10 @@
 
 import type { Node, ReactFlowProps } from '@xyflow/react';
 import { useCallback, useEffect, useRef } from 'react';
+import { areCanvasPositionsEqual, type CanvasPosition } from '../../types/canvasPositions';
 
 type CanvasViewport = { x: number; y: number; zoom: number };
-type CanvasNodePosition = { x: number; y: number };
-type CanvasNodePositions = Record<string, CanvasNodePosition>;
+type CanvasNodePositions = Record<string, CanvasPosition>;
 type SaveCanvasNodePositions = (positions: CanvasNodePositions) => void;
 
 function areViewportsEqual(left: CanvasViewport | null, right: CanvasViewport | null): boolean {
@@ -55,26 +55,13 @@ function hasActiveDragFrame(nodes: readonly Node[]): boolean {
   return nodes.some((node) => node.dragging === true);
 }
 
-function areNodePositionsEqual(left: CanvasNodePositions, right: CanvasNodePositions): boolean {
-  const leftEntries = Object.entries(left);
-
-  return (
-    leftEntries.length === Object.keys(right).length &&
-    leftEntries.every(([nodeId, position]) => {
-      const nextPosition = right[nodeId];
-
-      return position.x === nextPosition?.x && position.y === nextPosition?.y;
-    })
-  );
-}
-
 function didNodePositionsChange(
   previousNodePositions: CanvasNodePositions | null,
   nextNodePositions: CanvasNodePositions
 ): boolean {
   return (
     previousNodePositions != null &&
-    !areNodePositionsEqual(previousNodePositions, nextNodePositions)
+    !areCanvasPositionsEqual(previousNodePositions, nextNodePositions)
   );
 }
 
@@ -87,7 +74,8 @@ function shouldSaveObservedNodePositions(args: {
   const hasSaveCandidate = args.hasSettledDrag || args.nodePositionsChanged;
 
   return (
-    hasSaveCandidate && !areNodePositionsEqual(args.persistedNodePositions, args.nextNodePositions)
+    hasSaveCandidate &&
+    !areCanvasPositionsEqual(args.persistedNodePositions, args.nextNodePositions)
   );
 }
 
@@ -202,11 +190,6 @@ function useCanvasNodePositionPersistence({
     saveNodePositions: saveOrQueueNodePositions,
   });
 
-  const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(
-    () => undefined,
-    []
-  );
-
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
     (_event, draggedNode, draggedNodes) => {
       saveOrQueueNodePositions(
@@ -218,7 +201,6 @@ function useCanvasNodePositionPersistence({
 
   return {
     handleNodePositionsSave: saveOrQueueNodePositions,
-    handleNodeDrag,
     handleNodeDragStop,
   };
 }
@@ -262,14 +244,13 @@ export function useCanvasLayoutPersistence({
 }: UseCanvasLayoutPersistenceArgs) {
   const canPersistNodePositions = hasHydrated;
   const canPersistViewport = hasHydrated && !isGraphQueryPending;
-  const { handleNodePositionsSave, handleNodeDrag, handleNodeDragStop } =
-    useCanvasNodePositionPersistence({
-      canPersistNodePositions,
-      workspaceLayoutKey,
-      nodes,
-      persistedNodePositions,
-      setCanvasNodePositions,
-    });
+  const { handleNodePositionsSave, handleNodeDragStop } = useCanvasNodePositionPersistence({
+    canPersistNodePositions,
+    workspaceLayoutKey,
+    nodes,
+    persistedNodePositions,
+    setCanvasNodePositions,
+  });
   const handleViewportChange = useCanvasViewportPersistenceHandler({
     canPersistLayout: canPersistViewport,
     workspaceLayoutKey,
@@ -279,7 +260,6 @@ export function useCanvasLayoutPersistence({
 
   return {
     handleNodePositionsSave,
-    handleNodeDrag,
     handleNodeDragStop,
     handleViewportChange,
   };

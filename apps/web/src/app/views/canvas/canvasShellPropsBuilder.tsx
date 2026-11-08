@@ -134,7 +134,6 @@ function buildCanvasShellGraphCommandsArgs({
   return {
     graphCommands: {
       onNodesChange: controller.onNodesChange,
-      handleNodeDrag: controller.handleNodeDrag,
       handleNodeDragStop: controller.handleNodeDragStop,
       onEdgesChange: controller.onEdgesChange,
       onConnect: controller.onConnect,

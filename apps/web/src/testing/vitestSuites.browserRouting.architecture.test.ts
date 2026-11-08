@@ -1206,6 +1206,7 @@ describe('governed browser evidence routing', () => {
         resolve('cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-predicate-reopen.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts'),
+        resolve('cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts'),
         resolve('cypress/support/canvasReadyAuthoring.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts'),

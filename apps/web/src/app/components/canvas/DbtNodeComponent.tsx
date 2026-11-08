@@ -171,11 +171,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={projection.runAction}
       onSelectNode={projection.selectNode}
-      onOpenNode={
-        typeof data.onOpenNode === 'function' || typeof data.onInspectNode === 'function'
-          ? projection.openNode
-          : undefined
-      }
+      onOpenNode={projection.openNode}
       onDragOver={(event) => {
         fieldTransfer.onDragOver(event);
         if (!event.defaultPrevented) handleSchemaResourceDragOver(event);

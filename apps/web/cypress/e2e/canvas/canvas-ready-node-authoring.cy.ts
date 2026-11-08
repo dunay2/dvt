@@ -297,6 +297,47 @@ describe('Canvas ready node authoring', () => {
     stubRuntimeCapabilities();
   });
 
+  it('inspects on single click and enters a Model on double click without opening Properties', () => {
+    const draft = stubStatefulCanvasDraftAuthoring({ authoringGenerated: true });
+    draft.nodePositions['dvt-transform-1'] = { x: 700, y: 140 };
+    draft.nodePositions['sink-1'] = { x: 1300, y: 140 };
+    visitReadyCanvas();
+    cy.get('.react-flow__controls-fitview').click();
+    const overlay = '[data-slot="canvas-node-workbench-overlay"]';
+    let inspectorAppeared = false;
+    let observer: MutationObserver;
+    cy.document().then((document) => {
+      observer = new MutationObserver(() => {
+        if (document.querySelector(overlay) != null) inspectorAppeared = true;
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick(8, 8);
+    // Wait beyond the single-click decision interval to catch a deferred inspector.
+    cy.wait(600);
+    cy.get(overlay).should('not.exist');
+    cy.then(() => {
+      observer.disconnect();
+      expect(inspectorAppeared, 'Source double click never inspects').to.equal(false);
+    });
+    cy.get('.react-flow__controls-fitview').click();
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').click(8, 8);
+    cy.get(overlay).should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('.react-flow__controls-fitview').click();
+    cy.document().then((document) => {
+      inspectorAppeared = false;
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+    openWorkbenchModel('dvt-transform-1');
+    cy.wait(600);
+    cy.get(overlay).should('not.exist');
+    cy.then(() => {
+      observer.disconnect();
+      expect(inspectorAppeared, 'Model entry never inspects').to.equal(false);
+    });
+  });
+
   it('preserves computed card styles and Canvas palettes on cold load and reload without writing', () => {
     const draft = stubStatefulCanvasDraftAuthoring();
     Object.assign(draft, normalizeProjectCanvasDraft(draft));
@@ -878,7 +919,8 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.contains('h3', 'DVT source').should('be.visible');
     waitForE2eApiCall('/workspace/warehouse/connections', 'GET');
     cy.get('select[name="dvt-source-connection"]').select('warehouse-b');
@@ -907,7 +949,7 @@ describe('Canvas ready node authoring', () => {
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
     cy.contains('h3', 'DVT sink').should('be.visible');
     cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
@@ -952,14 +994,15 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="dvt-source-schema"]').should('have.value', 'curated');
     cy.get('input[name="dvt-source-table"]').should('have.value', 'orders_clean');
     cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
     cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
     cy.get('input[name="dvt-sink-schema"]').should('have.value', 'published');
     cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_monthly');

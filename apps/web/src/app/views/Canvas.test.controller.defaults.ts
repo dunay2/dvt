@@ -244,7 +244,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'onReconnect'
   | 'onSetEdgeExecutionGate'
   | 'handleViewportChange'
-  | 'handleNodeDrag'
   | 'handleNodeDragStop'
   | 'handleDrop'
   | 'handleInstantiateNode'
@@ -288,7 +287,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     onReconnect: vi.fn(),
     onSetEdgeExecutionGate: vi.fn(() => false),
     handleViewportChange: vi.fn(),
-    handleNodeDrag: vi.fn(),
     handleNodeDragStop: vi.fn(),
     handleDrop: vi.fn(),
     handleInstantiateNode: vi.fn(),

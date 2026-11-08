@@ -253,6 +253,7 @@ export default function CanvasShell({
                   <CanvasModelEditor
                     key={`${panels.activeCanvasId}:${model.selected.id}`}
                     canvasId={panels.activeCanvasId}
+                    workspaceScope={panels.inspectorAuthoring?.workspaceScope}
                     transformNode={model.selected}
                     nodes={panels.inspectorGraphNodes}
                     edges={panels.inspectorGraphEdges}

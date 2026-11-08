@@ -235,7 +235,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     },
     graphCommands: {
       onNodesChange: vi.fn(),
-      onNodeDrag: vi.fn(),
       onNodeDragStop: vi.fn(),
       onEdgesChange: vi.fn(),
       onConnect: vi.fn(),

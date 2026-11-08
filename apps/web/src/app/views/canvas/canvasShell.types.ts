@@ -128,7 +128,6 @@ export type CanvasShellChromeState = {
 
 export type CanvasShellGraphCommands = {
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
-  onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect?: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;

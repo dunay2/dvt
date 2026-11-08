@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-08
 planning_type: architecture
 ---
 
@@ -111,6 +111,29 @@ flowchart LR
   Model --> Focus[Shared opener focus]
   Code --> Focus
 ```
+
+## Canvas card gesture admission
+
+The [global gesture rule](https://github.com/dunay2/dvt/issues/3747#issuecomment-6715173265)
+keeps single-click inspection distinct from double-click node entry. A pointer
+click selects the card visually through React Flow immediately.
+`useCanvasNodeActivation` waits 500 ms before dispatching the existing `InspectCanvasNode`
+command. A second click or double click cancels that pending inspection. Double
+click invokes only a genuine node-open action, such as the native Model editor;
+Sources and file-backed dbt models do not open Properties through double click.
+Single-click Properties retains its existing Code section and permission guards.
+
+The shell composes one gesture owner, including cancellation for embedded controls,
+context menus, conflicting gestures, node replacement and unmount. A new pointer
+or keyboard intent on another card or toolbar cancels pending inspection too.
+Document listeners exist only while that gesture is pending and are removed on
+cancel, expiry or teardown. Deferred inspection uses the current callback and
+cannot target an obsolete node. It does
+not dispatch inspection and then hide its result. The existing keyboard router
+uses the shell's open/inspect capability: Enter opens an eligible Model or invokes
+inspection directly, without the pointer delay. Controls retain their own keys.
+This changes no execution selection, file authority or command permission and
+adds no rail, navigation store or data-acquisition path.
 
 ## Single project catalogue
 
@@ -835,8 +858,22 @@ canonical root on restore. Explicit `null` remains a disconnected Output, and
 pending sources or operations require explicit terminal intent. Operation Apply
 and later inspector saves preserve card coordinates without creating semantics,
 replaying a historical root or invoking Preview/Run.
-Movement alone retains its existing discardable-session behavior; this does not
-add an autosave or change navigation/cancellation ownership.
+Model card movement persists independently through the existing
+`PersistCanvasLayout` / `GetCanvasLayout` rails. `CanvasModelLayoutSession`
+adapts the existing relational session to `canvasInteractionStore` under a key
+containing tenant, project, environment, Canvas and Model identity. It mounts
+interactive layout only after local hydration and prefers any saved local record,
+including an explicit empty map, over legacy authoring positions. Settled drag,
+keyboard movement and Arrange persist complete coordinates; active drag, cancel,
+hydration and scope replacement do not write. An absent-to-empty map is saved
+once, and equivalent existing maps are no-ops. Missing scope cannot reuse another
+workspace's layout. Semantic Cancel still discards semantic edits; layout-only
+movement creates no semantic dirty state, protected draft write, SQL compilation
+or Preview request. The existing layout command/query ports and
+`CanvasLayoutProjection` remain the sole owner. The
+[prospective scope and regression matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6715600559)
+require remount/reload retention, workspace/Model isolation, hydration and cancel
+non-publication, empty-map precedence and no semantic effects.
 
 Inspector visibility is presentation state, not the lifetime of that transaction.
 Pending Source Output changes reuse `ConfigureCanvasDvtNode` and the existing

@@ -126,13 +126,13 @@ function openModelWorkbench(): void {
   cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
     .should('be.visible')
     .find('[data-slot="graph-node-card-title"]')
-    .dblclick();
+    .click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
-  cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+  cy.get('[data-slot="canvas-node-workbench-tab-general"]')
     .should('be.visible')
+    .click()
     .and('have.attr', 'aria-selected', 'true');
-  cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
   cy.get('[data-slot="dbt-yaml-description-editor"]', { timeout: 20_000 }).should('be.visible');
 }
 
@@ -144,9 +144,10 @@ function openModelCodeViewer(): void {
   cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
     .should('be.visible')
     .find('[data-slot="graph-node-card-title"]')
-    .dblclick();
+    .click();
   cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .should('be.visible')
+    .click()
     .and('have.attr', 'aria-selected', 'true');
   cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
     .should('be.visible')

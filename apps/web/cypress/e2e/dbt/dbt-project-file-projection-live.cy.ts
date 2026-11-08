@@ -384,13 +384,14 @@ describe('dbt project file projection live vertical', () => {
       );
     });
 
-    // Enter the node once: Properties opens with Code as the preferred section.
+    // Inspect the node with one click, then request its Code section explicitly.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
       .find('[data-slot="graph-node-card-title"]')
-      .dblclick();
+      .click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
+      .click()
       .and('have.attr', 'aria-selected', 'true');
 
     // Properties Code inspects the authoritative file without changing it.
@@ -507,10 +508,11 @@ describe('dbt project file projection live vertical', () => {
       const instance = instances.find((entry) => entry.resourceId === 'model.analytics.orders')!;
       cy.get(`.react-flow__node[data-id="${instance.id}"]`)
         .find('[data-slot="graph-node-card-title"]')
-        .dblclick();
+        .click();
       cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should(
         'be.visible'
       );
+      cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
       cy.get('[data-slot="workspace-file-code-editor"]').should(
         'have.attr',
         'data-file-path',

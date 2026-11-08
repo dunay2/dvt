@@ -26,6 +26,7 @@ describe('DbtNodeComponent behavior', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -101,18 +102,71 @@ describe('DbtNodeComponent behavior', () => {
       onColumnLayoutChange: vi.fn(),
     });
 
-    projection.openNode();
+    expect(projection.openNode).toBeUndefined();
     projection.runAction('open-properties');
     projection.runAction('duplicate-node');
     projection.runAction('deselect-node-from-execution');
     projection.runAction('remove-node');
 
-    expect(onInspectNode).toHaveBeenNthCalledWith(1, 'model.orders', 'code');
-    expect(onInspectNode).toHaveBeenNthCalledWith(2, 'model.orders', 'general');
+    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith('model.orders', 'general');
     expect(onDuplicateNode).toHaveBeenCalledWith('model.orders');
     expect(onToggleNodeSelection).toHaveBeenCalledWith('model.orders', false);
     expect(onRemoveNode).toHaveBeenCalledWith('model.orders');
   });
+
+  it.each([
+    { pluginKind: 'dvt:source', role: 'input', opensEditor: false, tab: 'columns' },
+    { pluginKind: 'dvt:transform', role: 'transform', opensEditor: true, tab: 'general' },
+    { pluginKind: 'dbt:model', role: 'transform', opensEditor: false, tab: 'general' },
+  ] as const)(
+    'separates complete pointer gestures for $pluginKind (editor: $opensEditor)',
+    ({ pluginKind, role, opensEditor, tab }) => {
+      vi.useFakeTimers();
+      const inspect = vi.fn();
+      const select = vi.fn();
+      const open = vi.fn();
+      const props = {
+        id: 'node',
+        selected: false,
+        data: {
+          name: 'Node',
+          status: 'idle',
+          pluginKind,
+          role,
+          onInspectNode: inspect,
+          onSelectNode: select,
+          ...(opensEditor ? { onOpenNode: open } : {}),
+        },
+      } as unknown as ComponentProps<typeof DbtNodeComponent>;
+      act(() =>
+        root.render(
+          <ReactFlowProvider>
+            <DbtNodeComponent {...props} />
+          </ReactFlowProvider>
+        )
+      );
+      const shell = container.querySelector('[data-slot="canvas-node-shell"]')!;
+      act(() => {
+        fireEvent.click(shell, { detail: 1 });
+        fireEvent.click(shell, { detail: 2 });
+        fireEvent.dblClick(shell, { detail: 2 });
+        vi.advanceTimersByTime(1000);
+      });
+      expect(inspect).not.toHaveBeenCalled();
+      expect(select).not.toHaveBeenCalled();
+      expect(open).toHaveBeenCalledTimes(opensEditor ? 1 : 0);
+      act(() => {
+        fireEvent.click(shell, { detail: 1 });
+      });
+      expect(inspect).not.toHaveBeenCalled();
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(inspect).toHaveBeenCalledExactlyOnceWith('node', tab);
+      expect(select).toHaveBeenCalledExactlyOnceWith('node');
+      expect(open).toHaveBeenCalledTimes(opensEditor ? 1 : 0);
+    }
+  );
 
   it.each([
     ['dvt:source', 'input', 'columns'],

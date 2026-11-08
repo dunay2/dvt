@@ -60,7 +60,7 @@ describe('Canvas card projection without shell or DOM', () => {
     }
   );
 
-  it('keeps explicit code denial and unavailable Preview while routing Source to Properties', () => {
+  it('retains Source inspection without exposing a double-click inspector action', () => {
     const inspect = vi.fn();
     const source = node('source', {
       role: 'input',
@@ -70,7 +70,9 @@ describe('Canvas card projection without shell or DOM', () => {
     });
     const data = projectCanvasShellNodes([source], projection)[0]!.data as DbtNodeData;
     data.onOpenNode?.('source');
-    expect(inspect).toHaveBeenCalledExactlyOnceWith('source', 'general');
+    expect(data.onOpenNode).toBeUndefined();
+    expect(inspect).not.toHaveBeenCalled();
+    expect(data.onInspectNode).toBe(inspect);
     expect(data.canOpenNodeCode).toBe(false);
     expect(data.onOpenSourceDataSample).toBeUndefined();
     expect(data.dataActionLabel).toBeUndefined();
@@ -79,27 +81,32 @@ describe('Canvas card projection without shell or DOM', () => {
   it('routes an admitted Model to its editor and forwards Preview without acquiring data', () => {
     const openModel = vi.fn();
     const preview = vi.fn();
-    const data = projectCanvasShellNodes([node('model', { pluginKind: 'dvt:transform' })], {
-      ...projection,
-      modelIds: new Set(['model']),
-      openModel,
-      projectSample: () => ({ canOpen: true, onOpen: preview }),
-    })[0]!.data as DbtNodeData;
+    const inspect = vi.fn();
+    const data = projectCanvasShellNodes(
+      [node('model', { pluginKind: 'dvt:transform', onInspectNode: inspect })],
+      {
+        ...projection,
+        modelIds: new Set(['model']),
+        openModel,
+        projectSample: () => ({ canOpen: true, onOpen: preview }),
+      }
+    )[0]!.data as DbtNodeData;
     expect(data.onOpenSourceDataSample).toBe(preview);
     expect(data.dataActionLabel).toBe('Preview');
     expect(preview).not.toHaveBeenCalled();
     data.onOpenNode?.('model');
     expect(openModel).toHaveBeenCalledExactlyOnceWith('model');
+    expect(inspect).not.toHaveBeenCalled();
   });
 
   it.each([
-    [undefined, 'code', true],
-    [false, 'general', true],
-    [undefined, 'code', false],
-    [false, 'general', false],
+    [undefined, true],
+    [false, true],
+    [undefined, false],
+    [false, false],
   ] as const)(
-    'preserves file-model authority with Code permission %s, direct identity=%s',
-    (permission, section, directIdentity) => {
+    'keeps file-model inspection explicit with Code permission %s, direct identity=%s',
+    (permission, directIdentity) => {
       const inspect = vi.fn();
       const openModel = vi.fn();
       const original = node('file-model', {
@@ -118,12 +125,26 @@ describe('Canvas card projection without shell or DOM', () => {
         openModel,
       })[0]!.data as DbtNodeData;
       data.onOpenNode?.('file-model');
-      expect(inspect).toHaveBeenCalledExactlyOnceWith('file-model', section);
+      expect(data.onOpenNode).toBeUndefined();
+      expect(inspect).not.toHaveBeenCalled();
+      expect(data.onInspectNode).toBe(inspect);
       expect(openModel).not.toHaveBeenCalled();
       expect(data.canOpenNodeCode).toBe(permission !== false);
       expect(original.data.onOpenNode).toBeUndefined();
     }
   );
+
+  it('preserves an explicit plugin open action without substituting inspection', () => {
+    const open = vi.fn();
+    const inspect = vi.fn();
+    const data = projectCanvasShellNodes(
+      [node('plugin-node', { onOpenNode: open, onInspectNode: inspect })],
+      projection
+    )[0]!.data as DbtNodeData;
+    data.onOpenNode?.('plugin-node');
+    expect(open).toHaveBeenCalledExactlyOnceWith('plugin-node');
+    expect(inspect).not.toHaveBeenCalled();
+  });
 
   it('does not fabricate a semantic editor when a file model has no inspector', () => {
     const openModel = vi.fn();

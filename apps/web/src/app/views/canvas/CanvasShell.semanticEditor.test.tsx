@@ -130,7 +130,8 @@ describe('Canvas Model inspection', () => {
       const modelClose = navigation.querySelector('[data-slot="canvas-model-tab-close"]');
       expect(modelClose?.tagName).toBe('BUTTON');
       expect(modelClose?.closest('[role="tab"]')).toBeNull();
-      expect(modelClose?.getAttribute('tabindex')).toBe('-1');
+      expect(modelClose?.getAttribute('tabindex')).toBe('0');
+      expect(modelClose?.closest('[role="tablist"]')).toBeNull();
       expect(model.getAttribute('aria-keyshortcuts')).toBe('Delete');
       expect(model.contains(modelClose)).toBe(false);
       expect(

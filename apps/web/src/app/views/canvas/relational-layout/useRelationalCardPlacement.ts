@@ -1,5 +1,6 @@
 /** Owned concern: project provisional card coordinates and publish only settled layout. */
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { areCanvasPositionsEqual } from '../../../types/canvasPositions';
 import {
   layoutCanvasRelationalTree,
   type CardPosition,
@@ -57,7 +58,7 @@ export function useRelationalCardPlacement(
     [positions, extent]
   );
   useLayoutEffect(() => {
-    if (initialPositions === positionsRef.current) return;
+    if (areCanvasPositionsEqual(initialPositions, positionsRef.current)) return;
     provisional.current = null;
     expansionFrame.current = null;
     setExtent(null);

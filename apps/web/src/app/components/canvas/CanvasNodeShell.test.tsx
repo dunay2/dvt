@@ -12,7 +12,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasNodeShell } from './CanvasNodeShell';
 import type { CanvasNodeContextMenuModel } from './canvasNodeContextMenuModel';
 import { canvasNodeEmbeddedControlProps } from './canvasNodeInteractionBoundary';
-import { activateFocusedCanvasNodeFromKeyboard } from '../../views/canvas/canvasViewportInteraction';
+import {
+  activateFocusedCanvasNodeFromKeyboard,
+  consumeCanvasDragClick,
+} from '../../views/canvas/canvasViewportInteraction';
 
 const CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders model' },
@@ -52,6 +55,7 @@ describe('CanvasNodeShell', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.useRealTimers();
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
     if (previousActEnvironment === undefined) {
       Reflect.deleteProperty(globalObject, 'IS_REACT_ACT_ENVIRONMENT');
@@ -60,7 +64,190 @@ describe('CanvasNodeShell', () => {
     }
   });
 
-  it('opens the node through one Properties intent on body double-click', () => {
+  const renderGestureShell = (
+    props: Partial<React.ComponentProps<typeof CanvasNodeShell>>
+  ): void => {
+    act(() =>
+      root.render(
+        <div className="react-flow__node" onKeyDownCapture={activateFocusedCanvasNodeFromKeyboard}>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle={false}
+            shouldShowTargetHandle={false}
+            onContextMenuAction={vi.fn()}
+            {...props}
+          >
+            <div data-testid="node-body">Orders model</div>
+            <button type="button" {...canvasNodeEmbeddedControlProps}>
+              Inline control
+            </button>
+          </CanvasNodeShell>
+        </div>
+      )
+    );
+  };
+
+  it('inspects exactly once after a native single click settles', () => {
+    vi.useFakeTimers();
+    const select = vi.fn();
+    const open = vi.fn();
+    renderGestureShell({ onSelectNode: select, onOpenNode: open });
+    act(() => {
+      fireEvent.click(container.querySelector('[data-testid="node-body"]')!, { detail: 1 });
+    });
+    expect(select).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(499);
+    });
+    expect(select).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(select).toHaveBeenCalledOnce();
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('opens only once for the native click-click-double-click sequence without inspecting', () => {
+    vi.useFakeTimers();
+    const select = vi.fn();
+    const open = vi.fn();
+    renderGestureShell({ onSelectNode: select, onOpenNode: open });
+    const body = container.querySelector('[data-testid="node-body"]')!;
+    act(() => {
+      fireEvent.click(body, { detail: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    act(() => {
+      fireEvent.click(body, { detail: 2 });
+      fireEvent.dblClick(body, { detail: 2 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(open).toHaveBeenCalledOnce();
+    expect(select).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'control',
+    'context-menu',
+    'pointer-elsewhere',
+    'keyboard-elsewhere',
+    'owner-change',
+    'unmount',
+  ] as const)('cancels pending pointer inspection after %s', (nextIntent) => {
+    vi.useFakeTimers();
+    const select = vi.fn();
+    const open = vi.fn();
+    renderGestureShell({ onSelectNode: select, onOpenNode: open });
+    const body = container.querySelector('[data-testid="node-body"]')!;
+    act(() => {
+      fireEvent.click(body, { detail: 1 });
+    });
+    act(() => {
+      if (nextIntent === 'control')
+        fireEvent.click(container.querySelector('button')!, { detail: 1 });
+      if (nextIntent === 'context-menu') fireEvent.contextMenu(body);
+      if (nextIntent === 'pointer-elsewhere') fireEvent.pointerDown(document.body, { button: 0 });
+      if (nextIntent === 'keyboard-elsewhere') fireEvent.keyDown(document.body, { key: 'Escape' });
+      if (nextIntent === 'unmount') root.render(null);
+    });
+    if (nextIntent === 'owner-change')
+      renderGestureShell({
+        onSelectNode: select,
+        onOpenNode: open,
+        contextMenuModel: {
+          ...CONTEXT_MENU_MODEL,
+          target: { kind: 'node', nodeId: 'different-model', nodeName: 'Different model' },
+        },
+      });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(select).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('uses the current callback for an unchanged card when its single click settles', () => {
+    vi.useFakeTimers();
+    const previous = vi.fn();
+    const current = vi.fn();
+    renderGestureShell({ onSelectNode: previous });
+    act(() => {
+      fireEvent.click(container.querySelector('[data-testid="node-body"]')!, { detail: 1 });
+    });
+    renderGestureShell({ onSelectNode: current });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(previous).not.toHaveBeenCalled();
+    expect(current).toHaveBeenCalledOnce();
+  });
+
+  it.each(['open', 'inspect'] as const)(
+    'routes Enter immediately to the card %s capability without delayed inspection',
+    (capability) => {
+      vi.useFakeTimers();
+      const select = vi.fn();
+      const open = vi.fn();
+      renderGestureShell({
+        onSelectNode: select,
+        ...(capability === 'open' ? { onOpenNode: open } : {}),
+      });
+      const shell = container.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]')!;
+      expect(shell.tabIndex).toBe(0);
+      expect(shell.getAttribute('aria-keyshortcuts')).toBe('Enter');
+      act(() => {
+        fireEvent.click(shell, { detail: 1 });
+      });
+      act(() => {
+        fireEvent.keyDown(shell, { key: 'Enter' });
+      });
+      expect(select).toHaveBeenCalledTimes(capability === 'inspect' ? 1 : 0);
+      expect(open).toHaveBeenCalledTimes(capability === 'open' ? 1 : 0);
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(select).toHaveBeenCalledTimes(capability === 'inspect' ? 1 : 0);
+      expect(open).toHaveBeenCalledTimes(capability === 'open' ? 1 : 0);
+    }
+  );
+
+  it('does not schedule inspection for a drag click consumed by the viewport capture boundary', () => {
+    vi.useFakeTimers();
+    const select = vi.fn();
+    const open = vi.fn();
+    const pendingDragClick = { current: true };
+    act(() =>
+      root.render(
+        <div onClickCapture={(event) => consumeCanvasDragClick(event, pendingDragClick, true)}>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle={false}
+            shouldShowTargetHandle={false}
+            onContextMenuAction={vi.fn()}
+            onSelectNode={select}
+            onOpenNode={open}
+          >
+            Orders model
+          </CanvasNodeShell>
+        </div>
+      )
+    );
+    act(() => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-node-shell"]')!, { detail: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(pendingDragClick.current).toBe(false);
+    expect(select).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('opens the node through its dedicated activation intent on body double-click', () => {
     const openNode = vi.fn();
 
     act(() => {
