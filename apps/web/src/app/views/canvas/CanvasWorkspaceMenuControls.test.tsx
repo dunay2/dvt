@@ -12,6 +12,7 @@ import {
 } from './CanvasWorkspaceMenuControls';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -125,6 +126,42 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(onImportProjectSnapshotFile).toHaveBeenCalledWith(snapshotFile);
   });
 
+  it('keeps Model close tabbable outside the tablist and delegates to its existing owner', async () => {
+    const closeModel = vi.fn();
+    const closeCode = vi.fn();
+    const selectModel = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasWorkspaceModelTabs
+          canvasTitle="Sales"
+          tab={{
+            canvasId: 'sales',
+            nodeId: 'model',
+            label: 'Customers',
+            active: true,
+            onSelect: selectModel,
+            onCanvas: vi.fn(),
+            onClose: closeModel,
+          }}
+          codeTab={{ active: false, onSelect: vi.fn(), onCanvas: vi.fn(), onClose: closeCode }}
+        />
+      )
+    );
+    const close = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-model-tab-close"]'
+    )!;
+    expect(close.tabIndex).toBe(0);
+    expect(close.closest('[role="tablist"]')).toBeNull();
+    const tablist = within(container).getByRole('tablist');
+    expect(
+      Array.from(tablist.querySelectorAll('button'), (button) => button.getAttribute('role'))
+    ).toEqual(['tab', 'tab', 'tab']);
+    await act(async () => fireEvent.click(close));
+    expect(closeModel).toHaveBeenCalledExactlyOnceWith();
+    expect(closeCode).not.toHaveBeenCalled();
+    expect(selectModel).not.toHaveBeenCalled();
+  });
+
   it('renders the active Canvas identity as minimal shell top-bar context', async () => {
     await act(async () => {
       root.render(
@@ -213,6 +250,7 @@ describe('CanvasWorkspaceMenuControls', () => {
     const close = within(container).getByRole('button', { name: closeLabel });
     const code = container.querySelector('[data-slot="canvas-code-main-tab"]')!;
     expect(close.closest('[role="tab"]')).toBeNull();
+    expect(close.closest('[role="tablist"]')).toBeNull();
     expect(close.getAttribute('tabindex')).toBe('-1');
     expect(code.getAttribute('aria-keyshortcuts')).toBe('Delete');
     await act(async () => fireEvent.click(close));
