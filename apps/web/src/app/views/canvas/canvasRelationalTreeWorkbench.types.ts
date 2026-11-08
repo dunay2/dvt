@@ -13,6 +13,7 @@ import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 
 export type CanvasRelationalTreeWorkbenchProps = Readonly<{
+  layoutKey?: string;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];

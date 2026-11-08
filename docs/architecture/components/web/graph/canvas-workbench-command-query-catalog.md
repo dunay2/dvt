@@ -858,8 +858,22 @@ canonical root on restore. Explicit `null` remains a disconnected Output, and
 pending sources or operations require explicit terminal intent. Operation Apply
 and later inspector saves preserve card coordinates without creating semantics,
 replaying a historical root or invoking Preview/Run.
-Movement alone retains its existing discardable-session behavior; this does not
-add an autosave or change navigation/cancellation ownership.
+Model card movement persists independently through the existing
+`PersistCanvasLayout` / `GetCanvasLayout` rails. `CanvasModelLayoutSession`
+adapts the existing relational session to `canvasInteractionStore` under a key
+containing tenant, project, environment, Canvas and Model identity. It mounts
+interactive layout only after local hydration and prefers any saved local record,
+including an explicit empty map, over legacy authoring positions. Settled drag,
+keyboard movement and Arrange persist complete coordinates; active drag, cancel,
+hydration and scope replacement do not write. An absent-to-empty map is saved
+once, and equivalent existing maps are no-ops. Missing scope cannot reuse another
+workspace's layout. Semantic Cancel still discards semantic edits; layout-only
+movement creates no semantic dirty state, protected draft write, SQL compilation
+or Preview request. The existing layout command/query ports and
+`CanvasLayoutProjection` remain the sole owner. The
+[prospective scope and regression matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6715600559)
+require remount/reload retention, workspace/Model isolation, hydration and cancel
+non-publication, empty-map precedence and no semantic effects.
 
 Inspector visibility is presentation state, not the lifetime of that transaction.
 Pending Source Output changes reuse `ConfigureCanvasDvtNode` and the existing

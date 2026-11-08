@@ -2,7 +2,7 @@
 title: Canvas Layout Persistence Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-10-01
+last_reviewed: 2026-11-08
 planning_type: architecture
 ---
 
@@ -141,25 +141,69 @@ responsibility is retired as a duplicate of the implemented composition concern.
 The [ownership review](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564854173)
 records the concrete source boundary; it does not declare the feature implemented.
 
+## Model editor layout persistence
+
+The Model editor reuses `PersistCanvasLayout` and `GetCanvasLayout` through
+`CanvasModelLayoutSession`, a presentation adapter around the existing
+`RelationalLayoutSession` and `canvasInteractionStore`. Its key contains the
+authorized tenant, project, environment, Canvas and Model identities. Shell
+passes its existing workspace scope; changing any key dimension replaces the
+Workbench session above its model and layout hooks before the new scope renders.
+Resetting only the nested layout provider would leave prior in-memory positions
+available as a legacy seed for a different workspace.
+
+Interactive layout children mount only after `_hasHydrated`. The Model adapter
+does not queue pre-hydration gestures. A local layout record, including an
+explicit empty position map, takes precedence over legacy authoring-session
+positions. Legacy positions seed entry only when no local record exists.
+Restoring either source does not persist it as a new user action.
+
+Settled drag, keyboard movement and Arrange publish the complete position map
+through `setCanvasNodePositions`. The existing session callback remains for
+Apply compatibility. Active drag frames, cancellation, hydration and scope
+replacement publish nothing. An absent-to-empty position map creates a local
+record once; subsequent equivalent writes are suppressed. Local coordinates
+survive Model close/reopen and browser reload without semantic Apply.
+
+```mermaid
+flowchart LR
+  Scope[Workspace Canvas and Model identity] --> Query[GetCanvasLayout]
+  Query --> Ready{Store hydrated?}
+  Ready -->|no| Wait[Defer interactive mount]
+  Ready -->|yes| Seed[Local record or legacy seed when absent]
+  Seed --> Session[Keyed RelationalLayoutSession]
+  Session -->|settled movement| Persist[PersistCanvasLayout]
+  Persist --> Store[Existing canvasInteractionStore]
+```
+
+The adapter owns no graph semantics, dirty detection, protected draft save,
+Preview, SQL or compiler behavior. Semantic Cancel keeps its existing edit
+discard behavior; it does not undo independently persisted presentation layout.
+Existing card-gesture capability checks remain in force. Missing workspace
+identity cannot borrow another workspace's layout or create a global storage key.
+The [prospective rationale, scope and negative-test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6715600559)
+govern this boundary repair.
+
 ## Public API
 
-| API                                          | Owner                                 | Responsibility                                                                               |
-| -------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `useCanvasLayoutPersistence(...)`            | `useCanvasLayoutPersistence.ts`       | Return node-position, node-drag, and viewport persistence handlers.                          |
-| `handleNodePositionsSave`                    | `useCanvasLayoutPersistence.ts`       | Persist a complete node-position map for the active layout key.                              |
-| `handleNodeDrag`                             | `useCanvasLayoutPersistence.ts`       | Preserve the current viewport callback seam without persisting active drag frames.           |
-| `handleNodeDragStop`                         | `useCanvasLayoutPersistence.ts`       | Persist the final drag-stop event payload over stale React Flow arrays.                      |
-| `handleViewportChange`                       | `useCanvasLayoutPersistence.ts`       | Persist viewport only after hydration and graph readiness.                                   |
-| `shouldSeedCanvasLayoutFromRemoteDraft(...)` | `canvasDraftLayoutHydrationPolicy.ts` | Allow remote draft coordinates to seed local layout only when no local card positions exist. |
-| `useCanvasViewportGraphModel(...)`           | `useCanvasViewportGraphModel.ts`      | Project canonical graph nodes into live React Flow viewport nodes.                           |
-| `CanvasViewport` callbacks                   | `CanvasViewport.tsx`                  | Forward governed React Flow gesture callbacks only.                                          |
-| `setCanvasGridVisible(...)`                  | `uiLayoutStore.ts`                    | Persist whether the viewport grid is rendered.                                               |
-| `setCanvasGridColor(...)`                    | `uiLayoutStore.ts`                    | Persist the grid line color as a normalized hex color.                                       |
-| `setCanvasSnapToGrid(...)`                   | `uiLayoutStore.ts`                    | Persist whether React Flow drag and auto-layout coordinates snap to the grid.                |
-| `ConfigureCanvasViewportPreferences`         | Canvas shell chrome command rail      | Apply grid and snap preferences without changing graph authority.                            |
-| `useCanvasInspectorListOrder(...)`           | `useCanvasInspectorListOrder.ts`      | Reconcile and persist Source Inspector column and outgoing-relationship identity order.      |
-| `useInspectorListReorder(...)`               | `useInspectorListReorder.ts`          | Apply the shared pointer and `Alt+Arrow` presentation-order gesture.                         |
-| `setCanvasInspectorListOrder(...)`           | `canvasInteractionStore.ts`           | Persist one reconciled Inspector list order for a workspace and Source node.                 |
+| API                                          | Owner                                 | Responsibility                                                                                 |
+| -------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `CanvasModelLayoutSession`                   | `CanvasModelLayoutSession.tsx`        | Restore and persist Model card coordinates under the hydrated workspace, Canvas and Model key. |
+| `useCanvasLayoutPersistence(...)`            | `useCanvasLayoutPersistence.ts`       | Return node-position, node-drag, and viewport persistence handlers.                            |
+| `handleNodePositionsSave`                    | `useCanvasLayoutPersistence.ts`       | Persist a complete node-position map for the active layout key.                                |
+| `handleNodeDrag`                             | `useCanvasLayoutPersistence.ts`       | Preserve the current viewport callback seam without persisting active drag frames.             |
+| `handleNodeDragStop`                         | `useCanvasLayoutPersistence.ts`       | Persist the final drag-stop event payload over stale React Flow arrays.                        |
+| `handleViewportChange`                       | `useCanvasLayoutPersistence.ts`       | Persist viewport only after hydration and graph readiness.                                     |
+| `shouldSeedCanvasLayoutFromRemoteDraft(...)` | `canvasDraftLayoutHydrationPolicy.ts` | Allow remote draft coordinates to seed local layout only when no local card positions exist.   |
+| `useCanvasViewportGraphModel(...)`           | `useCanvasViewportGraphModel.ts`      | Project canonical graph nodes into live React Flow viewport nodes.                             |
+| `CanvasViewport` callbacks                   | `CanvasViewport.tsx`                  | Forward governed React Flow gesture callbacks only.                                            |
+| `setCanvasGridVisible(...)`                  | `uiLayoutStore.ts`                    | Persist whether the viewport grid is rendered.                                                 |
+| `setCanvasGridColor(...)`                    | `uiLayoutStore.ts`                    | Persist the grid line color as a normalized hex color.                                         |
+| `setCanvasSnapToGrid(...)`                   | `uiLayoutStore.ts`                    | Persist whether React Flow drag and auto-layout coordinates snap to the grid.                  |
+| `ConfigureCanvasViewportPreferences`         | Canvas shell chrome command rail      | Apply grid and snap preferences without changing graph authority.                              |
+| `useCanvasInspectorListOrder(...)`           | `useCanvasInspectorListOrder.ts`      | Reconcile and persist Source Inspector column and outgoing-relationship identity order.        |
+| `useInspectorListReorder(...)`               | `useInspectorListReorder.ts`          | Apply the shared pointer and `Alt+Arrow` presentation-order gesture.                           |
+| `setCanvasInspectorListOrder(...)`           | `canvasInteractionStore.ts`           | Persist one reconciled Inspector list order for a workspace and Source node.                   |
 
 ## Invariants
 
@@ -179,8 +223,9 @@ calls protected draft persistence, or starts Preview/data execution.
   completed automatic hydration.
 - Viewport persistence runs after layout hydration and after the graph query is
   no longer pending.
-- Node-position observations captured before hydration are queued and flushed
-  after hydration completes; they must not be dropped.
+- Outer Canvas node-position observations captured before hydration are queued
+  and flushed after hydration completes; they must not be dropped. The Model
+  adapter instead defers interactive mounting until hydration completes.
 - Drag-stop persistence trusts the `draggedNode` event payload over the stale
   viewport snapshot. React Flow supplies only the dragged selection in its final
   node-array payload; merge those final coordinates into the complete current
@@ -355,6 +400,8 @@ Indirect consumers:
 
 Primary tests:
 
+- `apps/web/src/app/views/canvas/CanvasModelLayoutSession.test.tsx`
+- `apps/web/cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts`
 - `apps/web/src/app/views/canvas/relational-layout/RelationalCardCancellation.test.tsx`
 - `apps/web/src/app/views/canvas/CanvasRelationalTreeLayout.architecture.test.ts`
 - `apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts`
@@ -378,6 +425,13 @@ snap-to-grid propagation, snapped auto-layout coordinates, and semantic boundary
 rules. Source Inspector tests cover pointer and keyboard order, hydration denial,
 durable stale-identity reconciliation, focus and selection continuity, visible
 drop position, persisted reload, and absence of graph writes.
+
+Model layout tests use the real relational session and existing store to prove
+settled durability, remount restoration, delayed hydration, every scope-key
+dimension, local precedence including an empty map, and absence of writes from
+cancel or hydration. The browser journey moves a real Model card, closes and
+reopens its editor, then reloads and verifies the same position without Apply or
+a protected semantic save.
 
 ## Drift To Watch
 

@@ -20,9 +20,12 @@ import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
 import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 import { CanvasModelNavigationGuard } from './CanvasModelNavigationGuard';
+import type { WorkspaceScope } from '../../ports/sessionContext';
+import { canvasModelLayoutKey } from './CanvasModelLayoutSession';
 
 export function CanvasModelEditor({
   canvasId,
+  workspaceScope,
   transformNode,
   nodes,
   edges,
@@ -39,6 +42,7 @@ export function CanvasModelEditor({
   onShowCanvas,
 }: Readonly<{
   canvasId: string;
+  workspaceScope?: WorkspaceScope;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
@@ -94,6 +98,7 @@ export function CanvasModelEditor({
       editor={
         <CanvasRelationalTreeWorkbench
           ref={workbench}
+          layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
           transformNode={transformNode}
           nodes={nodes}
           edges={edges}

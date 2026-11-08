@@ -204,7 +204,10 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             }
           }
 
-          if (areCanvasNodePositionsEqual(currentPositions, nextPositions)) {
+          if (
+            currentLayout != null &&
+            areCanvasNodePositionsEqual(currentPositions, nextPositions)
+          ) {
             return state;
           }
 
