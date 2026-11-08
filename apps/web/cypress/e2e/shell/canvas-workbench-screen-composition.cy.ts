@@ -1190,6 +1190,7 @@ describe('Canvas workbench screen composition', () => {
       .find('[data-slot="canvas-node-shell"]')
       .should('be.focused');
 
+    cy.get('[data-testid="canvas-viewport"]').as('codeLifetimeViewport', { type: 'static' });
     for (const [path, sql] of [
       [MODEL_PATH, MODEL_SQL],
       [ORPHAN_PATH, ORPHAN_SQL],
@@ -1225,6 +1226,29 @@ describe('Canvas workbench screen composition', () => {
         .should('not.be.visible')
         .and('have.attr', 'aria-hidden', 'true')
         .and('have.attr', 'inert');
+      cy.get('[data-slot="canvas-code-main-tab"]').click();
+      cy.get('[data-slot="canvas-code-tab-close"]').should('be.visible').click();
+      cy.get('[data-slot="canvas-code-main-tab"]').should('not.exist');
+      cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.exist');
+      cy.get('[data-slot="canvas-workspace-tab"]')
+        .should('have.attr', 'aria-selected', 'true')
+        .and('be.focused');
+      cy.get<JQuery<HTMLElement>>('@codeLifetimeViewport').then(($original) => {
+        cy.get('[data-testid="canvas-viewport"]').should(($current) => {
+          expect($current[0], 'closing Code preserves the existing Canvas').to.equal($original[0]);
+        });
+      });
+      cy.get('[data-slot="canvas-explorer-git-toggle"]').click();
+      cy.get('[data-slot="canvas-code-main-tab"]')
+        .should('have.length', 1)
+        .and('have.attr', 'aria-selected', 'true');
+      cy.get('[data-slot="canvas-code-workspace-surface"]').should('have.length', 1);
+      cy.get(
+        `[data-slot="canvas-code-workspace-surface"] [data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`
+      ).click();
+      readProjectCode().should('equal', sql.replaceAll('\n', CLIPBOARD_EOL));
+      cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+      cy.get('[data-slot="canvas-workspace-tab"]').click();
     }
     cy.then(() => {
       expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);

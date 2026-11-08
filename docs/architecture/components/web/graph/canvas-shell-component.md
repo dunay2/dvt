@@ -2,7 +2,7 @@
 title: Canvas Shell Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-10-30
+last_reviewed: 2026-11-08
 ---
 
 # Canvas Shell Component
@@ -871,6 +871,14 @@ the same graph rather than fitting or recreating it. Returning to Code restores
 the same file tree, editor and buffer at their existing React parent. Import
 remains the priority task layer without replacing the retained Code host. Model
 authoring and file synchronization keep their existing owners.
+
+Code capability and an open Code session are distinct. File and Git remain
+available when Code is closed. The shell projects the Code tab and surface only
+while the existing project-code owner supplies its panel; an unopened or closed
+session has neither a tab nor an empty placeholder panel. Selecting Canvas or
+Model retains an open Code session. The existing guarded close removes both tab
+and panel only after its owner accepts the current close intent. Failed, pending
+or superseded closes preserve the session. Explicit File/Git entry reopens it.
 
 The Main Canvas activity rail remains accessible in both Canvas and Code. The
 shell provides a stable local activity slot outside the retained panels that

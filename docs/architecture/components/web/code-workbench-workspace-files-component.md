@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-11-05
+last_reviewed: 2026-11-08
 planning_type: architecture
 ---
 
@@ -425,6 +425,12 @@ camera, file selection and disclosure keep their owners. Existing RouteWorkbench
 slots present one file surface and accepted-file metadata on the right. The
 workspace presentation does not add a second file tree or a new route/store.
 
+The Code tab represents an open project-code session, not the capability to
+open one. File and Git remain its entry points while it is closed. Accepted close
+removes the tab and its surface; the shell does not retain an empty Code host.
+Selecting Canvas or Model keeps an already-open Code session mounted and its tab
+available. Existing flush and current-intent guards decide whether close commits.
+
 Metadata follows only the accepted path and successful file read. An unavailable
 new read cannot relabel the previous file. Modified time describes the loaded
 version. Hashes, size, author, Git state and node properties are not inferred or
@@ -524,7 +530,9 @@ and require an actual SHA-256 revision before comparing the subsequent reread.
 Project Code evidence uses the selected Code tab and its central
 `canvas-code-workspace-surface`. Returning through the Canvas tab keeps Code
 mounted but hidden, restores the visible Canvas and leaves focus on its active
-tab. Browser checks retain full-content copy, read-only input, accessibility and
+tab. Closing through the Code tab's X removes both the tab and its surface;
+the browser proof then reopens through File or Git and verifies one read-only
+session without file writes. Browser checks retain full-content copy, read-only input, accessibility and
 workspace bounds at narrow viewports. Publication/compilation rejection checks
 retain their file-refresh and diagnostic assertions. The old Project Code overlay
 and its close/resize controls are not the navigation contract. Native node and
@@ -602,7 +610,7 @@ Failed revalidation cannot display a previous file's definition or reference car
 #### CODE-FILES-6: Code Is Reachable Before First Canvas Document
 
 Existing Canvas actions open project Code before a document exists. Active Canvas
-also exposes the top Code tab. The same /canvas route retains graph context;
+exposes the top Code tab while its Code session is open. The same /canvas route retains graph context;
 Code reads files in a viewer. Other surfaces retain their own readiness gates.
 
 ### Scenario Matrix

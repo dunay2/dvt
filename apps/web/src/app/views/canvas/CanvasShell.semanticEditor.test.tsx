@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { getCanvasShellState } from './CanvasShell.testHarness';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
+import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import {
   setupSemanticEditorShell,
   harness,
@@ -22,8 +23,10 @@ describe('Canvas Model inspection', () => {
     const model = navigation.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-model-main-tab"]'
     )!;
+    await act(async () =>
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.()
+    );
     const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
-    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
     expect(code.getAttribute('aria-selected')).toBe('true');
     await act(async () =>
       fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
@@ -31,12 +34,23 @@ describe('Canvas Model inspection', () => {
     expect(
       navigation.querySelector('[data-slot="canvas-workspace-tab"]')?.getAttribute('aria-selected')
     ).toBe('true');
+    expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-code-workspace-surface"]')
+    ).toBeNull();
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).toBe(model);
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
     expect(editor?.closest('[inert]')).not.toBeNull();
     await act(async () => fireEvent.mouseDown(model, { button: 0 }));
     expect(model.getAttribute('aria-selected')).toBe('true');
     expect(editor?.closest('[inert]')).toBeNull();
+    await act(async () =>
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.()
+    );
+    expect(navigation.querySelectorAll('[data-slot="canvas-code-main-tab"]')).toHaveLength(1);
+    expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).not.toBe(code);
+    expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).toBe(model);
+    expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
@@ -117,6 +131,9 @@ describe('Canvas Model inspection', () => {
       const activityRail = within(harness.container).getByRole('navigation', {
         name: 'Canvas explorer',
       });
+      await act(async () =>
+        fireEvent.click(within(activityRail).getByRole('button', { name: 'Git' }))
+      );
       await act(async () => data.onOpenNode?.(fixture.transform.id));
       const model = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-model-main-tab"]'

@@ -87,7 +87,7 @@ function CanvasShellMenuContributionRegistrars({
       onOpenProjectCode={onOpenProjectCode}
       onImportDbtProject={onImportDbtProject}
       codeTab={
-        projectFiles == null
+        projectFiles?.panel == null
           ? undefined
           : {
               active: workspaceTask == null && projectFiles.active,
@@ -260,9 +260,7 @@ function CanvasShellMainSurface({
       editorVisible={workspaceTask == null && layout.centerSurfaceVisible === true}
       hasWorkspaceTabs={panels.activeCanvas != null}
       code={
-        projectFiles == null ? undefined : projectFiles.panel == null ? (
-          <></>
-        ) : (
+        projectFiles?.panel == null ? undefined : (
           <RouteWorkbenchFrame
             scroll={false}
             presentationMode="embedded"

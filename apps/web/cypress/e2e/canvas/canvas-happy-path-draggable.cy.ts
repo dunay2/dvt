@@ -131,7 +131,7 @@ describe('Canvas happy path remains writable after create/save', () => {
     cy.get(modelRow).should('contain.text', 'models/clientes.sql');
     cy.get(modelRow).click();
     cy.get('.react-flow__node').should('have.length', 2);
-    cy.get('#canvas-code-main-tab').should('have.attr', 'aria-selected', 'false');
+    cy.get('#canvas-code-main-tab').should('not.exist');
     cy.wrap(null).should(() => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
         { draft: unknown } | undefined;
