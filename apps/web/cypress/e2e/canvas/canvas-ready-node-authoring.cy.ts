@@ -129,11 +129,20 @@ function assertCanvasComputedAppearance(): void {
     .should('be.visible')
     .and('have.css', 'font-size', '14px')
     .and('have.css', 'line-height', '20px')
-    .and('have.css', 'width', '384px')
     .and('have.css', 'border-top-width', '1px')
     .and('have.css', 'border-top-style', 'solid');
   cy.get(sourceCard).should(($card) => {
-    const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
+    const card = $card[0]!;
+    const window = card.ownerDocument.defaultView!;
+    const style = window.getComputedStyle(card);
+    // jQuery's dimension getter includes React Flow's fit-view scale; the design width does not.
+    expect(style.width).to.equal('384px');
+    const viewport = card.closest('.react-flow__viewport')!;
+    const scale = new window.DOMMatrixReadOnly(window.getComputedStyle(viewport).transform).a;
+    expect(
+      card.getBoundingClientRect().width / scale,
+      'rendered card width in graph units'
+    ).to.be.closeTo(384, 1);
     expect(style.fontFamily).to.contain('IBM Plex Sans');
     expect(style.boxShadow, 'raised cards retain low elevation').not.to.equal('none');
   });
@@ -374,10 +383,12 @@ describe('Canvas ready node authoring', () => {
     const overview = '[data-slot="canvas-node-workbench-tab-general"]';
     const code = '[data-slot="canvas-node-workbench-tab-code"]';
     cy.get(overview).should('have.text', 'Overview').and('have.attr', 'aria-selected', 'true');
-    cy.get(code).click().should('have.attr', 'aria-selected', 'true');
+    cy.get(code).click();
+    cy.get(code).should('have.attr', 'aria-selected', 'true');
     openNodeProperties('dvt-transform-1');
     cy.get(overview).should('have.attr', 'aria-selected', 'true');
-    cy.get(code).click().should('have.attr', 'aria-selected', 'true');
+    cy.get(code).click();
+    cy.get(code).should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openNodeProperties('dvt-transform-1');
     cy.get(overview).should('have.attr', 'aria-selected', 'true');
