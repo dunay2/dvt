@@ -409,7 +409,7 @@ describe('Canvas ready node authoring', () => {
       .should(($title) => {
         const title = $title[0]!;
         expect(title.scrollWidth).to.be.greaterThan(title.clientWidth);
-        expect(title.textContent).to.contain('identidad');
+        expect(title.textContent).to.match(/identidad completa/i);
       });
 
     // A personal Canvas palette must not become the card's surface or erase its border.

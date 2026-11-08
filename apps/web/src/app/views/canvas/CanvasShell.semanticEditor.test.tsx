@@ -42,7 +42,13 @@ describe('Canvas Model inspection', () => {
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).toBe(model);
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
     expect(editor?.closest('[inert]')).not.toBeNull();
-    await act(async () => fireEvent.mouseDown(model, { button: 0 }));
+    await act(async () => {
+      // A real pointer gesture moves focus before the pending Code-close frame can restore Canvas.
+      fireEvent.mouseDown(model, { button: 0 });
+      model.focus();
+      fireEvent.mouseUp(model, { button: 0 });
+      fireEvent.click(model, { button: 0 });
+    });
     expect(model.getAttribute('aria-selected')).toBe('true');
     expect(editor?.closest('[inert]')).toBeNull();
     await act(async () =>
