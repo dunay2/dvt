@@ -12,6 +12,11 @@ import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { sharedSourceModelGraphNodeCardStrategy } from './sharedSourceModelGraphNodeCardStrategy';
 import { GraphNodeCardView } from './GraphNodeCardView';
 import { GraphNodeRenderer } from './GraphNodeRenderer';
+import {
+  graphNodeCardLayoutClasses,
+  graphNodeCardSurfaceClasses,
+  graphNodeHealthBorderClasses,
+} from './graphCardVisualTokens';
 
 const BASE_PROPS = {
   cardModel: {
@@ -610,13 +615,13 @@ describe('GraphNodeCardView', () => {
 
     expect(icon?.getAttribute('data-tone')).toBe('source');
     expect(icon?.getAttribute('style')).toBeNull();
-    expect(icon?.getAttribute('class')).toContain('text-purple');
+    expect(icon?.getAttribute('class')).toContain(graphNodeCardLayoutClasses.iconTone.source);
   });
 
   it.each([
-    ['healthy', 'Ready', 'border-green-500', 'border-solid'],
-    ['failed', 'Failed', 'border-red-500', 'border-dashed'],
-    ['neutral', 'Draft', 'border-slate-700', 'border-solid'],
+    ['healthy', 'Ready', graphNodeHealthBorderClasses.healthy, 'border-solid'],
+    ['failed', 'Failed', graphNodeHealthBorderClasses.failed, 'border-dashed'],
+    ['neutral', 'Draft', graphNodeHealthBorderClasses.neutral, 'border-solid'],
   ] as const)(
     'uses a %s health border without a visible status chip',
     (tone, label, borderClass, borderStyleClass) => {
@@ -635,7 +640,7 @@ describe('GraphNodeCardView', () => {
       const card = container.querySelector('[data-slot="graph-node-card"]');
       expect(card?.className).toContain(borderClass);
       expect(card?.className).toContain(borderStyleClass);
-      expect(card?.className).toContain('focus-within:ring-2');
+      expect(card?.className).toContain(graphNodeCardSurfaceClasses.root);
       expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
     }
   );
@@ -655,8 +660,9 @@ describe('GraphNodeCardView', () => {
     });
 
     const card = container.querySelector('[data-slot="graph-node-card"]');
-    expect(card?.className).toContain('border-green-500');
-    expect(card?.className).toContain('ring-2');
+    // Selection decorates the projected health; it must not replace a healthy border.
+    expect(card?.className).toContain(graphNodeHealthBorderClasses.healthy);
+    expect(card?.className).toContain(graphNodeCardSurfaceClasses.selected);
   });
 
   it('keeps overlay decoration on a separate layer from the semantic health border', () => {
@@ -676,7 +682,7 @@ describe('GraphNodeCardView', () => {
     const card = container.querySelector<HTMLElement>('[data-slot="graph-node-card"]');
     const overlay = container.querySelector<HTMLElement>('[data-slot="graph-node-overlay-border"]');
 
-    expect(card?.className).toContain('border-green-500');
+    expect(card?.className).toContain(graphNodeHealthBorderClasses.healthy);
     expect(card?.style.borderColor).toBe('');
     expect(card?.style.backgroundColor).toBe('rgba(245, 158, 11, 0.08)');
     expect(overlay?.style.borderColor).toBe('rgb(245, 158, 11)');

@@ -83,7 +83,7 @@ export const inspectorPropertyClasses = {
   contributionFill: 'flex min-h-0 flex-1 flex-col',
   header: 'flex items-center justify-between gap-3',
   fact: 'contents',
-  value: { inspector: propertyValue, workbench: `${propertyValue} text-(--text-primary)` },
+  value: { inspector: propertyValue, workbench: `${propertyValue} text-(--text-default)` },
   facts: {
     inspector: 'grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
     workbench: 'grid grid-cols-[minmax(96px,0.36fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
@@ -101,7 +101,7 @@ export const inspectorPropertyClasses = {
     region: `max-h-80 overflow-y-auto ${propertyPanel}`,
     disclosure: 'group',
     trigger:
-      'flex min-h-7 cursor-pointer list-none items-center gap-1.5 px-2 py-1 text-xs leading-4 text-(--text-primary) outline-none hover:bg-(--surface-hover) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden',
+      'flex min-h-7 cursor-pointer list-none items-center gap-1.5 px-2 py-1 text-xs leading-4 text-(--text-default) outline-none hover:bg-(--surface-selected) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden',
     arrow: 'size-3 shrink-0 text-(--text-muted) transition-transform group-open:rotate-90',
     name: `${propertyValue} font-medium`,
     details:
@@ -123,7 +123,7 @@ export const inspectorPropertyClasses = {
       heading:
         'border-b border-(--border-subtle) capitalize px-2 py-2 font-medium whitespace-nowrap',
       body: 'divide-y divide-(--border-subtle)',
-      cell: `${propertyCell} whitespace-nowrap text-(--text-primary)`,
+      cell: `${propertyCell} whitespace-nowrap text-(--text-default)`,
     },
   },
 } as const;
@@ -144,7 +144,7 @@ export const inspectorRelationshipClasses = {
   row: 'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
   selected: 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)',
   unselected:
-    'border-transparent bg-(--surface-elevated) text-(--text-primary) hover:bg-(--surface-selected)',
+    'border-transparent bg-(--surface-elevated) text-(--text-default) hover:bg-(--surface-selected)',
   drop: 'pointer-events-none absolute left-1 right-1 h-0.5 bg-(--status-info)',
   placement: { before: 'top-0', after: 'bottom-0' },
   handle: 'size-4 shrink-0 cursor-grab text-(--text-muted)',

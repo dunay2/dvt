@@ -1,9 +1,9 @@
 /* Editor-scoped interface type; monospaced text is reserved for expressions. */
 [data-slot='canvas-model-editor'],
 .canvas-relational-card-menu {
-  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
 }
 
 [data-slot='canvas-model-editor'] :where(button, input, select, textarea) {
@@ -79,11 +79,12 @@
 
 .canvas-workspace-model-tab-close:hover {
   background: var(--surface-panel);
-  color: var(--text-primary);
+  color: var(--text-strong);
 }
 
 .canvas-workspace-model-tab-close:focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .canvas-workspace-model-tab-close > svg {

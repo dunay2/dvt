@@ -7,6 +7,7 @@ export const selectStyle = {
   background: '#05090f',
   padding: '8px 9px',
   color: '#7dd3fc',
-  fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 11,
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--text-mono)',
+  lineHeight: 'var(--text-mono-line-height)',
 } as const;

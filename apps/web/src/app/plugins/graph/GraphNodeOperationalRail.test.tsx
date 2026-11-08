@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { CanvasNodeShell } from '../../components/canvas/CanvasNodeShell';
+import { graphNodeOperationalRailClasses } from './graphMetricVisualTokens';
 
 describe('GraphNodeOperationalRail', () => {
   let container: HTMLDivElement;
@@ -88,7 +89,7 @@ describe('GraphNodeOperationalRail', () => {
 
     expect(metric?.getAttribute('data-tone')).toBe('warning');
     expect(value?.getAttribute('data-tone')).toBe('estimated');
-    expect(value?.className).toContain('text-amber');
+    expect(value?.className).toContain(graphNodeOperationalRailClasses.valueTone.warning);
   });
 
   it('does not open card information from lower metrics without a data provider', () => {

@@ -63,7 +63,7 @@ export function CanvasModelOutputInspector({
         />
       }
     >
-      <h4 className="mb-2 text-xs font-semibold text-(--text-primary)">{labels.operations}</h4>
+      <h4 className="mb-2 text-xs font-semibold text-(--text-strong)">{labels.operations}</h4>
       <ol className="space-y-2" data-slot="canvas-model-composition-steps">
         {steps.map((step, index) => {
           const presentation = resolveCanvasRelationalNodeCopy(step.node, copy);
@@ -73,14 +73,14 @@ export function CanvasModelOutputInspector({
               key={step.locator}
               data-kind={step.kind}
               data-operator={step.node.operator}
-              className="flex items-start gap-3 rounded-md border border-(--border-subtle) bg-(--surface-subtle) px-3 py-2.5"
+              className="flex items-start gap-3 rounded-md border border-(--border-subtle) bg-(--surface-elevated) px-3 py-2.5"
             >
               <span className="grid size-6 shrink-0 place-items-center rounded-full border border-(--border-default) text-[10px] text-(--text-muted)">
                 {index + 1}
               </span>
               <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-(--status-info)" />
               <span className="min-w-0">
-                <span className="block truncate text-xs font-semibold text-(--text-primary)">
+                <span className="block truncate text-xs font-semibold text-(--text-strong)">
                   {presentation.title}
                 </span>
                 {step.kind === 'input' || presentation.detail.length === 0 ? null : (

@@ -40,9 +40,9 @@ export function CanvasSourceOccurrenceOutputs({
             key={field.id}
             data-field-id={field.id}
             data-slot="source-occurrence-output-field"
-            className="flex min-h-9 items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-xs"
+            className="flex min-h-9 items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-elevated) px-2 text-xs"
           >
-            <span className="min-w-0 flex-1 truncate font-medium text-(--text-primary)">
+            <span className="min-w-0 flex-1 truncate font-medium text-(--text-strong)">
               {field.name}
             </span>
             {field.dataType == null ? null : (

@@ -51,7 +51,7 @@ export function CanvasRelationalScalarTree({
               className={
                 node.data.unavailable
                   ? 'shrink-0 font-semibold text-(--status-danger)'
-                  : 'shrink-0 font-semibold text-cyan-300'
+                  : 'shrink-0 text-(--text-subtle)'
               }
             >
               {kind}

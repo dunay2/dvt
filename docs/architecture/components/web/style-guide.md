@@ -440,6 +440,70 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 
+### Shared Canvas Card Family Contract
+
+The [admitted typography and card-family slice](https://github.com/dunay2/dvt/issues/3035#issuecomment-6724573101)
+applies general roles before family anatomy and task-specific variants. It reuses
+`ReactFlowGraphVisualTokenQuery` and `RenderCanvasContextualGraphSurface`;
+presentation does not acquire a domain status or persistence authority.
+
+```mermaid
+flowchart TD
+    Foundation[Existing font, spacing, type, radius and shadow scales] --> Roles[Canonical semantic roles in fonts.css and theme.css]
+    Roles --> Main[Card, metric and column visual adapters]
+    Roles --> Model[Relational summary, Output and lexical-detail adapters]
+    Main --> MainVariants[Existing Source and Model anatomy with projected health]
+    Model --> ModelVariants[Neutral operation categories and explicit Output role]
+    MainVariants --> Boundaries[Existing identity, capabilities, geometry and interaction owners]
+    ModelVariants --> Boundaries
+```
+
+- Primary identity uses `--text-strong` and the body scale; ordinary values and
+  prose use `--text-default`; metadata uses `--text-muted` and the metadata
+  scale; technical expressions use the canonical Mono family and scale.
+  `--text-primary` is not a semantic token or a compatibility alias. Consumers
+  must select the existing role by meaning, including outside card templates.
+- Both families consume canonical font tokens. Model scope styles, source rows
+  and field/expression adapters must not replace those families with a local
+  stack or shrink primary text to make an identity fit.
+- Main card health remains projected evidence. Its status border and line style
+  coexist with selection and keyboard focus, including when a selected card has
+  failed. A type, authoring tag or participation cue never proves execution
+  success, dirty state, saving or acknowledgement.
+- Model operation categories use an elevated neutral surface and a general
+  border; icon and label identify the operation. Selection uses the existing
+  selected treatment and focus uses the focus-ring role. Read is not recast as
+  Source merely to reuse a color. The terminal Output uses the existing
+  `--canvas-node-port-output-ring` and `--canvas-node-port-output-fill` role
+  tokens, not `--status-success` as a type classification.
+- Source-reference participation, pending and missing cues retain their existing
+  state and accessible-label meaning. Their colors do not become a new health
+  projector or authorize an action.
+- A shared low elevation supports the card, identity-tooltip and metric-popover
+  surfaces. Selection rings, focus outlines and projected health borders remain
+  independent treatments; a shadow cannot replace them.
+- The Main card's fixed width and Model summary/detail dimensions remain with
+  their current geometry owners. Typography changes must not independently
+  alter CSS widths, measured bounds, ports, hit areas, expansion offsets or edge
+  routing. Long values retain accessible full-value recovery.
+- Appearance must preserve node identity, authored coordinates, camera, focus
+  and selection. Opening or inspecting a styled surface does not write a graph,
+  save a file, fit or arrange the viewport. User Canvas background preferences
+  remain separate from panel/form surfaces.
+
+Validate the contract with real computed typography, semantic colors and visible
+focus in both families, including selected and failed combinations, long names,
+read-only states, custom Canvas backgrounds and narrow/reflow layouts. Retain
+forced-color treatments and non-color cues. Source ownership checks supplement
+this evidence; matching class strings or screenshots alone do not establish
+contrast or interaction correctness.
+
+The current slice consumes used typography, focus and elevation roles. Shared
+Button/Tooltip and shell/panel-density migration is a separate family delivery;
+it must introduce its control tokens together with their consumers. This
+contract does not add unused token scales or change this guide's overall review
+status.
+
 ### Explicit data action
 
 Canvas forms share one presentation contract through
@@ -1242,6 +1306,22 @@ Suggested type scale:
 | `--text-meta`    | `12/16`            | metadata, helper labels       |
 | `--text-mono`    | `13/20`            | code, SQL, logs, identifiers  |
 
+The consumed body, metadata and technical-text roles have one implementation
+owner in `fonts.css`:
+
+| Role                           | Size token    | Line-height token         | Foundation                                         |
+| ------------------------------ | ------------- | ------------------------- | -------------------------------------------------- |
+| Body and primary identity      | `--text-body` | `--text-body-line-height` | `--text-sm` / `--text-sm--line-height` (`14/20`)   |
+| Metadata and supporting labels | `--text-meta` | `--text-meta-line-height` | `--text-xs` / `--text-xs--line-height` (`12/16`)   |
+| Technical text                 | `--text-mono` | `--text-mono-line-height` | One central `13/20` definition, with `--font-mono` |
+
+The size role does not choose a text color: title, body, metadata and disabled
+meaning still select their existing semantic color independently. A component
+variant may preserve a documented dense task, such as the logical-column record
+contract below, but may not introduce a competing font family or a local size
+fallback. The larger suggested roles are not a requirement to define unused
+tokens in each delivery.
+
 ### Spacing, Radius, And Density
 
 The workbench should use a tight but not cramped density model.
@@ -1293,6 +1373,11 @@ Shadow rules:
 - use one low-elevation shadow for overlays and popovers;
 - do not stack multiple heavy shadows;
 - depth should come mostly from surface contrast and borders, not from glow.
+
+`theme.css` owns the consumed `--elevation-low` role, composed from the existing
+`--shadow-sm` foundation. Card, identity-tooltip and metric-popover adapters use
+that role instead of maintaining separate heavy-shadow palettes. Existing
+spacing and radius scales remain the foundation; do not add synonymous scales.
 
 ### Iconography Contract
 
@@ -1459,6 +1544,10 @@ Rules:
 - color alone must not carry critical status;
 - icon-only controls require accessible labels and tooltip support;
 - focus ring must remain visible on dark surfaces;
+- shared card and port focus consumes `--focus-ring-width` and
+  `--focus-ring-offset` from `theme.css`, composed from `--spacing`, alongside
+  the existing `--focus-ring` color; these roles do not change selection, health
+  or pointer hit areas;
 - muted text must still be readable in panels and dense tables;
 - graph overlays, diff highlights, and status chips must stay distinguishable
   under color-vision variation.

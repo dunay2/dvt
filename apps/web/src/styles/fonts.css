@@ -7,6 +7,12 @@
 :root {
   --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
+  --text-body: var(--text-sm);
+  --text-body-line-height: var(--text-sm--line-height);
+  --text-meta: var(--text-xs);
+  --text-meta-line-height: var(--text-xs--line-height);
+  --text-mono: 0.8125rem;
+  --text-mono-line-height: 1.25rem;
 }
 
 body,

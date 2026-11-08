@@ -15,11 +15,11 @@ const panelClassName =
 const defaultPanelSizeClassName = 'sm:w-[38rem] sm:max-w-[42rem]';
 const headerClassName =
   'flex shrink-0 items-start justify-between gap-3 border-b border-(--border-subtle) px-4 py-3';
-const titleClassName = 'text-sm font-semibold text-(--text-primary)';
+const titleClassName = 'text-sm font-semibold text-(--text-strong)';
 const dragHandleClassName =
   'min-w-0 flex-1 cursor-move select-none rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-(--focus-ring)';
 const closeButtonClassName =
-  'inline-flex size-8 cursor-pointer items-center justify-center rounded border border-(--border-subtle) text-(--text-muted) hover:border-(--border-strong) hover:text-(--text-primary)';
+  'inline-flex size-8 cursor-pointer items-center justify-center rounded border border-(--border-subtle) text-(--text-muted) hover:border-(--border-strong) hover:text-(--text-strong)';
 
 export type CanvasContextualWorkbenchPanelProps = Readonly<{
   title: string;

@@ -27,8 +27,9 @@ export const RELATION_STYLE: CSSProperties = {
   borderRadius: 8,
   background: '#0b1425',
   color: '#f8fafc',
-  fontFamily: 'IBM Plex Sans, sans-serif',
-  fontSize: 12,
+  fontFamily: 'var(--font-sans)',
+  fontSize: 'var(--text-body)',
+  lineHeight: 'var(--text-body-line-height)',
   fontWeight: 600,
   textAlign: 'left',
 };
