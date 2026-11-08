@@ -229,7 +229,13 @@ export function createSourceImportWizardHarness() {
         () => container.querySelector('[data-slot="source-import-connection-summary"]') != null,
         {
           description: 'connection query presentation',
-          ...(vi.isFakeTimers() ? { tick: () => vi.advanceTimersByTimeAsync(0) } : {}),
+          ...(vi.isFakeTimers()
+            ? {
+                tick: async () => {
+                  await vi.advanceTimersByTimeAsync(0);
+                },
+              }
+            : {}),
         }
       );
     }

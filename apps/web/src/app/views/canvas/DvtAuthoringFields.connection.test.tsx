@@ -43,7 +43,12 @@ describe('DVT connection authoring', () => {
     );
     await waitForReactQuery(
       () => view.container.querySelector('option[value="warehouse-b"]') != null,
-      { description: 'connection choices published', tick: () => vi.advanceTimersByTimeAsync(0) }
+      {
+        description: 'connection choices published',
+        tick: async () => {
+          await vi.advanceTimersByTimeAsync(0);
+        },
+      }
     );
 
     const connectionSelect = view.container.querySelector(
@@ -105,7 +110,12 @@ describe('DVT connection authoring', () => {
     );
     await waitForReactQuery(
       () => view.container.querySelector('option[value="warehouse-b"]') != null,
-      { description: 'connection choices published', tick: () => vi.advanceTimersByTimeAsync(0) }
+      {
+        description: 'connection choices published',
+        tick: async () => {
+          await vi.advanceTimersByTimeAsync(0);
+        },
+      }
     );
 
     const testButton = [...view.container.querySelectorAll('button')].find((button) =>

@@ -969,7 +969,9 @@ describe('SourceImportWizard', () => {
             'true',
         {
           description: 'created connection accepted and selected after catalog refresh',
-          tick: () => vi.advanceTimersByTimeAsync(0),
+          tick: async () => {
+            await vi.advanceTimersByTimeAsync(0);
+          },
         }
       );
 
