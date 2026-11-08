@@ -56,6 +56,9 @@
   --border-default: #2f4368;
   --border-strong: #4b5f84;
   --focus-ring: #60a5fa;
+  --focus-ring-width: calc(var(--spacing) / 2);
+  --focus-ring-offset: calc(var(--spacing) / 2);
+  --elevation-low: var(--shadow-sm);
   --status-success: #22c55e;
   --status-running: #4f8cff;
   --status-degraded: #fbbf24;

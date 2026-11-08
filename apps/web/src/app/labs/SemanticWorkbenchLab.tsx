@@ -51,7 +51,7 @@ export default function SemanticWorkbenchLab() {
     },
   };
   return (
-    <main className="flex h-screen min-h-0 flex-col bg-(--surface-panel) text-(--text-primary)">
+    <main className="flex h-screen min-h-0 flex-col bg-(--surface-panel) text-(--text-default)">
       <header className="border-b border-(--border-default) px-4 py-2">
         <h1 className="text-sm font-semibold">Semantic Workbench Lab</h1>
         <p className="text-xs text-(--text-muted)">

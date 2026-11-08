@@ -12,8 +12,9 @@ const EXPRESSION_STYLE: CSSProperties = {
   borderRadius: 8,
   background: '#10192d',
   color: '#e2e8f0',
-  fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 11,
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--text-mono)',
+  lineHeight: 'var(--text-mono-line-height)',
   textAlign: 'left',
 };
 export const semanticExpressionStyles = {
