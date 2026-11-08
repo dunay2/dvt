@@ -59,6 +59,59 @@ function assertExplorerWidth(scope: string, widthPercent: number): void {
     });
 }
 
+function assertModelCardTypography(): void {
+  // Main and Model share type roles, while Model keeps its geometry and neutral operation identity.
+  cy.get('[data-slot="canvas-relational-tree-node"]').should(($nodes) => {
+    for (const node of $nodes.toArray()) {
+      const style = node.ownerDocument.defaultView!.getComputedStyle(node);
+      const title = node.querySelector<HTMLElement>('[data-slot="canvas-relational-node-title"]')!;
+      const titleStyle = node.ownerDocument.defaultView!.getComputedStyle(title);
+      expect(style.fontFamily).to.contain('IBM Plex Sans');
+      expect(titleStyle.fontSize).to.equal('14px');
+      expect(titleStyle.lineHeight).to.equal('20px');
+      expect(titleStyle.textOverflow).to.equal('ellipsis');
+      expect(title.getAttribute('title')).to.equal(title.textContent);
+      expect(style.height, 'summary geometry is unchanged').to.equal('76px');
+      expect(style.boxShadow).not.to.equal('none');
+      const token =
+        node.getAttribute('aria-selected') === 'true' ? '--surface-selected' : '--surface-elevated';
+      const color = style.getPropertyValue(token).trim();
+      const rgb = [1, 3, 5].map((offset) => Number.parseInt(color.slice(offset, offset + 2), 16));
+      expect(style.backgroundColor, `${node.dataset.operator} uses the common surface`).to.equal(
+        `rgb(${rgb.join(', ')})`
+      );
+    }
+  });
+  cy.get('[data-slot="canvas-relational-tree-source"] > span:first-child span span')
+    .should('have.css', 'font-size', '14px')
+    .and('have.css', 'line-height', '20px')
+    .should(($name) => {
+      expect(
+        $name[0]!.ownerDocument.defaultView!.getComputedStyle($name[0]!).fontFamily
+      ).to.contain('IBM Plex Sans');
+    });
+  cy.get('[data-slot="canvas-relational-tree-output"]').should(($output) => {
+    const output = $output[0]!;
+    const window = output.ownerDocument.defaultView!;
+    const style = window.getComputedStyle(output);
+    const identity = output.querySelector(
+      '[data-slot="canvas-relational-tree-output-open"] > span'
+    )!;
+    const name = window.getComputedStyle(identity.children[0]!);
+    const label = window.getComputedStyle(identity.children[1]!);
+    expect(name.fontSize).to.equal('14px');
+    expect(name.lineHeight).to.equal('20px');
+    expect(label.fontSize).to.equal('12px');
+    expect(label.lineHeight).to.equal('16px');
+    const ring = style.getPropertyValue('--canvas-node-port-output-ring').trim();
+    const rgb = [1, 3, 5].map((offset) => Number.parseInt(ring.slice(offset, offset + 2), 16));
+    expect(style.borderTopColor, 'Output is a role rather than a successful execution').to.equal(
+      `rgb(${rgb.join(', ')})`
+    );
+    expect(identity.clientWidth).to.be.at.most(output.clientWidth);
+  });
+}
+
 function assertResizeHandlePresentation(
   selector: string,
   direction: 'horizontal' | 'vertical'
@@ -408,6 +461,15 @@ describe('Workbench viewport', () => {
         );
       });
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+      assertModelCardTypography();
+      // Verify the exact focus token at native scale before exercising fractional graph zoom.
+      cy.get(modelZoom).should('have.text', '100%');
+      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+        .should('be.focused')
+        .and('have.css', 'outline-style', 'solid')
+        .and('have.css', 'outline-width', '2px')
+        .and('have.css', 'outline-offset', '2px');
       cy.then(() => {
         writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
@@ -416,6 +478,15 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
       revealWorkbenchCard('[data-slot="canvas-relational-card-detail"]');
       cy.get('[data-slot="canvas-relational-card-detail"]').should('contain.text', 'EQUAL');
+      cy.get('[data-slot="canvas-relational-expression-node"]')
+        .first()
+        .should('have.css', 'font-size', '13px')
+        .and('have.css', 'line-height', '20px')
+        .should(($expression) => {
+          expect(
+            $expression[0]!.ownerDocument.defaultView!.getComputedStyle($expression[0]!).fontFamily
+          ).to.contain('IBM Plex Mono');
+        });
       cy.screenshot('semantic-editor-card-expressions');
       verifyCompleteTreeFit(modelViewport);
       cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
@@ -466,6 +537,11 @@ describe('Workbench viewport', () => {
       });
       revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
+        'have.attr',
+        'aria-selected',
+        'true'
+      );
       cy.get('[data-canvas-inspector="true"]:visible').should(($panel) => {
         const bounds = $panel[0]!.getBoundingClientRect();
         expect(bounds.left).to.be.at.least(0);
@@ -473,6 +549,16 @@ describe('Workbench viewport', () => {
         expect(bounds.bottom).to.be.at.most(450);
       });
       cy.get('[data-slot="canvas-relational-collapse"]').should('be.visible').click();
+      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+        .should('be.focused')
+        .and('have.css', 'outline-style', 'solid')
+        .should(($node) => {
+          // CSS zoom snaps outlines to device pixels; reflow must preserve a visible focus cue.
+          const style = $node[0]!.ownerDocument.defaultView!.getComputedStyle($node[0]!);
+          expect(Number.parseFloat(style.outlineWidth)).to.be.greaterThan(0);
+          expect(Number.parseFloat(style.outlineOffset)).to.be.greaterThan(0);
+        });
       cy.get('[data-slot="canvas-model-toolbar"]').should(($footer) => {
         expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
       });

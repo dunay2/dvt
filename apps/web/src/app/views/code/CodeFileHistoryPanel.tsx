@@ -22,7 +22,7 @@ export function CodeFileHistoryPanel({
   return (
     <aside className="flex h-full flex-col gap-3 p-4" aria-label={copy.historyTitle}>
       <div>
-        <h2 className="text-sm font-semibold text-(--text-primary)">{copy.historyTitle}</h2>
+        <h2 className="text-sm font-semibold text-(--text-strong)">{copy.historyTitle}</h2>
         <p className="mt-1 text-xs text-(--text-muted)">{selectedPath ?? copy.historyNoFile}</p>
       </div>
 
@@ -43,7 +43,7 @@ export function CodeFileHistoryPanel({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-(--text-primary)">
+                  <p className="truncate text-sm font-medium text-(--text-strong)">
                     {entry.subject}
                   </p>
                   <p className="mt-1 text-xs text-(--text-muted)">

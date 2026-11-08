@@ -89,7 +89,7 @@ function ExternalFact({ label, value }: Readonly<{ label: string; value: string 
   return (
     <div className="contents">
       <dt className={inspectorVisualClasses.inspectorLabel}>{label}</dt>
-      <dd className="min-w-0 break-words text-(--text-primary)">{value}</dd>
+      <dd className="min-w-0 break-words text-(--text-default)">{value}</dd>
     </div>
   );
 }
@@ -209,7 +209,7 @@ export function SourceOverviewPanel({
           <h4 className={inspectorVisualClasses.inspectorLabel}>{copy.sourceComment}</h4>
           <p
             data-slot="source-table-comment"
-            className="whitespace-pre-wrap text-xs text-(--text-primary) [overflow-wrap:anywhere]"
+            className="whitespace-pre-wrap text-xs text-(--text-default) [overflow-wrap:anywhere]"
           >
             {sourceComment.success ? (sourceComment.data ?? copy.empty) : copy.empty}
           </p>
@@ -258,7 +258,7 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className="col-start-2 row-start-1 min-w-0 break-words text-xs font-medium text-(--text-primary)">
+            <p className="col-start-2 row-start-1 min-w-0 break-words text-xs font-medium text-(--text-strong)">
               {draft.name}
             </p>
           )}
@@ -340,7 +340,7 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className="whitespace-pre-wrap text-xs text-(--text-primary) [overflow-wrap:anywhere]">
+            <p className="whitespace-pre-wrap text-xs text-(--text-default) [overflow-wrap:anywhere]">
               {draft.description || copy.empty}
             </p>
           )}
@@ -348,12 +348,12 @@ export function SourceOverviewPanel({
 
         {alias ? (
           <details className="rounded-lg border border-(--border-subtle) bg-(--surface-elevated)">
-            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-(--text-primary)">
+            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-(--text-strong)">
               {copy.systemMetadata}
             </summary>
             <dl className="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-2 px-3 pb-3 text-xs">
               <dt className={inspectorVisualClasses.inspectorLabel}>{copy.alias}</dt>
-              <dd className="min-w-0 break-all font-mono text-(--text-primary)">
+              <dd className="min-w-0 break-all font-mono text-(--text-default)">
                 {alias}{' '}
                 <span className={inspectorVisualClasses.inspectorSubtle}>· {copy.derived}</span>
               </dd>

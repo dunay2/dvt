@@ -8,7 +8,7 @@
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-panel);
-  color: var(--text-primary);
+  color: var(--text-default);
   font-size: 0.75rem;
 }
 
@@ -41,7 +41,7 @@
   border-color: #be123c;
 }
 .cancel:hover {
-  background: var(--surface-hover, var(--surface-selected));
+  background: var(--surface-selected);
 }
 .confirm:hover {
   background: #9f1239;

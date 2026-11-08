@@ -45,7 +45,7 @@ export function SourceOccurrencePropertiesTemplate({
       {data.unsupported != null ? (
         <p className="text-xs text-(--text-muted)">{data.unsupported}</p>
       ) : !data.editing ? (
-        <p className="text-xs text-(--text-primary)">
+        <p className="text-xs text-(--text-default)">
           {data.aliasLabel}: {data.alias}
         </p>
       ) : (

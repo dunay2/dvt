@@ -113,13 +113,32 @@ function resolveComputedPaletteColor(value: string): string {
   return `rgb(${channels.join(', ')})`;
 }
 
+function assertComputedColorRole(selector: string, property: string, token: string): void {
+  cy.get(selector).should(($element) => {
+    const element = $element[0]!;
+    const style = element.ownerDocument.defaultView!.getComputedStyle(element);
+    expect(style.getPropertyValue(property), `${selector} ${property}`).to.equal(
+      resolveComputedPaletteColor(style.getPropertyValue(token).trim())
+    );
+  });
+}
+
 function assertCanvasComputedAppearance(): void {
   const sourceCard = '.react-flow__node[data-id="src_orders"] [data-slot="graph-node-card"]';
   cy.get(sourceCard)
     .should('be.visible')
     .and('have.css', 'font-size', '14px')
+    .and('have.css', 'line-height', '20px')
     .and('have.css', 'border-top-width', '1px')
     .and('have.css', 'border-top-style', 'solid');
+  cy.get(sourceCard).should(($card) => {
+    const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
+    // jQuery's width hook may report the transformed box; the layout width stays fixed.
+    expect(style.width, 'card layout width before React Flow scaling').to.equal('384px');
+    expect(style.fontFamily).to.contain('IBM Plex Sans');
+    expect(style.boxShadow, 'raised cards retain low elevation').not.to.equal('none');
+  });
+  assertComputedColorRole(sourceCard, 'background-color', '--surface-elevated');
   cy.get(sourceCard)
     .children()
     .first()
@@ -131,14 +150,24 @@ function assertCanvasComputedAppearance(): void {
     .find('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]')
     .should('have.length', 1)
     .and('have.css', 'font-size', '14px')
+    .and('have.css', 'line-height', '20px')
     .and('have.css', 'font-weight', '600');
   cy.get(sourceCard)
     .find('[data-slot="graph-node-tag"]')
     .first()
     .should('have.css', 'font-size', '12px')
+    .and('have.css', 'line-height', '16px')
     .and('have.css', 'padding-left', '8px')
     .and('have.css', 'padding-top', '2px')
     .and('have.css', 'border-top-width', '1px');
+  cy.get(sourceCard).find('button[data-slot="graph-node-tag"]').first().focus();
+  cy.press(Cypress.Keyboard.Keys.TAB);
+  cy.get(sourceCard).find('button[data-slot="graph-node-tag"]').first().focus();
+  cy.get(sourceCard)
+    .should('have.css', 'outline-style', 'solid')
+    .and('have.css', 'outline-width', '2px')
+    .and('have.css', 'outline-offset', '2px');
+  assertComputedColorRole(sourceCard, 'outline-color', '--focus-ring');
   cy.get('[data-testid="canvas-viewport"]').should(($viewport) => {
     const viewport = $viewport.get(0);
     const window = viewport.ownerDocument.defaultView!;
@@ -340,9 +369,28 @@ describe('Canvas ready node authoring', () => {
 
   it('preserves computed card styles and Canvas palettes on cold load and reload without writing', () => {
     const draft = stubStatefulCanvasDraftAuthoring();
+    const longName = 'Árbol de clientes 日本語 · ' + 'identidad completa '.repeat(10);
+    draft.nodes.find((node) => node.id === 'model_orders')!.name = longName;
     Object.assign(draft, normalizeProjectCanvasDraft(draft));
 
     visitReadyCanvas();
+    assertCanvasComputedAppearance();
+    // Readable type must keep long Unicode identities recoverable and inside the fixed card width.
+    cy.get('.react-flow__node[data-id="model_orders"] [data-slot="graph-node-card-title"]')
+      .should('contain.text', '日本語')
+      .and('have.css', 'text-overflow', 'ellipsis')
+      .should(($title) => {
+        const title = $title[0]!;
+        expect(title.scrollWidth).to.be.greaterThan(title.clientWidth);
+        expect(title.textContent).to.match(/identidad completa/i);
+      });
+
+    // A personal Canvas palette must not become the card's surface or erase its border.
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-canvas-settings"]').click();
+    cy.get('[data-slot="canvas-properties-background-input"]').clear().type('#223344');
+    cy.get('[data-slot="workbench-properties-apply"]').click();
+    cy.get('.react-flow').should('have.css', 'background-color', 'rgb(34, 51, 68)');
     assertCanvasComputedAppearance();
 
     cy.on('window:before:load', installE2eApiFetchStub);
@@ -350,6 +398,7 @@ describe('Canvas ready node authoring', () => {
       cy.reload();
     });
     assertCanvasComputedAppearance();
+    cy.get('.react-flow').should('have.css', 'background-color', 'rgb(34, 51, 68)');
   });
 
   it('persists business tags while semantic tags stay protected and directly filterable', () => {
@@ -619,19 +668,31 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'Src Orders').as('sourceNode').should('be.visible');
-    cy.get('@sourceNode')
-      .find('[data-slot="graph-node-card"]')
-      .should('have.class', 'border-green-500');
+    const sourceCard = '.react-flow__node[data-id="src_orders"] [data-slot="graph-node-card"]';
+    assertComputedColorRole(sourceCard, 'border-top-color', '--status-success');
+    cy.get('@sourceNode').click(8, 8);
+    cy.get(sourceCard).should(($card) => {
+      const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
+      expect(style.boxShadow, 'selection remains separate from the healthy border').to.contain(
+        resolveComputedPaletteColor(style.getPropertyValue('--primary').trim())
+      );
+    });
+    assertComputedColorRole(sourceCard, 'border-top-color', '--status-success');
     cy.get('@sourceNode')
       .should('have.attr', 'aria-label')
       .and('match', /Ready$/);
     cy.get('@sourceNode').find('[data-slot="graph-node-status-chip"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.contains('.react-flow__node', 'Model Orders').as('ordersNode').should('be.visible').click();
-    cy.get('@ordersNode')
-      .find('[data-slot="graph-node-card"]')
-      .should('have.class', 'border-slate-700')
-      .and('have.class', 'ring-2');
+    const modelCard = '.react-flow__node[data-id="model_orders"] [data-slot="graph-node-card"]';
+    assertComputedColorRole(modelCard, 'border-top-color', '--border-strong');
+    cy.get(modelCard).should(($card) => {
+      const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
+      expect(style.boxShadow).to.contain(
+        resolveComputedPaletteColor(style.getPropertyValue('--primary').trim())
+      );
+    });
     cy.get('@ordersNode')
       .should('have.attr', 'aria-label')
       .and('match', /Draft$/);
@@ -1039,6 +1100,11 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('Sales canvas').should('be.visible');
+    // A visual migration must retain the disabled native control instead of making it actionable.
+    cy.get('[data-slot="graph-node-materialization"]')
+      .should('be.disabled')
+      .and('have.css', 'font-size', '12px')
+      .and('have.css', 'cursor', 'default');
     cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
     cy.get('.react-flow__pane').should('be.visible').rightclick(620, 340, { force: true });
     cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-add-node-catalog"]').should(

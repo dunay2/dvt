@@ -120,7 +120,107 @@ const GRAPH_CARD_PRESENTATION_SOURCES = [
   [FALLBACK_RENDERER_SOURCE, 'graphVisualTokens'],
 ] as const;
 
+const FONT_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../../../styles/fonts.css');
+const THEME_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../../styles/theme.css'
+);
+const MODEL_FAMILY_SOURCES = [
+  'CanvasRelationalTreeCard.module.css',
+  'CanvasRelationalTreeSourceCard.tsx',
+  'CanvasRelationalTreeOutput.module.css',
+  'CanvasRelationalFieldToken.module.css',
+  'canvasSemanticEditor.css',
+  'semanticWorkbenchRelationMetadata.ts',
+  'semanticExpressionGraphLayout.ts',
+  'join-condition/operandStyles.ts',
+  'derivedOutputFormula.css',
+].map((file) => readArchitectureSiblingSource(import.meta.dirname, `../../views/canvas/${file}`));
+const TEXT_ROLE_CONSUMERS = [
+  '../../components/inspector/SourceColumns.module.css',
+  '../../components/inspector/inspectorVisualTokens.ts',
+  '../../views/canvas/CanvasCardRemovalBar.module.css',
+  '../../views/code/CodeFileHistoryPanel.tsx',
+  '../../labs/SemanticWorkbenchLab.tsx',
+  '../../views/canvas/CanvasContextualWorkbenchPanel.tsx',
+  '../../views/canvas/CanvasModelOutputInspector.tsx',
+  '../../views/canvas/CanvasRelationalTreeOutput.module.css',
+  '../../views/canvas/canvasSemanticEditor.css',
+  '../../views/canvas/CanvasSourceOccurrenceOutputs.tsx',
+  '../../views/canvas/relational-inspection/RelationalInspectionPanel.tsx',
+  '../../views/canvas/relational-source-occurrence/SourceOccurrenceProperties.templates.tsx',
+  '../../views/canvas/SourceOverviewPanel.tsx',
+];
+
 describe('React Flow visual token convergence architecture', () => {
+  it('keeps typography and shared focus/elevation definitions in their canonical owners', () => {
+    // Local family overrides previously made the same Model identity use a different font.
+    for (const role of ['body', 'meta', 'mono']) {
+      expect(FONT_SOURCE).toContain(`--text-${role}:`);
+      expect(FONT_SOURCE).toContain(`--text-${role}-line-height:`);
+    }
+    for (const role of ['focus-ring-width', 'focus-ring-offset', 'elevation-low']) {
+      expect(THEME_SOURCE).toContain(`--${role}:`);
+    }
+    for (const source of MODEL_FAMILY_SOURCES) {
+      expect(source).not.toMatch(/Segoe UI|IBM Plex|--font-(?:sans|mono)\s*:/);
+    }
+  });
+
+  it('resolves semantic roles against the canonical theme, foundation and local declarations', () => {
+    // An unknown role silently inherits or drops CSS, including hover and passive surfaces.
+    expect(THEME_SOURCE).not.toMatch(/--text-primary\s*:/);
+    const foundation = readArchitectureSiblingSource(
+      import.meta.dirname,
+      '../../../../node_modules/tailwindcss/theme.css'
+    );
+    const canonicalDefinitions = new Set(
+      [...`${FONT_SOURCE}\n${THEME_SOURCE}\n${foundation}`.matchAll(/(--[\w-]+)\s*:/g)].map(
+        (match) => match[1]
+      )
+    );
+    const sources = [
+      FONT_SOURCE,
+      THEME_SOURCE,
+      ...MODEL_FAMILY_SOURCES,
+      ...TEXT_ROLE_CONSUMERS.map((path) =>
+        readArchitectureSiblingSource(import.meta.dirname, path)
+      ),
+      ...[
+        'graphCardVisualTokens.ts',
+        'graphColumnVisualTokens.ts',
+        'graphMetricVisualTokens.ts',
+        '../../components/canvas/CanvasNodeShell.module.css',
+        '../../views/canvas/CanvasRelationalPorts.module.css',
+        '../../views/canvas/CanvasRelationalScalarTree.tsx',
+      ].map((path) => readArchitectureSiblingSource(import.meta.dirname, path)),
+    ];
+    for (const source of sources) {
+      const definitions = new Set([
+        ...canonicalDefinitions,
+        ...[...source.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1]),
+      ]);
+      const references = new Set(
+        source.match(/--(?:text|surface|border|focus|status|canvas-node-port|elevation)-[\w-]+/g)
+      );
+      for (const reference of references) expect(definitions.has(reference), reference).toBe(true);
+    }
+  });
+
+  it('keeps Model operation identity separate from health, selection and Output type', () => {
+    const card = MODEL_FAMILY_SOURCES[0]!;
+    const output = MODEL_FAMILY_SOURCES[2];
+    // A Read may represent a dbt model; category colors must not invent Source or execution status.
+    for (const categoryRule of card.matchAll(/\[data-category=[^}]+\{([^}]+)\}/g)) {
+      expect(categoryRule[1]).not.toMatch(/(?:color|background(?:-color)?|border-color)\s*:/);
+    }
+    expect(card).toContain('var(--surface-elevated)');
+    expect(card).toContain('var(--surface-selected)');
+    expect(card).toContain('var(--focus-ring)');
+    expect(output).toContain('var(--canvas-node-port-output-ring)');
+    expect(output).not.toContain('--status-success');
+  });
+
   it('keeps nested field appearance and drop-state styling in its own stylesheet', () => {
     expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain("from './GraphNodeColumnChildren.module.css'");
     expect(GRAPH_NESTED_COLUMNS_SOURCE).not.toMatch(
@@ -184,9 +284,9 @@ describe('React Flow visual token convergence architecture', () => {
 
   it('keeps health borders semantic and exposes status through the focusable node', () => {
     expect(graphNodeHealthBorderClasses).toEqual({
-      healthy: 'border-solid border-green-500',
-      failed: 'border-dashed border-red-500',
-      neutral: 'border-solid border-slate-700',
+      healthy: 'border-solid border-(--status-success)',
+      failed: 'border-dashed border-(--status-danger)',
+      neutral: 'border-solid border-(--border-strong)',
     });
     expect(GRAPH_CARD_VIEW_SOURCE).not.toContain('GraphNodeStatusChip');
     expect(CANVAS_NODE_MAPPER_SOURCE).toContain('buildGraphNodeCardReadModel');

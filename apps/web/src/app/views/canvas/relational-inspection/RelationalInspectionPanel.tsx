@@ -28,7 +28,7 @@ function InspectionContent({
         <JoinConditionSummary relationId={inspection.relationId} transformNode={transformNode} />
       );
     case 'summary':
-      return <p className="text-xs text-(--text-primary)">{inspection.text}</p>;
+      return <p className="text-xs text-(--text-default)">{inspection.text}</p>;
     case 'unsupported':
       return <p className="text-xs text-(--text-muted)">{copy.operationUnsupportedLabel}</p>;
     case 'cross':

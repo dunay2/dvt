@@ -7,9 +7,9 @@ import type {
 import { writeCanvasRelationalSourceDrag } from './canvasRelationalTreeDrag';
 
 const stateClass = {
-  participating: 'border-emerald-700/80 bg-emerald-950/30 text-emerald-300',
-  pending: 'border-amber-700/80 bg-amber-950/30 text-amber-300',
-  missing: 'border-rose-700/80 bg-rose-950/30 text-rose-300',
+  participating: 'bg-(--surface-selected) text-(--text-muted)',
+  pending: 'bg-(--surface-selected) text-(--status-warning)',
+  missing: 'bg-(--surface-selected) text-(--status-danger)',
 } as const;
 
 export function CanvasRelationalTreeSourceCard({
@@ -48,15 +48,12 @@ export function CanvasRelationalTreeSourceCard({
       onClick={() => {
         if (item.selectable !== false) onSelect(item);
       }}
-      className="flex h-9 w-full items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
+      className="flex h-9 w-full items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-panel) px-2 text-left enabled:cursor-grab enabled:hover:border-(--primary) enabled:active:cursor-grabbing aria-pressed:border-(--primary) aria-pressed:ring-1 aria-pressed:ring-(--primary) focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-(--focus-ring) focus-visible:outline-offset-[var(--focus-ring-offset)] disabled:cursor-default"
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">
-        <Table2 aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
+        <Table2 aria-hidden="true" className="size-4 shrink-0 text-(--primary)" />
         <span className="min-w-0 flex-1">
-          <span
-            style={{ fontFamily: '"Segoe UI", system-ui, sans-serif' }}
-            className="block truncate text-sm font-medium text-(--text-strong)"
-          >
+          <span className="block truncate text-[length:var(--text-body)] leading-(--text-body-line-height) font-medium text-(--text-strong)">
             {item.label}
           </span>
         </span>

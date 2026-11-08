@@ -8,16 +8,16 @@
   border-radius: 0.25rem;
   background: var(--surface-panel);
   padding: 0.25rem 0.5rem;
-  font-family: var(--font-mono, monospace);
-  font-size: 13px;
-  line-height: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: var(--text-mono-line-height);
 }
 .token[draggable='true'] {
   cursor: grab;
 }
 .token:focus-visible {
-  outline: 2px solid var(--border-focus, #38bdf8);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .remove {
@@ -37,8 +37,8 @@
   color: var(--status-danger);
 }
 .remove:focus-visible {
-  outline: 2px solid var(--border-focus, #38bdf8);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 .remove:disabled {
   cursor: default;
