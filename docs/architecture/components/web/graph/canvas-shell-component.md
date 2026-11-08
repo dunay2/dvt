@@ -880,6 +880,13 @@ Model retains an open Code session. The existing guarded close removes both tab
 and panel only after its owner accepts the current close intent. Failed, pending
 or superseded closes preserve the session. Explicit File/Git entry reopens it.
 
+`CanvasShellMainSurface` resolves contextual-workbench placement once and uses
+that result for both the contextual frame and the viewport gate for transient
+node surfaces and global Delete. The gate also reflects the existing Code,
+Model, import-task and inspector visibility. `CanvasShellViewport` forwards
+this derived value; it does not reclassify workbench identities or own navigation
+state.
+
 The Main Canvas activity rail remains accessible in both Canvas and Code. The
 shell provides a stable local activity slot outside the retained panels that
 become hidden and inert. `CanvasExplorer` presents its single existing nav in that
