@@ -43,6 +43,7 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<input aria-label="Data search" onContextMenu={childHandler} />}
           bottomDrawerHeight={360}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           leftNavigation={<button onContextMenu={childHandler}>Elements</button>}
 
@@ -89,6 +90,7 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={null}
           bottomDrawerHeight={0}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           leftNavigation={null}
 
@@ -130,6 +132,7 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<div data-testid="bottom-operational-drawer">Operations drawer</div>}
           bottomDrawerHeight={360}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
@@ -197,6 +200,7 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
           bottomDrawerHeight={360}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
@@ -227,6 +231,7 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
           bottomDrawerHeight={0}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}

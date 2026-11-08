@@ -14,7 +14,7 @@ import type { SourceImportInitialSelection } from '../../components/sourceImport
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasHexColor } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
@@ -103,9 +103,9 @@ export type CanvasShellGraph = {
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPalette: CanvasHexColor;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
   viewport: CanvasViewport | null;
   frozenNodeIds: ReadonlySet<string>;
@@ -155,9 +155,9 @@ export type CanvasShellChromeCommands = {
   onToggleImpact: () => void;
   onToggleColumns: () => void;
   onGridSizeChange: (size: number) => void;
-  onCanvasPaletteChange: (color: CanvasPaletteId) => void;
+  onCanvasPaletteChange: (color: CanvasHexColor) => void;
   onToggleGridVisible: () => void;
-  onGridColorChange: (color: CanvasPaletteId) => void;
+  onGridColorChange: (color: CanvasHexColor) => void;
   onToggleSnapToGrid: () => void;
   onExportProjectSnapshot?: () => void;
   onImportProjectSnapshotFile?: (file: File) => void;

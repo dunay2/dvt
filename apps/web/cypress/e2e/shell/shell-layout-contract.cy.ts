@@ -8,6 +8,7 @@
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -175,7 +176,9 @@ describe('Shell layout contract', () => {
       const rail = window.document.querySelector('[data-slot="left-navigation-rail"]');
       const nav = window.document.querySelector('[data-slot="left-navigation-nav"]');
       const links = Array.from(
-        window.document.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]')
+        window.document.querySelectorAll<HTMLElement>(
+          '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
+        )
       );
 
       expect(body, 'shell body').to.not.equal(null);
@@ -207,7 +210,7 @@ describe('Shell layout contract', () => {
     assertNavigationTargetGeometry();
     cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
     cy.viewport(640, 400);
-    cy.get('[data-slot="left-navigation-link"]')
+    cy.get('[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]')
       .last()
       .scrollIntoView()
       .focus()
@@ -220,9 +223,9 @@ describe('Shell layout contract', () => {
         expect(rect.bottom).to.be.at.most(400);
       })
       .focus();
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.get('[data-slot="shell-about-dialog"]').should('be.visible');
-    cy.press(Cypress.Keyboard.Keys.ESC);
+    pressNativeKey('Escape');
     cy.get('[data-slot="shell-about-command"]').should('be.focused');
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 640);
   });
@@ -319,7 +322,7 @@ describe('Shell layout contract', () => {
       hold = true;
     });
     cy.get('[data-slot="shell-project-code-command"]').focus();
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.location('pathname').should('equal', '/canvas');
     cy.get('[data-slot="app-shell-outlet"]').should('contain.text', 'Checking session...');
     cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.exist');
@@ -407,15 +410,20 @@ describe('Shell layout contract', () => {
     });
     cy.get('[data-slot="canvas-model-main-tab"]').click();
     assertShellCanvasEntries();
+    cy.get<JQuery<HTMLElement>>('@retainedModel').then(($original) => {
+      cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
+    });
     workbenchOperation('filter').scrollIntoView().click();
     cy.get('[data-pending-operation="true"]').should('exist');
+    // Staging starts the existing draft presentation; a rejected route change must retain that owner.
+    cy.get(modelViewport).as('pendingModel', { type: 'static' });
     cy.get('[data-slot="left-navigation-link"][href="/plugins"]').focus();
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.get('[role="alertdialog"]').should('be.visible');
     cy.location('pathname').should('eq', '/canvas');
     cy.contains('[role="alertdialog"] button', 'Keep editing').click();
     cy.get('[data-pending-operation="true"]').should('exist');
-    cy.get<JQuery<HTMLElement>>('@retainedModel').then(($original) => {
+    cy.get<JQuery<HTMLElement>>('@pendingModel').then(($original) => {
       cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
     });
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
@@ -433,14 +441,13 @@ describe('Shell layout contract', () => {
     });
   });
 
-  it('uses one drawer controls row and restores fully hidden tabs through the keyboard context menu', () => {
+  it('uses one drawer controls row and restores fully hidden tabs through a visible keyboard action', () => {
     // The title-only row took content space; removing it must keep close and tab restoration reachable.
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
     visitShellRouteWithUiLayout('/canvas');
     revealOperationalDrawer();
     const drawer = '[data-slot="bottom-operational-drawer"]';
     const controls = '[data-slot="bottom-operational-drawer-controls"]';
-    const tabs = '[data-slot="bottom-operational-drawer-tabs"]';
     const close = '[data-slot="bottom-operational-drawer-close"]';
     cy.get(drawer)
       .should('have.attr', 'role', 'region')
@@ -468,25 +475,13 @@ describe('Shell layout contract', () => {
       cy.wrap($button).click();
     });
     cy.get(`${drawer} [role="tablist"]`).should('not.exist');
-    cy.get(tabs).should('have.attr', 'tabindex', '0').focus().should('be.focused');
-    // Native Chromium default action proves the advertised Shift+F10 gesture, not a synthetic menu event.
-    cy.then(async () => {
-      for (const type of ['rawKeyDown', 'keyUp']) {
-        await Cypress.automation('remote:debugger:protocol', {
-          command: 'Input.dispatchKeyEvent',
-          params: {
-            type,
-            key: 'F10',
-            code: 'F10',
-            windowsVirtualKeyCode: 121,
-            nativeVirtualKeyCode: 121,
-            modifiers: 8,
-          },
-        });
-      }
-    });
+    cy.get('[data-slot="bottom-operational-drawer-restore"]')
+      .should('be.visible')
+      .focus()
+      .should('be.focused');
+    pressNativeKey('Enter');
     cy.get('[data-restore-tab="log"]').should('be.visible').focus();
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="log"]').should(
       'have.attr',
       'aria-selected',
@@ -497,7 +492,7 @@ describe('Shell layout contract', () => {
       expect($row[0]!.scrollWidth).to.be.at.most($row[0]!.clientWidth + 1);
     });
     cy.get(close).should('be.visible').focus();
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    pressNativeKey('Enter');
     cy.get(drawer).should('not.exist');
   });
 
@@ -588,10 +583,17 @@ describe('Shell layout contract', () => {
         expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(35, 1);
       });
 
-      cy.get(handle).focus().should('be.focused').trigger('keydown', { key: 'Home' });
+      cy.get(handle).focus().should('be.focused');
+      pressNativeKey('Home');
       cy.get(drawer).should('have.attr', 'data-panel-size', '90.0');
-      cy.get(handle).trigger('keydown', { key: 'End' });
-      cy.get(drawer).should('have.attr', 'data-panel-size', '12.0');
+      pressNativeKey('End');
+      cy.get(drawer).should(($drawer) => {
+        expect(
+          $drawer[0]!.getBoundingClientRect().height,
+          'minimum usable drawer height'
+        ).to.be.closeTo(160, 2);
+      });
+      pressNativeKey('ArrowUp');
       cy.get(expression).should(($current) => {
         expect($current[0]).to.equal(semanticElement);
         expect($current.text()).to.equal(expressionText);
@@ -606,6 +608,36 @@ describe('Shell layout contract', () => {
         'aria-selected',
         'true'
       );
+      cy.get(drawer).then(($drawer) => {
+        const rememberedHeight = $drawer[0]!.getBoundingClientRect().height;
+        expect(rememberedHeight, 'keyboard resize has a larger saved height').to.be.greaterThan(
+          160
+        );
+        cy.window().should((window) => {
+          const saved = JSON.parse(window.localStorage.getItem('dvt-web-ui-layout')!);
+          expect(
+            saved.state.bottomDrawerHeight,
+            'actual resize reached the layout owner'
+          ).to.be.closeTo(rememberedHeight, 2);
+        });
+        cy.get('[data-slot="bottom-operational-drawer-close"]').click();
+        cy.get(drawer).should('not.exist');
+        revealOperationalDrawer();
+        cy.get(drawer).should(($reopened) => {
+          expect(
+            $reopened[0]!.getBoundingClientRect().height,
+            'close and reveal retain size'
+          ).to.be.closeTo(rememberedHeight, 2);
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
+        });
+        cy.reload();
+        cy.get(drawer).should(($reloaded) => {
+          expect(
+            $reloaded[0]!.getBoundingClientRect().height,
+            'reload retains the resized height'
+          ).to.be.closeTo(rememberedHeight, 2);
+        });
+      });
     });
   });
 });

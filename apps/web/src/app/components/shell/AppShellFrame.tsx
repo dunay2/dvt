@@ -1,9 +1,13 @@
 /** Owned concern: lay out shell chrome slots from already-resolved presentation posture. */
-import { useMemo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { ShellActivityRailProvider } from './ShellActivityRail';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
-import { resolveBottomDrawerDefaultSize } from './appShellPanelSizing';
+import { OPERATIONAL_DRAWER_PERCENT } from './appShellPanelSizing';
+import {
+  OPERATIONAL_DRAWER_GROUP_ID,
+  useOperationalDrawerResize,
+} from './useOperationalDrawerResize';
 
 type AppShellFrameProps = {
   readonly topBar: ReactNode;
@@ -11,6 +15,7 @@ type AppShellFrameProps = {
   readonly leftNavigation: ReactNode;
   readonly bottomDrawer: ReactNode;
   readonly bottomDrawerHeight: number;
+  readonly onBottomDrawerHeightChange: (height: number) => void;
   readonly children: ReactNode;
   readonly focusMode: boolean;
   readonly showBottomDrawer: boolean;
@@ -25,6 +30,7 @@ export function AppShellFrame({
   leftNavigation,
   bottomDrawer,
   bottomDrawerHeight,
+  onBottomDrawerHeightChange,
   children,
   focusMode,
   showBottomDrawer,
@@ -32,15 +38,11 @@ export function AppShellFrame({
 }: AppShellFrameProps) {
   const showLeftNavigation = !focusMode;
   const showOperationalDrawer = !focusMode && showBottomDrawer;
-  // A default is a size request, not a continuously recomputed viewport constraint.
-  const bottomDrawerDefaultSize = useMemo(
-    () =>
-      resolveBottomDrawerDefaultSize(
-        bottomDrawerHeight,
-        typeof window === 'undefined' ? 0 : window.innerHeight
-      ),
-    [bottomDrawerHeight]
-  );
+  const drawerResize = useOperationalDrawerResize({
+    height: bottomDrawerHeight,
+    visible: showOperationalDrawer,
+    onHeightChange: onBottomDrawerHeightChange,
+  });
   const focusMainContent = (): void => {
     document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
   };
@@ -83,13 +85,14 @@ export function AppShellFrame({
 
             <div
               data-slot="app-shell-main"
+              ref={drawerResize.groupHostRef}
               className="flex min-h-0 flex-1 flex-col overflow-hidden"
             >
-              <ResizablePanelGroup direction="vertical" id="app-shell-vertical-panels">
+              <ResizablePanelGroup direction="vertical" id={OPERATIONAL_DRAWER_GROUP_ID}>
                 <ResizablePanel
                   id="app-shell-route-outlet-panel"
                   order={1}
-                  defaultSize={showOperationalDrawer ? 100 - bottomDrawerDefaultSize : 100}
+                  defaultSize={showOperationalDrawer ? 100 - drawerResize.defaultSize : 100}
                 >
                   <main
                     id={APP_SHELL_MAIN_CONTENT_ID}
@@ -103,14 +106,22 @@ export function AppShellFrame({
 
                 {showOperationalDrawer && (
                   <>
-                    <ResizableHandle id="app-shell-bottom-drawer-resize-handle" withHandle />
+                    <ResizableHandle
+                      id="app-shell-bottom-drawer-resize-handle"
+                      withHandle
+                      onDragging={drawerResize.onDragging}
+                      onKeyDownCapture={drawerResize.onKeyDownCapture}
+                      onKeyUpCapture={drawerResize.onKeyUpCapture}
+                      onBlur={drawerResize.onBlur}
+                    />
                     <ResizablePanel
-                      key={`bottom-drawer-${Math.round(bottomDrawerHeight)}`}
+                      ref={drawerResize.panelRef}
                       id="app-shell-bottom-drawer-panel"
                       order={2}
-                      defaultSize={bottomDrawerDefaultSize}
-                      minSize={12}
-                      maxSize={90}
+                      defaultSize={drawerResize.defaultSize}
+                      minSize={drawerResize.minSize}
+                      maxSize={OPERATIONAL_DRAWER_PERCENT.max}
+                      onResize={drawerResize.onResize}
                     >
                       <div data-slot="app-shell-bottom-drawer" className="h-full min-h-0">
                         {bottomDrawer}

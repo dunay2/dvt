@@ -14,6 +14,7 @@ import type { AuthorizedExecutionContext } from '../../../src/application/ports/
 import type { DbtModelProducer } from '../../../src/application/ports/dbtModelProducer.js';
 import { projectDvtPostgresTransform } from '../../../src/application/services/dvtPostgresTransformProjection.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
+import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import {
   resolveDvtTerminalTransformClosure,
   type DvtTerminalTransformClosure,
@@ -103,12 +104,14 @@ function harness(
     },
   }));
   const useCase = new PreviewCanvasTransformRowsUseCase({
-    graphDraftResolver: { executeWithAuthorizedDraft } as never,
+    projection: new ResolveCanvasTransformProjection({
+      graphDraftResolver: { executeWithAuthorizedDraft } as never,
+      ...(externalProducers == null
+        ? {}
+        : { modelProducers: { resolve: async () => externalProducers } }),
+    }),
     connectionCatalog: { getConnection } as never,
     probe: { previewTransformRows },
-    ...(externalProducers == null
-      ? {}
-      : { modelProducers: { resolve: async () => externalProducers } }),
   });
   return {
     draft,

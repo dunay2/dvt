@@ -10,7 +10,7 @@ import {
 } from './nodePropertyPresentation';
 
 const SECTION_DEFAULTS: Partial<Record<NodePropertySectionId, readonly [string, string]>> = {
-  general: ['General', ''],
+  general: ['Overview', ''],
   columns: ['Columns', 'No columns are recorded for this node.'],
   'inputs-outputs': ['Inputs / Outputs', 'No graph inputs or outputs are recorded for this node.'],
   tests: ['Tests', 'No dbt or data-quality tests are recorded for this node.'],

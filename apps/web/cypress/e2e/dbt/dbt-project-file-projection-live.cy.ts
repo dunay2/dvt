@@ -3,6 +3,25 @@
  * files, protected HTTP, server-side dbt parse, and browser rendering.
  */
 import {
+  ConnectedSourceRefSchema,
+  DbtProjectGraphProjectionSchema,
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformSqlProjectionResponseSchema,
+  type DbtProjectGraphProjection,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
+
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
+import type { CanonicalEdge, CanonicalNode } from '../../../src/app/types/canonical';
+import { createCanvasDbtModelDefinition } from '../../../src/app/views/canvas/canvasDbtModelReference';
+import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import { resolveCanvasDvtCompositionInputs } from '../../../src/app/views/canvas/canvasDvtCompositionInputCatalog';
+import { applyDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtTransformAuthoringAuthority';
+import { configureCanvasStagedComposition } from '../../../src/app/views/canvas/canvasStagedCompositionConfiguration';
+import { createPendingSourceOccurrence } from '../../../src/app/views/canvas/relational-source-occurrence/pendingSourceOccurrence';
+import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
+import { buildScenarioDraft } from '../../support/canvasDrafts/scenario';
+import {
   adoptLiveDbtProjectFileAuthority,
   replaceLiveWorkspaceFile,
   requestLiveDbtProjectGraph,
@@ -12,14 +31,17 @@ import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAutho
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveWorkspaceFile,
+  resolveLiveWorkspaceSession,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
 const PROJECT_ROOT = 'analytics-file-projection';
 const INVALID_PROJECT_ROOT = 'analytics-invalid';
 const CANVAS_ID = 'analytics-file-projection-files';
 const INVALID_CANVAS_ID = 'analytics-invalid-files';
+const MIXED_MODEL_ID = 'mixed-file-model-transform';
 
 const INVALID_PROJECT_CONFIG = `
 name: analytics_invalid
@@ -96,6 +118,66 @@ select * from {{ ref('orders') }}
 };
 
 type DragPoint = Readonly<{ x: number; y: number }>;
+
+/** Build real canonical JOIN semantics from a current file publication and the LIVE source fixture. */
+function buildMixedFileModelDraft(
+  projection: DbtProjectGraphProjection
+): WorkspaceGraphAuthoringDraft {
+  const seed = buildCanvasAuthoringDraft({
+    authoringGenerated: true,
+    terminalTransformPreview: true,
+    sourceDatabaseName: livePostgresDatabaseName(),
+  });
+  const source = projectWorkspaceGraphAuthoringDraftSemanticGraph(seed).canonicalNodes.find(
+    (node) => node.id === 'source-1'
+  )!;
+  const producer = createCanvasDbtModelDefinition(projection, 'model.analytics.orders');
+  const model: CanonicalNode = {
+    id: MIXED_MODEL_ID,
+    name: 'Mixed file model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
+    role: 'transform',
+    status: 'idle',
+    tags: ['authoring'],
+    metadata: {},
+  };
+  const edges: CanonicalEdge[] = [source, producer].map((input) => ({
+    id: `${input.id}-mixed-model`,
+    sourceId: input.id,
+    targetId: model.id,
+    relation: 'lineage',
+  }));
+  const inputs = resolveCanvasDvtCompositionInputs({
+    nodes: [source, producer, model],
+    edges,
+    targetNodeId: model.id,
+  });
+  expect(inputs, 'one physical source and one current file publication').to.have.length(2);
+  const sources = inputs.map(createPendingSourceOccurrence);
+  const configured = configureCanvasStagedComposition(
+    {
+      id: 'mixed-inner-join',
+      operation: 'inner_join',
+      inputs: sources.map((input) => input.read.binding.relationId),
+    },
+    inputs,
+    sources,
+    []
+  );
+  if (configured.semanticDocument == null) throw new Error('The real mixed JOIN was not admitted.');
+  const configuredModel = applyDvtSubstraitSemanticDocument(model, configured.semanticDocument);
+  return buildScenarioDraft({
+    canvas: seed.canvas,
+    nodes: [source, producer, configuredModel].map(projectCanonicalNodeToAuthoringNode),
+    edges,
+    nodePositions: {
+      [source.id]: { x: 50, y: 70 },
+      [producer.id]: { x: 50, y: 300 },
+      [model.id]: { x: 500, y: 170 },
+    },
+  });
+}
 
 function buildMouseEvent(
   point: DragPoint,
@@ -588,6 +670,106 @@ describe('dbt project file projection live vertical', () => {
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').should('not.exist');
     cy.then(() => {
       expect(writes, 'navigation does not persist copied semantics').to.deep.equal([]);
+    });
+  });
+
+  it('shows authorized SQL for a native JOIN of a real file model and physical source without executing rows', () => {
+    let draftRevision: string;
+    let semanticPlanSha256: string;
+    let projection: DbtProjectGraphProjection;
+    let sourceRef: ReturnType<typeof ConnectedSourceRefSchema.parse>;
+    const graphWrites: string[] = [];
+    const fileWrites: string[] = [];
+    const rowReads: string[] = [];
+
+    // This guards the original failure: the browser had a producer signature but no authorized SQL.
+    requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID)
+      .then((response) => {
+        expect(response.status).to.equal(200);
+        projection = DbtProjectGraphProjectionSchema.parse(response.body);
+        const draft = buildMixedFileModelDraft(projection);
+        const model = draft.nodes.find((node) => node.id === MIXED_MODEL_ID)!;
+        semanticPlanSha256 = DvtTransformAuthoringAuthorityV1Schema.parse(
+          model.metadata?.transformAuthoring
+        ).semanticDocument.semanticPlan.sha256;
+        sourceRef = ConnectedSourceRefSchema.parse(
+          draft.nodes.find((node) => node.id === 'source-1')?.metadata?.connectedSourceRef
+        );
+        return seedLiveSelectedClosureDraft({ draft });
+      })
+      .then((revision) => {
+        draftRevision = revision;
+      });
+
+    cy.intercept(
+      'GET',
+      `**/workspace/graph/canvases/main-canvas/transforms/${MIXED_MODEL_ID}/sql?*`
+    ).as('mixedModelSql');
+    cy.intercept('PUT', '**/workspace/graph/draft', (request) => {
+      graphWrites.push(request.url);
+    });
+    cy.intercept('POST', '**/workspace/files/**', (request) => {
+      fileWrites.push(request.url);
+    });
+    cy.intercept('GET', '**/workspace/graph/**/data-sample?*', (request) => {
+      rowReads.push(request.url);
+    });
+    cy.viewport(1500, 900);
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    openWorkbenchProperties(MIXED_MODEL_ID);
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
+    cy.wait('@mixedModelSql', { timeout: 60_000 }).then(({ request, response }) => {
+      expect(response?.statusCode).to.equal(200);
+      const sql = TransformSqlProjectionResponseSchema.parse(response?.body);
+      expect(Object.fromEntries(new URL(request.url).searchParams)).to.deep.equal({
+        ...resolveLiveWorkspaceSession(),
+        semanticPlanSha256,
+      });
+      expect(sql).to.include({
+        canvasId: 'main-canvas',
+        transformNodeId: MIXED_MODEL_ID,
+        draftRevision,
+        semanticPlanSha256,
+      });
+      expect(sql.provenance.sourceRefs).to.deep.equal([sourceRef]);
+      expect(sql.provenance.modelRefs).to.deep.equal([
+        {
+          canvasId: CANVAS_ID,
+          uniqueId: 'model.analytics.orders',
+          contentSetSha256: projection.projectRevision.contentSetSha256,
+          analysisSha256: projection.analysisSha256,
+        },
+      ]);
+      expect(sql.sql)
+        .to.match(/\bjoin\b/i)
+        .and.contain('customer-1');
+      expect(sql.sql)
+        .to.match(/raw"?\."?orders/)
+        .and.match(/public"?\."?orders/);
+    });
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines', { timeout: 20_000 })
+      .should('contain.text', 'customer-1')
+      .and(($lines) => {
+        expect($lines.text(), 'Monaco displays the protected SQL projection').to.match(/\bjoin\b/i);
+      });
+    cy.then(() => {
+      expect(graphWrites, 'inspection does not save native semantics').to.deep.equal([]);
+      expect(fileWrites, 'inspection does not write project artifacts').to.deep.equal([]);
+      expect(rowReads, 'SQL inspection does not execute row Preview').to.deep.equal([]);
+    });
+    readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
+      expect(response.body).to.have.property(
+        'content',
+        PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
+      );
     });
   });
 

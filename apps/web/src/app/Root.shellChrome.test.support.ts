@@ -160,17 +160,19 @@ export function expectRootShellNavigationChrome(container: ParentNode, activeHre
     '[data-slot="left-navigation-rail"]'
   );
   const leftNavigationLinks = [
-    ...container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
+    ...container.querySelectorAll<HTMLElement>(
+      '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
+    ),
   ];
   const activeNavigationLink = leftNavigationLinks.find(
-    (link) => link.getAttribute('href') === activeHref
+    (link) => readShellNavigationDestination(link) === activeHref
   );
   if (!activeNavigationLink) {
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
 
   expect(leftNavigationRail.className).toBe(navigationStyles.rail);
-  expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual(
+  expect(leftNavigationLinks.map(readShellNavigationDestination)).toEqual(
     ROOT_SHELL_NAVIGATION_HREFS
   );
   expect(readLeftNavigationCaptions(container)).toContain('Runs');
@@ -184,12 +186,18 @@ export function expectActiveRootShellNavigationLink(
   activeHref: string
 ): void {
   const activeNavigationLink = [
-    ...container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
-  ].find((link) => link.getAttribute('href') === activeHref);
+    ...container.querySelectorAll<HTMLElement>(
+      '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
+    ),
+  ].find((link) => readShellNavigationDestination(link) === activeHref);
   if (!activeNavigationLink) {
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
 
   expect(activeNavigationLink.getAttribute('aria-current')).toBe('page');
   expect(activeNavigationLink.className).not.toContain('isActive');
+}
+
+function readShellNavigationDestination(entry: HTMLElement): string | null {
+  return entry.getAttribute('href') ?? entry.getAttribute('data-route');
 }

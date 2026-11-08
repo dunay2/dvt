@@ -23,7 +23,7 @@ const readModel: NodePropertiesReadModel = {
   nodeId: node.id,
   nodeName: node.name,
   sections: [
-    { id: 'general', label: 'General', rows: [], tableRows: [] },
+    { id: 'general', label: 'Overview', rows: [], tableRows: [] },
     { id: 'columns', label: 'Columns', rows: [], tableRows: [] },
     { id: 'summary', label: 'Summary', rows: [], tableRows: [] },
     { id: 'constraints', label: 'Constraints', rows: [], tableRows: [] },

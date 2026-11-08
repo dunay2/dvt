@@ -48,6 +48,21 @@ describe('RootShell chrome', () => {
     else globalThis.ResizeObserver = previousResizeObserver;
   });
 
+  it('places the opted-in Admin heading in the existing top bar', async () => {
+    // Admin previously left this shared row blank and repeated a large local header beneath it.
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/admin'])
+    );
+    try {
+      await waitForHealthyShellChrome(mounted);
+      expect(mounted.container.querySelector('[data-slot="shell-top-bar"] h1')?.textContent).toBe(
+        'Admin & RBAC'
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('preserves owned rail styles, labels and keyboard focus on a global route', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/'])
@@ -57,8 +72,8 @@ describe('RootShell chrome', () => {
       const rail = mounted.container.querySelector('[data-slot="left-navigation-rail"]');
       const frame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
       const nav = rail?.querySelector('[data-slot="left-navigation-nav"]');
-      const admin = nav?.querySelector<HTMLAnchorElement>(
-        '[data-slot="left-navigation-link"][href="/admin"]'
+      const admin = nav?.querySelector<HTMLButtonElement>(
+        '[data-slot="left-navigation-section-trigger"][data-route="/admin"]'
       );
       const runs = nav?.querySelector<HTMLAnchorElement>(
         '[data-slot="left-navigation-link"][href="/runs"]'
@@ -97,15 +112,13 @@ describe('RootShell chrome', () => {
       const rail = mounted.container.querySelector('[data-slot="left-navigation-rail"]');
       expect(rail).not.toBeNull();
       const links = [
-        ...rail!.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
+        ...rail!.querySelectorAll<HTMLElement>(
+          '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
+        ),
       ];
-      expect(links.map((link) => link.getAttribute('href'))).toEqual([
-        '/canvas',
-        '/runs',
-        '/templates',
-        '/plugins',
-        '/admin',
-      ]);
+      expect(
+        links.map((link) => link.getAttribute('href') ?? link.getAttribute('data-route'))
+      ).toEqual(['/canvas', '/runs', '/templates', '/plugins', '/admin']);
       expect(links[0]?.getAttribute('aria-current')).toBe('page');
       expect(mounted.container.querySelector('[data-slot="shell-app-menu-trigger"]')).toBeNull();
       expect(rail!.querySelector('[data-slot="shell-about-command"]')).not.toBeNull();

@@ -11,6 +11,7 @@ import type {
 import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasTransformSqlQueryBinding } from '../../ports/canvasTransformSql';
 import {
   resolveCanvasNodeWorkbenchContributions,
   type CanvasNodeWorkbenchContribution,
@@ -39,6 +40,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[];
   authoring: CanvasInspectorAuthoringContract;
   contributions?: readonly CanvasNodeWorkbenchContribution[];
+  codeProjection?: CanvasTransformSqlQueryBinding;
   onOpenSemanticEditor?: () => void;
   onClose: () => void;
 }>;

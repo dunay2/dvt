@@ -8,7 +8,10 @@ import { Activity, Workflow } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LeftNavigationRail } from './LeftNavigation';
 import { resolveShellTopBarCopy } from './shell/copy';
-import type { ShellNavigationModel } from '../shell/shellNavigationModel';
+import {
+  buildShellNavigationModel,
+  type ShellNavigationModel,
+} from '../shell/shellNavigationModel';
 import { ShellActivityRailProvider } from './shell/ShellActivityRail';
 import { CanvasExplorer } from '../views/canvas/explorer/CanvasExplorer';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
@@ -52,6 +55,54 @@ afterEach(async () => {
 });
 
 describe('Direct shell navigation', () => {
+  it('opens Admin sections from the persistent icon instead of a direct route link', async () => {
+    // The operator requested a section menu at the icon; flat navigation cannot expose that choice.
+    let observedLocation: ReturnType<typeof useLocation>;
+    function SectionLocationProbe(): null {
+      observedLocation = useLocation();
+      return null;
+    }
+    await act(async () => {
+      root.render(
+        <MemoryRouter key="admin-sections" initialEntries={['/admin?view=compact#events']}>
+          <LeftNavigationRail
+            navigationModel={buildShellNavigationModel([])}
+            copy={resolveShellTopBarCopy('en')}
+          />
+          <SectionLocationProbe />
+        </MemoryRouter>
+      );
+    });
+    const admin = within(container).getByRole('button', { name: 'Admin' });
+    expect(admin.getAttribute('aria-haspopup')).toBe('menu');
+    expect(admin.getAttribute('href')).toBeNull();
+    expect(admin.getAttribute('aria-current')).toBe('page');
+    await act(async () => {
+      admin.focus();
+      fireEvent.keyDown(admin, { key: 'ArrowDown' });
+    });
+    await waitFor(() => expect(within(document.body).getAllByRole('menuitem')).toHaveLength(4));
+    expect(
+      within(document.body).getByRole('menuitem', { name: 'Platform' }).getAttribute('aria-current')
+    ).toBe('page');
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    await waitFor(() => expect(document.activeElement).toBe(admin));
+    await act(async () => {
+      fireEvent.keyDown(admin, { key: 'ArrowDown' });
+    });
+    const audit = await waitFor(() =>
+      within(document.body).getByRole('menuitem', { name: 'Audit Log' })
+    );
+    await act(async () => {
+      fireEvent.click(audit);
+    });
+    expect(observedLocation!.pathname).toBe('/admin');
+    expect(observedLocation!.search).toBe('?view=compact&tab=audit');
+    expect(observedLocation!.hash).toBe('#events');
+    expect(within(container).getByRole('button', { name: 'Admin' })).toBe(admin);
+  });
   it('keeps one Git entry across routes and delegates current Canvas activation without navigation', async () => {
     // Git belongs to shell lifetime; the route callback is used only while its owner is mounted.
     const navigationModel: ShellNavigationModel = {

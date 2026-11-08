@@ -17,17 +17,25 @@ import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasW
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './shell/copy';
 import { topAppBarClasses } from './shell/chrome';
+import {
+  buildShellNavigationModel,
+  resolveShellRouteHeading,
+  type ShellRouteHeading,
+} from '../shell/shellNavigationModel';
 import ShellTopBar from './TopAppBar';
 
 describe('ShellTopBar workspace context', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  function renderShellTopBar(pathname: string): JSX.Element {
+  function renderShellTopBar(
+    pathname: string,
+    routeHeading: ShellRouteHeading | null = null
+  ): JSX.Element {
     return (
       <AppServicesProvider overrides={createAppServicesTestOverrides()}>
         <MemoryRouter initialEntries={[pathname]}>
-          <ShellTopBar />
+          <ShellTopBar routeHeading={routeHeading} />
         </MemoryRouter>
       </AppServicesProvider>
     );
@@ -147,6 +155,21 @@ describe('ShellTopBar workspace context', () => {
     expect(contextTrigger?.textContent).toContain('Workspace context');
     expect(topBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
     expect(topBar?.querySelectorAll('[role="combobox"]')).toHaveLength(0);
+  });
+
+  it('renders an opted-in route heading in the existing identity area', async () => {
+    const heading = resolveShellRouteHeading(buildShellNavigationModel([]), '/admin');
+    await act(async () => {
+      root.render(renderShellTopBar('/admin', heading));
+    });
+    const title = container.querySelector('[data-slot="shell-top-bar"] h1');
+    expect(title?.textContent).toBe('Admin & RBAC');
+    expect(title?.closest('[data-slot="shell-top-bar-context-cluster"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="shell-file-menu-trigger"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="shell-route-heading"] svg')?.getAttribute('aria-hidden')
+    ).toBe('true');
   });
 
   it.each(['/canvas', '/runs/run_123'])(

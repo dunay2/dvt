@@ -12,6 +12,20 @@ import {
 } from './frontendOperabilityRecorder';
 
 describe('frontendOperabilityRecorder', () => {
+  it('records SQL projection contract failures with the closed operation name only', () => {
+    const record = vi.fn<FrontendOperabilitySink['record']>();
+    const candidate = {
+      ...createContractFailureEvent('ProjectCanvasTransformSql', 'response-contract-rejected'),
+      sql: 'private source text',
+      tenantId: 'private tenant',
+    };
+    recordFrontendOperabilityEvent({ record }, candidate);
+    expect(record).toHaveBeenCalledExactlyOnceWith({
+      type: 'frontend.contract.failed',
+      operation: 'ProjectCanvasTransformSql',
+      reasonCode: 'response-contract-rejected',
+    });
+  });
   it('projects only closed privacy-safe event shapes', () => {
     const record = vi.fn<FrontendOperabilitySink['record']>();
     const sink: FrontendOperabilitySink = { record };

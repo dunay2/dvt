@@ -8,6 +8,7 @@ export function DvtTransformCodeWorkbenchContent({
   edges,
   canonicalContent,
   copy,
+  codeProjection,
 }: Omit<DvtTransformOutputViewProps, 'canonicalContent'> &
   Readonly<{
     canonicalContent?: string;
@@ -19,6 +20,7 @@ export function DvtTransformCodeWorkbenchContent({
       edges={edges}
       canonicalContent={canonicalContent}
       copy={copy}
+      codeProjection={codeProjection}
     />
   );
 }

@@ -13,6 +13,7 @@ import {
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openModelOutputs } from '../../support/relationalWorkbench/fieldSelection';
 import {
   openWorkbenchProperties,
@@ -381,32 +382,7 @@ describe('Canvas Model output toggle lifecycle', () => {
     cy.contains(summaries, /^order_id$/).should('be.focused');
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.get('@customerSummary').should('be.focused');
-    // Cypress 15.18.1 omits Enter's CR text and virtual key code. Send the
-    // complete native key so Chromium performs the disclosure's default action.
-    cy.then(async () => {
-      await Cypress.automation('remote:debugger:protocol', {
-        command: 'Input.dispatchKeyEvent',
-        params: {
-          type: 'keyDown',
-          key: 'Enter',
-          code: 'Enter',
-          windowsVirtualKeyCode: 13,
-          nativeVirtualKeyCode: 13,
-          text: '\r',
-          unmodifiedText: '\r',
-        },
-      });
-      await Cypress.automation('remote:debugger:protocol', {
-        command: 'Input.dispatchKeyEvent',
-        params: {
-          type: 'keyUp',
-          key: 'Enter',
-          code: 'Enter',
-          windowsVirtualKeyCode: 13,
-          nativeVirtualKeyCode: 13,
-        },
-      });
-    });
+    pressNativeKey('Enter');
     cy.get('@customerSummary')
       .should('be.focused')
       .parent('details')

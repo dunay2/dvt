@@ -23,7 +23,8 @@ export type FrontendOperabilityEvent =
       operation:
         | 'ListWarehouseConnectionSourceObjects'
         | 'PreviewWarehouseSourceObjectRows'
-        | 'PreviewCanvasTransformRows';
+        | 'PreviewCanvasTransformRows'
+        | 'ProjectCanvasTransformSql';
       reasonCode: 'response-contract-rejected';
     }>
   | Readonly<{

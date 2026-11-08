@@ -24,7 +24,7 @@ import {
 import { GraphNodeHealthPopoverView } from '../../plugins/graph/GraphNodeHealthPopoverView';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
-import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasHexColor } from './canvasPalette';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
 import { CanvasGraphFilterControl } from './CanvasGraphFilterControl';
 import { CanvasGraphSearchControl } from './CanvasGraphSearchControl';
@@ -46,7 +46,7 @@ const CANVAS_EDGE_TYPES = {
 
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
-  resolvedCanvasPalette: CanvasPaletteId;
+  resolvedCanvasPalette: CanvasHexColor;
   canEditEdges: boolean;
   canDeleteWithKeyboard: boolean;
   canMoveNodes: boolean;

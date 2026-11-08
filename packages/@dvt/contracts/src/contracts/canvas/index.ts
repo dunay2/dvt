@@ -6,3 +6,4 @@
  * @version 1.0.0
  */
 export * from './TransformDataSample.v1.js';
+export * from './TransformSqlProjection.v1.js';

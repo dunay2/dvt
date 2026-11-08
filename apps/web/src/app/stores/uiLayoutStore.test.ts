@@ -222,6 +222,81 @@ describe('useUiLayoutStore', () => {
     });
   });
 
+  it('retains the last drawer height through close, toggle, implicit reveal and hydration', async () => {
+    // Closing used to erase geometry, so every route or sample reopened a differently sized drawer.
+    useUiLayoutStore.getState().showBottomDrawer(420.5);
+    useUiLayoutStore.getState().hideBottomDrawer();
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerVisible: false,
+      bottomDrawerHeight: 420.5,
+    });
+    useUiLayoutStore.getState().toggleBottomDrawer();
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerVisible: true,
+      bottomDrawerHeight: 420.5,
+    });
+    useUiLayoutStore.getState().toggleBottomDrawer();
+    const saved = localStorage.getItem(UI_LAYOUT_STORAGE_KEY)!;
+    useUiLayoutStore.setState({ bottomDrawerVisible: true, bottomDrawerHeight: 0 });
+    localStorage.setItem(UI_LAYOUT_STORAGE_KEY, saved);
+    await useUiLayoutStore.persist.rehydrate();
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerVisible: false,
+      bottomDrawerHeight: 420.5,
+    });
+    useUiLayoutStore.getState().showBottomDrawer();
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerVisible: true,
+      bottomDrawerHeight: 420.5,
+    });
+  });
+
+  it('does not persist unchanged or invalid drawer resize observations', () => {
+    // Programmatic acknowledgements and malformed measurements must not create a storage feedback loop.
+    useUiLayoutStore.getState().showBottomDrawer(420.5);
+    const previous = useUiLayoutStore.getState();
+    const listener = vi.fn();
+    const unsubscribe = useUiLayoutStore.subscribe(listener);
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      for (const height of [420.5, 420.500001, 0, -10, Number.NaN, Number.POSITIVE_INFINITY]) {
+        useUiLayoutStore.getState().setBottomDrawerHeight(height);
+      }
+      useUiLayoutStore.getState().showBottomDrawer();
+      expect(useUiLayoutStore.getState()).toBe(previous);
+      expect(listener).not.toHaveBeenCalled();
+      expect(write).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it.each([0, -1, null, '420', undefined])(
+    'repairs legacy or invalid drawer height %j without trusting stored actions',
+    async (height) => {
+      // Hydration must repair geometry while keeping the runtime command functions authoritative.
+      const hide = useUiLayoutStore.getState().hideBottomDrawer;
+      localStorage.setItem(
+        UI_LAYOUT_STORAGE_KEY,
+        JSON.stringify({
+          state: {
+            bottomDrawerHeight: height,
+            bottomDrawerVisible: false,
+            hideBottomDrawer: 'stored overwrite',
+            unknownLayoutAuthority: true,
+          },
+        })
+      );
+      await useUiLayoutStore.persist.rehydrate();
+      expect(useUiLayoutStore.getState()).toMatchObject({
+        bottomDrawerVisible: false,
+        bottomDrawerHeight: 300,
+      });
+      expect(useUiLayoutStore.getState().hideBottomDrawer).toBe(hide);
+      expect(useUiLayoutStore.getState()).not.toHaveProperty('unknownLayoutAuthority');
+    }
+  );
+
   it('falls back to the canonical palette when persisted state contains a named alias', async () => {
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,

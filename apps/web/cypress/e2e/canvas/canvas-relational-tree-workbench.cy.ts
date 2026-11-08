@@ -1,14 +1,49 @@
 /** Owned concern: keyboard Model entry and workspace navigation, without authoring scenarios. */
-import { getE2eApiCalls } from '../../support/e2eApiStub';
+import {
+  ConnectedSourceRefSchema,
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformSqlProjectionResponseSchema,
+} from '@dvt/contracts';
+
+import { getE2eApiCalls, stubE2eApi } from '../../support/e2eApiStub';
 import {
   openWorkbenchProperties,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
+import { E2E_WORKSPACE_SESSION } from '../../support/workspaceSession';
+
+const SQL_ENDPOINT = '/workspace/graph/canvases/main-canvas/transforms/join-transform/sql';
 
 describe('Workbench navigation', () => {
   beforeEach(() => {
-    stubWorkbenchScenario('saved-join');
+    const draft = stubWorkbenchScenario('saved-join');
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      draft.nodes.find((node) => node.id === 'join-transform')?.metadata?.transformAuthoring
+    );
+    const semanticPlanSha256 = authority.semanticDocument.semanticPlan.sha256;
+    // This viewer proof consumes the server contract; SQL generation belongs to API proofs.
+    stubE2eApi('GET', SQL_ENDPOINT, ({ url }) => {
+      expect(Object.fromEntries(url.searchParams)).to.deep.equal({
+        ...E2E_WORKSPACE_SESSION,
+        semanticPlanSha256,
+      });
+      return {
+        body: TransformSqlProjectionResponseSchema.parse({
+          schemaVersion: 'canvas-transform-sql-projection.v1',
+          canvasId: 'main-canvas',
+          transformNodeId: 'join-transform',
+          draftRevision: 'rev-e2e-graph-ready',
+          semanticPlanSha256,
+          sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
+          provenance: {
+            sourceRefs: draft.nodes
+              .filter((node) => node.metadata?.connectedSourceRef != null)
+              .map((node) => ConnectedSourceRefSchema.parse(node.metadata?.connectedSourceRef)),
+          },
+        }),
+      };
+    });
   });
   it('keeps Canvas cards and zoom stationary while inspecting Source and Model properties', () => {
     cy.viewport(1280, 720);
@@ -347,6 +382,9 @@ describe('Workbench navigation', () => {
       .should(($lines) => {
         expect($lines.text(), 'derived SQL uses the shared viewer').to.match(/\bselect\b/i);
       });
+    cy.then(() => {
+      expect(getE2eApiCalls(SQL_ENDPOINT, 'GET'), 'one authorized SQL read').to.have.length(1);
+    });
     cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
       expect(
         $editor[0]!.getBoundingClientRect().height,

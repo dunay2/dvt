@@ -22,7 +22,7 @@ import type {
   RequiredEndpointProbe,
 } from '../domain/platformHealthTypes';
 
-const OPTIONAL_ENDPOINT_NOT_ENABLED_STATUS = new Set([403, 404, 405]);
+const OPTIONAL_ENDPOINT_NOT_ENABLED_STATUS = new Set([404, 405]);
 const OPTIONAL_PLATFORM_HEALTH_PROBE_KEYS = ['readyz', 'version', 'dbReady'] as const;
 
 type OptionalPlatformHealthProbeKey = (typeof OPTIONAL_PLATFORM_HEALTH_PROBE_KEYS)[number];

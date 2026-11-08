@@ -767,7 +767,6 @@ async function main() {
         ],
         {
           VITE_API_BASE_URL: apiBaseUrl,
-          VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
           ...(localProtectedRuntimeAuth?.webEnv ?? {}),
         }
       )

@@ -4,15 +4,15 @@ import type { CSSProperties } from 'react';
 import {
   deriveCanvasGridStroke,
   deriveCanvasPaletteTokens,
-  type CanvasPaletteId,
+  type CanvasHexColor,
 } from './canvasPalette';
 
 export function resolveCanvasViewportStyle(
-  canvasPalette: CanvasPaletteId,
+  canvasPalette: CanvasHexColor,
   gridSize: number,
   options: Readonly<{
     gridVisible?: boolean;
-    gridColor?: CanvasPaletteId;
+    gridColor?: CanvasHexColor;
   }> = {}
 ): CSSProperties {
   const tokens = deriveCanvasPaletteTokens(canvasPalette);

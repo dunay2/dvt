@@ -567,17 +567,15 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
     cy.get('body').type('{esc}');
 
-    cy.get('[data-slot="left-navigation-link"]').then(($links) => {
-      expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
-        '/canvas',
-        '/runs',
-        '/templates',
-        '/plugins',
-        '/admin',
-      ]);
+    cy.get(
+      '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
+    ).then(($links) => {
+      expect(
+        [...$links].map((link) => link.getAttribute('href') ?? link.getAttribute('data-route'))
+      ).to.deep.equal(['/canvas', '/runs', '/templates', '/plugins', '/admin']);
     });
     cy.get('[data-slot="left-navigation-link"][href="/plugins"]').should('be.visible');
-    cy.get('[data-slot="left-navigation-link"][href="/admin"]')
+    cy.get('[data-slot="left-navigation-section-trigger"][data-route="/admin"]')
       .should('be.visible')
       .and('have.attr', 'aria-label', 'Administración');
     cy.get('[data-slot="left-navigation-link"][href="/canvas"]').should(
@@ -938,7 +936,7 @@ describe('Canvas workbench screen composition', () => {
         .and(($control) => {
           expect($control[0]!.closest('[inert], [hidden], [aria-hidden="true"]')).to.equal(null);
         });
-      cy.get('[data-slot="left-navigation-link"][href="/admin"]')
+      cy.get('[data-slot="left-navigation-section-trigger"][data-route="/admin"]')
         .scrollIntoView()
         .focus()
         .should('be.focused')

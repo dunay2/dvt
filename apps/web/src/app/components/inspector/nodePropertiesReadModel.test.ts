@@ -214,6 +214,33 @@ function expectTableCells(
 }
 
 describe('nodePropertiesReadModel', () => {
+  it.each([
+    { language: 'en', expected: 'Overview' },
+    { language: 'es', expected: 'Resumen' },
+    { language: null, expected: 'Overview' },
+  ])(
+    'uses the shared standard label for Sources and Models ($language)',
+    ({ language, expected }) => {
+      // Standard labels belong to the read model, including its no-copy fallback.
+      for (const node of [buildSourceNode(), downstreamNode]) {
+        const model = buildNodePropertiesReadModel({
+          node,
+          nodes: [node],
+          edges: [],
+          ...(language == null
+            ? {}
+            : {
+                presentationCopy: buildCanvasNodePresentationCopy(
+                  resolveCanvasViewCopy(language),
+                  language
+                ),
+              }),
+        });
+        expect(sectionById(model, 'general').label).toBe(expected);
+      }
+    }
+  );
+
   it('projects every core Inspector section, row, column, value, and empty state in Spanish', () => {
     const node = buildSourceNode({ metadata: {} });
     const model = buildNodePropertiesReadModel({
@@ -224,7 +251,7 @@ describe('nodePropertiesReadModel', () => {
     });
 
     expect(model.sections.map((section) => section.label)).toEqual([
-      'General',
+      'Resumen',
       'Columnas',
       'Entradas y salidas',
       'Pruebas',

@@ -3,12 +3,22 @@
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent, waitFor, within } from '@testing-library/dom';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import type { IWorkspaceAdminReadPort } from '../ports/workspace';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import AdminView from './AdminView';
+import { LeftNavigationRail } from '../components/LeftNavigation';
+import { buildShellNavigationModel } from '../shell/shellNavigationModel';
+import { resolveShellTopBarCopy } from '../components/shell/copy';
+import { platformHealthQueryKey } from '../../capabilities/platform-health';
+import {
+  createHealthzDto,
+  createReadyzDto,
+  createDbReadyDto,
+  jsonResponse,
+} from '../../capabilities/platform-health/testing/platformHealthHttpHarness';
 
 function buildWorkspaceAdminReadPort(
   overrides?: Partial<IWorkspaceAdminReadPort>
@@ -69,6 +79,10 @@ function createAdminRouteElement(
         workspaceAdminRead: buildWorkspaceAdminReadPort(),
       }}
     >
+      <LeftNavigationRail
+        navigationModel={buildShellNavigationModel([])}
+        copy={resolveShellTopBarCopy('en')}
+      />
       <AdminView initialTab={initialTab} />
     </AppServicesProvider>
   );
@@ -102,6 +116,15 @@ function readRequestUrl(input: RequestInfo | URL): string {
   }
 
   return input.url;
+}
+
+function respondToAdminProbe(input: RequestInfo | URL): Response {
+  const path = new URL(readRequestUrl(input), 'http://localhost').pathname;
+  if (path.endsWith('/healthz')) return jsonResponse(createHealthzDto());
+  if (path.endsWith('/readyz')) return jsonResponse(createReadyzDto());
+  if (path.endsWith('/db/ready')) return jsonResponse(createDbReadyDto());
+  if (path.endsWith('/version')) return new Response('', { status: 404 });
+  return jsonResponse({});
 }
 
 class TestResizeObserver implements ResizeObserver {
@@ -144,7 +167,7 @@ describe('AdminView', () => {
           { status: 200 }
         );
       }
-      return new Response('{}', { status: 200 });
+      return respondToAdminProbe(input);
     });
     vi.stubGlobal('fetch', fetchMock);
   });
@@ -165,7 +188,7 @@ describe('AdminView', () => {
       description: 'admin roles render',
     });
 
-    expect(mounted.container.textContent).toContain('Admin & RBAC');
+    expect(mounted.container.querySelector('[data-slot="route-workbench-header"]')).toBeNull();
     expect(mounted.container.textContent).toContain('Backend status');
     expect(mounted.container.textContent).toContain('Admin');
   });
@@ -205,13 +228,15 @@ describe('AdminView', () => {
       description: 'admin route ready before tab navigation',
     });
 
-    const auditTab = Array.from(mounted?.container.querySelectorAll('button') ?? []).find(
-      (button) => button.textContent?.includes('Audit Log') === true
-    );
-
+    const admin = within(mounted.container).getByRole('button', { name: 'Admin' });
     await act(async () => {
-      fireEvent.mouseDown(auditTab as HTMLElement, { button: 0 });
-      fireEvent.click(auditTab as HTMLElement);
+      fireEvent.keyDown(admin, { key: 'ArrowDown' });
+    });
+    const auditTab = await waitFor(() =>
+      within(document.body).getByRole('menuitem', { name: 'Audit Log' })
+    );
+    await act(async () => {
+      fireEvent.click(auditTab);
     });
 
     expect(router.state.location.search).toBe('?tab=audit');
@@ -224,5 +249,147 @@ describe('AdminView', () => {
     await waitFor(() => {
       expect(document.querySelector('input[placeholder="Search audit log..."]')).toBeTruthy();
     });
+  });
+
+  it('keeps summary and details consistent for observed readiness and an absent API version', async () => {
+    // API version absence previously looked like a failed warning while readiness claimed healthy without data.
+    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    await waitFor(() => {
+      expect(
+        mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+          ?.textContent
+      ).toContain('Ready');
+    });
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-probe"][data-endpoint="/readyz"]')
+        ?.textContent
+    ).toContain('Ready');
+    expect(
+      mounted.container
+        .querySelector('[data-slot="admin-health-summary"][data-probe="version"]')
+        ?.getAttribute('data-tone')
+    ).toBe('neutral');
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-summary"][data-probe="version"]')
+        ?.textContent
+    ).toContain('Not exposed');
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-probe"][data-endpoint="/version"]')
+        ?.textContent
+    ).toContain('404');
+    expect(mounted.container.textContent).not.toContain('readyz endpoint healthy');
+  });
+
+  it('renders checking while the real snapshot transport is pending', async () => {
+    // Pending transport must not masquerade as an offline service before it has responded.
+    let release: ((response: Response) => void) | undefined;
+    fetchMock.mockImplementation((input: RequestInfo | URL) =>
+      readRequestUrl(input).endsWith('/healthz')
+        ? new Promise<Response>((resolve) => {
+            release = resolve;
+          })
+        : Promise.resolve(respondToAdminProbe(input))
+    );
+    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-summary"][data-probe="backend"]')
+        ?.textContent
+    ).toContain('Checking');
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-summary"][data-probe="backend"]')
+        ?.textContent
+    ).not.toContain('Offline');
+    await act(async () => {
+      release?.(jsonResponse(createHealthzDto()));
+    });
+    await waitFor(() =>
+      expect(
+        mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+          ?.textContent
+      ).toContain('Ready')
+    );
+  });
+
+  it('shows an access-denied probe as a failure in summary and details', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) =>
+      readRequestUrl(input).endsWith('/readyz')
+        ? jsonResponse({ error: 'forbidden' }, 403)
+        : respondToAdminProbe(input)
+    );
+    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    await waitFor(() =>
+      expect(
+        mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+          ?.textContent
+      ).toContain('Access denied')
+    );
+    expect(
+      mounted.container
+        .querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+        ?.getAttribute('data-tone')
+    ).toBe('danger');
+    expect(
+      mounted.container.querySelector(
+        '[data-slot="admin-health-probe"][data-endpoint="/readyz"] [data-tone="danger"]'
+      )?.textContent
+    ).toContain('Access denied');
+  });
+
+  it('does not infer readiness from an incomplete optional response', async () => {
+    // An empty diagnostic body contains no positive or negative readiness fact.
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) =>
+      readRequestUrl(input).endsWith('/readyz') ? jsonResponse({}) : respondToAdminProbe(input)
+    );
+    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    await waitFor(() =>
+      expect(
+        mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+          ?.textContent
+      ).toContain('No observation')
+    );
+    expect(
+      mounted.container
+        .querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+        ?.getAttribute('data-tone')
+    ).toBe('neutral');
+  });
+
+  it('marks retained healthy data historical after a failed refresh', async () => {
+    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    await waitFor(() =>
+      expect(
+        mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+          ?.textContent
+      ).toContain('Ready')
+    );
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      if (readRequestUrl(input).endsWith('/healthz')) throw new Error('health transport failed');
+      return respondToAdminProbe(input);
+    });
+    await act(async () => {
+      await mounted?.queryClient.refetchQueries({ queryKey: platformHealthQueryKey });
+    });
+    await waitFor(
+      () =>
+        expect(
+          mounted?.container.querySelector(
+            '[data-slot="admin-health-summary"][data-probe="backend"]'
+          )?.textContent
+        ).toContain('Refresh failed'),
+      { timeout: 5000 }
+    );
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+        ?.textContent
+    ).toContain('Last observed: Ready');
+    expect(
+      mounted.container
+        .querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
+        ?.getAttribute('data-tone')
+    ).toBe('neutral');
+    expect(
+      mounted.container.querySelector('[data-slot="admin-health-probe"][data-endpoint="/readyz"]')
+        ?.textContent
+    ).toContain('Last observed: Ready');
   });
 });

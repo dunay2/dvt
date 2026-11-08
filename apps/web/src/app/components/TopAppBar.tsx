@@ -38,6 +38,7 @@ export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
+  routeHeading = null,
 }: ShellTopBarProps) {
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
@@ -90,7 +91,14 @@ export function ShellTopBar({
             <AppBrandMark className={styles.appBrandMark} />
           </span>
 
-          {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
+          {routeHeading != null ? (
+            <div className={styles.routeHeading} data-slot="shell-route-heading">
+              <routeHeading.icon aria-hidden="true" className={styles.routeHeadingIcon} />
+              <h1 className={styles.routeHeadingTitle}>{routeHeading.title}</h1>
+            </div>
+          ) : isWorkbenchShell ? (
+            <CanvasWorkspaceTopBarIdentity />
+          ) : null}
 
           {!isWorkbenchShell && (
             <>

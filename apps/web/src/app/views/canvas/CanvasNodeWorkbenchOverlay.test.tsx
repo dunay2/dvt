@@ -9,6 +9,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
+import {
+  AppServicesProvider,
+  type AppServicesProviderProps,
+} from '../../services/AppServicesContext';
 
 const workbenchState = vi.hoisted(() => ({
   props: null as null | Record<string, unknown>,
@@ -52,10 +56,11 @@ const SOURCE_NODE = {
 
 function renderOverlay(
   root: Root,
-  overrides?: Partial<React.ComponentProps<typeof CanvasNodeWorkbenchOverlay>>
+  overrides?: Partial<React.ComponentProps<typeof CanvasNodeWorkbenchOverlay>>,
+  services?: AppServicesProviderProps['overrides']
 ): void {
   act(() => {
-    root.render(
+    const overlay = (
       <CanvasNodeWorkbenchOverlay
         layout={{
           focusMode: false,
@@ -64,6 +69,7 @@ function renderOverlay(
         }}
         panels={{
           activeRunId: 'run-42',
+          activeCanvasId: 'canvas-active',
           inspectorAuthoring: {
             canEditNode: true,
             onApplyNodeDraft: vi.fn(),
@@ -79,6 +85,13 @@ function renderOverlay(
         onHide={vi.fn()}
         {...overrides}
       />
+    );
+    root.render(
+      services === undefined ? (
+        overlay
+      ) : (
+        <AppServicesProvider overrides={services}>{overlay}</AppServicesProvider>
+      )
     );
   });
 }
@@ -98,6 +111,21 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     container.remove();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it('binds SQL inspection to the real optional service and active Canvas without querying on render', () => {
+    const query = {
+      projectTransformSql: vi.fn(async () => {
+        throw new Error('Not requested');
+      }),
+    };
+    const services = { canvasTransformSqlQuery: query };
+    renderOverlay(root, undefined, services);
+    const binding = workbenchState.props?.codeProjection;
+    expect(binding).toEqual({ canvasId: 'canvas-active', query, scopeKey: undefined });
+    renderOverlay(root, undefined, services);
+    expect(workbenchState.props?.codeProjection).toBe(binding);
+    expect(query.projectTransformSql).not.toHaveBeenCalled();
   });
 
   it('renders the existing inspector as a fixed sibling without node-relative geometry', () => {
@@ -145,6 +173,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     renderOverlay(root, {
       panels: {
         activeRunId: null,
+        activeCanvasId: 'canvas-active',
         inspectorAuthoring: { canEditNode: false, onApplyNodeDraft: vi.fn() },
         inspectorGraphEdges: [],
         inspectorGraphNodes: [SOURCE_NODE],
@@ -230,6 +259,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
           ? {
               panels: {
                 activeRunId: null,
+                activeCanvasId: 'canvas-active',
                 inspectorAuthoring: { canEditNode: false, onApplyNodeDraft: vi.fn() },
                 inspectorGraphEdges: [],
                 inspectorGraphNodes: [],

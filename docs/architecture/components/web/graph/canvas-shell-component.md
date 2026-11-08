@@ -497,6 +497,34 @@ header controls reuse the shared 28 px Inspector icon-button token with no
 additional gap. Mutations remain on the existing authoring command handlers;
 moving the entrypoint introduces no second editor or navigation path.
 
+The authorized SQL continuation is governed by the
+[root-cause design](https://github.com/dunay2/dvt/issues/3765#issuecomment-6726292993)
+and the [SQL inspection query contract](../../../../contracts/data-access-modes.md#transform-sql-inspection).
+`ProjectCanvasTransformSql` supplies SQL for the selected native Model from the
+same protected producer preparation used by row Preview. In particular, a
+file-owned dbt producer requires its authorized compiled result, rather than its
+schema signature alone. The shared PostgreSQL projector's rejection of a missing
+external SQL publication must remain intact.
+
+The existing overlay supplies one scoped code-query bundle to the passive Code
+section. It carries the current Canvas identity and application query port;
+the request identifies the Model and expected semantic digest. The API resolves
+the persisted authorized graph, current file authority, native model result and
+existing target projection. It returns SQL and exact draft/model provenance;
+it neither reads database rows nor publishes a file. A native Model without an
+owned workspace path must not display an upstream file as its own code.
+
+```mermaid
+flowchart LR
+  Overlay[Existing inspector overlay owner] --> Bundle[Current Canvas and SQL query port]
+  Bundle --> Selection[Explicit SQL output selection]
+  Selection --> Query[ProjectCanvasTransformSql]
+  Query --> API[Shared protected producer preparation]
+  API --> View[Read-only Monaco SQL with current provenance]
+  Files[File-owned node reference] --> FileQuery[Existing GetWorkspaceFileContent]
+  FileQuery --> FileView[Shared read-only file Code surface]
+```
+
 Derived SQL belongs to the exact transform, nodes and edges references supplied
 to its query. A pending query is reused for repeated selection of those inputs;
 a ready result is reused only for those inputs. Changed references invalidate

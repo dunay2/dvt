@@ -21,11 +21,8 @@ export function useCanvasSelectionHandlers({
 
   const handleInspectNode = useCallback(
     (nodeId: string, preferredTabId?: string | null) => {
-      if (preferredTabId == null) {
-        setInspectorNode(nodeId);
-      } else {
-        setInspectorNode(nodeId, preferredTabId);
-      }
+      // An explicit Properties gesture starts a new request, even for the same node.
+      setInspectorNode(nodeId, preferredTabId ?? 'general');
       const layout = useUiLayoutStore.getState();
       if (focusMode && layout.focusMode) layout.toggleFocusMode();
       if (!inspectorPanelVisible) {

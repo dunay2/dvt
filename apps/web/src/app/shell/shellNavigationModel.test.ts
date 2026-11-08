@@ -2,9 +2,20 @@ import { FileCode2, GitCompareArrows } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
 import { createPublishedRouteBootstrapHandle } from '../bootstrap/routeBootstrapContract';
-import { buildShellNavigationModel } from './shellNavigationModel';
+import { buildShellNavigationModel, resolveShellRouteHeading } from './shellNavigationModel';
 
 describe('buildShellNavigationModel', () => {
+  it('projects opted-in headings and section destinations without another route-title state', () => {
+    const model = buildShellNavigationModel([]);
+    expect(resolveShellRouteHeading(model, '/admin')?.title).toBe('Admin & RBAC');
+    expect(resolveShellRouteHeading(model, '/admin/')).not.toBeNull();
+    expect(resolveShellRouteHeading(model, '/administrator')).toBeNull();
+    expect(resolveShellRouteHeading(model, '/canvas')).toBeNull();
+    expect(
+      model.footerItems.find((item) => item.to === '/admin')?.sections?.items.map((item) => item.id)
+    ).toEqual(['platform', 'roles', 'permissions', 'audit']);
+    expect(model.footerItems.find((item) => item.to === '/plugins')?.sections).toBeUndefined();
+  });
   it('maps runtime navigation views into primary shell items and appends shell footer items', () => {
     const model = buildShellNavigationModel([
       {

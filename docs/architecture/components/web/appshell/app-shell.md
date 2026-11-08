@@ -107,6 +107,31 @@ flowchart LR
 
 ## Shell Navigation Ownership
 
+An existing navigation item may opt into a route heading and concern-owned
+section navigation. Root projects the active optional heading from that same
+model into ShellTopBar; a route does not publish a second title state.
+
+Admin uses this composition: its title occupies the existing top bar, and the
+left Admin icon opens Platform, Roles, Permissions and Audit Log through the
+existing Radix menu and Router. The route no longer repeats a large header or a
+centered tab list. The Admin URL contract owns valid section IDs, fallback and
+search/hash preservation; the shell menu merely presents those destinations.
+
+```mermaid
+flowchart LR
+  Admin["Admin route-position contract"] --> Model["Existing shell navigation model"]
+  Model --> Menu["Admin icon section menu"]
+  Menu --> Router["Existing Router admission"]
+  Router --> Content["Selected passive Admin section"]
+  Model --> Heading["Root active heading projection"]
+  Heading --> TopBar["Existing ShellTopBar"]
+```
+
+Canvas and Git retain their existing controls and DOM lifetime. Other navigation
+items remain direct links; no new registry, route store or permission policy is
+introduced. Section menu items are real links, while their trigger is a real
+button with menu semantics and existing focus/tooltip/geometry roles.
+
 The current left navigation implementation follows the same boundary rule as
 the rest of the shell:
 
@@ -232,6 +257,54 @@ flowchart TB
 This composition recovers content space at the same drawer height. The shell
 frame still owns the resize separator and layout persistence; the drawer keeps
 the existing hide command, tab visibility commands and feed subscription.
+
+### Operational drawer layout command
+
+| Rail                               | Type    | Owner                | DDD object                             | Application port                                               | Adapter surface                                                                        | Scope and authorization                                                                          | Negative tests                                                                                                                                                                                                                     |
+| ---------------------------------- | ------- | -------------------- | -------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConfigureOperationalDrawerLayout` | command | Web App Shell layout | `OperationalDrawerLayout` value object | Existing `uiLayoutStore` show, hide, toggle and resize actions | `Root`, `AppShellFrame`, `useOperationalDrawerResize`, Preview and Run reveal adapters | Authenticated browser-local preference; no server grant, protected draft or workspace-file write | Ignore non-finite/invalid resize and synchronized echoes; repair legacy zero height; preserve height through close/reopen/reload; no persistence for mount/restoration/container observation; no content remount on height updates |
+
+The existing `bottomDrawerVisible` and `bottomDrawerHeight` fields are one layout
+value. A synchronous transition owns `show`, `hide`, `toggle` and `resize`.
+Closing changes visibility and retains the last positive height. An implicit
+Preview or Run reveal uses `showBottomDrawer()` and preserves that height;
+execution adapters do not receive or interpret drawer geometry. An explicit
+height request remains supported. The canonical default is 300 CSS pixels and
+the minimum preference is 160; the panel library separately bounds the rendered
+percentage to the available group space.
+
+Legacy zero or invalid persisted geometry normalizes to the default, including
+while hidden. Hydration keeps its explicit allowlist: stored values cannot
+replace runtime actions or restore inspector visibility. Explorer transitions
+retain their synchronous `get`/transition/identity guard. They deliberately do
+not call the persist-wrapped setter for a no-op, because persist can write even
+when Zustand would retain the same state object.
+
+The Frame resize adapter measures the actual vertical panel group, rather than
+the browser viewport. Pointer dragging and keyboard resize events are the only
+geometry observations that publish a preference. Mount, restoration,
+programmatic resize, container measurement and matching echoes do not write it.
+The adapter uses the existing imperative Panel handle for a changed height
+request; it does not key the panel by height or own another saved size/visibility
+state. Input, focus and drawer DOM survive resize and unrelated shell renders.
+Hide and explicit Focus mode retain their existing unmount semantics; layout
+and contribution owners retain their own data across reopening.
+
+```mermaid
+flowchart LR
+  Gesture["Pointer or keyboard separator gesture"] --> Adapter["Scoped resize adapter"]
+  Adapter -->|"Measured CSS pixels"| Command["ConfigureOperationalDrawerLayout"]
+  Reveal["Preview / Run reveal"] --> Command
+  Command --> Transition["Pure layout transition"]
+  Transition --> Store["Existing uiLayoutStore fields and persistence"]
+  Store --> Frame["Root to Frame presentation contract"]
+  Frame -->|"Imperative size acknowledgement"| Adapter
+  Adapter -->|"No preference command"| Ignore["Mount / restore / container observation"]
+```
+
+Canvas color preferences use `CanvasHexColor`, the existing hexadecimal string
+contract with an intention-revealing name. Persisted keys, normalization and
+palette rendering remain unchanged; there is no second color type or alias.
 
 Current state model:
 
@@ -513,6 +586,43 @@ The app bar shows current branch and short SHA from bootstrap config.
 - `Degraded`: backend responds but reports degraded status.
 
 Tooltips show additional detail when available.
+
+### Admin Operational Health Truth
+
+The existing `OperationalReadinessQuery` and `GetRuntimeCapabilities` reads feed
+Admin diagnostics. The platform-health query and its publication timestamp are
+the observation authority. `adminViewModel` projects that observation once for
+both summary cards and endpoint details; components do not infer readiness from
+missing data or from transport availability alone. Aggregate connectivity reuses
+`buildShellHealthPresentationModel` rather than copying its policy.
+
+```mermaid
+flowchart LR
+  Policy["Caller probe configuration or client default"] --> Client["Existing HTTP health client"]
+  Client --> Query["Existing platform-health query"]
+  Query --> Projection["Admin diagnostic presentation"]
+  Projection --> Summary["Summary cards"]
+  Projection --> Details["Endpoint facts"]
+  Capabilities["Existing runtime capabilities query"] --> Plugins["Exact plugin availability and reason"]
+```
+
+Initial pending is Checking. A probe excluded by client configuration is Not
+requested; an observed optional 404/405 is Not exposed. Both are informational,
+with neutral presentation. A 401/403, network error, invalid JSON or unexpected
+server error is a probe failure. A valid not-ready response preserves the
+backend reason. A failed refresh with a cached snapshot explicitly labels the
+prior observation historical; it cannot appear as a current successful probe.
+Status text and icons accompany semantic tone, so color is not the only signal.
+
+API service version, API compatibility version and Raven bundle version are
+independent facts. A disabled `/version` endpoint does not borrow the bundle
+version. Disabled plugins preserve their backend-provided reason and remain
+distinct from optional probe availability.
+
+The development launcher inherits an explicit caller probe policy and otherwise
+leaves the default to the existing client. It does not impose an empty optional
+probe set. No diagnostic component creates a polling loop, another health store,
+an API route or a run-admission decision.
 
 ### Shell Menu Actions
 
@@ -1246,3 +1356,12 @@ See [Workbench UX Canon User Stories](../workbench-ux-canon-component.md#section
 - Claiming implementation of Insert or other absent shell capabilities.
 
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
+
+### Hidden operational tab recovery
+
+When every operational tab is hidden, the compact controls row exposes a visible
+Restore tabs button. It opens the standard application dropdown by pointer or
+keyboard and delegates to the existing tab visibility command. Visible tabs retain
+their contextual restoration menu. Both presentations share one item renderer and
+the same restore callback. No browser context-menu shortcut is required to recover
+from the all-hidden state; the drawer close control remains separate.

@@ -366,6 +366,23 @@ describe('Canvas ready node authoring', () => {
     });
   });
 
+  it('opens and reopens Model Properties on Overview while keeping Code explicitly selectable', () => {
+    // Repeated Properties on one node previously reused its last Code tab instead of a new entry request.
+    stubStatefulCanvasDraftAuthoring({ authoringGenerated: true });
+    visitReadyCanvas();
+    openNodeProperties('dvt-transform-1');
+    const overview = '[data-slot="canvas-node-workbench-tab-general"]';
+    const code = '[data-slot="canvas-node-workbench-tab-code"]';
+    cy.get(overview).should('have.text', 'Overview').and('have.attr', 'aria-selected', 'true');
+    cy.get(code).click().should('have.attr', 'aria-selected', 'true');
+    openNodeProperties('dvt-transform-1');
+    cy.get(overview).should('have.attr', 'aria-selected', 'true');
+    cy.get(code).click().should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    openNodeProperties('dvt-transform-1');
+    cy.get(overview).should('have.attr', 'aria-selected', 'true');
+  });
+
   it('preserves computed card styles and Canvas palettes on cold load and reload without writing', () => {
     const draft = stubStatefulCanvasDraftAuthoring();
     const longName = 'Árbol de clientes 日本語 · ' + 'identidad completa '.repeat(10);

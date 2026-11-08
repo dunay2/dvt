@@ -6,7 +6,7 @@ import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 import { type CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+import { projectCanvasFixtureToPostgresSql } from './canvasOutputProjection.test-support';
 import { createSourceSet } from './canvasSourceSet';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { SOURCE, TRANSFORM, EDGE } from './canvasOutputProjection.test-support';
@@ -51,7 +51,7 @@ describe('Canonical output projection', () => {
       TRANSFORM,
       encodeDvtSubstraitSemanticDocument(draft)
     );
-    const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
+    const sql = await projectCanvasFixtureToPostgresSql({
       transformNode: transform,
       nodes: [north, south, transform],
       edges: [
@@ -71,7 +71,7 @@ describe('Canonical output projection', () => {
     });
     expect(deriveSubstraitSchemas(bound.document).schemas.get(bound.index.rootId)).toHaveLength(1);
     await expect(
-      projectDvtSubstraitTransformOutputToPostgresSql({
+      projectCanvasFixtureToPostgresSql({
         transformNode: transform,
         nodes: [north, south, transform],
         edges: [{ ...EDGE, id: 'north-transform', sourceId: north.id }],

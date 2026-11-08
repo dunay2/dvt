@@ -15,5 +15,7 @@ describe('application shell panel sizing', () => {
   it('retains the shell default when no usable measurement exists', () => {
     expect(resolveBottomDrawerDefaultSize(0, 660)).toBe(22);
     expect(resolveBottomDrawerDefaultSize(360, 0)).toBe(22);
+    expect(resolveBottomDrawerDefaultSize(Number.NaN, 660)).toBe(22);
+    expect(resolveBottomDrawerDefaultSize(360, Number.POSITIVE_INFINITY)).toBe(22);
   });
 });

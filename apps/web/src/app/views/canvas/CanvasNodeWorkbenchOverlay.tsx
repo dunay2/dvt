@@ -1,5 +1,6 @@
 /** Owned concern: present the existing node workbench in the fixed right inspector slot. */
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import { useOptionalCanvasTransformSqlQueryPort } from '../../services/AppServicesContext';
 import type {
   CanvasShellChromeCommands,
   CanvasShellLayout,
@@ -17,6 +18,7 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
   panels: Pick<
     CanvasShellPanels,
     | 'activeRunId'
+    | 'activeCanvasId'
     | 'inspectorAuthoring'
     | 'inspectorGraphEdges'
     | 'inspectorGraphNodes'
@@ -44,6 +46,19 @@ export function CanvasNodeWorkbenchOverlay({
     hasInspectorNode: panels.inspectorNode != null,
   });
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const sqlQuery = useOptionalCanvasTransformSqlQueryPort();
+  const workspaceScope = panels.inspectorAuthoring.workspaceScope;
+  const scopeKey =
+    workspaceScope == null
+      ? undefined
+      : `${workspaceScope.tenantId}::${workspaceScope.projectId}::${workspaceScope.environmentId}`;
+  const codeProjection = useMemo(
+    () =>
+      panels.activeCanvasId == null || sqlQuery == null
+        ? undefined
+        : { canvasId: panels.activeCanvasId, query: sqlQuery, scopeKey },
+    [panels.activeCanvasId, sqlQuery, scopeKey]
+  );
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const inspectorNodeId = panels.inspectorNode?.id ?? null;
   const surfaceRef = useRef<HTMLElement>(null);
@@ -97,6 +112,7 @@ export function CanvasNodeWorkbenchOverlay({
         onClose={hideAndRestoreNodeFocus}
         authoring={panels.inspectorAuthoring}
         contributions={panels.inspectorWorkbenchContributions}
+        codeProjection={codeProjection}
         {...(onOpenModelEditor == null
           ? {}
           : { onOpenSemanticEditor: () => onOpenModelEditor(panels.inspectorNode!.id) })}

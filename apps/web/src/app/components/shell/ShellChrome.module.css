@@ -16,6 +16,25 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   color: var(--text-default);
 }
 
+.routeHeading {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: calc(var(--spacing) * 2);
+  color: var(--text-strong);
+}
+.routeHeadingIcon {
+  width: var(--icon-size-navigation);
+  height: var(--icon-size-navigation);
+  flex-shrink: 0;
+}
+.routeHeadingTitle {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
+  font-weight: var(--font-weight-semibold);
+}
+
 .contextMenuContent {
   max-width: calc(100vw - 1rem);
   font-size: 0.75rem;

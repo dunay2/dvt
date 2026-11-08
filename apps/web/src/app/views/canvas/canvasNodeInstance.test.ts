@@ -8,7 +8,7 @@ import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
 import { sourceNode, projectedModel } from './canvasColumnOutputAuthoring.test-support';
 import { readCanvasModelCompositionPublication } from './canvasModelCompositionInput';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+import { projectCanvasFixtureToPostgresSql } from './canvasOutputProjection.test-support';
 import { outputFixture } from './canvasColumnOutputAuthoring.test-support';
 import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasDraftSession } from './canvasDraftSession';
@@ -64,7 +64,7 @@ describe('Canvas node instances', () => {
       )?.fields.map((field) => field.name)
     ).toEqual(['order_id', 'amount']);
     const sql = (transformNode: CanonicalNode): Promise<string> =>
-      projectDvtSubstraitTransformOutputToPostgresSql({
+      projectCanvasFixtureToPostgresSql({
         transformNode,
         nodes: graph.canonicalNodes,
         edges: graph.canonicalEdges,

@@ -1,3 +1,5 @@
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
 import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { create } from '@bufbuild/protobuf';
@@ -10,7 +12,7 @@ import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+import { projectCanvasFixtureToPostgresSql } from './canvasOutputProjection.test-support';
 import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
@@ -159,7 +161,7 @@ describe('Canonical output projection', () => {
         edges.push({ ...EDGE, id: `${level}-edge`, sourceId: upstream.id, targetId: target.id });
         nodes.push(transform);
         const before = JSON.stringify(nodes);
-        const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
+        const sql = await projectCanvasFixtureToPostgresSql({
           transformNode: transform,
           nodes,
           edges,
@@ -193,7 +195,7 @@ describe('Canonical output projection', () => {
           originalProducer,
           encodeDvtSubstraitSemanticDocument(changed)
         );
-        const changedSql = await projectDvtSubstraitTransformOutputToPostgresSql({
+        const changedSql = await projectCanvasFixtureToPostgresSql({
           transformNode: transform,
           nodes: nodes.map((node) => (node.id === originalProducer.id ? changedProducer : node)),
           edges,
@@ -202,14 +204,14 @@ describe('Canonical output projection', () => {
         expect(changedSql).not.toMatch(/upper\s*\(/i);
         expect(JSON.stringify(nodes)).toBe(before);
         await expect(
-          projectDvtSubstraitTransformOutputToPostgresSql({
+          projectCanvasFixtureToPostgresSql({
             transformNode: transform,
             nodes,
             edges: edges.slice(0, -1),
           })
         ).rejects.toThrow();
         await expect(
-          projectDvtSubstraitTransformOutputToPostgresSql({
+          projectCanvasFixtureToPostgresSql({
             transformNode: transform,
             nodes: nodes.map((node) =>
               node.id === upstream.id ? { ...node, metadata: {} } : node
@@ -218,7 +220,7 @@ describe('Canonical output projection', () => {
           })
         ).rejects.toThrow();
         await expect(
-          projectDvtSubstraitTransformOutputToPostgresSql({
+          projectCanvasFixtureToPostgresSql({
             transformNode: transform,
             nodes: nodes.map((node) =>
               node.id === upstream.id ? { ...buildCanonicalTransform(), id: upstream.id } : node
@@ -230,4 +232,85 @@ describe('Canonical output projection', () => {
       }
     }
   );
+});
+
+describe('Canonical output projection fixture boundaries', () => {
+  it('projects PostgreSQL SQL from the exact connected canonical revision', async () => {
+    const transform = buildCanonicalTransform();
+
+    const sql = await projectCanvasFixtureToPostgresSql({
+      transformNode: transform,
+      nodes: [SOURCE, transform],
+      edges: [EDGE],
+    });
+
+    expect(sql.length).toBeGreaterThan(0);
+    const bound = resolveCanvasSubstraitGraphBindings({
+      node: transform,
+      nodes: [SOURCE, transform],
+      edges: [EDGE],
+    });
+    expect(
+      bound.index.relations.get(bound.index.rootId)!.fields.map((field) => field.fieldId)
+    ).toEqual(['output:order_id', 'output:customer']);
+  });
+  it('fails closed when the connected source no longer matches the canonical sidecar', async () => {
+    const transform = buildCanonicalTransform();
+
+    await expect(
+      projectCanvasFixtureToPostgresSql({
+        transformNode: transform,
+        nodes: [
+          {
+            ...SOURCE,
+            metadata: { ...SOURCE.metadata, tableName: 'other_orders' },
+          },
+          transform,
+        ],
+        edges: [EDGE],
+      })
+    ).rejects.toThrow('source identities do not match');
+  });
+  it('projects a connected FilterRel from the exact canonical revision', async () => {
+    const source = resolveDvtSubstraitProjectionSource(SOURCE);
+    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
+    if (source == null || capability == null) throw new Error('Expected admitted filter fixtures.');
+    const filtered = await filterProjectionInputFixture(
+      createDvtSubstraitProjectionDraft({
+        source,
+        targetNodeId: TRANSFORM.id,
+        outputs: [
+          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+          { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+        ],
+      }),
+      {
+        fieldId: 'output:customer',
+        dataType: 'text',
+        capabilityId: capability.capabilityId,
+        value: 'Ada',
+      }
+    );
+    const transform = applyDvtSubstraitSemanticDocument(
+      TRANSFORM,
+      encodeDvtSubstraitSemanticDocument(filtered)
+    );
+
+    const sql = await projectCanvasFixtureToPostgresSql({
+      transformNode: transform,
+      nodes: [SOURCE, transform],
+      edges: [EDGE],
+    });
+    expect(sql.length).toBeGreaterThan(0);
+    const bound = resolveCanvasSubstraitGraphBindings({
+      node: transform,
+      nodes: [SOURCE, transform],
+      edges: [EDGE],
+    });
+    expect(
+      [...bound.index.relations.values()].filter(
+        (entry) => entry.relation.relType.case === 'filter'
+      )
+    ).toHaveLength(1);
+  });
 });

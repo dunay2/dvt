@@ -40,7 +40,9 @@ route-family reason remains useful for File/Project and identity presentation.
 - Runtime capability filtering and Router/session guards remain authoritative.
   Existing Plugins/Admin contributions are not newly granted or filtered by
   interpreting presentation `level` metadata as permissions.
-- Global destinations are links with `aria-current`. Following the user's
+- Global destinations are links with `aria-current`, or an opted-in route section
+  menu whose button owns menu disclosure and whose items are real Router links.
+  Admin opts into the section menu by the user's explicit choice. Following the user's
   [explicit clarification](https://github.com/dunay2/dvt/issues/3765#issuecomment-6725338570),
   an unmodified primary Canvas click on the current route opens Elements with
   the existing `expand` event, never a toggle. Modified/new-tab activation keeps
@@ -68,6 +70,13 @@ route-family reason remains useful for File/Project and identity presentation.
   selection, pending edits, node positions or semantic persistence.
 - About reads the existing browser bundle metadata; dismissal restores focus to
   its direct trigger, never to the logo.
+- A navigation item can supply an optional route heading. Root derives the active
+  heading from its existing model and pathname, then ShellTopBar presents it in
+  the existing identity area. Admin removes its duplicate local header; other
+  route headers are unaffected. No mutable title publication is introduced.
+- Admin owns section IDs and URL construction in `adminRoutePosition`; both the
+  passive route and generic menu consume this contract. The generic renderer
+  has no Admin ID list, tab query key or selected-section state of its own.
 
 ## Transitions
 

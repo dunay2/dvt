@@ -18,6 +18,7 @@ const CONTRACT_OPERATIONS = [
   'ListWarehouseConnectionSourceObjects',
   'PreviewWarehouseSourceObjectRows',
   'PreviewCanvasTransformRows',
+  'ProjectCanvasTransformSql',
 ] as const;
 
 export type FrontendOperabilityTransitionChannel =

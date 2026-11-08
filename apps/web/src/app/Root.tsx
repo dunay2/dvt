@@ -47,6 +47,7 @@ import { useFrontendOperabilityTransitionRecorder } from './services/AppServices
 import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
 import { isCanvasRoute } from './shell/shellNavigationDisposition';
 import { buildShellRuntimeState } from './shell/shellRuntimeModel';
+import { resolveShellRouteHeading } from './shell/shellNavigationModel';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
@@ -62,6 +63,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const previousPathnameRef = useRef(location.pathname);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const bottomDrawerHeight = useUiLayoutStore((state) => state.bottomDrawerHeight);
+  const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const closeCanvasContextualWorkbench = useCanvasInteractionStore(
     (state) => state.closeContextualWorkbench
@@ -287,6 +289,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     <AppShellFrame
       bottomDrawer={<BottomOperationalDrawer />}
       bottomDrawerHeight={bottomDrawerHeight}
+      onBottomDrawerHeightChange={setBottomDrawerHeight}
       focusMode={focusMode}
       healthBanner={
         <ShellHealthBanner
@@ -305,6 +308,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       skipToMainContentLabel={shellCopy.skipToMainContent}
       topBar={
         <TopAppBar
+          routeHeading={resolveShellRouteHeading(navigationModel, location.pathname)}
           connectionDetail={shellHealth.connectionDetail}
           connectionStateOverride={shellHealth.connectionState}
           isConnectionChecking={shellHealth.isInitialHealthCheckPending}

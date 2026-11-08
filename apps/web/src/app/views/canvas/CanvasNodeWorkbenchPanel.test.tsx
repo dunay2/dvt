@@ -2,6 +2,7 @@
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
 import React, { act } from 'react';
+import { ConnectedSourceRefSchema, type TransformSqlProjectionRequest } from '@dvt/contracts';
 import {
   ExtensionLeafRelSchema,
   RelCommonSchema,
@@ -272,6 +273,7 @@ async function renderNodePanel(
     nodes?: readonly CanonicalNode[];
     edges?: readonly CanonicalEdge[];
     onOpenSemanticEditor?: () => void;
+    codeProjection?: CanvasNodeWorkbenchPanelProps['codeProjection'];
   }>
 ): Promise<void> {
   await act(async () => {
@@ -305,6 +307,7 @@ async function renderNodePanel(
           ]
         }
         activeRunId={null}
+        codeProjection={graph?.codeProjection}
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
         preferredTabRequestId={preferredTabRequestId}
@@ -380,6 +383,26 @@ describe('CanvasNodeWorkbenchPanel', () => {
         .querySelector('[data-slot="canvas-node-workbench-tab-code"]')
         ?.getAttribute('aria-selected')
     ).toBe('true');
+  });
+
+  it('opens Model Properties on the shared Overview section', async () => {
+    // Models used to retain the legacy General label while Sources overrode it locally.
+    await renderNodePanel(root, MODEL_NODE);
+    const overview = container.querySelector('[data-slot="canvas-node-workbench-tab-general"]');
+    expect(overview?.textContent).toBe('Overview');
+    expect(overview?.getAttribute('aria-selected')).toBe('true');
+
+    const code = container.querySelector('[data-slot="canvas-node-workbench-tab-code"]')!;
+    await act(async () => fireEvent.mouseDown(code, { button: 0, ctrlKey: false }));
+    expect(code.getAttribute('aria-selected')).toBe('true');
+    await renderNodePanel(root, MODEL_NODE);
+    expect(code.getAttribute('aria-selected')).toBe('true');
+
+    // A fresh normal request chooses Overview; subsequent explicit Code requests still work.
+    await renderNodePanel(root, MODEL_NODE, 'general', undefined, 2);
+    expect(overview?.getAttribute('aria-selected')).toBe('true');
+    await renderNodePanel(root, MODEL_NODE, 'code', undefined, 3);
+    expect(code.getAttribute('aria-selected')).toBe('true');
   });
 
   it('renders the approved Source tabs without an overflow bucket', async () => {
@@ -840,9 +863,20 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
-  it('shows Substrait first and derives PostgreSQL SQL only after explicit output selection', async () => {
+  it('shows Substrait first and queries authorized PostgreSQL SQL only after explicit output selection', async () => {
     const project = vi.spyOn(outputProjection, 'projectDvtSubstraitTransformOutputToPostgresSql');
-    await renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
+    const projectTransformSql = vi.fn(async (input: TransformSqlProjectionRequest) => ({
+      ...input,
+      schemaVersion: 'canvas-transform-sql-projection.v1' as const,
+      draftRevision: 'revision-one',
+      sql: 'select order_id from raw.orders',
+      provenance: {
+        sourceRefs: [ConnectedSourceRefSchema.parse(SOURCE_NODE.metadata!.connectedSourceRef)],
+      },
+    }));
+    await renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code', undefined, 1, undefined, {
+      codeProjection: { canvasId: 'canvas-orders', query: { projectTransformSql } },
+    });
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const outputSelector = codeSection?.querySelector<HTMLSelectElement>(
@@ -874,6 +908,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       expect(sqlViewer?.textContent?.trim().length).toBeGreaterThan(0);
     });
     expect(project).toHaveBeenCalledOnce();
+    expect(projectTransformSql).toHaveBeenCalledOnce();
     expect(project.mock.calls[0]![0].transformNode.id).toBe(DVT_SUBSTRAIT_TRANSFORM_NODE.id);
     expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
       await project.mock.results[0]!.value

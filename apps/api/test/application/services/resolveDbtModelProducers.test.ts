@@ -21,6 +21,7 @@ import {
 } from '../../../src/application/ports/accessDecision.js';
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/authContract.js';
 import type { ICanvasTransformDataSampleProbe } from '../../../src/application/ports/canvasTransformDataSample.js';
+import { DbtModelProducerAccessDeniedError } from '../../../src/application/ports/dbtModelProducer.js';
 import type {
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
@@ -30,6 +31,7 @@ import { DvtOperationalWorkloadProjector } from '../../../src/application/servic
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import type { ProjectDbtGraphFromFilesUseCase } from '../../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
+import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import { ResolveDbtModelProducers } from '../../../src/application/services/resolveDbtModelProducers.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 import { publisherHarness } from '../../fixtures/dvtRepeatedSourcePublisher.js';
@@ -215,8 +217,10 @@ describe('scoped dbt model producer binding', () => {
       sourceObjects: [],
     });
     const useCase = new PreviewCanvasTransformRowsUseCase({
-      graphDraftResolver,
-      modelProducers: f.resolver,
+      projection: new ResolveCanvasTransformProjection({
+        graphDraftResolver,
+        modelProducers: f.resolver,
+      }),
       connectionCatalog: { getConnection },
       probe: { previewTransformRows },
     });
@@ -390,7 +394,9 @@ describe('scoped dbt model producer binding', () => {
   it('does not gain file access from permission to view the native graph', async () => {
     const f = fixture();
     f.authorize.mockResolvedValue({ ok: false, reason: 'missing_scope' });
-    await expect(f.resolver.resolve([node], context)).rejects.toThrow('file-model access');
+    await expect(f.resolver.resolve([node], context)).rejects.toBeInstanceOf(
+      DbtModelProducerAccessDeniedError
+    );
     expect(f.resolve).not.toHaveBeenCalled();
     expect(f.analyze).not.toHaveBeenCalled();
   });

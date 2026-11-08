@@ -22,7 +22,7 @@ const readModel: NodePropertiesReadModel = {
   nodeId: node.id,
   nodeName: node.name,
   sections: [
-    { id: 'general', label: 'General', rows: [], tableRows: [] },
+    { id: 'general', label: 'Overview', rows: [], tableRows: [] },
     { id: 'columns', label: 'Columns', rows: [], tableRows: [] },
     { id: 'inputs-outputs', label: 'Inputs / Outputs', rows: [], tableRows: [] },
     { id: 'tests', label: 'Tests', rows: [], tableRows: [] },
@@ -97,6 +97,30 @@ describe('NodePropertiesTabs primary sections', () => {
     expect(tabsList?.getAttribute('class')).toContain('overflow-visible');
     expect(tabsList?.getAttribute('class')).not.toContain('overflow-x-auto');
     expect(tabsList?.querySelector('svg')).toBeNull();
+  });
+
+  it('presents the supplied read-model label without a Source-specific override', () => {
+    // Local Source copy previously hid valid labels supplied by the shared read model.
+    act(() => {
+      root.render(
+        <NodePropertiesTabs
+          node={node}
+          model={{
+            ...readModel,
+            sections: [{ id: 'general', label: 'Custom details', rows: [], tableRows: [] }],
+          }}
+          activeRunId={null}
+          panels={[]}
+          activeTab="general"
+          moreLabel="More"
+          onActiveTabChange={vi.fn()}
+          onHide={vi.fn()}
+        />
+      );
+    });
+    expect(container.querySelector('[data-slot="node-inspector-tab-general"]')?.textContent).toBe(
+      'Custom details'
+    );
   });
 
   it('uses caller-provided primary section order instead of the global default', () => {

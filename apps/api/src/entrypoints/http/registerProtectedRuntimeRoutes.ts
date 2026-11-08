@@ -10,6 +10,7 @@ import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
 import { registerCanvasTransformDataSampleRoutes } from './canvasTransformDataSampleRoutes.js';
+import { registerCanvasTransformSqlRoutes } from './canvasTransformSqlRoutes.js';
 import { registerProtectedDbtDependencyEditRouteGroup } from './dbtDependencyEditRouteGroup.js';
 import { registerProtectedDbtProjectGraphRouteGroup } from './dbtProjectGraphRouteGroup.js';
 import { registerProtectedDbtProjectImportRouteGroup } from './dbtProjectImportRouteGroup.js';
@@ -80,6 +81,11 @@ export async function registerProtectedRuntimeRoutes(
   registerCanvasTransformDataSampleRoutes(app, {
     ...dependencies.runtimeAuth,
     query: dependencies.previewCanvasTransformRowsUseCase,
+    rateLimit: protectedRateLimit,
+  });
+  registerCanvasTransformSqlRoutes(app, {
+    ...dependencies.runtimeAuth,
+    query: dependencies.projectCanvasTransformSqlQuery,
     rateLimit: protectedRateLimit,
   });
   registerProtectedDbtProjectGraphRouteGroup(app, {

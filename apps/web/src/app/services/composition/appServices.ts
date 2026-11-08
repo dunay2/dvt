@@ -1,6 +1,8 @@
 /** Owned concern: assemble web application ports at the composition root. */
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
+import type { ICanvasTransformSqlQueryPort } from '../../ports/canvasTransformSql';
+import { createApiCanvasTransformSqlQueryPort } from '../canvas/canvasTransformSql.api';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
@@ -60,6 +62,7 @@ export interface AppServices {
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly warehouseSourceDataSampleQuery: IWarehouseSourceDataSampleQueryPort;
   readonly canvasTransformDataSampleQuery: ICanvasTransformDataSampleQueryPort;
+  readonly canvasTransformSqlQuery: ICanvasTransformSqlQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
@@ -89,6 +92,7 @@ export interface AppServicesOverrides {
   readonly warehouseSourceImport?: IWarehouseSourceImportPort;
   readonly warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   readonly canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
+  readonly canvasTransformSqlQuery?: ICanvasTransformSqlQueryPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
@@ -133,6 +137,9 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const canvasTransformDataSampleQuery =
     overrides.canvasTransformDataSampleQuery ??
     createApiCanvasTransformDataSampleQueryPort(apiClient, frontendOperabilitySink);
+  const canvasTransformSqlQuery =
+    overrides.canvasTransformSqlQuery ??
+    createApiCanvasTransformSqlQueryPort(apiClient, frontendOperabilitySink);
   const workspaceFileContentCommand =
     overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand;
   const graphDbtWorkspaceArtifactPublicationCommand =
@@ -165,6 +172,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     warehouseSourceImport,
     warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery,
+    canvasTransformSqlQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,

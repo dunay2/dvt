@@ -5,7 +5,7 @@ import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasHexColor } from './canvasPalette';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
@@ -39,19 +39,17 @@ type CanvasStoreFacade = {
     typeof useCanvasInteractionStore.getState
   >['closeContextualWorkbench'];
   userPermissions: UserPermissions;
-  setBottomDrawerHeight: (height: number) => void;
-  bottomDrawerVisible: boolean;
-  toggleBottomDrawer: () => void;
+  showBottomDrawer: () => void;
   inspectorPanelVisible: boolean;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPalette: CanvasHexColor;
   setGridSize: (size: number) => void;
-  setCanvasPalette: (palette: CanvasPaletteId) => void;
+  setCanvasPalette: (palette: CanvasHexColor) => void;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
   setCanvasGridVisible: (visible: boolean) => void;
-  setCanvasGridColor: (color: CanvasPaletteId) => void;
+  setCanvasGridColor: (color: CanvasHexColor) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
   canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
   setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
@@ -112,12 +110,10 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     (state) => state.closeContextualWorkbench
   );
   const userPermissions = useAuthorizationStore((state) => state.userPermissions);
-  const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
-  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
+  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const showInspectorPanelStore = useUiLayoutStore((state) => state.showInspectorPanel);
   const hideInspectorPanelStore = useUiLayoutStore((state) => state.hideInspectorPanel);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
-  const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
@@ -175,9 +171,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     currentRun,
     closeContextualWorkbench,
     userPermissions,
-    setBottomDrawerHeight,
-    bottomDrawerVisible,
-    toggleBottomDrawer,
+    showBottomDrawer,
     inspectorPanelVisible,
     gridSize,
     canvasPalette,

@@ -1,7 +1,7 @@
 /** English copy for node property sections. */
 export const nodePropertyCopyEn = {
   sectionLabels: {
-    general: 'General',
+    general: 'Overview',
     columns: 'Columns',
     'inputs-outputs': 'Inputs / Outputs',
     tests: 'Tests',

@@ -2,14 +2,52 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {
+  OPERATIONAL_DRAWER_HEIGHT,
+  normalizeOperationalDrawerHeight,
+} from '../components/shell/appShellPanelSizing';
+import {
   DEFAULT_CANVAS_GRID_COLOR,
   DEFAULT_CANVAS_PALETTE_ID,
   normalizeCanvasHexColor,
   normalizeCanvasPaletteId,
-  type CanvasPaletteId,
+  type CanvasHexColor,
 } from '../views/canvas/canvasPalette';
 
 export const CANVAS_EXPLORER_WIDTH = { default: 22, min: 15, max: 40 } as const;
+
+type OperationalDrawerLayout = Readonly<{
+  bottomDrawerVisible: boolean;
+  bottomDrawerHeight: number;
+}>;
+type OperationalDrawerLayoutEvent =
+  | Readonly<{ type: 'show'; height: number | undefined }>
+  | Readonly<{ type: 'hide' | 'toggle' }>
+  | Readonly<{ type: 'resize'; height: number }>;
+
+function transitionOperationalDrawerLayout(
+  current: OperationalDrawerLayout,
+  event: OperationalDrawerLayoutEvent
+): OperationalDrawerLayout {
+  if (event.type === 'resize' && (!Number.isFinite(event.height) || event.height <= 0))
+    return current;
+  const height = normalizeOperationalDrawerHeight(
+    event.type === 'resize' || (event.type === 'show' && event.height !== undefined)
+      ? event.height
+      : current.bottomDrawerHeight
+  );
+  const visible =
+    event.type === 'show'
+      ? true
+      : event.type === 'hide'
+        ? false
+        : event.type === 'toggle'
+          ? !current.bottomDrawerVisible
+          : current.bottomDrawerVisible;
+  return Math.abs(height - current.bottomDrawerHeight) <= OPERATIONAL_DRAWER_HEIGHT.precision &&
+    visible === current.bottomDrawerVisible
+    ? current
+    : { bottomDrawerHeight: height, bottomDrawerVisible: visible };
+}
 
 export type CanvasExplorerState = Readonly<{
   mode: 'expanded' | 'collapsed' | 'closed';
@@ -78,9 +116,9 @@ interface UiLayoutState {
   bottomDrawerVisible: boolean;
   focusMode: boolean;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPalette: CanvasHexColor;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
 
   toggleLeftNav: () => void;
@@ -95,9 +133,9 @@ interface UiLayoutState {
   showInspectorPanel: () => void;
   hideInspectorPanel: () => void;
   setGridSize: (size: number) => void;
-  setCanvasPalette: (palette: CanvasPaletteId) => void;
+  setCanvasPalette: (palette: CanvasHexColor) => void;
   setCanvasGridVisible: (visible: boolean) => void;
-  setCanvasGridColor: (color: CanvasPaletteId) => void;
+  setCanvasGridColor: (color: CanvasHexColor) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
 }
 
@@ -120,48 +158,51 @@ type PersistedUiLayoutState = Partial<
 
 export const useUiLayoutStore = create<UiLayoutState>()(
   persist(
-    (set, get) => ({
-      leftNavCollapsed: false,
-      canvasExplorer: { mode: 'expanded', widthPercent: CANVAS_EXPLORER_WIDTH.default },
-      inspectorPanelWidth: 380,
-      inspectorPanelVisible: false,
-      bottomDrawerHeight: 0,
-      bottomDrawerVisible: false,
-      focusMode: false,
-      gridSize: 20,
-      canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
-      canvasGridVisible: true,
-      canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
-      canvasSnapToGrid: false,
+    (set, get) => {
+      const dispatchOperationalDrawer = (event: OperationalDrawerLayoutEvent): void => {
+        const current = get();
+        const next = transitionOperationalDrawerLayout(current, event);
+        if (next !== current) set(next);
+      };
+      return {
+        leftNavCollapsed: false,
+        canvasExplorer: { mode: 'expanded', widthPercent: CANVAS_EXPLORER_WIDTH.default },
+        inspectorPanelWidth: 380,
+        inspectorPanelVisible: false,
+        bottomDrawerHeight: OPERATIONAL_DRAWER_HEIGHT.default,
+        bottomDrawerVisible: false,
+        focusMode: false,
+        gridSize: 20,
+        canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+        canvasGridVisible: true,
+        canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+        canvasSnapToGrid: false,
 
-      toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
-      dispatchCanvasExplorer: (event) => {
-        const current = get().canvasExplorer;
-        const canvasExplorer = transitionCanvasExplorer(current, event);
-        if (canvasExplorer !== current) set({ canvasExplorer });
-      },
-      setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
-      setBottomDrawerHeight: (height) => set({ bottomDrawerHeight: height }),
-      toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
-      toggleInspectorPanel: () =>
-        set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible })),
-      toggleBottomDrawer: () =>
-        set((state) => {
-          const next = !state.bottomDrawerVisible;
-          return { bottomDrawerVisible: next, bottomDrawerHeight: next ? 160 : 0 };
-        }),
-      showBottomDrawer: (height = 300) =>
-        set({ bottomDrawerVisible: true, bottomDrawerHeight: Math.max(160, height) }),
-      hideBottomDrawer: () => set({ bottomDrawerVisible: false, bottomDrawerHeight: 0 }),
-      showInspectorPanel: () => set({ inspectorPanelVisible: true }),
-      hideInspectorPanel: () => set({ inspectorPanelVisible: false }),
-      setGridSize: (size) => set({ gridSize: size }),
-      setCanvasPalette: (palette) => set({ canvasPalette: normalizeCanvasPaletteId(palette) }),
-      setCanvasGridVisible: (visible) => set({ canvasGridVisible: visible }),
-      setCanvasGridColor: (color) =>
-        set({ canvasGridColor: normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR) }),
-      setCanvasSnapToGrid: (enabled) => set({ canvasSnapToGrid: enabled }),
-    }),
+        toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
+        dispatchCanvasExplorer: (event) => {
+          // These transitions are synchronous; bypass persist entirely when a current-state event is a no-op.
+          const current = get().canvasExplorer;
+          const canvasExplorer = transitionCanvasExplorer(current, event);
+          if (canvasExplorer !== current) set({ canvasExplorer });
+        },
+        setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
+        setBottomDrawerHeight: (height) => dispatchOperationalDrawer({ type: 'resize', height }),
+        toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
+        toggleInspectorPanel: () =>
+          set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible })),
+        toggleBottomDrawer: () => dispatchOperationalDrawer({ type: 'toggle' }),
+        showBottomDrawer: (height) => dispatchOperationalDrawer({ type: 'show', height }),
+        hideBottomDrawer: () => dispatchOperationalDrawer({ type: 'hide' }),
+        showInspectorPanel: () => set({ inspectorPanelVisible: true }),
+        hideInspectorPanel: () => set({ inspectorPanelVisible: false }),
+        setGridSize: (size) => set({ gridSize: size }),
+        setCanvasPalette: (palette) => set({ canvasPalette: normalizeCanvasPaletteId(palette) }),
+        setCanvasGridVisible: (visible) => set({ canvasGridVisible: visible }),
+        setCanvasGridColor: (color) =>
+          set({ canvasGridColor: normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR) }),
+        setCanvasSnapToGrid: (enabled) => set({ canvasSnapToGrid: enabled }),
+      };
+    },
     {
       name: 'dvt-web-ui-layout',
       storage: createJSONStorage(() => localStorage),
@@ -181,10 +222,13 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           inspectorPanelWidth:
             persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
           inspectorPanelVisible: currentState.inspectorPanelVisible,
-          bottomDrawerHeight:
-            persistedLayoutState.bottomDrawerHeight ?? currentState.bottomDrawerHeight,
+          bottomDrawerHeight: normalizeOperationalDrawerHeight(
+            persistedLayoutState.bottomDrawerHeight
+          ),
           bottomDrawerVisible:
-            persistedLayoutState.bottomDrawerVisible ?? currentState.bottomDrawerVisible,
+            typeof persistedLayoutState.bottomDrawerVisible === 'boolean'
+              ? persistedLayoutState.bottomDrawerVisible
+              : currentState.bottomDrawerVisible,
           focusMode: persistedLayoutState.focusMode ?? currentState.focusMode,
           gridSize: persistedLayoutState.gridSize ?? currentState.gridSize,
           canvasPalette: normalizeCanvasPaletteId(

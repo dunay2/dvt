@@ -65,6 +65,27 @@ describe('createHttpPlatformHealthClient', () => {
       expect(recorder.requests).toHaveLength(1);
       expect(recorder.requests[0]?.endpoint).toBe('/healthz');
     });
+
+    it.each([
+      { configured: '', endpoints: ['/healthz'] },
+      { configured: 'readyz,dbReady', endpoints: ['/db/ready', '/healthz', '/readyz'] },
+      { configured: undefined, endpoints: ['/db/ready', '/healthz', '/readyz', '/version'] },
+    ])(
+      'honors caller probe policy $configured and otherwise uses the client default',
+      async ({ configured, endpoints }) => {
+        // The dev launcher must inherit policy rather than silently forcing all probes off.
+        vi.stubEnv('VITE_PLATFORM_HEALTH_OPTIONAL_PROBES', configured);
+        try {
+          const recorder = createApiRequestRecorder(mockEndpointResponse);
+          await createHttpPlatformHealthClient(
+            createApiClientStub(recorder.requestRaw)
+          ).loadSnapshot();
+          expect(recorder.requests.map((request) => request.endpoint).sort()).toEqual(endpoints);
+        } finally {
+          vi.unstubAllEnvs();
+        }
+      }
+    );
   });
 
   describe('loadSnapshot', () => {
@@ -137,6 +158,21 @@ describe('createHttpPlatformHealthClient', () => {
       expect(snapshot.readyz.availability).toBe('not_enabled');
       expect(snapshot.version.availability).toBe('not_enabled');
       expect(snapshot.dbReady.availability).toBe('not_enabled');
+    });
+
+    it('preserves optional access denial as a failure rather than disabled capability', async () => {
+      // An access-denied response must remain actionable instead of appearing unconfigured.
+      const requestRaw = vi.fn(async (endpoint: string) =>
+        endpoint === '/healthz'
+          ? jsonResponse(createHealthzDto())
+          : jsonResponse({ error: 'forbidden' }, 403)
+      );
+      const snapshot = await createHttpPlatformHealthClient(
+        createApiClientStub(requestRaw)
+      ).loadSnapshot();
+      expect(snapshot.readyz.availability).toBe('available');
+      expect(snapshot.readyz.error).toMatchObject({ kind: 'http', statusCode: 403 });
+      expect(snapshot.version.error).toMatchObject({ kind: 'http', statusCode: 403 });
     });
 
     it('captures optional endpoint failures without failing the full snapshot', async () => {

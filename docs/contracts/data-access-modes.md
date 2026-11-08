@@ -116,6 +116,47 @@ in the application use case; view components only render facts and emit actions.
 | Explicit refresh          | Responsibility overload | Presentation Model / Canvas source publication | Same query                         | Source sample hook and operational drawer         | Current selection, stale response, deletion, no automatic query        | View receives facts/actions, never credentials or SQL | Pointer/keyboard Refresh and unchanged tab behavior  | Automatic refresh and nested-scope refresh   |
 | Retire dead sample action | Duplicate semantics     | Remove obsolete adapter / Run evidence         | No new rail                        | Web Run/Sink ports, service and views             | Persisted evidence remains; no row-query action                        | Existing API retired-route rejection                  | Existing terminal Run proof remains green            | Reinterpreting historical execution evidence |
 
+## Transform SQL inspection
+
+The SQL inspection continuation is governed by
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6726292993).
+It declares a distinct read model for the existing Code surface; it does not
+execute a LIVE row read. A native Model consuming a file-owned dbt producer
+requires the server's authorized compiled publication as well as its schema
+signature. The browser cannot manufacture that SQL from the signature or use
+an upstream file as the selected Model's own source.
+
+| Query                       | DDD read model / application port                                          | Adapter                                                                                                                           | Scope and authorization                                                                                                                                                             | Negative paths                                                                                                                                                             |
+| --------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProjectCanvasTransformSql` | `TransformSqlProjectionResponse`; `ProjectCanvasTransformSqlQuery.execute` | GET `/workspace/graph/canvases/:canvasId/transforms/:transformNodeId/sql`; Web `ICanvasTransformSqlQueryPort.projectTransformSql` | Existing tenant/project/environment and `workspaceGraphDraftView`; file-model producers additionally use `workspaceFilesView`, current file authority and native compilation policy | Missing/malformed scope or semantic digest, 401/403, stale Canvas/digest, unsupported closure, changed producer fields/connection, malformed response and stale completion |
+
+The request contains only the selected Canvas and Transform identities and the
+expected canonical semantic-plan digest. The response names the protected draft
+revision, semantic digest, projected SQL and exact physical/model provenance.
+It contains no credentials, rows or publication command. The shared preparation
+owner resolves the protected draft and the existing producer/AST pipeline for
+both this query and `PreviewCanvasTransformRows`. Only row Preview continues to
+the connection catalog, credential resolver and bounded provider probe.
+
+```mermaid
+flowchart LR
+  Code[Explicit Code SQL selection] --> SQL[ProjectCanvasTransformSql]
+  SQL --> Shared[Authorized transform projection preparation]
+  Rows[PreviewCanvasTransformRows] --> Shared
+  Shared --> Producers[Current physical and native dbt producer closure]
+  Producers --> Projection[Existing PostgreSQL AST projection]
+  Projection --> CodeResult[SQL and revision provenance]
+  Projection --> Rows
+  Rows --> Probe[Bounded row probe]
+```
+
+Canonical JSON remains passive. Selecting SQL owns loading and currentness;
+pending identical selections are deduplicated, and a later SQL selection checks
+the current authorized publication using the existing native analyzer cache.
+Owner, accepted file revision, graph or semantic changes invalidate visible SQL.
+Late or unmounted results cannot become current. An unavailable query context
+rejects SQL inspection rather than lowering external publications locally.
+
 ## Transform LIVE preview
 
 The Transform continuation is owned by [#3555](https://github.com/dunay2/dvt/issues/3555).

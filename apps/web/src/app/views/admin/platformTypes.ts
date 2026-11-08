@@ -1,7 +1,4 @@
-import type {
-  PlatformConnectionState,
-  PlatformHealthSnapshot,
-} from '../../../capabilities/platform-health';
+import type { AdminPlatformHealthPresentation } from './adminViewModel';
 
 export type AdminCapabilitiesData =
   | {
@@ -12,8 +9,7 @@ export type AdminCapabilitiesData =
   | undefined;
 
 export type AdminPlatformTabProps = {
-  connectionStatus: PlatformConnectionState;
-  platformHealthSnapshot: PlatformHealthSnapshot | undefined;
+  health: AdminPlatformHealthPresentation;
   capabilitiesData: AdminCapabilitiesData;
   capabilitiesLoading: boolean;
   capabilitiesError: boolean;

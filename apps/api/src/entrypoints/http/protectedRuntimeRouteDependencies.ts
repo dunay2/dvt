@@ -17,10 +17,12 @@ import { ListRunsUseCase } from '../../application/services/listRunsUseCase.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../application/services/previewCanvasTransformRowsUseCase.js';
 import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
+import { ProjectCanvasTransformSqlQuery } from '../../application/services/projectCanvasTransformSqlQuery.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedDvtPreviewSelectionService } from '../../application/services/resolveAuthorizedDvtPreviewSelection.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
+import { ResolveCanvasTransformProjection } from '../../application/services/resolveCanvasTransformProjection.js';
 import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
 import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
@@ -104,10 +106,16 @@ export function buildProtectedRuntimeRouteDependencies(
     planner: protectedModule.planner,
     workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
   });
-  const previewCanvasTransformRowsUseCase = new PreviewCanvasTransformRowsUseCase({
+  const canvasTransformProjection = new ResolveCanvasTransformProjection({
     graphDraftResolver: previewGraphDraftResolver,
-    connectionCatalog: protectedModule.warehouseConnectionCatalog,
     modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
+  });
+  const projectCanvasTransformSqlQuery = new ProjectCanvasTransformSqlQuery({
+    projection: canvasTransformProjection,
+  });
+  const previewCanvasTransformRowsUseCase = new PreviewCanvasTransformRowsUseCase({
+    projection: canvasTransformProjection,
+    connectionCatalog: protectedModule.warehouseConnectionCatalog,
     probe: new PostgresCanvasTransformDataSampleProbe({
       credentialResolver: protectedModule.postgresCredentialResolver,
       now: () => new Date(),
@@ -156,6 +164,7 @@ export function buildProtectedRuntimeRouteDependencies(
     }),
     listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
     previewCanvasTransformRowsUseCase,
+    projectCanvasTransformSqlQuery,
     previewWarehouseSourceObjectRowsUseCase,
     previewPlanUseCase,
     validatePostgresTransformSqlUseCase,

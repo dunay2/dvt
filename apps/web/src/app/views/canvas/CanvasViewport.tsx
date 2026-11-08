@@ -20,7 +20,7 @@ import {
 
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
+import { normalizeCanvasPaletteId, type CanvasHexColor } from './canvasPalette';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
 import type {
@@ -64,9 +64,9 @@ type CanvasViewportProps = {
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
-  readonly canvasPalette: CanvasPaletteId;
+  readonly canvasPalette: CanvasHexColor;
   readonly canvasGridVisible: boolean;
-  readonly canvasGridColor: CanvasPaletteId;
+  readonly canvasGridColor: CanvasHexColor;
   readonly canvasSnapToGrid: boolean;
   readonly viewport: { x: number; y: number; zoom: number } | null;
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;

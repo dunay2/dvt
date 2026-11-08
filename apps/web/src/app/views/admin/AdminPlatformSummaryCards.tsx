@@ -1,95 +1,47 @@
+/** Present the same observed health facts used by endpoint details. */
 import { Activity, Database, Link2, Radio } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
 import { adminViewCopy as copy } from './copy';
-import { getBackendStatusLabel, getReadyzSummary } from './adminViewModel';
 import type { AdminPlatformTabProps } from './platformTypes';
-
-type SummaryProps = Pick<
-  AdminPlatformTabProps,
-  'connectionStatus' | 'platformHealthSnapshot' | 'capabilitiesData'
->;
+import styles from './AdminPlatform.module.css';
 
 export function AdminPlatformSummaryCards({
-  connectionStatus,
-  platformHealthSnapshot,
-  capabilitiesData,
-}: Readonly<SummaryProps>) {
+  health,
+}: Readonly<Pick<AdminPlatformTabProps, 'health'>>) {
+  const summaries = [
+    { id: 'backend', label: copy.labels.backendStatus, icon: Activity, ...health.backend },
+    { id: 'version', label: copy.labels.version, icon: Radio, ...health.probes.version },
+    { id: 'readyz', label: copy.labels.readiness, icon: Link2, ...health.probes.readyz },
+    {
+      id: 'dbReady',
+      label: copy.labels.databaseReadiness,
+      icon: Database,
+      ...health.probes.dbReady,
+    },
+  ];
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <Card className="border-slate-700 bg-slate-900 p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              {copy.labels.backendStatus}
+    <div className={styles.summaryGrid}>
+      {summaries.map(({ id, label, icon: Icon, status, tone, detail }) => (
+        <Card
+          key={id}
+          className={styles.card}
+          data-slot="admin-health-summary"
+          data-probe={id}
+          data-tone={tone}
+        >
+          <div className={styles.cardHeading}>
+            <div className={styles.summaryContent}>
+              <div className={styles.label}>{label}</div>
+              <div className={styles.value} data-slot="admin-health-status">
+                {status}
+              </div>
             </div>
-            <div className="mt-2 text-lg font-semibold">
-              {getBackendStatusLabel(connectionStatus.rest)}
-            </div>
+            <Icon aria-hidden="true" className={cn(styles.icon, styles[tone])} />
           </div>
-          <Activity
-            className={cn(
-              'size-5',
-              connectionStatus.rest === 'ok' && 'text-green-400',
-              connectionStatus.rest === 'degraded' && 'text-amber-400',
-              connectionStatus.rest === 'offline' && 'text-red-400'
-            )}
-          />
-        </div>
-        <div className="mt-4 text-sm text-slate-400">
-          REST: {connectionStatus.rest} - events: {connectionStatus.liveEvents}
-        </div>
-      </Card>
-
-      <Card className="border-slate-700 bg-slate-900 p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              {copy.labels.version}
-            </div>
-            <div className="mt-2 text-lg font-semibold">
-              {platformHealthSnapshot?.version.data?.version ?? 'unknown'}
-            </div>
-          </div>
-          <Radio className="size-5 text-cyan-400" />
-        </div>
-        <div className="mt-4 text-sm text-slate-400">
-          {platformHealthSnapshot?.version.data?.name ?? 'backend'} - API{' '}
-          {capabilitiesData?.apiVersion ?? 'n/a'}
-        </div>
-      </Card>
-
-      <Card className="border-slate-700 bg-slate-900 p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              {copy.labels.readiness}
-            </div>
-            <div className="mt-2 text-lg font-semibold">
-              {platformHealthSnapshot?.readyz.data?.status ?? 'unavailable'}
-            </div>
-          </div>
-          <Link2 className="size-5 text-violet-400" />
-        </div>
-        <div className="mt-4 text-sm text-slate-400">
-          {getReadyzSummary(platformHealthSnapshot)}
-        </div>
-      </Card>
-
-      <Card className="border-slate-700 bg-slate-900 p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              {copy.labels.dataTransport}
-            </div>
-            <div className="mt-2 text-lg font-semibold">API</div>
-          </div>
-          <Database className="size-5 text-emerald-400" />
-        </div>
-        <div className="mt-4 text-sm text-slate-400">
-          API base: {platformHealthSnapshot?.apiBaseUrl ?? 'not resolved'}
-        </div>
-      </Card>
+          <p className={styles.detail}>{detail}</p>
+        </Card>
+      ))}
     </div>
   );
 }

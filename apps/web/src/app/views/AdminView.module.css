@@ -1,0 +1,10 @@
+/* Route composition owns useful width; diagnostic cards own their own presentation. */
+.surface {
+  width: 100%;
+  max-width: var(--container-6xl);
+  margin-inline: auto;
+}
+.section {
+  min-width: 0;
+  width: 100%;
+}

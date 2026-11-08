@@ -1,0 +1,190 @@
+/* Shared diagnostic roles; observation state selects tone without defining domain readiness. */
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 6);
+  min-width: 0;
+}
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 4);
+}
+.detailsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: calc(var(--spacing) * 4);
+}
+.card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 4);
+  border-color: var(--border-default);
+  background: var(--surface-panel);
+  padding: calc(var(--spacing) * 5);
+  color: var(--text-default);
+}
+.cardHeading,
+.sectionHeading,
+.probeHeading {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 2);
+}
+.cardHeading,
+.probeHeading {
+  justify-content: space-between;
+}
+.probeHeading {
+  flex-wrap: wrap;
+}
+.summaryContent {
+  min-width: 0;
+}
+.label {
+  color: var(--text-subtle);
+  font-size: var(--text-meta);
+  line-height: var(--text-meta-line-height);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.value {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+.detail,
+.subtitle,
+.probeDetail {
+  color: var(--text-muted);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
+  overflow-wrap: anywhere;
+}
+.detail {
+  margin-top: auto;
+}
+.title {
+  color: var(--text-strong);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
+  font-weight: var(--font-weight-semibold);
+}
+.metadata {
+  margin-top: calc(var(--spacing) * 2);
+  color: var(--text-subtle);
+  font-size: var(--text-meta);
+  line-height: var(--text-meta-line-height);
+  overflow-wrap: anywhere;
+}
+.icon,
+.sectionIcon {
+  width: calc(var(--spacing) * 5);
+  height: calc(var(--spacing) * 5);
+  flex: 0 0 auto;
+}
+.sectionIcon {
+  color: var(--status-info);
+}
+.probeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 3);
+}
+.inset {
+  min-width: 0;
+  padding: calc(var(--spacing) * 4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--surface-app);
+}
+.endpoint,
+.technicalValue,
+.pluginId {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: var(--text-mono-line-height);
+  overflow-wrap: anywhere;
+}
+.technicalValue,
+.compatibility,
+.pluginList {
+  margin-top: calc(var(--spacing) * 2);
+}
+.compatibility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 2);
+}
+.pluginList {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+}
+.plugin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  padding: calc(var(--spacing) * 3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+.pluginId {
+  flex: 1 1 12ch;
+  color: var(--text-strong);
+}
+.plugin > .probeDetail {
+  flex: 2 1 16ch;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing);
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border: 1px solid currentColor;
+  background: var(--surface-elevated);
+}
+.badgeIcon {
+  width: calc(var(--spacing) * 3);
+  height: calc(var(--spacing) * 3);
+  flex: 0 0 auto;
+}
+.neutral {
+  color: var(--text-subtle);
+}
+.success {
+  color: var(--status-success);
+}
+.warning {
+  color: var(--status-warning);
+}
+.danger {
+  color: var(--status-danger);
+}
+.badge.neutral,
+.badge.success,
+.badge.warning,
+.badge.danger {
+  background: var(--surface-elevated);
+}
+@media (max-width: 80rem) {
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .detailsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .summaryGrid,
+  .probeGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

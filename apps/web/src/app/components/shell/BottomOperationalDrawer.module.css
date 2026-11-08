@@ -60,8 +60,7 @@ Owned concern: own operational drawer layout, typography and feed chrome appeara
   color: var(--text-strong);
 }
 
-.tab:focus-visible,
-.tabs:focus-visible {
+.tab:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
@@ -82,11 +81,13 @@ Owned concern: own operational drawer layout, typography and feed chrome appeara
   height: calc(var(--spacing) * 3);
 }
 
-.restoreHint {
-  padding-inline: calc(var(--spacing) * 2);
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
-  color: var(--text-muted);
+.restoreAction {
+  height: calc(var(--spacing) * 7);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-default);
+  cursor: pointer;
 }
 
 .runBadge {

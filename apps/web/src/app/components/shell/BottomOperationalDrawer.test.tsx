@@ -244,7 +244,7 @@ describe('BottomOperationalDrawer', () => {
     expect(closeButton).toBeTruthy();
     expect(closeButton?.classList).toContain(styles.closeButton);
     fireEvent.click(closeButton!);
-    expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(0);
+    expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(160);
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(false);
   });
 
