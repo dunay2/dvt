@@ -41,6 +41,7 @@ afterEach(() => {
 
 describe('Canvas explorer', () => {
   it('restores the saved dock width on mount and remount under StrictMode', () => {
+    // GH-3818: mount observations could replace the saved width with the panel's default size.
     const view = (key: string): JSX.Element => (
       <React.StrictMode>
         <CanvasExplorer key={key} elements={<input aria-label="Panel search" />}>
@@ -65,6 +66,7 @@ describe('Canvas explorer', () => {
   });
 
   it('synchronizes width and disclosure across retained explorers without replacing content', () => {
+    // defaultSize only runs at mount; retained Canvas/Model panels also need later size updates.
     render(
       <>
         <CanvasExplorer elements={<input aria-label="Canvas search" />}>
@@ -109,6 +111,7 @@ describe('Canvas explorer', () => {
   });
 
   it('restores a collapsed explorer and its width after hydration and remount', async () => {
+    // Local expansion state used to reopen the dock even when its saved preference was collapsed.
     const view = (key: string): JSX.Element => (
       <CanvasExplorer key={key} elements={<input aria-label="Panel search" />}>
         <input aria-label="Graph state" />

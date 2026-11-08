@@ -29,6 +29,7 @@ describe('useUiLayoutStore', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('starts with one expanded Explorer state and retires the old visibility commands', () => {
+    // GH-3818: separate visibility and local expansion owners disagreed after reopening.
     expect(useUiLayoutStore.getInitialState().canvasExplorer).toEqual({
       mode: 'expanded',
       widthPercent: 22,
@@ -52,6 +53,7 @@ describe('useUiLayoutStore', () => {
     ['closed', 'toggle', 'expanded'],
     ['closed', 'close', 'closed'],
   ] as const)('transitions %s with %s to %s without losing width', (mode, type, expectedMode) => {
+    // Disclosure commands must not reset the width or accidentally reopen a closed dock.
     useUiLayoutStore.setState({ canvasExplorer: { mode, widthPercent: 31.25 } });
     const previous = useUiLayoutStore.getState().canvasExplorer;
 
@@ -69,6 +71,7 @@ describe('useUiLayoutStore', () => {
   it.each(['expanded', 'collapsed', 'closed'] as const)(
     'persists and restores the %s mode and fractional width using the existing storage key',
     async (mode) => {
+      // GH-3818: reload lost both the user's resize and the collapsed state.
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: 31.25 });
       if (mode !== 'expanded') {
         useUiLayoutStore.getState().dispatchCanvasExplorer({
@@ -97,6 +100,7 @@ describe('useUiLayoutStore', () => {
   ] as const)(
     'migrates legacy visibility %j without restoring a second runtime field',
     async (value, mode) => {
+      // Existing installs have the boolean shape; migrating must not revive that second owner.
       localStorage.setItem(
         UI_LAYOUT_STORAGE_KEY,
         JSON.stringify({ state: { canvasExplorerVisible: value } })
@@ -108,6 +112,7 @@ describe('useUiLayoutStore', () => {
   );
 
   it('prefers the new persisted mode over legacy visibility', async () => {
+    // A stale legacy flag must not override a newer, deliberately collapsed preference.
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,
       JSON.stringify({
@@ -131,6 +136,7 @@ describe('useUiLayoutStore', () => {
     { mode: 'unknown', widthPercent: '31' },
     { mode: false, widthPercent: null },
   ])('defaults malformed persisted Explorer state %j', async (canvasExplorer) => {
+    // Browser storage is untrusted input; malformed values must not produce unusable geometry.
     useUiLayoutStore.setState({ canvasExplorer: { mode: 'closed', widthPercent: 35 } });
     localStorage.setItem(UI_LAYOUT_STORAGE_KEY, JSON.stringify({ state: { canvasExplorer } }));
     await useUiLayoutStore.persist.rehydrate();
@@ -149,6 +155,7 @@ describe('useUiLayoutStore', () => {
   ])(
     'validates hydrated width %j while preserving valid disclosure',
     async (widthPercent, expected) => {
+      // Repairing one invalid field must preserve the user's valid disclosure preference.
       localStorage.setItem(
         UI_LAYOUT_STORAGE_KEY,
         JSON.stringify({ state: { canvasExplorer: { mode: 'collapsed', widthPercent } } })
@@ -164,6 +171,7 @@ describe('useUiLayoutStore', () => {
   it.each(['expanded', 'collapsed', 'closed'] as const)(
     'bounds resize without changing %s mode',
     (mode) => {
+      // Geometry observations are not open/close commands, including for retained hidden views.
       useUiLayoutStore.setState({ canvasExplorer: { mode, widthPercent: 22 } });
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: -10 });
       expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 15 });
@@ -173,6 +181,7 @@ describe('useUiLayoutStore', () => {
   );
 
   it('does not notify or write storage for unchanged, clamped-equal or non-finite transitions', () => {
+    // Retained panels echo synchronized sizes; no-op events must not start a persistence loop.
     useUiLayoutStore.setState({ canvasExplorer: { mode: 'closed', widthPercent: 40 } });
     const previous = useUiLayoutStore.getState();
     const listener = vi.fn();

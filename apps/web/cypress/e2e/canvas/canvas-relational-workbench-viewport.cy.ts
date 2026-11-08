@@ -7,6 +7,7 @@
  */
 import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
 
+import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
   seedLiveWorkspaceFiles,
@@ -58,11 +59,64 @@ function assertExplorerWidth(scope: string, widthPercent: number): void {
     });
 }
 
+function assertResizeHandlePresentation(
+  selector: string,
+  direction: 'horizontal' | 'vertical'
+): void {
+  cy.get(selector)
+    .should('be.focused')
+    .should(($handle) => {
+      const handle = $handle[0];
+      if (handle === undefined) throw new Error('Expected the focused resize handle.');
+      const window = handle.ownerDocument.defaultView;
+      if (window === null) throw new Error('Expected the resize handle browser window.');
+      const style = window.getComputedStyle(handle);
+      const hitArea = window.getComputedStyle(handle, '::after');
+      const bounds = handle.getBoundingClientRect();
+      expect(handle.matches(':focus-visible'), 'keyboard resize keeps a visible focus cue').to.be
+        .true;
+      expect(style.outlineStyle).to.equal('none');
+      expect(style.boxShadow, 'one-pixel white focus offset').to.contain(
+        'rgb(255, 255, 255) 0px 0px 0px 1px'
+      );
+      expect(style.boxShadow, 'outer focus ring').to.match(/0px 0px 0px 2px/);
+      expect(hitArea.position).to.equal('absolute');
+      expect(hitArea.content).not.to.equal('none');
+      expect(Number.parseFloat(hitArea.top)).to.be.closeTo(0, 0.1);
+      if (direction === 'horizontal') {
+        expect(bounds.width, 'visible vertical divider').to.be.closeTo(1, 0.1);
+        expect(Number.parseFloat(hitArea.width), 'horizontal pointer target').to.be.closeTo(4, 0.1);
+        expect(Number.parseFloat(hitArea.height)).to.be.closeTo(bounds.height, 0.5);
+        expect(hitArea.translate).to.match(/^-50%(?: 0px)?$/);
+      } else {
+        expect(bounds.height, 'visible horizontal divider').to.be.closeTo(1, 0.1);
+        expect(Number.parseFloat(hitArea.height), 'vertical pointer target').to.be.closeTo(4, 0.1);
+        expect(Number.parseFloat(hitArea.width)).to.be.closeTo(bounds.width, 0.5);
+        expect(Number.parseFloat(hitArea.left)).to.be.closeTo(0, 0.1);
+        expect(hitArea.translate).to.equal('0px -50%');
+        const grip = handle.firstElementChild;
+        const icon = grip?.querySelector('svg');
+        if (grip == null || icon == null)
+          throw new Error('Expected the drawer resize grip and icon.');
+        const gripStyle = window.getComputedStyle(grip);
+        expect(gripStyle.rotate).to.equal('90deg');
+        expect(Number.parseFloat(gripStyle.width)).to.be.closeTo(12, 0.1);
+        expect(Number.parseFloat(gripStyle.height)).to.be.closeTo(16, 0.1);
+        expect(grip.getBoundingClientRect().width, 'rotated grip width').to.be.closeTo(16, 0.5);
+        expect(grip.getBoundingClientRect().height, 'rotated grip height').to.be.closeTo(12, 0.5);
+        const iconStyle = window.getComputedStyle(icon);
+        expect(Number.parseFloat(iconStyle.width)).to.be.closeTo(10, 0.1);
+        expect(Number.parseFloat(iconStyle.height)).to.be.closeTo(10, 0.1);
+      }
+    });
+}
+
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
   });
   it('uses the arrow and left drag for the background and an arrowless cross for cards', () => {
+    // Panning must move the camera, while dragging a card must keep its separate gesture owner.
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
@@ -120,6 +174,7 @@ describe('Workbench viewport', () => {
     });
   });
   it('uses the same pointer policy in the synthetic composition laboratory', () => {
+    // The composition lab consumes the same gesture contract as the persisted Canvas.
     cy.visit('/lab/relational-composition');
     cy.get('.react-flow__node.draggable').first().should('have.css', 'cursor', 'crosshair');
     cy.get('.react-flow__pane').should('have.css', 'cursor', 'default');
@@ -136,6 +191,7 @@ describe('Workbench viewport', () => {
     });
   });
   it('retains the Canvas while browsing Git and opening a project file', () => {
+    // Code may cover the Canvas, but must not discard its camera, search, or graph identity.
     stubE2eJsonApi('GET', '/workspace/files', [
       {
         path: 'notes',
@@ -307,9 +363,12 @@ describe('Workbench viewport', () => {
       direction: 'LEFT' | 'RIGHT',
       widthPercent: number
     ): void {
-      cy.get(`${scope} [role="separator"][aria-label="Resize explorer"]`).focus();
+      const handle = `${scope} [role="separator"][aria-label="Resize explorer"]`;
+      cy.get(handle).focus();
       cy.press(Cypress.Keyboard.Keys[direction]);
       assertExplorerWidth(scope, widthPercent);
+      // A working resize alone would miss a CSS regression in the hit target or keyboard focus.
+      assertResizeHandlePresentation(handle, 'horizontal');
     }
 
     function reopenExplorerFromView(): void {
@@ -326,6 +385,7 @@ describe('Workbench viewport', () => {
     }
 
     it('keeps zoom, source search and narrow reflow while toggling the rail', () => {
+      // Layout gestures must preserve the editor's local search and camera without saving semantics.
       let writesBeforeZoom = 0;
       let zoomBeforeCollapse = '';
       let expandedViewportWidth = 0;
@@ -425,7 +485,9 @@ describe('Workbench viewport', () => {
     });
 
     it('shares resized width across retained and reopened Canvas and Model surfaces', () => {
+      // Both surfaces consume one width preference; switching views must retain their live DOM state.
       let writesBeforeResize = 0;
+      let drawerSizeBeforeResize = 0;
       let retainedMainViewport: HTMLElement | undefined;
       let retainedModelViewport: HTMLElement | undefined;
       let retainedModelZoom = '';
@@ -447,6 +509,25 @@ describe('Workbench viewport', () => {
       cy.then(() => {
         writesBeforeResize = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
+      // The shared primitive also owns the vertical drawer, whose grip and keyboard cue must survive.
+      revealOperationalDrawer();
+      const drawer = '#app-shell-bottom-drawer-panel';
+      const drawerHandle = '#app-shell-bottom-drawer-resize-handle';
+      cy.get(drawer).then(($drawer) => {
+        drawerSizeBeforeResize = Number($drawer.attr('data-panel-size'));
+      });
+      cy.get(drawerHandle).focus();
+      cy.press(Cypress.Keyboard.Keys.UP);
+      cy.get(drawer).should(($drawer) => {
+        expect(Number($drawer.attr('data-panel-size'))).to.be.greaterThan(drawerSizeBeforeResize);
+      });
+      assertResizeHandlePresentation(drawerHandle, 'vertical');
+      cy.press(Cypress.Keyboard.Keys.DOWN);
+      cy.get(drawer).should(($drawer) => {
+        expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(drawerSizeBeforeResize, 0.1);
+      });
+      cy.get('[data-slot="bottom-operational-drawer-close"]').click();
+      cy.get(drawerHandle).should('not.exist');
       cy.get(modelSearch).type('customers');
       resizeExplorer(model, 'RIGHT', 25);
       cy.get(modelViewport).then(($viewport) => {
@@ -487,6 +568,7 @@ describe('Workbench viewport', () => {
     });
 
     it('restores collapsed and closed explorer modes with their width after reload', () => {
+      // Reload must rehydrate disclosure and width together, without reopening a rail the user hid.
       let writesBeforeDisclosure = 0;
       openWorkbenchModel();
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
@@ -549,6 +631,7 @@ describe('DBT project Git browsing with real file authority', () => {
   });
 
   it('retains repeated DBT file selection without file saves or persisted graph changes', () => {
+    // Real file and graph baselines distinguish clean browsing from accidental persistence.
     const hashes: Record<string, string> = {};
     const modified: Record<string, string> = {};
     let viewport: HTMLElement | undefined;
@@ -767,6 +850,7 @@ describe('DBT project Git browsing with real file authority', () => {
   });
 
   it('hands read-only project Code to node inspection without writes or viewport movement', () => {
+    // Inspecting another node must hand off read-only Code without moving or rewriting the graph.
     const handoffRoot = 'git-handoff-dbt';
     const handoffCanvas = 'git-handoff-dbt-files';
     const sourcePath = `${handoffRoot}/models/handoff_a.sql`;

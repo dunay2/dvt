@@ -1,0 +1,77 @@
+/** Owned concern: shared resize geometry and focus treatment; callers may override these defaults. */
+@layer components {
+  .panelGroup {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .panelGroup[data-panel-group-direction='vertical'] {
+    flex-direction: column;
+  }
+
+  .resizeHandle {
+    position: relative;
+    display: flex;
+    width: 1px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--border);
+  }
+
+  .resizeHandle::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: var(--spacing);
+    translate: -50% 0;
+  }
+
+  .resizeHandle:focus-visible {
+    outline-style: none;
+    box-shadow:
+      0 0 0 1px var(--color-white),
+      0 0 0 2px var(--ring);
+  }
+
+  @media (forced-colors: active) {
+    .resizeHandle:focus-visible {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+  }
+
+  .resizeHandle[data-panel-group-direction='vertical'] {
+    width: 100%;
+    height: 1px;
+  }
+
+  .resizeHandle[data-panel-group-direction='vertical']::after {
+    left: 0;
+    width: 100%;
+    height: var(--spacing);
+    translate: 0 -50%;
+  }
+
+  .handleGrip {
+    z-index: 10;
+    display: flex;
+    width: calc(var(--spacing) * 3);
+    height: calc(var(--spacing) * 4);
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    background-color: var(--border);
+  }
+
+  .resizeHandle[data-panel-group-direction='vertical'] > .handleGrip {
+    rotate: 90deg;
+  }
+
+  .gripIcon {
+    width: calc(var(--spacing) * 2.5);
+    height: calc(var(--spacing) * 2.5);
+  }
+}
