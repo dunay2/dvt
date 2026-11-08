@@ -41,18 +41,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
 const CanvasRelationalTreeWorkbenchSession = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
   CanvasRelationalTreeWorkbenchProps
->(function CanvasRelationalTreeWorkbenchSession(
-  { transformNode, nodes, edges, copy, authoring, actionsHost, preview, layoutKey },
-  ref
-) {
+>(function CanvasRelationalTreeWorkbenchSession(props, ref) {
+  const { transformNode, nodes, edges, copy, authoring, actionsHost, preview, layoutKey } = props;
   const focus = useCanvasWorkbenchFocusRecovery();
-  const model = useCanvasRelationalTreeWorkbenchModel({
-    transformNode,
-    nodes,
-    edges,
-    copy,
-    authoring,
-  });
+  const model = useCanvasRelationalTreeWorkbenchModel(props);
   const [pendingCondition, setPendingCondition] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const modelOutput = useCanvasModelOutputInspectorState();
