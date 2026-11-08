@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_CANVAS_PALETTE_ID } from '../views/canvas/canvasPalette';
 import { useUiLayoutStore } from './uiLayoutStore';
@@ -12,7 +12,7 @@ describe('useUiLayoutStore', () => {
     localStorage.clear();
     useUiLayoutStore.setState({
       leftNavCollapsed: false,
-      canvasExplorerVisible: true,
+      canvasExplorer: { mode: 'expanded', widthPercent: 22 },
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
       bottomDrawerHeight: 0,
@@ -26,21 +26,176 @@ describe('useUiLayoutStore', () => {
     });
   });
 
-  it('keeps the explorer closed across hydration until explicitly reopened', async () => {
-    useUiLayoutStore.getState().hideCanvasExplorer();
-    await useUiLayoutStore.persist.rehydrate();
-    expect(useUiLayoutStore.getState().canvasExplorerVisible).toBe(false);
-    useUiLayoutStore.getState().showCanvasExplorer();
-    expect(useUiLayoutStore.getState().canvasExplorerVisible).toBe(true);
+  afterEach(() => vi.restoreAllMocks());
+
+  it('starts with one expanded Explorer state and retires the old visibility commands', () => {
+    expect(useUiLayoutStore.getInitialState().canvasExplorer).toEqual({
+      mode: 'expanded',
+      widthPercent: 22,
+    });
+    for (const key of ['canvasExplorerVisible', 'showCanvasExplorer', 'hideCanvasExplorer']) {
+      expect(useUiLayoutStore.getState()).not.toHaveProperty(key);
+    }
   });
 
-  it('ignores malformed persisted explorer visibility', async () => {
+  it.each([
+    ['expanded', 'expand', 'expanded'],
+    ['expanded', 'collapse', 'collapsed'],
+    ['expanded', 'toggle', 'collapsed'],
+    ['expanded', 'close', 'closed'],
+    ['collapsed', 'expand', 'expanded'],
+    ['collapsed', 'collapse', 'collapsed'],
+    ['collapsed', 'toggle', 'expanded'],
+    ['collapsed', 'close', 'closed'],
+    ['closed', 'expand', 'expanded'],
+    ['closed', 'collapse', 'closed'],
+    ['closed', 'toggle', 'expanded'],
+    ['closed', 'close', 'closed'],
+  ] as const)('transitions %s with %s to %s without losing width', (mode, type, expectedMode) => {
+    useUiLayoutStore.setState({ canvasExplorer: { mode, widthPercent: 31.25 } });
+    const previous = useUiLayoutStore.getState().canvasExplorer;
+
+    useUiLayoutStore.getState().dispatchCanvasExplorer({ type });
+
+    expect(useUiLayoutStore.getState().canvasExplorer).toEqual({
+      mode: expectedMode,
+      widthPercent: 31.25,
+    });
+    if (mode === expectedMode) {
+      expect(useUiLayoutStore.getState().canvasExplorer).toBe(previous);
+    }
+  });
+
+  it.each(['expanded', 'collapsed', 'closed'] as const)(
+    'persists and restores the %s mode and fractional width using the existing storage key',
+    async (mode) => {
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: 31.25 });
+      if (mode !== 'expanded') {
+        useUiLayoutStore.getState().dispatchCanvasExplorer({
+          type: mode === 'collapsed' ? 'collapse' : 'close',
+        });
+      }
+      const saved = localStorage.getItem(UI_LAYOUT_STORAGE_KEY);
+      expect(saved).not.toBeNull();
+      const persisted = JSON.parse(saved!);
+      expect(persisted.state.canvasExplorer).toEqual({ mode, widthPercent: 31.25 });
+      expect(persisted.state).not.toHaveProperty('canvasExplorerVisible');
+
+      useUiLayoutStore.setState({ canvasExplorer: { mode: 'expanded', widthPercent: 22 } });
+      localStorage.setItem(UI_LAYOUT_STORAGE_KEY, saved!);
+      await useUiLayoutStore.persist.rehydrate();
+
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 31.25 });
+    }
+  );
+
+  it.each([
+    [false, 'closed'],
+    [true, 'expanded'],
+    ['false', 'expanded'],
+    [undefined, 'expanded'],
+  ] as const)(
+    'migrates legacy visibility %j without restoring a second runtime field',
+    async (value, mode) => {
+      localStorage.setItem(
+        UI_LAYOUT_STORAGE_KEY,
+        JSON.stringify({ state: { canvasExplorerVisible: value } })
+      );
+      await useUiLayoutStore.persist.rehydrate();
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 22 });
+      expect(useUiLayoutStore.getState()).not.toHaveProperty('canvasExplorerVisible');
+    }
+  );
+
+  it('prefers the new persisted mode over legacy visibility', async () => {
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,
-      JSON.stringify({ state: { canvasExplorerVisible: 'false' } })
+      JSON.stringify({
+        state: {
+          canvasExplorerVisible: false,
+          canvasExplorer: { mode: 'collapsed', widthPercent: 28 },
+        },
+      })
     );
     await useUiLayoutStore.persist.rehydrate();
-    expect(useUiLayoutStore.getState().canvasExplorerVisible).toBe(true);
+    expect(useUiLayoutStore.getState().canvasExplorer).toEqual({
+      mode: 'collapsed',
+      widthPercent: 28,
+    });
+  });
+
+  it.each([
+    null,
+    'closed',
+    {},
+    { mode: 'unknown', widthPercent: '31' },
+    { mode: false, widthPercent: null },
+  ])('defaults malformed persisted Explorer state %j', async (canvasExplorer) => {
+    useUiLayoutStore.setState({ canvasExplorer: { mode: 'closed', widthPercent: 35 } });
+    localStorage.setItem(UI_LAYOUT_STORAGE_KEY, JSON.stringify({ state: { canvasExplorer } }));
+    await useUiLayoutStore.persist.rehydrate();
+    expect(useUiLayoutStore.getState().canvasExplorer).toEqual({
+      mode: 'expanded',
+      widthPercent: 22,
+    });
+  });
+
+  it.each([
+    [-1, 15],
+    [100, 40],
+    [31.25, 31.25],
+    [null, 22],
+    ['31', 22],
+  ])(
+    'validates hydrated width %j while preserving valid disclosure',
+    async (widthPercent, expected) => {
+      localStorage.setItem(
+        UI_LAYOUT_STORAGE_KEY,
+        JSON.stringify({ state: { canvasExplorer: { mode: 'collapsed', widthPercent } } })
+      );
+      await useUiLayoutStore.persist.rehydrate();
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({
+        mode: 'collapsed',
+        widthPercent: expected,
+      });
+    }
+  );
+
+  it.each(['expanded', 'collapsed', 'closed'] as const)(
+    'bounds resize without changing %s mode',
+    (mode) => {
+      useUiLayoutStore.setState({ canvasExplorer: { mode, widthPercent: 22 } });
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: -10 });
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 15 });
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: 100 });
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 40 });
+    }
+  );
+
+  it('does not notify or write storage for unchanged, clamped-equal or non-finite transitions', () => {
+    useUiLayoutStore.setState({ canvasExplorer: { mode: 'closed', widthPercent: 40 } });
+    const previous = useUiLayoutStore.getState();
+    const listener = vi.fn();
+    const unsubscribe = useUiLayoutStore.subscribe(listener);
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'close' });
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'collapse' });
+      for (const widthPercent of [
+        40,
+        100,
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+        Number.NEGATIVE_INFINITY,
+      ]) {
+        useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent });
+      }
+      expect(useUiLayoutStore.getState()).toBe(previous);
+      expect(listener).not.toHaveBeenCalled();
+      expect(write).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('falls back to the canonical palette when the setter receives a named alias', () => {

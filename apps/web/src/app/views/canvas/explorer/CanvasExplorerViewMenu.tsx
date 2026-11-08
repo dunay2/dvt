@@ -14,16 +14,15 @@ import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 export function CanvasExplorerViewMenu(): JSX.Element | null {
   const { pathname } = useLocation();
-  const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
-  const show = useUiLayoutStore((state) => state.showCanvasExplorer);
-  const hide = useUiLayoutStore((state) => state.hideCanvasExplorer);
+  const visible = useUiLayoutStore((state) => state.canvasExplorer.mode !== 'closed');
+  const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   if (!isCanvasRoute(pathname)) return null;
   return (
     <CanvasExplorerMenuTemplate
       visible={visible}
       copy={copy}
-      onVisibleChange={(next) => (next ? show() : hide())}
+      onVisibleChange={(next) => dispatch({ type: next ? 'expand' : 'close' })}
     />
   );
 }

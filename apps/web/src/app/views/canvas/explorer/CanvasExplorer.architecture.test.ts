@@ -23,4 +23,14 @@ describe('Canvas explorer ownership', () => {
     expect(relational).toContain('CanvasRelationalTreeSourceCatalogue');
     expect(catalogue).not.toMatch(/PanelLeftClose|PanelLeftOpen|collapsed|onToggle/);
   });
+
+  it('keeps disclosure and persistence in the shell layout owner', () => {
+    for (const source of [frame, template]) {
+      expect(source).not.toMatch(/localStorage|sessionStorage|autoSaveId|createJSONStorage/);
+    }
+    expect(frame).not.toMatch(/useState|setExpanded|canvasExplorerVisible/);
+    expect(frame).toContain('state.canvasExplorer');
+    expect(frame).toContain('state.dispatchCanvasExplorer');
+    expect(template).not.toMatch(/useUiLayoutStore|useEffect|useLayoutEffect/);
+  });
 });

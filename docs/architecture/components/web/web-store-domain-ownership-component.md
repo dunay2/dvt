@@ -92,67 +92,63 @@ flowchart TB
 The table is the current method-level ownership map. New methods must be added
 here before implementation so the DDD owner and C&Q rail are explicit.
 
-| Store                        | Method or state surface     | Type    | DDD owner                          | Rail                              | Notes                                                                 |
-| ---------------------------- | --------------------------- | ------- | ---------------------------------- | --------------------------------- | --------------------------------------------------------------------- |
-| `sessionStore.ts`            | `tenantId`                  | query   | Web shell session aggregate        | Workspace scope selection         | Current tenant scope.                                                 |
-| `sessionStore.ts`            | `projectId`                 | query   | Web shell session aggregate        | Workspace scope selection         | Current project scope.                                                |
-| `sessionStore.ts`            | `environmentId`             | query   | Web shell session aggregate        | Workspace scope selection         | Current environment scope.                                            |
-| `sessionStore.ts`            | `targetAdapter`             | query   | Web shell session aggregate        | Workspace scope selection         | Current run target adapter.                                           |
-| `sessionStore.ts`            | `setTenantId`               | command | Web shell session aggregate        | Workspace scope selection         | Changes tenant scope.                                                 |
-| `sessionStore.ts`            | `setProjectId`              | command | Web shell session aggregate        | Workspace scope selection         | Changes project scope.                                                |
-| `sessionStore.ts`            | `setEnvironmentId`          | command | Web shell session aggregate        | Workspace scope selection         | Changes environment scope.                                            |
-| `sessionStore.ts`            | `setTargetAdapter`          | command | Web shell session aggregate        | Workspace scope selection         | Changes target adapter.                                               |
-| `sessionStore.ts`            | `setSessionContext`         | command | Web shell session aggregate        | Workspace scope selection         | Updates multiple scope fields atomically.                             |
-| `sessionStore.ts`            | `buildRunContext`           | query   | Web shell session aggregate        | Build run context                 | Builds command payload context for run actions.                       |
-| `canvasInteractionStore.ts`  | `selectedNodes`             | query   | Canvas authoring session aggregate | Canvas interaction updates        | Current selected Canvas node ids.                                     |
-| `canvasInteractionStore.ts`  | `impactOverlayEnabled`      | query   | Canvas authoring session aggregate | Canvas interaction updates        | Current impact overlay state.                                         |
-| `canvasInteractionStore.ts`  | `columnLevelLineageEnabled` | query   | Canvas authoring session aggregate | Canvas interaction updates        | Current lineage overlay state.                                        |
-| `canvasInteractionStore.ts`  | `canvasLayouts`             | query   | Canvas authoring session aggregate | Canvas interaction updates        | Persisted viewport and node positions by workspace key.               |
-| `canvasInteractionStore.ts`  | `inspectorNodeId`           | query   | Canvas authoring session aggregate | Canvas interaction updates        | Current inspector focus.                                              |
-| `canvasInteractionStore.ts`  | `setSelectedNodes`          | command | Canvas authoring session aggregate | Canvas interaction updates        | Updates selection.                                                    |
-| `canvasInteractionStore.ts`  | `toggleImpactOverlay`       | command | Canvas authoring session aggregate | Canvas interaction updates        | Toggles impact overlay.                                               |
-| `canvasInteractionStore.ts`  | `toggleColumnLevelLineage`  | command | Canvas authoring session aggregate | Canvas interaction updates        | Toggles column-level lineage.                                         |
-| `canvasInteractionStore.ts`  | `setCanvasViewport`         | command | Canvas authoring session aggregate | Canvas interaction updates        | Persists viewport by workspace key.                                   |
-| `canvasInteractionStore.ts`  | `setCanvasNodePositions`    | command | Canvas authoring session aggregate | Canvas interaction updates        | Persists node positions by workspace key.                             |
-| `canvasInteractionStore.ts`  | `setInspectorNode`          | command | Canvas authoring session aggregate | Canvas interaction updates        | Sets inspector focus.                                                 |
-| `uiLayoutStore.ts`           | `leftNavCollapsed`          | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current left navigation display.                                      |
-| `uiLayoutStore.ts`           | `explorerPanelWidth`        | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current explorer width.                                               |
-| `uiLayoutStore.ts`           | `explorerPanelVisible`      | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current explorer visibility.                                          |
-| `uiLayoutStore.ts`           | `inspectorPanelWidth`       | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current inspector width.                                              |
-| `uiLayoutStore.ts`           | `inspectorPanelVisible`     | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current inspector visibility.                                         |
-| `uiLayoutStore.ts`           | `bottomDrawerHeight`        | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current bottom operational drawer height.                             |
-| `uiLayoutStore.ts`           | `bottomDrawerVisible`       | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current bottom operational drawer visibility.                         |
-| `uiLayoutStore.ts`           | `focusMode`                 | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current focus-mode state.                                             |
-| `uiLayoutStore.ts`           | `gridSize`                  | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current Canvas grid preference.                                       |
-| `uiLayoutStore.ts`           | `canvasPalette`             | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current Canvas palette preference.                                    |
-| `uiLayoutStore.ts`           | `activeTabs`                | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current shell tab list.                                               |
-| `uiLayoutStore.ts`           | `activeTabId`               | query   | Web shell layout aggregate         | Shell panel/layout updates        | Current active shell tab.                                             |
-| `uiLayoutStore.ts`           | `toggleLeftNav`             | command | Web shell layout aggregate         | Shell panel/layout updates        | Toggles left navigation.                                              |
-| `uiLayoutStore.ts`           | `setExplorerPanelWidth`     | command | Web shell layout aggregate         | Shell panel/layout updates        | Changes explorer width.                                               |
-| `uiLayoutStore.ts`           | `setInspectorPanelWidth`    | command | Web shell layout aggregate         | Shell panel/layout updates        | Changes inspector width.                                              |
-| `uiLayoutStore.ts`           | `setBottomDrawerHeight`     | command | Web shell layout aggregate         | Shell panel/layout updates        | Changes bottom operational drawer height.                             |
-| `uiLayoutStore.ts`           | `toggleFocusMode`           | command | Web shell layout aggregate         | Shell panel/layout updates        | Toggles focus mode.                                                   |
-| `uiLayoutStore.ts`           | `toggleExplorerPanel`       | command | Web shell layout aggregate         | Shell panel/layout updates        | Toggles explorer visibility.                                          |
-| `uiLayoutStore.ts`           | `toggleInspectorPanel`      | command | Web shell layout aggregate         | Shell panel/layout updates        | Toggles inspector visibility.                                         |
-| `uiLayoutStore.ts`           | `toggleBottomDrawer`        | command | Web shell layout aggregate         | Shell panel/layout updates        | Toggles bottom operational drawer visibility and default height.      |
-| `uiLayoutStore.ts`           | `hideBottomDrawer`          | command | Web shell layout aggregate         | Shell panel/layout updates        | Hides bottom operational drawer.                                      |
-| `uiLayoutStore.ts`           | `showExplorerPanel`         | command | Web shell layout aggregate         | Shell panel/layout updates        | Shows explorer panel.                                                 |
-| `uiLayoutStore.ts`           | `hideExplorerPanel`         | command | Web shell layout aggregate         | Shell panel/layout updates        | Hides explorer panel.                                                 |
-| `uiLayoutStore.ts`           | `showInspectorPanel`        | command | Web shell layout aggregate         | Shell panel/layout updates        | Shows inspector panel.                                                |
-| `uiLayoutStore.ts`           | `hideInspectorPanel`        | command | Web shell layout aggregate         | Shell panel/layout updates        | Hides inspector panel.                                                |
-| `uiLayoutStore.ts`           | `setGridSize`               | command | Web shell layout aggregate         | Shell panel/layout updates        | Changes Canvas grid preference.                                       |
-| `uiLayoutStore.ts`           | `setCanvasPalette`          | command | Web shell layout aggregate         | Shell panel/layout updates        | Changes Canvas palette preference.                                    |
-| `uiLayoutStore.ts`           | `addTab`                    | command | Web shell layout aggregate         | Shell panel/layout updates        | Adds and activates a shell tab.                                       |
-| `uiLayoutStore.ts`           | `closeTab`                  | command | Web shell layout aggregate         | Shell panel/layout updates        | Closes a shell tab and resolves next active tab.                      |
-| `uiLayoutStore.ts`           | `setActiveTab`              | command | Web shell layout aggregate         | Shell panel/layout updates        | Sets active shell tab.                                                |
-| `platformConnectionStore.ts` | `connectionStatus`          | query   | Platform health read model         | `ProjectPlatformConnectionStatus` | Current REST and live-event connection projection for shell display.  |
-| `platformConnectionStore.ts` | `setConnectionStatus`       | command | Platform health read model         | `ProjectPlatformConnectionStatus` | Updates the local projection from the authoritative health query.     |
-| `executionStore.ts`          | `currentPlan`               | query   | Runtime evidence read model        | Current run/plan display          | Current plan projection.                                              |
-| `executionStore.ts`          | `currentRun`                | query   | Runtime evidence read model        | Current run/plan display          | Current run projection.                                               |
-| `executionStore.ts`          | `setCurrentPlan`            | command | Runtime evidence read model        | Current run/plan display          | Updates current plan projection.                                      |
-| `executionStore.ts`          | `setCurrentRun`             | command | Runtime evidence read model        | Current run/plan display          | Updates current run projection.                                       |
-| `authorizationStore.ts`      | `userPermissions`           | query   | Web authorization read model       | Authorization capability display  | Effective UI permissions for Canvas and shell authoring controls.     |
-| `authorizationStore.ts`      | `setUserPermissions`        | command | Web authorization read model       | Authorization capability display  | Replaces the effective permissions projection; no execution fallback. |
+| Store                        | Method or state surface     | Type    | DDD owner                          | Rail                                 | Notes                                                                                              |
+| ---------------------------- | --------------------------- | ------- | ---------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `sessionStore.ts`            | `tenantId`                  | query   | Web shell session aggregate        | Workspace scope selection            | Current tenant scope.                                                                              |
+| `sessionStore.ts`            | `projectId`                 | query   | Web shell session aggregate        | Workspace scope selection            | Current project scope.                                                                             |
+| `sessionStore.ts`            | `environmentId`             | query   | Web shell session aggregate        | Workspace scope selection            | Current environment scope.                                                                         |
+| `sessionStore.ts`            | `targetAdapter`             | query   | Web shell session aggregate        | Workspace scope selection            | Current run target adapter.                                                                        |
+| `sessionStore.ts`            | `setTenantId`               | command | Web shell session aggregate        | Workspace scope selection            | Changes tenant scope.                                                                              |
+| `sessionStore.ts`            | `setProjectId`              | command | Web shell session aggregate        | Workspace scope selection            | Changes project scope.                                                                             |
+| `sessionStore.ts`            | `setEnvironmentId`          | command | Web shell session aggregate        | Workspace scope selection            | Changes environment scope.                                                                         |
+| `sessionStore.ts`            | `setTargetAdapter`          | command | Web shell session aggregate        | Workspace scope selection            | Changes target adapter.                                                                            |
+| `sessionStore.ts`            | `setSessionContext`         | command | Web shell session aggregate        | Workspace scope selection            | Updates multiple scope fields atomically.                                                          |
+| `sessionStore.ts`            | `buildRunContext`           | query   | Web shell session aggregate        | Build run context                    | Builds command payload context for run actions.                                                    |
+| `canvasInteractionStore.ts`  | `selectedNodes`             | query   | Canvas authoring session aggregate | Canvas interaction updates           | Current selected Canvas node ids.                                                                  |
+| `canvasInteractionStore.ts`  | `impactOverlayEnabled`      | query   | Canvas authoring session aggregate | Canvas interaction updates           | Current impact overlay state.                                                                      |
+| `canvasInteractionStore.ts`  | `columnLevelLineageEnabled` | query   | Canvas authoring session aggregate | Canvas interaction updates           | Current lineage overlay state.                                                                     |
+| `canvasInteractionStore.ts`  | `canvasLayouts`             | query   | Canvas authoring session aggregate | Canvas interaction updates           | Persisted viewport and node positions by workspace key.                                            |
+| `canvasInteractionStore.ts`  | `inspectorNodeId`           | query   | Canvas authoring session aggregate | Canvas interaction updates           | Current inspector focus.                                                                           |
+| `canvasInteractionStore.ts`  | `setSelectedNodes`          | command | Canvas authoring session aggregate | Canvas interaction updates           | Updates selection.                                                                                 |
+| `canvasInteractionStore.ts`  | `toggleImpactOverlay`       | command | Canvas authoring session aggregate | Canvas interaction updates           | Toggles impact overlay.                                                                            |
+| `canvasInteractionStore.ts`  | `toggleColumnLevelLineage`  | command | Canvas authoring session aggregate | Canvas interaction updates           | Toggles column-level lineage.                                                                      |
+| `canvasInteractionStore.ts`  | `setCanvasViewport`         | command | Canvas authoring session aggregate | Canvas interaction updates           | Persists viewport by workspace key.                                                                |
+| `canvasInteractionStore.ts`  | `setCanvasNodePositions`    | command | Canvas authoring session aggregate | Canvas interaction updates           | Persists node positions by workspace key.                                                          |
+| `canvasInteractionStore.ts`  | `setInspectorNode`          | command | Canvas authoring session aggregate | Canvas interaction updates           | Sets inspector focus.                                                                              |
+| `uiLayoutStore.ts`           | `leftNavCollapsed`          | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current left navigation display.                                                                   |
+| `uiLayoutStore.ts`           | `canvasExplorer`            | query   | Web shell layout aggregate         | `RenderCanvasContextualGraphSurface` | Persisted disclosure mode and expanded width percentage shared by Canvas and Model.                |
+| `uiLayoutStore.ts`           | `inspectorPanelWidth`       | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current inspector width.                                                                           |
+| `uiLayoutStore.ts`           | `inspectorPanelVisible`     | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current inspector visibility.                                                                      |
+| `uiLayoutStore.ts`           | `bottomDrawerHeight`        | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current bottom operational drawer height.                                                          |
+| `uiLayoutStore.ts`           | `bottomDrawerVisible`       | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current bottom operational drawer visibility.                                                      |
+| `uiLayoutStore.ts`           | `focusMode`                 | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current focus-mode state.                                                                          |
+| `uiLayoutStore.ts`           | `gridSize`                  | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current Canvas grid preference.                                                                    |
+| `uiLayoutStore.ts`           | `canvasPalette`             | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current Canvas palette preference.                                                                 |
+| `uiLayoutStore.ts`           | `activeTabs`                | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current shell tab list.                                                                            |
+| `uiLayoutStore.ts`           | `activeTabId`               | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current active shell tab.                                                                          |
+| `uiLayoutStore.ts`           | `toggleLeftNav`             | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles left navigation.                                                                           |
+| `uiLayoutStore.ts`           | `dispatchCanvasExplorer`    | command | Web shell layout aggregate         | `ConfigureCanvasViewportPreferences` | Central expand, collapse, toggle, close and resize transitions; unchanged state performs no write. |
+| `uiLayoutStore.ts`           | `setInspectorPanelWidth`    | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes inspector width.                                                                           |
+| `uiLayoutStore.ts`           | `setBottomDrawerHeight`     | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes bottom operational drawer height.                                                          |
+| `uiLayoutStore.ts`           | `toggleFocusMode`           | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles focus mode.                                                                                |
+| `uiLayoutStore.ts`           | `toggleInspectorPanel`      | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles inspector visibility.                                                                      |
+| `uiLayoutStore.ts`           | `toggleBottomDrawer`        | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles bottom operational drawer visibility and default height.                                   |
+| `uiLayoutStore.ts`           | `hideBottomDrawer`          | command | Web shell layout aggregate         | Shell panel/layout updates           | Hides bottom operational drawer.                                                                   |
+| `uiLayoutStore.ts`           | `showInspectorPanel`        | command | Web shell layout aggregate         | Shell panel/layout updates           | Shows inspector panel.                                                                             |
+| `uiLayoutStore.ts`           | `hideInspectorPanel`        | command | Web shell layout aggregate         | Shell panel/layout updates           | Hides inspector panel.                                                                             |
+| `uiLayoutStore.ts`           | `setGridSize`               | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes Canvas grid preference.                                                                    |
+| `uiLayoutStore.ts`           | `setCanvasPalette`          | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes Canvas palette preference.                                                                 |
+| `uiLayoutStore.ts`           | `addTab`                    | command | Web shell layout aggregate         | Shell panel/layout updates           | Adds and activates a shell tab.                                                                    |
+| `uiLayoutStore.ts`           | `closeTab`                  | command | Web shell layout aggregate         | Shell panel/layout updates           | Closes a shell tab and resolves next active tab.                                                   |
+| `uiLayoutStore.ts`           | `setActiveTab`              | command | Web shell layout aggregate         | Shell panel/layout updates           | Sets active shell tab.                                                                             |
+| `platformConnectionStore.ts` | `connectionStatus`          | query   | Platform health read model         | `ProjectPlatformConnectionStatus`    | Current REST and live-event connection projection for shell display.                               |
+| `platformConnectionStore.ts` | `setConnectionStatus`       | command | Platform health read model         | `ProjectPlatformConnectionStatus`    | Updates the local projection from the authoritative health query.                                  |
+| `executionStore.ts`          | `currentPlan`               | query   | Runtime evidence read model        | Current run/plan display             | Current plan projection.                                                                           |
+| `executionStore.ts`          | `currentRun`                | query   | Runtime evidence read model        | Current run/plan display             | Current run projection.                                                                            |
+| `executionStore.ts`          | `setCurrentPlan`            | command | Runtime evidence read model        | Current run/plan display             | Updates current plan projection.                                                                   |
+| `executionStore.ts`          | `setCurrentRun`             | command | Runtime evidence read model        | Current run/plan display             | Updates current run projection.                                                                    |
+| `authorizationStore.ts`      | `userPermissions`           | query   | Web authorization read model       | Authorization capability display     | Effective UI permissions for Canvas and shell authoring controls.                                  |
+| `authorizationStore.ts`      | `setUserPermissions`        | command | Web authorization read model       | Authorization capability display     | Replaces the effective permissions projection; no execution fallback.                              |
 
 ## Current Cross-Store Composition
 
@@ -408,6 +404,48 @@ the exact owner they need, and route facades compose those owners explicitly.
   capabilities through `useExecutionStore`.
 - `useCanvasStoreFacade` may compose stores for the Canvas route, but it must
   not define new durable state or become a public store replacement.
+
+### Explorer layout state
+
+`uiLayoutStore` is the single owner of `canvasExplorer: { mode, widthPercent }`.
+The modes are `expanded`, `collapsed` (activity rail only), and `closed`.
+`dispatchCanvasExplorer` handles these local presentation events:
+
+| Event      | Expanded  | Collapsed | Closed    |
+| ---------- | --------- | --------- | --------- |
+| `expand`   | expanded  | expanded  | expanded  |
+| `collapse` | collapsed | collapsed | closed    |
+| `toggle`   | collapsed | expanded  | expanded  |
+| `close`    | closed    | closed    | closed    |
+| `resize`   | same mode | same mode | same mode |
+
+The existing `dvt-web-ui-layout` storage persists both mode and expanded width.
+Width uses the resizable primitive's percentage unit, default 22%, bounded to
+15–40%. Finite out-of-range input clamps; invalid resize commands leave the
+current state untouched. Hydration validates the stored object; invalid or absent
+width defaults to 22%, invalid mode defaults to expanded. Legacy
+`canvasExplorerVisible: false` migrates to closed when the new object is absent.
+New writes contain only the new object, with no parallel visibility flag.
+
+Explicit View reopening and returning from Code through Elements send `expand`.
+Ordinary Elements activation sends `toggle`; Git activation remains with its
+existing guarded workspace owner. Disclosure and width changes neither mutate
+semantic drafts nor trigger graph fitting. Repeated events do not notify or
+write storage. Collapsed and closed modes retain the last expanded width.
+
+The Explorer controller binds this state to the existing resizable Panel handle.
+Initial resize notifications are observations, not commands. Retained Canvas and
+Model instances synchronize their panel sizes without remounting content; the
+passive template owns no persistence or transition policy.
+
+```mermaid
+stateDiagram-v2
+  expanded --> collapsed: collapse or toggle
+  collapsed --> expanded: expand or toggle
+  closed --> expanded: expand or toggle
+  expanded --> closed: close
+  collapsed --> closed: close
+```
 
 ### Transitions
 

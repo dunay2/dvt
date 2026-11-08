@@ -1,6 +1,6 @@
 /**
  * Owned concern: passive explorer markup and accessible presentation.
- * @baseline GH-3610: persistent activity buttons replace the separate collapse control.
+ * @baseline GH-3610: persistent activity buttons retain access to the collapsed dock.
  * @decision Render graph and panels at stable positions; hidden panels leave the focus order.
  * @consequence Switching a panel cannot recreate the graph or lose a search input.
  * @version 1.0.0
@@ -18,6 +18,7 @@ import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
+  type ImperativePanelHandle,
 } from '../../../components/ui/resizable';
 import type { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import styles from './CanvasExplorer.module.css';
@@ -50,6 +51,13 @@ export function CanvasExplorerTemplate(
     id: string;
     active: CanvasExplorerPanel | null;
     visible: boolean;
+    dock: Readonly<{
+      panelRef: RefObject<ImperativePanelHandle>;
+      widthPercent: number;
+      minSize: number;
+      maxSize: number;
+      onResize: (size: number, previousSize: number | undefined) => void;
+    }>;
     copy: Copy;
     rootRef?: RefObject<HTMLDivElement>;
     elements: ReactNode;
@@ -98,11 +106,13 @@ export function CanvasExplorerTemplate(
           : createPortal(activityRail, props.activityRail.target)}
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
+          ref={props.dock.panelRef}
           id={`${props.id}-dock`}
           order={1}
-          defaultSize={22}
-          minSize={15}
-          maxSize={40}
+          defaultSize={props.dock.widthPercent}
+          minSize={props.dock.minSize}
+          maxSize={props.dock.maxSize}
+          onResize={props.dock.onResize}
           className={props.active == null ? styles.hidden : styles.dock}
         >
           {availablePanels.map(({ key }) =>
@@ -142,6 +152,7 @@ export function CanvasExplorerTemplate(
         </ResizablePanel>
         <ResizableHandle
           aria-label={props.copy.resize}
+          aria-orientation="vertical"
           disabled={props.active == null}
           tabIndex={props.active == null ? -1 : 0}
           className={props.active == null ? styles.hidden : styles.resize}
@@ -149,7 +160,7 @@ export function CanvasExplorerTemplate(
         <ResizablePanel
           id={`${props.id}-surface`}
           order={2}
-          defaultSize={78}
+          defaultSize={100 - props.dock.widthPercent}
           minSize={40}
           className={styles.surface}
         >
