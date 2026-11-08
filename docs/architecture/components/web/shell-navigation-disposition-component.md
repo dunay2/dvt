@@ -19,13 +19,13 @@ plugin registration, route authorization, bootstrap readiness or Canvas tabs.
 
 ## Public API
 
-| API                                           | Kind               | Responsibility                                                        |
-| --------------------------------------------- | ------------------ | --------------------------------------------------------------------- |
-| `resolveShellNavigationDisposition(pathname)` | query model        | Classifies the existing route family.                                 |
-| `ShellNavigationDisposition.reason`           | read model         | Distinguishes `global_route` and `workbench_route`.                   |
-| `LeftNavigationRail`                          | presentation       | Renders the existing navigation model and shell activity host.        |
-| `ShellActivityRail`                           | presentation scope | Shares a DOM target and active-surface scope, not commands or routes. |
-| `ShellAbout`                                  | presentation       | Owns the direct About trigger and existing compiled metadata dialog.  |
+| API                                           | Kind               | Responsibility                                                       |
+| --------------------------------------------- | ------------------ | -------------------------------------------------------------------- |
+| `resolveShellNavigationDisposition(pathname)` | query model        | Classifies the existing route family.                                |
+| `ShellNavigationDisposition.reason`           | read model         | Distinguishes `global_route` and `workbench_route`.                  |
+| `LeftNavigationRail`                          | presentation       | Renders existing destinations and the capability-derived Git entry.  |
+| `ShellActivityRail`                           | presentation scope | Identifies shell presence without DOM targets or route commands.     |
+| `ShellAbout`                                  | presentation       | Owns the direct About trigger and existing compiled metadata dialog. |
 
 `railMode`, `footerMode` and the frame's disposition input are retired. They
 would encode constant placement or an obsolete hidden-menu alternative. The
@@ -52,12 +52,18 @@ route-family reason remains useful for File/Project and identity presentation.
   be reopened there at its retained width. Repeated clicks remain idempotent.
 - The Raven mark is identity, with no dropdown or hidden navigation fallback.
 - Explicit Focus mode retains its existing chrome suppression and View escape.
-  A present host provider with a null target means no rail, not inline fallback.
-- An absent provider permits the existing standalone Explorer inline mode.
-- Canvas controls remain active while Canvas or Code is visible. Model controls
-  are active only while Model is visible. Inactive retained surfaces cannot leak
-  portalled controls into keyboard focus: DOM `hidden`/`inert` on the source
-  panel does not hide its portal elsewhere.
+- Boolean shell presence suppresses Explorer's duplicate navigation. Without
+  that provider, the existing standalone inline controls remain available.
+- Git belongs to the shell and remains the same control across routes and
+  Canvas/Code/Model. It exists only when the navigation model includes Canvas.
+  The former DOM target, portal and active-surface scope are removed.
+- On Canvas, Git invokes the existing published Code callback without Router
+  replacement. Elsewhere its `/canvas` link carries only the finite
+  `canvasWorkbench: 'code'` state request. The Canvas-owned adapter consumes it
+  at the same URL, preserves unrelated state, waits for observed Router commit
+  and invokes the actual Code owner. Blocked consumption never dispatches.
+  Modified/new-tab navigation uses ordinary Canvas href semantics. There is no
+  last-binding cache or global pending-intent store.
 - Moving controls does not remount the graph/editor or change layout preference,
   selection, pending edits, node positions or semantic persistence.
 - About reads the existing browser bundle metadata; dismissal restores focus to
@@ -84,7 +90,7 @@ stateDiagram-v2
 
 All states retain the capability-derived global links. A rejected navigation
 keeps the current state and pending editor. Focus mode hides shell chrome through
-the existing preference; leaving it restores the active contextual scope.
+the existing preference; leaving it restores the same shell navigation.
 
 ## Consumers
 
@@ -94,14 +100,16 @@ flowchart TD
   Model --> Rail[LeftNavigationRail]
   Router[Router pathname] --> Disposition[Existing route-family reason]
   Disposition --> TopBar[File Project and context presentation]
-  Surfaces[Retained Canvas Code Model scopes] --> Host[Shell activity DOM host]
-  Explorer[Existing Elements and Git owners] --> Host
-  Host --> Rail
+  Rail --> Git[Existing guarded Code entry]
+  Git -->|other route| Intent[Finite Router state request]
+  Intent --> Owner[Canvas Code owner]
+  Git -->|Canvas route| Owner
+  Presence[Shell presence] --> Explorer[Standalone controls only without shell]
   Rail --> About[ShellAbout and compiled metadata]
 ```
 
 `AppShellFrame` owns the shared layout; `LeftNavigation` owns direct navigation
-presentation; `CanvasShellWorkspaceSurfaces` supplies active contextual scope;
+presentation; `CanvasShellWorkspaceSurfaces` retains panel visibility and inertness;
 Explorer retains panel disclosure and project-file handlers. Canvas activation
 reuses `ConfigureCanvasViewportPreferences` and `SelectCanvasWorkbenchTab` through
 the existing layout store and workspace contribution contract. No generic contribution
@@ -129,9 +137,11 @@ the existing browser tests; source style checks alone do not prove geometry.
 The previous route posture required a second navigation renderer in a logo
 dropdown and divided the activity rail between Shell, Canvas and Model. The
 direct-rail request removes that alternative rather than adding a third route
-owner. One render-ready model supplies links; one DOM host composes existing
-contextual controls. A small presentation context is necessary because retained
-panels and their external portals have different DOM visibility lifetimes.
+owner. One render-ready model supplies links. Shell-owned Git removes the
+route-lifetime dependency instead of retaining an unmounted route callback.
+The remaining context expresses shell presence only; it has no mutable DOM
+target or active-surface policy. A finite Router command request reaches the
+existing Code owner without becoming a second active-tab authority.
 
 ## Command And Query Rails
 

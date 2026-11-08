@@ -55,6 +55,7 @@ describe('RootShell chrome', () => {
     try {
       await waitForHealthyShellChrome(mounted);
       const rail = mounted.container.querySelector('[data-slot="left-navigation-rail"]');
+      const frame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
       const nav = rail?.querySelector('[data-slot="left-navigation-nav"]');
       const admin = nav?.querySelector<HTMLAnchorElement>(
         '[data-slot="left-navigation-link"][href="/admin"]'
@@ -77,9 +78,8 @@ describe('RootShell chrome', () => {
       await act(async () => fireEvent.click(runs!));
       await waitFor(() => {
         expect(mounted.container.textContent).toContain('Runs route');
-        expect(
-          mounted.container.querySelector('[data-slot="left-navigation-rail"]')
-        ).not.toBeNull();
+        expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBe(rail);
+        expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).toBe(frame);
       });
     } finally {
       await mounted.cleanup();

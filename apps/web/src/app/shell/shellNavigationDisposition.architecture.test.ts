@@ -52,7 +52,11 @@ describe('shell navigation disposition architecture', () => {
     expect(railSource).not.toMatch(/useShellRuntime|plugins\/registry|capabilitiesPort/u);
     expect(entriesSource).not.toContain('ShellNavigationEntriesTemplate');
     expect(explorerSource).not.toMatch(/shellNavigationModel|useNavigate|NavLink/u);
-    expect(railSource).toContain('ShellActivityRailHost');
+    expect(railSource).toContain('shell-project-code-command');
+    expect(railSource).not.toContain('ShellActivityRailHost');
+    expect(readAppSource('views/canvas/explorer/CanvasExplorer.templates.tsx')).not.toContain(
+      'createPortal'
+    );
     expect(componentDoc).toContain('Public API');
     expect(componentDoc).toContain('Invariants');
     expect(componentDoc).toContain('Transitions');

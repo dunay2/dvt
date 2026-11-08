@@ -659,9 +659,9 @@ forced-click workaround.
   execution controls; it does not import Canvas controller hooks.
 - `Admin` and `Plugins` remain direct links from the existing navigation model.
   Explicit Focus mode retains its View recovery; there is no hidden logo menu.
-- Retained Canvas activity stays active for Canvas or Code; Model activity is
-  active only while Model is visible. Inactive portals cannot enter focus order.
-  A present shell host with null target must not create an inline fallback.
+- Canvas and Git are shell-owned entries across routes and retained surfaces.
+  Shell presence suppresses standalone Explorer controls; no route activity
+  portal or active-surface scope remains.
 - The first-canvas state must not show disabled Plan, Run, Export, or Import
   controls before a canvas document exists.
 - Identity details remain read-only. Granted scope selection reuses
@@ -903,9 +903,9 @@ Model, import-task and inspector visibility. `CanvasShellViewport` forwards
 this derived value; it does not reclassify workbench identities or own navigation
 state.
 
-The Main Canvas activity rail remains accessible in both Canvas and Code. The
-shell provides a stable activity slot outside retained panels that become inert.
-`CanvasExplorer` portals Git there; the single global Canvas link opens Elements
+The shell owns stable Canvas and Git entries outside retained panels. Git is
+present whenever the existing navigation model includes Canvas, including other
+routes and Model. `CanvasExplorer` does not portal controls; the single Canvas link opens Elements
 using the existing layout `expand` event. If Code is selected it first invokes the
 existing `codeTab.onCanvas` contribution, without closing its session. Model stays
 selected and its Elements panel opens through the same shared preference. No
@@ -913,15 +913,21 @@ command registry or controller import is added. Standalone explorers retain
 their local Elements control. Collapse remains in the panel header and returns
 focus to Canvas; repeated Canvas activation never collapses or resets width.
 
-During Model authoring the main activity slot is hidden and inert because the
-Model owns its separate explorer lifecycle. There must be one visible activity
-rail for the active workspace. This local placement slot does not introduce a
-global toolbar portal, another navigation store, a file mutation or a save policy.
+`CanvasCodeRouteEntry` translates the finite cross-route history-state request
+into the same `CanvasShell.openProjectCode` command. It waits for a real owner,
+defers work across StrictMode replay, consumes the request at the identical URL
+and dispatches only after observing its own Router replacement. Other history
+state is preserved; blocked or stale consumption does not dispatch. On Canvas,
+the shell invokes the published opener directly, preserving pending Model route
+guards. Code authority, flush, current-intent and activation remain in their
+existing owner. This transport is not a tab store, new command or file operation.
 
 ```mermaid
 flowchart LR
-  Explorer[Retained CanvasExplorer] --> Git[Git action]
-  Explorer --> Slot[Shared local activity slot outside hidden panels]
+  Shell[Stable shell rail] --> Git[Git action]
+  Git -->|outside Canvas| Router[Finite Router state request]
+  Router --> Entry[Canvas-owned consumption adapter]
+  Entry --> Opener
   Git --> Opener[Existing project Code opener with optional path]
   File[Existing File-menu entry] --> Opener
   CodeTab[Top Code tab] --> Opener

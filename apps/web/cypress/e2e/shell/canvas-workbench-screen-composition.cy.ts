@@ -931,7 +931,7 @@ describe('Canvas workbench screen composition', () => {
           expect(rect.bottom).to.be.at.most(844);
         });
       assertViewportHasNoGlobalHorizontalOverflow(390);
-      cy.get('[data-slot="canvas-explorer-git-toggle"]')
+      cy.get('[data-slot="shell-project-code-command"]')
         .should('have.length', 1)
         .and('be.visible')
         .and('have.attr', 'aria-expanded', 'true')
@@ -1289,7 +1289,7 @@ describe('Canvas workbench screen composition', () => {
           expect($current[0], 'closing Code preserves the existing Canvas').to.equal($original[0]);
         });
       });
-      cy.get('[data-slot="canvas-explorer-git-toggle"]').click();
+      cy.get('[data-slot="shell-project-code-command"]').click();
       cy.get('[data-slot="canvas-code-main-tab"]')
         .should('have.length', 1)
         .and('have.attr', 'aria-selected', 'true');

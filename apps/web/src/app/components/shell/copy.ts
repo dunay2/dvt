@@ -27,6 +27,7 @@ export type ShellTopBarCopy = {
   readonly noAlternativeProjects: string;
   readonly projectUnavailable: string;
   readonly gitContext: string;
+  readonly projectCode: string;
   readonly viewOptions: string;
   readonly language: string;
   readonly languageEnglish: string;
@@ -104,6 +105,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
     fallback: 'That project is not available in this session.',
   },
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
+  projectCode: { key: 'shell.projectCode', fallback: 'Git' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
   language: { key: 'shell.language', fallback: 'Language' },
   languageEnglish: { key: 'shell.languageEnglish', fallback: 'English' },
@@ -196,6 +198,7 @@ const COPY_ES: ShellTopBarCopy = {
   noAlternativeProjects: 'No hay otro proyecto disponible en esta sesión.',
   projectUnavailable: 'Ese proyecto no está disponible en esta sesión.',
   gitContext: 'Contexto Git',
+  projectCode: 'Git',
   viewOptions: 'Opciones de vista',
   language: 'Idioma',
   languageEnglish: 'Inglés',
@@ -267,6 +270,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     noAlternativeProjects: resolveString(COPY_BY_KEY.noAlternativeProjects, locale),
     projectUnavailable: resolveString(COPY_BY_KEY.projectUnavailable, locale),
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
+    projectCode: resolveString(COPY_BY_KEY.projectCode, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
     language: resolveString(COPY_BY_KEY.language, locale),
     languageEnglish: resolveString(COPY_BY_KEY.languageEnglish, locale),

@@ -1,9 +1,10 @@
 /** Owned concern: present direct shell destinations and compose the active contextual rail. */
 import { NavLink, useMatch } from 'react-router';
+import { GitBranch } from 'lucide-react';
 import type { ShellNavigationItem, ShellNavigationModel } from '../shell/shellNavigationModel';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
-import { ShellActivityRailHost } from './shell/ShellActivityRail';
+import { canvasCodeRouteEntryState } from '../views/canvas/CanvasCodeRouteEntry';
 import { ShellAbout } from './shell/ShellAbout';
 import type { ShellTopBarCopy } from './shell/copy';
 import styles from './LeftNavigation.module.css';
@@ -20,7 +21,8 @@ export function LeftNavigationRail({
   const onCanvasRoute = useMatch('/canvas/*') != null;
   const expanded = useUiLayoutStore((state) => state.canvasExplorer.mode === 'expanded');
   const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
-  const codeTab = useCanvasWorkspaceMenuContributionStore((state) => state.contribution?.codeTab);
+  const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
+  const codeTab = contribution?.codeTab;
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
@@ -76,7 +78,51 @@ export function LeftNavigationRail({
             aria-label={copy.globalNavigation}
           >
             {canvasItem == null ? null : renderDestination(canvasItem)}
-            <ShellActivityRailHost />
+            {canvasItem == null ? null : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={canvasItem.to}
+                    state={canvasCodeRouteEntryState}
+                    id="shell-project-code-command"
+                    data-slot="shell-project-code-command"
+                    aria-label={copy.projectCode}
+                    aria-current={false}
+                    aria-expanded={onCanvasRoute && codeTab?.active === true}
+                    aria-controls={
+                      onCanvasRoute && codeTab?.active === true
+                        ? 'canvas-code-workspace-surface'
+                        : undefined
+                    }
+                    aria-disabled={
+                      onCanvasRoute &&
+                      (!contribution?.canOpenProjectCode || contribution.onOpenProjectCode == null)
+                        ? true
+                        : undefined
+                    }
+                    className={cn(styles.link, styles.linkInteractive)}
+                    onClick={(event) => {
+                      if (
+                        !onCanvasRoute ||
+                        event.defaultPrevented ||
+                        event.button !== 0 ||
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey
+                      )
+                        return;
+                      event.preventDefault();
+                      if (contribution?.canOpenProjectCode) contribution.onOpenProjectCode?.();
+                    }}
+                  >
+                    <GitBranch aria-hidden="true" className={styles.icon} />
+                    <span className={styles.caption}>{copy.projectCode}</span>
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right">{copy.projectCode}</TooltipContent>
+              </Tooltip>
+            )}
             <div className={cn(styles.nav, styles.destinations)}>
               {items.filter((item) => item !== canvasItem).map(renderDestination)}
             </div>

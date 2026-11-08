@@ -31,6 +31,7 @@ import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpression
 import { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 import { useCanvasModelSelection } from './useCanvasModelSelection';
 import { useCanvasCodeWorkbench } from './useCanvasCodeWorkbench';
+import { CanvasCodeRouteEntry } from './CanvasCodeRouteEntry';
 import { useCanvasOperationDataTab } from './useCanvasOperationDataTab';
 import styles from './CanvasShell.module.css';
 
@@ -193,6 +194,14 @@ export default function CanvasShell({
       direction="horizontal"
       className={styles.workspace}
     >
+      <CanvasCodeRouteEntry
+        ownerKey={
+          panels.activeCanvasId == null || layout.surfaceStrategy == null
+            ? null
+            : `${layout.surfaceStrategy.id}:${panels.activeCanvasId}`
+        }
+        onOpen={openProjectCode}
+      />
       {layout.surfaceStrategy?.operationalDrawer == null ? null : (
         <CanvasOperationalDrawerContributionRegistrar
           policy={{

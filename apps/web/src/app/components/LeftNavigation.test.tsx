@@ -3,7 +3,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent, waitFor, within } from '@testing-library/dom';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { Activity, Workflow } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LeftNavigationRail } from './LeftNavigation';
@@ -12,6 +12,7 @@ import type { ShellNavigationModel } from '../shell/shellNavigationModel';
 import { ShellActivityRailProvider } from './shell/ShellActivityRail';
 import { CanvasExplorer } from '../views/canvas/explorer/CanvasExplorer';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
 
 const model: ShellNavigationModel = {
   primaryItems: [{ to: '/runs', label: 'Runs', icon: Activity, source: 'runtime', level: 'core' }],
@@ -46,10 +47,70 @@ afterEach(async () => {
     root.unmount();
   });
   container.remove();
+  useCanvasWorkspaceMenuContributionStore.setState({ contribution: null, modelTab: null });
   vi.unstubAllGlobals();
 });
 
 describe('Direct shell navigation', () => {
+  it('keeps one Git entry across routes and delegates current Canvas activation without navigation', async () => {
+    // Git belongs to shell lifetime; the route callback is used only while its owner is mounted.
+    const navigationModel: ShellNavigationModel = {
+      ...model,
+      primaryItems: [
+        { to: '/canvas', label: 'Canvas', icon: Workflow, source: 'runtime', level: 'core' },
+        ...model.primaryItems,
+      ],
+    };
+    let observedLocation: ReturnType<typeof useLocation>;
+    function LocationProbe(): null {
+      observedLocation = useLocation();
+      return null;
+    }
+    await act(async () => {
+      root.render(
+        <MemoryRouter key="persistent-git" initialEntries={['/runs']}>
+          <LeftNavigationRail
+            navigationModel={navigationModel}
+            copy={resolveShellTopBarCopy('en')}
+          />
+          <LocationProbe />
+        </MemoryRouter>
+      );
+    });
+    const rail = container.querySelector('[data-slot="left-navigation-rail"]');
+    const git = within(container).getByRole('link', { name: 'Git' });
+    expect(git.getAttribute('href')).toBe('/canvas');
+    await act(async () => {
+      fireEvent.click(git);
+    });
+    expect(observedLocation!.pathname).toBe('/canvas');
+    expect(observedLocation!.state).toEqual({ canvasWorkbench: 'code' });
+    expect(container.querySelector('[data-slot="left-navigation-rail"]')).toBe(rail);
+    expect(within(container).getByRole('link', { name: 'Git' })).toBe(git);
+    const onOpenProjectCode = vi.fn();
+    await act(async () => {
+      useCanvasWorkspaceMenuContributionStore.setState({
+        contribution: {
+          canExportProjectSnapshot: false,
+          canImportProjectSnapshot: false,
+          canOpenProjectCode: true,
+          onOpenProjectCode,
+        },
+      });
+    });
+    const location = observedLocation!;
+    await act(async () => {
+      fireEvent.click(git);
+    });
+    expect(onOpenProjectCode).toHaveBeenCalledOnce();
+    expect(observedLocation!).toBe(location);
+    await act(async () => {
+      fireEvent.click(within(container).getByRole('link', { name: 'Runs' }));
+    });
+    expect(observedLocation!.pathname).toBe('/runs');
+    expect(within(container).getByRole('link', { name: 'Git' })).toBe(git);
+  });
+
   it('preserves modified link activation and navigates from another route before opening Elements', async () => {
     const canvasModel: ShellNavigationModel = {
       primaryItems: [

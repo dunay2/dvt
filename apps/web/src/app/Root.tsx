@@ -12,6 +12,7 @@ import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame, { APP_SHELL_MAIN_CONTENT_ID } from './components/shell/AppShellFrame';
 import BottomOperationalDrawer from './components/shell/BottomOperationalDrawer';
+import { AuthRouteSurface } from './bootstrap/AuthRouteGate';
 import { resolveShellTopBarCopy } from './components/shell/copy';
 import {
   createCapabilitiesFallbackBootstrapCommand,
@@ -310,7 +311,9 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
         />
       }
     >
-      <Outlet />
+      <AuthRouteSurface>
+        <Outlet />
+      </AuthRouteSurface>
     </AppShellFrame>
   );
 }

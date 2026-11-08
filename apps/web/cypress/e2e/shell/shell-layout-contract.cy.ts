@@ -92,62 +92,43 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
   cy.get('[data-slot="app-shell-outlet"]').should('exist');
 }
 
-function assertActiveActivityRail(hasGit: boolean): void {
-  const host = '[data-slot="canvas-activity-rail-host"]';
-  cy.get(host).should('have.length', 1);
+function assertShellCanvasEntries(): void {
   cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
     .should('have.length', 1)
     .and('be.visible')
-    .and('have.attr', 'aria-current', 'page')
-    .and(($entry) => {
-      expect($entry.attr('aria-expanded')).to.be.oneOf(['true', 'false']);
-      expect($entry[0]!.closest('[hidden], [inert], [aria-hidden="true"]')).to.equal(null);
-    });
+    .and('have.attr', 'aria-current', 'page');
   cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
-  cy.get(host)
-    .find('[data-slot="canvas-explorer-git-toggle"]:visible')
-    .should('have.length', hasGit ? 1 : 0);
-  cy.get(host).should(($host) => {
-    $host.find('button:hidden').each((_, control) => {
+  cy.get('[data-slot="canvas-activity-rail-host"]').should('not.exist');
+  cy.get('[data-slot="shell-project-code-command"]')
+    .should('have.length', 1)
+    .and('be.visible')
+    .and('have.attr', 'href', '/canvas')
+    .and(($entry) => {
+      const entry = $entry[0]!;
+      expect(entry.closest('[hidden], [inert], [aria-hidden="true"]')).to.equal(null);
+      expect(entry.getAttribute('aria-expanded')).to.be.oneOf(['true', 'false']);
       expect(
-        control.closest('[inert]'),
-        'retained controls stay outside the focus order'
-      ).not.to.equal(null);
-    });
-  });
-  cy.get(host)
-    .find('button:visible')
-    .should('have.length', hasGit ? 1 : 0)
-    .each(($button) => {
-      const button = $button[0]!;
+        entry.getAttribute('aria-current'),
+        'Code disclosure is not route identity'
+      ).not.to.equal('page');
       expect(
-        button.closest('[hidden], [inert], [aria-hidden="true"]'),
-        'active portal is operable'
-      ).to.equal(null);
-      expect(
-        button.hasAttribute('aria-current'),
-        'disclosure is distinct from route selection'
-      ).to.equal(false);
-      expect(button.getAttribute('aria-expanded')).to.be.oneOf(['true', 'false']);
-      expect(
-        Array.from(button.ownerDocument.querySelectorAll('[id]')).filter(
-          (node) => node.id === button.id
+        Array.from(entry.ownerDocument.querySelectorAll('[id]')).filter(
+          (node) => node.id === entry.id
         ),
-        'one control identity'
+        'one shell control identity'
       ).to.have.length(1);
-      // A closed Code session has no panel; only an expanded disclosure requires its mounted target.
-      if (button.getAttribute('aria-expanded') === 'true') {
+      if (entry.getAttribute('aria-expanded') === 'true') {
         expect(
-          button.ownerDocument.getElementById(button.getAttribute('aria-controls')!)
+          entry.ownerDocument.getElementById(entry.getAttribute('aria-controls')!)
         ).not.to.equal(null);
       }
-      cy.wrap($button).should('be.visible').focus().should('be.focused');
-    });
+    })
+    .focus()
+    .should('be.focused');
   cy.get('[data-slot="canvas-explorer"]')
     .find('[data-slot="canvas-explorer-elements-toggle"], [data-slot="canvas-explorer-git-toggle"]')
     .should('not.exist');
 }
-
 function assertNavigationTargetGeometry(): void {
   // Measure the actual hit target and glyph, not class strings or mocked rectangles.
   cy.get('[data-slot="left-navigation-rail"]')
@@ -260,8 +241,101 @@ describe('Shell layout contract', () => {
       .should('be.visible');
   });
 
-  it('keeps one active contextual rail across retained surfaces and respects pending Model edits', () => {
-    // Portals escape hidden tabpanels, but only the active surface may contribute controls.
+  it('retains the same shell through session revalidation and opens Code from another route', () => {
+    // Route admission may withhold right-hand content, but must not recreate the frame or its links.
+    stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitShellRouteWithUiLayout('/canvas');
+    cy.get('[data-testid="canvas-viewport"]').should('be.visible');
+    let frame: HTMLElement;
+    let rail: HTMLElement;
+    let canvas: HTMLElement;
+    let git: HTMLElement;
+    let hold = false;
+    let sessionRequests = 0;
+    const releases: Array<() => void> = [];
+    cy.get('[data-slot="app-shell-frame"]').then(($node) => {
+      frame = $node[0]!;
+    });
+    cy.get('[data-slot="left-navigation-rail"]').then(($node) => {
+      rail = $node[0]!;
+    });
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').then(($node) => {
+      canvas = $node[0]!;
+    });
+    cy.get('[data-slot="shell-project-code-command"]').then(($node) => {
+      git = $node[0]!;
+    });
+    cy.window().then((window) => {
+      const fetch = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const requestUrl =
+          typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (new URL(requestUrl, window.location.href).pathname === '/session') {
+          sessionRequests += 1;
+          if (hold)
+            await new Promise<void>((resolve) => {
+              releases.push(resolve);
+            });
+        }
+        return fetch(input, init);
+      };
+    });
+    const assertRetained = (): void => {
+      cy.get('[data-slot="app-shell-frame"]').should(($node) => expect($node[0]).to.equal(frame));
+      cy.get('[data-slot="left-navigation-rail"]')
+        .should('be.visible')
+        .and(($node) => expect($node[0]).to.equal(rail));
+      cy.get('[data-slot="left-navigation-link"][href="/canvas"]')
+        .should('be.visible')
+        .and(($node) => expect($node[0]).to.equal(canvas));
+      cy.get('[data-slot="shell-project-code-command"]')
+        .should('be.visible')
+        .and(($node) => expect($node[0]).to.equal(git));
+    };
+    const releaseSession = (): void => {
+      cy.then(() => {
+        hold = false;
+        expect(releases.length, 'a real session request is waiting').to.be.greaterThan(0);
+        releases.splice(0).forEach((release) => release());
+      });
+    };
+    cy.then(() => {
+      hold = true;
+    });
+    cy.get('[data-slot="left-navigation-link"][href="/plugins"]').click();
+    cy.location('pathname').should('equal', '/plugins');
+    cy.get('[data-slot="app-shell-outlet"]').should('contain.text', 'Checking session...');
+    cy.get('[data-slot="app-shell-outlet"]')
+      .contains(/^Plugins$/)
+      .should('not.exist');
+    assertRetained();
+    releaseSession();
+    cy.get('[data-slot="app-shell-outlet"]')
+      .contains(/^Plugins$/)
+      .should('be.visible');
+    assertRetained();
+    cy.then(() => {
+      hold = true;
+    });
+    cy.get('[data-slot="shell-project-code-command"]').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.location('pathname').should('equal', '/canvas');
+    cy.get('[data-slot="app-shell-outlet"]').should('contain.text', 'Checking session...');
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.exist');
+    assertRetained();
+    releaseSession();
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.window().its('history.state.usr').should('not.have.property', 'canvasWorkbench');
+    assertRetained();
+    cy.then(() => {
+      expect(sessionRequests, 'consuming state does not revalidate and remount Canvas').to.equal(2);
+    });
+  });
+
+  it('keeps shell Canvas and Git entries across retained surfaces and respects pending Model edits', () => {
+    // Navigation belongs to the shell, independently of retained Canvas, Code and Model panels.
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
     stubE2eJsonApi('GET', '/workspace/files', [
       { path: 'notes.md', name: 'notes.md', kind: 'file' },
@@ -281,9 +355,9 @@ describe('Shell layout contract', () => {
     const model = '[data-slot="canvas-model-editor"]';
     const modelViewport = `${model} [data-slot="canvas-relational-tree-viewport"], ${model} [data-slot="canvas-relational-tree-draft-viewport"]`;
     cy.get(`${canvas} [data-testid="canvas-viewport"]`).as('retainedCanvas', { type: 'static' });
-    assertActiveActivityRail(true);
+    assertShellCanvasEntries();
     assertNavigationTargetGeometry();
-    cy.get('[data-slot="canvas-activity-rail-host"]').then(($host) => {
+    cy.get('[data-slot="shell-project-code-command"]').then(($host) => {
       const hostTop = $host[0]!.getBoundingClientRect().top;
       const hostBottom = $host[0]!.getBoundingClientRect().bottom;
       cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').should(($entry) => {
@@ -296,17 +370,17 @@ describe('Shell layout contract', () => {
         .should(($link) => {
           expect(
             $link[0]!.getBoundingClientRect().top,
-            'route group follows contextual controls'
+            'route group follows Git'
           ).to.be.greaterThan(hostBottom);
         });
     });
-    cy.get('[data-slot="canvas-explorer-git-toggle"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-workspace-path="notes.md"]`).click();
     cy.get(`${code} .monaco-editor`).should('be.visible').as('retainedCode', { type: 'static' });
     cy.get(canvas).should('have.attr', 'inert');
-    assertActiveActivityRail(true);
-    cy.get('[data-slot="canvas-explorer-git-toggle"]').should('have.attr', 'aria-expanded', 'true');
+    assertShellCanvasEntries();
+    cy.get('[data-slot="shell-project-code-command"]').should('have.attr', 'aria-expanded', 'true');
     cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(canvas).should('be.visible');
     // Repeated Canvas activation opens Elements; it must not collapse or recreate the graph.
@@ -317,22 +391,22 @@ describe('Shell layout contract', () => {
     openWorkbenchModel();
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get(modelViewport).as('retainedModel', { type: 'static' });
-    assertActiveActivityRail(false);
+    assertShellCanvasEntries();
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    assertActiveActivityRail(true);
+    assertShellCanvasEntries();
     cy.get('[data-slot="canvas-code-main-tab"]').click();
-    assertActiveActivityRail(true);
+    assertShellCanvasEntries();
     cy.get<JQuery<HTMLElement>>('@retainedCode').then(($original) => {
       cy.get(`${code} .monaco-editor`).should(($current) =>
         expect($current[0]).to.equal($original[0])
       );
     });
     cy.get('[data-slot="canvas-model-main-tab"]').click();
-    assertActiveActivityRail(false);
+    assertShellCanvasEntries();
     workbenchOperation('filter').scrollIntoView().click();
     cy.get('[data-pending-operation="true"]').should('exist');
     cy.get('[data-slot="left-navigation-link"][href="/plugins"]').focus();
@@ -347,7 +421,7 @@ describe('Shell layout contract', () => {
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-pending-operation="true"]').should('not.exist');
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    assertActiveActivityRail(true);
+    assertShellCanvasEntries();
     cy.get<JQuery<HTMLElement>>('@retainedCanvas').then(($original) => {
       cy.get(`${canvas} [data-testid="canvas-viewport"]`).should(($current) =>
         expect($current[0]).to.equal($original[0])

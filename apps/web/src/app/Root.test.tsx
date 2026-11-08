@@ -8,9 +8,11 @@ import type { PlatformHealthCapabilityApi } from '../capabilities/platform-healt
 import { createStaticRouteBootstrapHandle } from './bootstrap/routeBootstrapContract';
 import { createPlatformHealthSnapshot } from '../capabilities/platform-health/testing/platformHealthFixtures';
 import { withTestQueryClient } from '../testing/reactQueryHarness';
+// Install the shared session transport fixture before loading the real routed shell.
+import { createBrokenRootShellNode } from './Root.bootstrapRoute.test.support';
 import AppProviders from './AppProviders';
 import Root from './Root';
-import { createBrokenRootShellNode } from './Root.bootstrapRoute.test.support';
+import AuthRouteGate from './bootstrap/AuthRouteGate';
 import { RootServicesProbe } from './Root.test.support';
 import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 
@@ -24,7 +26,11 @@ describe('Root integration guard', () => {
       [
         {
           path: '/',
-          element: <Root />,
+          element: (
+            <AuthRouteGate>
+              <Root />
+            </AuthRouteGate>
+          ),
           children: [
             {
               id: 'test.workspace',

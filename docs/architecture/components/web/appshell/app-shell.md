@@ -43,7 +43,7 @@ flowchart TB
   Root["Root shell"] --> Frame["AppShellFrame"]
   Frame --> TopBar["TopAppBar"]
   TopBar --> Identity["Raven identity only"]
-  Nav --> Activity["Current route activity host"]
+  Nav --> Activity["Capability-derived Canvas and Git entries"]
   Nav --> About["ShellAbout"]
   Frame --> Health["ShellHealthBanner"]
   Frame --> Body["Shell body"]
@@ -52,6 +52,22 @@ flowchart TB
   Main --> Outlet["Route outlet"]
   Main --> Operations["Operational drawer"]
 ```
+
+## Protected Route And Shell Lifetime
+
+`AuthRouteGate` owns the existing `GetProtectedRouteSession` admission. Initial
+checking renders no Root. Once admitted, protected navigation retains Root,
+AppShellFrame and the navigation DOM while `AuthRouteSurface` closes only the
+Outlet until the current session and workspace query succeeds. The requested
+pathname/search/hash must match the allowed identity during render, so no target
+route effects run before revalidation. Missing admission context fails closed.
+
+A current denial removes the protected shell and content in favor of existing
+login or project onboarding recovery. This is one admission state machine with
+a read-only presentation boundary, not an authentication cache or another store.
+Abort cleanup and the resolver's publication receipt still reject stale results.
+See the [auth contract](web-auth-project-onboarding-component.md) for the state
+diagram, ordering and negative tests.
 
 ## Shell Service Composition
 
@@ -101,7 +117,8 @@ the rest of the shell:
 
 Direct rail contract:
 
-- Canvas is the single first entry; Git follows when owned by the active surface;
+- Canvas is the single first entry; Git follows whenever that Canvas capability
+  exists in the navigation model, independently of the current route or panel;
 - remaining global destinations follow in their model order below a divider;
 - About remains at the bottom, with constrained navigation scrolling;
 - `Root` supplies the existing capability-derived model once to `LeftNavigation`;
@@ -114,15 +131,26 @@ Direct rail contract:
   retains Router behavior. Collapse uses the panel header and returns focus to Canvas;
 - the existing shell footer contributions are not a new permission predicate;
   route/session guards continue to decide authorization;
-- a shell-owned DOM host and explicit active-surface scope compose contextual
-  controls without moving global authority into CanvasExplorer.
+- the shell owns both entries directly; Explorer does not portal navigation
+  from a route whose lifetime can end.
 
-Canvas activity remains available while Code is visible, even though the Canvas
-tabpanel is inert. Model activity is present only while Model is visible. A
-portal cannot rely on its source panel's hidden/inert attributes. An absent
-host provider means legitimate standalone inline mode; a present provider with
-a null target means no rail, including Focus mode. Moving controls must retain
-graph/editor identity and must not write layout preferences or semantics.
+Shell presence is a boolean presentation context. Without it, Explorer retains
+its standalone inline controls; with it, there are no duplicate activity controls.
+The DOM target, portal and active-surface scope are retired. Explicit Focus mode
+still suppresses shell chrome through its existing owner. Graph/editor identity
+and existing hidden/inert surface lifetimes remain unchanged.
+
+The [persistent Git entry supplement](https://github.com/dunay2/dvt/issues/3765#issuecomment-6725659498)
+reuses `SelectCanvasWorkbenchTab`. On Canvas, Git invokes the published Code
+opener directly, avoiding Router navigation through a pending Model guard.
+From another route its real `/canvas` link carries the finite Router state
+request `canvasWorkbench: 'code'`. Canvas consumes only that request, preserving
+other state and the full URL, before its existing owner admits Code. A blocked
+replace cannot open Code. Cancelable deferred effects protect StrictMode replay;
+changed authority, navigation and stale completion cannot claim admission.
+Modified/new-tab activation follows the ordinary Canvas href: history state is
+not a cross-window Code deep link. No last-project cache or global intent store
+is introduced.
 
 The unified Canvas activation is the explicit exception for layout preference
 writes: it opens a collapsed or closed dock at its retained width. Repeating it

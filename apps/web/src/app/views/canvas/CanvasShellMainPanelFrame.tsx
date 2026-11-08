@@ -1,6 +1,5 @@
 /** Owned concern: render Canvas main panel frame and layout-only presentation slots. */
 import type { ReactNode } from 'react';
-import { ShellActivityRailScope } from '../../components/shell/ShellActivityRail';
 
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
@@ -66,9 +65,7 @@ export function CanvasShellWorkspaceSurfaces({
                 visible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
               }`}
             >
-              <ShellActivityRailScope active={kind === 'canvas' ? !modelVisible : visible}>
-                {content}
-              </ShellActivityRailScope>
+              {content}
             </div>
           )
         )}

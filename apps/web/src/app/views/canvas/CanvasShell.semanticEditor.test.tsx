@@ -130,10 +130,10 @@ describe('Canvas Model inspection', () => {
       const canvasPanel = panelFor(canvas);
       const viewport = harness.container.querySelector('[data-testid="canvas-viewport"]');
       const activityRail = within(harness.container).getByRole('navigation', {
-        name: 'Canvas explorer',
+        name: 'Navigation',
       });
       await act(async () =>
-        fireEvent.click(within(activityRail).getByRole('button', { name: 'Git' }))
+        fireEvent.click(within(activityRail).getByRole('link', { name: 'Git' }))
       );
       await act(async () => data.onOpenNode?.(fixture.transform.id));
       const model = navigation.querySelector<HTMLButtonElement>(
@@ -176,11 +176,12 @@ describe('Canvas Model inspection', () => {
         expect(activePanel.getAttribute('aria-hidden')).toBe('false');
         expect(activePanel.hasAttribute('inert')).toBe(false);
         const visibleRails = within(harness.container).queryAllByRole('navigation', {
-          name: 'Canvas explorer',
+          name: 'Navigation',
         });
+        expect(visibleRails).toHaveLength(1);
+        expect(visibleRails[0]).toBe(activityRail);
+        expect(activityRail.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
         if (target === model) {
-          expect(visibleRails).toHaveLength(0);
-          expect(activityRail.closest('[hidden][inert]')).not.toBeNull();
           const canvasEntry = within(harness.container).getByRole('link', { name: 'Canvas' });
           expect(modelPanel.contains(canvasEntry)).toBe(false);
           expect(canvasEntry.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
@@ -191,10 +192,6 @@ describe('Canvas Model inspection', () => {
           expect(model.getAttribute('aria-selected')).toBe('true');
           expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
           expect(panelFor(model)).toBe(modelPanel);
-        } else {
-          expect(visibleRails).toHaveLength(1);
-          expect(visibleRails[0]).toBe(activityRail);
-          expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
         }
         if (target === code) {
           codePanel ??= activePanel;

@@ -57,7 +57,7 @@ export function CanvasExplorer({
   workspaceTask?: ReactNode;
   activityRail?: CanvasExplorerActivityRail;
 }>): JSX.Element {
-  const activityHost = useShellActivityRail();
+  const shellOwned = useShellActivityRail();
   const { mode, widthPercent } = useUiLayoutStore((state) => state.canvasExplorer);
   const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const expanded = mode === 'expanded';
@@ -106,8 +106,7 @@ export function CanvasExplorer({
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       activityRail={activityRail}
-      railTarget={activityHost?.target}
-      railActive={activityHost?.active ?? true}
+      shellOwned={shellOwned}
       elements={
         typeof elements === 'function'
           ? elements(visible && expanded && activityRail?.codeVisible !== true)
@@ -120,9 +119,7 @@ export function CanvasExplorer({
         projectFiles?.onCanvas();
         dispatch({ type: 'collapse' });
         document
-          .getElementById(
-            activityHost === undefined ? `${id}-elements-button` : 'shell-canvas-navigation'
-          )
+          .getElementById(shellOwned ? 'shell-canvas-navigation' : `${id}-elements-button`)
           ?.focus();
       }}
       onClose={() => {

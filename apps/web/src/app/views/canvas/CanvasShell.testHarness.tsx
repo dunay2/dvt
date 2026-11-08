@@ -289,7 +289,12 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
   };
 }
 
-export function createCanvasShellHarness(): {
+export function createCanvasShellHarness(
+  options?: Readonly<{
+    strictMode?: boolean;
+    initialEntries?: React.ComponentProps<typeof MemoryRouter>['initialEntries'];
+  }>
+): {
   container: HTMLDivElement;
   navigation: HTMLDivElement;
   render: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -335,7 +340,7 @@ export function createCanvasShellHarness(): {
         root.render(
           <QueryClientProvider client={queryClient}>
             <ShellActivityRailProvider>
-              <MemoryRouter initialEntries={['/canvas']}>
+              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
                 <LeftNavigationRail
                   navigationModel={{
                     primaryItems: [
@@ -351,8 +356,15 @@ export function createCanvasShellHarness(): {
                   }}
                   copy={resolveShellTopBarCopy('en')}
                 />
+                {options?.initialEntries == null ? null : options.strictMode ? (
+                  <React.StrictMode>
+                    <CanvasShell {...props} />
+                  </React.StrictMode>
+                ) : (
+                  <CanvasShell {...props} />
+                )}
               </MemoryRouter>
-              <CanvasShell {...props} />
+              {options?.initialEntries == null ? <CanvasShell {...props} /> : null}
             </ShellActivityRailProvider>
           </QueryClientProvider>
         );
@@ -364,7 +376,7 @@ export function createCanvasShellHarness(): {
         root.render(
           <QueryClientProvider client={queryClient}>
             <ShellActivityRailProvider>
-              <MemoryRouter initialEntries={['/canvas']}>
+              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
                 <LeftNavigationRail
                   navigationModel={{
                     primaryItems: [
@@ -380,8 +392,15 @@ export function createCanvasShellHarness(): {
                   }}
                   copy={resolveShellTopBarCopy('en')}
                 />
+                {options?.initialEntries == null ? null : options.strictMode ? (
+                  <React.StrictMode>
+                    <CanvasShell {...props} />
+                  </React.StrictMode>
+                ) : (
+                  <CanvasShell {...props} />
+                )}
               </MemoryRouter>
-              <CanvasShell {...props} />
+              {options?.initialEntries == null ? <CanvasShell {...props} /> : null}
             </ShellActivityRailProvider>
           </QueryClientProvider>
         );

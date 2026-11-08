@@ -11,7 +11,7 @@ import type { CreateProjectResponse } from '../services/projectOnboarding/projec
 import { activateProjectWorkspace } from '../services/projectOnboarding/activateProjectWorkspace';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
 import type { SessionContextPublication } from '../services/session/sessionContextPublication';
-import AuthRouteGate from './AuthRouteGate';
+import AuthRouteGate, { AuthRouteSurface } from './AuthRouteGate';
 
 vi.mock('../services/session/protectedRouteSessionContext', () => ({
   resolveProtectedRouteSessionContext: vi.fn(),
@@ -98,6 +98,17 @@ describe('AuthRouteGate project onboarding recovery', () => {
     }
 
     document.getElementById('app-loading-screen')?.remove();
+  });
+
+  it('does not admit protected children without the owning gate provider', async () => {
+    mounted = await withTestQueryClient(
+      <AuthRouteSurface>
+        <div>Protected route without admission</div>
+      </AuthRouteSurface>
+    );
+    expect(mounted.container.textContent).toContain('Checking session');
+    expect(mounted.container.textContent).not.toContain('Protected route without admission');
+    expect(resolveProtectedRouteSessionContext).not.toHaveBeenCalled();
   });
 
   it('uses project onboarding instead of a terminal workspace-denied screen', async () => {

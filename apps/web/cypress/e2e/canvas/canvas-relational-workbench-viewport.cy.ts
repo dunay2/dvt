@@ -276,16 +276,14 @@ describe('Workbench viewport', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
-    const git = `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`;
+    const git = `[data-slot="shell-project-code-command"]`;
     const code = '[data-slot="canvas-code-workspace-surface"]';
     const tree = `${code} [data-slot="route-workbench-left-panel"]`;
     const properties = `${code} [data-slot="route-workbench-right-panel"] [role="region"]`;
     cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
       expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
     });
-    cy.get(`${main} section[aria-labelledby$="-elements-button"] input[type="search"]`).type(
-      'customers'
-    );
+    cy.get(`${main} [data-slot="canvas-explorer-panel"] input[type="search"]`).type('customers');
     cy.get(`${main} .react-flow__viewport`).then(($viewport) => {
       const viewport = $viewport[0]!;
       const transform = viewport.getAttribute('style');
@@ -329,17 +327,10 @@ describe('Workbench viewport', () => {
       cy.get(properties).should('contain.text', 'notes/first.md');
       cy.get(`${properties} time`).should('have.attr', 'datetime', '2026-10-28T00:00:00Z');
       cy.screenshot('canvas-git-project-files');
-      for (const panel of ['elements']) {
-        cy.get(
-          `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-${panel}-toggle"]`
-        ).click();
-        cy.get(code).should('not.be.visible');
-        assertStationary();
-      }
-      cy.get(`${main} section[aria-labelledby$="-elements-button"] input`).should(
-        'have.value',
-        'customers'
-      );
+      cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
+      cy.get(code).should('not.be.visible');
+      assertStationary();
+      cy.get(`${main} [data-slot="canvas-explorer-panel"] input`).should('have.value', 'customers');
       cy.get(git).click();
       cy.get(code).should('be.visible');
       cy.get(tree).find('[data-workspace-path="notes/second.md"]').click();
@@ -758,7 +749,7 @@ describe('DBT project Git browsing with real file authority', () => {
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${canvasId}&projectRoot=${projectRoot}`
     );
-    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`, {
+    cy.get(`[data-slot="shell-project-code-command"]`, {
       timeout: 60_000,
     }).should('be.visible');
     cy.get(`${main} .react-flow__node`).its('length').should('be.at.least', 2);
@@ -788,9 +779,7 @@ describe('DBT project Git browsing with real file authority', () => {
         viewport = $viewport[0]!;
         transform = viewport.getAttribute('style');
       });
-    cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`
-    ).click();
+    cy.get(`[data-slot="shell-project-code-command"]`).click();
     cy.wait('@actualFileTree')
       .its('response')
       .should((response) => {
@@ -888,9 +877,7 @@ describe('DBT project Git browsing with real file authority', () => {
         expect($viewport[0]).to.equal(viewport);
         expect($viewport.attr('style')).to.equal(transform);
       });
-    cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`
-    ).click();
+    cy.get(`[data-slot="shell-project-code-command"]`).click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
       'have.attr',
@@ -976,9 +963,7 @@ describe('DBT project Git browsing with real file authority', () => {
         viewport = $viewport[0]!;
         transform = viewport.getAttribute('style');
       });
-    cy.get(
-      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]'
-    ).click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(`${code} [data-workspace-path="${sourcePath}"]`).click();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`)
       .should('be.visible')

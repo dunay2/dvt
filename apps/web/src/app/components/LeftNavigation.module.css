@@ -58,10 +58,14 @@
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
-.link[aria-current='page'] {
+.link[aria-current='page'],
+.link[aria-expanded='true'] {
   border-color: var(--primary);
   background: var(--surface-selected);
   color: var(--text-strong);
+}
+.link[aria-disabled='true'] {
+  color: var(--text-disabled);
 }
 .icon {
   width: var(--icon-size-navigation);
