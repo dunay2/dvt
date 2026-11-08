@@ -13,6 +13,7 @@ import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 const DEFAULT_CANVAS_AUTHORING_MODE: CanvasGraphAuthoringMode = 'transformation';
 
 export type ActiveCanvasGraphStrategyResolution =
+  // The default runtime presents an empty Canvas; command admission still requires ready.
   | {
       kind: 'missing_document';
       executionStrategy: CanvasExecutionStrategy;
@@ -60,48 +61,16 @@ export function resolveActiveCanvasGraphStrategy(
   capabilities?: RuntimeCapabilities
 ): ActiveCanvasGraphStrategyResolution {
   const canvasKind = resolveDraftCanvasKind(draftReadModel);
-  if (canvasKind == null) {
-    const defaultRuntimeRegistration = findCanvasRuntimeRegistration(
-      DEFAULT_CANVAS_AUTHORING_MODE,
-      capabilities
-    );
-    if (defaultRuntimeRegistration == null) {
-      const registeredDefaultRuntime = findCanvasRuntimeRegistration(DEFAULT_CANVAS_AUTHORING_MODE);
-      if (registeredDefaultRuntime != null) {
-        const reason = capabilities?.plugins[registeredDefaultRuntime.pluginId]?.reason;
-
-        return {
-          kind: 'disabled_plugin',
-          canvasKind: DEFAULT_CANVAS_AUTHORING_MODE,
-          pluginId: registeredDefaultRuntime.pluginId,
-          ...(reason == null ? {} : { reason }),
-        };
-      }
-
-      return {
-        kind: 'unsupported_kind',
-        canvasKind: DEFAULT_CANVAS_AUTHORING_MODE,
-      };
-    }
-
-    return {
-      kind: 'missing_document',
-      executionStrategy: defaultRuntimeRegistration.executionStrategy,
-      nodeKinds: defaultRuntimeRegistration.nodeKinds,
-      strategy: defaultRuntimeRegistration.graphStrategy,
-      surfaceStrategy: defaultRuntimeRegistration.surfaceStrategy,
-    };
-  }
-
-  const runtimeRegistration = findCanvasRuntimeRegistration(canvasKind, capabilities);
+  const effectiveKind = canvasKind ?? DEFAULT_CANVAS_AUTHORING_MODE;
+  const runtimeRegistration = findCanvasRuntimeRegistration(effectiveKind, capabilities);
   if (runtimeRegistration == null) {
-    const registeredRuntime = findCanvasRuntimeRegistration(canvasKind);
+    const registeredRuntime = findCanvasRuntimeRegistration(effectiveKind);
     if (registeredRuntime != null) {
       const reason = capabilities?.plugins[registeredRuntime.pluginId]?.reason;
 
       return {
         kind: 'disabled_plugin',
-        canvasKind,
+        canvasKind: effectiveKind,
         pluginId: registeredRuntime.pluginId,
         ...(reason == null ? {} : { reason }),
       };
@@ -109,24 +78,25 @@ export function resolveActiveCanvasGraphStrategy(
 
     return {
       kind: 'unsupported_kind',
-      canvasKind,
+      canvasKind: effectiveKind,
     };
   }
 
-  return {
-    kind: 'ready',
-    canvasKind,
+  const resolved = {
     executionStrategy: runtimeRegistration.executionStrategy,
     nodeKinds: runtimeRegistration.nodeKinds,
     strategy: runtimeRegistration.graphStrategy,
     surfaceStrategy: runtimeRegistration.surfaceStrategy,
   };
+  return canvasKind == null
+    ? { kind: 'missing_document', ...resolved }
+    : { kind: 'ready', canvasKind, ...resolved };
 }
 
 export function selectActiveCanvasGraphStrategy(
   resolution: ActiveCanvasGraphStrategyResolution
 ): CanvasGraphStrategy | null {
-  if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
+  if (isActiveCanvasGraphStrategySupported(resolution)) {
     return resolution.strategy;
   }
 
@@ -136,7 +106,7 @@ export function selectActiveCanvasGraphStrategy(
 export function selectActiveCanvasSurfaceStrategy(
   resolution: ActiveCanvasGraphStrategyResolution
 ): CanvasSurfaceStrategy | null {
-  if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
+  if (isActiveCanvasGraphStrategySupported(resolution)) {
     return resolution.surfaceStrategy;
   }
 
@@ -146,7 +116,7 @@ export function selectActiveCanvasSurfaceStrategy(
 export function selectActiveCanvasExecutionStrategy(
   resolution: ActiveCanvasGraphStrategyResolution
 ): CanvasExecutionStrategy | null {
-  if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
+  if (isActiveCanvasGraphStrategySupported(resolution)) {
     return resolution.executionStrategy;
   }
 
@@ -155,6 +125,9 @@ export function selectActiveCanvasExecutionStrategy(
 
 export function isActiveCanvasGraphStrategySupported(
   resolution: ActiveCanvasGraphStrategyResolution
-): boolean {
+): resolution is Extract<
+  ActiveCanvasGraphStrategyResolution,
+  { kind: 'ready' | 'missing_document' }
+> {
   return resolution.kind === 'ready' || resolution.kind === 'missing_document';
 }

@@ -24,34 +24,48 @@ function buildCanonicalNode(overrides: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('resolveCanvasRuntimePolicy', () => {
-  it('blocks mutating and execution commands before a canvas document exists', () => {
-    const policy = resolveCanvasRuntimePolicy({
-      activeRuntime: {
-        kind: 'missing_document',
-        executionStrategy: { kind: 'not_executable' },
-        nodeKinds: DVT_AUTHORING_NODE_KINDS,
-      },
-      canMutateGraph: true,
-      canOpenSourceImport: true,
-      canPlan: true,
-      runPermissionGranted: true,
-      draftExecutionBarrier: null,
-      canReloadLatestDraft: true,
-    });
+  it.each([
+    { kind: 'not_executable' },
+    {
+      kind: 'dvt_protected_preview',
+      previewProfile: 'planner-generic-v1',
+      sourceFamily: 'dvt',
+    },
+  ] as const)(
+    'blocks commands without a document even with $kind presentation',
+    (executionStrategy) => {
+      const policy = resolveCanvasRuntimePolicy({
+        activeRuntime: {
+          kind: 'missing_document',
+          executionStrategy,
+          nodeKinds: DVT_AUTHORING_NODE_KINDS,
+        },
+        canMutateGraph: true,
+        canOpenSourceImport: true,
+        canPlan: true,
+        runPermissionGranted: true,
+        draftExecutionBarrier: null,
+        canReloadLatestDraft: true,
+      });
 
-    expect(policy.document).toEqual({
-      kind: 'missing_document',
-    });
-    expect(policy.commands).toEqual({
-      canMutateGraph: false,
-      canEditInspectorNode: false,
-      canOpenSourceImport: false,
-      canPlan: false,
-      canRun: false,
-      runAdmission: { allowed: false, reason: 'capability_mismatch' },
-      canReloadLatestDraft: true,
-    });
-  });
+      expect(policy.document).toEqual({
+        kind: 'missing_document',
+      });
+      expect(policy.commands).toEqual({
+        canMutateGraph: false,
+        canEditInspectorNode: false,
+        canOpenSourceImport: false,
+        canPlan: false,
+        canRun: false,
+        runAdmission: { allowed: false, reason: 'capability_mismatch' },
+        canReloadLatestDraft: true,
+      });
+      expect(policy.execution.kind).toBe(
+        executionStrategy.kind === 'not_executable' ? 'not_executable' : 'executable'
+      );
+      expect(policy.admission.nodeKinds).toBe(DVT_AUTHORING_NODE_KINDS);
+    }
+  );
 
   it('fails closed for unsupported persisted canvas kinds', () => {
     const policy = resolveCanvasRuntimePolicy({
@@ -343,6 +357,15 @@ describe('resolveCanvasRuntimePolicy', () => {
     });
 
     expect(policy.execution.kind).toBe('executable');
-    expect(policy.commands.canPlan).toBe(true);
+    expect(policy.commands).toEqual({
+      canMutateGraph: true,
+      canEditInspectorNode: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      runAdmission: { allowed: true },
+      canReloadLatestDraft: false,
+    });
+    expect(policy.admission.nodeKinds).toBe(DVT_AUTHORING_NODE_KINDS);
   });
 });

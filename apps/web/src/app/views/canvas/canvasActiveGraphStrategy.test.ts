@@ -6,6 +6,7 @@ import {
   type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 import {
+  isActiveCanvasGraphStrategySupported,
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
@@ -32,20 +33,23 @@ function buildDraftReadModelWithCanvasKind(kind: string): CanvasAuthoringDraftRe
 }
 
 describe('resolveActiveCanvasGraphStrategy', () => {
-  it('uses the shared transformation Canvas runtime for persisted Canvas documents', () => {
-    expect(
-      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('transformation'))
-    ).toMatchObject({
-      kind: 'ready',
-      canvasKind: 'transformation',
-      strategy: {
-        id: 'transformation',
-      },
-      surfaceStrategy: {
-        id: 'dvt-transformation-contextual-canvas',
-      },
-    });
-  });
+  it.each(['transformation', ' TRANSFORMATION '])(
+    'uses the shared transformation Canvas runtime for persisted kind %j',
+    (canvasKind) => {
+      expect(
+        resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind(canvasKind))
+      ).toMatchObject({
+        kind: 'ready',
+        canvasKind: 'transformation',
+        strategy: {
+          id: 'transformation',
+        },
+        surfaceStrategy: {
+          id: 'dvt-transformation-contextual-canvas',
+        },
+      });
+    }
+  );
 
   it('fails closed for obsolete persisted dbt Canvas kinds instead of aliasing them', () => {
     expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'))).toEqual({
@@ -54,42 +58,63 @@ describe('resolveActiveCanvasGraphStrategy', () => {
     });
   });
 
-  it('falls back to the transformation strategy before a canvas document exists', () => {
-    expect(resolveActiveCanvasGraphStrategy(undefined)).toMatchObject({
-      kind: 'missing_document',
-      strategy: {
-        id: 'transformation',
-      },
-      surfaceStrategy: {
-        id: 'dvt-transformation-contextual-canvas',
-      },
-    });
-  });
-
-  it('fails closed without throwing when the default canvas plugin is disabled before document creation', () => {
-    expect(
-      resolveActiveCanvasGraphStrategy(undefined, {
-        plugins: {
-          dvt: {
-            available: false,
-            reason: 'disabled_for_workspace',
-          },
+  it.each([undefined, '', ' \t '])(
+    'retains the default presentation without a usable document kind (%j)',
+    (canvasKind) => {
+      const resolution = resolveActiveCanvasGraphStrategy(
+        canvasKind === undefined ? undefined : buildDraftReadModelWithCanvasKind(canvasKind)
+      );
+      expect(resolution).toMatchObject({
+        kind: 'missing_document',
+        executionStrategy: { kind: 'dvt_protected_preview' },
+        strategy: {
+          id: 'transformation',
         },
-      })
-    ).toEqual({
-      kind: 'disabled_plugin',
-      canvasKind: 'transformation',
-      pluginId: 'dvt',
-      reason: 'disabled_for_workspace',
-    });
-  });
+        surfaceStrategy: {
+          id: 'dvt-transformation-contextual-canvas',
+        },
+      });
+      expect(resolution).not.toHaveProperty('canvasKind');
+      expect(resolution).toHaveProperty('nodeKinds', expect.any(Array));
+    }
+  );
 
-  it('fails closed for persisted canvas documents with unsupported kind', () => {
-    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown'))).toEqual({
-      kind: 'unsupported_kind',
-      canvasKind: 'unknown',
-    });
-  });
+  it.each([undefined, '', 'disabled_for_workspace'])(
+    'fails closed for a disabled default or explicit Canvas kind with reason %j',
+    (reason) => {
+      for (const canvasKind of [undefined, 'transformation']) {
+        const resolution = resolveActiveCanvasGraphStrategy(
+          canvasKind === undefined ? undefined : buildDraftReadModelWithCanvasKind(canvasKind),
+          {
+            plugins: {
+              dvt: {
+                available: false,
+                ...(reason === undefined ? {} : { reason }),
+              },
+            },
+          }
+        );
+        expect(resolution).toStrictEqual({
+          kind: 'disabled_plugin',
+          canvasKind: 'transformation',
+          pluginId: 'dvt',
+          ...(reason === undefined ? {} : { reason }),
+        });
+      }
+    }
+  );
+
+  it.each(['unknown', ' UNKNOWN '])(
+    'fails closed for unsupported persisted kind %j',
+    (canvasKind) => {
+      expect(
+        resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind(canvasKind))
+      ).toEqual({
+        kind: 'unsupported_kind',
+        canvasKind: 'unknown',
+      });
+    }
+  );
 
   it('does not turn dbt plugin availability into a Canvas kind registration', () => {
     expect(
@@ -107,17 +132,37 @@ describe('resolveActiveCanvasGraphStrategy', () => {
     });
   });
 
-  it('does not invent fallback strategies for unsupported active runtimes', () => {
+  it.each([undefined, 'transformation'])(
+    'selects the registered presentation strategies for kind %j',
+    (canvasKind) => {
+      const resolution = resolveActiveCanvasGraphStrategy(
+        canvasKind === undefined ? undefined : buildDraftReadModelWithCanvasKind(canvasKind)
+      );
+      expect(isActiveCanvasGraphStrategySupported(resolution)).toBe(true);
+      if (resolution.kind !== 'ready' && resolution.kind !== 'missing_document') {
+        throw new Error('Expected a supported Canvas presentation');
+      }
+      expect(selectActiveCanvasGraphStrategy(resolution)).toBe(resolution.strategy);
+      expect(selectActiveCanvasExecutionStrategy(resolution)).toBe(resolution.executionStrategy);
+      expect(selectActiveCanvasSurfaceStrategy(resolution)).toBe(resolution.surfaceStrategy);
+    }
+  );
+
+  it('does not invent fallback strategies for unsupported or disabled active runtimes', () => {
     const unsupported = resolveActiveCanvasGraphStrategy(
       buildDraftReadModelWithCanvasKind('unknown')
     );
     const obsoleteDbt = resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'));
+    const disabled = resolveActiveCanvasGraphStrategy(
+      buildDraftReadModelWithCanvasKind('transformation'),
+      { plugins: { dvt: { available: false } } }
+    );
 
-    expect(selectActiveCanvasGraphStrategy(unsupported)).toBeNull();
-    expect(selectActiveCanvasExecutionStrategy(unsupported)).toBeNull();
-    expect(selectActiveCanvasSurfaceStrategy(unsupported)).toBeNull();
-    expect(selectActiveCanvasGraphStrategy(obsoleteDbt)).toBeNull();
-    expect(selectActiveCanvasExecutionStrategy(obsoleteDbt)).toBeNull();
-    expect(selectActiveCanvasSurfaceStrategy(obsoleteDbt)).toBeNull();
+    for (const resolution of [unsupported, obsoleteDbt, disabled]) {
+      expect(isActiveCanvasGraphStrategySupported(resolution)).toBe(false);
+      expect(selectActiveCanvasGraphStrategy(resolution)).toBeNull();
+      expect(selectActiveCanvasExecutionStrategy(resolution)).toBeNull();
+      expect(selectActiveCanvasSurfaceStrategy(resolution)).toBeNull();
+    }
   });
 });
