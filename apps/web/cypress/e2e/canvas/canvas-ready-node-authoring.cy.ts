@@ -878,7 +878,8 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.contains('h3', 'DVT source').should('be.visible');
     waitForE2eApiCall('/workspace/warehouse/connections', 'GET');
     cy.get('select[name="dvt-source-connection"]').select('warehouse-b');
@@ -907,7 +908,7 @@ describe('Canvas ready node authoring', () => {
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
     cy.contains('h3', 'DVT sink').should('be.visible');
     cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
@@ -952,14 +953,15 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="dvt-source-schema"]').should('have.value', 'curated');
     cy.get('input[name="dvt-source-table"]').should('have.value', 'orders_clean');
     cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
     cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
     cy.get('input[name="dvt-sink-schema"]').should('have.value', 'published');
     cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_monthly');

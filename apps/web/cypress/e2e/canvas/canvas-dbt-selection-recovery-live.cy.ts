@@ -62,7 +62,8 @@ function attemptToDisableSelectedModelThroughReadOnlyCode(): void {
   cy.get('.react-flow__controls-fitview').click();
   cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`)
     .find('[data-slot="graph-node-card-title"]')
-    .dblclick();
+    .click();
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible').click();
   cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
     .should('be.visible')
     .and('have.attr', 'data-file-path', SELECTED_MODEL_PATH);

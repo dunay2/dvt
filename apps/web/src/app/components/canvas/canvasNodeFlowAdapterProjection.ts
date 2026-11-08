@@ -154,17 +154,15 @@ export function projectCanvasNodeFlowAdapter({
       canonicalNode.kind === 'dvt:transform'
         ? data.onMapCanvasInput
         : undefined,
-    selectNode: (): void => {
-      data.onSelectNode?.(nodeId);
-      data.onInspectNode?.(nodeId, role === 'input' ? 'columns' : 'general');
-    },
-    openNode: (): void => {
-      if (typeof data.onOpenNode === 'function') {
-        data.onOpenNode(nodeId);
-        return;
-      }
-      data.onInspectNode?.(nodeId, 'code');
-    },
+    selectNode:
+      typeof data.onSelectNode === 'function' || typeof data.onInspectNode === 'function'
+        ? (): void => {
+            data.onSelectNode?.(nodeId);
+            data.onInspectNode?.(nodeId, role === 'input' ? 'columns' : 'general');
+          }
+        : undefined,
+    openNode:
+      typeof data.onOpenNode === 'function' ? (): void => data.onOpenNode?.(nodeId) : undefined,
     attachSchema: (schemaName: string): void => data.onAttachSchemaToNode?.(nodeId, schemaName),
     runAction,
   };

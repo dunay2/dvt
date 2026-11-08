@@ -102,7 +102,8 @@ describe('DbtNodeComponent plugin failure containment', () => {
     expect(container.textContent).toContain('Healthy');
   });
 
-  it('opens Properties on Code while honoring an explicit external editor denial', () => {
+  it('keeps inspection explicit without a double-click Code fallback', () => {
+    vi.useFakeTimers();
     const onInspectNode = vi.fn();
     const nodeProps = {
       id: 'model.orders',
@@ -140,11 +141,22 @@ describe('DbtNodeComponent plugin failure containment', () => {
       );
     });
 
-    act(() => {
-      fireEvent.dblClick(container.querySelector('div')!);
-    });
-
-    expect(onInspectNode).toHaveBeenCalledOnce();
-    expect(onInspectNode).toHaveBeenCalledWith('model.orders', 'code');
+    try {
+      const shell = container.querySelector('[data-slot="canvas-node-shell"]')!;
+      act(() => {
+        fireEvent.click(shell, { detail: 1 });
+        fireEvent.click(shell, { detail: 2 });
+        fireEvent.dblClick(shell, { detail: 2 });
+        vi.advanceTimersByTime(1000);
+      });
+      expect(onInspectNode).not.toHaveBeenCalled();
+      act(() => {
+        fireEvent.click(shell, { detail: 1 });
+        vi.advanceTimersByTime(1000);
+      });
+      expect(onInspectNode).toHaveBeenCalledExactlyOnceWith('model.orders', 'general');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

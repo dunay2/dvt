@@ -21,15 +21,21 @@ function buildKeyboardEvent(target: EventTarget, key = 'Enter'): KeyboardEventDo
 }
 
 describe('CanvasViewport keyboard node entry', () => {
-  it('routes Enter on a focused React Flow node through the same node-open gesture', () => {
+  it.each([
+    ['open', 'dblclick', 2],
+    ['inspect', 'click', 0],
+  ] as const)('routes Enter through the declared %s action', (activation, type, detail) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'react-flow__node';
     const shell = document.createElement('div');
     shell.setAttribute('data-slot', 'canvas-node-shell');
+    shell.setAttribute('data-canvas-node-activation', activation);
     wrapper.append(shell);
     document.body.append(wrapper);
     const onDoubleClick = vi.fn();
+    const onClick = vi.fn();
     shell.addEventListener('dblclick', onDoubleClick);
+    shell.addEventListener('click', onClick);
     const event = buildKeyboardEvent(wrapper);
 
     try {
@@ -38,7 +44,10 @@ describe('CanvasViewport keyboard node entry', () => {
           event as unknown as Parameters<typeof activateFocusedCanvasNodeFromKeyboard>[0]
         )
       ).toBe(true);
-      expect(onDoubleClick).toHaveBeenCalledOnce();
+      const action = type === 'dblclick' ? onDoubleClick : onClick;
+      const otherAction = type === 'dblclick' ? onClick : onDoubleClick;
+      expect(action).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ type, detail }));
+      expect(otherAction).not.toHaveBeenCalled();
       expect(event.preventDefault).toHaveBeenCalledOnce();
       expect(event.stopPropagation).toHaveBeenCalledOnce();
     } finally {
@@ -46,11 +55,37 @@ describe('CanvasViewport keyboard node entry', () => {
     }
   });
 
+  it.each([undefined, 'unsupported'])(
+    'does not invent an action for capability %s',
+    (activation) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'react-flow__node';
+      const shell = document.createElement('div');
+      shell.setAttribute('data-slot', 'canvas-node-shell');
+      if (activation) shell.setAttribute('data-canvas-node-activation', activation);
+      wrapper.append(shell);
+      const action = vi.fn();
+      shell.addEventListener('dblclick', action);
+      shell.addEventListener('click', action);
+      const event = buildKeyboardEvent(wrapper);
+
+      expect(
+        activateFocusedCanvasNodeFromKeyboard(
+          event as unknown as Parameters<typeof activateFocusedCanvasNodeFromKeyboard>[0]
+        )
+      ).toBe(false);
+      expect(action).not.toHaveBeenCalled();
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      expect(event.stopPropagation).not.toHaveBeenCalled();
+    }
+  );
+
   it('does not enter the node when Enter belongs to an embedded node control', () => {
     const wrapper = document.createElement('div');
     wrapper.className = 'react-flow__node';
     const shell = document.createElement('div');
     shell.setAttribute('data-slot', 'canvas-node-shell');
+    shell.setAttribute('data-canvas-node-activation', 'open');
     const actions = document.createElement('button');
     actions.setAttribute('data-canvas-node-control', '');
     shell.append(actions);
@@ -79,6 +114,7 @@ describe('CanvasViewport keyboard node entry', () => {
     wrapper.className = 'react-flow__node';
     const shell = document.createElement('div');
     shell.setAttribute('data-slot', 'canvas-node-shell');
+    shell.setAttribute('data-canvas-node-activation', 'open');
     wrapper.append(shell);
     const event = buildKeyboardEvent(wrapper, 'Space');
 
@@ -97,6 +133,7 @@ describe('CanvasViewport keyboard node entry', () => {
       wrapper.className = 'react-flow__node';
       const shell = document.createElement('div');
       shell.setAttribute('data-slot', 'canvas-node-shell');
+      shell.setAttribute('data-canvas-node-activation', 'open');
       const control = document.createElement(tag);
       shell.append(control);
       wrapper.append(shell);

@@ -138,13 +138,19 @@ export function activateFocusedCanvasNodeFromKeyboard(
     .closest('.react-flow__node')
     ?.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]');
   if (shell == null) return false;
+  const activation = shell.getAttribute('data-canvas-node-activation');
+  if (activation !== 'open' && activation !== 'inspect') return false;
 
   event.preventDefault();
   event.stopPropagation();
   const MouseEventConstructor =
     shell.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
   shell.dispatchEvent(
-    new MouseEventConstructor('dblclick', { bubbles: true, cancelable: true, detail: 2 })
+    new MouseEventConstructor(activation === 'open' ? 'dblclick' : 'click', {
+      bubbles: true,
+      cancelable: true,
+      detail: activation === 'open' ? 2 : 0,
+    })
   );
   return true;
 }

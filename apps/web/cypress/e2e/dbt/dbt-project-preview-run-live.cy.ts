@@ -223,7 +223,7 @@ describe('dbt project file Preview and Run live vertical', () => {
       .and('contain.text', 'Orders');
     cy.get(
       `.react-flow__node[data-id="${MODEL_UNIQUE_ID}"] [data-slot="graph-node-card-title"]`
-    ).dblclick();
+    ).click();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]', { timeout: 20_000 })
       .should('be.visible')
       .click();
