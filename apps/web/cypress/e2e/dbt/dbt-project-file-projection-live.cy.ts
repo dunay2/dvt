@@ -306,9 +306,9 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
     cy.get('[data-slot="canvas-explorer-sources-toggle"]').should('not.exist');
-    cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($toggle) => {
-      if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
-    });
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
+      .click()
+      .should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-element-id="source.analytics.raw.orders"]')
       .filter(':visible')
       .should('be.enabled')
@@ -561,7 +561,7 @@ describe('dbt project file projection live vertical', () => {
         );
       },
     });
-    cy.get('[data-slot="canvas-explorer-elements-toggle"]').should(
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').should(
       'have.attr',
       'aria-expanded',
       'true'
@@ -580,7 +580,7 @@ describe('dbt project file projection live vertical', () => {
       '[data-slot="canvas-code-workspace-surface"] [data-slot="workspace-file-code-editor"]'
     ).should('have.attr', 'data-file-path', `${PROJECT_ROOT}/models/orders.sql`);
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get('[data-slot="canvas-explorer-elements-toggle"]').should(
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').should(
       'have.attr',
       'aria-expanded',
       'true'

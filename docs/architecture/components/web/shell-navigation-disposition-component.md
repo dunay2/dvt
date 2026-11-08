@@ -33,16 +33,23 @@ route-family reason remains useful for File/Project and identity presentation.
 
 ## Invariants
 
-- The rail presents current route controls first, then global destinations,
-  with About below. Canvas/Model Elements and Canvas Git retain their owners.
+- The rail presents one Canvas entry, then contextual Git and remaining global
+  destinations, with About below. There is no duplicate Elements rail button.
 - Root supplies one existing `buildShellRuntimeState` navigation projection.
   There is no route list in Explorer and no parallel permission predicate.
 - Runtime capability filtering and Router/session guards remain authoritative.
   Existing Plugins/Admin contributions are not newly granted or filtered by
   interpreting presentation `level` metadata as permissions.
-- Global destinations are links with `aria-current`; contextual controls retain
-  disclosure `aria-expanded` and `aria-controls`. Canvas route selection must
-  not become an Elements toggle.
+- Global destinations are links with `aria-current`. Following the user's
+  [explicit clarification](https://github.com/dunay2/dvt/issues/3765#issuecomment-6725338570),
+  an unmodified primary Canvas click on the current route opens Elements with
+  the existing `expand` event, never a toggle. Modified/new-tab activation keeps
+  Router semantics. Other routes navigate normally without a speculative layout write.
+- Code returns through the existing `codeTab.onCanvas` contribution; Model stays
+  selected. No Canvas controller, new registry or mirrored state moves into shell.
+  Canvas exposes current disclosure; Git retains its own guarded action and controls.
+- The panel header owns collapse and returns focus to Canvas. A closed dock can
+  be reopened there at its retained width. Repeated clicks remain idempotent.
 - The Raven mark is identity, with no dropdown or hidden navigation fallback.
 - Explicit Focus mode retains its existing chrome suppression and View escape.
   A present host provider with a null target means no rail, not inline fallback.
@@ -62,16 +69,16 @@ route-family reason remains useful for File/Project and identity presentation.
 stateDiagram-v2
   [*] --> Canvas
   Canvas --> Code: existing guarded Code activation
-  Code --> Canvas: existing Elements or Canvas activation
+  Code --> Canvas: single Canvas activation and existing Code owner
   Canvas --> Model: existing guarded Model activation
   Model --> Canvas: existing guarded workspace navigation
   Canvas --> OtherRoute: existing Router guard accepts navigation
   Code --> OtherRoute: existing Router guard accepts navigation
   Model --> OtherRoute: existing Router guard accepts navigation
 
-  Canvas: Canvas Elements/Git in shared host
-  Code: Canvas Elements/Git remain in shared host
-  Model: Model Elements in shared host
+  Canvas: single Canvas entry opens Elements; Git in shared host
+  Code: same Canvas entry returns and opens Elements; Git remains
+  Model: same Canvas entry opens Model Elements without changing selection
   OtherRoute: no stale Canvas or Model controls
 ```
 
@@ -95,7 +102,9 @@ flowchart TD
 
 `AppShellFrame` owns the shared layout; `LeftNavigation` owns direct navigation
 presentation; `CanvasShellWorkspaceSurfaces` supplies active contextual scope;
-Explorer retains disclosure and project-file handlers. No generic contribution
+Explorer retains panel disclosure and project-file handlers. Canvas activation
+reuses `ConfigureCanvasViewportPreferences` and `SelectCanvasWorkbenchTab` through
+the existing layout store and workspace contribution contract. No generic contribution
 registry, new state store, imperative navigation service or duplicate catalogue
 is introduced.
 

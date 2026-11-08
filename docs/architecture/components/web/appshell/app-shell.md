@@ -101,12 +101,17 @@ the rest of the shell:
 
 Direct rail contract:
 
-- Elements/Git remain at the top when owned by the active route surface;
-- global destinations follow in their existing model order below a divider;
+- Canvas is the single first entry; Git follows when owned by the active surface;
+- remaining global destinations follow in their model order below a divider;
 - About remains at the bottom, with constrained navigation scrolling;
 - `Root` supplies the existing capability-derived model once to `LeftNavigation`;
-- global links use Router and `aria-current`; Elements/Git retain disclosure
-  `aria-expanded`/`aria-controls` and their existing command owners;
+- global links use Router and `aria-current`; on the Canvas route, its unmodified
+  primary activation opens Elements idempotently through the existing
+  `dispatchCanvasExplorer({ type: 'expand' })` command. Code returns through the
+  existing `codeTab.onCanvas` contribution; an active Model remains selected;
+- Canvas exposes Elements disclosure without a second Elements button. Git keeps
+  its independent disclosure and guarded owner. Modified/new-tab link activation
+  retains Router behavior. Collapse uses the panel header and returns focus to Canvas;
 - the existing shell footer contributions are not a new permission predicate;
   route/session guards continue to decide authorization;
 - a shell-owned DOM host and explicit active-surface scope compose contextual
@@ -118,6 +123,12 @@ portal cannot rely on its source panel's hidden/inert attributes. An absent
 host provider means legitimate standalone inline mode; a present provider with
 a null target means no rail, including Focus mode. Moving controls must retain
 graph/editor identity and must not write layout preferences or semantics.
+
+The unified Canvas activation is the explicit exception for layout preference
+writes: it opens a collapsed or closed dock at its retained width. Repeating it
+does not collapse, close Code, change Model, or create a semantic write. The shell
+depends on the existing workspace contribution contract, never a Canvas controller
+or another command registry. Standalone Explorer retains its local Elements control.
 
 Use the existing Lucide family at 20px/stroke 2 in 44px targets, with a 52px rail,
 4px inline padding and an inset divider. Only consumed navigation control/icon
@@ -174,8 +185,25 @@ The bottom drawer now follows the same separation rule as the rest of the shell:
 
 - shell copy and shell chrome stay in shell-owned modules;
 - the drawer resolves a small, explicit state model before rendering;
-- the render surface stays focused on header, badges, close action, and body slot ownership.
+- the render surface owns one controls row containing the existing tabs, optional
+  run badge and close action, followed directly by the content body;
+- the localized drawer title names its accessible region; it does not consume
+  a separate visible heading row;
+- the close button remains outside the tablist. With no route contribution, the
+  controls row contains only the real run badge and close action. Hidden tabs
+  remain restorable without rendering an empty tablist;
 - the drawer is a shell companion surface, not the durable run workspace authority.
+
+```mermaid
+flowchart TB
+  Region["Named operational region"] --> Controls["Existing tabs / optional run / close"]
+  Controls --> Body["Contribution or live-log content"]
+  State["Existing contribution, feed and layout owners"] --> Region
+```
+
+This composition recovers content space at the same drawer height. The shell
+frame still owns the resize separator and layout persistence; the drawer keeps
+the existing hide command, tab visibility commands and feed subscription.
 
 Current state model:
 

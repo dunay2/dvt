@@ -397,9 +397,7 @@ describe('Workbench viewport', () => {
   describe('Explorer layout', () => {
     const main = '[data-slot="canvas-workspace-surface"]';
     const model = '[data-slot="canvas-relational-tree-workbench"]';
-    const mainElements =
-      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]';
-    const modelElements = `${model} [data-slot="canvas-explorer-elements-toggle"]`;
+    const canvasEntry = 'a[data-slot="left-navigation-link"][href="/canvas"]';
     const modelViewport = '[data-slot="canvas-relational-tree-viewport"]';
     const modelZoom = '[data-slot="canvas-relational-tree-zoom"]';
     const modelSearch = '[data-slot="canvas-relational-tree-sources"] input';
@@ -429,7 +427,7 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-explorer-view-command"]')
         .should('have.attr', 'aria-checked', 'false')
         .click();
-      cy.get(mainElements).should('be.visible').and('have.attr', 'aria-expanded', 'true');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'true');
     }
 
     function fitAndOpenModel(): void {
@@ -462,6 +460,14 @@ describe('Workbench viewport', () => {
       });
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       assertModelCardTypography();
+      // Verify the exact focus token at native scale before exercising fractional graph zoom.
+      cy.get(modelZoom).should('have.text', '100%');
+      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+        .should('be.focused')
+        .and('have.css', 'outline-style', 'solid')
+        .and('have.css', 'outline-width', '2px')
+        .and('have.css', 'outline-offset', '2px');
       cy.then(() => {
         writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
@@ -494,8 +500,8 @@ describe('Workbench viewport', () => {
         if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
         expandedViewportWidth = viewport.clientWidth;
       });
-      cy.get(modelElements).click().should('have.attr', 'aria-expanded', 'false');
-      cy.get(mainElements).should('have.attr', 'aria-expanded', 'false');
+      cy.get(`${model} button[aria-label="Collapse explorer"]:visible`).click();
+      cy.get(canvasEntry).should('be.focused').and('have.attr', 'aria-expanded', 'false');
       cy.get(modelViewport).should(($viewport) => {
         const viewport = $viewport[0];
         if (viewport === undefined) throw new Error('Expected the resized relational viewport.');
@@ -507,9 +513,11 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
       verifyCompleteTreeFit(modelViewport);
       cy.screenshot('semantic-editor-sources-collapsed');
-      cy.get(modelElements).focus();
+      cy.get(canvasEntry).focus();
       cy.press(Cypress.Keyboard.Keys.ENTER);
-      cy.get(modelElements).should('have.attr', 'aria-expanded', 'true');
+      cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true').click();
+      cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true');
+      cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
       assertExplorerWidth(model, 32);
       cy.get(modelSearch).should('have.value', 'customers').clear();
       cy.get('[data-slot="canvas-relational-tree-sources"]').should('have.length', 1);
@@ -545,8 +553,12 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
         .should('be.focused')
         .and('have.css', 'outline-style', 'solid')
-        .and('have.css', 'outline-width', '2px')
-        .and('have.css', 'outline-offset', '2px');
+        .should(($node) => {
+          // CSS zoom snaps outlines to device pixels; reflow must preserve a visible focus cue.
+          const style = $node[0]!.ownerDocument.defaultView!.getComputedStyle($node[0]!);
+          expect(Number.parseFloat(style.outlineWidth)).to.be.greaterThan(0);
+          expect(Number.parseFloat(style.outlineOffset)).to.be.greaterThan(0);
+        });
       cy.get('[data-slot="canvas-model-toolbar"]').should(($footer) => {
         expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
       });
@@ -570,10 +582,10 @@ describe('Workbench viewport', () => {
         retainedMainViewport = $viewport[0];
       });
       cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
-      cy.get(mainElements).should('be.visible').click();
+      cy.get(canvasEntry).should('be.visible').click();
       assertExplorerWidth(main, 15);
       cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
-      cy.get(mainElements).should('not.be.visible');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       reopenExplorerFromView();
       cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
       assertExplorerWidth(main, 15);
@@ -651,7 +663,7 @@ describe('Workbench viewport', () => {
       });
       resizeExplorer(model, 'RIGHT', 32);
       cy.get(`${model} button[aria-label="Collapse explorer"]`).click();
-      cy.get(mainElements).should('have.attr', 'aria-expanded', 'false');
+      cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'false');
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.then(() => {
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
@@ -662,17 +674,21 @@ describe('Workbench viewport', () => {
       // the completed presentation gestures above, not a fresh bootstrap.
       cy.on('window:before:load', installE2eApiFetchStub);
       cy.reload();
-      cy.get(mainElements).should('be.visible').and('have.attr', 'aria-expanded', 'false');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       cy.get(`${main} [data-panel-id$="-dock"]`).should('not.be.visible');
-      cy.get(mainElements).click();
+      cy.get(canvasEntry).click();
       assertExplorerWidth(main, 32);
       fitAndOpenModel();
       assertExplorerWidth(model, 32);
       cy.get(`${model} button[aria-label="Close explorer"]`).click();
-      cy.get(mainElements).should('not.be.visible');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       cy.reload();
-      cy.get(mainElements).should('not.be.visible');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       cy.get(`${main} [data-panel-id$="-dock"]`).should('not.be.visible');
+      // The one Canvas destination can also reopen a durably closed Explorer.
+      cy.get(canvasEntry).click().should('have.attr', 'aria-expanded', 'true');
+      assertExplorerWidth(main, 32);
+      cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
       reopenExplorerFromView();
       assertExplorerWidth(main, 32);
       fitAndOpenModel();
@@ -883,9 +899,7 @@ describe('DBT project Git browsing with real file authority', () => {
     );
     cy.get(properties).should('contain.text', secondPath);
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`
-    ).click();
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(code).should('not.be.visible');
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();

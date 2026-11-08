@@ -254,9 +254,9 @@ describe('Canvas happy path remains writable after create/save', () => {
         cy.contains(copy.draftProjectionGapTitle).should('not.exist');
         cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
         cy.screenshot('canvas-happy-path-after-drag');
-        cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($button) => {
-          if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
-        });
+        cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
+          .click()
+          .should('have.attr', 'aria-expanded', 'true');
         cy.get(`[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`)
           .should('be.visible')
           .click();

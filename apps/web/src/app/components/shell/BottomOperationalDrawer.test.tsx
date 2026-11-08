@@ -142,16 +142,20 @@ describe('BottomOperationalDrawer', () => {
     });
 
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-title"]')?.textContent
-    ).toContain('Operations');
+      document.body
+        .querySelector('[data-slot="bottom-operational-drawer"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Operations');
 
     await act(async () => {
       useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     });
 
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-title"]')?.textContent
-    ).toContain('Operaciones');
+      document.body
+        .querySelector('[data-slot="bottom-operational-drawer"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Operaciones');
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
     ).toBe('Ejecución run-42');
@@ -242,5 +246,35 @@ describe('BottomOperationalDrawer', () => {
     fireEvent.click(closeButton!);
     expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(0);
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(false);
+  });
+
+  it('keeps run identity and close in one row without inventing tabs or a visible title', async () => {
+    // The old static title consumed a complete row even when it added no information.
+    liveLogStreamState.runId = 'run-compact';
+    liveLogStreamState.health = { state: 'loading', events: [], canRetry: false };
+    await act(async () => {
+      root.render(
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+          <BottomOperationalDrawer />
+        </AppServicesProvider>
+      );
+    });
+
+    const drawer = container.querySelector('[data-slot="bottom-operational-drawer"]');
+    const controls = container.querySelector('[data-slot="bottom-operational-drawer-controls"]');
+    expect(drawer?.getAttribute('role')).toBe('region');
+    expect(drawer?.getAttribute('aria-label')).toBe('Operations');
+    expect(container.querySelector('[data-slot="bottom-operational-drawer-header"]')).toBeNull();
+    expect(container.querySelector('[data-slot="bottom-operational-drawer-title"]')).toBeNull();
+    expect(container.querySelector('[role="tablist"]')).toBeNull();
+    expect(
+      controls?.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
+    ).toBe('Run run-compact');
+    const close = controls?.querySelector('[data-slot="bottom-operational-drawer-close"]');
+    expect(close).not.toBeNull();
+    expect(close?.closest('[role="tablist"]')).toBeNull();
+    expect(controls?.nextElementSibling?.getAttribute('data-slot')).toBe(
+      'bottom-operational-drawer-body'
+    );
   });
 });

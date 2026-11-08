@@ -13,14 +13,7 @@ import type {
   OperationalDrawerTab,
   OperationalDrawerTabId,
 } from './operationalDrawerContributionStore';
-
-const classes = {
-  list: 'flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
-  tab: 'group flex h-9 items-center border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
-  close:
-    'ml-1 grid size-5 place-items-center rounded text-[var(--text-muted)] group-hover:bg-[var(--surface-hover)] group-hover:text-[var(--text-strong)]',
-  closeIcon: 'size-3',
-} as const;
+import styles from './BottomOperationalDrawer.module.css';
 
 export function OperationalDrawerTabStrip({
   activeTab,
@@ -42,7 +35,9 @@ export function OperationalDrawerTabStrip({
   onSelectTab: (tab: OperationalDrawerTabId) => void;
   restoreTabsLabel: string;
   visibleTabs: readonly OperationalDrawerTab[];
-}>): JSX.Element {
+}>): JSX.Element | null {
+  const hasVisibleTabs = visibleTabs.length > 0;
+  if (!hasVisibleTabs && hiddenTabs.length === 0) return null;
   const moveFocus = (event: KeyboardEvent<HTMLButtonElement>, tabId: OperationalDrawerTabId) => {
     const currentIndex = visibleTabs.findIndex((tab) => tab.id === tabId);
     const offsets: Record<string, number> = {
@@ -68,11 +63,14 @@ export function OperationalDrawerTabStrip({
       <ContextMenuTrigger asChild>
         <div
           data-slot="bottom-operational-drawer-tabs"
-          className={classes.list}
-          role="tablist"
-          aria-orientation="horizontal"
-          aria-label={ariaLabel}
+          className={styles.tabs}
+          role={hasVisibleTabs ? 'tablist' : 'group'}
+          aria-orientation={hasVisibleTabs ? 'horizontal' : undefined}
+          aria-label={hasVisibleTabs ? ariaLabel : restoreTabsLabel}
+          tabIndex={hasVisibleTabs ? undefined : 0}
+          aria-keyshortcuts={hasVisibleTabs ? undefined : 'Shift+F10'}
         >
+          {hasVisibleTabs ? null : <span className={styles.restoreHint}>{restoreTabsLabel}</span>}
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
@@ -85,7 +83,7 @@ export function OperationalDrawerTabStrip({
               tabIndex={activeTab === tab.id ? 0 : -1}
               data-slot="bottom-operational-drawer-tab"
               data-tab={tab.id}
-              className={classes.tab}
+              className={styles.tab}
               data-active={activeTab === tab.id}
               onClick={(event) => {
                 if ((event.target as HTMLElement).closest('[data-tab-close]') != null) {
@@ -103,7 +101,7 @@ export function OperationalDrawerTabStrip({
                 moveFocus(event, tab.id);
               }}
             >
-              <span>
+              <span className={styles.tabLabel}>
                 {tab.label}
                 {tab.count == null ? null : <span> {tab.count}</span>}
               </span>
@@ -112,9 +110,9 @@ export function OperationalDrawerTabStrip({
                 title={closeTabLabel.replace('{tab}', tab.label)}
                 data-slot="bottom-operational-drawer-tab-close"
                 data-tab-close={tab.id}
-                className={classes.close}
+                className={styles.tabClose}
               >
-                <X aria-hidden="true" className={classes.closeIcon} />
+                <X aria-hidden="true" className={styles.tabCloseIcon} />
               </span>
             </button>
           ))}

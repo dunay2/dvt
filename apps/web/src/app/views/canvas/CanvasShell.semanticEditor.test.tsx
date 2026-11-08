@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Open and inspect a Model without mutating or requesting its data. */
 import { act } from 'react';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { fireEvent, within } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
@@ -174,20 +175,24 @@ describe('Canvas Model inspection', () => {
         const activePanel = panelFor(target);
         expect(activePanel.getAttribute('aria-hidden')).toBe('false');
         expect(activePanel.hasAttribute('inert')).toBe(false);
-        const visibleRails = within(harness.container).getAllByRole('navigation', {
+        const visibleRails = within(harness.container).queryAllByRole('navigation', {
           name: 'Canvas explorer',
         });
-        expect(visibleRails).toHaveLength(1);
         if (target === model) {
+          expect(visibleRails).toHaveLength(0);
           expect(activityRail.closest('[hidden][inert]')).not.toBeNull();
-          expect(modelPanel.contains(visibleRails[0]!)).toBe(false);
-          expect(
-            harness.container
-              .querySelector('[data-slot="canvas-activity-rail-host"]')
-              ?.contains(visibleRails[0]!)
-          ).toBe(true);
-          expect(visibleRails[0]?.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
+          const canvasEntry = within(harness.container).getByRole('link', { name: 'Canvas' });
+          expect(modelPanel.contains(canvasEntry)).toBe(false);
+          expect(canvasEntry.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
+          await act(async () => {
+            useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'collapse' });
+            fireEvent.click(canvasEntry);
+          });
+          expect(model.getAttribute('aria-selected')).toBe('true');
+          expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
+          expect(panelFor(model)).toBe(modelPanel);
         } else {
+          expect(visibleRails).toHaveLength(1);
           expect(visibleRails[0]).toBe(activityRail);
           expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
         }

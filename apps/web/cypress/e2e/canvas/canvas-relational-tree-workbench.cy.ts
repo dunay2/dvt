@@ -33,11 +33,13 @@ describe('Workbench navigation', () => {
         const transform = viewport.getAttribute('style');
         const host = document.querySelector('[data-testid="canvas-viewport"]')!;
         const hostBounds = host.getBoundingClientRect();
-        const explorerToggle = document.querySelector(
-          '[data-slot="canvas-explorer-elements-toggle"]'
+        const canvasEntry = document.querySelector(
+          'a[data-slot="left-navigation-link"][href="/canvas"]'
         )!;
-        expect(explorerToggle.getAttribute('aria-expanded')).to.equal('true');
-        const dock = document.getElementById(explorerToggle.getAttribute('aria-controls')!)!;
+        expect(canvasEntry.getAttribute('aria-expanded')).to.equal('true');
+        const dock = document.querySelector(
+          '[data-slot="canvas-workspace-surface"] [data-slot="canvas-explorer-panel"]'
+        )!;
         const dockWidth = dock.getBoundingClientRect().width;
         expect(dockWidth, 'visible Explorer width before Properties').to.be.greaterThan(0);
         const nodeIds = ['source-customers', 'source-orders', 'join-transform'];
@@ -148,7 +150,7 @@ describe('Workbench navigation', () => {
     cy.get('[data-slot="canvas-model-editor"]').should('be.focused');
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.get(
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
+      '[data-slot="canvas-relational-tree-workbench"] button[aria-label="Collapse explorer"]:visible'
     ).should('be.focused');
     cy.get('[data-slot="canvas-model-view-tab"]').should('not.exist');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should('not.exist');

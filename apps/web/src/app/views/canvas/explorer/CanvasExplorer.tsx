@@ -119,7 +119,11 @@ export function CanvasExplorer({
       onCollapse={() => {
         projectFiles?.onCanvas();
         dispatch({ type: 'collapse' });
-        document.getElementById(`${id}-elements-button`)?.focus();
+        document
+          .getElementById(
+            activityHost === undefined ? `${id}-elements-button` : 'shell-canvas-navigation'
+          )
+          ?.focus();
       }}
       onClose={() => {
         projectFiles?.onCanvas();

@@ -72,7 +72,9 @@ export function CanvasExplorerTemplate(
   }>
 ): JSX.Element {
   const availablePanels = panels.filter(({ key }) => key !== 'git' || props.hasProjectFiles);
-  const railVisible = props.visible && props.railActive !== false;
+  const shellOwned = props.railTarget !== undefined;
+  const railVisible =
+    props.railActive !== false && (shellOwned ? props.hasProjectFiles : props.visible);
   const activityRail = (
     <nav
       className={styles.rail}
@@ -81,30 +83,34 @@ export function CanvasExplorerTemplate(
       aria-hidden={!railVisible}
       {...(railVisible ? {} : { inert: '' })}
     >
-      {availablePanels.map(({ key, icon }) => (
-        <Tooltip key={key}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              id={`${props.id}-${key}-button`}
-              className={styles.activity}
-              data-slot={`canvas-explorer-${key}-toggle`}
-              aria-label={props.copy[key]}
-              aria-expanded={
-                key === 'git'
-                  ? props.activityRail?.codeVisible
-                  : props.activityRail?.codeVisible !== true && props.active === key
-              }
-              aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
-              onClick={() => props.onToggle(key)}
-              onKeyDown={(event) => props.onKeyToggle(key, event)}
-            >
-              {icon}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">{props.copy[key]}</TooltipContent>
-        </Tooltip>
-      ))}
+      {availablePanels
+        .filter(({ key }) => !shellOwned || key !== 'elements')
+        .map(({ key, icon }) => (
+          <Tooltip key={key}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                id={`${props.id}-${key}-button`}
+                className={styles.activity}
+                data-slot={`canvas-explorer-${key}-toggle`}
+                aria-label={props.copy[key]}
+                aria-expanded={
+                  key === 'git'
+                    ? props.activityRail?.codeVisible
+                    : props.activityRail?.codeVisible !== true && props.active === key
+                }
+                aria-controls={
+                  key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`
+                }
+                onClick={() => props.onToggle(key)}
+                onKeyDown={(event) => props.onKeyToggle(key, event)}
+              >
+                {icon}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">{props.copy[key]}</TooltipContent>
+          </Tooltip>
+        ))}
     </nav>
   );
   return (
@@ -130,7 +136,8 @@ export function CanvasExplorerTemplate(
               <section
                 key={key}
                 id={`${props.id}-${key}`}
-                aria-labelledby={`${props.id}-${key}-button`}
+                aria-label={props.copy[key]}
+                data-slot="canvas-explorer-panel"
                 hidden={props.active !== key}
                 className={styles.panel}
               >

@@ -216,7 +216,7 @@ describe('RootShell chrome', () => {
       const main = mounted.container.querySelector<HTMLElement>('#app-shell-main-content')!;
 
       expect(document.activeElement).not.toBe(main);
-      routeLink.focus();
+      await act(async () => routeLink.focus());
       expect(document.activeElement).toBe(routeLink);
 
       await act(async () => {
@@ -272,7 +272,9 @@ describe('RootShell chrome', () => {
       expect(bottomDrawer).not.toBeNull();
       expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
       expect(operationalDrawer).not.toBeNull();
-      expect(bottomDrawer?.textContent).toContain('Operations');
+      // The region stays named after removing the redundant visible heading row.
+      expect(operationalDrawer?.getAttribute('role')).toBe('region');
+      expect(operationalDrawer?.getAttribute('aria-label')).toBe('Operations');
       expect(bottomDrawer?.textContent).toContain('Start a run to see live run events here.');
     } finally {
       await mounted.cleanup();

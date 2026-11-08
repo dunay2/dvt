@@ -19,16 +19,16 @@
 .scroll::-webkit-scrollbar {
   display: none;
 }
-.scroll > :first-child:has(nav:not([hidden])) {
-  padding-bottom: calc(var(--spacing) * 2);
-  margin-bottom: calc(var(--spacing) * 2);
-  box-shadow: 0 1px var(--border-subtle);
-}
 .nav {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--spacing);
+}
+.destinations:not(:empty) {
+  padding-top: calc(var(--spacing) * 2);
+  margin-top: var(--spacing);
+  box-shadow: 0 -1px var(--border-subtle);
 }
 .link {
   position: relative;

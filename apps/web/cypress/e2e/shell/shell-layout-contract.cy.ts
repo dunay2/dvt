@@ -94,34 +94,55 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
 
 function assertActiveActivityRail(hasGit: boolean): void {
   const host = '[data-slot="canvas-activity-rail-host"]';
-  cy.get(host).should('have.length', 1).and('be.visible');
-  cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('have.length', 1);
-  cy.get('[data-slot="canvas-explorer-git-toggle"]').should('have.length', hasGit ? 1 : 0);
-  cy.get(`${host} button`).each(($button) => {
-    const button = $button[0]!;
-    expect(
-      button.closest('[hidden], [inert], [aria-hidden="true"]'),
-      'active portal is operable'
-    ).to.equal(null);
-    expect(
-      button.hasAttribute('aria-current'),
-      'disclosure is distinct from route selection'
-    ).to.equal(false);
-    expect(button.getAttribute('aria-expanded')).to.be.oneOf(['true', 'false']);
-    expect(
-      Array.from(button.ownerDocument.querySelectorAll('[id]')).filter(
-        (node) => node.id === button.id
-      ),
-      'one control identity'
-    ).to.have.length(1);
-    // A closed Code session has no panel; only an expanded disclosure requires its mounted target.
-    if (button.getAttribute('aria-expanded') === 'true') {
+  cy.get(host).should('have.length', 1);
+  cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
+    .should('have.length', 1)
+    .and('be.visible')
+    .and('have.attr', 'aria-current', 'page')
+    .and(($entry) => {
+      expect($entry.attr('aria-expanded')).to.be.oneOf(['true', 'false']);
+      expect($entry[0]!.closest('[hidden], [inert], [aria-hidden="true"]')).to.equal(null);
+    });
+  cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
+  cy.get(host)
+    .find('[data-slot="canvas-explorer-git-toggle"]:visible')
+    .should('have.length', hasGit ? 1 : 0);
+  cy.get(host).should(($host) => {
+    $host.find('button:hidden').each((_, control) => {
       expect(
-        button.ownerDocument.getElementById(button.getAttribute('aria-controls')!)
+        control.closest('[inert]'),
+        'retained controls stay outside the focus order'
       ).not.to.equal(null);
-    }
-    cy.wrap($button).should('be.visible').focus().should('be.focused');
+    });
   });
+  cy.get(host)
+    .find('button:visible')
+    .should('have.length', hasGit ? 1 : 0)
+    .each(($button) => {
+      const button = $button[0]!;
+      expect(
+        button.closest('[hidden], [inert], [aria-hidden="true"]'),
+        'active portal is operable'
+      ).to.equal(null);
+      expect(
+        button.hasAttribute('aria-current'),
+        'disclosure is distinct from route selection'
+      ).to.equal(false);
+      expect(button.getAttribute('aria-expanded')).to.be.oneOf(['true', 'false']);
+      expect(
+        Array.from(button.ownerDocument.querySelectorAll('[id]')).filter(
+          (node) => node.id === button.id
+        ),
+        'one control identity'
+      ).to.have.length(1);
+      // A closed Code session has no panel; only an expanded disclosure requires its mounted target.
+      if (button.getAttribute('aria-expanded') === 'true') {
+        expect(
+          button.ownerDocument.getElementById(button.getAttribute('aria-controls')!)
+        ).not.to.equal(null);
+      }
+      cy.wrap($button).should('be.visible').focus().should('be.focused');
+    });
   cy.get('[data-slot="canvas-explorer"]')
     .find('[data-slot="canvas-explorer-elements-toggle"], [data-slot="canvas-explorer-git-toggle"]')
     .should('not.exist');
@@ -263,8 +284,14 @@ describe('Shell layout contract', () => {
     assertActiveActivityRail(true);
     assertNavigationTargetGeometry();
     cy.get('[data-slot="canvas-activity-rail-host"]').then(($host) => {
+      const hostTop = $host[0]!.getBoundingClientRect().top;
       const hostBottom = $host[0]!.getBoundingClientRect().bottom;
-      cy.get('[data-slot="left-navigation-link"]')
+      cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').should(($entry) => {
+        expect($entry[0]!.getBoundingClientRect().bottom, 'Canvas precedes Git').to.be.at.most(
+          hostTop
+        );
+      });
+      cy.get('[data-slot="left-navigation-link"]:not([href="/canvas"])')
         .first()
         .should(($link) => {
           expect(
@@ -280,8 +307,13 @@ describe('Shell layout contract', () => {
     cy.get(canvas).should('have.attr', 'inert');
     assertActiveActivityRail(true);
     cy.get('[data-slot="canvas-explorer-git-toggle"]').should('have.attr', 'aria-expanded', 'true');
-    cy.get('[data-slot="canvas-explorer-elements-toggle"]').click();
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(canvas).should('be.visible');
+    // Repeated Canvas activation opens Elements; it must not collapse or recreate the graph.
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
+      .click()
+      .should('have.attr', 'aria-expanded', 'true');
+    cy.get(`${canvas} [data-slot="canvas-explorer-panel"]:visible`).should('have.length', 1);
     openWorkbenchModel();
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get(modelViewport).as('retainedModel', { type: 'static' });
@@ -325,6 +357,88 @@ describe('Shell layout contract', () => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(initialWrites);
       expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
     });
+  });
+
+  it('uses one drawer controls row and restores fully hidden tabs through the keyboard context menu', () => {
+    // The title-only row took content space; removing it must keep close and tab restoration reachable.
+    stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
+    visitShellRouteWithUiLayout('/canvas');
+    revealOperationalDrawer();
+    const drawer = '[data-slot="bottom-operational-drawer"]';
+    const controls = '[data-slot="bottom-operational-drawer-controls"]';
+    const tabs = '[data-slot="bottom-operational-drawer-tabs"]';
+    const close = '[data-slot="bottom-operational-drawer-close"]';
+    cy.get(drawer)
+      .should('have.attr', 'role', 'region')
+      .and('have.attr', 'aria-label', 'Canvas operations');
+    cy.get(
+      '[data-slot="bottom-operational-drawer-header"], [data-slot="bottom-operational-drawer-title"]'
+    ).should('not.exist');
+    cy.get(controls).should(($controls) => {
+      const row = $controls[0]!;
+      const bounds = row.getBoundingClientRect();
+      const content = row.nextElementSibling!.getBoundingClientRect();
+      const surface = row.parentElement!.getBoundingClientRect();
+      const closeControl = row.querySelector(close)!;
+      expect(row.querySelector('[role="tablist"]')).not.to.equal(null);
+      expect(closeControl.closest('[role="tablist"]')).to.equal(null);
+      expect(bounds.height, 'one controls row at desktop width').to.be.at.most(44);
+      expect(content.top).to.be.closeTo(bounds.bottom, 1);
+      expect(content.height, 'remaining height belongs to content').to.be.closeTo(
+        surface.height - bounds.height - 1,
+        2
+      );
+    });
+    cy.get(drawer).screenshot('compact-operational-drawer');
+    cy.get('[data-slot="bottom-operational-drawer-tab-close"]').each(($button) => {
+      cy.wrap($button).click();
+    });
+    cy.get(`${drawer} [role="tablist"]`).should('not.exist');
+    cy.get(tabs).should('have.attr', 'tabindex', '0').focus().should('be.focused');
+    // Native Chromium default action proves the advertised Shift+F10 gesture, not a synthetic menu event.
+    cy.then(async () => {
+      for (const type of ['rawKeyDown', 'keyUp']) {
+        await Cypress.automation('remote:debugger:protocol', {
+          command: 'Input.dispatchKeyEvent',
+          params: {
+            type,
+            key: 'F10',
+            code: 'F10',
+            windowsVirtualKeyCode: 121,
+            nativeVirtualKeyCode: 121,
+            modifiers: 8,
+          },
+        });
+      }
+    });
+    cy.get('[data-restore-tab="log"]').should('be.visible').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="log"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.viewport(640, 480);
+    cy.get(controls).should(($row) => {
+      expect($row[0]!.scrollWidth).to.be.at.most($row[0]!.clientWidth + 1);
+    });
+    cy.get(close).should('be.visible').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get(drawer).should('not.exist');
+  });
+
+  it('keeps the drawer closable on a route without operational tabs', () => {
+    // A shell log companion has no Canvas contribution and must not fabricate an empty tablist.
+    visitShellRouteWithUiLayout('/cost');
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.contains('[role="menuitemcheckbox"]', /^Operations$/).click();
+    cy.get('[data-slot="bottom-operational-drawer"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Operations');
+    cy.get('[data-slot="bottom-operational-drawer"] [role="tablist"]').should('not.exist');
+    cy.get('[data-slot="bottom-operational-drawer-header"]').should('not.exist');
+    cy.get('[data-slot="bottom-operational-drawer-close"]').click();
+    cy.get('[data-slot="bottom-operational-drawer"]').should('not.exist');
   });
 
   it('resizes the operational drawer without losing the selected expression or saving a draft', () => {

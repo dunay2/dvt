@@ -288,13 +288,13 @@ replaces its Raven-dropdown placement with direct icons in the existing left
 activity rail. Project, File, View, execution and authorization retain their
 owners. Raven becomes noninteractive identity.
 
-| Surface            | Owned concern                                                         | Existing authority                                           |
-| ------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Left shell rail    | Direct global destinations below active Elements/Git; About at bottom | `ListShellNavigationItems`, `GetCompiledApplicationMetadata` |
-| Project menu       | Granted project/environment selection, context and Git                | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`       |
-| File menu          | New Project and active project import/export, files and code          | `CreateProject`, existing Canvas workspace contribution      |
-| View menu          | Explorer/drawer recovery, focus mode and ES/EN preference             | Existing layout commands, `ConfigureApplicationLanguage`     |
-| Execution controls | Existing explicit execution intent/readiness                          | Unchanged operational contribution                           |
+| Surface            | Owned concern                                                            | Existing authority                                                                                 |
+| ------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Left shell rail    | Single Canvas entry, contextual Git, remaining destinations; About below | `ListShellNavigationItems`, `ConfigureCanvasViewportPreferences`, `GetCompiledApplicationMetadata` |
+| Project menu       | Granted project/environment selection, context and Git                   | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`                                             |
+| File menu          | New Project and active project import/export, files and code             | `CreateProject`, existing Canvas workspace contribution                                            |
+| View menu          | Explorer/drawer recovery, focus mode and ES/EN preference                | Existing layout commands, `ConfigureApplicationLanguage`                                           |
+| Execution controls | Existing explicit execution intent/readiness                             | Unchanged operational contribution                                                                 |
 
 ```mermaid
 flowchart LR
@@ -649,8 +649,9 @@ forced-click workaround.
 
 ### Invariants
 
-- Canvas shares the narrow shell rail with other routes. Elements/Git appear
-  first, global route links below, and About at the bottom.
+- Canvas shares the narrow shell rail with other routes. One Canvas entry opens
+  Elements idempotently when already on that route; Git follows separately,
+  remaining global links below, and About at the bottom. No second Elements icon.
 - Canvas graph/document editing commands remain route-local. The existing
   project/file contribution is rendered only inside File, not as loose top-bar
   controls.
@@ -903,13 +904,14 @@ this derived value; it does not reclassify workbench identities or own navigatio
 state.
 
 The Main Canvas activity rail remains accessible in both Canvas and Code. The
-shell provides a stable local activity slot outside the retained panels that
-become hidden and inert. `CanvasExplorer` presents its single existing nav in that
-slot through a public React portal, retaining actions, keyboard behavior,
-disclosure, copy and CSS ownership. Standalone explorers retain their placement.
-The rail keeps its existing flex width; the graph, Code editor and project tree
-keep stable parents and geometry. Sources and Elements return through the existing
-Canvas action, while Git retains the same guarded Code opener.
+shell provides a stable activity slot outside retained panels that become inert.
+`CanvasExplorer` portals Git there; the single global Canvas link opens Elements
+using the existing layout `expand` event. If Code is selected it first invokes the
+existing `codeTab.onCanvas` contribution, without closing its session. Model stays
+selected and its Elements panel opens through the same shared preference. No
+command registry or controller import is added. Standalone explorers retain
+their local Elements control. Collapse remains in the panel header and returns
+focus to Canvas; repeated Canvas activation never collapses or resets width.
 
 During Model authoring the main activity slot is hidden and inert because the
 Model owns its separate explorer lifecycle. There must be one visible activity

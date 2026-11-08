@@ -504,16 +504,14 @@ describe('Canvas explorer', () => {
       const rail = screen.getByRole('navigation');
       expect(host.contains(rail)).toBe(true);
       expect(rail.closest('[inert], [aria-hidden="true"]')).toBeNull();
-      expect(screen.getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')).toBe(
-        'false'
-      );
+      expect(screen.queryByRole('button', { name: 'Elements' })).toBeNull();
       expect(screen.getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')).toBe(
         'true'
       );
       expect(screen.getByLabelText('Retained graph')).toBe(graph);
       expect(screen.getByLabelText('Retained source search')).toBe(search);
       act(() => useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'close' }));
-      expect(screen.queryByRole('navigation')).toBeNull();
+      expect(screen.getByRole('navigation')).toBe(rail);
       act(() => useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' }));
       expect(screen.getByRole('navigation')).toBe(rail);
       act(() => root.render(view(true, false)));

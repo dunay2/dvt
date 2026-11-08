@@ -1,7 +1,8 @@
-import {
-  ShellActivityRailProvider,
-  ShellActivityRailHost,
-} from '../../components/shell/ShellActivityRail';
+import { ShellActivityRailProvider } from '../../components/shell/ShellActivityRail';
+import { LeftNavigationRail } from '../../components/LeftNavigation';
+import { resolveShellTopBarCopy } from '../../components/shell/copy';
+import { MemoryRouter } from 'react-router';
+import { Workflow } from 'lucide-react';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -334,7 +335,23 @@ export function createCanvasShellHarness(): {
         root.render(
           <QueryClientProvider client={queryClient}>
             <ShellActivityRailProvider>
-              <ShellActivityRailHost />
+              <MemoryRouter initialEntries={['/canvas']}>
+                <LeftNavigationRail
+                  navigationModel={{
+                    primaryItems: [
+                      {
+                        to: '/canvas',
+                        label: 'Canvas',
+                        icon: Workflow,
+                        source: 'runtime',
+                        level: 'core',
+                      },
+                    ],
+                    footerItems: [],
+                  }}
+                  copy={resolveShellTopBarCopy('en')}
+                />
+              </MemoryRouter>
               <CanvasShell {...props} />
             </ShellActivityRailProvider>
           </QueryClientProvider>
@@ -347,7 +364,23 @@ export function createCanvasShellHarness(): {
         root.render(
           <QueryClientProvider client={queryClient}>
             <ShellActivityRailProvider>
-              <ShellActivityRailHost />
+              <MemoryRouter initialEntries={['/canvas']}>
+                <LeftNavigationRail
+                  navigationModel={{
+                    primaryItems: [
+                      {
+                        to: '/canvas',
+                        label: 'Canvas',
+                        icon: Workflow,
+                        source: 'runtime',
+                        level: 'core',
+                      },
+                    ],
+                    footerItems: [],
+                  }}
+                  copy={resolveShellTopBarCopy('en')}
+                />
+              </MemoryRouter>
               <CanvasShell {...props} />
             </ShellActivityRailProvider>
           </QueryClientProvider>
