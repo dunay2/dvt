@@ -47,51 +47,75 @@ describe('CanvasShell graph base surface', () => {
     unmountShell();
   });
 
-  it('closes Code through its flush guard and keeps the Code entry available to reopen', async () => {
-    const frames: FrameRequestCallback[] = [];
-    const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      frames.push(callback);
-      return frames.length;
-    });
-    try {
-      const props = await renderShell();
-      const code = navigation.querySelector<HTMLButtonElement>(
-        '[data-slot="canvas-code-main-tab"]'
-      )!;
-      expect(navigation.querySelector('[data-slot="canvas-code-tab-close"]')).toBeNull();
-      await act(async () => code.focus());
-      await act(async () => fireEvent.mouseDown(code, { button: 0 }));
-      const close = within(navigation).getByRole('button', { name: 'Close: Code' });
-      expect(close.getAttribute('data-slot')).toBe('canvas-code-tab-close');
-      expect(close.closest('[role="tab"]')).toBeNull();
-      expect(close.getAttribute('tabindex')).toBe('-1');
-      expect(code.getAttribute('aria-keyshortcuts')).toBe('Delete');
-      await act(async () => fireEvent.click(close));
-      await act(async () => frames.splice(0).forEach((callback) => callback(0)));
-      expect(getCanvasShellState().codeFlush).toHaveBeenCalledOnce();
-      expect(document.activeElement).toBe(
-        navigation.querySelector('[data-slot="canvas-workspace-tab"]')
-      );
-      expect(code.getAttribute('aria-selected')).toBe('false');
-      expect(
-        container.querySelector('[data-testid="canvas-viewport"]')?.closest('[inert]')
-      ).toBeNull();
-      expect(navigation.querySelector('[data-slot="canvas-code-tab-close"]')).toBeNull();
-      expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBe(code);
-      await act(async () => fireEvent.mouseDown(code, { button: 0 }));
-      expect(code.getAttribute('aria-selected')).toBe('true');
-      expect(container.querySelectorAll('[data-testid="sql-context-workbench"]')).toHaveLength(1);
-      expect(props.chromeCommands.onPreviewExecutionPlan).not.toHaveBeenCalled();
-      expect(props.panels.inspectorAuthoring?.onApplyNodeDraft).not.toHaveBeenCalled();
-    } finally {
-      schedule.mockRestore();
+  it.each(['button', 'Delete'] as const)(
+    'closes the Code session and reopens it through File (%s)',
+    async (gesture) => {
+      const frames: FrameRequestCallback[] = [];
+      const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      try {
+        const props = await renderShell();
+        const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+        await act(async () =>
+          fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!)
+        );
+        const code = navigation.querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-code-main-tab"]'
+        )!;
+        const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+        expect(editor).not.toBeNull();
+        await act(async () => code.focus());
+        const close = within(navigation).getByRole('button', { name: 'Close: Code' });
+        expect(close.getAttribute('data-slot')).toBe('canvas-code-tab-close');
+        expect(close.closest('[role="tab"]')).toBeNull();
+        expect(close.getAttribute('tabindex')).toBe('-1');
+        expect(code.getAttribute('aria-keyshortcuts')).toBe('Delete');
+        await act(async () => {
+          if (gesture === 'button') fireEvent.click(close);
+          else fireEvent.keyDown(code, { key: 'Delete' });
+        });
+        await act(async () => frames.splice(0).forEach((callback) => callback(0)));
+        expect(getCanvasShellState().codeFlush).toHaveBeenCalledOnce();
+        expect(document.activeElement).toBe(
+          navigation.querySelector('[data-slot="canvas-workspace-tab"]')
+        );
+        expect(
+          container.querySelector('[data-testid="canvas-viewport"]')?.closest('[inert]')
+        ).toBeNull();
+        expect(navigation.querySelector('[data-slot="canvas-code-tab-close"]')).toBeNull();
+        expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBeNull();
+        expect(container.querySelector('[data-slot="canvas-code-workspace-surface"]')).toBeNull();
+        expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+        const reopen =
+          useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode;
+        expect(reopen).toBeTypeOf('function');
+        await act(async () => reopen?.());
+        const reopened = navigation.querySelector('[data-slot="canvas-code-main-tab"]');
+        expect(reopened).not.toBe(code);
+        expect(reopened?.getAttribute('aria-selected')).toBe('true');
+        expect(navigation.querySelectorAll('[data-slot="canvas-code-main-tab"]')).toHaveLength(1);
+        expect(
+          container.querySelectorAll('[data-slot="canvas-code-workspace-surface"]')
+        ).toHaveLength(1);
+        expect(container.querySelectorAll('[data-testid="sql-context-workbench"]')).toHaveLength(1);
+        expect(container.querySelector('[data-testid="sql-context-workbench"]')).not.toBe(editor);
+        expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+        expect(props.chromeCommands.onPreviewExecutionPlan).not.toHaveBeenCalled();
+        expect(props.panels.inspectorAuthoring?.onApplyNodeDraft).not.toHaveBeenCalled();
+      } finally {
+        schedule.mockRestore();
+      }
     }
-  });
+  );
 
   it.each(['rejected', 'failed'] as const)('retains Code when its flush is %s', async (outcome) => {
     await renderShell();
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!)
+    );
     const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
-    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
     const editor = container.querySelector('[data-testid="sql-context-workbench"]');
     const flush = getCanvasShellState().codeFlush;
     if (outcome === 'rejected') flush.mockResolvedValue(false);
@@ -100,6 +124,7 @@ describe('CanvasShell graph base surface', () => {
       fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
     );
     expect(flush).toHaveBeenCalledOnce();
+    expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBe(code);
     expect(code.getAttribute('aria-selected')).toBe('true');
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
     expect(editor?.closest('[inert]')).toBeNull();
@@ -107,11 +132,13 @@ describe('CanvasShell graph base surface', () => {
 
   it('keeps pending Code open and rejects a stale close after a newer Code activation', async () => {
     await renderShell();
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!)
+    );
     const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
     const canvas = navigation.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-workspace-tab"]'
     )!;
-    await act(async () => fireEvent.mouseDown(code, { button: 0 }));
     const editor = container.querySelector('[data-testid="sql-context-workbench"]');
     let settle!: (accepted: boolean) => void;
     getCanvasShellState().codeFlush.mockImplementation(
@@ -137,32 +164,53 @@ describe('CanvasShell graph base surface', () => {
   it.each([false, true])(
     'delegates Code close to its external owner (accepted: %s)',
     async (accepted) => {
-      const requestClose = vi.fn(async () => accepted);
-      await renderShell({
-        workspaceCommands: { onOpenProjectCode: async () => true },
-        layout: {
-          contextualWorkbench: {
-            id: 'project-code',
-            title: 'Files',
-            closeLabel: 'Close',
-            panel: <div data-testid="authority-owned-code" />,
-            requestClose,
-          },
-        },
+      let ownerOpen = true;
+      const onClose = vi.fn(() => {
+        ownerOpen = false;
       });
+      const workbenchRef = { current: null };
+      const renderOwner = (): Promise<CanvasShellProps> =>
+        renderShell({
+          workspaceCommands: { onOpenProjectCode: async () => true },
+          layout: {
+            contextualWorkbench: buildDbtProjectFileCodeWorkbench({
+              copy: canvasViewCopy,
+              workbenchRef,
+              onClose,
+              reconcilePersistedFile: vi.fn(async () => ({
+                kind: 'fresh' as const,
+                analysisSha256: 'a'.repeat(64),
+                projectContentSetSha256: 'b'.repeat(64),
+              })),
+              projectRoot: 'analytics',
+              open: ownerOpen,
+            }),
+          },
+        });
+      await renderOwner();
       const code = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-code-main-tab"]'
       )!;
       await act(async () => fireEvent.mouseDown(code, { button: 0 }));
+      const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+      expect(editor?.getAttribute('data-file-scope')).toBe('dbt-project-files');
+      getCanvasShellState().codeFlush.mockResolvedValue(accepted);
       await act(async () =>
         fireEvent.click(navigation.querySelector('[data-slot="canvas-code-tab-close"]')!)
       );
-      expect(requestClose).toHaveBeenCalledOnce();
-      expect(getCanvasShellState().codeFlush).not.toHaveBeenCalled();
-      expect(code.getAttribute('aria-selected')).toBe(String(!accepted));
-      expect(
-        container.querySelector('[data-testid="authority-owned-code"]')?.closest('[inert]') != null
-      ).toBe(accepted);
+      expect(getCanvasShellState().codeFlush).toHaveBeenCalledOnce();
+      expect(onClose).toHaveBeenCalledTimes(accepted ? 1 : 0);
+      await renderOwner();
+      if (accepted) {
+        expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBeNull();
+        expect(container.querySelector('[data-slot="canvas-code-workspace-surface"]')).toBeNull();
+        expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+      } else {
+        expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBe(code);
+        expect(code.getAttribute('aria-selected')).toBe('true');
+        expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+        expect(editor?.closest('[inert]')).toBeNull();
+      }
     }
   );
 
@@ -215,16 +263,8 @@ describe('CanvasShell graph base surface', () => {
 
   it('enters one retained project Code workspace from Git and the File menu', async () => {
     await renderShell();
-    const codeTab = navigation.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-code-main-tab"]'
-    );
-    expect(codeTab).not.toBeNull();
-    expect(codeTab?.getAttribute('aria-selected')).toBe('false');
-    const initialCodePanel = document.getElementById(codeTab?.getAttribute('aria-controls') ?? '');
-    expect(initialCodePanel?.getAttribute('role')).toBe('tabpanel');
-    expect(initialCodePanel?.getAttribute('aria-hidden')).toBe('true');
-    expect(initialCodePanel?.hasAttribute('inert')).toBe(true);
-    expect(initialCodePanel?.childElementCount).toBe(0);
+    expect(navigation.querySelector('[data-slot="canvas-code-main-tab"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-code-workspace-surface"]')).toBeNull();
     expect(container.querySelector('[data-testid="project-files-explorer"]')).toBeNull();
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
     const activityRail = container
@@ -238,9 +278,12 @@ describe('CanvasShell graph base surface', () => {
     });
     const editor = container.querySelector('[data-testid="sql-context-workbench"]');
     expect(editor).not.toBeNull();
+    const codeTab = navigation.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-code-main-tab"]'
+    );
     expect(codeTab?.getAttribute('aria-selected')).toBe('true');
     const codePanel = document.getElementById(codeTab?.getAttribute('aria-controls') ?? '');
-    expect(codePanel).toBe(initialCodePanel);
+    expect(codePanel).not.toBeNull();
     expect(codePanel?.getAttribute('role')).toBe('tabpanel');
     expect(codePanel?.getAttribute('aria-labelledby')).toBe(codeTab?.id);
     expect(codePanel?.contains(editor)).toBe(true);
