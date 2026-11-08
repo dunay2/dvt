@@ -534,6 +534,13 @@ layout-only reference changes and schedules no automatic compilation. Failures
 remain visible and a subsequent explicit selection can retry. Older completions
 cannot overwrite a newer request.
 
+The ready SQL value is an authorized read snapshot, not a live file watcher.
+The bundle carries Canvas/query/scope identity, without a file revision or
+permission epoch. Opening project Code retains the Canvas subtree, so a file
+update alone does not invalidate that snapshot. Selecting canonical output and
+then SQL revalidates current file authority and permissions through the API.
+No polling, new authority store or automatic compilation is introduced.
+
 Canonical JSON and ready SQL use one shared Monaco rendering path. One compact
 row contains the accessible output selector using the shared Inspector form
 typography and native-select styles. Document schema and digest prose are not

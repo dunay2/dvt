@@ -297,6 +297,54 @@ describe('Direct shell navigation', () => {
     });
   });
 
+  it('dismisses About while its trigger tooltip is still running a closing animation', async () => {
+    // Independent layer contexts let a closing Tooltip consume Escape before the active Dialog.
+    const style = document.createElement('style');
+    style.textContent = `
+      [data-slot="tooltip-content"][data-state="instant-open"] {
+        animation-name: shellTooltipEnter; animation-duration: 10ms;
+      }
+      [data-slot="tooltip-content"][data-state="closed"] {
+        animation-name: shellTooltipExit; animation-duration: 1s;
+      }
+    `;
+    document.head.append(style);
+    // Presence keeps a browser-live declaration; jsdom exposes a snapshot instead.
+    const readComputedStyle = getComputedStyle;
+    const liveStyles = vi
+      .spyOn(globalThis, 'getComputedStyle')
+      .mockImplementation((element, pseudo) => {
+        const computed = readComputedStyle(element, pseudo);
+        Object.defineProperty(computed, 'animationName', {
+          configurable: true,
+          get: () => readComputedStyle(element, pseudo).animationName,
+        });
+        return computed;
+      });
+    try {
+      const trigger = within(container).getByRole('button', { name: 'About Raven' });
+      await act(async () => trigger.focus());
+      const tooltip = await waitFor(() => {
+        const content = document.querySelector<HTMLElement>('[data-slot="tooltip-content"]');
+        expect(content).not.toBeNull();
+        return content!;
+      });
+      await act(async () => fireEvent.click(trigger));
+      expect(within(document.body).getByRole('dialog')).not.toBeNull();
+      expect(tooltip.isConnected).toBe(true);
+      expect(tooltip.getAttribute('data-state')).toBe('closed');
+      expect(getComputedStyle(tooltip).animationName).toBe('shellTooltipExit');
+      await act(async () => fireEvent.keyDown(document, { key: 'Escape' }));
+      await waitFor(() => {
+        expect(within(document.body).queryByRole('dialog')).toBeNull();
+        expect(document.activeElement).toBe(trigger);
+      });
+    } finally {
+      liveStyles.mockRestore();
+      style.remove();
+    }
+  });
+
   it('exposes the same destination name through keyboard-focus tooltip', async () => {
     const link = within(container).getByRole('link', { name: 'Runs' });
     await act(async () => {

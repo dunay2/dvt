@@ -223,9 +223,11 @@ describe('Shell layout contract', () => {
         expect(rect.bottom).to.be.at.most(400);
       })
       .focus();
+    cy.get('[data-slot="tooltip-content"]').should('be.visible');
     pressNativeKey('Enter');
     cy.get('[data-slot="shell-about-dialog"]').should('be.visible');
     pressNativeKey('Escape');
+    cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
     cy.get('[data-slot="shell-about-command"]').should('be.focused');
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 640);
   });

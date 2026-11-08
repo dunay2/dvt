@@ -1,6 +1,6 @@
 ---
 title: Authorized Canvas Transform SQL inspection
-status: draft
+status: active
 date: 2026-11-08
 owners:
   - API
@@ -120,10 +120,15 @@ malformed response cannot produce partial SQL.
 
 Passive canonical JSON inspection does not request SQL. Explicit SQL selection
 uses the current authorized preparation and existing native analyzer reuse.
-There is no new persistent compiled flag or server SQL cache. Web lifecycle
-guards withhold responses after identity, graph, scope or accepted file
-authority changes, and after the consumer closes. A missing provider leaves
-canonical inspection available and SQL unavailable.
+There is no new persistent compiled flag or server SQL cache. SQL is a read
+snapshot authorized at its last explicit request. Web lifecycle guards withhold
+responses after transform/graph references or scoped query bindings change,
+and after the consumer unmounts. The SQL view does not subscribe to upstream
+file-revision or permission-revocation events. The retained Canvas surface can
+keep its last snapshot while Code is active; an accepted file update alone does
+not invalidate that snapshot. Returning to canonical output and selecting SQL
+again rechecks current producer authority and permission. A missing provider
+leaves canonical inspection available and SQL unavailable.
 
 ## Recorded Validation
 
@@ -161,7 +166,7 @@ unimplemented retry path skipped. There were zero hash mismatches. These
 unchanged skips are not hidden or counted as executed scenarios. No Docker or
 database migration was required for these checks.
 
-## Remaining Acceptance Boundary
+## Acceptance Evidence Boundaries
 
 Controlled SQL-viewer and LIVE mixed-producer Cypress consumers are implemented
 but their final browser acceptance is not claimed by this record. Their setup

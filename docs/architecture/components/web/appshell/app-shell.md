@@ -232,6 +232,19 @@ flowchart TB
   Rail --> Link
 ```
 
+Navigation boundary rules:
+
+- `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
+  fixed shell footer item definitions;
+- only plugin-contributed `placement.kind === 'shell-nav'` views become
+  `primaryItems` inside the shell model;
+- Canvas owns Code, Lineage, Diff, Artifacts and Canvas Runs sessions. The
+  shell Git entry delegates to the existing Code command; it does not own a
+  second Code route or workbench session;
+- shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
+- the rail consumes render-ready navigation items and section descriptors,
+  preserving navigation chrome and routing as its owned concern.
+
 ## Bottom Operational Drawer Ownership
 
 The bottom drawer now follows the same separation rule as the rest of the shell:
@@ -257,6 +270,15 @@ flowchart TB
 This composition recovers content space at the same drawer height. The shell
 frame still owns the resize separator and layout persistence; the drawer keeps
 the existing hide command, tab visibility commands and feed subscription.
+
+### Hidden Operational Tab Recovery
+
+When every operational tab is hidden, the compact controls row exposes a visible
+Restore tabs button. It opens the standard application dropdown by pointer or
+keyboard and delegates to the existing tab visibility command. Visible tabs retain
+their contextual restoration menu. Both presentations share one item renderer and
+the same restore callback. No browser context-menu shortcut is required to recover
+from the all-hidden state; the drawer close control remains separate.
 
 ### Operational drawer layout command
 
@@ -357,18 +379,6 @@ Rules for the shared seam:
   that shared semantics plus shared copy;
 - the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
 - the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
-
-Rules for this seam:
-
-- `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
-  fixed shell footer item definitions;
-- only plugin-contributed `placement.kind === 'shell-nav'` views become
-  `primaryItems` inside the shell model;
-- Canvas-scoped Code, Lineage, Diff, Artifacts, and Canvas Runs are owned by
-  the Canvas workbench tab rail, not by shell navigation;
-- shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
-- the rail consumes render-ready `{ to, label, icon }` items and stays focused
-  on navigation chrome and routing behavior.
 
 ## Shell Workspace Context Component
 
@@ -721,6 +731,40 @@ Global links belong to `LeftNavigation`, not this dialog or TopBar.
 The About dialog shows the compiled browser bundle version from
 `VITE_APP_VERSION` and the optional build date from `VITE_APP_BUILD_DATE`. It
 must not call backend `/version`, mutate workspace scope, or become a route.
+
+### Shared Overlay Interaction Authority
+
+Declared Radix primitives whose dependency graph reaches `DismissableLayer` must
+resolve to one physical installed layer implementation. Dialogs, alerts, menus,
+popovers, selects, hover cards, navigation menus and tooltips compose within the
+same browser document; their ordering cannot be split across independent layer
+contexts.
+
+A tooltip remains mounted while its closing animation runs. Separate dismissal
+implementations can each consider their own layer highest and let that closing
+tooltip consume Escape before an active dialog sees it. This prevented About
+from closing even though the browser delivered a trusted Escape event. Supported
+direct package versions and the governed lock align the existing primitives on
+one authority; the fix adds no Escape listener, forced transitive override,
+animation removal, timing wait or presentation store.
+
+```mermaid
+flowchart LR
+  Tooltip[Closing tooltip] --> Shared[One installed dismissal layer]
+  Dialog[Active dialog or alert] --> Shared
+  Menu[Menu popover select and navigation] --> Shared
+  Shared --> Order[One ordered layer context]
+  Order --> Escape[Escape dismisses the active overlay]
+  Escape --> Focus[Existing trigger focus restoration]
+```
+
+The installed-dependency architecture test includes every declared Radix root
+that reaches this authority. The real About consumer also tests Escape while a
+tooltip exit animation is retained. Native shell journeys retain trusted
+keyboard input and verify dialog dismissal, trigger focus, section-menu Escape
+and pending Model edit guards without waiting for animations to finish. This
+dependency alignment repairs those existing interactions; it does not integrate
+unrelated dependency PRs or alter the governing queries.
 
 ### Multi-Language Strategy
 
@@ -1356,12 +1400,3 @@ See [Workbench UX Canon User Stories](../workbench-ux-canon-component.md#section
 - Claiming implementation of Insert or other absent shell capabilities.
 
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
-
-### Hidden operational tab recovery
-
-When every operational tab is hidden, the compact controls row exposes a visible
-Restore tabs button. It opens the standard application dropdown by pointer or
-keyboard and delegates to the existing tab visibility command. Visible tabs retain
-their contextual restoration menu. Both presentations share one item renderer and
-the same restore callback. No browser context-menu shortcut is required to recover
-from the all-hidden state; the drawer close control remains separate.

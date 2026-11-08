@@ -42,8 +42,11 @@ their distinct responsibilities.
   the existing row route preserves its prior 422 wire behavior. No permission,
   grant, semantic guard or PostgreSQL support rule is relaxed.
 - Validate the strict V1 response, exact target identity and digest in the Web
-  adapter. Retained UI state does not authorize a query. Identity, graph, scope,
-  file-authority changes and late completions invalidate visible SQL.
+  adapter. Retained UI state does not authorize a query. Changed transform/graph
+  references or scoped query bindings invalidate visible SQL; late completions
+  cannot replace a newer input. SQL remains the authorized snapshot of its last
+  request. File updates and permission revocations have no independent push
+  subscription into this view; explicit reselect revalidates those conditions.
 - Keep passive canonical JSON inspection independent of the SQL query provider.
   Reuse existing native analyzer caching only within its existing verified
   scope/revision rules. Do not add a compiled boolean or promise cache survival

@@ -153,8 +153,13 @@ flowchart LR
 Canonical JSON remains passive. Selecting SQL owns loading and currentness;
 pending identical selections are deduplicated, and a later SQL selection checks
 the current authorized publication using the existing native analyzer cache.
-Owner, accepted file revision, graph or semantic changes invalidate visible SQL.
-Late or unmounted results cannot become current. An unavailable query context
+SQL is a read snapshot authorized at the last explicit request. Changed
+transform/graph references or scoped query bindings invalidate its visible
+result; late or unmounted completions cannot become current. The SQL view does
+not subscribe to upstream file revisions or permission-revocation events.
+An accepted file update alone does not refresh a retained snapshot; returning
+to canonical output and selecting SQL again revalidates the current publication
+and permission. An unavailable query context
 rejects SQL inspection rather than lowering external publications locally.
 
 ## Transform LIVE preview
