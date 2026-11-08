@@ -764,7 +764,12 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines', { timeout: 20_000 })
       .should('contain.text', 'customer-1')
       .and(($lines) => {
-        expect($lines.text(), 'Monaco displays the protected SQL projection').to.match(/\bjoin\b/i);
+        // Monaco stores each display line separately; concatenation would turn "i0" + "JOIN" into "i0JOIN".
+        const displayedSql = $lines
+          .toArray()
+          .map((line) => line.textContent ?? '')
+          .join('\n');
+        expect(displayedSql, 'Monaco displays the protected SQL projection').to.match(/\bjoin\b/i);
       });
     // This deterministic fixture must revalidate the same complete compiled result on explicit reselect.
     cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');

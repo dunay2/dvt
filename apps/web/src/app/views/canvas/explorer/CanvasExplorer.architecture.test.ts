@@ -1,5 +1,6 @@
 /** Owned concern: the shared explorer stays a presentation component, not a second authoring rail. */
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import frame from './CanvasExplorer.tsx?raw';
 import template from './CanvasExplorer.templates.tsx?raw';
 import list from './CanvasExplorerList.tsx?raw';
@@ -7,10 +8,34 @@ import connections from './CanvasExplorerConnections.tsx?raw';
 import graph from './CanvasGraphExplorer.tsx?raw';
 import relational from './CanvasRelationalExplorer.tsx?raw';
 import catalogue from '../CanvasRelationalTreeSourceCatalogue.tsx?raw';
+import catalogueTemplate from '../CanvasRelationalTreeSourceCatalogue.templates.tsx?raw';
 import viewport from '../CanvasViewport.tsx?raw';
 import resizable from '../../../components/ui/resizable.tsx?raw';
 
+const explorerStyles = readFileSync(
+  new URL('./CanvasExplorer.module.css', import.meta.url),
+  'utf8'
+);
+
 describe('Canvas explorer ownership', () => {
+  it('keeps every shared catalogue CSS class linked for both real presentation consumers', () => {
+    // Native GH-3765 proof found the internal occurrence control stacked after its live shared selector was removed.
+    const declared = new Set(
+      Array.from(explorerStyles.matchAll(/\.([a-zA-Z_][\w-]*)/g), (match) => match[1])
+    );
+    for (const consumer of [template, catalogueTemplate]) {
+      for (const match of consumer.matchAll(/styles\.([a-zA-Z_][\w]*)/g)) {
+        expect(declared.has(match[1]!), `Live shared class ${match[1]} must be declared`).toBe(
+          true
+        );
+      }
+    }
+    expect(catalogueTemplate).toContain('styles.actionRow');
+    expect(explorerStyles).toMatch(/\.itemRow\s*\{[^}]*composes:\s*actionRow;/);
+    expect(explorerStyles).not.toMatch(/\.sourceRow\b/);
+    expect(catalogueTemplate).not.toMatch(/styles\.sourceRow|style=\{|className="/);
+  });
+
   it('keeps shared resize presentation in its CSS module', () => {
     // GH-3818: keep the resize primitive from accumulating visual policy inside React again.
     expect(resizable).toContain("'./resizable.module.css'");

@@ -229,11 +229,15 @@
   margin: 0;
   list-style: none;
 }
-.itemRow {
-  position: relative;
+.actionRow {
   display: flex;
   min-width: 0;
   align-items: center;
+  gap: var(--spacing);
+}
+.itemRow {
+  composes: actionRow;
+  position: relative;
   margin: var(--spacing) 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
