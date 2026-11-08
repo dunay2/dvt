@@ -3,16 +3,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { isRecord } from '../types/canonicalGuards';
+import { areCanvasPositionsEqual, type CanvasPosition } from '../types/canvasPositions';
 
 import {
   createCanvasExecutionSelectionIntent,
   type CanvasExecutionSelectionIntent,
 } from '../types/canvasExecutionSelection';
-
-type CanvasPosition = {
-  x: number;
-  y: number;
-};
 
 type CanvasViewportState = CanvasPosition & {
   zoom: number;
@@ -40,24 +36,6 @@ function buildWorkspaceCanvasLayout(
   patch: Partial<WorkspaceCanvasLayout>
 ): WorkspaceCanvasLayout {
   return { viewport: null, nodePositions: EMPTY_NODE_POSITIONS, ...current, ...patch };
-}
-
-function areCanvasNodePositionsEqual(
-  left: Record<string, CanvasPosition>,
-  right: Record<string, CanvasPosition>
-): boolean {
-  const leftEntries = Object.entries(left);
-  const rightEntries = Object.entries(right);
-
-  if (leftEntries.length !== rightEntries.length) {
-    return false;
-  }
-
-  return leftEntries.every(([nodeId, position]) => {
-    const nextPosition = right[nodeId];
-
-    return nextPosition != null && position.x === nextPosition.x && position.y === nextPosition.y;
-  });
 }
 
 function areOrderedIdsEqual(left: readonly string[], right: readonly string[]): boolean {
@@ -204,10 +182,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             }
           }
 
-          if (
-            currentLayout != null &&
-            areCanvasNodePositionsEqual(currentPositions, nextPositions)
-          ) {
+          if (currentLayout != null && areCanvasPositionsEqual(currentPositions, nextPositions)) {
             return state;
           }
 

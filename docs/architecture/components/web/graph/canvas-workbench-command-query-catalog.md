@@ -117,13 +117,13 @@ flowchart LR
 The [global gesture rule](https://github.com/dunay2/dvt/issues/3747#issuecomment-6715173265)
 keeps single-click inspection distinct from double-click node entry. A pointer
 click selects the card visually through React Flow immediately.
-`CanvasNodeShell` waits 500 ms before dispatching the existing `InspectCanvasNode`
+`useCanvasNodeActivation` waits 500 ms before dispatching the existing `InspectCanvasNode`
 command. A second click or double click cancels that pending inspection. Double
 click invokes only a genuine node-open action, such as the native Model editor;
 Sources and file-backed dbt models do not open Properties through double click.
 Single-click Properties retains its existing Code section and permission guards.
 
-The shell owns arbitration once, including cancellation for embedded controls,
+The shell composes one gesture owner, including cancellation for embedded controls,
 context menus, conflicting gestures, node replacement and unmount. A new pointer
 or keyboard intent on another card or toolbar cancels pending inspection too.
 Document listeners exist only while that gesture is pending and are removed on

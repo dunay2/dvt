@@ -1,12 +1,5 @@
 /** Owned concern: render the React Flow node shell around a precomputed Canvas node body. */
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type DragEventHandler,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-} from 'react';
+import type { DragEventHandler, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
@@ -21,13 +14,9 @@ import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
-import {
-  isCanvasElement,
-  isCanvasNodeEmbeddedControlTarget,
-} from './canvasNodeInteractionBoundary';
+import { isCanvasElement } from './canvasNodeInteractionBoundary';
+import { useCanvasNodeActivation } from './useCanvasNodeActivation';
 import styles from './CanvasNodeShell.module.css';
-
-const SINGLE_CLICK_DELAY_MS = 500;
 
 type CanvasNodeShellProps = Readonly<{
   children: ReactNode;
@@ -64,60 +53,11 @@ export function CanvasNodeShell({
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
-  const pendingClick = useRef<{
-    timer: ReturnType<typeof setTimeout>;
-    ownerDocument: Document;
-  } | null>(null);
-  const selectNode = useRef(onSelectNode);
-  selectNode.current = onSelectNode;
-  const cancelPendingClick = useCallback((): void => {
-    const pending = pendingClick.current;
-    if (pending == null) return;
-    clearTimeout(pending.timer);
-    pending.ownerDocument.removeEventListener('pointerdown', cancelPendingClick, true);
-    pending.ownerDocument.removeEventListener('keydown', cancelPendingClick, true);
-    pendingClick.current = null;
-  }, []);
-  useEffect(() => cancelPendingClick, [cancelPendingClick, contextMenuModel.target.nodeId]);
-  const activation = onOpenNode != null ? 'open' : onSelectNode != null ? 'inspect' : undefined;
-  const handleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    cancelPendingClick();
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.detail > 1 ||
-      isCanvasNodeEmbeddedControlTarget(event.target)
-    ) {
-      return;
-    }
-    if (event.detail === 0) {
-      selectNode.current?.();
-      return;
-    }
-    if (onSelectNode == null) return;
-    const ownerDocument = event.currentTarget.ownerDocument;
-    pendingClick.current = {
-      ownerDocument,
-      timer: setTimeout(() => {
-        cancelPendingClick();
-        selectNode.current?.();
-      }, SINGLE_CLICK_DELAY_MS),
-    };
-    ownerDocument.addEventListener('pointerdown', cancelPendingClick, {
-      capture: true,
-      once: true,
-    });
-    ownerDocument.addEventListener('keydown', cancelPendingClick, { capture: true, once: true });
-  };
-
-  const handleDoubleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    cancelPendingClick();
-    if (isCanvasNodeEmbeddedControlTarget(event.target)) {
-      return;
-    }
-
-    onOpenNode?.();
-  };
+  const { activation, onClick, onDoubleClick, cancelPendingClick } = useCanvasNodeActivation(
+    contextMenuModel.target.nodeId,
+    onSelectNode,
+    onOpenNode
+  );
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
     cancelPendingClick();
@@ -141,8 +81,8 @@ export function CanvasNodeShell({
           aria-label={contextMenuModel.target.nodeName}
           aria-keyshortcuts={activation == null ? undefined : 'Enter'}
           className={cn(styles.root, 'relative group/canvas-node')}
-          onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
+          onClick={onClick}
+          onDoubleClick={onDoubleClick}
           onContextMenu={handleContextMenu}
           onDragOver={onDragOver}
           onDrop={onDrop}

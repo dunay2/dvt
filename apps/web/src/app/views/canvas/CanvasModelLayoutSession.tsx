@@ -52,7 +52,6 @@ export function CanvasModelLayoutSession({
   if (layoutKey != null && !hydrated) return null;
   return (
     <RelationalLayoutSession
-      key={layoutKey}
       isolated={layoutKey != null}
       initialPositions={positions ?? initialPositions}
       onPositionsChange={publish}

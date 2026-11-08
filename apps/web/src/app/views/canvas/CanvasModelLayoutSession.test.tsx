@@ -10,6 +10,7 @@ import {
 import { projectionTarget } from './CanvasRelationalTreeWorkbench.operation-drag.test-support';
 import { CanvasModelLayoutSession, canvasModelLayoutKey } from './CanvasModelLayoutSession';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
+import { CANVAS_RELATIONAL_OUTPUT_POSITION_ID } from './canvasRelationalTreeGeometry';
 import {
   COPY,
   container,
@@ -97,6 +98,45 @@ describe('Model layout persistence through the real Workbench', () => {
     await render();
     expect(positions()).toEqual(moved);
     expect(authoring.onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+  it('retains movement extent when settled positions are echoed by persistence', async () => {
+    const outputId = CANVAS_RELATIONAL_OUTPUT_POSITION_ID;
+    useCanvasInteractionStore.getState().setCanvasNodePositions(firstKey, {
+      [outputId]: { x: 2000, y: 400 },
+    });
+    await render();
+    const layout = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-tree-layout"]'
+    )!;
+    const width = Number.parseFloat(layout.style.width);
+    const before = positions()[outputId]!;
+    expect(width).toBeGreaterThan(2000);
+    await act(async () => {
+      container
+        .querySelector<HTMLElement>(`[data-relational-card-id="${outputId}"]`)!
+        .dispatchEvent(
+          new KeyboardEvent('keydown', {
+            bubbles: true,
+            key: 'ArrowLeft',
+            altKey: true,
+            shiftKey: true,
+          })
+        );
+    });
+    expect(positions()[outputId]).toEqual({ ...before, x: before.x - 40 });
+    expect(
+      useCanvasInteractionStore.getState().canvasLayouts[firstKey]?.nodePositions[outputId]
+    ).toEqual({ ...before, x: before.x - 40 });
+    expect(Number.parseFloat(layout.style.width)).toBe(width);
+    await act(async () => {
+      useCanvasInteractionStore.getState().setCanvasNodePositions(firstKey, {
+        [outputId]: { x: 2200, y: 400 },
+      });
+    });
+    expect(positions()[outputId]).toEqual({ x: 2200, y: 400 });
+    expect(Number.parseFloat(layout.style.width)).toBeGreaterThan(width);
+    expect(authoring.onApplyNodeDraft).not.toHaveBeenCalled();
+    expect(handle.current?.hasUnappliedChanges).toBe(false);
   });
   it('waits for layout hydration before admitting interactive movement', async () => {
     useCanvasInteractionStore.setState({ _hasHydrated: false });

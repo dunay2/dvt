@@ -165,13 +165,20 @@ replacement publish nothing. An absent-to-empty position map creates a local
 record once; subsequent equivalent writes are suppressed. Local coordinates
 survive Model close/reopen and browser reload without semantic Apply.
 
+One pure Canvas-position value predicate serves store write suppression, outer
+Canvas persistence, and relational layout restoration. Equivalent record or Map
+coordinates are acknowledgements of the current placement; they do not reset
+movement-owned extent or expansion. A genuinely changed restored position map
+retains the existing reset behavior. The full Workbench owns scoped lifetime;
+the persistence adapter does not add a second keyed lifetime boundary.
+
 ```mermaid
 flowchart LR
   Scope[Workspace Canvas and Model identity] --> Query[GetCanvasLayout]
   Query --> Ready{Store hydrated?}
   Ready -->|no| Wait[Defer interactive mount]
   Ready -->|yes| Seed[Local record or legacy seed when absent]
-  Seed --> Session[Keyed RelationalLayoutSession]
+  Seed --> Session[RelationalLayoutSession inside keyed Workbench]
   Session -->|settled movement| Persist[PersistCanvasLayout]
   Persist --> Store[Existing canvasInteractionStore]
 ```
