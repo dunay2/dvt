@@ -15,8 +15,8 @@ describe('SourceImportWizard plugin options', () => {
     harness = createSourceImportWizardHarness();
   });
 
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
   });
 
   it('requests column metadata by default when attaching selected sources', async () => {

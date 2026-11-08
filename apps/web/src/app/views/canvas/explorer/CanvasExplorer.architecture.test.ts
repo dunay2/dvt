@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import frame from './CanvasExplorer.tsx?raw';
 import template from './CanvasExplorer.templates.tsx?raw';
 import list from './CanvasExplorerList.tsx?raw';
+import connections from './CanvasExplorerConnections.tsx?raw';
 import graph from './CanvasGraphExplorer.tsx?raw';
 import relational from './CanvasRelationalExplorer.tsx?raw';
 import catalogue from '../CanvasRelationalTreeSourceCatalogue.tsx?raw';
@@ -41,5 +42,17 @@ describe('Canvas explorer ownership', () => {
     expect(frame).toContain('state.canvasExplorer');
     expect(frame).toContain('state.dispatchCanvasExplorer');
     expect(template).not.toMatch(/useUiLayoutStore|useEffect|useLayoutEffect/);
+  });
+
+  it('keeps shared connection acquisition and graph writes outside catalogue presentation', () => {
+    // GH-3765: the sidebar must consume the shared scoped query, never create a competing cache/provider rail.
+    for (const source of [list, template, connections]) {
+      expect(source).not.toMatch(
+        /fetch\(|useQuery\(|useMutation\(|listWarehouseConnections\(|credentialRef|setNodes|addNode/
+      );
+      expect(source).not.toMatch(/localStorage|sessionStorage|createJSONStorage/);
+    }
+    expect(relational).toContain('CanvasRelationalTreeSourceCatalogue');
+    expect(relational).not.toContain('CanvasExplorerList');
   });
 });

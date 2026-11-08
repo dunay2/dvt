@@ -13,6 +13,7 @@ import { CanvasGraphExplorer } from './CanvasGraphExplorer';
 import { CanvasExplorer } from './CanvasExplorer';
 import { ShellActivityRailProvider } from '../../../components/shell/ShellActivityRail';
 import { CanvasExplorerList } from './CanvasExplorerList';
+import { CanvasExplorerConnections } from './CanvasExplorerConnections';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 
@@ -190,7 +191,7 @@ describe('Canvas explorer', () => {
     );
     expect(screen.getAllByRole('searchbox')).toHaveLength(1);
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Import sources' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Configure connections' }));
     });
     expect(onImport).toHaveBeenCalledExactlyOnceWith();
     const addModel = screen.getByRole('button', { name: 'Add model' });
@@ -198,20 +199,31 @@ describe('Canvas explorer', () => {
       fireEvent.click(addModel);
     });
     expect(onAddModel).toHaveBeenCalledExactlyOnceWith(addModel);
-    expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Connections' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
   });
 
-  it('collapses categories independently and retains disclosure through search and panel changes', () => {
+  it('retains independent project sections, model details and search through dock changes', () => {
+    // The unified catalogue must retain UI disclosure without invoking a placement command.
     const onSelect = vi.fn();
     render(
       <CanvasExplorer
         elements={
           <CanvasExplorerList
             items={[
-              { id: 'orders', label: 'Orders', category: 'Sources' },
-              { id: 'revenue', label: 'Revenue', category: 'Models', selected: true },
+              {
+                id: 'orders',
+                label: 'Orders',
+                isSource: true,
+                details: [{ label: 'object', value: 'raw.orders' }],
+              },
+              { id: 'revenue', label: 'Revenue', selected: true },
             ]}
+            connections={
+              <CanvasExplorerConnections
+                state={{ status: 'ready', connections: [], refreshing: false }}
+              />
+            }
             onSelect={onSelect}
           />
         }
@@ -219,41 +231,46 @@ describe('Canvas explorer', () => {
         <input aria-label="Retained graph" />
       </CanvasExplorer>
     );
-    const sources = screen.getByRole('button', { name: 'Elements: Sources' });
-    const models = screen.getByRole('button', { name: 'Elements: Models' });
+    const connections = screen.getByRole('button', { name: 'Connections' });
+    const models = screen.getByRole('button', { name: 'Models' });
     const graph = screen.getByLabelText('Retained graph');
     act(() => {
-      fireEvent.click(sources);
+      fireEvent.click(connections);
+      fireEvent.click(screen.getByRole('button', { name: 'Details: Orders' }));
     });
-    expect(sources.getAttribute('aria-expanded')).toBe('false');
+    expect(connections.getAttribute('aria-expanded')).toBe('true');
     expect(models.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.queryByRole('button', { name: 'Orders' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Revenue' }).getAttribute('aria-pressed')).toBe(
       'true'
     );
     act(() => {
       fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Revenue' } });
     });
-    expect(screen.queryByRole('button', { name: 'Elements: Sources' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Orders' })).toBeNull();
     act(() => {
-      fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } });
       fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
     });
     expect(screen.queryByRole('searchbox')).toBeNull();
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
     });
-    const restoredSources = screen.getByRole('button', { name: 'Elements: Sources' });
-    expect(restoredSources.getAttribute('aria-expanded')).toBe('false');
+    expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('Revenue');
+    expect(screen.getByRole('button', { name: 'Connections' }).getAttribute('aria-expanded')).toBe(
+      'true'
+    );
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Elements: Models' }));
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } });
     });
-    expect(screen.queryByRole('button', { name: 'Revenue' })).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Details: Orders' }).getAttribute('aria-expanded')
+    ).toBe('true');
     act(() => {
-      fireEvent.click(restoredSources);
+      fireEvent.click(screen.getByRole('button', { name: 'Models' }));
     });
-    expect(screen.getByRole('button', { name: 'Orders' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Revenue' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Orders' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Connections' }).getAttribute('aria-expanded')).toBe(
+      'true'
+    );
     expect(screen.getByLabelText('Retained graph')).toBe(graph);
     expect(onSelect).not.toHaveBeenCalled();
   });
@@ -318,7 +335,7 @@ describe('Canvas explorer', () => {
       );
       expect(screen.queryByRole('button', { name: /Placed Orders/ })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Revenue 2' })).toBeNull();
-      expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Connections' })).toBeTruthy();
       expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
       const row = screen.getByRole('button', { name: 'Orders' });
       expect(row.draggable).toBe(writable);
@@ -692,7 +709,15 @@ describe('Canvas explorer', () => {
       },
       status: 'idle',
       tags: [],
-      metadata: { schema: 'raw', connectionName: 'Warehouse' },
+      metadata: {
+        schema: 'raw',
+        connectionName: 'Warehouse',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse-id',
+        },
+      },
     };
     const catalogue = [source];
     const onSelect = vi.fn();
@@ -726,7 +751,7 @@ describe('Canvas explorer', () => {
     expect(onSelect).toHaveBeenCalledExactlyOnceWith('registered');
     act(() =>
       root.render(
-        view(true, [{ ...source, metadata: { schema: 'reporting', connectionName: 'Warehouse' } }])
+        view(true, [{ ...source, metadata: { ...source.metadata, schema: 'reporting' } }])
       )
     );
     expect(screen.getByRole('button', { name: 'Orders reporting · Warehouse' })).toBe(row);
@@ -806,8 +831,8 @@ describe('Canvas explorer', () => {
     act(() => {
       fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'missing' } });
     });
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
-    expect(screen.getByText('No matching elements.')).toBeTruthy();
+    expect(container.querySelectorAll('[data-element-id]')).toHaveLength(0);
+    expect(screen.getByText('No matching models.')).toBeTruthy();
   });
 
   it('does not dispatch selection while navigation is disabled by pending edits', () => {

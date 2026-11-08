@@ -81,7 +81,7 @@ describe('source import search-page recovery', () => {
           ?.getAttribute('aria-checked')
       ).toBe('true');
     } finally {
-      harness.cleanup();
+      await harness.cleanup();
       vi.useRealTimers();
     }
   });
@@ -116,7 +116,7 @@ describe('source import search-page recovery', () => {
       expect(search).toHaveBeenCalledTimes(1);
       expect(search.mock.calls[0]?.[0]).not.toHaveProperty('cursor');
     } finally {
-      harness.cleanup();
+      await harness.cleanup();
       vi.useRealTimers();
     }
   });

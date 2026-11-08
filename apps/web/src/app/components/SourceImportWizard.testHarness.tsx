@@ -2,15 +2,21 @@
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
+import {
+  createTestQueryClient,
+  waitForReactQuery,
+  withTestQueryClient,
+} from '../../testing/reactQueryHarness';
 
 import type {
   ImportSourcesResult,
   IWarehouseSourceImportPort,
+  WarehouseConnection,
   RelationalSourceObject,
   SourceObject,
 } from '../ports/workspace';
+import type { SessionContextPort } from '../ports/sessionContext';
 import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
@@ -85,15 +91,12 @@ export function buildSourceObjectCatalogResponder(sourceObjects: readonly Source
 export function buildWarehouseSourceImportPort(
   overrides?: Partial<IWarehouseSourceImportPort>
 ): IWarehouseSourceImportPort {
+  let receipts: WarehouseConnection[] = [];
+  const upsert = (connection: WarehouseConnection) => {
+    receipts = [...receipts.filter((item) => item.id !== connection.id), connection];
+    return connection;
+  };
   return {
-    listWarehouseConnections: async () => [
-      {
-        id: 'conn-1',
-        name: 'Local Postgres proof',
-        type: 'postgres',
-        database: 'dvt',
-      },
-    ],
     listSourceObjectCatalog: buildSourceObjectCatalogResponder([
       buildSourceObject({
         database: 'RAW',
@@ -102,18 +105,6 @@ export function buildWarehouseSourceImportPort(
         metricEvidence: buildSourceImportTestMetricEvidence(100, 4096),
       }),
     ]),
-    createWarehouseConnection: async (input) => ({
-      id: 'conn-created',
-      name: input.name,
-      type: input.type,
-      database: input.database,
-    }),
-    renameWarehouseConnection: async (connectionId, input) => ({
-      id: connectionId,
-      name: input.name,
-      type: 'postgres',
-      database: 'dvt',
-    }),
     testWarehouseConnection: async (connectionId) => ({
       connectionId,
       status: 'passed',
@@ -133,6 +124,37 @@ export function buildWarehouseSourceImportPort(
         },
       }),
     ...overrides,
+    listWarehouseConnections: async () => {
+      const current = overrides?.listWarehouseConnections
+        ? await overrides.listWarehouseConnections()
+        : [
+            {
+              id: 'conn-1',
+              name: 'Local Postgres proof',
+              type: 'postgres' as const,
+              database: 'dvt',
+            },
+          ];
+      return [
+        ...current.filter((item) => !receipts.some((receipt) => receipt.id === item.id)),
+        ...receipts,
+      ];
+    },
+    createWarehouseConnection: async (input) =>
+      upsert(
+        await (overrides?.createWarehouseConnection?.(input) ??
+          Promise.resolve({
+            id: 'conn-created',
+            name: input.name,
+            type: input.type,
+            database: input.database,
+          }))
+      ),
+    renameWarehouseConnection: async (id, input) =>
+      upsert(
+        await (overrides?.renameWarehouseConnection?.(id, input) ??
+          Promise.resolve({ id, name: input.name, type: 'postgres' as const, database: 'dvt' }))
+      ),
   };
 }
 
@@ -147,9 +169,9 @@ export function buildSourceObject(
 }
 
 export function createSourceImportWizardHarness() {
-  const container = document.createElement('div');
-  document.body.appendChild(container);
-  const root: Root = createRoot(container);
+  const queryClient = createTestQueryClient();
+  let container = document.createElement('div');
+  let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
   (
     globalThis as typeof globalThis & {
       IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -168,32 +190,49 @@ export function createSourceImportWizardHarness() {
     open?: boolean;
     canvasId?: string;
     warehouseSourceImport?: IWarehouseSourceImportPort;
+    sessionContext?: SessionContextPort;
     onClose?: () => void;
     onComplete?: (result: ImportSourcesResult) => void;
     onConnectionRenamed?: SourceImportWizardProps['onConnectionRenamed'];
     sourceImportOptions?: readonly SourceImportOptionContribution[];
     initialSelection?: SourceImportInitialSelection | null;
   }): Promise<void> {
-    await act(async () => {
-      root.render(
-        <AppServicesProvider
-          overrides={{
-            ...createAppServicesTestOverrides(),
-            warehouseSourceImport: args?.warehouseSourceImport ?? buildWarehouseSourceImportPort(),
-          }}
-        >
-          <SourceImportWizard
-            open={args?.open ?? true}
-            canvasId={args?.canvasId ?? 'canvas-orders'}
-            onClose={args?.onClose ?? vi.fn()}
-            onComplete={args?.onComplete}
-            onConnectionRenamed={args?.onConnectionRenamed}
-            sourceImportOptions={args?.sourceImportOptions}
-            initialSelection={args?.initialSelection}
-          />
-        </AppServicesProvider>
+    const node = (
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          ...(args?.sessionContext ? { sessionContext: args.sessionContext } : {}),
+          warehouseSourceImport: args?.warehouseSourceImport ?? buildWarehouseSourceImportPort(),
+        }}
+      >
+        <SourceImportWizard
+          open={args?.open ?? true}
+          canvasId={args?.canvasId ?? 'canvas-orders'}
+          onClose={args?.onClose ?? vi.fn()}
+          onComplete={args?.onComplete}
+          onConnectionRenamed={args?.onConnectionRenamed}
+          sourceImportOptions={args?.sourceImportOptions}
+          initialSelection={args?.initialSelection}
+        />
+      </AppServicesProvider>
+    );
+    if (mounted) await mounted.render(node);
+    else {
+      mounted = await withTestQueryClient(node, queryClient);
+      container = mounted.container;
+    }
+    if (
+      args?.open !== false &&
+      (args?.initialSelection == null || args.initialSelection.kind === 'dbt-source-binding')
+    ) {
+      await waitForReactQuery(
+        () => container.querySelector('[data-slot="source-import-connection-summary"]') != null,
+        {
+          description: 'connection query presentation',
+          ...(vi.isFakeTimers() ? { tick: () => vi.advanceTimersByTimeAsync(0) } : {}),
+        }
       );
-    });
+    }
   }
 
   async function flushPendingWork(): Promise<void> {
@@ -346,16 +385,16 @@ export function createSourceImportWizardHarness() {
     });
   }
 
-  function cleanup(): void {
-    act(() => {
-      root.unmount();
-    });
+  async function cleanup(): Promise<void> {
+    await mounted?.cleanup();
     container.remove();
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   }
 
   return {
-    container,
+    get container() {
+      return container;
+    },
     renderWizard,
     flushPendingWork,
     findNextButton,

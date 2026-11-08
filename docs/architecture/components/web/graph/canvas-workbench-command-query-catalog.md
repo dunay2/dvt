@@ -137,12 +137,35 @@ adds no rail, navigation store or data-acquisition path.
 
 ## Single project catalogue
 
-The single Elements activity presents project definitions under independently
-collapsible Sources and Models categories. Category additions delegate to the
-existing `ImportWarehouseSources` and `CreateCanvasAuthoringNode` adapters; they do not
-introduce a catalogue writer. Available connection objects, registered definitions
-and placed instances remain distinct. Repeated source placement uses the same
-guarded instance command and never creates a SQL file per placement.
+The single Elements activity presents independently collapsible Connections and
+Models sections. Models form one catalogue with one base icon; Source is an
+independent property badge, never a second entity type or section. The read-model
+adapter translates the existing explicit source resource discriminant (or an
+admitted legacy source kind when no more precise resource discriminant exists).
+It must not infer Source from the input role, SQL, dbt origin or a physical
+connection: seeds also have the input role, and valid logical models can remain
+unbound. This is presentation adaptation, not a backend migration or a persisted
+`isSource` field.
+
+Connection management and model creation delegate to the existing import Wizard
+and `CreateCanvasAuthoringNode` adapters. The import action retains the existing
+`ImportWarehouseSources` command. Available connections, registered model
+definitions and placed instances remain distinct. The native definition adapter
+excludes occurrence references; equal names do not imply equal identity. File
+definitions deduplicate only by their explicit Canvas owner and unique resource
+ID. Repeated placement uses the existing guarded command and never creates a
+SQL file per placement.
+
+Connections are shared project resources queried once through the existing
+`IWarehouseSourceImportPort.listWarehouseConnections` boundary and a registered
+React Query key containing the granted tenant, project and environment. The
+sidebar, import Wizard and manual-source Inspector share this query. Create and
+rename receipts update and invalidate only their captured scope. A late response
+or receipt from one scope cannot populate or select a connection in another.
+The connection DTO exposes only ID, name, type and database; listing does not
+test health. Counts require a successful snapshot, and empty, unavailable,
+loading, denied and refresh-error states remain distinguishable. No credentials
+or connection configuration are copied into model rows.
 
 New authoring definitions reserve identities from the canonical catalogue,
 including unplaced definitions, and from immediately admitted placements. The
@@ -171,8 +194,16 @@ existing contextual graph query, not a new cache or mutation rail.
 remain scoped queries. Governed dbt file models use the existing instance
 admission when the current Canvas permits creation; read-only or unavailable
 admission remains disabled. The Code explorer owns file navigation.
-The existing shared list and creation catalogue own search, category disclosure,
-capability gating and focus. [Prospective design and negative tests](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
+The existing shared list owns model search, result counts, selection highlight
+and detail disclosure as separate presentation states. Search uses names and
+actual metadata, including the localized Source property. A sibling disclosure
+button can inspect metadata even when placement is unavailable; it must not
+activate, drag or open Properties. Native keyboard activation retains the
+existing placement command; a pointer double click cannot create a second
+instance. Section and detail controls expose coherent `aria-expanded` and
+`aria-controls`. The dock retains the existing layout-state owner and resize
+persistence. The Model's internal relational input catalogue keeps its own
+existing owner. [Unified catalogue design and negative tests](https://github.com/dunay2/dvt/issues/3765#issuecomment-6727884137).
 
 ## C&Q Summary
 

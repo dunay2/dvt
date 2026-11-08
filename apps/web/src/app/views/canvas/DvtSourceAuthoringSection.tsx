@@ -5,7 +5,12 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { useOptionalWarehouseSourceImportPort } from '../../services/AppServicesContext';
-import type { TestWarehouseConnectionResult, WarehouseConnection } from '../../ports/workspace';
+import type {
+  IWarehouseSourceImportPort,
+  TestWarehouseConnectionResult,
+  WarehouseConnection,
+} from '../../ports/workspace';
+import { useWarehouseConnectionsQuery } from '../../queries/warehouseConnectionQueries';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSourceAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -16,50 +21,57 @@ import type {
 import { canvasViewCopy } from './copy';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 
-export function DvtSourceAuthoringSection({
-  node,
-  disabled,
-  draft,
-  errors,
-  sourceTarget,
-  onChange,
-}: Readonly<{
+type SourceAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
   disabled: boolean;
   draft: DvtSourceAuthoringMetadata;
   errors: CanvasInspectorNodeDraftErrors['dvt'];
   sourceTarget: string;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
-}>): JSX.Element {
+}>;
+
+export function DvtSourceAuthoringSection(props: SourceAuthoringSectionProps): JSX.Element {
   const warehouseSourceImport = useOptionalWarehouseSourceImportPort();
-  const [connections, setConnections] = useState<readonly WarehouseConnection[]>([]);
-  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'failed'>('idle');
+  return warehouseSourceImport && props.node.pluginId !== 'dvt.warehouse-source' ? (
+    <ConnectedSourceAuthoringSection {...props} port={warehouseSourceImport} />
+  ) : (
+    <SourceAuthoringFields {...props} connections={[]} loadState="idle" />
+  );
+}
+
+function ConnectedSourceAuthoringSection(
+  props: SourceAuthoringSectionProps & { readonly port: IWarehouseSourceImportPort }
+): JSX.Element {
+  const query = useWarehouseConnectionsQuery(props.port);
+  return (
+    <SourceAuthoringFields
+      {...props}
+      warehouseSourceImport={props.port}
+      connections={query.data ?? []}
+      loadState={query.isError ? 'failed' : query.isPending ? 'loading' : 'idle'}
+    />
+  );
+}
+
+function SourceAuthoringFields({
+  node,
+  disabled,
+  draft,
+  errors,
+  sourceTarget,
+  onChange,
+  connections,
+  loadState,
+  warehouseSourceImport,
+}: SourceAuthoringSectionProps &
+  Readonly<{
+    connections: readonly WarehouseConnection[];
+    loadState: 'idle' | 'loading' | 'failed';
+    warehouseSourceImport?: IWarehouseSourceImportPort;
+  }>): JSX.Element {
   const [testResult, setTestResult] = useState<TestWarehouseConnectionResult | null>(null);
   const connectionTestSequence = useRef(0);
   const isImportedSource = node.pluginId === 'dvt.warehouse-source';
-
-  useEffect(() => {
-    if (!warehouseSourceImport || isImportedSource) {
-      return;
-    }
-
-    let active = true;
-    setLoadState('loading');
-    void warehouseSourceImport
-      .listWarehouseConnections()
-      .then((result) => {
-        if (!active) return;
-        setConnections(result.filter((connection) => connection.type === 'postgres'));
-        setLoadState('idle');
-      })
-      .catch(() => {
-        if (active) setLoadState('failed');
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [isImportedSource, warehouseSourceImport]);
 
   const selectedConnectionId = draft.connectionRef?.connectionId ?? '';
   const selectedConnectionIdRef = useRef(selectedConnectionId);

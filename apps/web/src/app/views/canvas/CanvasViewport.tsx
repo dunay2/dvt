@@ -60,6 +60,7 @@ type CanvasViewportProps = {
   readonly canSelectNodes?: boolean;
   readonly nodesWithImpact: Node[];
   readonly sourceCatalogue?: readonly CanonicalNode[];
+  readonly sourceCatalogueCanvasId?: string;
   readonly onInstantiateNode?: CanvasNodeInstantiationHandler;
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
@@ -466,6 +467,7 @@ function CanvasViewportWithPresenter({
       activityRail={props.activityRail}
       nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
+      sourceCatalogueCanvasId={props.sourceCatalogueCanvasId}
       canPlaceSource={props.canEditEdges && props.onInstantiateNode != null}
       referencePlacementScope={props.referencePlacementScope}
       importedSourceIds={props.importedNodeFocusIds}

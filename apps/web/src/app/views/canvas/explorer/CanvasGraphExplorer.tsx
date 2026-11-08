@@ -7,7 +7,6 @@
  */
 import type { Node } from '@xyflow/react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
-import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
@@ -15,9 +14,8 @@ import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
 import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
-import { projectCanvasExplorerSources } from './canvasExplorerItems';
-import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import { projectCanvasExplorerModels } from './canvasExplorerItems';
+import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 
 export function CanvasGraphExplorer({
   nodes,
@@ -25,6 +23,7 @@ export function CanvasGraphExplorer({
   onImport,
   onAddModel,
   catalogue,
+  sourceCatalogueCanvasId,
   canPlaceSource = false,
   referencePlacementScope,
   importedSourceIds = [],
@@ -43,20 +42,16 @@ export function CanvasGraphExplorer({
   projectFiles?: CanvasExplorerProjectWorkspace;
   activityRail?: CanvasExplorerActivityRail;
   catalogue?: readonly CanonicalNode[];
+  sourceCatalogueCanvasId?: string;
   canPlaceSource?: boolean;
   referencePlacementScope?: string;
   importedSourceIds?: readonly string[];
   onImportFocusComplete?: () => void;
 }>): JSX.Element {
-  const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const rootRef = useRef<HTMLDivElement>(null);
-  const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
-  const models = useMemo(
-    () =>
-      (catalogue ?? []).filter(
-        (node) => node.role === 'transform' && workspaceNodeDefinitionId(node) == null
-      ),
-    [catalogue]
+  const definitions = useMemo(
+    () => projectCanvasExplorerModels(catalogue ?? [], sourceCatalogueCanvasId),
+    [catalogue, sourceCatalogueCanvasId]
   );
   const placeableIds = useMemo(
     () =>
@@ -74,30 +69,13 @@ export function CanvasGraphExplorer({
       ),
     [catalogue, canPlaceSource, referencePlacementScope]
   );
-  const items = [
-    ...sources.map((source) => ({
-      ...source,
-      category: copy.sources,
-      draggable: placeableIds.has(source.id),
-      disabled: !placeableIds.has(source.id),
-    })),
-    ...models.map((node) => ({
-      id: node.id,
-      label: node.name,
-      description: node.path,
-      category: copy.models,
-      draggable: placeableIds.has(node.id),
-      disabled: !placeableIds.has(node.id),
-      selected: nodes.some((placed) => placed.id === node.id && placed.selected),
-    })),
-  ];
-  const categoryActions = new Map<string, CanvasExplorerCategoryAction>([
-    [
-      copy.sources,
-      { label: copy.importSources, onAdd: onImport == null ? undefined : () => onImport() },
-    ],
-    [copy.models, { label: copy.addModel, onAdd: onAddModel }],
-  ]);
+  const items = definitions.map((item) => ({
+    ...item,
+    draggable: placeableIds.has(item.id),
+    disabled: !placeableIds.has(item.id),
+    selected: nodes.some((placed) => placed.id === item.id && placed.selected),
+  }));
+  const connections = <CanvasWarehouseConnections onManage={onImport} />;
   const draggableIds = new Set(items.filter((item) => item.draggable).map((item) => item.id));
   const dragResource =
     draggableIds.size > 0
@@ -133,7 +111,9 @@ export function CanvasGraphExplorer({
         projectFiles?.renderElements == null ? (
           <CanvasExplorerList
             items={items}
-            categoryActions={categoryActions}
+            onAddModel={onAddModel}
+            onImport={onImport}
+            connections={connections}
             onSelect={onSelect}
             onDragStart={dragResource}
           />
@@ -145,7 +125,9 @@ export function CanvasGraphExplorer({
               canCreateInstances: canPlaceSource && referencePlacementScope == null,
               onSelect,
               onDragStart: dragResource,
-              categoryActions,
+              onAddModel,
+              onImport,
+              connections,
             })
         )
       }

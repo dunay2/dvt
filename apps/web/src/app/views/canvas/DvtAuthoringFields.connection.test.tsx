@@ -9,9 +9,11 @@ import type {
   TestWarehouseConnectionResult,
 } from '../../ports/workspace';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { waitForReactQuery } from '../../../testing/reactQueryHarness';
 describe('DVT connection authoring', () => {
   const view = useAuthoringFieldsHarness();
   it('discards a connection-test response after the selected connection changes', async () => {
+    vi.useFakeTimers();
     const baseWarehouseSourceImport = createAppServicesTestOverrides().warehouseSourceImport;
     if (!baseWarehouseSourceImport)
       throw new Error('Warehouse source import test port is required.');
@@ -39,7 +41,10 @@ describe('DVT connection authoring', () => {
       }),
       warehouseSourceImport
     );
-    await act(async () => Promise.resolve());
+    await waitForReactQuery(
+      () => view.container.querySelector('option[value="warehouse-b"]') != null,
+      { description: 'connection choices published', tick: () => vi.advanceTimersByTimeAsync(0) }
+    );
 
     const connectionSelect = view.container.querySelector(
       'select[name="dvt-source-connection"]'
@@ -69,6 +74,7 @@ describe('DVT connection authoring', () => {
   });
 
   it('clears visible connection-test feedback after an authoritative selection change', async () => {
+    vi.useFakeTimers();
     const baseWarehouseSourceImport = createAppServicesTestOverrides().warehouseSourceImport;
     if (!baseWarehouseSourceImport)
       throw new Error('Warehouse source import test port is required.');
@@ -97,7 +103,10 @@ describe('DVT connection authoring', () => {
       warehouseSourceImport,
       'warehouse-b'
     );
-    await act(async () => Promise.resolve());
+    await waitForReactQuery(
+      () => view.container.querySelector('option[value="warehouse-b"]') != null,
+      { description: 'connection choices published', tick: () => vi.advanceTimersByTimeAsync(0) }
+    );
 
     const testButton = [...view.container.querySelectorAll('button')].find((button) =>
       button.textContent?.includes('Test')

@@ -1,6 +1,6 @@
 /** Owned concern: coordinate source import wizard state through the import port. */
 import { PostgresCredentialRefSchema } from '@dvt/contracts';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from 'react';
 import { toast } from 'sonner';
 
 import type {
@@ -38,7 +38,11 @@ import {
   toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
-import { useConnectionsLoader, useSourceCatalogLoader } from './useSourceImportWizardDataLoaders';
+import { useSourceCatalogLoader } from './useSourceImportWizardDataLoaders';
+import {
+  useWarehouseConnectionCatalogCache,
+  useWarehouseConnectionsQuery,
+} from '../../queries/warehouseConnectionQueries';
 import { useSourceImportConnectionTest } from './useSourceImportConnectionTest';
 import {
   buildSourceImportFailure,
@@ -64,7 +68,6 @@ interface UseSourceImportWizardParams {
 
 const initialState: SourceImportWizardState = {
   currentStep: 'connection',
-  connections: [],
   selectedConnection: null,
   createConnectionFormOpen: false,
   createConnectionForm: {
@@ -86,7 +89,6 @@ const initialState: SourceImportWizardState = {
   addTests: false,
   addFreshness: false,
   isProcessing: false,
-  isLoadingConnections: false,
   isCreatingConnection: false,
   isRenamingConnection: false,
   loadError: null,
@@ -113,19 +115,6 @@ function isCreateConnectionInputComplete(input: CreateWarehouseConnectionInput):
   return input.name.length > 0 && input.database.length > 0 && input.credentialRef.length > 0;
 }
 
-function upsertWarehouseConnection(
-  connections: readonly WarehouseConnection[],
-  nextConnection: WarehouseConnection
-): WarehouseConnection[] {
-  const replaced = connections.map((connection) =>
-    connection.id === nextConnection.id ? nextConnection : connection
-  );
-  const nextConnections = replaced.some((connection) => connection.id === nextConnection.id)
-    ? replaced
-    : [...connections, nextConnection];
-  return nextConnections.sort((left, right) => left.name.localeCompare(right.name));
-}
-
 export function useSourceImportWizard({
   open,
   canvasId,
@@ -141,19 +130,51 @@ export function useSourceImportWizard({
     () => applySourceImportOptionDefaults(initialState, sourceImportOptions),
     [sourceImportOptions]
   );
-  const [state, setState] = useState<SourceImportWizardState>(initialWizardState);
+  const connectionsQuery = useWarehouseConnectionsQuery(warehouseSourceImport, { enabled: open });
+  const connectionCache = useWarehouseConnectionCatalogCache();
+  const selectedScope = connectionCache.captureScope();
+  const currentScope = useMemo(
+    () => ({
+      tenantId: selectedScope.tenantId,
+      projectId: selectedScope.projectId,
+      environmentId: selectedScope.environmentId,
+    }),
+    [selectedScope.tenantId, selectedScope.projectId, selectedScope.environmentId]
+  );
+  const scopeKey = JSON.stringify([
+    currentScope.tenantId,
+    currentScope.projectId,
+    currentScope.environmentId,
+  ]);
+  const [sessionState, setSessionState] = useState({ scopeKey, value: initialWizardState });
+  const state = sessionState.scopeKey === scopeKey ? sessionState.value : initialWizardState;
+  const setState = useCallback(
+    (update: SetStateAction<SourceImportWizardState>) => {
+      if (!connectionCache.isCurrentScope(currentScope)) return;
+      setSessionState((current) => {
+        if (!connectionCache.isCurrentScope(currentScope)) return current;
+        const value = current.scopeKey === scopeKey ? current.value : initialWizardState;
+        return { scopeKey, value: typeof update === 'function' ? update(value) : update };
+      });
+    },
+    [scopeKey, initialWizardState, connectionCache, currentScope]
+  );
+  const connections = connectionsQuery.data ?? [];
+  const selectionOwner = useRef({ selection: initialSelection, scopeKey });
+  if (selectionOwner.current.selection !== initialSelection)
+    selectionOwner.current = { selection: initialSelection, scopeKey };
+  const currentInitialSelection =
+    selectionOwner.current.scopeKey === scopeKey ? initialSelection : undefined;
   const dbtSourceBinding =
-    initialSelection?.kind === 'dbt-source-binding' ? initialSelection : null;
+    currentInitialSelection?.kind === 'dbt-source-binding' ? currentInitialSelection : null;
   const catalogInitialSelection =
-    initialSelection != null && initialSelection.kind !== 'dbt-source-binding'
-      ? initialSelection
+    currentInitialSelection != null && currentInitialSelection.kind !== 'dbt-source-binding'
+      ? currentInitialSelection
       : null;
   const pendingImportIdentity = useRef<SourceImportCommandIdentity | null>(null);
   useEffect(() => {
-    if (!open) {
-      pendingImportIdentity.current = null;
-    }
-  }, [open]);
+    pendingImportIdentity.current = null;
+  }, [open, scopeKey]);
   useEffect(() => {
     setState((prev) => ({
       ...prev,
@@ -161,17 +182,20 @@ export function useSourceImportWizard({
       addTests: initialWizardState.addTests,
       addFreshness: initialWizardState.addFreshness,
     }));
-  }, [initialWizardState]);
+  }, [initialWizardState, setState]);
   useEffect(() => {
-    if (!open || initialSelection == null) {
+    if (!open || currentInitialSelection == null) {
       return;
     }
 
     setState((prev) => ({
       ...prev,
-      currentStep: initialSelection.kind === 'dbt-source-binding' ? 'connection' : 'selection',
+      currentStep:
+        currentInitialSelection.kind === 'dbt-source-binding' ? 'connection' : 'selection',
       selectedConnection:
-        initialSelection.kind === 'dbt-source-binding' ? null : initialSelection.connectionId,
+        currentInitialSelection.kind === 'dbt-source-binding'
+          ? null
+          : currentInitialSelection.connectionId,
       createConnectionFormOpen: false,
       renameConnectionFormOpen: false,
       renameConnectionError: null,
@@ -188,7 +212,7 @@ export function useSourceImportWizard({
       loadError: null,
       importResult: null,
     }));
-  }, [initialSelection, open]);
+  }, [currentInitialSelection, open, setState]);
   const selectedCount = useMemo(() => getSelectedCount(state.sourceObjects), [state.sourceObjects]);
   const selectedSourceObjects = useMemo(
     () => getSelectedSourceObjects(state.sourceObjects),
@@ -204,8 +228,8 @@ export function useSourceImportWizard({
     [state.includeColumns, state.addTests, state.addFreshness]
   );
   const selectedConnectionObject = useMemo<WarehouseConnection | undefined>(
-    () => state.connections.find((connection) => connection.id === state.selectedConnection),
-    [state.connections, state.selectedConnection]
+    () => connections.find((connection) => connection.id === state.selectedConnection),
+    [connections, state.selectedConnection]
   );
   const initiallySelectedSourceObjectsForConnection =
     state.selectedConnection === catalogInitialSelection?.connectionId
@@ -234,7 +258,6 @@ export function useSourceImportWizard({
     );
   }, [dbtSourceBinding, dbtSourceTargetMatch, selectedSourceObjects]);
 
-  useConnectionsLoader({ open, warehouseSourceImport, setState });
   const connectionTest = useSourceImportConnectionTest(
     open,
     state.selectedConnection,
@@ -403,6 +426,8 @@ export function useSourceImportWizard({
   const handleBack = () => setCurrentStep(getPreviousStep(state.currentStep));
 
   const handleCreateConnection = async () => {
+    const commandScope = currentScope;
+    if (!connectionCache.isCurrentScope(commandScope)) return;
     const input = normalizeCreateConnectionInput(state.createConnectionForm);
     if (!isCreateConnectionInputComplete(input)) {
       setState((prev) => ({
@@ -427,10 +452,11 @@ export function useSourceImportWizard({
     }));
     try {
       const connection = await warehouseSourceImport.createWarehouseConnection(input);
+      await connectionCache.acceptReceipt(commandScope, connection);
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       setState((prev) => ({
         ...prev,
         currentStep: dbtSourceBinding == null ? prev.currentStep : 'selection',
-        connections: upsertWarehouseConnection(prev.connections, connection),
         selectedConnection: connection.id,
         createConnectionFormOpen: false,
         createConnectionForm: initialWizardState.createConnectionForm,
@@ -446,6 +472,7 @@ export function useSourceImportWizard({
       }));
       toast.success(copy.connection.createSuccess);
     } catch (error) {
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       const reason = extractHttpErrorReason(error);
       const target = extractHttpErrorTarget(error);
       const failure = buildSourceImportFailure(
@@ -459,11 +486,14 @@ export function useSourceImportWizard({
       setState((prev) => ({ ...prev, createConnectionError: failure }));
       toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
-      setState((prev) => ({ ...prev, isCreatingConnection: false }));
+      if (connectionCache.isCurrentScope(commandScope))
+        setState((prev) => ({ ...prev, isCreatingConnection: false }));
     }
   };
 
   const handleRenameConnection = async () => {
+    const commandScope = currentScope;
+    if (!connectionCache.isCurrentScope(commandScope)) return;
     if (!selectedConnectionObject) return;
     const name = state.renameConnectionForm.name.trim();
     if (!name || name === selectedConnectionObject.name.trim()) {
@@ -485,10 +515,12 @@ export function useSourceImportWizard({
         selectedConnectionObject.id,
         { name }
       );
+      await connectionCache.acceptReceipt(commandScope, connection);
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       await onConnectionRenamed?.(connection);
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       setState((prev) => ({
         ...prev,
-        connections: upsertWarehouseConnection(prev.connections, connection),
         renameConnectionFormOpen: false,
         renameConnectionForm: { name: '' },
         renameConnectionError: null,
@@ -496,6 +528,7 @@ export function useSourceImportWizard({
       }));
       toast.success(copy.connection.renameSuccess);
     } catch (error) {
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       const failure = buildSourceImportFailure(
         extractHttpErrorReason(error) === 'warehouse_connection_duplicate'
           ? 'connection-name-conflict'
@@ -509,7 +542,8 @@ export function useSourceImportWizard({
       }));
       toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
-      setState((prev) => ({ ...prev, isRenamingConnection: false }));
+      if (connectionCache.isCurrentScope(commandScope))
+        setState((prev) => ({ ...prev, isRenamingConnection: false }));
     }
   };
 
@@ -521,6 +555,8 @@ export function useSourceImportWizard({
     !state.isProcessing;
 
   const handleImport = async () => {
+    const commandScope = currentScope;
+    if (!connectionCache.isCurrentScope(commandScope)) return;
     if (!state.selectedConnection) {
       setState((prev) => ({
         ...prev,
@@ -553,6 +589,7 @@ export function useSourceImportWizard({
       const result = await warehouseSourceImport.importSources(
         buildSourceImportCommand(commandDraft, commandIdentity)
       );
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       pendingImportIdentity.current = null;
       setState((prev) => ({
         ...prev,
@@ -562,6 +599,7 @@ export function useSourceImportWizard({
       onComplete?.(result);
       toast.success(copy.importSuccess);
     } catch (error) {
+      if (!connectionCache.isCurrentScope(commandScope)) return;
       const failure = buildSourceImportFailure('import-sources', error);
       setState((prev) => ({ ...prev, loadError: failure }));
       toast.error(resolveSourceImportFailureMessage(copy, failure));
@@ -634,7 +672,13 @@ export function useSourceImportWizard({
   const canProceed = canProceedForStep(state.currentStep, state.selectedConnection, selectedCount);
 
   return {
-    state: { ...state, isLoadingSourceObjects: catalogueState.status === 'loading' },
+    state: {
+      ...state,
+      connections,
+      isLoadingConnections: connectionsQuery.isPending && connectionsQuery.fetchStatus !== 'idle',
+      isLoadingSourceObjects: catalogueState.status === 'loading',
+    },
+    connectionsQuery,
     connectionTest,
     catalogueRecovery,
     cataloguePageFailure,

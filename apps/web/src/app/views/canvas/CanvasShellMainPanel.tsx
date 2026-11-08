@@ -145,6 +145,7 @@ function CanvasShellViewport({
       canSelectNodes={layout.canSelectNodes}
       nodesWithImpact={graph.nodesWithImpact}
       sourceCatalogue={panels.inspectorGraphNodes}
+      sourceCatalogueCanvasId={panels.activeCanvasId ?? undefined}
       onInstantiateNode={graphCommands.onInstantiateNode}
       edges={graph.edges}
       nodeTypes={graph.nodeTypes}

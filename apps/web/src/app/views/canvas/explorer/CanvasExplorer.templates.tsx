@@ -6,6 +6,7 @@
  * @version 1.0.0
  */
 import {
+  Box,
   Workflow,
   GitBranch,
   Search,
@@ -15,7 +16,7 @@ import {
   ChevronDown,
   X,
 } from 'lucide-react';
-import type { KeyboardEvent, ReactNode, RefObject } from 'react';
+import { useId, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
@@ -31,7 +32,7 @@ import {
 } from '../../../components/ui/resizable';
 import type { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import styles from './CanvasExplorer.module.css';
-import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import type { CanvasExplorerItem } from './canvasExplorerItems';
 
 type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
 const panels = [
@@ -208,116 +209,213 @@ export function CanvasExplorerMenuTemplate({
   );
 }
 
+/** Shared disclosure structure for project connection and model sections. */
+export function CanvasExplorerSection({
+  title,
+  count,
+  countSlot,
+  slot,
+  open,
+  onOpenChange,
+  action,
+  busy,
+  children,
+}: Readonly<{
+  title: string;
+  count?: number;
+  countSlot: string;
+  slot: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  action?: ReactNode;
+  busy?: boolean;
+  children: ReactNode;
+}>): JSX.Element {
+  const id = useId();
+  return (
+    <section className={styles.catalogSection} data-slot={slot} aria-busy={busy}>
+      <Collapsible open={open} onOpenChange={onOpenChange}>
+        <div className={styles.categoryHeader}>
+          <h4 className={styles.categoryHeading} aria-label={title}>
+            <CollapsibleTrigger
+              className={styles.sectionToggle}
+              aria-label={title}
+              aria-controls={id}
+            >
+              <ChevronDown aria-hidden="true" />
+              <span>{title}</span>
+              {count == null ? null : (
+                <span className={styles.count} data-slot={countSlot}>
+                  {count}
+                </span>
+              )}
+            </CollapsibleTrigger>
+          </h4>
+          {action}
+        </div>
+        <CollapsibleContent id={id} className={styles.sectionContent} forceMount hidden={!open}>
+          {children}
+        </CollapsibleContent>
+      </Collapsible>
+    </section>
+  );
+}
+
+/** Passive model rows preserve command activation and expose independent metadata controls. */
 export function CanvasExplorerListTemplate({
-  categories,
-  collapsedCategories,
-  onCategoryOpenChange,
+  items,
+  open,
+  onOpenChange,
+  expandedIds,
+  onToggleDetails,
+  selectedId,
   query,
   copy,
   disabled,
   onQuery,
   onSelect,
   onDragStart,
-  categoryActions,
+  onAddModel,
+  connections,
+  status,
+  countKnown,
+  pending,
 }: Readonly<{
-  categories: ReadonlyMap<string | undefined, readonly CanvasExplorerItem[]>;
-  collapsedCategories: ReadonlySet<string>;
-  onCategoryOpenChange: (category: string, open: boolean) => void;
+  items: readonly CanvasExplorerItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  expandedIds: ReadonlySet<string>;
+  onToggleDetails: (id: string) => void;
+  selectedId: string | null;
   query: string;
   copy: Copy;
   disabled?: boolean;
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: React.DragEvent<HTMLButtonElement>) => void;
-  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
+  onAddModel?: (opener: HTMLButtonElement) => void;
+  connections?: ReactNode;
+  status?: ReactNode;
+  countKnown: boolean;
+  pending: boolean;
 }>): JSX.Element {
-  const renderItem = (item: CanvasExplorerItem) => {
-    const unavailable = disabled || item.disabled;
-    const draggable = !unavailable && item.draggable !== false && onDragStart != null;
-    return (
-      <li key={item.id}>
-        <button
-          type="button"
-          className={styles.item}
-          aria-pressed={item.selected === true}
-          title={item.description == null ? item.label : `${item.label} · ${item.description}`}
-          data-element-id={item.id}
-          disabled={unavailable}
-          onClick={() => onSelect(item.id)}
-          draggable={draggable}
-          onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
-        >
-          <span className={styles.itemText}>
-            <span className={styles.name}>{item.label}</span>{' '}
-            {item.description == null ? null : (
-              <span className={styles.description}>{item.description}</span>
-            )}
-          </span>
-        </button>
-      </li>
-    );
-  };
+  const id = useId();
   return (
     <div className={styles.listPanel}>
-      <label className={styles.search}>
-        <Search aria-hidden="true" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => onQuery(event.currentTarget.value)}
-          aria-label={copy.search}
-          placeholder={copy.search}
-        />
-      </label>
-      <ul className={styles.list}>
-        {Array.from(categories, ([category, items]) => {
-          if (category == null) return items.map(renderItem);
-          const open = !collapsedCategories.has(category);
-          const action = categoryActions?.get(category);
-          return (
-            <li key={category}>
-              <Collapsible
-                open={open}
-                onOpenChange={(nextOpen) => onCategoryOpenChange(category, nextOpen)}
-              >
-                <div className={styles.categoryHeader}>
-                  <h4 className={styles.categoryHeading}>
-                    <CollapsibleTrigger
-                      className={styles.heading}
-                      aria-label={`${copy.elements}: ${category}`}
-                    >
-                      {open ? (
-                        <ChevronDown size={12} aria-hidden="true" />
-                      ) : (
-                        <ChevronRight size={12} aria-hidden="true" />
-                      )}
-                      {category}
-                    </CollapsibleTrigger>
-                  </h4>
-                  {action == null ? null : (
+      {connections}
+      <CanvasExplorerSection
+        title={copy.models}
+        count={countKnown ? items.length : undefined}
+        countSlot="canvas-explorer-model-count"
+        slot="canvas-explorer-models"
+        open={open}
+        onOpenChange={onOpenChange}
+        busy={pending}
+        action={
+          <button
+            type="button"
+            className={styles.headerAction}
+            aria-label={copy.addModel}
+            title={copy.addModel}
+            disabled={disabled || onAddModel == null}
+            onClick={(event) => onAddModel?.(event.currentTarget)}
+          >
+            <Plus aria-hidden="true" />
+          </button>
+        }
+      >
+        {status}
+        <label className={styles.search}>
+          <Search aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => onQuery(event.currentTarget.value)}
+            aria-label={copy.search}
+            placeholder={copy.search}
+          />
+        </label>
+        <ul className={styles.list}>
+          {items.map((item) => {
+            const unavailable = disabled || item.disabled;
+            const draggable = !unavailable && item.draggable !== false && onDragStart != null;
+            const expanded = expandedIds.has(item.id);
+            const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
+            const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
+            const selected = selectedId == null ? item.selected === true : item.id === selectedId;
+            const description = item.description?.trim();
+            return (
+              <li key={item.id} data-slot="canvas-explorer-model-row" data-model-id={item.id}>
+                <div className={styles.itemRow} data-selected={selected}>
+                  <button
+                    type="button"
+                    className={styles.item}
+                    aria-pressed={selected}
+                    aria-label={description ? `${item.label} ${description}` : item.label}
+                    aria-describedby={item.isSource ? sourceId : undefined}
+                    title={description ? `${item.label} · ${description}` : item.label}
+                    data-element-id={item.id}
+                    disabled={unavailable}
+                    onClick={(event) => {
+                      if (event.detail <= 1) onSelect(item.id);
+                    }}
+                    onDoubleClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    draggable={draggable}
+                    onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
+                  >
+                    <span className={styles.modelIcon}>
+                      <Box aria-hidden="true" data-model-icon="model" />
+                    </span>
+                    <span className={styles.itemText}>
+                      <span className={styles.titleLine} data-slot="canvas-explorer-model-title">
+                        <span className={styles.name}>{item.label}</span>
+                        {item.isSource ? (
+                          <span id={sourceId} className={styles.property}>
+                            {copy.source}
+                          </span>
+                        ) : null}
+                      </span>
+                      {description ? (
+                        <span className={styles.description}>{description}</span>
+                      ) : null}
+                    </span>
+                  </button>
+                  {item.details?.length ? (
                     <button
                       type="button"
-                      className={styles.headerAction}
-                      aria-label={action.label}
-                      title={action.label}
-                      disabled={disabled || action.onAdd == null}
-                      onClick={(event) => action.onAdd?.(event.currentTarget)}
+                      className={styles.detailsToggle}
+                      data-slot="canvas-explorer-model-disclosure"
+                      data-model-id={item.id}
+                      aria-label={`${copy.details}: ${item.label}`}
+                      aria-expanded={expanded}
+                      aria-controls={detailsId}
+                      onClick={() => onToggleDetails(item.id)}
                     >
-                      <Plus aria-hidden="true" />
+                      <ChevronRight aria-hidden="true" />
                     </button>
-                  )}
+                  ) : null}
                 </div>
-                <CollapsibleContent>
-                  <ul className={styles.list}>{items.map(renderItem)}</ul>
-                </CollapsibleContent>
-              </Collapsible>
-            </li>
-          );
-        })}
-      </ul>
-      {Array.from(categories.values()).every((items) => items.length === 0) ? (
-        <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>
-      ) : null}
+                {item.details?.length ? (
+                  <dl id={detailsId} className={styles.details} hidden={!expanded}>
+                    {item.details.map((detail) => (
+                      <div key={`${detail.label}:${detail.value}`}>
+                        <dt>{copy[detail.label]}</dt>
+                        <dd>{detail.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+        {countKnown && items.length === 0 ? (
+          <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>
+        ) : null}
+      </CanvasExplorerSection>
     </div>
   );
 }

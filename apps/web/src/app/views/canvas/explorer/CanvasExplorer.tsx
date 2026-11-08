@@ -24,7 +24,7 @@ import {
   type CanvasExplorerPanel,
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import type { CanvasExplorerItem } from './canvasExplorerItems';
 import type { CanonicalNode } from '../../../types/canonical';
 
 export type CanvasProjectElementsInput = Readonly<{
@@ -33,7 +33,9 @@ export type CanvasProjectElementsInput = Readonly<{
   canCreateInstances?: boolean;
   onSelect: (id: string, definition?: CanonicalNode) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
+  onAddModel?: (opener: HTMLButtonElement) => void;
+  onImport?: () => void;
+  connections?: ReactNode;
 }>;
 
 export type CanvasExplorerProjectWorkspace = Readonly<{

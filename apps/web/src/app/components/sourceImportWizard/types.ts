@@ -91,7 +91,6 @@ export function buildSourceImportFailure(
 
 export interface SourceImportWizardState {
   currentStep: WizardStep;
-  connections: WarehouseConnection[];
   selectedConnection: string | null;
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
@@ -108,7 +107,6 @@ export interface SourceImportWizardState {
   addTests: boolean;
   addFreshness: boolean;
   isProcessing: boolean;
-  isLoadingConnections: boolean;
   isCreatingConnection: boolean;
   isRenamingConnection: boolean;
   loadError: SourceImportFailure | null;

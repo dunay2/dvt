@@ -17,6 +17,8 @@ import { useApplicationLanguageStore } from '../../../stores/applicationLanguage
 import { CanvasProjectElementsExplorer } from './CanvasProjectElementsExplorer';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { canvasDbtModelDefinitionId } from '../canvasDbtModelReference';
+import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
+import type { DragEvent } from 'react';
 
 const binding = {
   schemaVersion: 'canvas-authoring-authority-binding.v1',
@@ -134,18 +136,20 @@ afterEach(async () => {
 it('admits native and file-model definitions without navigation or file writes', async () => {
   await render();
   await waitForReactQuery(
-    () => screen.queryByRole('button', { name: /ventas_por_cliente/ }) != null
+    () => screen.queryByRole('button', { name: /^ventas_por_cliente(?:\s|$)/ }) != null
   );
   for (const name of ['clientes', 'pedidos', 'ventas_por_cliente'])
-    expect(screen.getByRole('button', { name: new RegExp(name) })).toBeTruthy();
+    expect(screen.getByRole('button', { name: new RegExp(`^${name}(?:\\s|$)`) })).toBeTruthy();
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: 'Model 1' }));
   });
   expect(onSelect).toHaveBeenCalledExactlyOnceWith('native');
   act(() => {
-    fireEvent.click(screen.getByRole('button', { name: /pedidos/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ }));
   });
-  expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).disabled).toBe(false);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ }).disabled).toBe(
+    false
+  );
   expect(onSelect).toHaveBeenCalledTimes(2);
   expect(onSelect.mock.calls[1]?.[1]?.metadata?.dbtModelReference).toMatchObject({
     canvasId: binding.canvasId,
@@ -176,8 +180,10 @@ it('shows the workspace path when the project root repeats a model directory', a
     projectRevision: { ...project.projectRevision, projectRoot: 'models' },
   });
   await render();
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /clientes/ }) != null);
-  expect(screen.getByRole('button', { name: /clientes/ }).title).toBe(
+  await waitForReactQuery(
+    () => screen.queryByRole('button', { name: /^clientes(?:\s|$)/ }) != null
+  );
+  expect(screen.getByRole('button', { name: /^clientes(?:\s|$)/ }).title).toBe(
     'clientes · models/models/clientes.sql'
   );
 });
@@ -185,8 +191,8 @@ it('shows the workspace path when the project root repeats a model directory', a
 it('uses the authoritative model identity rather than inferring existence from file-tree entries', async () => {
   listFiles.mockResolvedValue([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
   await render();
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
-  const row = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  const row = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
   expect(row.disabled).toBe(false);
   act(() => {
     fireEvent.click(row);
@@ -197,10 +203,26 @@ it('uses the authoritative model identity rather than inferring existence from f
 
 it('keeps file-model admission unavailable in a read-only workspace', async () => {
   await render(true, [], false);
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
-  const model = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  const model = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
   expect(model.disabled).toBe(true);
   expect(model.draggable).toBe(false);
+  act(() => {
+    fireEvent.click(model);
+  });
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(saveFileContent).not.toHaveBeenCalled();
+});
+
+it('lists an unbound logical file Model without offering unsafe placement', async () => {
+  // A connection is needed for this instance adapter, not for the Model to exist in the catalogue.
+  getProjectGraph.mockResolvedValue({ ...project, executionTarget: undefined });
+  await render();
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  const model = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
+  expect(model.disabled).toBe(true);
+  expect(model.draggable).toBe(false);
+  expect(screen.queryByRole('alert')).toBeNull();
   act(() => {
     fireEvent.click(model);
   });
@@ -214,9 +236,9 @@ it('reports a missing published output without creating a partial instance', asy
     nodes: project.nodes.map((node) => ({ ...node, columns: [] })),
   });
   await render();
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
   act(() => {
-    fireEvent.click(screen.getByRole('button', { name: /pedidos/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ }));
   });
   expect(screen.getByRole('alert').textContent).toMatch(/output|schema/i);
   expect(onSelect).not.toHaveBeenCalled();
@@ -224,15 +246,15 @@ it('reports a missing published output without creating a partial instance', asy
 });
 
 it('retains native drag and transfers a typed external model definition through the same admission adapter', async () => {
-  await render(true, [{ id: 'source', label: 'Orders', category: 'Sources', draggable: true }]);
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  await render(true, [{ id: 'source', label: 'Orders', isSource: true, draggable: true }]);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
   const source = screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' });
   expect(source.draggable).toBe(true);
   act(() => {
     fireEvent.dragStart(source, { dataTransfer: {} });
   });
   expect(onDragStart.mock.calls[0]?.[0]).toBe('source');
-  const model = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
+  const model = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
   expect(model.draggable).toBe(true);
   const setData = vi.fn();
   act(() => {
@@ -254,7 +276,7 @@ it('deduplicates by identity while preserving a distinct native element with the
       selected: true,
     },
   ]);
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
   expect(
     mounted!.container.querySelectorAll(
       `[data-element-id="${canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes')}"]`
@@ -273,6 +295,58 @@ it('deduplicates by identity while preserving a distinct native element with the
   );
 });
 
+it('deduplicates an explicit direct file identity without changing its registered drag payload', async () => {
+  // A discovered publication must not allocate new relation/field IDs for an existing definition.
+  const id = canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes');
+  onDragStart.mockImplementation((_id: string, event: DragEvent<HTMLButtonElement>) => {
+    event.dataTransfer.setData(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE, 'registered-definition');
+  });
+  await render(true, [
+    {
+      id,
+      label: 'clientes',
+      draggable: true,
+      definitionIdentity: { canvasId: binding.canvasId, uniqueId: 'model.demo.clientes' },
+    },
+  ]);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  expect(mounted!.container.querySelectorAll(`[data-element-id="${id}"]`)).toHaveLength(1);
+  const setData = vi.fn();
+  act(() => {
+    fireEvent.dragStart(screen.getByRole('button', { name: /^clientes(?:\s|$)/ }), {
+      dataTransfer: { setData },
+    });
+  });
+  expect(onDragStart).toHaveBeenCalledOnce();
+  expect(onDragStart.mock.calls[0]?.[0]).toBe(id);
+  expect(setData).toHaveBeenCalledExactlyOnceWith(
+    CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+    'registered-definition'
+  );
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(saveFileContent).not.toHaveBeenCalled();
+});
+
+it('merges raw file definitions using the Canvas identity rather than a display name or ID prefix', async () => {
+  // Direct file projections use raw uniqueIds while native file references use a different UI id.
+  await render(true, [
+    {
+      id: 'model.demo.clientes',
+      label: 'Registered clients',
+      definitionIdentity: { canvasId: binding.canvasId, uniqueId: 'model.demo.clientes' },
+    },
+    {
+      id: 'other-canvas-client',
+      label: 'Other clients',
+      definitionIdentity: { canvasId: 'other-canvas', uniqueId: 'model.demo.clientes' },
+    },
+  ]);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  expect(screen.getByRole('button', { name: 'Registered clients' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Other clients' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /^clientes(?:\s|$)/ })).toBeNull();
+});
+
 it('does no discovery while closed and reuses graph analysis across close and reopen', async () => {
   await render(false);
   // Exercise the browser cache lifetime; the shared harness otherwise collects inactive queries immediately.
@@ -283,7 +357,7 @@ it('does no discovery while closed and reuses graph analysis across close and re
   expect(getFileContent).not.toHaveBeenCalled();
   expect(getProjectGraph).not.toHaveBeenCalled();
   await render(true);
-  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
   const graphQuery = mounted!.queryClient
     .getQueryCache()
     .findAll({
@@ -298,7 +372,7 @@ it('does no discovery while closed and reuses graph analysis across close and re
     expect(mounted!.queryClient.getQueryData(graphQuery!.queryKey)).toBe(project);
     await render(true);
     await act(async () => vi.advanceTimersByTimeAsync(1));
-    expect(screen.getByRole('button', { name: /pedidos/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ })).toBeTruthy();
     expect(getProjectGraph).toHaveBeenCalledTimes(1);
   } finally {
     vi.useRealTimers();
@@ -329,7 +403,7 @@ it.each(['unresolved', 'ambiguous', 'stale', 'wrong-owner', 'denied'] as const)(
     await render();
     await waitForReactQuery(() => screen.queryByRole('alert') != null);
     expect(screen.getByRole('button', { name: 'Model 1' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /pedidos/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ })).toBeNull();
     expect(mounted!.container.textContent).not.toContain('PRIVATE_BACKEND_PATH');
     expect(saveFileContent).not.toHaveBeenCalled();
     if (state === 'ambiguous' || state === 'unresolved')
@@ -358,13 +432,15 @@ it.each(['tenantId', 'projectId', 'environmentId'] as const)(
       },
     };
     await render();
-    await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+    await waitForReactQuery(
+      () => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null
+    );
     listFiles.mockResolvedValue([]);
     act(() => {
       scope = { ...scope, [field]: 'other' };
       for (const listener of listeners) listener();
     });
-    expect(screen.queryByRole('button', { name: /pedidos/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ })).toBeNull();
     await waitForReactQuery(() => listFiles.mock.calls.length === 2);
     expect(getProjectGraph).toHaveBeenCalledTimes(1);
   }

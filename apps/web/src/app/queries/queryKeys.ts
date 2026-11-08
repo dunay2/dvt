@@ -19,6 +19,8 @@ export const queryKeys = {
   // Workspace
   // -------------------------------------------------------------------------
   workspace: {
+    warehouseConnections: (tenantId: string, projectId: string, environmentId: string) =>
+      ['workspace', 'warehouse-connections', tenantId, projectId, environmentId] as const,
     graphDraftRoot: () => ['workspace', 'graph-draft'] as const,
     graphDraft: (workspaceLayoutKey: string) =>
       ['workspace', 'graph-draft', workspaceLayoutKey] as const,

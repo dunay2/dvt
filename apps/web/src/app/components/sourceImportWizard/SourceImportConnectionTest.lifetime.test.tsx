@@ -16,8 +16,8 @@ describe('source import connection test lifetime', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     harness = createSourceImportWizardHarness();
   });
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
   });
 
   it('does not publish a completed test from the previous connection', async () => {

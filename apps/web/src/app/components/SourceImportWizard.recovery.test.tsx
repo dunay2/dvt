@@ -33,8 +33,8 @@ describe('SourceImportWizard catalogue recovery', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     harness = createSourceImportWizardHarness();
   });
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
   });
 
   it('retains failed catalogue after a passing connection test and retries the full dbt binding', async () => {

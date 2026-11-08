@@ -14,6 +14,38 @@ import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTes
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import { ApiError } from '../services/api/createApiClient';
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { waitForReactQuery } from '../../testing/reactQueryHarness';
+import type { SessionContextPort, WorkspaceScope } from '../ports/sessionContext';
+
+function reactiveWorkspaceSession(): { sessionContext: SessionContextPort; selectB(): void } {
+  const base = createAppServicesTestOverrides().sessionContext!;
+  let scope: WorkspaceScope = {
+    tenantId: 'tenant',
+    projectId: 'a',
+    environmentId: 'dev',
+    targetAdapter: 'temporal',
+  };
+  const listeners = new Set<() => void>();
+  const sessionContext: SessionContextPort = {
+    ...base,
+    getWorkspaceScope: () => scope,
+    getWorkspaceScopeSnapshot: () => scope,
+    subscribeWorkspaceScope: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+  return {
+    sessionContext,
+    selectB() {
+      scope = { ...scope, projectId: 'b' };
+      listeners.forEach((listener) => listener());
+    },
+  };
+}
 
 describe('SourceImportWizard', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
@@ -23,9 +55,79 @@ describe('SourceImportWizard', () => {
     harness = createSourceImportWizardHarness();
   });
 
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
+    vi.useRealTimers();
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+  });
+
+  // A pending command from A used to be able to mutate a newly selected workspace B.
+  it('does not apply a delayed rename receipt or selection to a new workspace', async () => {
+    const session = reactiveWorkspaceSession();
+    let finishRename!: (value: {
+      id: string;
+      name: string;
+      type: 'postgres';
+      database: string;
+    }) => void;
+    const port = buildWarehouseSourceImportPort({
+      listWarehouseConnections: async () => [
+        {
+          id: session.sessionContext.getWorkspaceScope().projectId,
+          name: `Warehouse ${session.sessionContext.getWorkspaceScope().projectId}`,
+          type: 'postgres',
+          database: 'demo',
+        },
+      ],
+      renameWarehouseConnection: () =>
+        new Promise((resolve) => {
+          finishRename = resolve;
+        }),
+    });
+    await harness.renderWizard({
+      warehouseSourceImport: port,
+      sessionContext: session.sessionContext,
+    });
+    await harness.clickConnectionOption('Warehouse a');
+    await harness.clickTab('Connections');
+    await harness.clickButtonContaining('Rename connection');
+    await harness.fillInputByLabel('New connection name', 'Old workspace rename');
+    await harness.clickButtonContaining('Save name');
+    await act(async () => session.selectB());
+    await waitForReactQuery(() => harness.findConnectionOption('Warehouse b') != null);
+    await act(async () => {
+      finishRename({ id: 'a', name: 'Old workspace rename', type: 'postgres', database: 'demo' });
+    });
+    expect(harness.findConnectionOption('Warehouse b')?.getAttribute('aria-pressed')).toBe('false');
+    expect(document.body.textContent).not.toContain('Old workspace rename');
+    expect(document.body.textContent).not.toContain('Connection name updated');
+  });
+
+  it('does not publish a delayed import completion into another workspace', async () => {
+    const session = reactiveWorkspaceSession();
+    let completeImport!: (value: ReturnType<typeof buildGraphDraftSourceImportResult>) => void;
+    const onComplete = vi.fn();
+    const port = buildWarehouseSourceImportPort({
+      importSources: () =>
+        new Promise((resolve) => {
+          completeImport = resolve;
+        }),
+    });
+    await harness.renderWizard({
+      warehouseSourceImport: port,
+      sessionContext: session.sessionContext,
+      onComplete,
+      initialSelection: { connectionId: 'conn-1', sourceObjects: [buildSourceObject()] },
+    });
+    await waitForReactQuery(() => harness.findButtonContaining('Add sources')?.disabled === false);
+    await harness.clickButtonContaining('Add sources');
+    await act(async () => session.selectB());
+    await act(async () => {
+      completeImport(buildGraphDraftSourceImportResult());
+    });
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(document.body.textContent).not.toContain('Sources attached successfully');
+    expect(harness.findTab('Connections')?.getAttribute('aria-selected')).toBe('true');
   });
 
   it('makes the catalogue panel identity addressable for keyboard resizing', async () => {
@@ -821,6 +923,7 @@ describe('SourceImportWizard', () => {
   });
 
   it('creates a governed warehouse connection before browsing source tables', async () => {
+    vi.useFakeTimers();
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = vi.fn();
     const createWarehouseConnection = vi.fn(async () => ({
@@ -858,7 +961,17 @@ describe('SourceImportWizard', () => {
       await harness.fillInputByLabel('Database', 'dvt');
       await harness.fillInputByLabel('Credential reference', 'postgres:local-warehouse');
       await harness.clickButtonContaining('Create connection');
-      await harness.flushPendingWork();
+      // Query refresh completion and form settlement are later than the command's HTTP receipt.
+      await waitForReactQuery(
+        () =>
+          document.querySelector('[data-slot="source-import-create-connection-actions"]') == null &&
+          harness.findConnectionOption('Local Postgres proof')?.getAttribute('aria-pressed') ===
+            'true',
+        {
+          description: 'created connection accepted and selected after catalog refresh',
+          tick: () => vi.advanceTimersByTimeAsync(0),
+        }
+      );
 
       expect(createWarehouseConnection).toHaveBeenCalledWith({
         name: 'Local Postgres proof',

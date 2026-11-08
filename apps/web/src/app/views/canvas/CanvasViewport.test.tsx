@@ -11,6 +11,7 @@ vi.mock(
 );
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
+import type { CanvasProjectElementsInput } from './explorer/CanvasExplorer';
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';
@@ -118,6 +119,49 @@ describe('CanvasViewport', () => {
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add model' }).disabled).toBe(
       true
     );
+  });
+
+  it('qualifies only actual file definitions with the explicit catalogue Canvas owner', async () => {
+    // Scoped file identity cannot be reconstructed from an id prefix or the Canvas layout key.
+    const renderElements = vi.fn((_input: CanvasProjectElementsInput) => null);
+    const onInstantiateNode = vi.fn();
+    await renderViewport({
+      onInstantiateNode,
+      sourceCatalogueCanvasId: 'file-canvas',
+      sourceCatalogue: [
+        {
+          id: 'model.demo.orders',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: {
+            authority: 'dbt-project-files',
+            resourceType: 'model',
+            dbtUniqueId: 'model.demo.orders',
+          },
+        },
+        {
+          id: 'native-model',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: { dbtUniqueId: 'model.demo.orders' },
+        },
+      ],
+      projectFiles: { onActivate: async () => true, onCanvas: () => undefined, renderElements },
+    });
+    const items = renderElements.mock.lastCall?.[0].items;
+    expect(items?.map((item) => item.definitionIdentity)).toEqual([
+      { canvasId: 'file-canvas', uniqueId: 'model.demo.orders' },
+      undefined,
+    ]);
+    expect(onInstantiateNode).not.toHaveBeenCalled();
   });
 
   it.each([true, false])(

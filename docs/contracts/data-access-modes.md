@@ -59,6 +59,15 @@ existing `SourceDataSampleResponse`. This is an in-place hard cut: `sampledAt`
 is removed from Source responses, not accepted as a legacy alternative.
 Transform responses use the same LIVE value object as described below.
 
+The project sidebar, import Wizard and manual-source Inspector consume the same
+scope-keyed `ListWarehouseConnections` query through the existing warehouse
+application port. This cache contains public connection metadata only, not data
+samples, health observations or credentials. Its tenant/project/environment key
+comes from the granted session; a scope change cannot reuse another scope's
+snapshot. Existing create/rename receipts update and invalidate their captured
+key. A connection reference on a model remains a reference to that shared
+resource, and a model can remain logically valid without a physical binding.
+
 The authorized connection catalog owns provider and binding identity. The
 provider probe owns `queriedAt`, the time it completed the bounded read in its
 read-only transaction; this is neither capture time nor a guarantee that the

@@ -19,6 +19,7 @@ import {
 } from '../../support/canvasExecutionSelection';
 import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
 import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchProperties,
   revisitWorkbenchCanvas,
@@ -28,6 +29,7 @@ import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../../support/workspaceSession';
 
 describe('Canvas happy path remains writable after create/save', () => {
+  let initialDraft: ReturnType<typeof stubStatefulCanvasDraftAuthoring>;
   beforeEach(() => {
     stubShellBootstrapApis({
       scopes: ['workspace:files:view', 'workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -41,7 +43,105 @@ describe('Canvas happy path remains writable after create/save', () => {
       defaultWorkspace: E2E_PROJECT_WORKSPACE,
       availableWorkspaces: [E2E_PROJECT_WORKSPACE],
     });
-    stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
+    initialDraft = stubStatefulCanvasDraftAuthoring({
+      emptyCanvas: true,
+      canvasKind: 'transformation',
+    });
+    stubE2eJsonApi('GET', '/workspace/warehouse/connections', [
+      { id: 'warehouse', name: 'Project warehouse', type: 'postgres', database: 'analytics' },
+    ]);
+  });
+
+  it('keeps Source models in one searchable catalog and metadata disclosure separate from placement', () => {
+    // A source facet must survive without a physical binding; an input seed must not acquire it.
+    let writesBeforeDisclosure = 0;
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    initialDraft.nodes.push(
+      {
+        id: 'catalog-client',
+        name: 'Customers',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+        metadata: { resourceType: 'source', schema: 'raw', tableIdentifier: 'client' },
+      },
+      {
+        id: 'catalog-revenue',
+        name: 'Revenue without physical connection',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+      },
+      {
+        id: 'catalog-seed',
+        name: 'Country seed',
+        pluginId: 'dbt',
+        kind: 'dbt:seed',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+        metadata: { resourceType: 'seed' },
+      }
+    );
+    visitWorkbenchCanvas('es');
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '3');
+    cy.get('[data-slot="canvas-explorer-models"]')
+      .should('contain.text', 'Customers')
+      .and('contain.text', 'Revenue without physical connection')
+      .and('contain.text', 'Country seed');
+    cy.get('[data-element-id="catalog-client"]').should('contain.text', 'Fuente');
+    cy.get('[data-element-id="catalog-seed"]').should('not.contain.text', 'Fuente');
+    cy.get('[data-slot="canvas-explorer-models"] [data-model-icon="model"]').should(
+      'have.length',
+      3
+    );
+    cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().focus();
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
+    cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Project warehouse');
+    // Entry can normalize the protected draft; disclosure must add no write to that baseline.
+    cy.then(() => {
+      writesBeforeDisclosure = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(
+      '[data-slot="canvas-explorer-model-disclosure"][data-model-id="catalog-client"]'
+    ).focus();
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('[data-slot="canvas-explorer-model-disclosure"][data-model-id="catalog-client"]')
+      .should('have.attr', 'aria-expanded', 'true')
+      .and('be.focused');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDisclosure)
+    );
+    cy.get('[data-slot="canvas-explorer-models"] input[type="search"]').type('Fuente');
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '1');
+    cy.get('[data-element-id="catalog-client"]').should('be.visible');
+    cy.get('[data-element-id="catalog-seed"]').should('not.exist');
+    cy.get('[data-slot="canvas-explorer-models"] input[type="search"]')
+      .clear()
+      .type('no-such-model');
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '0');
+    cy.get('[data-slot="canvas-explorer-models"]').should('contain.text', 'No hay coincidencias.');
+    cy.get('[data-slot="canvas-explorer-models"] input[type="search"]').clear();
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--connections-models');
+    cy.viewport(1544, 868);
+    cy.document().should((document) => {
+      expect(document.documentElement.scrollWidth).to.be.at.most(1544);
+    });
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--desktop');
+    cy.get('[data-element-id="catalog-client"]').dblclick();
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('[data-element-id="catalog-client"]').should('have.attr', 'aria-pressed', 'true');
+    dragWorkbenchField('[data-element-id="catalog-client"]', '[data-testid="canvas-viewport"]');
+    cy.get('.react-flow__node').should('have.length', 2);
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '3');
+    cy.get('#canvas-code-main-tab').should('not.exist');
+    cy.then(() => expect(getE2eApiCalls('/workspace/files', 'POST')).to.have.length(0));
   });
 
   it('creates independent file-model references through Elements without navigating to Code or creating SQL files', () => {

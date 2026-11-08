@@ -1,4 +1,5 @@
 import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
+import { buildSourceImportFailure } from './types';
 import { Card } from '../ui/card';
 import { ConnectionStep } from './ConnectionStep';
 import { ResultStep } from './ResultStep';
@@ -21,7 +22,11 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
   );
   const connectionError = resolveSourceImportFailureMessage(
     copy,
-    testState.status === 'failed' ? testState.failure : state.loadError
+    testState.status === 'failed'
+      ? testState.failure
+      : controller.connectionsQuery.isError
+        ? buildSourceImportFailure('load-connections', controller.connectionsQuery.error)
+        : state.loadError
   );
   const createConnectionError = resolveSourceImportFailureMessage(
     copy,
@@ -49,6 +54,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             renameConnectionFormOpen={state.renameConnectionFormOpen}
             renameConnectionForm={state.renameConnectionForm}
             isLoadingConnections={state.isLoadingConnections}
+            hasConnectionSnapshot={controller.connectionsQuery.data !== undefined}
             isCreatingConnection={state.isCreatingConnection}
             isRenamingConnection={state.isRenamingConnection}
             isTestingConnection={testState.status === 'loading'}
