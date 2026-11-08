@@ -33,6 +33,7 @@ const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
   sourceImportWizardProps: null as null | Record<string, unknown>,
   dbtProjectImportDialogProps: null as null | Record<string, unknown>,
+  codeFlush: vi.fn<() => Promise<boolean>>(async () => true),
 }));
 
 vi.mock('../../components/SourceImportWizard', () => ({
@@ -101,7 +102,7 @@ vi.mock('./SqlContextWorkbench', async () => {
       props: Pick<CodeViewProps, 'fileScope' | 'initialPath' | 'fileSelectionRequest'>,
       ref
     ) {
-      useImperativeHandle(ref, () => ({ flush: async () => true }));
+      useImperativeHandle(ref, () => ({ flush: shellState.codeFlush }));
       return (
         <div
           data-testid="sql-context-workbench"
@@ -310,6 +311,7 @@ export function createCanvasShellHarness(): {
   act(() => navigationRoot.render(<CanvasWorkspaceTopBarIdentity />));
   shellState.sourceImportWizardProps = null;
   shellState.dbtProjectImportDialogProps = null;
+  shellState.codeFlush.mockReset().mockResolvedValue(true);
   useCanvasInteractionStore.setState({
     contextualWorkbenchId: null,
     contextualWorkbenchOwnerKey: null,

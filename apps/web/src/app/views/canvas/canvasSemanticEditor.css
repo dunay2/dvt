@@ -33,6 +33,12 @@
   flex-shrink: 0;
 }
 
+.canvas-workspace-model-tab-group {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
 .canvas-workspace-model-tab-label {
   max-width: 16rem;
   overflow: hidden;

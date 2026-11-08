@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent, waitFor, within } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -187,6 +187,54 @@ describe('CanvasWorkspaceMenuControls', () => {
       expect(showCanvas).toHaveBeenCalledExactlyOnceWith();
     }
   );
+  it.each([
+    ['en', 'Close: Code'],
+    ['es', 'Cerrar: Código'],
+  ] as const)('closes Code through the current command in %s', async (language, closeLabel) => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+    const selectCode = vi.fn();
+    const showCanvas = vi.fn();
+    const closeCode = vi.fn();
+    const render = async (onClose?: () => void): Promise<void> =>
+      act(async () =>
+        root.render(
+          <>
+            <CanvasWorkspaceMenuContributionRegistrar
+              activeCanvas={{ id: 'sales', kind: 'transformation', title: 'Sales' }}
+              canExportProjectSnapshot={false}
+              canImportProjectSnapshot={false}
+              codeTab={{ active: true, onSelect: selectCode, onCanvas: showCanvas, onClose }}
+            />
+            <CanvasWorkspaceTopBarIdentity />
+          </>
+        )
+      );
+    await render(closeCode);
+    const close = within(container).getByRole('button', { name: closeLabel });
+    const code = container.querySelector('[data-slot="canvas-code-main-tab"]')!;
+    expect(close.closest('[role="tab"]')).toBeNull();
+    expect(close.getAttribute('tabindex')).toBe('-1');
+    expect(code.getAttribute('aria-keyshortcuts')).toBe('Delete');
+    await act(async () => fireEvent.click(close));
+    expect(closeCode).toHaveBeenCalledExactlyOnceWith();
+    const replacement = vi.fn();
+    await render(replacement);
+    const globalDelete = vi.fn();
+    document.addEventListener('keydown', globalDelete);
+    try {
+      await act(async () => fireEvent.keyDown(code, { key: 'Delete' }));
+      expect(replacement).toHaveBeenCalledExactlyOnceWith();
+      expect(globalDelete).not.toHaveBeenCalled();
+    } finally {
+      document.removeEventListener('keydown', globalDelete);
+    }
+    expect(selectCode).not.toHaveBeenCalled();
+    expect(showCanvas).not.toHaveBeenCalled();
+    await render();
+    expect(within(container).queryByRole('button', { name: closeLabel })).toBeNull();
+    expect(code.getAttribute('aria-keyshortcuts')).toBeNull();
+  });
+
   it('renders project commands and active Canvas context in the configured language', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 

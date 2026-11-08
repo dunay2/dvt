@@ -2,10 +2,13 @@
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabsTemplate } from './CanvasWorkspaceModelTabs.templates';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import type { CanvasModelWorkspaceTabContribution } from './canvasWorkspaceMenuContributionStore';
+import type {
+  CanvasModelWorkspaceTabContribution,
+  CanvasWorkspaceMenuContribution,
+} from './canvasWorkspaceMenuContributionStore';
 import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
 import { resolveCodeViewCopy } from '../code/codeViewCopy';
-import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 export function CanvasWorkspaceModelTabs({
   canvasTitle,
@@ -18,6 +21,7 @@ export function CanvasWorkspaceModelTabs({
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
+  const codeTitle = resolveCodeViewCopy(language).title;
   const tabs = [
     {
       key: 'canvas',
@@ -34,8 +38,15 @@ export function CanvasWorkspaceModelTabs({
           {
             key: 'code',
             ...canvasWorkspaceTabs.code,
-            label: resolveCodeViewCopy(language).title,
+            label: codeTitle,
             select: codeTab.onSelect,
+            close:
+              codeTab.onClose == null
+                ? undefined
+                : {
+                    label: `${resolveCanvasViewCopy(language).nodeWorkbenchCloseLabel}: ${codeTitle}`,
+                    action: codeTab.onClose,
+                  },
           },
         ]),
     ...(tab == null
@@ -45,6 +56,7 @@ export function CanvasWorkspaceModelTabs({
             key: 'model',
             ...canvasWorkspaceTabs.model,
             label: tab.label,
+            close: { label: copy.closeEditor, action: () => tab.onClose() },
             select: () => {
               codeTab?.onCanvas();
               tab.onSelect();
@@ -58,7 +70,6 @@ export function CanvasWorkspaceModelTabs({
       activeKey={codeTab?.active === true ? 'code' : tab?.active === true ? 'model' : 'canvas'}
       copy={copy}
       onSelect={(key) => tabs.find((item) => item.key === key)?.select?.()}
-      onClose={tab == null ? undefined : () => tab.onClose()}
     />
   );
 }

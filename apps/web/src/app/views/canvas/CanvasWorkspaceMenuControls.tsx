@@ -40,6 +40,7 @@ export function CanvasWorkspaceMenuContributionRegistrar(
   const hasOpenProjectCodeCommand = props.onOpenProjectCode != null;
   const hasOpenProjectExplorerCommand = props.onOpenProjectExplorer != null;
   const hasCodeTab = props.codeTab != null;
+  const hasCloseCodeCommand = props.codeTab?.onClose != null;
   const contribution = useMemo<CanvasWorkspaceMenuContribution>(
     () => ({
       activeCanvas:
@@ -63,6 +64,9 @@ export function CanvasWorkspaceMenuContributionRegistrar(
               active: props.codeTab?.active === true,
               onSelect: () => latestPropsRef.current.codeTab?.onSelect(),
               onCanvas: () => latestPropsRef.current.codeTab?.onCanvas(),
+              ...(hasCloseCodeCommand
+                ? { onClose: () => latestPropsRef.current.codeTab?.onClose?.() }
+                : {}),
             },
           }
         : {}),
@@ -102,6 +106,7 @@ export function CanvasWorkspaceMenuContributionRegistrar(
       hasOpenProjectCodeCommand,
       hasOpenProjectExplorerCommand,
       hasCodeTab,
+      hasCloseCodeCommand,
       props.codeTab?.active,
     ]
   );
