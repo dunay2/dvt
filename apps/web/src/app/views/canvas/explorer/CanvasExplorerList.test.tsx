@@ -214,7 +214,7 @@ it('keeps the full model name and Source facet in a wrapping title group', () =>
   const name = screen.getByText('Customers');
   const facet = screen.getByText('Source');
   expect(name.parentElement?.getAttribute('data-slot')).toBe('canvas-explorer-model-title');
-  expect(facet.parentElement).toBe(name.parentElement);
+  expect(facet.closest('[data-slot="canvas-explorer-model-title"]')).toBe(name.parentElement);
   expect(screen.getByRole('button', { name: 'Customers' }).getAttribute('aria-describedby')).toBe(
     facet.id
   );
@@ -223,4 +223,46 @@ it('keeps the full model name and Source facet in a wrapping title group', () =>
   });
   expect(screen.getByText('Identifier').tagName).toBe('DT');
   expect(screen.getByText('catalog-client').tagName).toBe('DD');
+});
+
+it('keeps collapsed rows compact while exposing independent real Source and SQL facets', () => {
+  // The visual reference puts metadata behind detail disclosure; format must remain an admitted file fact.
+  act(() =>
+    root.render(
+      <CanvasExplorerList
+        items={[
+          {
+            id: 'file-source',
+            label: 'Customers',
+            description: 'models/customers.sql',
+            isSource: true,
+            definitionFormat: 'sql',
+            details: [{ label: 'file', value: 'models/customers.sql' }],
+          },
+          { id: 'inline', label: 'Inline SQL', description: 'An unbound logical definition' },
+        ]}
+        onSelect={vi.fn()}
+      />
+    )
+  );
+  const row = screen.getByRole('button', { name: 'Customers models/customers.sql' });
+  expect(row.textContent).not.toContain('models/customers.sql');
+  expect(row.title).toBe('Customers · models/customers.sql');
+  const source = within(row).getByText('Source');
+  const format = within(row).getByText('SQL');
+  expect(source.parentElement).toBe(format.parentElement);
+  expect(row.getAttribute('aria-describedby')?.split(' ')).toEqual([source.id, format.id]);
+  expect(
+    within(
+      screen.getByRole('button', { name: 'Inline SQL An unbound logical definition' })
+    ).queryByText('SQL')
+  ).toBeNull();
+  act(() => {
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'models/customers.sql' } });
+  });
+  expect(screen.getByRole('button', { name: 'Customers models/customers.sql' })).toBe(row);
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Details: Customers' }));
+  });
+  expect(screen.getByText('models/customers.sql').tagName).toBe('DD');
 });

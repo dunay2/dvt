@@ -7,6 +7,7 @@
  */
 import type { Node } from '@xyflow/react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
@@ -16,6 +17,7 @@ import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerModels } from './canvasExplorerItems';
 import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
+import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 export function CanvasGraphExplorer({
   nodes,
@@ -48,6 +50,7 @@ export function CanvasGraphExplorer({
   importedSourceIds?: readonly string[];
   onImportFocusComplete?: () => void;
 }>): JSX.Element {
+  const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const rootRef = useRef<HTMLDivElement>(null);
   const definitions = useMemo(
     () => projectCanvasExplorerModels(catalogue ?? [], sourceCatalogueCanvasId),
@@ -104,6 +107,7 @@ export function CanvasGraphExplorer({
   return (
     <CanvasExplorer
       rootRef={rootRef}
+      heading={{ label: copy.explorerTitle, contextLabel: copy.project }}
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={activityRail}

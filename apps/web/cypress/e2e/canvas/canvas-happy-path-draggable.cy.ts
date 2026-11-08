@@ -28,6 +28,17 @@ import {
 import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../../support/workspaceSession';
 
+function assertDisclosedModelPath(row: string, path: string): void {
+  const parent = '[data-slot="canvas-explorer-model-row"]';
+  cy.get(row)
+    .closest(parent)
+    .find('[data-slot="canvas-explorer-model-disclosure"]')
+    .then(($button) => {
+      if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
+    });
+  cy.get(row).closest(parent).find('dl').should('be.visible').and('contain.text', path);
+}
+
 describe('Canvas happy path remains writable after create/save', () => {
   let initialDraft: ReturnType<typeof stubStatefulCanvasDraftAuthoring>;
   beforeEach(() => {
@@ -128,20 +139,43 @@ describe('Canvas happy path remains writable after create/save', () => {
     cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '0');
     cy.get('[data-slot="canvas-explorer-models"]').should('contain.text', 'No hay coincidencias.');
     cy.get('[data-slot="canvas-explorer-models"] input[type="search"]').clear();
+    cy.get(
+      '[data-slot="canvas-explorer-model-disclosure"][data-model-id="catalog-client"]'
+    ).click();
+    cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().click();
+    cy.get('[data-element-id="catalog-client"]').should(($button) => {
+      const button = $button[0]!;
+      const document = button.ownerDocument;
+      const window = document.defaultView!;
+      expect(window.getComputedStyle(button).fontSize).to.equal('14px');
+      const facet = document.getElementById(button.getAttribute('aria-describedby')!);
+      expect(facet, 'the real Source property remains accessible').not.to.equal(null);
+      expect(window.getComputedStyle(facet!).fontSize).to.equal('12px');
+    });
+    cy.contains('[data-slot="canvas-explorer"] h3', 'Explorador').should(
+      'have.css',
+      'font-size',
+      '14px'
+    );
     cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--connections-models');
     cy.viewport(1544, 868);
     cy.document().should((document) => {
       expect(document.documentElement.scrollWidth).to.be.at.most(1544);
     });
-    cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--desktop');
     cy.get('[data-element-id="catalog-client"]').dblclick();
     cy.get('.react-flow__node').should('have.length', 1);
     cy.get('[data-element-id="catalog-client"]').should('have.attr', 'aria-pressed', 'true');
+    // Check the actual placement control before the native gesture.
+    cy.get('[data-element-id="catalog-client"]')
+      .should('be.enabled')
+      .and('have.attr', 'draggable', 'true');
     dragWorkbenchField('[data-element-id="catalog-client"]', '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '3');
     cy.get('#canvas-code-main-tab').should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/files', 'POST')).to.have.length(0));
+    // Element screenshots restore runner geometry asynchronously; capture after native gestures.
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--desktop');
   });
 
   it('creates independent file-model references through Elements without navigating to Code or creating SQL files', () => {
@@ -224,11 +258,13 @@ describe('Canvas happy path remains writable after create/save', () => {
     cy.get(modelRow)
       .should('be.visible')
       .and('not.be.disabled')
-      .and('contain.text', 'models/clientes.sql');
+      .and('contain.text', 'clientes')
+      .and('contain.text', 'SQL');
+    assertDisclosedModelPath(modelRow, 'models/clientes.sql');
     dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 1);
     cy.get('.react-flow__node').invoke('attr', 'data-id').as('firstFileInstance');
-    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
+    assertDisclosedModelPath(modelRow, 'models/clientes.sql');
     cy.get(modelRow).click();
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('#canvas-code-main-tab').should('not.exist');
@@ -264,7 +300,7 @@ describe('Canvas happy path remains writable after create/save', () => {
     });
     revisitWorkbenchCanvas();
     cy.get('.react-flow__node').should('have.length', 2);
-    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
+    assertDisclosedModelPath(modelRow, 'models/clientes.sql');
     openCanvasNodeOperations('clientes 2');
     clickCanvasContextMenuItem('Delete');
     cy.get('.react-flow__node').should('have.length', 1);

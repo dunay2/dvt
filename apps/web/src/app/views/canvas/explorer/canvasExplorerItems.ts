@@ -34,6 +34,8 @@ export type CanvasExplorerItem = Readonly<{
   disabled?: boolean;
   /** Read-only adaptation of an explicit resource discriminator, never persisted node metadata. */
   isSource?: boolean;
+  /** File-format fact from the accepted path, independent of Source and execution readiness. */
+  definitionFormat?: 'sql';
   details?: readonly CanvasExplorerDetail[];
   searchText?: string;
   definitionIdentity?: Readonly<{ canvasId: string; uniqueId: string }>;
@@ -43,6 +45,10 @@ export type CanvasExplorerFileModelItem = CanvasExplorerItem &
   Readonly<{
     definitionIdentity: Readonly<{ canvasId: string; uniqueId: string }>;
   }>;
+
+function definitionFormatForPath(path: string | undefined): CanvasExplorerItem['definitionFormat'] {
+  return text(path)?.toLowerCase().endsWith('.sql') === true ? 'sql' : undefined;
+}
 
 function projectDetails(
   facts: Partial<Record<CanvasExplorerDetail['label'], unknown>>
@@ -130,6 +136,7 @@ export function projectCanvasExplorerModels(
           description:
             fileModelPath ?? (context || undefined) ?? text(node.path) ?? text(node.description),
           isSource,
+          definitionFormat: definitionFormatForPath(node.path),
           details,
           ...(definitionIdentity == null ? {} : { definitionIdentity }),
         },
@@ -161,6 +168,7 @@ export function projectCanvasExplorerFileModels(
           label: node.name,
           description: path ?? node.description,
           isSource: false,
+          definitionFormat: definitionFormatForPath(path),
           details: projectDetails({
             file: path,
             identifier: node.uniqueId,

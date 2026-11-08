@@ -80,4 +80,14 @@ describe('Canvas explorer ownership', () => {
     expect(relational).toContain('CanvasRelationalTreeSourceCatalogue');
     expect(relational).not.toContain('CanvasExplorerList');
   });
+
+  it('keeps compact project metadata and format decisions behind the admitted read model', () => {
+    // The reference is presentation: inline SQL text, file heuristics and enlarged local typography cannot become new domain policy.
+    expect(template).toContain("item.definitionFormat === 'sql'");
+    expect(template).not.toMatch(/\.endsWith\(|\.originalFilePath|item\.path|styles\.description/);
+    expect(explorerStyles).toMatch(/\.catalogModelIcon\s*\{[^}]*composes:\s*modelIcon;/);
+    expect(explorerStyles).toContain('--catalog-model-accent: var(--canvas-node-port-source-ring)');
+    expect(explorerStyles).toContain('--catalog-source-accent: var(--status-info)');
+    expect(explorerStyles).not.toMatch(/#[\da-f]{3,8}\b|font-size:\s*(?:18|20)px/i);
+  });
 });

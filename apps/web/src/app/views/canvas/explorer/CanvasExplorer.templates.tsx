@@ -7,6 +7,7 @@
  */
 import {
   Box,
+  PanelsTopLeft,
   Workflow,
   GitBranch,
   Search,
@@ -43,6 +44,10 @@ export type CanvasExplorerPanel = (typeof panels)[number]['key'];
 export type CanvasExplorerActivityRail = Readonly<{
   codeVisible: boolean;
 }>;
+export type CanvasExplorerHeading = Readonly<{
+  label: string;
+  contextLabel?: string;
+}>;
 
 export function CanvasExplorerTemplate(
   props: Readonly<{
@@ -57,6 +62,7 @@ export function CanvasExplorerTemplate(
       onResize: (size: number, previousSize: number | undefined) => void;
     }>;
     copy: Copy;
+    heading?: CanvasExplorerHeading;
     rootRef?: RefObject<HTMLDivElement>;
     elements: ReactNode;
     hasProjectFiles: boolean;
@@ -131,7 +137,21 @@ export function CanvasExplorerTemplate(
                 className={styles.panel}
               >
                 <header className={styles.header}>
-                  <h3 className={styles.heading}>{props.copy[key]}</h3>
+                  <h3 className={styles.heading}>
+                    {props.heading == null ? null : (
+                      <PanelsTopLeft className={styles.headingIcon} aria-hidden="true" />
+                    )}
+                    <span
+                      className={styles.headingLabel}
+                      data-slot="canvas-explorer-heading-label"
+                      title={props.heading?.label ?? props.copy[key]}
+                    >
+                      {props.heading?.label ?? props.copy[key]}
+                    </span>
+                  </h3>
+                  {props.heading?.contextLabel ? (
+                    <span className={styles.contextLabel}>{props.heading.contextLabel}</span>
+                  ) : null}
                   <button
                     type="button"
                     className={styles.headerAction}
@@ -342,6 +362,11 @@ export function CanvasExplorerListTemplate({
             const expanded = expandedIds.has(item.id);
             const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
             const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
+            const formatId = `${id}-${encodeURIComponent(item.id)}-format`;
+            const sqlFile = item.definitionFormat === 'sql';
+            const descriptions = [item.isSource ? sourceId : null, sqlFile ? formatId : null]
+              .filter(Boolean)
+              .join(' ');
             const selected = selectedId == null ? item.selected === true : item.id === selectedId;
             const description = item.description?.trim();
             return (
@@ -352,7 +377,7 @@ export function CanvasExplorerListTemplate({
                     className={styles.item}
                     aria-pressed={selected}
                     aria-label={description ? `${item.label} ${description}` : item.label}
-                    aria-describedby={item.isSource ? sourceId : undefined}
+                    aria-describedby={descriptions || undefined}
                     title={description ? `${item.label} · ${description}` : item.label}
                     data-element-id={item.id}
                     disabled={unavailable}
@@ -366,21 +391,27 @@ export function CanvasExplorerListTemplate({
                     draggable={draggable}
                     onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
                   >
-                    <span className={styles.modelIcon}>
+                    <span className={styles.catalogModelIcon}>
                       <Box aria-hidden="true" data-model-icon="model" />
                     </span>
                     <span className={styles.itemText}>
                       <span className={styles.titleLine} data-slot="canvas-explorer-model-title">
                         <span className={styles.name}>{item.label}</span>
-                        {item.isSource ? (
-                          <span id={sourceId} className={styles.property}>
-                            {copy.source}
+                        {item.isSource || sqlFile ? (
+                          <span className={styles.facets}>
+                            {item.isSource ? (
+                              <span id={sourceId} className={styles.property}>
+                                {copy.source}
+                              </span>
+                            ) : null}
+                            {sqlFile ? (
+                              <span id={formatId} className={styles.format}>
+                                {copy.sql}
+                              </span>
+                            ) : null}
                           </span>
                         ) : null}
                       </span>
-                      {description ? (
-                        <span className={styles.description}>{description}</span>
-                      ) : null}
                     </span>
                   </button>
                   {item.details?.length ? (

@@ -108,8 +108,11 @@ describe('Canonical code inspection query lifecycle', () => {
     expect(container.querySelector('pre')?.textContent).toBe('select current_model');
     select('substrait');
     expect(container.querySelector('pre')?.textContent).toBe(PROPS.canonicalContent);
-    select('postgres-sql');
+    await act(async () => {
+      select('postgres-sql');
+    });
     expect(project).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('pre')?.textContent).toBe('select current_model');
   });
 
   it('keeps canonical JSON available without an authorized SQL query port', async () => {

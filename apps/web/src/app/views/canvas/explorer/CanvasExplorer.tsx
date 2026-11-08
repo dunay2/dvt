@@ -21,6 +21,7 @@ import type { ImperativePanelHandle } from '../../../components/ui/resizable';
 import {
   CanvasExplorerTemplate,
   type CanvasExplorerActivityRail,
+  type CanvasExplorerHeading,
   type CanvasExplorerPanel,
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
@@ -46,6 +47,7 @@ export type CanvasExplorerProjectWorkspace = Readonly<{
 
 export function CanvasExplorer({
   elements,
+  heading,
   projectFiles,
   children,
   rootRef,
@@ -53,6 +55,7 @@ export function CanvasExplorer({
   activityRail,
 }: Readonly<{
   elements: ReactNode | ((enabled: boolean) => ReactNode);
+  heading?: CanvasExplorerHeading;
   projectFiles?: CanvasExplorerProjectWorkspace;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
@@ -90,6 +93,7 @@ export function CanvasExplorer({
   return (
     <CanvasExplorerTemplate
       id={id}
+      heading={heading}
       active={visible && expanded ? 'elements' : null}
       visible={visible}
       dock={{

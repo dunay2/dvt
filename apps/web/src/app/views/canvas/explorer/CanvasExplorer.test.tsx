@@ -52,6 +52,37 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it.each([
+    { language: 'en', explorer: 'Explorer', project: 'Project', elements: 'Elements' },
+    { language: 'es', explorer: 'Explorador', project: 'Proyecto', elements: 'Elementos' },
+  ] as const)(
+    'keeps the project heading contextual and the internal catalogue generic in $language',
+    ({ language, explorer, project, elements }) => {
+      // Shared dock markup must not relabel the Model's internal catalogue as a project or change activity semantics.
+      useApplicationLanguageStore.setState({ language });
+      render(
+        <>
+          <CanvasGraphExplorer nodes={[]} catalogue={[]} onSelect={vi.fn()}>
+            <input aria-label="Project graph" />
+          </CanvasGraphExplorer>
+          <CanvasExplorer elements={<p>Internal inputs</p>}>
+            <input aria-label="Model graph" />
+          </CanvasExplorer>
+        </>
+      );
+      const heading = screen.getByRole('heading', { name: explorer });
+      expect(
+        heading.querySelector('[data-slot="canvas-explorer-heading-label"]')?.textContent
+      ).toBe(explorer);
+      expect(heading.closest('header')?.textContent).toContain(project);
+      expect(
+        screen.getByRole('heading', { name: elements }).closest('header')?.textContent
+      ).not.toContain(project);
+      expect(screen.getAllByRole('button', { name: elements })).toHaveLength(2);
+      expect(screen.getByLabelText('Model graph')).toBeTruthy();
+    }
+  );
+
   it('restores the saved dock width on mount and remount under StrictMode', () => {
     // GH-3818: mount observations could replace the saved width with the panel's default size.
     const view = (key: string): JSX.Element => (

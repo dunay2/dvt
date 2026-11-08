@@ -1,9 +1,98 @@
 /** Owned concern: navigation projections preserve node identity without changing graph data. */
 import { describe, expect, it } from 'vitest';
-import { projectCanvasExplorerModels, mergeCanvasExplorerModels } from './canvasExplorerItems';
+import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
+import {
+  projectCanvasExplorerModels,
+  projectCanvasExplorerFileModels,
+  mergeCanvasExplorerModels,
+} from './canvasExplorerItems';
 import type { CanonicalNode } from '../../../types/canonical';
 
 describe('Canvas explorer node projection', () => {
+  it.each([
+    { path: 'models/orders.sql', source: false, format: 'sql' },
+    { path: 'models/ORDERS.SQL', source: true, format: 'sql' },
+    { path: 'models/orders.sql.bak', source: false, format: undefined },
+    { path: 'models/orders.yml', source: true, format: undefined },
+    { path: undefined, source: false, format: undefined },
+  ])(
+    'derives the SQL file indicator from the actual path $path independently of Source',
+    ({ path, source, format }) => {
+      // A format label must not turn inline SQL or a plugin/resource name into a fictitious SQL file.
+      const node: CanonicalNode = {
+        id: 'model',
+        name: 'orders.sql',
+        description: 'SQL model in dbt.sql',
+        pluginId: 'sql-plugin',
+        kind: source ? 'dvt:source' : 'dbt:model',
+        role: source ? 'input' : 'transform',
+        status: 'idle',
+        tags: [],
+        ...(path == null ? {} : { path }),
+        metadata: {
+          resourceType: source ? 'source' : 'model',
+          sql: 'select 1',
+          path: 'guessed.sql',
+        },
+      };
+      const before = JSON.stringify(node);
+      const item = projectCanvasExplorerModels([node])[0]!;
+      expect(item.definitionFormat).toBe(format);
+      expect(item.isSource).toBe(source);
+      expect(item.details?.find((detail) => detail.label === 'file')?.value).toBe(path);
+      expect(JSON.stringify(node)).toBe(before);
+    }
+  );
+
+  it('uses only the resolved accepted file publication path for a discovered SQL file indicator', () => {
+    // Unbound file Models still list; a missing path cannot borrow one from its name or description.
+    const projection = DbtProjectGraphProjectionSchema.parse({
+      schemaVersion: 'dbt-project-graph-projection.v1',
+      adapterType: 'postgres',
+      freshness: 'fresh',
+      authorityBinding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'files',
+        authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
+      },
+      analysisSha256: 'a'.repeat(64),
+      projectRevision: {
+        projectRoot: 'analytics',
+        projectName: 'demo',
+        dbtVersion: '1.10.0',
+        contentSetSha256: 'b'.repeat(64),
+        analyzedAt: '2026-11-08T00:00:00.000Z',
+        analyzerVersion: 'dbt-cli',
+      },
+      nodes: ['models/Orders.SQL', 'models/schema.yml', undefined].map(
+        (originalFilePath, index) => ({
+          uniqueId: `model.demo.model_${index}`,
+          name: 'orders.sql',
+          packageName: 'demo',
+          resourceType: 'model',
+          ...(originalFilePath == null ? {} : { originalFilePath }),
+          description: 'inline.sql',
+          columns: [],
+          tags: [],
+          visualEditability: { status: 'code_only', reasons: ['File authority'] },
+        })
+      ),
+      edges: [],
+      diagnostics: [],
+      capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 3 },
+    });
+    const before = JSON.stringify(projection);
+    const items = projectCanvasExplorerFileModels(projection);
+    expect(items.map((item) => item.definitionFormat)).toEqual(['sql', undefined, undefined]);
+    expect(items[0]?.details).toContainEqual({
+      label: 'file',
+      value: 'analytics/models/Orders.SQL',
+    });
+    expect(items[0]?.searchText).toContain('analytics/models/Orders.SQL');
+    expect(items.every((item) => item.isSource === false)).toBe(true);
+    expect(JSON.stringify(projection)).toBe(before);
+  });
+
   it('lists logical models and keeps the Source facet independent of connection and input role', () => {
     // A role-only Sources section hid logical models and incorrectly classified seeds as Sources.
     const base: CanonicalNode = {

@@ -761,7 +761,9 @@ describe('dbt project file projection live vertical', () => {
         .and.match(/public"?\."?orders/);
       compiledProjection = sql;
     });
-    cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines', { timeout: 20_000 })
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines .view-line', {
+      timeout: 20_000,
+    })
       .should('contain.text', 'customer-1')
       .and(($lines) => {
         // Monaco stores each display line separately; concatenation would turn "i0" + "JOIN" into "i0JOIN".
