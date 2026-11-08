@@ -18,7 +18,12 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
-import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchProperties,
@@ -114,7 +119,9 @@ describe('Canvas happy path remains writable after create/save', () => {
     pressNativeKey('Enter');
     cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
     cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Project warehouse');
-    // Entry can normalize the protected draft; disclosure must add no write to that baseline.
+    // Entry normalization autosaves; wait for its real acknowledgement before measuring disclosure.
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.then(() => {
       writesBeforeDisclosure = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
