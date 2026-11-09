@@ -214,7 +214,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     { shell: true, newer: true },
   ])(
     'restores the card interaction owner (shell: $shell, newer focus: $newer)',
-    ({ shell, newer }) => {
+    async ({ shell, newer }) => {
       const card = document.createElement('div');
       card.className = 'react-flow__node';
       card.dataset.id = NODE.id;
@@ -235,8 +235,8 @@ describe('CanvasNodeWorkbenchOverlay', () => {
         closeFrame = callback;
         return 1;
       });
-      act(() => {
-        (workbenchState.props!.onClose as () => void)();
+      await act(async () => {
+        await (workbenchState.props!.onClose as () => Promise<void>)();
         if (newer) control.focus();
         closeFrame!(0);
       });
@@ -245,6 +245,74 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       control.remove();
     }
   );
+
+  it('retains the active Properties focus when the existing asynchronous close guard refuses', async () => {
+    const onHide = vi.fn(async () => false);
+    renderOverlay(root, { onHide });
+    const input = container.querySelector<HTMLInputElement>('input')!;
+    input.focus();
+    const frame = vi.spyOn(window, 'requestAnimationFrame');
+    await act(async () => {
+      await (workbenchState.props!.onClose as () => Promise<void>)();
+    });
+    expect(onHide).toHaveBeenCalledOnce();
+    expect(document.activeElement).toBe(input);
+    expect(frame).not.toHaveBeenCalled();
+  });
+
+  it('restores the actual catalogue opener when no placement exists', async () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    renderOverlay(root);
+    container.querySelector<HTMLInputElement>('input')!.focus();
+    let closeFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      closeFrame = callback;
+      return 1;
+    });
+    await act(async () => {
+      await (workbenchState.props!.onClose as () => Promise<void>)();
+    });
+    act(() => {
+      closeFrame!(0);
+    });
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
+  it('retains close ownership when the same Inspector publishes a refreshed callback', async () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    let resolve!: (accepted: boolean) => void;
+    renderOverlay(root, {
+      onHide: () =>
+        new Promise<boolean>((accept) => {
+          resolve = accept;
+        }),
+    });
+    container.querySelector<HTMLInputElement>('input')!.focus();
+    let closeFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      closeFrame = callback;
+      return 1;
+    });
+    act(() => {
+      (workbenchState.props!.onClose as () => void)();
+    });
+    // Hiding can recreate the facade callback; callback identity is not resource ownership.
+    renderOverlay(root, { onHide: vi.fn() });
+    await act(async () => {
+      resolve(true);
+    });
+    expect(closeFrame).toBeTypeOf('function');
+    act(() => {
+      closeFrame!(0);
+    });
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
 
   it.each(['focus', 'hidden', 'strategy', 'node'])(
     'does not mount an inactive inspector (%s)',

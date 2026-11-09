@@ -23,10 +23,11 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasHexColor } from './canvasPalette';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
+import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import type {
-  CreateCanvasAuthoringNode,
-  CanvasNodeInstantiationHandler,
-} from './canvasGraphHandlerContracts';
+  CanvasInspectorCommand,
+  CanvasInspectorResource,
+} from '../../stores/canvasInspectorTarget';
 import { projectCanvasGraphFilterPresentation } from './canvasGraphFilterPresentation';
 import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
 import {
@@ -36,7 +37,6 @@ import {
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
-import { CANVAS_NODE_DROP_GRAPH_ANCHOR } from './canvasNodeDropPayload';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
@@ -61,7 +61,9 @@ type CanvasViewportProps = {
   readonly nodesWithImpact: Node[];
   readonly sourceCatalogue?: readonly CanonicalNode[];
   readonly sourceCatalogueCanvasId?: string;
-  readonly onInstantiateNode?: CanvasNodeInstantiationHandler;
+  readonly onInspectNode: CanvasInspectorCommand;
+  readonly inspectorTarget?: CanvasInspectorResource | null;
+  readonly catalogueScopeKey?: string;
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
@@ -88,6 +90,7 @@ type CanvasViewportProps = {
   readonly onImpactFocusNodeChange?: (nodeId: string | null) => void;
   readonly canOpenSourceImport?: boolean;
   readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
+  readonly onManageConnections?: () => void;
   readonly canOpenCanvasSettings?: boolean;
   readonly onOpenCanvasSettings?: () => void;
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
@@ -465,30 +468,17 @@ function CanvasViewportWithPresenter({
       workspaceTask={props.workspaceTask}
       projectFiles={props.projectFiles}
       activityRail={props.activityRail}
-      nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
       sourceCatalogueCanvasId={props.sourceCatalogueCanvasId}
-      canPlaceSource={props.canEditEdges && props.onInstantiateNode != null}
+      canPlaceSource={props.canEditEdges}
       referencePlacementScope={props.referencePlacementScope}
       importedSourceIds={props.importedNodeFocusIds}
       onImportFocusComplete={props.onImportedNodeFocusComplete}
-      onSelect={(nodeId, definition) => {
-        const bounds = viewportRef.current?.getBoundingClientRect();
-        if (bounds == null) return;
-        const center = reactFlow.screenToFlowPosition({
-          x: bounds.left + bounds.width / 2,
-          y: bounds.top + bounds.height / 2,
-        });
-        props.onInstantiateNode?.(
-          nodeId,
-          {
-            x: center.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
-            y: center.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
-          },
-          definition
-        );
-      }}
+      onInspectNode={props.onInspectNode}
+      inspectorTarget={props.inspectorTarget}
+      catalogueScopeKey={props.catalogueScopeKey}
       onImport={props.canOpenSourceImport ? props.onOpenSourceImport : undefined}
+      onManageConnections={props.canOpenSourceImport ? props.onManageConnections : undefined}
       onAddModel={
         props.canEditEdges &&
         props.onCreateAuthoringNode != null &&

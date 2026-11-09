@@ -2,6 +2,11 @@
 import { useCallback, useMemo } from 'react';
 import { useAuthorizationStore, type UserPermissions } from '../../stores/authorizationStore';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import {
+  isCanvasInspectorScopeCurrent,
+  type CanvasInspectorRequest,
+  type CanvasInspectorTarget,
+} from '../../stores/canvasInspectorTarget';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
@@ -24,9 +29,13 @@ type CanvasStoreFacade = {
     typeof useCanvasInteractionStore.getState
   >['setExecutionSelectionIntent'];
   inspectorNodeId: string | null;
+  inspectorTarget: CanvasInspectorTarget | null;
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
-  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
+  setInspectorNode: (
+    request: CanvasInspectorRequest | null,
+    preferredTabId?: string | null
+  ) => boolean;
   impactOverlayEnabled: boolean;
   toggleImpactOverlay: () => void;
   columnLevelLineageEnabled: boolean;
@@ -86,14 +95,61 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const setExecutionSelectionIntent = useCanvasInteractionStore(
     (state) => state.setExecutionSelectionIntent
   );
-  const inspectorNodeId = useCanvasInteractionStore((state) => state.inspectorNodeId);
+  const storedInspectorTarget = useCanvasInteractionStore((state) => state.inspectorTarget);
+  const workspaceScope = {
+    tenantId: selectedTenant,
+    projectId: selectedProject,
+    environmentId: selectedEnvironment,
+  };
+  const inspectorTarget = isCanvasInspectorScopeCurrent(
+    storedInspectorTarget?.workspaceScope,
+    workspaceScope
+  )
+    ? storedInspectorTarget
+    : null;
+  const inspectorNodeId =
+    inspectorTarget?.kind === 'canonical-node' ? inspectorTarget.nodeId : null;
   const inspectorPreferredTabId = useCanvasInteractionStore(
     (state) => state.inspectorPreferredTabId
   );
   const inspectorPreferredTabRequestId = useCanvasInteractionStore(
     (state) => state.inspectorPreferredTabRequestId
   );
-  const setInspectorNode = useCanvasInteractionStore((state) => state.setInspectorNode);
+  const setInspectorTarget = useCanvasInteractionStore((state) => state.setInspectorTarget);
+  const setInspectorNode = useCallback(
+    (request: CanvasInspectorRequest | null, preferredTabId?: string | null) => {
+      const current = useSessionStore.getState();
+      // Async file handoffs can retain this callback after the selected workspace changes.
+      if (
+        !isCanvasInspectorScopeCurrent(
+          {
+            tenantId: selectedTenant,
+            projectId: selectedProject,
+            environmentId: selectedEnvironment,
+          },
+          current
+        )
+      )
+        return false;
+      setInspectorTarget(
+        request == null
+          ? null
+          : {
+              ...(typeof request === 'string'
+                ? { kind: 'canonical-node' as const, nodeId: request }
+                : request),
+              workspaceScope: {
+                tenantId: selectedTenant,
+                projectId: selectedProject,
+                environmentId: selectedEnvironment,
+              },
+            },
+        preferredTabId
+      );
+      return true;
+    },
+    [selectedTenant, selectedProject, selectedEnvironment, setInspectorTarget]
+  );
   const impactOverlayEnabled = useCanvasInteractionStore((state) => state.impactOverlayEnabled);
   const toggleImpactOverlay = useCanvasInteractionStore((state) => state.toggleImpactOverlay);
   const columnLevelLineageEnabled = useCanvasInteractionStore(
@@ -158,6 +214,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     setSelectedNodes,
     setExecutionSelectionIntent,
     inspectorNodeId,
+    inspectorTarget,
     inspectorPreferredTabId,
     inspectorPreferredTabRequestId,
     setInspectorNode,

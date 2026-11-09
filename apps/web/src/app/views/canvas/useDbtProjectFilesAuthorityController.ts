@@ -6,7 +6,9 @@ Owned concern: orchestrate the read-only external dbt project-file authority rea
 @version 1.0.1
  */
 import type { Node, NodeTypes } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget';
 
 import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
@@ -167,12 +169,43 @@ export function useDbtProjectFilesAuthorityController(
   );
   const canonicalNodesById = useMemo(() => buildCanonicalNodeMap(canonicalNodes), [canonicalNodes]);
   const workbenchSession = useDbtProjectFileWorkbenchSession({
+    ownerKey: layoutKey,
     nodesById: canonicalNodesById,
     setInspectorNode,
     showInspectorPanel,
     hideInspectorPanel,
   });
   const { openNodeWorkbench } = workbenchSession;
+  const owner = useMemo(() => ({ layoutKey }), [layoutKey]);
+  const currentOwner = useRef(owner);
+  currentOwner.current = owner;
+  const inspectCatalogueResource = useCallback<CanvasInspectorCommand>(
+    (request, preferredTabId) => {
+      if (
+        typeof request !== 'string' &&
+        request.kind === 'dbt-file-model' &&
+        (request.binding.canvasId !== authorityBinding.canvasId ||
+          request.binding.authority.projectRoot !== authorityBinding.authority.projectRoot)
+      )
+        return false;
+      const nodeId =
+        typeof request === 'string'
+          ? request
+          : request.kind === 'canonical-node'
+            ? request.nodeId
+            : request.uniqueId;
+      const capturedOwner = owner;
+      return openNodeWorkbench(
+        nodeId,
+        preferredTabId as Parameters<typeof openNodeWorkbench>[1]
+      ).catch(() => {
+        if (currentOwner.current === capturedOwner)
+          toast.error('Properties could not be opened. Please try again.');
+        return false;
+      });
+    },
+    [authorityBinding, openNodeWorkbench, owner]
+  );
   const inspectorNode = useDbtProjectFileInspector({
     authorityKey: layoutKey,
     inspectorNodeId,
@@ -288,7 +321,8 @@ export function useDbtProjectFilesAuthorityController(
           onRemoveNode: isInstance ? placements.removeInstance : undefined,
           selectedForExecution: selectedNodeIds.includes(resourceId),
           onInspectNode: (_nodeId, preferredTabId) => {
-            void openNodeWorkbench(resourceId, preferredTabId);
+            // The shared adapter catches current-owner failures and cancels abandoned handoffs.
+            void inspectCatalogueResource(resourceId, preferredTabId);
           },
           canOpenNodeCode: node.data.path != null,
           onToggleNodeSelection:
@@ -328,7 +362,7 @@ export function useDbtProjectFilesAuthorityController(
       executionScope.requestedNodeIds,
       graphNodeCardStrategies,
       graphModel.nodes,
-      openNodeWorkbench,
+      inspectCatalogueResource,
       runtimeCapabilities,
       selectedNodeIds,
       store.setExecutionSelectionIntent,
@@ -380,6 +414,7 @@ export function useDbtProjectFilesAuthorityController(
     referencePlacementScope: canPlaceReferences ? layoutKey : undefined,
     importedNodeFocusIds,
     presentation: {
+      inspectorTarget: store.inspectorTarget,
       focusMode,
       inspectorPanelVisible,
       inspectorPreferredTabId,
@@ -399,7 +434,7 @@ export function useDbtProjectFilesAuthorityController(
     registeredPlugins: getRegisteredPluginIds(runtimeCapabilities),
     runtimeCapabilities,
     graphCommands: {
-      onInstantiateNode: placements.placeResource,
+      onInspectNode: inspectCatalogueResource,
       onNodesChange: (changes: Parameters<typeof graphModel.onNodesChange>[0]) => {
         const accepted = placements.applyNodeChanges(changes);
         if (accepted.length > 0) graphModel.onNodesChange(accepted);

@@ -188,14 +188,33 @@ describe('Canvas happy path remains writable after create/save', () => {
       expect(document.documentElement.scrollWidth).to.be.at.most(1544);
     });
     cy.get('[data-element-id="catalog-client"]').dblclick();
-    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    // Catalogue inspection must never take the placement rail, including an unplaced Source.
+    cy.get('[data-element-id="catalog-client"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Resumen');
+    cy.get('.react-flow__node').should('have.length', 0);
     cy.get('[data-element-id="catalog-client"]').should('have.attr', 'aria-pressed', 'true');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDisclosure)
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
     // Check the actual placement control before the native gesture.
     cy.get('[data-element-id="catalog-client"]')
       .should('be.enabled')
       .and('have.attr', 'draggable', 'true');
     dragWorkbenchField('[data-element-id="catalog-client"]', '[data-testid="canvas-viewport"]');
-    cy.get('.react-flow__node').should('have.length', 2);
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('.react-flow__node').first().find('[data-slot="canvas-node-shell"]').click(50, 18);
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '3');
     cy.get('#canvas-code-main-tab').should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/files', 'POST')).to.have.length(0));
@@ -286,11 +305,30 @@ describe('Canvas happy path remains writable after create/save', () => {
       .and('contain.text', 'clientes')
       .and('contain.text', 'SQL');
     assertDisclosedModelPath(modelRow, 'models/clientes.sql');
+    // A discovered file model is inspected with its current authority before any definition exists.
+    cy.get(modelRow).click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Overview');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('contain.text', 'clientes');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('#canvas-code-main-tab').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get(modelRow).should('be.focused');
     dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 1);
     cy.get('.react-flow__node').invoke('attr', 'data-id').as('firstFileInstance');
     assertDisclosedModelPath(modelRow, 'models/clientes.sql');
     cy.get(modelRow).click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    // A second actual drag creates the independent reference; clicking the registered row cannot.
+    dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('#canvas-code-main-tab').should('not.exist');
     cy.wrap(null).should(() => {
@@ -379,6 +417,70 @@ describe('Canvas happy path remains writable after create/save', () => {
     }
   });
 
+  it('opens connection management and creates through its scoped command without importing or placing models', () => {
+    // The Connections action used to inherit a source selection and hide creation in Browse.
+    const connections = [
+      { id: 'warehouse', name: 'Project warehouse', type: 'postgres', database: 'analytics' },
+    ];
+    let writesBeforeManagement = 0;
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    stubE2eApi('GET', '/workspace/warehouse/connections', () => ({ body: connections }));
+    stubE2eApi('POST', '/workspace/warehouse/connections', () => {
+      const created = {
+        id: 'managed-warehouse',
+        name: 'Managed warehouse',
+        type: 'postgres',
+        database: 'analytics',
+      };
+      connections.push(created);
+      return { status: 201, body: created };
+    });
+    visitWorkbenchCanvas('en');
+    cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
+    cy.then(() => {
+      writesBeforeManagement = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(
+      '[data-slot="canvas-explorer-connections"] button[aria-label="Configure connections"]'
+    ).click();
+    cy.get('[data-slot="source-import-workspace"]').within(() => {
+      cy.contains('h2', 'Connections').should('be.visible');
+      cy.contains('button', 'New connection').click();
+      cy.get('[data-slot="source-import-create-connection-name"]').type('Managed warehouse');
+      cy.get('[data-slot="source-import-create-connection-database"]').type('analytics');
+      cy.get('[data-slot="source-import-create-connection-credential-ref"]').type(
+        'postgres:managed-warehouse'
+      );
+      cy.contains('button', 'Create connection').click();
+      cy.contains('Managed warehouse').should('be.visible');
+      cy.get('[data-slot="source-import-connection-search"]').should('be.visible');
+      cy.contains('button', /^Done$/).click();
+    });
+    cy.get('[data-slot="source-import-workspace"]').should('not.exist');
+    cy.get(
+      '[data-slot="canvas-explorer-connections"] button[aria-label="Configure connections"]'
+    ).should('be.focused');
+    cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '2');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.then(() => {
+      const requests = getE2eApiCalls('/workspace/warehouse/connections', 'POST');
+      expect(requests).to.have.length(1);
+      expect(requests[0]!.body).to.deep.equal({
+        name: 'Managed warehouse',
+        type: 'postgres',
+        database: 'analytics',
+        credentialRef: 'postgres:managed-warehouse',
+      });
+      expect(getE2eApiCalls('/workspace/sources/import', 'POST')).to.have.length(0);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
+        writesBeforeManagement
+      );
+    });
+    cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().click();
+    cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Managed warehouse');
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-connections--created');
+  });
+
   it('creates and saves a model, reopens without a projection gap, and allows drag', () => {
     const copy = resolveCanvasViewCopy('en');
     cy.viewport(1280, 720);
@@ -421,6 +523,17 @@ describe('Canvas happy path remains writable after create/save', () => {
         cy.get(`[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`)
           .should('be.visible')
           .click();
+        cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+          'have.attr',
+          'aria-selected',
+          'true'
+        );
+        cy.get('.react-flow__node').should('have.length', 1);
+        cy.get('[data-slot="canvas-node-workbench-close"]').click();
+        dragWorkbenchField(
+          `[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`,
+          '[data-testid="canvas-viewport"]'
+        );
         cy.get('.react-flow__node').should('have.length', 2);
         cy.wrap(null).should(() => {
           const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as

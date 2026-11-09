@@ -2,13 +2,14 @@
 
 import { useCallback } from 'react';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import type { CanvasInspectorRequest } from '../../stores/canvasInspectorTarget';
 
 import type { CanvasSelectionContracts } from './canvasGraphHandlerContracts';
 
 type UseCanvasSelectionHandlersArgs = CanvasSelectionContracts;
 
 type UseCanvasSelectionHandlersResult = {
-  handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
+  handleInspectNode: (request: CanvasInspectorRequest, preferredTabId?: string | null) => boolean;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
 };
 
@@ -20,14 +21,15 @@ export function useCanvasSelectionHandlers({
   const { setSelectedNodes, setInspectorNode, toggleInspectorPanel } = effects;
 
   const handleInspectNode = useCallback(
-    (nodeId: string, preferredTabId?: string | null) => {
+    (request: CanvasInspectorRequest, preferredTabId?: string | null) => {
       // An explicit Properties gesture starts a new request, even for the same node.
-      setInspectorNode(nodeId, preferredTabId ?? 'general');
+      if (setInspectorNode(request, preferredTabId ?? 'general') === false) return false;
       const layout = useUiLayoutStore.getState();
       if (focusMode && layout.focusMode) layout.toggleFocusMode();
       if (!inspectorPanelVisible) {
         toggleInspectorPanel();
       }
+      return true;
     },
     [focusMode, inspectorPanelVisible, setInspectorNode, toggleInspectorPanel]
   );

@@ -115,12 +115,13 @@ describe('DbtNodeComponent behavior', () => {
   });
 
   it.each([
-    { pluginKind: 'dvt:source', role: 'input', opensEditor: false, tab: 'columns' },
-    { pluginKind: 'dvt:transform', role: 'transform', opensEditor: true, tab: 'general' },
-    { pluginKind: 'dbt:model', role: 'transform', opensEditor: false, tab: 'general' },
+    { pluginKind: 'dvt:source', role: 'input', opensEditor: false },
+    { pluginKind: 'dvt:transform', role: 'transform', opensEditor: true },
+    { pluginKind: 'dbt:model', role: 'transform', opensEditor: false },
   ] as const)(
     'separates complete pointer gestures for $pluginKind (editor: $opensEditor)',
-    ({ pluginKind, role, opensEditor, tab }) => {
+    ({ pluginKind, role, opensEditor }) => {
+      // GH-3765: Source used to bypass the shared Overview entry and request Columns on normal click.
       vi.useFakeTimers();
       const inspect = vi.fn();
       const select = vi.fn();
@@ -162,16 +163,20 @@ describe('DbtNodeComponent behavior', () => {
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-      expect(inspect).toHaveBeenCalledExactlyOnceWith('node', tab);
+      expect(inspect).toHaveBeenCalledExactlyOnceWith('node', 'general');
       expect(select).toHaveBeenCalledExactlyOnceWith('node');
       expect(open).toHaveBeenCalledTimes(opensEditor ? 1 : 0);
     }
   );
 
   it.each([
-    ['dvt:source', 'input', 'columns'],
-    ['dvt:transform', 'transform', 'general'],
-  ] as const)('inspects %s on click without opening or running it', (pluginKind, role, tab) => {
+    ['dvt:source', 'input'],
+    ['dvt:transform', 'transform'],
+    ['dbt:model', 'transform'],
+    ['dvt:sink', 'output'],
+    ['dbt:test', 'check'],
+    ['dbt:macro', 'control'],
+  ] as const)('inspects %s in Overview without opening or running it', (pluginKind, role) => {
     const onSelectNode = vi.fn();
     const onInspectNode = vi.fn();
     const onOpenNode = vi.fn();
@@ -193,7 +198,7 @@ describe('DbtNodeComponent behavior', () => {
     });
     projection.selectNode?.();
     expect(onSelectNode).toHaveBeenCalledWith('node');
-    expect(onInspectNode).toHaveBeenCalledWith('node', tab);
+    expect(onInspectNode).toHaveBeenCalledWith('node', 'general');
     expect(onOpenNode).not.toHaveBeenCalled();
     expect(onToggleNodeSelection).not.toHaveBeenCalled();
   });

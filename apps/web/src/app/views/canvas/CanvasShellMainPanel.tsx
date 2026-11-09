@@ -133,6 +133,14 @@ function CanvasShellViewport({
   activityRail: CanvasExplorerActivityRail;
   externalNodeSurfaceActive: boolean;
 }): JSX.Element {
+  const scope = panels.inspectorAuthoring.workspaceScope;
+  const catalogueScopeKey = JSON.stringify([
+    scope?.tenantId,
+    scope?.projectId,
+    scope?.environmentId,
+    panels.activeCanvasId,
+    projectFiles?.projectRoot,
+  ]);
   return (
     <CanvasViewport
       workspaceTask={workspaceTask}
@@ -146,7 +154,9 @@ function CanvasShellViewport({
       nodesWithImpact={graph.nodesWithImpact}
       sourceCatalogue={panels.inspectorGraphNodes}
       sourceCatalogueCanvasId={panels.activeCanvasId ?? undefined}
-      onInstantiateNode={graphCommands.onInstantiateNode}
+      onInspectNode={graphCommands.onInspectNode}
+      inspectorTarget={panels.inspectorTarget}
+      catalogueScopeKey={catalogueScopeKey}
       edges={graph.edges}
       nodeTypes={graph.nodeTypes}
       gridSize={graph.gridSize}
@@ -175,10 +185,15 @@ function CanvasShellViewport({
         onOpenSourceImport == null
           ? undefined
           : (flowPosition) =>
-              onOpenSourceImport(
-                undefined,
-                flowPosition == null ? undefined : { canvasPosition: flowPosition }
-              )
+              onOpenSourceImport({
+                intent: 'import-sources',
+                ...(flowPosition == null ? {} : { placement: { canvasPosition: flowPosition } }),
+              })
+      }
+      onManageConnections={
+        onOpenSourceImport == null
+          ? undefined
+          : () => onOpenSourceImport({ intent: 'manage-connections' })
       }
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
@@ -222,7 +237,7 @@ function CanvasShellMainSurface({
     focusMode: layout.focusMode,
     inspectorPanelVisible: layout.inspectorPanelVisible,
     surfaceStrategy: layout.surfaceStrategy,
-    hasInspectorNode: panels.inspectorNode != null,
+    hasInspectorNode: panels.inspectorNode != null || panels.inspectorTarget != null,
   });
   // Suspend transient node surfaces and global Delete while another surface is active.
   const externalNodeSurfaceActive =
@@ -331,6 +346,7 @@ export function CanvasShellMainPanel({
           <CanvasNodeWorkbenchOverlay
             layout={layout}
             panels={panels}
+            currentProjectRoot={projectFiles?.projectRoot}
             onHide={chromeCommands.onHideInspector}
             onOpenModelEditor={onOpenModelEditor}
           />

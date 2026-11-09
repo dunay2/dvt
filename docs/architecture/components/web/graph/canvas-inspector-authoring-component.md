@@ -112,6 +112,14 @@ gestures request the internal `general` section; specific requests such as `code
 store's existing request epoch distinguishes a new inspection request from a
 background selection synchronization or an unrelated render.
 
+The card adapter follows this rule for every canonical role, including input
+models with the Source property. A normal card click or keyboard activation must
+not infer Columns from that role. Only an explicitly requested section overrides
+Overview. The complete Source gesture and the role matrix exercise this adapter
+boundary, while explicit-section and shared gesture-cancellation tests retain
+their existing responsibility.
+[All-card entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729714310).
+
 The standard `general` label is **Overview** in English and **Resumen** in Spanish.
 The shared Canvas node-property copy and its default fallback own that label for
 Sources and Models. `NodePropertiesTabs` presents the read model without a

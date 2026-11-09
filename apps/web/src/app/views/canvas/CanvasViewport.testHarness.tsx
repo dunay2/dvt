@@ -44,6 +44,7 @@ export function buildCanvasViewportProps(
     onReconnect: vi.fn(),
     onViewportChange: vi.fn(),
     onDrop: vi.fn(),
+    onInspectNode: vi.fn(),
     onDragOver: vi.fn(),
     authoringNodeKinds: [],
     onCreateAuthoringNode: vi.fn(),

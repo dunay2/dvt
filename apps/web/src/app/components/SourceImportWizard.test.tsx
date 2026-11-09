@@ -9,7 +9,7 @@ import {
   buildSourceObjectCatalogResponder,
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
-import type { ImportSourcesInput } from '../ports/workspace';
+import type { CreateWarehouseConnectionInput, ImportSourcesInput } from '../ports/workspace';
 import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
@@ -59,6 +59,115 @@ describe('SourceImportWizard', () => {
     await harness.cleanup();
     vi.useRealTimers();
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+  });
+
+  it('opens connection management instead of inheriting object browsing', async () => {
+    // The Connections action used to inherit an old object selection and hide the create form in Browse.
+    await harness.renderWizard({
+      entry: { intent: 'manage-connections' },
+      initialSelection: { connectionId: 'conn-1', sourceObjects: [] },
+    });
+    expect(harness.findTab('Connections')?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.findButtonContaining('New connection')).toBeDefined();
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(
+      document.getElementById(dialog?.getAttribute('aria-labelledby') ?? '')?.textContent
+    ).toBe('Connections');
+    expect(harness.findButtonContaining('Add sources')).toBeUndefined();
+  });
+
+  it('creates a real connection from the management entry without entering object import', async () => {
+    // Management uses the same real command and cache receipt, while staying on Connections for further management.
+    vi.useFakeTimers();
+    const createWarehouseConnection = vi.fn(async (input: CreateWarehouseConnectionInput) => ({
+      id: 'managed-connection',
+      name: input.name,
+      type: input.type,
+      database: input.database,
+    }));
+    const importSources = vi.fn();
+    await harness.renderWizard({
+      entry: { intent: 'manage-connections' },
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        createWarehouseConnection,
+        importSources,
+      }),
+    });
+    await harness.clickConnectionOption('Local Postgres proof');
+    expect(harness.findTab('Connections')?.getAttribute('aria-selected')).toBe('true');
+    await harness.clickButtonContaining('New connection');
+    await harness.fillInputByLabel('Connection name', 'Managed warehouse');
+    await harness.fillInputByLabel('Database', 'analytics');
+    await harness.fillInputByLabel('Credential reference', 'postgres:managed-warehouse');
+    await harness.clickButtonContaining('Create connection');
+    await waitForReactQuery(
+      () =>
+        harness.findConnectionOption('Managed warehouse')?.getAttribute('aria-pressed') === 'true',
+      {
+        description: 'managed connection accepted into the shared catalog',
+        tick: async () => {
+          await vi.advanceTimersByTimeAsync(0);
+        },
+      }
+    );
+    expect(createWarehouseConnection).toHaveBeenCalledExactlyOnceWith({
+      name: 'Managed warehouse',
+      type: 'postgres',
+      database: 'analytics',
+      credentialRef: 'postgres:managed-warehouse',
+    });
+    expect(harness.findTab('Connections')?.getAttribute('aria-selected')).toBe('true');
+    expect(importSources).not.toHaveBeenCalled();
+  });
+
+  it('does not select an old creation receipt in a newer management opening', async () => {
+    // A second explicit entry in the same scope must supersede the first request just like a workspace change.
+    vi.useFakeTimers();
+    let finishCreate!: (value: {
+      id: string;
+      name: string;
+      type: 'postgres';
+      database: string;
+    }) => void;
+    const port = buildWarehouseSourceImportPort({
+      createWarehouseConnection: () =>
+        new Promise((resolve) => {
+          finishCreate = resolve;
+        }),
+    });
+    await harness.renderWizard({
+      warehouseSourceImport: port,
+      entry: { intent: 'manage-connections' },
+    });
+    await harness.clickButtonContaining('New connection');
+    await harness.fillInputByLabel('Connection name', 'Abandoned creation');
+    await harness.fillInputByLabel('Database', 'analytics');
+    await harness.fillInputByLabel('Credential reference', 'postgres:managed-warehouse');
+    await harness.clickButtonContaining('Create connection');
+    await harness.renderWizard({
+      warehouseSourceImport: port,
+      entry: { intent: 'manage-connections' },
+    });
+    await act(async () => {
+      finishCreate({
+        id: 'old-receipt',
+        name: 'Abandoned creation',
+        type: 'postgres',
+        database: 'analytics',
+      });
+    });
+    await waitForReactQuery(() => harness.findConnectionOption('Abandoned creation') != null, {
+      description: 'real receipt refreshed without adopting the old selection',
+      tick: async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      },
+    });
+    expect(harness.findConnectionOption('Abandoned creation')?.getAttribute('aria-pressed')).toBe(
+      'false'
+    );
+    expect(
+      document.querySelector('[data-slot="source-import-create-connection-actions"]')
+    ).toBeNull();
   });
 
   // A pending command from A used to be able to mutate a newly selected workspace B.

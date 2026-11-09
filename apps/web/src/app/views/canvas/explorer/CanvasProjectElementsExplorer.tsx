@@ -13,7 +13,9 @@ import { projectCanvasExplorerFileModels, mergeCanvasExplorerModels } from './ca
 export function CanvasProjectElementsExplorer({
   enabled,
   items,
-  onSelect,
+  onInspectNode,
+  inspectorTarget,
+  catalogueScopeKey,
   onDragStart,
   onAddModel,
   onImport,
@@ -33,11 +35,22 @@ export function CanvasProjectElementsExplorer({
       ? projectCanvasExplorerFileModels(projection).map((item) => {
           // Unbound logical Models remain visible; the existing factory owns full output admission.
           const canPlace = canCreateInstances && projection.executionTarget?.connectionRef != null;
-          return { ...item, draggable: canPlace, disabled: !canPlace };
+          const selected =
+            inspectorTarget?.kind === 'dbt-file-model' &&
+            inspectorTarget.binding.canvasId === binding.canvasId &&
+            inspectorTarget.binding.authority.projectRoot === binding.authority.projectRoot &&
+            inspectorTarget.uniqueId === item.definitionIdentity.uniqueId;
+          return { ...item, selected, draggable: canPlace, disabled: false };
         })
       : [];
   return (
     <CanvasExplorerList
+      key={JSON.stringify([
+        catalogueScopeKey,
+        projectRoot,
+        binding?.canvasId,
+        binding?.authority.projectRoot,
+      ])}
       items={mergeCanvasExplorerModels(items, models)}
       onAddModel={onAddModel}
       onImport={onImport}
@@ -87,21 +100,16 @@ export function CanvasProjectElementsExplorer({
       }}
       onSelect={(id) => {
         if (currentIds.has(id)) {
-          onSelect(id);
+          onInspectNode({ kind: 'canonical-node', nodeId: id });
           return;
         }
         const model = models.find((item) => item.id === id);
-        try {
-          if (!canCreateInstances || projection == null || model == null)
-            throw new Error('Unavailable model.');
-          onSelect(
-            id,
-            createCanvasDbtModelDefinition(projection, model.definitionIdentity.uniqueId)
-          );
-          setCreationError(false);
-        } catch {
-          setCreationError(true);
-        }
+        if (binding == null || model == null) return;
+        onInspectNode({
+          kind: 'dbt-file-model',
+          binding,
+          uniqueId: model.definitionIdentity.uniqueId,
+        });
       }}
     />
   );

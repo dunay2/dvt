@@ -3,9 +3,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useCanvasInteractionStore } from './canvasInteractionStore';
+import type { CanvasInspectorTarget } from './canvasInspectorTarget';
 
 const CANVAS_INTERACTION_STORAGE_KEY = 'dvt-web-canvas-interaction';
 const WORKSPACE_KEY = 'tenant-a::project-a::dev';
+const workspaceScope = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' };
+const canonicalTarget = (nodeId: string): CanvasInspectorTarget => ({
+  kind: 'canonical-node',
+  nodeId,
+  workspaceScope,
+});
 
 describe('useCanvasInteractionStore', () => {
   it('retains an explicit empty layout once so legacy positions cannot return', () => {
@@ -64,7 +71,7 @@ describe('useCanvasInteractionStore', () => {
       impactOverlayEnabled: false,
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
-      inspectorNodeId: null,
+      inspectorTarget: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
       contextualWorkbenchId: null,
@@ -150,20 +157,57 @@ describe('useCanvasInteractionStore', () => {
   });
 
   it('keeps node workbench tab preference transient and clears it with inspector selection', () => {
-    useCanvasInteractionStore.getState().setInspectorNode('source-node', 'inputs-outputs');
+    useCanvasInteractionStore
+      .getState()
+      .setInspectorTarget(canonicalTarget('source-node'), 'inputs-outputs');
 
-    expect(useCanvasInteractionStore.getState().inspectorNodeId).toBe('source-node');
+    expect(useCanvasInteractionStore.getState().inspectorTarget).toEqual(
+      canonicalTarget('source-node')
+    );
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBe('inputs-outputs');
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(1);
 
-    useCanvasInteractionStore.getState().setInspectorNode('source-node', 'inputs-outputs');
+    useCanvasInteractionStore
+      .getState()
+      .setInspectorTarget(canonicalTarget('source-node'), 'inputs-outputs');
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(2);
 
-    useCanvasInteractionStore.getState().setInspectorNode('model-node');
+    useCanvasInteractionStore.getState().setInspectorTarget(canonicalTarget('model-node'));
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(2);
 
-    useCanvasInteractionStore.getState().setInspectorNode(null);
+    useCanvasInteractionStore.getState().setInspectorTarget(null);
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
+  });
+
+  it('switches mutually exclusive Inspector resources without allocating layout or persisting selection', async () => {
+    // File inspection used to pass through executable-definition creation and placement.
+    const fileTarget: CanvasInspectorTarget = {
+      kind: 'dbt-file-model',
+      workspaceScope,
+      uniqueId: 'model.demo.orders',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'file-canvas',
+        authority: { kind: 'dbt-project-files', projectRoot: 'project' },
+      },
+    };
+    const commands = useCanvasInteractionStore.getState();
+    commands.setInspectorTarget(canonicalTarget('native'), 'general');
+    commands.setInspectorTarget(fileTarget, 'code');
+    expect(useCanvasInteractionStore.getState().inspectorTarget).toEqual(fileTarget);
+    expect(useCanvasInteractionStore.getState().canvasLayouts).toEqual({});
+    expect(useCanvasInteractionStore.getState().executionSelectionIntent).toEqual({
+      mode: 'workspace',
+      nodeIds: [],
+    });
+    const persisted = JSON.parse(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)!).state;
+    expect(persisted).not.toHaveProperty('inspectorTarget');
+    expect(persisted).not.toHaveProperty('inspectorNodeId');
+    await useCanvasInteractionStore.persist.rehydrate();
+    expect(useCanvasInteractionStore.getState().inspectorTarget).toEqual(fileTarget);
+    commands.setInspectorTarget(null);
+    expect(useCanvasInteractionStore.getState().inspectorTarget).toBeNull();
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
   });
 

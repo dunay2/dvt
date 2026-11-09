@@ -5,7 +5,7 @@
  * @consequence Scope recovery remains Project and no shell menu authors graph state.
  * @version 1.0.0
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
@@ -153,18 +153,51 @@ export default function CanvasShell({
     [panels.runtimeCapabilities]
   );
   const canOpenDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
-  const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
+  const sourceImportScope = panels.inspectorAuthoring.workspaceScope;
+  const sourceImportOwnerKey = JSON.stringify([
+    sourceImportScope?.tenantId,
+    sourceImportScope?.projectId,
+    sourceImportScope?.environmentId,
+    panels.activeCanvasId,
+  ]);
+  const sourceImportDialog = useCanvasSourceImportDialogState(
+    canOpenDataRegistry,
+    sourceImportOwnerKey
+  );
+  const retainedSelectionOwner = useRef({
+    selection: sourceImportInitialSelection,
+    ownerKey: sourceImportOwnerKey,
+  });
+  if (retainedSelectionOwner.current.selection !== sourceImportInitialSelection)
+    retainedSelectionOwner.current = {
+      selection: sourceImportInitialSelection,
+      ownerKey: sourceImportOwnerKey,
+    };
+  const retainedInitialSelection =
+    retainedSelectionOwner.current.ownerKey === sourceImportOwnerKey
+      ? sourceImportInitialSelection
+      : undefined;
   useEffect(() => {
-    if (sourceImportInitialSelection != null)
-      sourceImportDialog.openCommand?.(sourceImportInitialSelection);
-  }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
+    if (retainedInitialSelection != null)
+      sourceImportDialog.openCommand?.({
+        intent: 'import-sources',
+        initialSelection: retainedInitialSelection,
+      });
+  }, [sourceImportDialog.openCommand, retainedInitialSelection]);
   const openSourceImport = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
     const open = sourceImportDialog.openCommand;
     return open == null
       ? undefined
-      : (initialSelection, placement) =>
-          open(initialSelection ?? sourceImportInitialSelection, placement);
-  }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
+      : (request = { intent: 'import-sources' }) =>
+          open(
+            request.intent === 'manage-connections'
+              ? request
+              : {
+                  ...request,
+                  initialSelection: request.initialSelection ?? retainedInitialSelection,
+                }
+          );
+  }, [sourceImportDialog.openCommand, retainedInitialSelection]);
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: panels.userPermissions.canEditEdges,
     canOpenSourceImport: canOpenDataRegistry,
@@ -178,10 +211,10 @@ export default function CanvasShell({
       sourceImportDialog.openCommand == null
         ? undefined
         : (position) =>
-            sourceImportDialog.openCommand?.(
-              undefined,
-              position == null ? undefined : { canvasPosition: position }
-            ),
+            sourceImportDialog.openCommand?.({
+              intent: 'import-sources',
+              ...(position == null ? {} : { placement: { canvasPosition: position } }),
+            }),
     onOpenCanvasSettings: openCanvasSettings,
   });
   const modelData = nodes.find((node) => node.id === model.selected?.id)?.data as
@@ -223,6 +256,7 @@ export default function CanvasShell({
           panels.activeCanvasId == null || layout.surfaceStrategy == null
             ? undefined
             : {
+                projectRoot: workspaceCommands?.projectRoot,
                 tree: (
                   <CanvasProjectFilesExplorer
                     projectRoot={workspaceCommands?.projectRoot}
@@ -312,20 +346,42 @@ export default function CanvasShell({
         onOpenModelEditor={openModel}
         contextMenuPresenter={contextMenuPresenter}
         workspaceTask={
-          panels.activeCanvasId == null || !sourceImportDialog.open ? null : (
+          panels.activeCanvasId == null ||
+          !sourceImportDialog.open ||
+          sourceImportDialog.request == null ? null : (
             <CanvasSourceImportDialogHost
               open={sourceImportDialog.open}
               canvasId={panels.activeCanvasId}
-              onClose={sourceImportDialog.close}
-              onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
+              onClose={() => {
+                if (
+                  sourceImportDialog.request != null &&
+                  sourceImportDialog.isCurrent(sourceImportDialog.request)
+                )
+                  sourceImportDialog.close();
+              }}
+              onRestoreFocus={
+                sourceImportDialog.request.intent === 'import-sources'
+                  ? contextMenuPresenter.restoreContextMenuOpenerFocus
+                  : () => {
+                      if (sourceImportDialog.request != null)
+                        sourceImportDialog.restoreFocus(sourceImportDialog.request);
+                    }
+              }
               onComplete={(result, placement) => {
+                const request = sourceImportDialog.request;
+                if (request?.intent !== 'import-sources' || !sourceImportDialog.isCurrent(request))
+                  return;
                 graphCommands.onSourceImportComplete(result, placement);
-                if (sourceImportInitialSelection?.kind === 'dbt-source-binding')
+                if (request.initialSelection?.kind === 'dbt-source-binding')
                   onSourceImportInitialSelectionConsumed?.();
               }}
               sourceImportOptions={sourceImportOptions}
-              initialSelection={sourceImportDialog.initialSelection}
-              placement={sourceImportDialog.placement}
+              entry={sourceImportDialog.request}
+              placement={
+                sourceImportDialog.request.intent === 'import-sources'
+                  ? sourceImportDialog.request.placement
+                  : undefined
+              }
             />
           )
         }

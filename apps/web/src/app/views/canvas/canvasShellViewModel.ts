@@ -76,6 +76,7 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     inspectorNode,
+    inspectorTarget: store.inspectorTarget ?? null,
     inspectorPreferredTabId: store.inspectorPreferredTabId,
     inspectorPreferredTabRequestId: store.inspectorPreferredTabRequestId,
     inspectorGraphNodes: graphModel.canonicalNodes,
@@ -108,7 +109,10 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     canvasSnapToGrid: store.canvasSnapToGrid,
     viewport: store.persistedViewport,
     frozenNodeIds: store.frozenNodeIds,
-    canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
+    canEditInspectorNode:
+      runtimePolicy.commands.canEditInspectorNode &&
+      inspectorNode != null &&
+      (inspectorNode.role === 'input' || visibleScope.visibleNodeIds.includes(inspectorNode.id)),
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
     applyNodeDraft: args.inspectorCommands.applyNodeDraft,
   };

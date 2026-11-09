@@ -4,8 +4,92 @@ import { describe, expect, it } from 'vitest';
 
 import { canvasDraftSession } from './canvasDraftSession';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
+import type { CanonicalNode } from '../../types/canonical';
+
+function inspectCatalogueNode(
+  node: CanonicalNode,
+  inspectorNodeId = node.id,
+  placed = false
+): ReturnType<typeof deriveCanvasAuthoringState> {
+  return deriveCanvasAuthoringState({
+    draftSession: canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: placed ? [node.id] : [],
+      canonicalEdges: [],
+    }),
+    canonicalNodes: [node],
+    canonicalEdges: [],
+    selectionIntent: { mode: 'explicit', nodeIds: [node.id] },
+    inspectorNodeId,
+    draftSaveStatus: 'idle',
+    canMutateGraphTransport: false,
+    draftReadModel: undefined,
+    authTransportPosture: 'none',
+  });
+}
+
+const catalogueNode: CanonicalNode = {
+  id: 'catalogue-model',
+  name: 'Catalogue model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
+  role: 'transform',
+  status: 'idle',
+  tags: [],
+};
 
 describe('canvasAuthoringState', () => {
+  it.each(['input', 'transform'] as const)(
+    'retains an unplaced %s definition for inspection without granting graph or execution membership',
+    (role) => {
+      // GH-3765: catalogue click must inspect a definition without manufacturing a placement.
+      const state = inspectCatalogueNode({
+        ...catalogueNode,
+        kind: role === 'input' ? 'dvt:source' : 'dvt:transform',
+        role,
+      });
+
+      expect(state.uiScope).toEqual({ selectedNodeIds: [], inspectorNodeId: catalogueNode.id });
+      expect(state.visibleScope.visibleNodeIds).toEqual([]);
+      expect(state.visibleScope.canonicalNodes).toEqual([]);
+      expect(state.executionScope.selectedNodeIds).toEqual([]);
+      expect(state.executionScope.workspaceNodeIds).toEqual([]);
+      expect(state.canMutateGraph).toBe(false);
+    }
+  );
+
+  it.each([
+    { label: 'output', node: { ...catalogueNode, role: 'output' as const } },
+    { label: 'check', node: { ...catalogueNode, role: 'check' as const } },
+    { label: 'control', node: { ...catalogueNode, role: 'control' as const } },
+    { label: 'model occurrence', node: { ...catalogueNode, definitionId: 'definition' } },
+    {
+      label: 'legacy source occurrence',
+      node: {
+        ...catalogueNode,
+        kind: 'dvt:source' as const,
+        role: 'input' as const,
+        sourceDefinitionId: 'definition',
+      },
+    },
+  ])('rejects an unplaced $label as a catalogue definition', ({ node }) => {
+    // Inspectable definitions must not revive removed occurrences or unrelated canonical roles.
+    expect(inspectCatalogueNode(node).uiScope.inspectorNodeId).toBeNull();
+  });
+
+  it('rejects an inspector identity missing from the current catalogue', () => {
+    expect(inspectCatalogueNode(catalogueNode, 'foreign-model').uiScope.inspectorNodeId).toBeNull();
+  });
+
+  it('retains inspection of a visible occurrence through its existing placement scope', () => {
+    const node = { ...catalogueNode, definitionId: 'definition' };
+    const state = inspectCatalogueNode(node, node.id, true);
+
+    expect(state.uiScope.inspectorNodeId).toBe(node.id);
+    expect(state.visibleScope.visibleNodeIds).toEqual([node.id]);
+    expect(state.executionScope.selectedNodeIds).toEqual([node.id]);
+  });
+
   it('preserves UI selection while the draft session is bootstrapping', () => {
     const authoringState = deriveCanvasAuthoringState({
       draftSession: canvasDraftSession.machine.createBootstrapping(),

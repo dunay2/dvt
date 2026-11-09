@@ -22,6 +22,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.useRealTimers();
 });
 
 const items: readonly CanvasExplorerItem[] = [
@@ -72,8 +73,9 @@ it('discloses real metadata without activating an unavailable model', () => {
   expect(container.querySelector('button button')).toBeNull();
 });
 
-it('admits one placement for a double click while retaining native keyboard activation', () => {
-  // Browser dblclick dispatches two click events; the second must not create another occurrence.
+it('inspects only a single click and keeps keyboard activation immediate', () => {
+  // The first browser click must remain cancellable: double click may never open Properties.
+  vi.useFakeTimers();
   const onSelect = vi.fn();
   act(() => root.render(<CanvasExplorerList items={[items[0]!]} onSelect={onSelect} />));
   const row = screen.getByRole('button', { name: 'Orders' });
@@ -82,12 +84,70 @@ it('admits one placement for a double click while retaining native keyboard acti
     fireEvent.click(row, { detail: 2 });
     fireEvent.doubleClick(row);
   });
+  act(() => vi.runAllTimers());
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(row.getAttribute('aria-pressed')).toBe('false');
+  act(() => fireEvent.click(row, { detail: 1 }));
+  expect(onSelect).not.toHaveBeenCalled();
+  act(() => vi.runAllTimers());
   expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
-  expect(row.getAttribute('aria-pressed')).toBe('true');
   act(() => {
     fireEvent.click(row, { detail: 0 });
   });
   expect(onSelect).toHaveBeenCalledTimes(2);
+});
+
+it('reflects admitted inspection selection without optimistic local selection', () => {
+  // A cancelled file-editor handoff must leave the previous Properties selection intact.
+  const onSelect = vi.fn();
+  act(() => root.render(<CanvasExplorerList items={[items[0]!]} onSelect={onSelect} />));
+  const row = screen.getByRole('button', { name: 'Orders' });
+  act(() => fireEvent.click(row, { detail: 0 }));
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
+  expect(row.getAttribute('aria-pressed')).toBe('false');
+  act(() =>
+    root.render(
+      <CanvasExplorerList items={[{ ...items[0]!, selected: true }]} onSelect={onSelect} />
+    )
+  );
+  expect(row.getAttribute('aria-pressed')).toBe('true');
+});
+
+it('cancels pending inspection when a real drag or catalogue replacement supersedes it', () => {
+  // Drag must only emit the existing payload; it must not leave an inspect timer behind.
+  vi.useFakeTimers();
+  const onSelect = vi.fn();
+  const onDragStart = vi.fn();
+  act(() =>
+    root.render(
+      <CanvasExplorerList
+        items={[{ ...items[0]!, draggable: true }]}
+        onSelect={onSelect}
+        onDragStart={onDragStart}
+      />
+    )
+  );
+  const row = screen.getByRole('button', { name: 'Orders' });
+  act(() => {
+    fireEvent.click(row, { detail: 1 });
+    fireEvent.dragStart(row);
+    vi.runAllTimers();
+  });
+  expect(onDragStart).toHaveBeenCalledExactlyOnceWith('source', expect.anything());
+  expect(onSelect).not.toHaveBeenCalled();
+  act(() => fireEvent.click(row, { detail: 1 }));
+  act(() => root.render(<CanvasExplorerList items={[items[1]!]} onSelect={onSelect} />));
+  act(() => vi.runAllTimers());
+  expect(onSelect).not.toHaveBeenCalled();
+  act(() =>
+    root.render(<CanvasExplorerList key="scope-a" items={[items[0]!]} onSelect={onSelect} />)
+  );
+  act(() => fireEvent.click(screen.getByRole('button', { name: 'Orders' }), { detail: 1 }));
+  act(() =>
+    root.render(<CanvasExplorerList key="scope-b" items={[items[0]!]} onSelect={onSelect} />)
+  );
+  act(() => vi.runAllTimers());
+  expect(onSelect).not.toHaveBeenCalled();
 });
 
 it('searches metadata and the localized Source property in one identity-preserving list', () => {

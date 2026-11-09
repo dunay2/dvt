@@ -18,7 +18,7 @@ export default function SourceImportWizard({
   onComplete,
   onConnectionRenamed,
   sourceImportOptions: declaredSourceImportOptions,
-  initialSelection,
+  entry,
 }: SourceImportWizardProps) {
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const sourceImportOptions = useMemo(
@@ -33,7 +33,7 @@ export default function SourceImportWizard({
     onComplete,
     onConnectionRenamed,
     onClose,
-    initialSelection,
+    entry,
   });
   const { state } = controller;
   const isResultStep = state.currentStep === 'result';
@@ -41,6 +41,7 @@ export default function SourceImportWizard({
   return (
     <SourceImportWizardFrame
       open={open}
+      entryIntent={entry?.intent}
       activeContentId={isResultStep ? 'result' : controller.activeSection}
       isResultStep={isResultStep}
       isProcessing={state.isProcessing}

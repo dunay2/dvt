@@ -2,7 +2,9 @@
 
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { waitForReactQuery } from '../../../testing/reactQueryHarness';
 
 import {
   buildWarehouseSourceImportPort,
@@ -18,7 +20,79 @@ describe('source import connection test lifetime', () => {
   });
   afterEach(async () => {
     await harness.cleanup();
+    vi.restoreAllMocks();
   });
+
+  it.each(['success', 'failure'] as const)(
+    'rejects a previous entry %s when the new request reuses the same selection and connection',
+    async (outcome) => {
+      // A new opening owns its requests even when none of the selection values changed.
+      const initialSelection = { connectionId: 'A', sourceObjects: [] };
+      const firstEntry = { intent: 'import-sources', initialSelection } as const;
+      const nextEntry = { ...firstEntry };
+      const pending: Array<{
+        resolve(value: TestWarehouseConnectionResult): void;
+        reject(error: Error): void;
+      }> = [];
+      const testConnection = vi.fn(
+        () =>
+          new Promise<TestWarehouseConnectionResult>((resolve, reject) => {
+            pending.push({ resolve, reject });
+          })
+      );
+      const port = buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [
+          { id: 'A', name: 'Connection A', type: 'postgres', database: 'dvt' },
+        ],
+        testWarehouseConnection: testConnection,
+      });
+      const toastError = vi.spyOn(toast, 'error');
+      await harness.renderWizard({
+        warehouseSourceImport: port,
+        initialSelection,
+        entry: firstEntry,
+      });
+      await waitForReactQuery(() => harness.findTab('Connections') != null);
+      await harness.clickTab('Connections');
+      await harness.clickButtonContaining('Test connection');
+      expect(testConnection).toHaveBeenCalledExactlyOnceWith('A');
+      expect(nextEntry.initialSelection).toBe(firstEntry.initialSelection);
+      expect(nextEntry).not.toBe(firstEntry);
+      await harness.renderWizard({
+        warehouseSourceImport: port,
+        initialSelection,
+        entry: nextEntry,
+      });
+      await harness.clickTab('Connections');
+      await act(async () => {
+        if (outcome === 'failure') pending[0]!.reject(new Error('Obsolete connection test'));
+        else
+          pending[0]!.resolve({
+            connectionId: 'A',
+            status: 'passed',
+            checkedAt: '2026-11-09T00:00:00Z',
+            objectCount: 999,
+          });
+      });
+      expect(document.body.textContent).not.toContain('999 objects reachable');
+      expect(document.body.textContent).not.toContain('Connection passed');
+      expect(document.body.textContent).not.toContain('Failed to test connection');
+      expect(toastError).not.toHaveBeenCalled();
+      await harness.clickButtonContaining('Test connection');
+      expect(testConnection).toHaveBeenCalledTimes(2);
+      expect(harness.findButtonContaining('Testing')?.disabled).toBe(true);
+      await act(async () => {
+        pending[1]!.resolve({
+          connectionId: 'A',
+          status: 'passed',
+          checkedAt: '2026-11-09T00:00:00Z',
+          objectCount: 51,
+        });
+      });
+      expect(document.body.textContent).toContain('51 objects reachable');
+      expect(toastError).not.toHaveBeenCalled();
+    }
+  );
 
   it('does not publish a completed test from the previous connection', async () => {
     let resolveOld!: (value: TestWarehouseConnectionResult) => void;
@@ -82,6 +156,8 @@ describe('source import connection test lifetime', () => {
     if (change === 'session') {
       await harness.renderWizard({ warehouseSourceImport: port, open: false });
       await harness.renderWizard({ warehouseSourceImport: port });
+      // A fresh Wizard entry resets selection; the new test must explicitly select A again.
+      await harness.clickConnectionOption('Connection A');
     } else if (change === 'binding') {
       await harness.renderWizard({
         warehouseSourceImport: port,
@@ -94,6 +170,7 @@ describe('source import connection test lifetime', () => {
     }
     await harness.clickTab('Connections');
     await harness.clickButtonContaining('Test connection');
+    expect(sequence).toBe(2);
     await act(async () => {
       const initialRequest = pending.get(1)!;
       if (outcome === 'failure') initialRequest.reject(new Error('obsolete failure'));

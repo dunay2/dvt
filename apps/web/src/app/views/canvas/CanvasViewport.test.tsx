@@ -112,7 +112,6 @@ describe('CanvasViewport', () => {
           metadata: { authority: 'dbt-project-files', resourceType: 'model' },
         },
       ],
-      onInstantiateNode: vi.fn(),
     });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' }).draggable).toBe(true);
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(true);
@@ -124,9 +123,9 @@ describe('CanvasViewport', () => {
   it('qualifies only actual file definitions with the explicit catalogue Canvas owner', async () => {
     // Scoped file identity cannot be reconstructed from an id prefix or the Canvas layout key.
     const renderElements = vi.fn((_input: CanvasProjectElementsInput) => null);
-    const onInstantiateNode = vi.fn();
+    const onInspectNode = vi.fn();
     await renderViewport({
-      onInstantiateNode,
+      onInspectNode,
       sourceCatalogueCanvasId: 'file-canvas',
       sourceCatalogue: [
         {
@@ -161,16 +160,16 @@ describe('CanvasViewport', () => {
       { canvasId: 'file-canvas', uniqueId: 'model.demo.orders' },
       undefined,
     ]);
-    expect(onInstantiateNode).not.toHaveBeenCalled();
+    expect(onInspectNode).not.toHaveBeenCalled();
   });
 
   it.each([true, false])(
-    'creates at the visible center without focusing or opening a card (writable=%s)',
+    'inspects catalogue definitions without placement or camera movement (writable=%s)',
     async (writable) => {
-      const onInstantiateNode = vi.fn();
-      await renderViewport({
+      const onInspectNode = vi.fn();
+      const props = await renderViewport({
         canEditEdges: writable,
-        onInstantiateNode,
+        onInspectNode,
         sourceCatalogue: [
           {
             id: 'orders',
@@ -188,13 +187,13 @@ describe('CanvasViewport', () => {
       xyflowState.fitView.mockClear();
       xyflowState.setViewport.mockClear();
       await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
-      if (writable)
-        expect(onInstantiateNode).toHaveBeenCalledExactlyOnceWith(
-          'orders',
-          { x: 500, y: 270 },
-          undefined
-        );
-      else expect(onInstantiateNode).not.toHaveBeenCalled();
+      expect(onInspectNode).toHaveBeenCalledExactlyOnceWith({
+        kind: 'canonical-node',
+        nodeId: 'orders',
+      });
+      expect(props.onDrop).not.toHaveBeenCalled();
+      expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+      expect(props.onNodesChange).not.toHaveBeenCalled();
       expect(xyflowState.fitView).not.toHaveBeenCalled();
       expect(xyflowState.setViewport).not.toHaveBeenCalled();
     }

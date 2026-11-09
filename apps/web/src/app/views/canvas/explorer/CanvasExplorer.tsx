@@ -26,13 +26,18 @@ import {
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
-import type { CanonicalNode } from '../../../types/canonical';
+import type {
+  CanvasInspectorCommand,
+  CanvasInspectorResource,
+} from '../../../stores/canvasInspectorTarget';
 
 export type CanvasProjectElementsInput = Readonly<{
   enabled: boolean;
   items: readonly CanvasExplorerItem[];
   canCreateInstances?: boolean;
-  onSelect: (id: string, definition?: CanonicalNode) => void;
+  onInspectNode: CanvasInspectorCommand;
+  inspectorTarget?: CanvasInspectorResource | null;
+  catalogueScopeKey?: string;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onImport?: () => void;
@@ -40,6 +45,7 @@ export type CanvasProjectElementsInput = Readonly<{
 }>;
 
 export type CanvasExplorerProjectWorkspace = Readonly<{
+  projectRoot?: string;
   onActivate: () => Promise<boolean>;
   onCanvas: () => void;
   renderElements?: (input: CanvasProjectElementsInput) => ReactNode;

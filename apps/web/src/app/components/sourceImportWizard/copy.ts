@@ -7,6 +7,11 @@ import type { SourceImportFailure } from './types';
 
 const EN_COPY = {
   title: 'Add source',
+  management: {
+    title: 'Connections',
+    description: 'Create and manage the governed database connections for this workspace.',
+    closeAction: 'Close connections',
+  },
   description:
     'Explore governed connections, inspect source objects, and register sources in the catalog.',
   closeAction: 'Close source import',
@@ -236,6 +241,12 @@ export type SourceImportWizardCopy = LocalizedCopyShape<typeof EN_COPY>;
 
 const ES_COPY = {
   title: 'Añadir origen',
+  management: {
+    title: 'Conexiones',
+    description:
+      'Crea y gestiona las conexiones gobernadas de bases de datos de este espacio de trabajo.',
+    closeAction: 'Cerrar conexiones',
+  },
   description:
     'Explora conexiones gobernadas, inspecciona objetos de origen y registra fuentes en el catálogo.',
   closeAction: 'Cerrar importación de orígenes',

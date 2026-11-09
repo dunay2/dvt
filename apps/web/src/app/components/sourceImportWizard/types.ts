@@ -21,8 +21,15 @@ export interface SourceImportWizardProps {
   onComplete?: (result: ImportSourcesResult) => void;
   onConnectionRenamed?: (connection: WarehouseConnection) => void | Promise<void>;
   sourceImportOptions?: readonly SourceImportOptionContribution[];
-  initialSelection?: SourceImportInitialSelection | null;
+  entry?: SourceImportWizardEntry;
 }
+
+export type SourceImportWizardEntry =
+  | Readonly<{ intent: 'manage-connections' }>
+  | Readonly<{
+      intent: 'import-sources';
+      initialSelection?: SourceImportInitialSelection | null;
+    }>;
 
 export type SourceImportInitialSelection =
   | Readonly<{

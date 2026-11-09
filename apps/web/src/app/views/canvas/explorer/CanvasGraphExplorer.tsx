@@ -1,11 +1,10 @@
 /**
  * Owned concern: adapt the main Canvas graph to the shared explorer.
  * @baseline GH-3610: registered sources need not have a placed card.
- * @decision Activate admitted definitions to create; transfer the same identity on drag.
- * @consequence Catalogue affordances reuse the guarded drop adapter's admission rule.
+ * @decision Inspect actual definitions on activation; transfer their identity only on drag.
+ * @consequence Inspection cannot enter the guarded placement command.
  * @version 1.0.0
  */
-import type { Node } from '@xyflow/react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
@@ -18,11 +17,17 @@ import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerModels } from './canvasExplorerItems';
 import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import type {
+  CanvasInspectorCommand,
+  CanvasInspectorResource,
+} from '../../../stores/canvasInspectorTarget';
 
 export function CanvasGraphExplorer({
-  nodes,
-  onSelect,
+  onInspectNode,
+  inspectorTarget,
+  catalogueScopeKey,
   onImport,
+  onManageConnections,
   onAddModel,
   catalogue,
   sourceCatalogueCanvasId,
@@ -35,9 +40,11 @@ export function CanvasGraphExplorer({
   projectFiles,
   activityRail,
 }: Readonly<{
-  nodes: readonly Node[];
-  onSelect: (id: string, definition?: CanonicalNode) => void;
+  onInspectNode: CanvasInspectorCommand;
+  inspectorTarget?: CanvasInspectorResource | null;
+  catalogueScopeKey?: string;
   onImport?: () => void;
+  onManageConnections?: () => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
   children: ReactNode;
   workspaceTask?: ReactNode;
@@ -72,13 +79,27 @@ export function CanvasGraphExplorer({
       ),
     [catalogue, canPlaceSource, referencePlacementScope]
   );
+  const inspectedCanonicalNode =
+    inspectorTarget?.kind === 'canonical-node'
+      ? catalogue?.find((node) => node.id === inspectorTarget.nodeId)
+      : undefined;
+  const inspectedDefinitionId =
+    inspectorTarget?.kind === 'canonical-node'
+      ? inspectedCanonicalNode == null
+        ? inspectorTarget.nodeId
+        : (workspaceNodeDefinitionId(inspectedCanonicalNode) ?? inspectedCanonicalNode.id)
+      : null;
   const items = definitions.map((item) => ({
     ...item,
     draggable: placeableIds.has(item.id),
-    disabled: !placeableIds.has(item.id),
-    selected: nodes.some((placed) => placed.id === item.id && placed.selected),
+    disabled: typeof onInspectNode !== 'function',
+    selected:
+      inspectorTarget?.kind === 'dbt-file-model'
+        ? item.definitionIdentity?.canvasId === inspectorTarget.binding.canvasId &&
+          item.definitionIdentity.uniqueId === inspectorTarget.uniqueId
+        : item.id === inspectedDefinitionId,
   }));
-  const connections = <CanvasWarehouseConnections onManage={onImport} />;
+  const connections = <CanvasWarehouseConnections onManage={onManageConnections} />;
   const draggableIds = new Set(items.filter((item) => item.draggable).map((item) => item.id));
   const dragResource =
     draggableIds.size > 0
@@ -114,11 +135,12 @@ export function CanvasGraphExplorer({
       elements={
         projectFiles?.renderElements == null ? (
           <CanvasExplorerList
+            key={catalogueScopeKey}
             items={items}
             onAddModel={onAddModel}
             onImport={onImport}
             connections={connections}
-            onSelect={onSelect}
+            onSelect={(id) => onInspectNode({ kind: 'canonical-node', nodeId: id })}
             onDragStart={dragResource}
           />
         ) : (
@@ -127,7 +149,9 @@ export function CanvasGraphExplorer({
               enabled,
               items,
               canCreateInstances: canPlaceSource && referencePlacementScope == null,
-              onSelect,
+              onInspectNode,
+              inspectorTarget,
+              catalogueScopeKey,
               onDragStart: dragResource,
               onAddModel,
               onImport,

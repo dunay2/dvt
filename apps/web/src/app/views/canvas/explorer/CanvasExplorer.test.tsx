@@ -62,7 +62,7 @@ describe('Canvas explorer', () => {
       useApplicationLanguageStore.setState({ language });
       render(
         <>
-          <CanvasGraphExplorer nodes={[]} catalogue={[]} onSelect={vi.fn()}>
+          <CanvasGraphExplorer catalogue={[]} onInspectNode={vi.fn()}>
             <input aria-label="Project graph" />
           </CanvasGraphExplorer>
           <CanvasExplorer elements={<p>Internal inputs</p>}>
@@ -192,7 +192,7 @@ describe('Canvas explorer', () => {
       path: 'models/clientes.sql',
     };
     render(
-      <CanvasGraphExplorer nodes={[]} catalogue={[model]} onSelect={vi.fn()} canPlaceSource>
+      <CanvasGraphExplorer catalogue={[model]} onInspectNode={vi.fn()} canPlaceSource>
         <input aria-label="Graph" />
       </CanvasGraphExplorer>
     );
@@ -203,13 +203,14 @@ describe('Canvas explorer', () => {
 
   it('offers one catalogue with category additions even before objects are registered', () => {
     const onImport = vi.fn();
+    const onManageConnections = vi.fn();
     const onAddModel = vi.fn();
     render(
       <CanvasGraphExplorer
-        nodes={[]}
         catalogue={[]}
-        onSelect={vi.fn()}
+        onInspectNode={vi.fn()}
         onImport={onImport}
+        onManageConnections={onManageConnections}
         onAddModel={onAddModel}
         canPlaceSource
       >
@@ -224,7 +225,8 @@ describe('Canvas explorer', () => {
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: 'Configure connections' }));
     });
-    expect(onImport).toHaveBeenCalledExactlyOnceWith();
+    expect(onManageConnections).toHaveBeenCalledExactlyOnceWith();
+    expect(onImport).not.toHaveBeenCalled();
     const addModel = screen.getByRole('button', { name: 'Add model' });
     act(() => {
       fireEvent.click(addModel);
@@ -324,7 +326,7 @@ describe('Canvas explorer', () => {
     expect(screen.getByRole('button', { name: 'Orders' })).toBeTruthy();
   });
   it.each([true, false])(
-    'activates definitions through creation and guards click and drag (writable=%s)',
+    'inspects readonly definitions independently of placement admission (writable=%s)',
     (writable) => {
       const source: CanonicalNode = {
         id: 'source',
@@ -345,20 +347,13 @@ describe('Canvas explorer', () => {
       const onSelect = vi.fn();
       render(
         <CanvasGraphExplorer
-          nodes={[
-            {
-              id: 'instance',
-              position: { x: 0, y: 0 },
-              data: { name: 'Placed Orders', role: 'input' },
-            },
-          ]}
           catalogue={[
             source,
             { ...source, id: 'instance', name: 'Placed Orders', sourceDefinitionId: source.id },
             model,
             { ...model, id: 'model-instance', name: 'Revenue 2', definitionId: model.id },
           ]}
-          onSelect={onSelect}
+          onInspectNode={onSelect}
           canPlaceSource={writable}
         >
           <input aria-label="Retained graph" />
@@ -387,21 +382,21 @@ describe('Canvas explorer', () => {
       act(() => {
         fireEvent.click(row);
       });
-      if (writable) expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
-      else expect(onSelect).not.toHaveBeenCalled();
+      expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+        kind: 'canonical-node',
+        nodeId: 'source',
+      });
       act(() => {
         fireEvent.click(screen.getByRole('button', { name: 'Revenue' }));
       });
-      if (writable) expect(onSelect).toHaveBeenLastCalledWith('model');
-      else expect(onSelect).not.toHaveBeenCalled();
+      expect(onSelect).toHaveBeenLastCalledWith({ kind: 'canonical-node', nodeId: 'model' });
     }
   );
 
   it('allows source and model reference drops without authoring permission', () => {
     render(
       <CanvasGraphExplorer
-        nodes={[]}
-        onSelect={vi.fn()}
+        onInspectNode={vi.fn()}
         referencePlacementScope="scope"
         catalogue={[
           {
@@ -450,8 +445,7 @@ describe('Canvas explorer', () => {
     const onSelect = vi.fn();
     render(
       <CanvasGraphExplorer
-        nodes={[]}
-        onSelect={onSelect}
+        onInspectNode={onSelect}
         referencePlacementScope="scope"
         catalogue={[
           {
@@ -486,7 +480,10 @@ describe('Canvas explorer', () => {
         fireEvent.click(row);
       });
     }
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect.mock.calls).toEqual([
+      [{ kind: 'canonical-node', nodeId: 'seed' }],
+      [{ kind: 'canonical-node', nodeId: 'snapshot' }],
+    ]);
   });
 
   it('enables project discovery only in the open Elements panel without remounting its list or graph', () => {
@@ -495,8 +492,7 @@ describe('Canvas explorer', () => {
     ));
     render(
       <CanvasGraphExplorer
-        nodes={[]}
-        onSelect={() => undefined}
+        onInspectNode={() => undefined}
         projectFiles={{ onActivate: async () => true, onCanvas: () => undefined, renderElements }}
       >
         <input aria-label="Retained graph" />
@@ -682,7 +678,7 @@ describe('Canvas explorer', () => {
     });
     expect(button.getAttribute('aria-expanded')).toBe('true');
   });
-  it('shows registered definitions without cards and uses their identity for creation gestures', () => {
+  it('inspects registered definitions without cards and preserves their identity for drag', () => {
     const catalogue: CanonicalNode[] = [
       {
         id: 'imported',
@@ -697,9 +693,8 @@ describe('Canvas explorer', () => {
     const onSelect = vi.fn();
     const view = (ready: boolean): JSX.Element => (
       <CanvasGraphExplorer
-        nodes={[]}
         catalogue={ready ? catalogue : []}
-        onSelect={onSelect}
+        onInspectNode={onSelect}
         canPlaceSource
       >
         <input aria-label="Graph state" />
@@ -713,7 +708,10 @@ describe('Canvas explorer', () => {
     act(() => {
       fireEvent.click(source);
     });
-    expect(onSelect).toHaveBeenCalledExactlyOnceWith('imported');
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+      kind: 'canonical-node',
+      nodeId: 'imported',
+    });
     const transfer = { setData: vi.fn(), effectAllowed: '' };
     act(() => {
       fireEvent.dragStart(source, { dataTransfer: transfer });
@@ -727,7 +725,7 @@ describe('Canvas explorer', () => {
     expect(screen.getByLabelText('Graph state')).toBe(graph);
   });
 
-  it('reuses catalogue projection across graph movement and refreshes changed source context', () => {
+  it('reuses catalogue projection across parent renders and refreshes changed source context', () => {
     let roleReads = 0;
     const source: CanonicalNode = {
       id: 'registered',
@@ -753,15 +751,8 @@ describe('Canvas explorer', () => {
     const catalogue = [source];
     const onSelect = vi.fn();
     const view = (moved: boolean, sources = catalogue): JSX.Element => (
-      <CanvasGraphExplorer
-        nodes={
-          moved ? [{ id: 'placed', position: { x: 200, y: 40 }, data: { name: 'Placed' } }] : []
-        }
-        catalogue={sources}
-        onSelect={onSelect}
-        canPlaceSource
-      >
-        <input aria-label="Retained graph" />
+      <CanvasGraphExplorer catalogue={sources} onInspectNode={onSelect} canPlaceSource>
+        <input aria-label="Retained graph" data-parent-render={moved} />
       </CanvasGraphExplorer>
     );
     render(view(false));
@@ -779,7 +770,10 @@ describe('Canvas explorer', () => {
     act(() => {
       fireEvent.click(row);
     });
-    expect(onSelect).toHaveBeenCalledExactlyOnceWith('registered');
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+      kind: 'canonical-node',
+      nodeId: 'registered',
+    });
     act(() =>
       root.render(
         view(true, [{ ...source, metadata: { ...source.metadata, schema: 'reporting' } }])

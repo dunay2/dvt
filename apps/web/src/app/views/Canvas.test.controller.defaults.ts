@@ -22,6 +22,7 @@ type CanvasWorkbenchDefaultsDto = {
   inspectorPanelVisible: CanvasController['inspectorPanelVisible'];
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
   inspectorNode: CanvasController['inspectorNode'];
+  inspectorTarget: CanvasController['inspectorTarget'];
   inspectorPreferredTabId: CanvasController['inspectorPreferredTabId'];
   inspectorPreferredTabRequestId: CanvasController['inspectorPreferredTabRequestId'];
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
@@ -127,6 +128,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     inspectorPanelVisible: true,
     canOpenSourceImport: true,
     inspectorNode: null,
+    inspectorTarget: null,
     inspectorPreferredTabId: null,
     inspectorPreferredTabRequestId: 0,
     inspectorGraphNodes: [],

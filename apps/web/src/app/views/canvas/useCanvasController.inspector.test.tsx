@@ -70,7 +70,11 @@ describe('useCanvasController inspector contract', () => {
       mode: 'explicit',
       nodeIds: ['node_1', 'node_2'],
     });
-    harness.state.store.inspectorNodeId = 'node_1';
+    harness.state.store.setInspectorTarget({
+      kind: 'canonical-node',
+      nodeId: 'node_1',
+      workspaceScope: harness.state.services.sessionContext.getWorkspaceScopeSnapshot(),
+    });
     await harness.renderProbe();
 
     await act(async () => {
@@ -84,7 +88,7 @@ describe('useCanvasController inspector contract', () => {
     await harness.renderProbe();
 
     expect(harness.state.store.setSelectedNodes).toHaveBeenCalledWith(['node_2']);
-    expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
+    expect(harness.state.store.setInspectorTarget).toHaveBeenCalledWith(null, undefined);
     expect(harness.getLatestResult()?.inspectorNode).toBeNull();
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_2']);
     expect(harness.getLatestResult()?.edges).toEqual([]);

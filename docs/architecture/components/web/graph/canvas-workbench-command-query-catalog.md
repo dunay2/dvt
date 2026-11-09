@@ -174,9 +174,12 @@ definition ID. Visible cards determine placement only; they do not determine
 which identities are available. Placing an existing definition remains a
 separate instance action and preserves the registered definition.
 
-Activation in Elements requests creation, never file navigation or camera focus.
-Click uses the visible Canvas center and drag uses the dropped graph position;
-both reuse native node admission or the existing local reference-placement rail.
+Catalogue activation requests the existing `InspectCanvasNode` command and opens
+right Properties; it never creates an instance, focuses the camera or changes
+execution selection. Enter/Space has the same inspection intent. Only catalogue
+drag/drop uses the dropped graph position and existing guarded instance admission.
+Disclosure and menus remain independent, and the existing shared gesture arbiter
+cancels the pending inspection on double click, drag, replacement or unmount.
 Instances reference one registered definition and retain their own placement
 identity, name and position. They do not create a consumer Read, copy the model
 document or add a dependency edge to the original. The shared contract resolves
@@ -215,11 +218,25 @@ and detail disclosure as separate presentation states. Search uses names and
 actual metadata, including the localized Source property. A sibling disclosure
 button can inspect metadata even when placement is unavailable; it must not
 activate, drag or open Properties. Native keyboard activation retains the
-existing placement command; a pointer double click cannot create a second
-instance. Section and detail controls expose coherent `aria-expanded` and
+existing inspection command; a pointer double click cannot open Properties or
+create an instance. Section and detail controls expose coherent `aria-expanded` and
 `aria-controls`. The dock retains the existing layout-state owner and resize
 persistence. The Model's internal relational input catalogue keeps its own
 existing owner. [Unified catalogue design and negative tests](https://github.com/dunay2/dvt/issues/3765#issuecomment-6727884137).
+
+The interaction owner stores one scoped Inspector target: an actual canonical
+node ID or a dbt file binding plus unique ID. The facade derives a canonical ID
+for existing graph consumers; file targets are not inserted into the draft or
+execution selection. Current catalogue definitions remain inspectable without a
+placed card or placement permission. Unsupported unplaced transform mutation
+stays read-only under the existing authoring guard. A conditional file adapter at
+the existing right workbench resolves the independently current project-root
+authority and renders real read-only metadata and file Code contributions. It
+does not replace the catalogue's graph array, allocate executable identities,
+copy connection configuration or add a query/cache/store. Scope, binding, root
+and confirmed membership revocation fail closed. Existing explicit tab requests
+and Overview request epochs remain authoritative.
+[Inspection intent and boundaries](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729355692).
 
 ## C&Q Summary
 
@@ -1082,6 +1099,24 @@ Runtime rails and test-only rails must stay explicit:
 - new backend persistence, adapter authority, protected draft behavior, or
   cross-context ownership requires a catalog update and an ADR check before
   implementation.
+
+## Existing Connection And Inspection Entry Boundaries
+
+The Connections action enters the existing Wizard with `manage-connections`;
+source import enters it with `import-sources`. Both reuse the existing scoped
+Warehouse connection catalog and `ListWarehouseConnections` query. Creation
+remains `CreateWarehouseConnection`, owned by the Warehouse connection aggregate
+and exposed through `IWarehouseSourceImportPort.createWarehouseConnection`.
+The existing adapter, scope, authorization, validation and error contracts apply.
+Management neither invokes `ImportWarehouseSources` nor places a canvas instance.
+Negative proof covers retained import selections, late request completions,
+creation errors, scope changes and the unchanged import continuation.
+
+Normal card inspection for every role, including Source, requests
+`InspectCanvasNode` with internal `general`/Overview. Explicit Columns, Code and
+Inputs/Outputs requests retain their sections. The shared gesture arbiter still
+cancels pending Properties during double click, drag and owner replacement.
+No role-specific default, second timer or parallel command is admitted.
 
 ## Drift Rules
 

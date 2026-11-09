@@ -565,6 +565,57 @@ preserves missing versus invalid reasons and tenant-first error precedence.
 Each route retains its own authorization action and application port. The dbt
 project parser keeps its distinct combined-query error contract.
 
+## Catalogue File Inspection
+
+Clicking a file-backed model in the project catalogue uses the existing
+`InspectCanvasNode` intent with its real binding and unique ID. It never calls
+the executable definition factory or registers a draft node. The right panel's
+conditional adapter reuses the existing scoped project query/cache and canonical
+file projection. Its query root comes independently from the current
+`workspaceCommands.projectRoot`, shared with the catalogue and Code owner; only
+then may current scope, binding/root/Canvas and resource membership admit the
+requested target. A foreign/stale request cannot choose its own authority.
+
+The existing workbench receives actual read-only file metadata and
+`dbt-project-files` Code contributions. No graph-draft Code fallback, semantic
+editor, Transform SQL execution context or replacement of the main catalogue
+array is introduced. The canonical-only Inspector branch gains no file-query
+provider requirement. Existing pending/unavailable and file-inspector continuity
+rules remain authoritative.
+
+The existing file workbench session owns async handoff. It captures both editor
+handles and the current owner before waiting, revalidates mount, owner generation,
+latest intent and resource membership after each await, and keeps Code open/path
+state tagged to that owner. Cancellation, rejected flush, newer intent,
+A-to-B-to-A scope changes or unmount cannot select/open/close or flush another
+owner's editor. Failures remain visible through the existing caller rather than
+an ignored promise. This is local UI state, not a new store or product rail.
+[Inspection and handoff design](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729355692).
+
+## Connection Management And Import Entry
+
+The existing Wizard accepts an independent typed entry request:
+`manage-connections`, or `import-sources` with optional initial selection and
+placement. Management is not a fictitious `SourceImportInitialSelection` variant.
+It opens Connections without inheriting a previously selected object or dbt
+binding, and uses the existing `IWarehouseSourceImportPort.createWarehouseConnection`
+command and actual credential-reference form. The existing import entry retains
+object browsing, dbt-source-binding continuation and guarded placement.
+
+The existing dialog owns the current opening request. The Wizard's current
+request and granted workspace scope admit UI transitions after asynchronous work;
+late results cannot advance or notify a superseding entry. Import continuation
+is consumed only for the matching current import request. Existing connection
+cache receipt handling, validation and authorization failures remain visible.
+The existing `TestWarehouseConnection` adapter also receives that request owner,
+rather than treating an unchanged selected connection or prefill as proof of the
+same opening. A late connection-test success or failure cannot publish into a
+new opening that reuses the same selection; its existing request machine still
+owns cancellation.
+This is a presentation/session correction, with no backend migration or duplicate
+connection configuration.
+[Entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729712973).
+
 ## Explicit Non-Goals
 
 - ZIP, Git, and dbt Cloud import adapters.

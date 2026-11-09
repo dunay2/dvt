@@ -43,6 +43,7 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
   panelState: Pick<
     CanvasRouteController,
     | 'inspectorNode'
+    | 'inspectorTarget'
     | 'inspectorPreferredTabId'
     | 'inspectorPreferredTabRequestId'
     | 'inspectorGraphNodes'
@@ -111,7 +112,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'onSetEdgeExecutionGate'
     | 'handleViewportChange'
     | 'handleDrop'
-    | 'handleInstantiateNode'
+    | 'handleInspectNode'
     | 'handleDragOver'
     | 'handleToggleFrozenNode'
     | 'handleCreateAuthoringNode'

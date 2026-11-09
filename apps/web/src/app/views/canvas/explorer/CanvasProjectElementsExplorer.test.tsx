@@ -17,6 +17,7 @@ import { useApplicationLanguageStore } from '../../../stores/applicationLanguage
 import { CanvasProjectElementsExplorer } from './CanvasProjectElementsExplorer';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { canvasDbtModelDefinitionId } from '../canvasDbtModelReference';
+import * as modelReferences from '../canvasDbtModelReference';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import type { DragEvent } from 'react';
 
@@ -89,7 +90,7 @@ async function render(
         <CanvasProjectElementsExplorer
           enabled={enabled}
           items={items}
-          onSelect={onSelect}
+          onInspectNode={onSelect}
           onDragStart={onDragStart}
           canCreateInstances={canCreateInstances}
         />
@@ -131,9 +132,11 @@ beforeEach(() => {
 afterEach(async () => {
   await mounted?.cleanup();
   mounted = undefined;
+  vi.restoreAllMocks();
 });
 
-it('admits native and file-model definitions without navigation or file writes', async () => {
+it('inspects native and actual file definitions without instance admission, navigation or file writes', async () => {
+  const createDefinition = vi.spyOn(modelReferences, 'createCanvasDbtModelDefinition');
   await render();
   await waitForReactQuery(
     () => screen.queryByRole('button', { name: /^ventas_por_cliente(?:\s|$)/ }) != null
@@ -143,7 +146,7 @@ it('admits native and file-model definitions without navigation or file writes',
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: 'Model 1' }));
   });
-  expect(onSelect).toHaveBeenCalledExactlyOnceWith('native');
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith({ kind: 'canonical-node', nodeId: 'native' });
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ }));
   });
@@ -151,13 +154,17 @@ it('admits native and file-model definitions without navigation or file writes',
     false
   );
   expect(onSelect).toHaveBeenCalledTimes(2);
-  expect(onSelect.mock.calls[1]?.[1]?.metadata?.dbtModelReference).toMatchObject({
-    canvasId: binding.canvasId,
-    uniqueId: 'model.demo.pedidos',
-  });
+  expect(onSelect.mock.calls[1]).toEqual([
+    {
+      kind: 'dbt-file-model',
+      binding,
+      uniqueId: 'model.demo.pedidos',
+    },
+  ]);
   expect(screen.getByLabelText('Location').textContent).toBe('/canvas');
   expect(getProjectGraph).toHaveBeenCalledExactlyOnceWith(binding);
   expect(saveFileContent).not.toHaveBeenCalled();
+  expect(createDefinition).not.toHaveBeenCalled();
 });
 
 it('shows the workspace path when the project root repeats a model directory', async () => {
@@ -201,16 +208,20 @@ it('uses the authoritative model identity rather than inferring existence from f
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
-it('keeps file-model admission unavailable in a read-only workspace', async () => {
+it('keeps readonly file Models inspectable while instance admission stays unavailable', async () => {
   await render(true, [], false);
   await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
   const model = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
-  expect(model.disabled).toBe(true);
+  expect(model.disabled).toBe(false);
   expect(model.draggable).toBe(false);
   act(() => {
     fireEvent.click(model);
   });
-  expect(onSelect).not.toHaveBeenCalled();
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+    kind: 'dbt-file-model',
+    binding,
+    uniqueId: 'model.demo.pedidos',
+  });
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
@@ -220,17 +231,21 @@ it('lists an unbound logical file Model without offering unsafe placement', asyn
   await render();
   await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
   const model = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
-  expect(model.disabled).toBe(true);
+  expect(model.disabled).toBe(false);
   expect(model.draggable).toBe(false);
   expect(screen.queryByRole('alert')).toBeNull();
   act(() => {
     fireEvent.click(model);
   });
-  expect(onSelect).not.toHaveBeenCalled();
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+    kind: 'dbt-file-model',
+    binding,
+    uniqueId: 'model.demo.pedidos',
+  });
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
-it('reports a missing published output without creating a partial instance', async () => {
+it('inspects a Model without published outputs but rejects its drag before creating a partial instance', async () => {
   getProjectGraph.mockResolvedValue({
     ...project,
     nodes: project.nodes.map((node) => ({ ...node, columns: [] })),
@@ -240,8 +255,20 @@ it('reports a missing published output without creating a partial instance', asy
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ }));
   });
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+    kind: 'dbt-file-model',
+    binding,
+    uniqueId: 'model.demo.pedidos',
+  });
+  expect(screen.queryByRole('alert')).toBeNull();
+  const setData = vi.fn();
+  act(() => {
+    fireEvent.dragStart(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ }), {
+      dataTransfer: { setData },
+    });
+  });
   expect(screen.getByRole('alert').textContent).toMatch(/output|schema/i);
-  expect(onSelect).not.toHaveBeenCalled();
+  expect(setData).not.toHaveBeenCalled();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
@@ -290,9 +317,10 @@ it('deduplicates by identity while preserving a distinct native element with the
       )!
     );
   });
-  expect(onSelect).toHaveBeenCalledExactlyOnceWith(
-    canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes')
-  );
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith({
+    kind: 'canonical-node',
+    nodeId: canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes'),
+  });
 });
 
 it('deduplicates an explicit direct file identity without changing its registered drag payload', async () => {

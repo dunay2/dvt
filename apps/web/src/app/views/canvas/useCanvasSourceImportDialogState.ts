@@ -1,57 +1,94 @@
 /** Owned concern: manage contextual Add Source dialog state for the Canvas shell. */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   CanvasShellOpenDataRegistryCommand,
-  CanvasShellSourceImportPlacement,
+  CanvasShellDataRegistryRequest,
 } from './canvasShell.types';
 
 type CanvasSourceImportDialogState = Readonly<{
   open: boolean;
-  initialSelection: Parameters<CanvasShellOpenDataRegistryCommand>[0];
-  placement: CanvasShellSourceImportPlacement | undefined;
+  request: CanvasShellDataRegistryRequest | null;
+  isCurrent: (request: CanvasShellDataRegistryRequest) => boolean;
+  restoreFocus: (request: CanvasShellDataRegistryRequest) => void;
   openCommand: CanvasShellOpenDataRegistryCommand | undefined;
   close: () => void;
 }>;
 
 export function useCanvasSourceImportDialogState(
-  canOpenSourceImport: boolean
+  canOpenSourceImport: boolean,
+  ownerKey: string
 ): CanvasSourceImportDialogState {
-  const [open, setOpen] = useState(false);
-  const [initialSelection, setInitialSelection] =
-    useState<Parameters<CanvasShellOpenDataRegistryCommand>[0]>(undefined);
-  const [placement, setPlacement] = useState<CanvasShellSourceImportPlacement | undefined>(
-    undefined
+  const owner = useMemo(() => ({ key: ownerKey }), [ownerKey]);
+  const currentOwner = useRef(owner);
+  currentOwner.current = owner;
+  const [session, setSession] = useState<{
+    owner: typeof owner;
+    request: CanvasShellDataRegistryRequest;
+  } | null>(null);
+  const request = session?.owner === owner ? session.request : null;
+  const currentRequest = useRef(session);
+  const opener = useRef<{
+    owner: typeof owner;
+    request: CanvasShellDataRegistryRequest;
+    element: HTMLElement;
+  } | null>(null);
+  const allowed = useRef(canOpenSourceImport);
+  allowed.current = canOpenSourceImport;
+  const isCurrent = useCallback(
+    (candidate: CanvasShellDataRegistryRequest): boolean =>
+      allowed.current &&
+      currentRequest.current?.owner === currentOwner.current &&
+      currentRequest.current?.request === candidate,
+    []
   );
+  const restoreFocus = useCallback((candidate: CanvasShellDataRegistryRequest): void => {
+    const target = opener.current;
+    if (
+      target?.owner === currentOwner.current &&
+      target.request === candidate &&
+      target.element.isConnected
+    )
+      target.element.focus({ preventScroll: true });
+  }, []);
 
   const close = useCallback(() => {
-    setOpen(false);
-    setInitialSelection(undefined);
-    setPlacement(undefined);
-  }, []);
+    if (currentOwner.current !== owner) return;
+    currentRequest.current = null;
+    setSession(null);
+  }, [owner]);
 
   const openCommand = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
     if (!canOpenSourceImport) {
       return undefined;
     }
 
-    return (nextInitialSelection, nextPlacement) => {
-      setInitialSelection(nextInitialSelection);
-      setPlacement(nextPlacement);
-      setOpen(true);
+    return (next = { intent: 'import-sources' }) => {
+      if (currentOwner.current !== owner) return;
+      const nextRequest: CanvasShellDataRegistryRequest =
+        next.intent === 'manage-connections' ? { intent: 'manage-connections' } : { ...next };
+      const nextSession = { owner, request: nextRequest };
+      const element = document.activeElement;
+      opener.current =
+        element instanceof HTMLElement && element !== document.body
+          ? { ...nextSession, element }
+          : null;
+      currentRequest.current = nextSession;
+      setSession(nextSession);
     };
-  }, [canOpenSourceImport]);
+  }, [canOpenSourceImport, owner]);
 
   useEffect(() => {
-    if (!canOpenSourceImport && open) {
+    if (!canOpenSourceImport && request != null) {
       close();
     }
-  }, [canOpenSourceImport, close, open]);
+  }, [canOpenSourceImport, close, request]);
 
   return {
-    open,
-    initialSelection,
-    placement,
+    open: canOpenSourceImport && request != null,
+    request: canOpenSourceImport ? request : null,
+    isCurrent,
+    restoreFocus,
     openCommand,
     close,
   };

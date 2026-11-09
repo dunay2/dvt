@@ -61,6 +61,7 @@ function buildCanvasShellPanelsArgs({
   return {
     panelState: {
       inspectorNode: controller.inspectorNode,
+      inspectorTarget: controller.inspectorTarget,
       inspectorPreferredTabId: controller.inspectorPreferredTabId,
       inspectorPreferredTabRequestId: controller.inspectorPreferredTabRequestId,
       inspectorGraphNodes: controller.inspectorGraphNodes,
@@ -141,7 +142,7 @@ function buildCanvasShellGraphCommandsArgs({
       onSetEdgeExecutionGate: controller.onSetEdgeExecutionGate,
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
-      handleInstantiateNode: controller.handleInstantiateNode,
+      handleInspectNode: controller.handleInspectNode,
       handleDragOver: controller.handleDragOver,
       handleToggleFrozenNode: controller.handleToggleFrozenNode,
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,

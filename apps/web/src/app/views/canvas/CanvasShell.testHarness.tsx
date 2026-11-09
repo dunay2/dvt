@@ -190,6 +190,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       ],
       executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
       inspectorNode: null,
+      inspectorTarget: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
       inspectorGraphNodes: [],
@@ -239,6 +240,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       ...overrides?.chromeState,
     },
     graphCommands: {
+      onInspectNode: vi.fn(),
       onNodesChange: vi.fn(),
       onNodeDragStop: vi.fn(),
       onEdgesChange: vi.fn(),

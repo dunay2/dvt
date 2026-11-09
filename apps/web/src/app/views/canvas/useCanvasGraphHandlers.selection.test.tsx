@@ -104,7 +104,9 @@ describe('useCanvasGraphHandlers explicit selection intents', () => {
     harness = renderedHarness;
     await renderedHarness.render();
 
-    act(() => renderedHarness.latest()?.handleInspectNode('source-node', 'general'));
+    act(() => {
+      renderedHarness.latest()?.handleInspectNode('source-node', 'general');
+    });
 
     expect(setInspectorNode).toHaveBeenCalledWith('source-node', 'general');
     expect(useUiLayoutStore.getState().focusMode).toBe(false);
@@ -127,5 +129,53 @@ describe('useCanvasGraphHandlers explicit selection intents', () => {
 
     expect(setSelectedNodes).toHaveBeenNthCalledWith(1, ['source-node', 'sink-node']);
     expect(setSelectedNodes).toHaveBeenNthCalledWith(2, []);
+  });
+
+  it('inspects an actual file resource through the same command without placement or execution effects', async () => {
+    const setInspectorNode = vi.fn();
+    const setSelectedNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const onLayoutComplete = vi.fn();
+    const request = {
+      kind: 'dbt-file-model',
+      uniqueId: 'model.demo.orders',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'files',
+        authority: { kind: 'dbt-project-files', projectRoot: 'project' },
+      },
+    } as const;
+    harness = renderSelectionHarness({
+      setInspectorNode,
+      setSelectedNodes,
+      setDraftSession,
+      onLayoutComplete,
+    });
+    await harness.render();
+    act(() => {
+      harness?.latest()?.handleInspectNode(request);
+    });
+    expect(setInspectorNode).toHaveBeenCalledExactlyOnceWith(request, 'general');
+    expect(setSelectedNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(onLayoutComplete).not.toHaveBeenCalled();
+  });
+
+  it('does not reveal Properties or exit focus when the current scope refuses inspection', async () => {
+    useUiLayoutStore.setState({ focusMode: true });
+    const setInspectorNode = vi.fn(() => false);
+    const toggleInspectorPanel = vi.fn();
+    harness = renderSelectionHarness({
+      focusMode: true,
+      inspectorPanelVisible: false,
+      setInspectorNode,
+      toggleInspectorPanel,
+    });
+    await harness.render();
+    act(() => {
+      harness?.latest()?.handleInspectNode('old-scope-node');
+    });
+    expect(toggleInspectorPanel).not.toHaveBeenCalled();
+    expect(useUiLayoutStore.getState().focusMode).toBe(true);
   });
 });

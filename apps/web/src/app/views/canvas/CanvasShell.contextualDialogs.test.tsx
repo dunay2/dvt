@@ -228,9 +228,12 @@ describe('CanvasShell contextual dialogs', () => {
 
     expect(shellState.sourceImportWizardProps).toMatchObject({
       open: true,
-      initialSelection: {
-        kind: 'dbt-source-binding',
-        sourceTableDeclarations,
+      entry: {
+        intent: 'import-sources',
+        initialSelection: {
+          kind: 'dbt-source-binding',
+          sourceTableDeclarations,
+        },
       },
     });
     expect(onConsumed).not.toHaveBeenCalled();
@@ -248,9 +251,12 @@ describe('CanvasShell contextual dialogs', () => {
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
       open: true,
-      initialSelection: {
-        kind: 'dbt-source-binding',
-        sourceTableDeclarations,
+      entry: {
+        intent: 'import-sources',
+        initialSelection: {
+          kind: 'dbt-source-binding',
+          sourceTableDeclarations,
+        },
       },
     });
 

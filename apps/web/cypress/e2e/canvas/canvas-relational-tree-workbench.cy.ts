@@ -111,8 +111,24 @@ describe('Workbench navigation', () => {
                 expect(bounds.right).to.be.closeTo(1280, 30);
                 expect(bounds.width).to.be.at.most(450);
               });
+            // Normal Properties entry is Overview for every role, including a Source.
+            cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+              'have.attr',
+              'aria-selected',
+              'true'
+            );
             if (nodeId !== 'join-transform') {
+              cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
               cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
+                'have.attr',
+                'aria-selected',
+                'true'
+              );
+              // A new normal gesture must reopen Overview even for the same Source after Columns.
+              cy.get(
+                `.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`
+              ).click();
+              cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
                 'have.attr',
                 'aria-selected',
                 'true'

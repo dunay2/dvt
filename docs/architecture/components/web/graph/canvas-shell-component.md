@@ -866,33 +866,71 @@ column names remain fully readable in detail. The existing facts projection,
 filtered navigation, focus restoration, transfer and local ordering own their
 semantics; density changes do not issue provider requests or persist a draft.
 
+### Explicit Connection Management Entry
+
+The project Connections action opens the existing Source Import Wizard through
+an explicit `manage-connections` entry request. The same dialog/session owner
+stores one current request. Management starts at Connections and exposes the
+existing New connection form; selecting or creating a connection stays there.
+Retained source-object selection, dbt binding prefill and canvas placement belong
+only to the separate `import-sources` entry of that same Wizard.
+
+```mermaid
+flowchart LR
+  Manage[Connections action] --> Request[Current typed entry request]
+  Import[Import action with optional selection and placement] --> Request
+  Request --> Intent{Existing Wizard entry intent}
+  Intent -->|manage-connections| Connections[Connections and existing creation form]
+  Intent -->|import-sources| ImportFlow[Existing source import workflow]
+  Connections --> Port[Existing CreateWarehouseConnection port]
+```
+
+Current request identity and granted workspace scope govern asynchronous UI
+completion. An older request cannot advance, notify or consume a dbt continuation
+in a newer entry. Existing scoped cache receipt invalidation remains authoritative.
+No new modal, permission flag, backend endpoint or query is introduced.
+[Entry design](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729712973).
+
 ### Source Catalogue Presentation
 
 The existing `RenderCanvasContextualGraphSurface` query presents registered
-source definitions through `CanvasGraphExplorer` and the shared
-`CanvasExplorerList`. Sources use compact cards with a table icon, a minimum
+model definitions through `CanvasGraphExplorer` and the shared
+`CanvasExplorerList`. Models use a common icon and an independent Source badge, a minimum
 44 px hit target, 4 px separation and the available schema/connection as display
 context. Other explorer lists retain their existing presentation.
 
-The source projection excludes reference instances and preserves definition
+The catalogue projection excludes reference instances and preserves definition
 identity and catalogue order. Its derived rows change with the catalogue,
 independently from graph coordinates. The shared list prepares searchable text
 when its items change; an empty search returns those items directly. These are
 render-local projections, never a second source authority or a global cache.
 
-Click still inspects the definition. Drag still transfers only its identity to
-the existing guarded drop command. Filtering, card styling and keyboard focus
-must not place a node, write a draft or make a provider request. Missing display
+Click and keyboard activation inspect the definition through `InspectCanvasNode`;
+they never call instance admission or move the camera. Drag transfers only its
+identity to the existing guarded drop command. A double click cancels the pending
+single-click inspection through the shared gesture owner. Filtering, card styling and keyboard focus
+must not place a node or write a draft. Missing display
 metadata is omitted without inventing a connection or schema.
+
+Inspection and placement admission are independent: current unplaced definitions
+can open Properties, including read-only/unbound logical models, while unsupported
+mutation remains read-only. The one scoped interaction target distinguishes an
+actual canonical node ID from an actual dbt file binding/unique ID. File metadata
+is resolved only in the existing right workbench boundary against the current
+catalogue/Code root, not a target-selected root. Its graph context and file Code
+contributions stay local to that panel; the main catalogue, semantic graph and
+execution membership remain unchanged. Closing restores catalogue focus when
+there is no placed card. No executable definition is constructed for inspection.
+[Inspection boundary decision](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729355692).
 
 ```mermaid
 flowchart LR
-  Catalogue[Authorized source catalogue] --> Projection[Definition rows]
+  Catalogue[Authorized model catalogue] --> Projection[Definition rows]
   Projection --> Search[Shared local search]
   Search --> Card[Accessible compact card]
   Card --> Inspect[Existing inspect action]
   Card --> Drag[Existing identity drag]
-  Graph[Graph geometry] --> Elements[Existing element rows]
+  Graph[Graph geometry] --> Elements[Existing placed cards]
 ```
 
 ### Project Files In The Main Canvas Explorer

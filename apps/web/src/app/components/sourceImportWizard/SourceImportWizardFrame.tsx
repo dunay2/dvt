@@ -5,7 +5,7 @@
  * @consequence The surrounding explorer remains accessible and Canvas stays mounted.
  * @version 1.0.0
  */
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { Content as DialogContent, Close as DialogClose } from '@radix-ui/react-dialog';
 
@@ -14,6 +14,7 @@ import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } fr
 import { ScrollArea } from '../ui/scroll-area';
 import { useSourceImportLocalization } from './copy';
 import styles from './SourceImportWorkspace.module.css';
+import type { SourceImportWizardEntry } from './types';
 
 type SourceImportWizardFooterProps = Readonly<{
   isResultStep: boolean;
@@ -68,6 +69,7 @@ export function SourceImportWizardFooter({
 
 type SourceImportWizardFrameProps = Readonly<{
   open: boolean;
+  entryIntent?: SourceImportWizardEntry['intent'];
   activeContentId: string;
   isResultStep: boolean;
   isProcessing: boolean;
@@ -84,6 +86,7 @@ type SourceImportWizardFrameProps = Readonly<{
 
 export function SourceImportWizardFrame({
   open,
+  entryIntent = 'import-sources',
   activeContentId,
   isResultStep,
   isProcessing,
@@ -98,6 +101,8 @@ export function SourceImportWizardFrame({
   onImport,
 }: SourceImportWizardFrameProps): JSX.Element {
   const { copy } = useSourceImportLocalization();
+  const managing = entryIntent === 'manage-connections';
+  const opener = useRef<HTMLElement | null>(null);
 
   return (
     <Dialog
@@ -112,6 +117,11 @@ export function SourceImportWizardFrame({
       <DialogContent
         data-slot="source-import-workspace"
         className={styles.workspace}
+        onOpenAutoFocus={() => {
+          const element = document.activeElement;
+          opener.current =
+            element instanceof HTMLElement && element !== document.body ? element : null;
+        }}
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => {
           if (preventCloseOnEscape) {
@@ -122,17 +132,23 @@ export function SourceImportWizardFrame({
           if (onRestoreFocus) {
             event.preventDefault();
             onRestoreFocus();
+          } else if (opener.current?.isConnected) {
+            // This inline dialog has no Radix Trigger; use the actual opening focus when no owner callback exists.
+            event.preventDefault();
+            opener.current.focus({ preventScroll: true });
           }
         }}
       >
         <DialogHeader className={styles.header}>
-          <DialogTitle>{copy.title}</DialogTitle>
-          <DialogDescription>{copy.description}</DialogDescription>
+          <DialogTitle>{managing ? copy.management.title : copy.title}</DialogTitle>
+          <DialogDescription>
+            {managing ? copy.management.description : copy.description}
+          </DialogDescription>
         </DialogHeader>
         <DialogClose
           className={styles.close}
-          aria-label={copy.closeAction}
-          title={copy.closeAction}
+          aria-label={managing ? copy.management.closeAction : copy.closeAction}
+          title={managing ? copy.management.closeAction : copy.closeAction}
         >
           <X aria-hidden="true" />
         </DialogClose>
@@ -150,15 +166,19 @@ export function SourceImportWizardFrame({
         </ScrollArea>
 
         <DialogFooter className={styles.footer}>
-          <SourceImportWizardFooter
-            isResultStep={isResultStep}
-            isProcessing={isProcessing}
-            canImport={canImport}
-            selectedCount={selectedCount}
-            onClose={onClose}
-            onDone={onDone}
-            onImport={onImport}
-          />
+          {managing ? (
+            <Button onClick={onClose}>{copy.footer.doneAction}</Button>
+          ) : (
+            <SourceImportWizardFooter
+              isResultStep={isResultStep}
+              isProcessing={isProcessing}
+              canImport={canImport}
+              selectedCount={selectedCount}
+              onClose={onClose}
+              onDone={onDone}
+              onImport={onImport}
+            />
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

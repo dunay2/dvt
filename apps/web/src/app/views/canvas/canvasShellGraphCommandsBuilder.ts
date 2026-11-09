@@ -16,7 +16,7 @@ export function buildCanvasShellGraphCommands({
     onSetEdgeExecutionGate: graphCommands.onSetEdgeExecutionGate,
     onViewportChange: graphCommands.handleViewportChange,
     onDrop: graphCommands.handleDrop,
-    onInstantiateNode: graphCommands.handleInstantiateNode,
+    onInspectNode: graphCommands.handleInspectNode,
     onDragOver: graphCommands.handleDragOver,
     onToggleFrozenNode: graphCommands.handleToggleFrozenNode,
     onCreateAuthoringNode: graphCommands.handleCreateAuthoringNode,

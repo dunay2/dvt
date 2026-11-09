@@ -57,6 +57,23 @@ describe('CanvasShell graph base surface', () => {
     vi.unstubAllGlobals();
   });
 
+  it('forwards catalogue inspection without placing an instance or changing the retained viewport', async () => {
+    const onInspectNode = vi.fn();
+    const props = await renderShell({ graphCommands: { onInspectNode } });
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const request = { kind: 'canonical-node', nodeId: 'registered-model' } as const;
+    const inspect = getCanvasShellState().canvasViewportProps
+      ?.onInspectNode as typeof onInspectNode;
+    await act(async () => {
+      await inspect(request);
+    });
+    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith(request);
+    expect(props.graphCommands.onDrop).not.toHaveBeenCalled();
+    expect(props.panels.inspectorAuthoring.onApplyNodeDraft).not.toHaveBeenCalled();
+    expect(props.graph.nodesWithImpact).toEqual([]);
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+  });
+
   it('opens the actual Code owner once from a consumed route request under StrictMode', async () => {
     // Owner cleanup increments its intent on replay; transport must defer admission until replay ends.
     unmountShell();

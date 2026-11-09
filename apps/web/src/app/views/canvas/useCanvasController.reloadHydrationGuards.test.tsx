@@ -203,10 +203,14 @@ describe('useCanvasController reload hydration guards', () => {
       mode: 'explicit',
       nodeIds: ['node_2'],
     });
-    harness.state.store.inspectorNodeId = 'node_2';
+    harness.state.store.setInspectorTarget({
+      kind: 'canonical-node',
+      nodeId: 'node_2',
+      workspaceScope: harness.state.services.sessionContext.getWorkspaceScopeSnapshot(),
+    });
     const storeActions = harness.state.store;
     storeActions.setSelectedNodes.mockClear();
-    storeActions.setInspectorNode.mockClear();
+    storeActions.setInspectorTarget.mockClear();
 
     setHarnessRemoteDraftRecord(
       harness,
@@ -226,7 +230,7 @@ describe('useCanvasController reload hydration guards', () => {
     await reloadLatestDraft(harness);
 
     expect(storeActions.setSelectedNodes).toHaveBeenCalledWith([]);
-    expect(storeActions.setInspectorNode).toHaveBeenCalledWith(null);
+    expect(storeActions.setInspectorTarget).toHaveBeenCalledWith(null, undefined);
     expect(harness.getLatestResult()?.inspectorNode).toBeNull();
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
   });

@@ -31,7 +31,6 @@ export function CanvasExplorerList({
 }>): JSX.Element {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const search = query.trim().toLocaleLowerCase();
@@ -65,7 +64,6 @@ export function CanvasExplorerList({
       items={matches}
       open={open}
       onOpenChange={setOpen}
-      selectedId={selectedId}
       expandedIds={expandedIds}
       onToggleDetails={(id) => {
         setExpandedIds((previous) => {
@@ -77,10 +75,7 @@ export function CanvasExplorerList({
       }}
       query={query}
       onQuery={setQuery}
-      onSelect={(id) => {
-        setSelectedId(id);
-        onSelect(id);
-      }}
+      onSelect={onSelect}
       disabled={disabled}
       onDragStart={onDragStart}
       onAddModel={onAddModel}

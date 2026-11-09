@@ -209,7 +209,7 @@ describe('useCanvasController active draft node authoring', () => {
       }),
       ['node_1']
     );
-    harness.state.store.inspectorNodeId = null;
+    harness.state.store.setInspectorTarget(null);
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(async () =>
       buildDraftSaveSavedResponse(
         {
