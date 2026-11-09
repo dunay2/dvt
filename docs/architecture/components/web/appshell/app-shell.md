@@ -1169,7 +1169,9 @@ flowchart LR
 
 Design `GH-3765-AUDITED-SELECTION-MENU-PRESENTATION` retains the existing
 `ResolveShellTextSelectionMenu`, `CopyShellTextSelection` and
-`LookupShellTextSelection` rails in `SYS-WEB-CANVAS-SHELL-CHROME`.
+`LookupShellTextSelection` rails in Web App Shell. The route-owned
+`SYS-WEB-CANVAS-SHELL-CHROME` remains separate from this global interaction
+boundary; a Canvas route component does not acquire ownership of App Shell.
 `ShellTextSelection` remains an ephemeral value object; selection is neither
 graph state nor a persisted browser preference.
 
