@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/** Owned concern: preserve accessible shell slots, target-menu ownership and focus across layout changes. */
 
 import React, { act } from 'react';
 import { createPortal } from 'react-dom';
@@ -164,8 +165,8 @@ describe('AppShellFrame', () => {
     expect(body).not.toBeNull();
     expect(leftNavigation?.textContent).toContain('Left nav');
     expect(leftNavigation?.parentElement).toBe(body);
-    expect(leftNavigation?.className).toContain('flex');
-    expect(leftNavigation?.className).toContain('h-full');
+    // Guard the slot relationship; utility-class spelling is owned by external presentation.
+    expect(Array.from(body?.children ?? [])).toEqual([leftNavigation, main]);
     expect(main?.parentElement).toBe(body);
     expect(outlet?.textContent).toContain('Route outlet');
     expect(outlet?.closest('[data-slot="app-shell-main"]')).toBe(main);

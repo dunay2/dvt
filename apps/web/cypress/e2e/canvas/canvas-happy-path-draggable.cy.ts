@@ -528,25 +528,80 @@ describe('Canvas happy path remains writable after create/save', () => {
       .should('be.visible')
       .within(() => {
         cy.get('[role="menuitem"]').should('have.length', 3);
-        cy.contains('[role="menuitem"]', /^Copy$/)
-          .should('be.focused')
-          .click();
-        cy.get('[role="status"]').should('contain.text', 'Copied');
-        cy.get('a')
-          .first()
-          .should(($link) => {
-            expect($link.attr('href')).to.equal(
-              `https://dle.rae.es/${encodeURIComponent(selectedTerm)}`
-            );
-            expect($link.attr('rel')).to.equal('noopener noreferrer');
-          });
+        cy.contains('[role="menuitem"]', /^Copy$/).should('be.focused');
       });
+    let scrollBeforeActivation = 0;
+    cy.window().then((window) => {
+      window.focus();
+      scrollBeforeActivation = window.scrollY;
+    });
+    // Native defaults must neither scroll on Space nor dispatch a second Copy after keyup.
+    cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.get('@copySelectedText').should((clipboard) => {
       expect(clipboard).to.have.been.calledOnceWithExactly(selectedTerm);
     });
+    pressNativeKey('Enter');
+    cy.get('[data-slot="shell-text-selection-menu"]').within(() => {
+      cy.get('[role="status"]').should('contain.text', 'Copied');
+      cy.get('a')
+        .first()
+        .should(($link) => {
+          expect($link.attr('href')).to.equal(
+            `https://dle.rae.es/${encodeURIComponent(selectedTerm)}`
+          );
+          expect($link.attr('rel')).to.equal('noopener noreferrer');
+        });
+    });
+    cy.get('@copySelectedText').should((clipboard) => {
+      expect(clipboard).to.have.callCount(2);
+      expect(clipboard).to.have.always.been.calledWithExactly(selectedTerm);
+    });
+    cy.window().then((window) => {
+      expect(window.scrollY).to.equal(scrollBeforeActivation);
+    });
     cy.get('[data-slot="shell-text-selection-menu"]').screenshot('shell-selected-text-menu');
-    cy.get('[data-slot="shell-text-selection-menu"]').type('{esc}');
-    cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+    // The original defect affects anchors: observe activation while preventing any external window.
+    for (const key of [Cypress.Keyboard.Keys.SPACE, Cypress.Keyboard.Keys.ENTER]) {
+      if (key === Cypress.Keyboard.Keys.ENTER) cy.get('#canvas-workspace-tab').rightclick();
+      const activations: string[] = [];
+      let nativeKey: KeyboardEvent | undefined;
+      cy.get<HTMLAnchorElement>('[data-slot="shell-text-selection-menu"] a')
+        .first()
+        .focus()
+        .then(($link) => {
+          const link = $link[0]!;
+          link.addEventListener(
+            'click',
+            (event) => {
+              event.preventDefault();
+              activations.push(link.href);
+            },
+            { once: true }
+          );
+          link.addEventListener(
+            'keydown',
+            (event) => {
+              nativeKey = event;
+            },
+            { once: true }
+          );
+        });
+      cy.window().then((window) => {
+        window.focus();
+      });
+      cy.press(key);
+      cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+      cy.get('#canvas-workspace-tab').should('be.focused');
+      cy.then(() => {
+        expect(nativeKey?.isTrusted, 'dictionary activation uses a real keyboard gesture').to.equal(
+          true
+        );
+        expect(nativeKey?.key).to.equal(key === Cypress.Keyboard.Keys.SPACE ? ' ' : 'Enter');
+        expect(activations).to.deep.equal([
+          `https://dle.rae.es/${encodeURIComponent(selectedTerm)}`,
+        ]);
+      });
+    }
     cy.get('#canvas-workspace-tab').should('be.focused');
     cy.window().then((window) => {
       expect(window.getSelection()?.toString()).to.equal(selectedTerm);

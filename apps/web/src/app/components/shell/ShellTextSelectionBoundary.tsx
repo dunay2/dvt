@@ -1,4 +1,10 @@
-/** Owned concern: arbitrate shell selected-text intent without replacing local target menus. */
+/**
+ * Owned concern: arbitrate shell selected-text intent without replacing local target menus.
+ * @baseline Canvas and editor menus retain their own admission and actions.
+ * @decision Own the selected snapshot and action lifetime; delegate passive menu presentation.
+ * @consequence A stale selection cannot acquire clipboard or dictionary authority.
+ * @version 1.1.0
+ */
 import {
   cloneElement,
   useEffect,
@@ -6,27 +12,24 @@ import {
   useRef,
   useState,
   type HTMLAttributes,
-  type KeyboardEvent,
   type ReactElement,
 } from 'react';
-import { BookOpen, Copy } from 'lucide-react';
-import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover';
+import { Popover, PopoverAnchor } from '../ui/popover';
+import { ShellTextSelectionMenu } from './ShellTextSelectionMenu';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
-  buildShellDictionaryLinks,
   copyShellTextSelection,
   readShellTextSelection,
   resolveShellTextSelectionCopy,
   type ShellTextSelection,
 } from './shellTextSelection';
-import styles from './ShellTextSelectionBoundary.module.css';
 
 type SelectionRequest = Readonly<{
   selection: ShellTextSelection;
   opener: HTMLElement;
   x: number;
   y: number;
-  feedback: 'copied' | 'failed' | 'stale' | null;
+  feedback: Awaited<ReturnType<typeof copyShellTextSelection>> | null;
 }>;
 
 /** Capture only an accepted text context gesture; ordinary selection and local menus stay native to their owners. */
@@ -68,25 +71,6 @@ export function ShellTextSelectionBoundary({
     setRequest(next);
     return true;
   };
-  const navigateMenu = (event: KeyboardEvent<HTMLDivElement>) => {
-    const items = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')];
-    const current = items.indexOf(event.currentTarget.ownerDocument.activeElement as HTMLElement);
-    const index =
-      event.key === 'Home'
-        ? 0
-        : event.key === 'End'
-          ? items.length - 1
-          : event.key === 'ArrowDown'
-            ? (current + 1) % items.length
-            : event.key === 'ArrowUp'
-              ? (current - 1 + items.length) % items.length
-              : null;
-    if (index != null) {
-      event.preventDefault();
-      event.stopPropagation();
-      items[index]?.focus();
-    }
-  };
   return (
     <Popover
       open={request != null}
@@ -121,13 +105,10 @@ export function ShellTextSelectionBoundary({
       })}
       <PopoverAnchor virtualRef={virtualAnchor} />
       {request == null ? null : (
-        <PopoverContent
-          role="menu"
-          aria-label={copy.label}
-          data-slot="shell-text-selection-menu"
-          className={styles.menu}
-          align="start"
-          sideOffset={0}
+        <ShellTextSelectionMenu
+          text={request.selection.text}
+          copy={copy}
+          feedback={request.feedback}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
             (event.currentTarget as HTMLElement | null)
@@ -142,51 +123,20 @@ export function ShellTextSelectionBoundary({
               request.selection.restore();
             }
           }}
-          onKeyDown={navigateMenu}
-        >
-          <button
-            role="menuitem"
-            tabIndex={-1}
-            className={styles.item}
-            onClick={() => {
-              void copyShellTextSelection(request.selection, navigator.clipboard).then(
-                (feedback) => {
-                  setRequest((current) =>
-                    current?.selection === request.selection ? { ...current, feedback } : current
-                  );
-                }
+          onCopy={() => {
+            void copyShellTextSelection(request.selection, navigator.clipboard).then((feedback) => {
+              setRequest((current) =>
+                current?.selection === request.selection ? { ...current, feedback } : current
               );
-            }}
-          >
-            <Copy aria-hidden="true" className={styles.icon} />
-            {copy.copy}
-          </button>
-          {buildShellDictionaryLinks(request.selection.text).map((link) => (
-            <a
-              role="menuitem"
-              tabIndex={-1}
-              key={link.id}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.item}
-              onClick={(event) => {
-                if (!request.selection.isCurrent()) {
-                  event.preventDefault();
-                  setRequest({ ...request, feedback: 'stale' });
-                } else setRequest(null);
-              }}
-            >
-              <BookOpen aria-hidden="true" className={styles.icon} />
-              {copy.dictionary} · {link.label}
-            </a>
-          ))}
-          {request.feedback == null ? null : (
-            <p role="status" className={styles.feedback}>
-              {copy[request.feedback]}
-            </p>
-          )}
-        </PopoverContent>
+            });
+          }}
+          onLookup={(event) => {
+            if (!request.selection.isCurrent()) {
+              event.preventDefault();
+              setRequest({ ...request, feedback: 'stale' });
+            } else setRequest(null);
+          }}
+        />
       )}
     </Popover>
   );

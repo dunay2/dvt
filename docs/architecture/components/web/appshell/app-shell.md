@@ -1165,6 +1165,45 @@ flowchart LR
 >
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
 
+## Selected-Text Presentation Boundary Audit
+
+Design `GH-3765-AUDITED-SELECTION-MENU-PRESENTATION` retains the existing
+`ResolveShellTextSelectionMenu`, `CopyShellTextSelection` and
+`LookupShellTextSelection` rails in `SYS-WEB-CANVAS-SHELL-CHROME`.
+`ShellTextSelection` remains an ephemeral value object; selection is neither
+graph state nor a persisted browser preference.
+
+The current Popover boundary combines selection admission, request lifetime,
+markup and keyboard navigation. Arrow navigation works, but a dictionary link
+with `role="menuitem"` does not inherit button activation on Space. The solution
+separates the menu view from admission and action ownership. The view normalizes
+Enter and Space into one explicit item activation and prevents scrolling and
+native duplicate activation. Repeated activation keys do not repeat commands.
+The boundary retains exact snapshot checks, clipboard feedback, virtual anchor
+and focus restoration. No document listener, alternate menu engine or dependency
+is added; the installed menu wrappers do not expose the same controlled virtual
+anchor contract.
+
+```mermaid
+flowchart LR
+  Gesture[Context gesture] --> Admission[Selection admission and lifetime]
+  Admission --> View[Selected-text menu presentation]
+  View --> Action[Existing explicit Copy or dictionary action]
+  View --> Focus[Radix Popover focus lifecycle]
+```
+
+`AppShellFrame` owns slot composition and drawer geometry. Its visual rules move
+to a CSS module using existing semantic tokens and the global
+`app-shell-background` class. Skip-link focus, main focus, retained route slots
+and resize behavior remain unchanged. Browser-owned selection chrome remains
+outside this application's authority.
+
+Regression evidence must exercise pointer and keyboard activation, denied and
+stale copy, stale dictionary selection, focus return and target-menu delegation.
+Keyboard link tests cancel navigation after observing the real activation;
+they must not open an external window. Existing shell frame and lifecycle
+tests continue to guard composition and retained content.
+
 <a id="section-app-bootstrap-screen-component"></a>
 
 ## App Bootstrap Screen Component

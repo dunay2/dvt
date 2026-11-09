@@ -159,4 +159,69 @@ describe('shell selected-text intent', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1);
     expect(within(menu).getByRole('status').textContent).toContain('Select the text again');
   });
+
+  it.each(['Enter', ' '])('activates a menu action exactly once with %s', async (key) => {
+    // Links with menuitem semantics previously scrolled on Space instead of activating.
+    await mount(<div tabIndex={0}>customer</div>);
+    const menu = await open(host.querySelector('[tabindex="0"]') as HTMLElement);
+    const copy = within(menu).getByRole('menuitem', { name: 'Copy' });
+    let allowed = true;
+    await act(async () => {
+      allowed = fireEvent.keyDown(copy, { key });
+      fireEvent.keyUp(copy, { key });
+    });
+    expect(allowed).toBe(false);
+    expect(navigator.clipboard.writeText).toHaveBeenCalledExactlyOnceWith('customer');
+    expect(within(menu).getByRole('status').textContent).toContain('Copied');
+
+    const link = within(menu).getAllByRole('menuitem')[1] as HTMLAnchorElement;
+    const activated = vi.fn((event: Event) => event.preventDefault());
+    link.addEventListener('click', activated);
+    link.focus();
+    await act(async () => {
+      expect(fireEvent.keyDown(link, { key, repeat: true })).toBe(false);
+    });
+    expect(activated).not.toHaveBeenCalled();
+    await act(async () => {
+      expect(fireEvent.keyDown(link, { key })).toBe(false);
+      fireEvent.keyUp(link, { key });
+    });
+    expect(activated).toHaveBeenCalledOnce();
+    expect(within(document.body).queryByRole('menu')).toBeNull();
+  });
+
+  it('navigates from the menu container and wraps across its actions', async () => {
+    // Focus may enter the content itself; ArrowUp must start at the last action, not skip it.
+    await mount(<div tabIndex={0}>customer</div>);
+    const menu = await open(host.querySelector('[tabindex="0"]') as HTMLElement);
+    const items = within(menu).getAllByRole('menuitem');
+    menu.focus();
+    await act(async () => fireEvent.keyDown(menu, { key: 'ArrowUp' }));
+    expect(document.activeElement).toBe(items.at(-1));
+    await act(async () => fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' }));
+    expect(document.activeElement).toBe(items[0]);
+    await act(async () => fireEvent.keyDown(document.activeElement!, { key: 'End' }));
+    expect(document.activeElement).toBe(items.at(-1));
+    await act(async () => fireEvent.keyDown(document.activeElement!, { key: 'Home' }));
+    expect(document.activeElement).toBe(items[0]);
+  });
+
+  it('refuses keyboard dictionary activation after the selected text changes', async () => {
+    // Presentation extraction must not bypass the boundary's stale-snapshot admission.
+    await mount(<div tabIndex={0}>customer</div>);
+    const text = host.querySelector('[tabindex="0"]') as HTMLElement;
+    const menu = await open(text);
+    const link = within(menu).getAllByRole('menuitem')[1] as HTMLAnchorElement;
+    let cancelled = false;
+    link.addEventListener('click', (event) => {
+      // Observe cancellation after React dispatch without allowing any browser navigation.
+      queueMicrotask(() => {
+        cancelled = event.defaultPrevented;
+      });
+    });
+    text.textContent = 'different';
+    await act(async () => fireEvent.keyDown(link, { key: ' ' }));
+    expect(cancelled).toBe(true);
+    expect(within(menu).getByRole('status').textContent).toContain('Select the text again');
+  });
 });

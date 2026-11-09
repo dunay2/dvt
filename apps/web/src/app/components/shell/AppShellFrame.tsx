@@ -1,5 +1,12 @@
-/** Owned concern: lay out shell chrome slots from already-resolved presentation posture. */
+/**
+ * Owned concern: lay out shell chrome slots from already-resolved presentation posture.
+ * @baseline Route content and resize admission retain their existing owners.
+ * @decision Keep slot composition here and semantic visual rules in the CSS module.
+ * @consequence Focus mode and drawer resizing cannot introduce a second route lifetime.
+ * @version 1.1.0
+ */
 import type { ReactNode } from 'react';
+import styles from './AppShellFrame.module.css';
 
 import { ShellActivityRailProvider } from './ShellActivityRail';
 import { ShellTextSelectionBoundary } from './ShellTextSelectionBoundary';
@@ -53,7 +60,7 @@ export function AppShellFrame({
       <ShellTextSelectionBoundary>
         <div
           data-slot="app-shell-frame"
-          className="app-shell-background h-screen w-screen overflow-hidden text-foreground"
+          className={styles.frame}
           // Bubble after component-owned menus; capture would prevent Radix from opening.
           onContextMenu={(event) => event.preventDefault()}
         >
@@ -70,17 +77,17 @@ export function AppShellFrame({
                 focusMainContent();
               }
             }}
-            className="sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-[var(--surface-elevated)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--text-strong)] focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+            className={styles.skipLink}
           >
             {skipToMainContentLabel}
           </a>
-          <div className="flex h-full flex-col overflow-hidden">
+          <div className={styles.column}>
             {topBar}
             {healthBanner}
 
-            <div data-slot="app-shell-body" className="flex min-h-0 flex-1 overflow-hidden">
+            <div data-slot="app-shell-body" className={styles.body}>
               {showLeftNavigation && (
-                <div data-slot="app-shell-left-navigation" className="flex h-full shrink-0">
+                <div data-slot="app-shell-left-navigation" className={styles.navigation}>
                   {leftNavigation}
                 </div>
               )}
@@ -88,7 +95,7 @@ export function AppShellFrame({
               <div
                 data-slot="app-shell-main"
                 ref={drawerResize.groupHostRef}
-                className="flex min-h-0 flex-1 flex-col overflow-hidden"
+                className={styles.main}
               >
                 <ResizablePanelGroup direction="vertical" id={OPERATIONAL_DRAWER_GROUP_ID}>
                   <ResizablePanel
@@ -100,7 +107,7 @@ export function AppShellFrame({
                       id={APP_SHELL_MAIN_CONTENT_ID}
                       tabIndex={-1}
                       data-slot="app-shell-outlet"
-                      className="h-full w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+                      className={styles.outlet}
                     >
                       {children}
                     </main>
@@ -125,7 +132,7 @@ export function AppShellFrame({
                         maxSize={OPERATIONAL_DRAWER_PERCENT.max}
                         onResize={drawerResize.onResize}
                       >
-                        <div data-slot="app-shell-bottom-drawer" className="h-full min-h-0">
+                        <div data-slot="app-shell-bottom-drawer" className={styles.drawer}>
                           {bottomDrawer}
                         </div>
                       </ResizablePanel>
