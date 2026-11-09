@@ -56,6 +56,8 @@ export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
     },
   });
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  // A recorded GET is not a completed bootstrap; never send gestures through its covering screen.
+  cy.get('#app-loading-screen').should('not.exist');
 }
 
 export function openWorkbenchModel(nodeId = 'join-transform'): void {

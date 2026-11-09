@@ -125,6 +125,24 @@ authoritative. No global listener, synthetic trigger, hidden button, second
 operation list or new domain command is introduced. Graphical product surfaces
 are Main Canvas and the applied/pending Model viewport; text Code views and the
 immutable comparison lab do not gain an authoring gesture.
+Main and Model share the existing literal, case-insensitive catalog search rule.
+The pure `matchesCanvasCatalogQuery` predicate replaces the Model primitive's
+default fuzzy subsequence scoring, using only real operation IDs, labels and
+group keywords. Searching a visible label such as Filter cannot leave an
+unrelated FULL OUTER JOIN selected merely because its characters form a fuzzy
+subsequence. An unmatched search admits no choice; disabled items retain their
+existing admission and reason. This changes discovery, not domain operation
+semantics or the global Command primitive.
+
+```mermaid
+flowchart LR
+  Query[Search text] --> Match[Shared literal catalog predicate]
+  Main[Main node catalog] --> Match
+  Model[Model admitted operations] --> Match
+  Match --> Results[Existing matching results and keyboard selection]
+  Results -->|explicit choice only| Owner[Existing creation or staging command]
+```
+
 [Background-entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6730107882).
 
 ## File Responsibilities

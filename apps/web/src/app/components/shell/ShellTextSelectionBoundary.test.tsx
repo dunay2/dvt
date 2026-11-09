@@ -60,8 +60,7 @@ describe('shell selected-text intent', () => {
     const targetAction = vi.fn();
     await mount(
       <div tabIndex={0} onContextMenu={targetAction}>
-        {' '}
-        customer orders{' '}
+        {'  customer orders  '}
       </div>
     );
     const text = host.querySelector('[tabindex="0"]') as HTMLElement;

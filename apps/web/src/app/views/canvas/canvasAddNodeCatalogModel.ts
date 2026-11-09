@@ -1,6 +1,7 @@
 /** Owned concern: derive searchable Canvas add-node catalog items without rendering UI. */
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy, type CanvasViewCopy } from './copy';
+import { matchesCanvasCatalogQuery } from './canvasCatalogSearch';
 
 export type CanvasAddNodeCatalogCategory =
   'source' | 'model' | 'seed' | 'test' | 'output' | 'macro' | 'node';
@@ -187,7 +188,7 @@ export function filterCanvasAddNodeCatalogItems(
     return items;
   }
 
-  return items.filter((item) => item.searchableText.includes(normalizedQuery));
+  return items.filter((item) => matchesCanvasCatalogQuery(item.searchableText, normalizedQuery));
 }
 
 function resolveCanvasAddNodeCatalogActionLabel(

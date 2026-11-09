@@ -549,6 +549,13 @@ global pointer styles or disabling modal behavior.
 
 ### Canvas context-menu event ownership
 
+Canvas Add discovery uses one literal case-insensitive catalog search predicate
+for Main nodes and Model operations. IDs, actual labels and group keywords remain
+searchable. Keyboard Enter chooses an admitted matching result; a fuzzy character
+subsequence cannot introduce an unrelated operation. The policy remains internal
+to `ResolveCanvasContextMenu` and contextual presentation, with no new command or
+parallel operation catalog.
+
 Issue [#3629](https://github.com/dunay2/dvt/issues/3629) refines the existing
 `ResolveCanvasContextMenu` query and shared Radix trigger over the actual graph
 viewport, including its frame and sibling overlays. Background targets open one

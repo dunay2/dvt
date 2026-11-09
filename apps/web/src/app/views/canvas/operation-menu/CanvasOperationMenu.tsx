@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from '../../../components/ui/popover';
 import { useCanvasRelationalOperationMenu } from './CanvasRelationalOperationMenuContext';
+import { matchesCanvasCatalogQuery } from '../canvasCatalogSearch';
 import { resolveCanvasRelationalOperationPresentation } from '../canvasRelationalOperationPresentation';
 import { writeCanvasRelationalOperationDrag } from '../canvasRelationalTreeDrag';
 import { canvasRelationalOperationPresentation } from '../canvasRelationalOperationPresentation';
@@ -83,7 +84,14 @@ export function CanvasOperationMenu({
         }}
         className="w-80 max-w-[calc(100vw-1rem)] border-(--border-subtle) bg-(--surface-panel) p-0 font-sans text-(--text-strong)"
       >
-        <Command label={copy.add} className="bg-transparent text-inherit" loop>
+        <Command
+          label={copy.add}
+          className="bg-transparent text-inherit"
+          loop
+          filter={(value, query, keywords) =>
+            matchesCanvasCatalogQuery([value, ...(keywords ?? [])].join(' '), query) ? 1 : 0
+          }
+        >
           <CommandInput aria-label={copy.search} placeholder={copy.search} />
           <CommandList className="max-h-[min(24rem,var(--radix-popover-content-available-height))]">
             <CommandEmpty>{copy.empty}</CommandEmpty>

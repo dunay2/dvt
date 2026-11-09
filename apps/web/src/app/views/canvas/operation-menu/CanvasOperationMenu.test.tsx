@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import { CanvasOperationMenu } from './CanvasOperationMenu';
 import { resolveCanvasOperationMenuCopy } from './canvasOperationMenuCopy';
 
@@ -137,6 +138,40 @@ describe('Canvas operation menu', () => {
     act(() => document.querySelector<HTMLElement>('[data-operation="left_join"]')!.click());
     expect(onStage).toHaveBeenCalledExactlyOnceWith('left_join');
     expect(document.querySelector('[role="listbox"]')).toBeNull();
+  });
+  it('selects Filter by its visible label instead of an unrelated fuzzy JOIN match', async () => {
+    // cmdk's group-first fuzzy result previously executed FULL OUTER JOIN for the exact Filter label.
+    act(() =>
+      root.render(
+        <CanvasOperationMenu
+          items={[
+            {
+              id: 'full_outer_join',
+              group: 'combine',
+              label: 'FULL OUTER JOIN',
+              reason: null,
+              draggable: true,
+            },
+            { id: 'filter', group: 'transform', label: 'Filter', reason: null, draggable: true },
+          ]}
+          copy={resolveCanvasOperationMenuCopy('en')}
+          onStage={onStage}
+        />
+      )
+    );
+    open();
+    const input = document.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    await act(async () => fireEvent.change(input, { target: { value: 'Filter' } }));
+    await waitFor(() =>
+      expect(
+        document
+          .querySelector('[role="option"][data-selected="true"]')
+          ?.getAttribute('data-operation')
+      ).toBe('filter')
+    );
+    expect(document.querySelector('[data-operation="full_outer_join"]')).toBeNull();
+    await act(async () => fireEvent.keyDown(input, { key: 'Enter' }));
+    expect(onStage).toHaveBeenCalledExactlyOnceWith('filter');
   });
   it('stages an operation that needs an Input instead of pretending it is already configurable', () => {
     open();
