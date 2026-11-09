@@ -47,31 +47,16 @@ export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentPr
   );
 }
 
-function CanvasRelationalTreeContentView({
-  model,
-  authoring,
-  transformNode,
-  nodes,
-  edges,
-  copy,
-  expanded,
-  onExpandedChange,
-  onPendingConditionChange,
-  pendingCondition,
-  onSelectRelation,
-  modelOutput,
-}: CanvasRelationalTreeContentProps): JSX.Element {
+function CanvasRelationalTreeContentView(props: CanvasRelationalTreeContentProps): JSX.Element {
+  const { model } = props;
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
     return (
       <CanvasRelationalTreeAuthoring
-        {...projectCanvasRelationalTreeAuthoringView(
-          { model, transformNode, nodes, edges, pendingCondition },
-          onSelectRelation
-        )}
-        onPendingConditionChange={onPendingConditionChange}
-        expanded={expanded}
-        onExpandedChange={onExpandedChange}
-        copy={copy}
+        {...projectCanvasRelationalTreeAuthoringView(props, props.onSelectRelation)}
+        onPendingConditionChange={props.onPendingConditionChange}
+        expanded={props.expanded}
+        onExpandedChange={props.onExpandedChange}
+        copy={props.copy}
         sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
       />
     );
@@ -88,12 +73,12 @@ function CanvasRelationalTreeContentView({
   return (
     <CanvasRelationalTreeInspection
       model={model}
-      authoring={authoring}
-      transformNode={transformNode}
-      copy={copy}
-      expanded={expanded}
-      onExpandedChange={onExpandedChange}
-      modelOutput={modelOutput}
+      authoring={props.authoring}
+      transformNode={props.transformNode}
+      copy={props.copy}
+      expanded={props.expanded}
+      onExpandedChange={props.onExpandedChange}
+      modelOutput={props.modelOutput}
     />
   );
 }

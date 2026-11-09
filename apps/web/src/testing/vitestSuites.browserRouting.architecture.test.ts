@@ -343,6 +343,7 @@ describe('governed browser evidence routing', () => {
       .map((path) => `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`)
       .sort();
     expect(consumers).toEqual([
+      'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts',
       'apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts',
       'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
