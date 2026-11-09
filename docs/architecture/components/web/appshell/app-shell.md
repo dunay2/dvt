@@ -391,6 +391,24 @@ flowchart LR
   Receipt --> Continue[Continue the existing semantic proof]
 ```
 
+`revisitWorkbenchCanvas` owns proof reopening after an accepted save. A recorded
+PUT precedes its response and the React persistence acknowledgement; it cannot
+authorize a hard navigation. When a Model is open, this adapter first observes
+its existing localized Saved or Synced status, then closes its public tab and
+requires the editor to leave before navigating. Unapplied changes fail at the
+real close decision; the adapter cannot discard them or accept native dialogs.
+It captures the previous GET count after that handshake and still requires a
+fresh read. Main Canvas reopening retains its existing path.
+
+```mermaid
+flowchart LR
+  Request[Recorded save request] --> Status[Observe existing durable Model status]
+  Status --> Close[Existing public Model tab close]
+  Close -->|unapplied changes| Fail[Fail without discarding or unloading]
+  Close -->|editor left| Reopen[Existing hard navigation]
+  Reopen --> Fresh[Fresh draft GET and bootstrap acknowledgement]
+```
+
 ### Operational drawer layout command
 
 | Rail                               | Type    | Owner                | DDD object                             | Application port                                               | Adapter surface                                                                        | Scope and authorization                                                                          | Negative tests                                                                                                                                                                                                                     |
@@ -1406,8 +1424,9 @@ flowchart LR
 ### Consumers
 
 - `apps/web/index.html` owns the critical HTML and CSS shell.
-- `apps/web/src/main.tsx` starts the screen and completes the hydration step.
-- `apps/web/src/app/AppProviders.tsx` publishes service/provider readiness.
+- `apps/web/src/main.tsx` starts the screen and renders the app.
+- `apps/web/src/app/AppProviders.tsx` acknowledges its committed hydration and
+  separately publishes service/provider readiness.
 - `apps/web/src/app/Root.tsx` publishes capability, platform health, and active
   route posture.
 - `apps/web/src/app/routes.ts` publishes public-route bootstrap completion for

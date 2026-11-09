@@ -11,6 +11,7 @@ import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
   openWorkbenchModel,
   dragWorkbenchSource,
   connectWorkbenchProducer,
@@ -94,7 +95,7 @@ describe('Workbench pending binary operations', () => {
         expect(savedConfiguration).not.to.equal(undefined);
         expect(retained.operations[0]!.semanticDocument).to.equal(undefined);
       });
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get(join).click();
       cy.get('[data-slot="canvas-staged-operation-reconfigure"]').focus().click();
@@ -130,7 +131,7 @@ describe('Workbench pending binary operations', () => {
           outcome === 'apply' ? 2 : 1
         )
       );
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       if (outcome === 'cancel') {
         cy.get(join).click();
@@ -285,7 +286,7 @@ describe('Workbench pending binary operations', () => {
         2
       );
       cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(1));
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(
         'have.length',
