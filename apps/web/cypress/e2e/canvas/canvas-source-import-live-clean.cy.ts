@@ -241,7 +241,9 @@ describe('Canvas Source Import live', () => {
         placedDraft.nodes.filter((node) => workspaceNodeDefinitionId(node) != null)
       ).to.have.length(2);
     });
-    cy.get('[data-slot="canvas-explorer-models"] button[aria-label="Add model"]').click();
+    // Public Fit leaves a viewport margin for the same background Add gesture after pan/reload.
+    cy.get('[data-testid="canvas-viewport"] .react-flow__controls-fitview').click();
+    cy.get('[data-testid="canvas-viewport"] .react-flow__pane').dblclick('topRight');
     clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     importLivePostgresSource({ kind: 'graph-draft' }, 'after-placement');
     cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
