@@ -11,7 +11,6 @@ describe('useUiLayoutStore', () => {
   beforeEach(() => {
     localStorage.clear();
     useUiLayoutStore.setState({
-      leftNavCollapsed: false,
       canvasExplorer: { mode: 'expanded', widthPercent: 22 },
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
@@ -37,6 +36,21 @@ describe('useUiLayoutStore', () => {
     for (const key of ['canvasExplorerVisible', 'showCanvasExplorer', 'hideCanvasExplorer']) {
       expect(useUiLayoutStore.getState()).not.toHaveProperty(key);
     }
+  });
+
+  it('ignores retired navigation layout keys during hydration and future persistence', async () => {
+    // The direct navigation rail has no collapse preference; old storage must not restore a dead command or field.
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({ state: { leftNavCollapsed: true }, version: 0 })
+    );
+    await useUiLayoutStore.persist.rehydrate();
+    expect(useUiLayoutStore.getState()).not.toHaveProperty('leftNavCollapsed');
+    expect(useUiLayoutStore.getState()).not.toHaveProperty('toggleLeftNav');
+    useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: 30 });
+    const persisted = JSON.parse(localStorage.getItem(UI_LAYOUT_STORAGE_KEY)!);
+    expect(persisted.state).not.toHaveProperty('leftNavCollapsed');
+    expect(persisted.state.canvasExplorer.widthPercent).toBe(30);
   });
 
   it.each([

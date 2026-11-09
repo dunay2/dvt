@@ -5,10 +5,12 @@ import React, { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
   AppServicesProvider,
   type AppServicesProviderProps,
@@ -100,6 +102,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
   let container: HTMLDivElement;
   let root: Root;
   beforeEach(() => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -111,6 +114,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     container.remove();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    useApplicationLanguageStore.setState({ language: 'en' });
   });
 
   it('binds SQL inspection to the real optional service and active Canvas without querying on render', () => {
@@ -256,6 +260,30 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       await (workbenchState.props!.onClose as () => Promise<void>)();
     });
     expect(onHide).toHaveBeenCalledOnce();
+    expect(document.activeElement).toBe(input);
+    expect(frame).not.toHaveBeenCalled();
+  });
+
+  it('reports a rejected close in the current language without moving Properties focus', async () => {
+    // A retained Inspector must use current copy after a language change, even when its close owner is unchanged.
+    const failure = vi.spyOn(toast, 'error').mockReturnValue('close-failure');
+    const onHide = vi.fn(async () => {
+      throw new Error('close failed');
+    });
+    renderOverlay(root, { onHide });
+    const input = container.querySelector<HTMLInputElement>('input')!;
+    input.focus();
+    const frame = vi.spyOn(window, 'requestAnimationFrame');
+    act(() => useApplicationLanguageStore.setState({ language: 'es' }));
+
+    await act(async () => {
+      (workbenchState.props!.onClose as () => void)();
+    });
+
+    expect(onHide).toHaveBeenCalledOnce();
+    expect(failure).toHaveBeenCalledExactlyOnceWith(
+      'No se pudieron cerrar las propiedades. Inténtalo de nuevo.'
+    );
     expect(document.activeElement).toBe(input);
     expect(frame).not.toHaveBeenCalled();
   });

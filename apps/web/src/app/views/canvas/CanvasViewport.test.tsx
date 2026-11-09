@@ -11,7 +11,7 @@ vi.mock(
 );
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
-import type { CanvasProjectElementsInput } from './explorer/CanvasExplorer';
+import type { CanvasProjectElementsInput } from './explorer/CanvasExplorer.types';
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';

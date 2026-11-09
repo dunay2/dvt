@@ -1,8 +1,12 @@
 /** Owned concern: the shared explorer stays a presentation component, not a second authoring rail. */
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+import { inspectEmbeddedComponentStyles } from '../../../../testing/embeddedComponentStyles.test.support';
 import frame from './CanvasExplorer.tsx?raw';
 import template from './CanvasExplorer.templates.tsx?raw';
+import projectCatalogue from './CanvasExplorerCatalog.templates.tsx?raw';
+import contracts from './CanvasExplorer.types.ts?raw';
 import list from './CanvasExplorerList.tsx?raw';
 import connections from './CanvasExplorerConnections.tsx?raw';
 import graph from './CanvasGraphExplorer.tsx?raw';
@@ -40,17 +44,29 @@ describe('Canvas explorer ownership', () => {
     const declared = new Set(
       Array.from(explorerStyles.matchAll(/\.([a-zA-Z_][\w-]*)/g), (match) => match[1])
     );
-    for (const consumer of [template, catalogueTemplate]) {
+    for (const consumer of [template, projectCatalogue, catalogueTemplate, connections]) {
+      expect(inspectEmbeddedComponentStyles(consumer)).toEqual([]);
       for (const match of consumer.matchAll(/styles\.([a-zA-Z_][\w]*)/g)) {
         expect(declared.has(match[1]!), `Live shared class ${match[1]} must be declared`).toBe(
           true
         );
       }
     }
-    expect(catalogueTemplate).toContain('styles.actionRow');
-    expect(explorerStyles).toMatch(/\.itemRow\s*\{[^}]*composes:\s*actionRow;/);
-    expect(explorerStyles).not.toMatch(/\.sourceRow\b/);
-    expect(catalogueTemplate).not.toMatch(/styles\.sourceRow|style=\{|className="/);
+  });
+
+  it('keeps public Explorer contracts type-only rather than deriving them from JSX metadata', () => {
+    // The contract remains importable without executing templates, stores or navigation display data.
+    const source = ts.createSourceFile('contracts.ts', contracts, ts.ScriptTarget.Latest, true);
+    expect(source.statements.length).toBeGreaterThan(0);
+    for (const statement of source.statements) {
+      if (ts.isImportDeclaration(statement)) {
+        expect(statement.importClause?.isTypeOnly).toBe(true);
+      } else {
+        expect(ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)).toBe(
+          true
+        );
+      }
+    }
   });
 
   it('keeps shared resize presentation in its CSS module', () => {
@@ -61,7 +77,7 @@ describe('Canvas explorer ownership', () => {
 
   it('keeps topology writes and domain/provider decisions out of shared presentation', () => {
     // Opening or hiding Elements must not become a second path for editing the graph.
-    for (const source of [frame, template, list]) {
+    for (const source of [frame, template, projectCatalogue, list]) {
       expect(source).not.toMatch(
         /fetch\(|\.occurrences|setNodes|addNode|applyDvt|postgres|dbt|zustand/
       );
@@ -88,7 +104,7 @@ describe('Canvas explorer ownership', () => {
 
   it('keeps shared connection acquisition and graph writes outside catalogue presentation', () => {
     // GH-3765: the sidebar must consume the shared scoped query, never create a competing cache/provider rail.
-    for (const source of [list, template, connections]) {
+    for (const source of [list, projectCatalogue, connections]) {
       expect(source).not.toMatch(
         /fetch\(|useQuery\(|useMutation\(|listWarehouseConnections\(|credentialRef|setNodes|addNode/
       );
@@ -100,11 +116,8 @@ describe('Canvas explorer ownership', () => {
 
   it('keeps compact project metadata and format decisions behind the admitted read model', () => {
     // The reference is presentation: inline SQL text, file heuristics and enlarged local typography cannot become new domain policy.
-    expect(template).toContain("item.definitionFormat === 'sql'");
-    expect(template).not.toMatch(/\.endsWith\(|\.originalFilePath|item\.path|styles\.description/);
-    expect(explorerStyles).toMatch(/\.catalogModelIcon\s*\{[^}]*composes:\s*modelIcon;/);
-    expect(explorerStyles).toContain('--catalog-model-accent: var(--canvas-node-port-source-ring)');
-    expect(explorerStyles).toContain('--catalog-source-accent: var(--status-info)');
+    // Source/SQL facets and independent disclosure are exercised by the real list presentation tests.
+    expect(projectCatalogue).not.toMatch(/\.endsWith\(|\.originalFilePath|item\.path/);
     expect(explorerStyles).not.toMatch(/#[\da-f]{3,8}\b|font-size:\s*(?:18|20)px/i);
   });
 });

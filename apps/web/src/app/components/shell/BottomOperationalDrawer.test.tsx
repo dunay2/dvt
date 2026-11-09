@@ -52,7 +52,6 @@ describe('BottomOperationalDrawer', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
     useUiLayoutStore.setState({
-      leftNavCollapsed: false,
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
       bottomDrawerHeight: 160,

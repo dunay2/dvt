@@ -632,10 +632,17 @@ describe('Canvas explorer', () => {
     render(view(true));
     const graph = screen.getByRole('textbox', { name: 'Graph state' });
     const search = screen.getByRole('textbox', { name: 'Source search' });
+    const elementsPanel = container.querySelector('[data-slot="canvas-explorer-panel"]');
+    expect(container.querySelectorAll('[data-slot="canvas-explorer-panel"]')).toHaveLength(1);
     act(() => root.render(view(false)));
     expect(screen.queryByRole('button', { name: 'Git' })).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Graph state' })).toBe(graph);
     expect(screen.getByRole('textbox', { name: 'Source search' })).toBe(search);
+    expect(container.querySelector('[data-slot="canvas-explorer-panel"]')).toBe(elementsPanel);
+    expect(container.querySelectorAll('[data-slot="canvas-explorer-panel"]')).toHaveLength(1);
+    act(() => root.render(view(true)));
+    expect(screen.getByRole('button', { name: 'Git' })).toBeTruthy();
+    expect(container.querySelector('[data-slot="canvas-explorer-panel"]')).toBe(elementsPanel);
   });
 
   it('retains graph state while an inline task temporarily owns its surface', () => {

@@ -11,8 +11,11 @@ import type { CanonicalNode } from '../../../types/canonical';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
-import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
-import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
+import { CanvasExplorer } from './CanvasExplorer';
+import type {
+  CanvasExplorerActivityRail,
+  CanvasExplorerProjectWorkspace,
+} from './CanvasExplorer.types';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerModels } from './canvasExplorerItems';
 import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';

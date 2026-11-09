@@ -1,4 +1,8 @@
-/** Owned concern: own workbench shell layout commands and visual preferences. */
+/**
+ * Owned concern: own workbench shell layout commands and visual preferences.
+ * Reason: one allowlisted projection retains usable layout rather than retired navigation state.
+ * Corner invariant: unknown persisted keys cannot restore commands or become runtime layout fields.
+ */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {
@@ -108,7 +112,6 @@ function transitionCanvasExplorer(
 }
 
 interface UiLayoutState {
-  leftNavCollapsed: boolean;
   canvasExplorer: CanvasExplorerState;
   inspectorPanelWidth: number;
   inspectorPanelVisible: boolean;
@@ -121,7 +124,6 @@ interface UiLayoutState {
   canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
 
-  toggleLeftNav: () => void;
   dispatchCanvasExplorer: (event: CanvasExplorerEvent) => void;
   setInspectorPanelWidth: (width: number) => void;
   setBottomDrawerHeight: (height: number) => void;
@@ -142,7 +144,6 @@ interface UiLayoutState {
 type PersistedUiLayoutState = Partial<
   Pick<
     UiLayoutState,
-    | 'leftNavCollapsed'
     | 'canvasExplorer'
     | 'inspectorPanelWidth'
     | 'bottomDrawerHeight'
@@ -165,7 +166,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         if (next !== current) set(next);
       };
       return {
-        leftNavCollapsed: false,
         canvasExplorer: { mode: 'expanded', widthPercent: CANVAS_EXPLORER_WIDTH.default },
         inspectorPanelWidth: 380,
         inspectorPanelVisible: false,
@@ -178,7 +178,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
         canvasSnapToGrid: false,
 
-        toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
         dispatchCanvasExplorer: (event) => {
           // These transitions are synchronous; bypass persist entirely when a current-state event is a no-op.
           const current = get().canvasExplorer;
@@ -214,7 +213,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
 
         return {
           ...currentState,
-          leftNavCollapsed: persistedLayoutState.leftNavCollapsed ?? currentState.leftNavCollapsed,
           canvasExplorer: hydrateCanvasExplorer(
             persistedLayoutState.canvasExplorer,
             persistedLayoutState.canvasExplorerVisible
@@ -249,7 +247,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         };
       },
       partialize: (state) => ({
-        leftNavCollapsed: state.leftNavCollapsed,
         canvasExplorer: state.canvasExplorer,
         inspectorPanelWidth: state.inspectorPanelWidth,
         bottomDrawerHeight: state.bottomDrawerHeight,

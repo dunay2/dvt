@@ -1,7 +1,7 @@
 /** Owned concern: project catalogue search and disclosure, independent of placement commands. */
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { CanvasExplorerListTemplate } from './CanvasExplorer.templates';
+import { CanvasExplorerListTemplate } from './CanvasExplorerCatalog.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { CanvasExplorerConnections } from './CanvasExplorerConnections';

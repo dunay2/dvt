@@ -3,7 +3,7 @@ import { ChevronRight, Database, Settings2 } from 'lucide-react';
 import { useId, useState } from 'react';
 import type { WarehouseConnection } from '../../../ports/workspace';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { CanvasExplorerSection } from './CanvasExplorer.templates';
+import { CanvasExplorerSection } from './CanvasExplorerCatalog.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import styles from './CanvasExplorer.module.css';
 

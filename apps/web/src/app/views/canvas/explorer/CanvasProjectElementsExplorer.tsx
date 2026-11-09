@@ -3,7 +3,7 @@ import { useApplicationLanguageStore } from '../../../stores/applicationLanguage
 import { useWorkspaceDbtProjectContext } from '../../code/useWorkspaceDbtProjectContext';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasProjectElementsInput } from './CanvasExplorer';
+import type { CanvasProjectElementsInput } from './CanvasExplorer.types';
 import styles from './CanvasExplorer.module.css';
 import { useState } from 'react';
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../../types/canonical';

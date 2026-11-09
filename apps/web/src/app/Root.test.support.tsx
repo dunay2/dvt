@@ -18,7 +18,6 @@ export function resetRootShellStores(): void {
     contextualWorkbenchOwnerKey: null,
   });
   useUiLayoutStore.setState({
-    leftNavCollapsed: false,
     inspectorPanelWidth: 380,
     inspectorPanelVisible: false,
     bottomDrawerHeight: 0,

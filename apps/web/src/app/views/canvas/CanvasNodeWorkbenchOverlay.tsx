@@ -1,4 +1,8 @@
-/** Owned concern: present the existing node workbench in the fixed right inspector slot. */
+/**
+ * Owned concern: present the existing node workbench in the fixed right inspector slot.
+ * Reason: inspection and guarded close retain their existing resource and copy owners.
+ * Corner invariant: a rejected or stale close cannot move focus or report another owner's failure.
+ */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { useOptionalCanvasTransformSqlQueryPort } from '../../services/AppServicesContext';
@@ -103,7 +107,7 @@ export function CanvasNodeWorkbenchOverlay({
       if ((await onHide()) === false || !mounted.current || currentOwner.current !== owner) return;
     } catch {
       if (mounted.current && currentOwner.current === owner)
-        toast.error('Properties could not be closed. Please try again.');
+        toast.error(copy.nodeWorkbenchCloseFailedMessage);
       return;
     }
     window.requestAnimationFrame(() => {
@@ -126,7 +130,7 @@ export function CanvasNodeWorkbenchOverlay({
         preventScroll: true,
       });
     });
-  }, [inspectorNodeId, onHide, panels.inspectorTarget]);
+  }, [inspectorNodeId, onHide, panels.inspectorTarget, copy.nodeWorkbenchCloseFailedMessage]);
   const requestHide = useCallback((): void => {
     // This adapter handles both cancellation and failures before its promise settles.
     void hideAndRestoreNodeFocus();

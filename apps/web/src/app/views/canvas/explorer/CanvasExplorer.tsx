@@ -1,5 +1,7 @@
 /**
  * Owned concern: explorer disclosure and shell visibility, not graph selection or authoring.
+ * Reason: the layout projection is the one owner of retained dock disclosure and width.
+ * Corner invariant: moving template contracts cannot remount the graph or the catalogue.
  * @baseline GH-3610: one retained panel, no graph mutation or automatic fit on toggle.
  * @decision Delegate layout to the existing resizable primitive and content to adapters.
  * @consequence Main and semantic views share interaction without sharing domain commands.
@@ -10,7 +12,7 @@ import {
   useId,
   useRef,
   type KeyboardEvent,
-  type DragEvent,
+  type JSX,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -18,38 +20,14 @@ import { useShellActivityRail } from '../../../components/shell/ShellActivityRai
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CANVAS_EXPLORER_WIDTH, useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import type { ImperativePanelHandle } from '../../../components/ui/resizable';
-import {
-  CanvasExplorerTemplate,
-  type CanvasExplorerActivityRail,
-  type CanvasExplorerHeading,
-  type CanvasExplorerPanel,
-} from './CanvasExplorer.templates';
-import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerItem } from './canvasExplorerItems';
+import { CanvasExplorerTemplate } from './CanvasExplorer.templates';
 import type {
-  CanvasInspectorCommand,
-  CanvasInspectorResource,
-} from '../../../stores/canvasInspectorTarget';
-
-export type CanvasProjectElementsInput = Readonly<{
-  enabled: boolean;
-  items: readonly CanvasExplorerItem[];
-  canCreateInstances?: boolean;
-  onInspectNode: CanvasInspectorCommand;
-  inspectorTarget?: CanvasInspectorResource | null;
-  catalogueScopeKey?: string;
-  onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  onAddModel?: (opener: HTMLButtonElement) => void;
-  onImport?: () => void;
-  connections?: ReactNode;
-}>;
-
-export type CanvasExplorerProjectWorkspace = Readonly<{
-  projectRoot?: string;
-  onActivate: () => Promise<boolean>;
-  onCanvas: () => void;
-  renderElements?: (input: CanvasProjectElementsInput) => ReactNode;
-}>;
+  CanvasExplorerActivityRail,
+  CanvasExplorerHeading,
+  CanvasExplorerNavigationAction,
+  CanvasExplorerProjectWorkspace,
+} from './CanvasExplorer.types';
+import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 export function CanvasExplorer({
   elements,
@@ -82,7 +60,7 @@ export function CanvasExplorer({
   }, [widthPercent]);
   const id = useId();
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
-  const toggle = (key: CanvasExplorerPanel): void => {
+  const toggle = (key: CanvasExplorerNavigationAction): void => {
     if (key === 'git') {
       if (projectFiles != null) void projectFiles.onActivate().catch(() => undefined);
       return;
@@ -90,7 +68,10 @@ export function CanvasExplorer({
     projectFiles?.onCanvas();
     dispatch({ type: activityRail?.codeVisible === true ? 'expand' : 'toggle' });
   };
-  const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
+  const onKeyToggle = (
+    key: CanvasExplorerNavigationAction,
+    event: KeyboardEvent<HTMLButtonElement>
+  ): void => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     event.stopPropagation();

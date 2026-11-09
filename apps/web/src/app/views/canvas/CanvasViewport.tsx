@@ -37,8 +37,10 @@ import {
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
-import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
-import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
+import type {
+  CanvasExplorerActivityRail,
+  CanvasExplorerProjectWorkspace,
+} from './explorer/CanvasExplorer.types';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {

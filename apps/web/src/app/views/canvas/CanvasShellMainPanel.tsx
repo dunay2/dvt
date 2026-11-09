@@ -1,8 +1,10 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import type { ReactNode } from 'react';
-import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
-import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
+import type {
+  CanvasExplorerActivityRail,
+  CanvasExplorerProjectWorkspace,
+} from './explorer/CanvasExplorer.types';
 import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   CanvasShellContextualWorkbenchSplit,

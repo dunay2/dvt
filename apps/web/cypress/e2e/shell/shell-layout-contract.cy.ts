@@ -74,7 +74,6 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
           'dvt-web-ui-layout',
           JSON.stringify({
             state: {
-              leftNavCollapsed: false,
               inspectorPanelWidth: 380,
               inspectorPanelVisible: false,
               bottomDrawerHeight: 0,

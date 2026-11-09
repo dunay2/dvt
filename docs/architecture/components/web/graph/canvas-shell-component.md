@@ -1157,3 +1157,52 @@ Acceptance:
 > Acceptance scope status: Active. Owner: Frontend / Shell / Canvas.
 >
 > Section status: Active. Owner: Frontend / Shell / Canvas. Colocation does not merge component responsibilities.
+
+## Audited Explorer Presentation Ownership
+
+Planning DB design `GH-3765-AUDITED-EXPLORER-OWNER-SEPARATION` records the
+[bounded audit decision](https://github.com/dunay2/dvt/issues/3765#issuecomment-6753033944).
+The retained dock, reusable catalogue sections and model rows previously shared
+one template file, and public contracts depended on its JSX navigation metadata.
+The dock also mapped two navigation actions to render its one Elements body.
+Separate these existing responsibilities without creating another registry,
+context, factory, compatibility barrel or command/query rail.
+
+```mermaid
+flowchart LR
+  Before[Combined dock and catalogue template] --> Dock[Retained dock and navigation]
+  Before --> Catalog[Section and model catalogue templates]
+  Types[Pure explorer contracts] --> Dock
+  Types --> Catalog
+  Layout[Existing CanvasExplorerState] --> Dock
+  Dock --> Stable[Stable graph and Elements DOM slots]
+  Catalog --> Inspect[Existing InspectCanvasNode]
+  Catalog --> Place[Existing drag placement]
+```
+
+`SYS-WEB-CANVAS-VIEWPORT` retains
+`RESP-WEB-VIEWPORT-EXPLORER-DISCLOSURE` and
+`RESP-WEB-VIEWPORT-LOCAL-LAYOUT`; `SYS-WEB-PROJECT-ELEMENTS-EXPLORER`
+retains `RESP-WEB-PROJECT-ELEMENTS-NAVIGATION`. Layout preferences reuse
+`ConfigureCanvasViewportPreferences` and its `CanvasViewportPreferences`
+object; graph-position persistence remains the separate `CanvasLayoutProjection`
+concern. The [rail clarification](https://github.com/dunay2/dvt/issues/3765#issuecomment-6753231602)
+records that existing authority without adding another command.
+`CanvasExplorer.types.ts`
+owns type-only explorer contracts; `CanvasExplorer.templates.tsx` owns retained
+docking and the two meaningful standalone Elements/Git actions;
+`CanvasExplorerCatalog.templates.tsx` owns section and model-list presentation.
+All consume the existing CSS module and semantic tokens. The one Elements body
+is explicit; Connections and Models remain meaningful business sections even
+when their current collection has one item.
+
+The corner invariant is stable DOM identity: collapse, close, Git availability
+and inline tasks cannot replace the graph or catalogue, lose search/disclosure,
+or restore hidden controls to focus order. Source remains a model facet;
+selection stays independent of metadata disclosure, clicks inspect and drag
+places through the existing owners. The UI layout store ignores retired
+`leftNavCollapsed` state through its allowlisted hydration rather than retaining
+a migration or alias. Rejected Inspector close keeps focus and reports current
+localized copy through the existing Canvas copy contract. Tests assert these
+observable invariants and dependency/style boundaries without fixing incidental
+template helper names or CSS selector spellings.
