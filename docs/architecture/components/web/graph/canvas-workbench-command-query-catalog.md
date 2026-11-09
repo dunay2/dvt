@@ -1118,6 +1118,30 @@ Inputs/Outputs requests retain their sections. The shared gesture arbiter still
 cancels pending Properties during double click, drag and owner replacement.
 No role-specific default, second timer or parallel command is admitted.
 
+## Background Add Entry And Independent Model Admission
+
+A complete double click on the owning graphical canvas background opens that
+canvas's existing searchable Add menu at the pointer. Main Canvas delegates to
+the existing `ResolveCanvasContextMenu` presenter and
+`CreateCanvasAuthoringNode` command. Applied and pending Model viewports share
+one scoped operation-menu request and the existing staging callbacks under
+`ConfigureCanvasDvtNode`; only explicit Apply commits semantic changes.
+`ProjectCanvasRelationalTree`, `RenderCanvasContextualGraphSurface` and
+`SaveWorkspaceGraphDraft` retain their current ownership and authorization.
+
+The shared background boundary rejects cards, edges, ports, controls, menus,
+inspectors and nested foreign viewports. A single background click or pan does
+not open Add. Main disables double-click zoom for this gesture. Model placement
+uses the existing screen-to-local projection under pan/zoom. Toolbar, keyboard
+and pointer entry share menu choices, availability, search and focus recovery.
+Text Code views and immutable comparison views gain no graphical Add command.
+
+Model editing permission is independent of the current Inspector target. The
+existing graph command permission and selected Model placement admit its
+authoring session; `applyNodeDraft` independently retains its exact target guard.
+Unplaced and globally read-only Models remain read-only. A restorable pending
+draft does not require an invented canonical output tree to expose authoring.
+
 ## Drift Rules
 
 - Do not add a route, tab, toolbar command, Cypress workflow, or plugin view

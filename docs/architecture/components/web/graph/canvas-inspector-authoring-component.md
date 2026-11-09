@@ -120,6 +120,13 @@ boundary, while explicit-section and shared gesture-cancellation tests retain
 their existing responsibility.
 [All-card entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729714310).
 
+A background double click belongs to the owning canvas's existing Add menu. It
+does not inspect a node or open Model editing. Shared boundary admission excludes
+cards, edges, ports, controls, inspectors and nested canvases; the existing node
+gesture arbiter continues to separate normal Properties entry from node double
+click. Main and applied/pending Model backgrounds share the rule while retaining
+their current command owners and menu choices.
+
 The standard `general` label is **Overview** in English and **Resumen** in Spanish.
 The shared Canvas node-property copy and its default fallback own that label for
 Sources and Models. `NodePropertiesTabs` presents the read model without a

@@ -8,6 +8,7 @@ import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTree
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 import { CanvasRelationalFieldSelectionProvider } from './CanvasRelationalFieldSelectionProvider';
+import { CanvasRelationalOperationMenuProvider } from './operation-menu/CanvasRelationalOperationMenuContext';
 
 type CanvasRelationalTreeContentProps = Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -35,7 +36,12 @@ export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentPr
         onChange={props.model.session.setJoinDraft}
         onConnect={props.model.session.staged.connectField}
       >
-        <CanvasRelationalTreeContentView {...props} />
+        <CanvasRelationalOperationMenuProvider
+          enabled={props.model.authoringAvailable && !props.pendingCondition}
+          label={props.copy.relationalTreeCanvasLabel}
+        >
+          <CanvasRelationalTreeContentView {...props} />
+        </CanvasRelationalOperationMenuProvider>
       </CanvasRelationalFieldSelectionProvider>
     </div>
   );

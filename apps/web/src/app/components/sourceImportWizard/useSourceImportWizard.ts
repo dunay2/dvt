@@ -268,7 +268,7 @@ export function useSourceImportWizard({
     catalogueRecovery: queryRecovery,
     cataloguePageFailure,
   } = useSourceCatalogLoader({
-    open,
+    open: open && (entry.intent === 'import-sources' || activeSection !== 'connections'),
     selectedConnection: state.selectedConnection,
     sourceObjectSearchQuery: state.sourceObjectSearchQuery,
     initiallySelectedSourceObjects: initiallySelectedSourceObjectsForConnection,

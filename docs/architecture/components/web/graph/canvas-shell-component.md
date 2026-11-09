@@ -866,6 +866,31 @@ column names remain fully readable in detail. The existing facts projection,
 filtered navigation, focus restoration, transfer and local ordering own their
 semantics; density changes do not issue provider requests or persist a draft.
 
+### Model Authoring Target Admission
+
+Properties and the relational Model editor consume independent admission
+projections. The Inspector contract remains scoped to the inspected resource,
+including read-only unplaced definitions. The relational authoring contract uses
+the existing runtime graph permission; the shell intersects it with the selected
+Model's actual flow placement, resolved through its existing `modelData` lookup.
+Changing or closing the Inspector cannot disable an unrelated placed Model.
+An unplaced Model opened through the existing pencil remains read-only.
+
+```mermaid
+flowchart LR
+  InspectorTarget[Current Inspector target] --> InspectorAdmission[Inspector admission]
+  InspectorAdmission --> Properties[Properties]
+  Runtime[Existing graph command permission] --> Placement[Selected Model has a flow placement]
+  Placement --> Editor[Existing Model authoring session]
+  Editor --> Apply[Existing applyNodeDraft target guard]
+```
+
+A placed Model with a valid restored pending draft can remain editable before a
+published canonical tree exists. Its saved sources, staged operations and output
+identity remain authoritative. This correction does not manufacture a semantic
+tree, repair data, relax mutation membership or add a second permission store.
+[Target-independence rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6730107356).
+
 ### Explicit Connection Management Entry
 
 The project Connections action opens the existing Source Import Wizard through

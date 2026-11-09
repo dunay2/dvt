@@ -4,10 +4,81 @@ import {
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
+import { panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const trigger = '[data-slot="canvas-operation-menu-trigger"]';
 const search = '[role="combobox"]';
+
+function addFilterFromBackground(viewportSelector: string): void {
+  let expectedPosition = { x: 0, y: 0 };
+  let pointerPosition = { x: 0, y: 0 };
+  let zoomBefore = '';
+  cy.get('[data-slot="canvas-relational-tree-zoom"]')
+    .parent()
+    .find('button[aria-label="Zoom in"]')
+    .click();
+  panWorkbenchViewport(viewportSelector, 42, 26);
+  cy.get('[data-slot="canvas-relational-tree-zoom"]').then(($zoom) => {
+    zoomBefore = $zoom.text();
+  });
+  cy.get(viewportSelector).then(($viewport) => {
+    const surface = $viewport[0]!;
+    const bounds = surface.getBoundingClientRect();
+    const content = surface.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-tree"], [data-slot="canvas-relational-tree-draft"]'
+    )!;
+    const background = new Set<Element | null>([
+      surface,
+      content,
+      surface.querySelector('[data-slot="canvas-relational-tree-layout"]'),
+    ]);
+    let point: { x: number; y: number } | undefined;
+    for (let y = 8; y < bounds.height && point == null; y += 24) {
+      for (let x = 8; x < bounds.width && point == null; x += 24) {
+        if (background.has(surface.ownerDocument.elementFromPoint(bounds.left + x, bounds.top + y)))
+          point = { x, y };
+      }
+    }
+    expect(point, 'visible background belonging to this Model viewport').not.to.equal(undefined);
+    pointerPosition = point!;
+    const contentBounds = content.getBoundingClientRect();
+    const zoom = Number.parseFloat(content.style.zoom);
+    expectedPosition = {
+      x: (bounds.left + point!.x - contentBounds.left) / zoom,
+      y: (bounds.top + point!.y - contentBounds.top) / zoom,
+    };
+    cy.get(viewportSelector).dblclick(point!.x, point!.y);
+  });
+  cy.get('[data-slot="popover-content"] [role="combobox"]').should('be.focused').type('{esc}');
+  cy.get('[role="listbox"]').should('not.exist');
+  cy.get(viewportSelector).should('be.focused');
+  cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+  // Reopen at the same pointer after pan/zoom; keyboard search retains the actual placement point.
+  cy.get(viewportSelector).then(() =>
+    cy.get(viewportSelector).dblclick(pointerPosition.x, pointerPosition.y)
+  );
+  cy.get('[data-slot="canvas-model-editor"]').screenshot(
+    viewportSelector.includes('draft')
+      ? 'model-background-add--pending'
+      : 'model-background-add--applied'
+  );
+  cy.get('[data-slot="popover-content"] [role="combobox"]')
+    .should('be.focused')
+    .type('Filter{enter}');
+  cy.get('[role="listbox"]').should('not.exist');
+  cy.get('[data-pending-operation="true"] [data-operator="filter"]').should('have.length', 1);
+  cy.get('[data-slot="canvas-relational-tree-zoom"]').should(($zoom) => {
+    expect($zoom.text()).to.equal(zoomBefore);
+  });
+  cy.get('[data-pending-operation="true"] [data-operator="filter"]')
+    .closest('[data-slot="canvas-relational-card"]')
+    .should(($card) => {
+      expect(Number.parseFloat($card[0]!.style.left)).to.be.closeTo(expectedPosition.x, 1);
+      expect(Number.parseFloat($card[0]!.style.top)).to.be.closeTo(expectedPosition.y, 1);
+    });
+  cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+}
 
 describe('Compact semantic operation menu', () => {
   beforeEach(() => {
@@ -33,6 +104,10 @@ describe('Compact semantic operation menu', () => {
     cy.get(trigger).should('be.focused');
     cy.get('[role="listbox"]').should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+  });
+  it('shares background Add, keyboard search and pointer placement in a pending Model', () => {
+    // A pending Model must use the same Add command as its toolbar without requiring a canonical tree.
+    addFilterFromBackground('[data-slot="canvas-relational-tree-draft-viewport"]');
   });
   it('places a pending Filter without an Input and cancels without semantic writes', () => {
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should('not.exist');
@@ -83,5 +158,16 @@ describe('Compact semantic operation menu', () => {
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').should('not.exist');
+  });
+});
+
+describe('Applied Model background Add entry', () => {
+  it('opens the same operation menu and stages at the projected point without applying', () => {
+    // Opening from an applied view must retain its command and layout session when staging begins.
+    stubWorkbenchScenario('saved-join');
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    openWorkbenchModel();
+    addFilterFromBackground('[data-slot="canvas-relational-tree-viewport"]');
   });
 });

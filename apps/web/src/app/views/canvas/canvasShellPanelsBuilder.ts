@@ -61,7 +61,7 @@ export function buildCanvasShellPanels({
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
     },
     relationalTreeAuthoring: {
-      canEditNode: panelState.canEditInspectorNode,
+      canEditNode: userPermissions.canEditEdges,
       onApplyNodeDraft: panelState.applyNodeDraft,
     },
     inspectorWorkbenchContributions: [],

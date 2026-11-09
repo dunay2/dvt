@@ -49,6 +49,68 @@ describe('CanvasViewport', () => {
     vi.useRealTimers();
   });
 
+  it('opens Add at the background pointer without inspecting, zooming or creating before selection', async () => {
+    const registration = {
+      ...buildTestNodeKind('dvt:transform', 'Model'),
+      role: 'transform' as const,
+    };
+    const props = await renderViewport({ authoringNodeKinds: [registration] });
+    const surface = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    )!;
+    await act(async () => fireEvent.click(surface));
+    expect(
+      document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+    ).toBeNull();
+    await act(async () =>
+      fireEvent.doubleClick(surface, { clientX: 180, clientY: 240, detail: 2 })
+    );
+    expect(
+      document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+    ).not.toBeNull();
+    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+    expect(props.onInspectNode).not.toHaveBeenCalled();
+    expect(xyflowState.lastReactFlowProps?.zoomOnDoubleClick).toBe(false);
+    await act(async () =>
+      fireEvent.click(document.querySelector('[data-registration-kind="dvt:transform"]')!)
+    );
+    expect(props.onCreateAuthoringNode).toHaveBeenCalledExactlyOnceWith(registration, {
+      x: 280,
+      y: 200,
+    });
+  });
+
+  it.each(['node', 'edge', 'control', 'nested'])(
+    'does not open the background catalog from a %s gesture',
+    async (kind) => {
+      await renderViewport({ authoringNodeKinds: [buildTestNodeKind('dvt:transform', 'Model')] });
+      const surface = container.querySelector<HTMLElement>(
+        '[data-slot="canvas-viewport-context-surface"]'
+      )!;
+      const child = document.createElement(kind === 'control' ? 'button' : 'div');
+      if (kind === 'node') child.className = 'react-flow__node';
+      if (kind === 'edge') child.className = 'react-flow__edge';
+      if (kind === 'nested') child.setAttribute('data-canvas-viewport', '');
+      surface.append(child);
+      await act(async () => fireEvent.doubleClick(child, { detail: 2 }));
+      expect(
+        document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+      ).toBeNull();
+    }
+  );
+  it('keeps a read-only background side-effect free', async () => {
+    const props = await renderViewport({ canEditEdges: false });
+    const surface = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    )!;
+    await act(async () => fireEvent.doubleClick(surface, { detail: 2 }));
+    expect(
+      document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+    ).toBeNull();
+    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+    expect(props.onInspectNode).not.toHaveBeenCalled();
+  });
+
   it.each([true, false])(
     'delegates model addition at the Canvas center only when writable=%s',
     async (writable) => {

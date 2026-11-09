@@ -305,6 +305,8 @@ export default function CanvasShell({
                         ? undefined
                         : {
                             ...panels.relationalTreeAuthoring,
+                            canEditNode:
+                              panels.relationalTreeAuthoring.canEditNode && modelData != null,
                             onMapInput: modelData?.onMapCanvasInput,
                             onRemoveInput: modelData?.onRemoveCanvasInput,
                           }

@@ -22,6 +22,73 @@ import {
 
 describe('Canvas relational-tree Workbench ', () => {
   setupWorkbenchTest();
+  it.each(['applied', 'draft'] as const)(
+    'opens the same searchable Add menu on the %s background and only stages after selection',
+    async (view) => {
+      // A background gesture must not apply a Model or require an existing canonical tree.
+      const fixture = buildSemanticWorkbenchFixture();
+      const pendingModel = transformNode();
+      const sources = [sourceNode('clients', 'clients'), sourceNode('orders', 'orders')];
+      const transform = view === 'applied' ? fixture.transform : pendingModel;
+      const nodes = view === 'applied' ? [...fixture.sources, transform] : [...sources, transform];
+      const edges = view === 'applied' ? fixture.edges : sources.map((source) => edge(source.id));
+      const apply = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+      act(() =>
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={transform}
+            nodes={nodes}
+            edges={edges}
+            copy={COPY}
+            authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+          />
+        )
+      );
+      const viewport = container.querySelector<HTMLElement>(
+        `[data-slot="canvas-relational-tree-${view === 'draft' ? 'draft-' : ''}viewport"]`
+      )!;
+      expect(viewport).not.toBeNull();
+      expect(viewport.getAttribute('tabindex')).toBe('0');
+      await act(async () =>
+        viewport.dispatchEvent(
+          new MouseEvent('dblclick', {
+            bubbles: true,
+            cancelable: true,
+            detail: 2,
+            clientX: 340,
+            clientY: 220,
+          })
+        )
+      );
+      expect(document.querySelector('[cmdk-input]')).not.toBeNull();
+      expect(apply).not.toHaveBeenCalled();
+      expect(container.querySelectorAll('[data-operator="aggregate"]')).toHaveLength(0);
+      await act(async () =>
+        document.querySelector<HTMLElement>('[data-operation="aggregate"]')!.click()
+      );
+      expect(document.querySelector('[cmdk-input]')).toBeNull();
+      expect(container.querySelectorAll('[data-operator="aggregate"]')).toHaveLength(1);
+      expect(apply).not.toHaveBeenCalled();
+    }
+  );
+  it('keeps read-only Model background gestures away from the operation menu', () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={fixture.transform}
+          nodes={[...fixture.sources, fixture.transform]}
+          edges={fixture.edges}
+          copy={COPY}
+        />
+      )
+    );
+    const viewport = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-tree-viewport"]'
+    )!;
+    act(() => viewport.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
+    expect(document.querySelector('[cmdk-input]')).toBeNull();
+  });
   it('shows the retained tree and precise recovery guidance without enabling semantic editing', async () => {
     const graph = await createModelOutputDependencyFixture();
     const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);

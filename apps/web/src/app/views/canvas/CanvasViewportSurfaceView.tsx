@@ -19,6 +19,8 @@ import type { DragEventHandler, RefObject } from 'react';
 
 import {
   activateFocusedCanvasNodeFromKeyboard,
+  canvasViewportScopeProps,
+  useCanvasBackgroundAddMenuGesture,
   resolveCanvasViewportInteraction,
 } from './canvasViewportInteraction';
 import { GraphNodeHealthPopoverView } from '../../plugins/graph/GraphNodeHealthPopoverView';
@@ -144,6 +146,7 @@ function CanvasViewportReactFlowSurface({
 >): JSX.Element {
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
   const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
+  const backgroundAdd = useCanvasBackgroundAddMenuGesture();
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeHealthPopover();
     onImpactFocusNodeChange?.(null);
@@ -178,12 +181,18 @@ function CanvasViewportReactFlowSurface({
 
   return (
     <div
+      {...canvasViewportScopeProps}
+      {...backgroundAdd.pointerHandlers}
       ref={contextMenuPresenter.contextSurfaceRef}
       data-slot="canvas-viewport-context-surface"
       role="region"
       aria-label={contextSurfaceLabel}
       tabIndex={0}
       className={styles.contextSurface}
+      onDoubleClick={(event) => {
+        if (backgroundAdd.resolveRequest(event) != null)
+          contextMenuPresenter.handleViewportDoubleClick(event);
+      }}
       onFocusCapture={(event) => {
         onImpactFocusNodeChange?.(
           event.target instanceof Element

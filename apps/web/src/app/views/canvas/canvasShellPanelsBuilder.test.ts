@@ -79,6 +79,34 @@ function buildArgs(
 }
 
 describe('buildCanvasShellPanels', () => {
+  it.each([
+    null,
+    buildInspectorNode(),
+    buildInspectorNode({ id: 'unplaced-model', kind: 'dvt:transform', role: 'transform' }),
+  ])(
+    'keeps Model runtime authoring independent of the readonly Inspector target %j',
+    (inspectorNode) => {
+      // A stricter Properties admission must not disable another placed Model's pending editor.
+      const args = buildArgs();
+      const panels = buildCanvasShellPanels({
+        ...args,
+        panelState: { ...args.panelState, inspectorNode, canEditInspectorNode: false },
+      });
+      expect(panels.inspectorAuthoring.canEditNode).toBe(false);
+      expect(panels.relationalTreeAuthoring?.canEditNode).toBe(true);
+    }
+  );
+
+  it('cannot borrow Inspector editability when graph commands are readonly', () => {
+    const args = buildArgs();
+    const panels = buildCanvasShellPanels({
+      ...args,
+      userPermissions: { ...args.userPermissions, canEditEdges: false },
+      panelState: { ...args.panelState, canEditInspectorNode: true },
+    });
+    expect(panels.relationalTreeAuthoring?.canEditNode).toBe(false);
+  });
+
   it('derives active canvas authoring node kinds from the ready canvas kind', () => {
     const panels = buildCanvasShellPanels(buildArgs());
 

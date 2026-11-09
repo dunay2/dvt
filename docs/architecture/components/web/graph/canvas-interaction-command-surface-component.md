@@ -83,6 +83,43 @@ Related command seams:
   workbench open action. It is not a new command/query rail and does not
   own role, status, or catalog vocabularies.
 
+## Shared Background Add Gesture
+
+The existing `canvasViewportInteraction` boundary admits a complete double click
+only on the owning authoring canvas background. It uses the nearest actual
+viewport boundary and excludes cards, edges, ports, controls, text editors,
+menus, dialogs, inspectors and nested canvases. It does not decide which node
+kinds or operations exist. A single click and a completed pan remain unchanged.
+
+```mermaid
+flowchart LR
+  Gesture[Background double click or keyboard context intent] --> Boundary[Shared nearest-viewport admission]
+  Boundary -->|Main| Presenter[Existing context presenter]
+  Presenter --> Catalog[Existing searchable node catalog]
+  Catalog -->|choose| Create[CreateCanvasAuthoringNode]
+  Boundary -->|Model applied or pending| Request[Scoped screen point and projected local point]
+  Toolbar[Existing Add operation toolbar] --> Request
+  Request --> Menu[One existing searchable operation menu]
+  Menu -->|choose| Stage[Existing stage operation and layout placement]
+  Stage -->|explicit Apply later| Apply[ConfigureCanvasDvtNode]
+```
+
+Main delegates to `openAddNodeCatalog` and disables React Flow's double-click
+zoom. Model uses one local presentation request shared by its operation toolbar
+and applied/pending viewport, with a real Radix point anchor. Selecting an
+operation reuses its existing staging callback and places the returned identity
+through the existing layout session and camera projection. Opening or closing
+the menu cannot create, connect, apply, publish, execute or persist graph state.
+
+Search focus, Escape and return focus use the actual opener. The named Model
+viewport also exposes the same menu through Context Menu or Shift+F10 at its
+center. Existing permission, disabled-reason and pending-form admission remain
+authoritative. No global listener, synthetic trigger, hidden button, second
+operation list or new domain command is introduced. Graphical product surfaces
+are Main Canvas and the applied/pending Model viewport; text Code views and the
+immutable comparison lab do not gain an authoring gesture.
+[Background-entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6730107882).
+
 ## File Responsibilities
 
 - `canvasInteractionCommandSurface.ts`: pure pane/edge contextual menu read

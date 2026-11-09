@@ -86,15 +86,18 @@ describe('SourceImportWizard', () => {
       database: input.database,
     }));
     const importSources = vi.fn();
+    const listSourceObjectCatalog = vi.fn(buildSourceObjectCatalogResponder([buildSourceObject()]));
     await harness.renderWizard({
       entry: { intent: 'manage-connections' },
       warehouseSourceImport: buildWarehouseSourceImportPort({
         createWarehouseConnection,
         importSources,
+        listSourceObjectCatalog,
       }),
     });
     await harness.clickConnectionOption('Local Postgres proof');
     expect(harness.findTab('Connections')?.getAttribute('aria-selected')).toBe('true');
+    expect(listSourceObjectCatalog).not.toHaveBeenCalled();
     await harness.clickButtonContaining('New connection');
     await harness.fillInputByLabel('Connection name', 'Managed warehouse');
     await harness.fillInputByLabel('Database', 'analytics');
@@ -118,6 +121,45 @@ describe('SourceImportWizard', () => {
     });
     expect(harness.findTab('Connections')?.getAttribute('aria-selected')).toBe('true');
     expect(importSources).not.toHaveBeenCalled();
+    expect(listSourceObjectCatalog).not.toHaveBeenCalled();
+    await harness.clickTab('Browse');
+    await waitForReactQuery(() => listSourceObjectCatalog.mock.calls.length === 1, {
+      description: 'explicit management Browse requests the actual source catalog',
+      tick: async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      },
+    });
+    expect(listSourceObjectCatalog).toHaveBeenCalledExactlyOnceWith('managed-connection', {
+      kind: 'schema-list',
+      limit: 50,
+    });
+  });
+
+  it('keeps source discovery failures visible after management explicitly enters Browse', async () => {
+    // Deferring object discovery must not convert its real failure into an empty or healthy catalog.
+    vi.useFakeTimers();
+    const listSourceObjectCatalog = vi.fn(async () => {
+      throw new Error('Provider unavailable');
+    });
+    await harness.renderWizard({
+      entry: { intent: 'manage-connections' },
+      warehouseSourceImport: buildWarehouseSourceImportPort({ listSourceObjectCatalog }),
+    });
+    await harness.clickConnectionOption('Local Postgres proof');
+    expect(listSourceObjectCatalog).not.toHaveBeenCalled();
+    expect(harness.findButtonContaining('Retry catalogue')).toBeUndefined();
+    await harness.clickTab('Browse');
+    await waitForReactQuery(() => harness.findButtonContaining('Retry catalogue') != null, {
+      description: 'explicit source discovery preserves its failure and retry',
+      tick: async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      },
+    });
+    expect(listSourceObjectCatalog).toHaveBeenCalledExactlyOnceWith('conn-1', {
+      kind: 'schema-list',
+      limit: 50,
+    });
+    expect(document.body.textContent).toContain('Failed to load source objects.');
   });
 
   it('does not select an old creation receipt in a newer management opening', async () => {

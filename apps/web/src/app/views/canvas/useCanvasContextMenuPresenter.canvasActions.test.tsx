@@ -127,6 +127,42 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     });
   });
 
+  it('adapts only its own background double click to the existing positioned catalog', async () => {
+    await renderAndOpenPaneMenu();
+    const surface = document.createElement('div');
+    surface.setAttribute('data-canvas-viewport', '');
+    const preventDefault = vi.fn();
+    const stopPropagation = vi.fn();
+    const event = {
+      currentTarget: surface,
+      target: surface,
+      detail: 2,
+      button: 0,
+      clientX: 480,
+      clientY: 280,
+      defaultPrevented: false,
+      preventDefault,
+      stopPropagation,
+    };
+    await act(async () =>
+      presenter!.handleViewportDoubleClick(event as unknown as React.MouseEvent<HTMLDivElement>)
+    );
+    expect(presenter!.model).toMatchObject({
+      surface: 'add-node-catalog',
+      screenPosition: { x: 480, y: 280 },
+      flowPosition: { x: 580, y: 240 },
+    });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(stopPropagation).toHaveBeenCalledOnce();
+    expect(callbacks.onCreateAuthoringNode).not.toHaveBeenCalled();
+    const action = presenter!.model!.createNodeActions[0]!;
+    await act(async () => presenter!.handleCreateNodeAction(action));
+    expect(callbacks.onCreateAuthoringNode).toHaveBeenCalledExactlyOnceWith(action.registration, {
+      x: 580,
+      y: 240,
+    });
+  });
+
   it('reuses the creation catalogue for Models with separate menu and graph coordinates', async () => {
     const current = await renderAndOpenPaneMenu();
     const opener = document.createElement('button');

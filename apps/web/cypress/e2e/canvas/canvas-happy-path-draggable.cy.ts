@@ -46,6 +46,7 @@ function assertDisclosedModelPath(row: string, path: string): void {
 
 describe('Canvas happy path remains writable after create/save', () => {
   let initialDraft: ReturnType<typeof stubStatefulCanvasDraftAuthoring>;
+  let warehouseConnections: { id: string; name: string; type: 'postgres'; database: string }[];
   beforeEach(() => {
     stubShellBootstrapApis({
       scopes: ['workspace:files:view', 'workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -63,9 +64,10 @@ describe('Canvas happy path remains writable after create/save', () => {
       emptyCanvas: true,
       canvasKind: 'transformation',
     });
-    stubE2eJsonApi('GET', '/workspace/warehouse/connections', [
+    warehouseConnections = [
       { id: 'warehouse', name: 'Project warehouse', type: 'postgres', database: 'analytics' },
-    ]);
+    ];
+    stubE2eApi('GET', '/workspace/warehouse/connections', () => ({ body: warehouseConnections }));
   });
 
   it('keeps Source models in one searchable catalog and metadata disclosure separate from placement', () => {
@@ -419,21 +421,20 @@ describe('Canvas happy path remains writable after create/save', () => {
 
   it('opens connection management and creates through its scoped command without importing or placing models', () => {
     // The Connections action used to inherit a source selection and hide creation in Browse.
-    const connections = [
-      { id: 'warehouse', name: 'Project warehouse', type: 'postgres', database: 'analytics' },
-    ];
+    cy.intercept('GET', '**/workspace/warehouse/connections/*/objects?*').as(
+      'managementObjectReads'
+    );
     let writesBeforeManagement = 0;
     stubE2eJsonApi('GET', '/workspace/files', []);
-    stubE2eApi('GET', '/workspace/warehouse/connections', () => ({ body: connections }));
     stubE2eApi('POST', '/workspace/warehouse/connections', () => {
       const created = {
         id: 'managed-warehouse',
         name: 'Managed warehouse',
-        type: 'postgres',
+        type: 'postgres' as const,
         database: 'analytics',
       };
-      connections.push(created);
-      return { status: 201, body: created };
+      warehouseConnections.push(created);
+      return { statusCode: 201, body: created };
     });
     visitWorkbenchCanvas('en');
     cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
@@ -478,7 +479,53 @@ describe('Canvas happy path remains writable after create/save', () => {
     });
     cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().click();
     cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Managed warehouse');
+    cy.get('@managementObjectReads.all').should('have.length', 0);
     cy.get('[data-slot="canvas-explorer"]').screenshot('project-connections--created');
+  });
+
+  it('opens the existing Add search on background double click without zooming or placing before a choice', () => {
+    // Background Add has one command owner; it cannot inherit node Properties or double-click zoom.
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitWorkbenchCanvas('en');
+    const pane = '[data-testid="canvas-viewport"] .react-flow__pane';
+    let transform = '';
+    let writesBeforeMenu = 0;
+    cy.get('.react-flow__viewport').then(($viewport) => {
+      transform = $viewport.attr('style') ?? '';
+    });
+    cy.then(() => {
+      writesBeforeMenu = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(pane).click(220, 160);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+    cy.get(pane).dblclick(220, 160);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"] input[type="search"]').should(
+      'be.focused'
+    );
+    cy.get('.react-flow__viewport').should(($viewport) => {
+      expect($viewport.attr('style')).to.equal(transform);
+    });
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeMenu)
+    );
+    cy.get('[data-testid="canvas-viewport"]').screenshot('canvas-background-add-search');
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"] input[type="search"]').type(
+      '{esc}'
+    );
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+    cy.get('[data-slot="canvas-viewport-context-surface"]').should('be.focused');
+    cy.get(pane).dblclick(220, 160);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"] input[type="search"]').type(
+      'Model'
+    );
+    cy.get(
+      '[data-slot="canvas-context-menu-add-catalog-item"][data-registration-kind="dvt:transform"]'
+    ).click();
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
   });
 
   it('creates and saves a model, reopens without a projection gap, and allows drag', () => {

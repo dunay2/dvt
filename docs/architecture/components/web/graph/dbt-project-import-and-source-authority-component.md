@@ -612,6 +612,12 @@ rather than treating an unchanged selected connection or prefill as proof of the
 same opening. A late connection-test success or failure cannot publish into a
 new opening that reuses the same selection; its existing request machine still
 owns cancellation.
+Management at Connections does not query physical source objects when a
+connection is selected or created. The existing
+`ListWarehouseConnectionSourceObjects` query is enabled for management only by
+explicit navigation to Browse or another object-oriented section. Ordinary
+import retains its existing discovery and prefill behavior. Configuration, object
+discovery and the explicit connection test remain separate intents.
 This is a presentation/session correction, with no backend migration or duplicate
 connection configuration.
 [Entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729712973).
