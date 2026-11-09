@@ -88,8 +88,8 @@
   margin: 0;
   padding: var(--spacing);
   color: var(--text-strong);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line-height);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
   font-weight: var(--font-weight-medium);
 }
 .headingLabel {
@@ -112,8 +112,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-subtle);
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption-line-height);
 }
 @container canvas-explorer-panel (max-width: 16rem) {
   .contextLabel {
@@ -170,8 +170,8 @@
   gap: calc(var(--spacing) * 3);
   padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 3);
   overflow: auto;
-  font-size: var(--text-body);
-  line-height: var(--text-body-line-height);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
 }
 .catalogSection {
   min-width: 0;
@@ -217,8 +217,8 @@
   border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   color: var(--text-muted);
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
+  font-size: var(--text-ui-micro);
+  line-height: var(--text-ui-micro-line-height);
   font-weight: var(--font-weight-normal);
   font-variant-numeric: tabular-nums;
 }
@@ -341,15 +341,15 @@
   display: block;
   color: var(--text-strong);
   font-weight: var(--font-weight-medium);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line-height);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
   overflow-wrap: anywhere;
 }
 .description {
   display: block;
   color: var(--text-subtle);
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption-line-height);
   overflow-wrap: anywhere;
 }
 .modelIcon {
@@ -378,8 +378,8 @@
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--catalog-source-accent) 12%, var(--surface-panel));
   color: var(--catalog-source-accent);
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
+  font-size: var(--text-ui-micro);
+  line-height: var(--text-ui-micro-line-height);
 }
 .format {
   composes: property;
@@ -414,8 +414,8 @@
 .details {
   margin: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 3) calc(var(--spacing) * 11);
   padding: var(--spacing) 0;
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption-line-height);
 }
 .details > div {
   display: flex;
@@ -439,8 +439,8 @@
   padding: calc(var(--spacing) * 2);
   margin: 0;
   color: var(--text-muted);
-  font-size: var(--text-meta);
-  line-height: var(--text-meta-line-height);
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption-line-height);
 }
 .empty p {
   margin: 0 0 var(--spacing);

@@ -37,8 +37,8 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 
 .contextMenuContent {
   max-width: calc(100vw - 1rem);
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
 }
 
 .contextMenuContent {
@@ -65,8 +65,8 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 .menuGitContext {
   padding-inline: 0.5rem;
   padding-bottom: 0.5rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
   color: var(--text-subtle);
 }
 
@@ -117,13 +117,13 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   border: 1px solid var(--border-default);
   background: var(--surface-app);
   padding-inline: 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
   color: var(--text-default);
 }
 
 .contextLabel {
-  font-size: 11px;
+  font-size: var(--text-ui-caption);
   font-weight: 500;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -137,7 +137,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   border-radius: calc(var(--radius) - 2px);
   border: 1px solid transparent;
   padding-inline: 0.375rem;
-  font-size: 11px;
+  font-size: var(--text-ui-caption);
   color: var(--text-subtle);
 }
 
@@ -153,7 +153,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 }
 
 .gitRefSha {
-  font-size: 11px;
+  font-size: var(--text-ui-caption);
   color: var(--text-default);
 }
 
@@ -167,8 +167,8 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   border: 1px solid var(--border-default);
   background: var(--surface-app);
   padding-inline: 0.625rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
   color: var(--text-default);
 }
 
@@ -202,7 +202,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   align-items: center;
   gap: 0.375rem;
   padding-inline: 0.25rem;
-  font-size: 11px;
+  font-size: var(--text-ui-caption);
 }
 
 .menuButton {
@@ -225,8 +225,8 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 .aboutMetadata {
   display: grid;
   gap: 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
 }
 
 .aboutMetadataRow {

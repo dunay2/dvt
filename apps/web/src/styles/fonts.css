@@ -11,6 +11,13 @@
   --text-body-line-height: var(--text-sm--line-height);
   --text-meta: var(--text-xs);
   --text-meta-line-height: var(--text-xs--line-height);
+  /* Shared application controls; content typography keeps its independent scale. */
+  --text-ui: var(--text-xs);
+  --text-ui-line-height: var(--text-xs--line-height);
+  --text-ui-caption: 0.6875rem;
+  --text-ui-caption-line-height: 1rem;
+  --text-ui-micro: 0.625rem;
+  --text-ui-micro-line-height: 0.875rem;
   --text-mono: 0.8125rem;
   --text-mono-line-height: 1.25rem;
 }

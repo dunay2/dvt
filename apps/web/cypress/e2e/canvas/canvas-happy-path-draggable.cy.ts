@@ -154,16 +154,34 @@ describe('Canvas happy path remains writable after create/save', () => {
       const button = $button[0]!;
       const document = button.ownerDocument;
       const window = document.defaultView!;
-      expect(window.getComputedStyle(button).fontSize).to.equal('14px');
+      const rootStyle = window.getComputedStyle(document.documentElement);
+      const roleSize = (role: string): number =>
+        Number.parseFloat(rootStyle.getPropertyValue(role)) * Number.parseFloat(rootStyle.fontSize);
+      const controlSize = roleSize('--text-ui');
+      const canvasTab = document.getElementById('canvas-workspace-tab')!;
+      expect(
+        Number.parseFloat(window.getComputedStyle(canvasTab).fontSize),
+        'surrounding Canvas tab'
+      ).to.be.at.least(controlSize);
+      for (const control of [
+        button,
+        document.querySelector('[data-slot="canvas-explorer"] h3')!,
+        document.querySelector('[data-slot="canvas-explorer-models"] button[aria-expanded]')!,
+        document.querySelector('[data-slot="canvas-explorer-models"] input[type="search"]')!,
+      ]) {
+        expect(
+          Number.parseFloat(window.getComputedStyle(control).fontSize),
+          'shared UI control scale'
+        ).to.equal(controlSize);
+      }
       const facet = document.getElementById(button.getAttribute('aria-describedby')!);
       expect(facet, 'the real Source property remains accessible').not.to.equal(null);
-      expect(window.getComputedStyle(facet!).fontSize).to.equal('12px');
+      expect(Number.parseFloat(window.getComputedStyle(facet!).fontSize)).to.equal(
+        roleSize('--text-ui-micro')
+      );
+      expect(roleSize('--text-ui-micro')).to.be.lessThan(controlSize);
     });
-    cy.contains('[data-slot="canvas-explorer"] h3', 'Explorador').should(
-      'have.css',
-      'font-size',
-      '14px'
-    );
+    cy.contains('[data-slot="canvas-explorer"] h3', 'Explorador').should('be.visible');
     cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--connections-models');
     cy.viewport(1544, 868);
     cy.document().should((document) => {

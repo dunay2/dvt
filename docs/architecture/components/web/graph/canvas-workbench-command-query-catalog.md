@@ -194,8 +194,11 @@ existing contextual graph query, not a new cache or mutation rail.
 remain scoped queries. Governed dbt file models use the existing instance
 admission when the current Canvas permits creation; read-only or unavailable
 admission remains disabled. The Code explorer owns file navigation.
-The project Explorer uses the existing compact body/meta typography roles
-(14/12 px in the current scale), one common Model icon, an informational Source
+The project Explorer uses the common dense UI typography roles from
+`styles/fonts.css`: UI for names, headings and search (the shell's 12 px control
+scale), caption for secondary metadata (11 px), and micro for badges/counts
+(10 px). This supersedes the initial 14/12 content-role choice without resizing
+the application's content typography. It retains one common Model icon, an informational Source
 badge and an optional SQL file-format label. The latter is derived only from an
 actual accepted `.sql` file path, independently of Source, plugin, connection or
 execution readiness. A logical inline SQL definition without such a file must
@@ -204,7 +207,8 @@ content; actual secondary metadata stays in the accessible name/title, search
 and progressive detail. The Graph adapter supplies contextual Explorer/Project
 heading copy, while the internal Model catalogue keeps its existing heading and
 activity semantics. This adds no global theme, fixed dock width or preview
-wrapper. [Compact presentation refinement](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728465872).
+wrapper. [Compact presentation refinement](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728465872),
+[shared UI typography](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728952540).
 
 The existing shared list owns model search, result counts, selection highlight
 and detail disclosure as separate presentation states. Search uses names and

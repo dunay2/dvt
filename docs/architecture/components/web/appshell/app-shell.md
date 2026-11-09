@@ -779,6 +779,13 @@ unrelated dependency PRs or alter the governing queries.
 - `shell/chrome.ts` contains reusable shell chrome tokens for recurring visual
   patterns.
 - Subcomponents consume these tokens instead of duplicating Tailwind strings.
+- `styles/fonts.css` owns the shared dense UI typography roles: `--text-ui`
+  (the existing 12 px control scale), `--text-ui-caption` (11 px), and
+  `--text-ui-micro` (10 px), with their line-height tokens. Shell chrome and the
+  project Explorer consume these roles; the content body/meta/mono scale and
+  root font size remain unchanged. Hierarchy uses weight and contrast rather
+  than enlarged sidebar text. Existing 14 px content remains on the body role.
+  [Shared UI typography decision](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728952540).
 
 ### SRP Rules
 

@@ -18,6 +18,23 @@ const explorerStyles = readFileSync(
 );
 
 describe('Canvas explorer ownership', () => {
+  it('shares the shell control typography instead of enlarging catalogue text', () => {
+    // GH-3765: the content body token made Explorer names larger than the surrounding application controls.
+    const fonts = readFileSync(new URL('../../../../styles/fonts.css', import.meta.url), 'utf8');
+    const shell = readFileSync(
+      new URL('../../../components/shell/ShellChrome.module.css', import.meta.url),
+      'utf8'
+    );
+    for (const role of ['ui', 'ui-caption', 'ui-micro']) {
+      expect(fonts).toContain(`--text-${role}:`);
+      expect(explorerStyles).toContain(`var(--text-${role})`);
+    }
+    expect(shell).toContain('var(--text-ui)');
+    expect(shell).toContain('var(--text-ui-caption)');
+    expect(explorerStyles).not.toMatch(/font-size:\s*(?:var\(--text-body\)|[\d.]+(?:px|rem))/);
+    expect(shell).not.toMatch(/font-size:\s*[\d.]+(?:px|rem)/);
+  });
+
   it('keeps every shared catalogue CSS class linked for both real presentation consumers', () => {
     // Native GH-3765 proof found the internal occurrence control stacked after its live shared selector was removed.
     const declared = new Set(
