@@ -1,7 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 
-import { createServicesReadyBootstrapCommand } from './bootstrap/appBootstrapCommands';
+import {
+  createHydrationCompleteBootstrapCommand,
+  createServicesReadyBootstrapCommand,
+} from './bootstrap/appBootstrapCommands';
 import { setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import { AppServicesProvider, type AppServicesProviderProps } from './services/AppServicesContext';
 
@@ -25,6 +28,11 @@ type AppProvidersProps = Readonly<{
 export default function AppProviders({ children, overrides, queryClient }: AppProvidersProps) {
   const [ownedQueryClient] = useState(createAppQueryClient);
   const resolvedQueryClient = queryClient ?? ownedQueryClient;
+
+  // Mounting is a React commit acknowledgement, independent of suspended browser painting.
+  useLayoutEffect(() => {
+    setBootstrapStepStatus(createHydrationCompleteBootstrapCommand());
+  }, []);
 
   useEffect(() => {
     setBootstrapStepStatus(createServicesReadyBootstrapCommand());

@@ -1121,6 +1121,38 @@ It does not own route-specific readiness, backend contract semantics, or Canvas
 draft truth. Those concerns publish into this component through typed route and
 health/bootstrap adapters.
 
+### Initial React Commit Acknowledgement
+
+The `hydrate` check represents a committed initial React tree, independently of
+browser painting. `main.tsx` starts the pre-React screen and mounts `App`;
+`AppProviders` publishes the existing hydration-complete command from its initial
+layout effect. Its services-ready effect remains a separate publisher. A render
+that suspends without committing must not acknowledge either lifecycle event.
+
+An animation frame is not a mounting acknowledgement: browsers may pause it in
+background tabs and hidden frames. The native full-branch failure retained a
+four-of-five startup snapshot with only `hydrate` pending even though the other
+publishers had settled. The regression withholds animation frames on the real
+public login route and preserves the original aggregate and visibility checks.
+This rules out a readiness dependency on paint without extending a deadline or
+removing the startup screen from test code.
+
+```mermaid
+flowchart LR
+  Old[Entry schedules one animation frame] --> Paused[Hidden or paused paint]
+  Paused --> Pending[Hydrate stays pending despite mounted React]
+  Commit[Existing AppProviders React commit] --> Command[Existing hydration command]
+  Command --> Gate[Existing five-check bootstrap aggregate]
+  Others[Independent services capabilities health and route owners] --> Gate
+  Gate --> Reveal[Existing CompleteAppBootstrapScreen]
+```
+
+The existing bootstrap aggregate, authorization, route readiness and completion
+commands retain their authority. No new timer, state flag, store or completion
+path is introduced. The supporting platform contracts are
+[browser animation-frame scheduling](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)
+and [React layout-effect timing](https://react.dev/reference/react/useLayoutEffect).
+
 ### Public API
 
 | API                               | Owned behavior                                                              |
