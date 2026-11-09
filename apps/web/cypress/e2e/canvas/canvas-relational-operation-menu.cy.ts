@@ -78,6 +78,10 @@ function addFilterFromBackground(viewportSelector: string): void {
       expect(Number.parseFloat($card[0]!.style.top)).to.be.closeTo(expectedPosition.y, 1);
     });
   cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+  // Retire this test's staged edit through its real owner before browser isolation navigates away.
+  cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+  cy.get('[data-pending-operation="true"]').should('not.exist');
+  cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
 }
 
 describe('Compact semantic operation menu', () => {
