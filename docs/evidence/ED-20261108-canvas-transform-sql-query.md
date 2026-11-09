@@ -132,6 +132,102 @@ leaves canonical inspection available and SQL unavailable.
 
 ## Recorded Validation
 
+### Audited semantic producer selection
+
+The independent integration audit reproduced an admitted protected draft with
+an unused file-model predecessor. PostgreSQL correctly projected only
+`raw.orders`, but SQL provenance named the unused file model because shared
+preparation resolved every topological file reference before semantic traversal.
+The audit used the real planner, protected draft resolver, closure and AST
+projector with an injected file publication; it did not execute native dbt.
+
+```mermaid
+flowchart LR
+  Before[Protected upstream graph] --> All[Resolve every topological file model]
+  All --> Wrong[Semantic SQL with excessive model provenance]
+  Full[Admit complete protected upstream graph] --> Digest[Check original target digest]
+  Digest --> Select[Existing semantic traversal and relation selection]
+  Select --> Used[Resolve consumed file models]
+  Used --> Ast[Existing PostgreSQL AST projection]
+  Ast --> Exact[Exact SQL provenance]
+  Ast --> Preview[Existing bounded row Preview]
+```
+
+The correction belongs to `ResolveCanvasTransformProjection` and the Preview
+preparation branch of `resolveDvtTerminalTransformClosure`, under
+`GH-3765-AUDITED-SQL-SEMANTIC-PROVENANCE`. One pure application helper reuses
+`resolveProducerDocuments` and `selectDvtSubstraitRelation`; it does not introduce
+another traversal engine, SQL rule, semantic IR, transport contract or factory.
+Full graph authorization and direct-edge validation precede semantic selection.
+The original target digest is checked before external work; a selected subtree
+is only an analysis input, never replacement response authority. Operational
+closure without a Preview target retains its existing rules.
+
+Filtering only the final provenance array is rejected because it would retain
+irrelevant file authorization and compilation. Native and external consumed
+producers must instead be selected before the file resolver. Regressions must
+prove unused-file exclusion, current mixed/transitive consumption, relation
+selection, consumed-file denial, full topology rejection and digest ordering.
+The meaningful RED for this correction had three failures and six passes in
+`projectCanvasTransformSqlQuery.test.ts`: an unused file invoked the resolver,
+the transitive query supplied unrelated nodes, and invalid unused topology
+reached the resolver before rejection. After correction, seven API suites pass
+80 tests: dependency selection, SQL query, producer row Preview, scoped file
+resolution, Transform row Preview, operational workload projection and SQL HTTP
+routes. Both API TypeScript checks and full API lint also pass. A first focused
+run exposed a missing position in a new test fixture; a first test typecheck and
+lint exposed request branding, import ordering and return annotations in new
+test code. Those authoring errors were corrected before the passing checks.
+
+These are local API regression results, with no native dbt, provider database or
+browser execution claim for the correction. Hook normalization, independent
+review, generated/native evidence refresh and exact committed-head prepush
+remain integration obligations. The earlier checkpoint results below describe
+the original SQL slice and are not substituted for these regressions.
+
+### Audited physical producer selection
+
+Read-only follow-up controls exposed the same topology/consumption mismatch
+for physical Sources. The protected planner admitted a physical target, a
+file-only selected relation and a native file-only target. Each control passed
+with a same-connection unused Source; changing only that Source to another
+connection caused `projection_unsupported`. The closure chose its connection
+from the complete topological Source list rather than consumed bindings. A
+preexisting mixed-connection test encoded this excess restriction.
+
+```mermaid
+flowchart LR
+  Full[Admit complete protected topology] --> Documents[Consumed semantic documents]
+  Documents --> Physical[All matching protected physical identities]
+  Documents --> External[Consumed external publications]
+  Physical --> Connection[One consumed PostgreSQL connection]
+  External --> Connection
+  Connection --> Projection[Existing AST and exact provenance]
+```
+
+`GH-3765-AUDITED-PHYSICAL-PRODUCER-SELECTION` keeps the same rails and closure
+owner. Preview uses existing `sameConnectedSource` identity semantics to retain
+all protected bindings matching consumed source references before choosing its
+connection. Retaining every match preserves ambiguity and direct-edge refusals;
+the complete topology is still admitted before narrowing. The no-Preview
+operational branch retains whole-selection source and connection admission.
+Replacing the obsolete negative with consumed mixed-connection and strict
+operational negatives preserves the real invariant. SQL and row regressions
+also cover an unused foreign Source and file-only relation provenance. No new
+helper, traversal, SQL rule, DTO or execution policy is introduced.
+
+The physical continuation's meaningful RED had five failures and 26 passes:
+unused foreign Sources incorrectly rejected two SQL node-order variants, a
+native file-only target, row Preview and a file-only selected relation. The
+first GREEN passes all 31 SQL/producer-row cases. The final affected run passes
+**88 tests across seven suites**, both API typechecks and full API lint.
+Negatives retain every
+matching identity for ambiguity/direct-edge rejection and reject genuinely
+consumed physical/external mixed connections and strict operational mixed
+selection. These local results precede hook normalization and the exact
+committed-head integration gate; they are not a prepush or browser acceptance
+claim.
+
 At the checkpoint, the contracts package passed **1,040 tests across 81 files**,
 including the six new SQL contract cases. The seven focused API suites passed
 **61 tests** after hook normalization. Both API typechecks, API lint, the

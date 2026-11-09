@@ -147,6 +147,28 @@ owner resolves the protected draft and the existing producer/AST pipeline for
 both this query and `PreviewCanvasTransformRows`. Only row Preview continues to
 the connection catalog, credential resolver and bounded provider probe.
 
+Protected graph admission and semantic producer consumption are distinct. The
+complete upstream graph retains its scope authorization, topology and direct-edge
+checks. After checking the original target digest, shared preparation uses the
+existing semantic document traversal to select only consumed producer references
+before requesting file authorization or compilation. An unused file-model edge
+does not become SQL provenance or require that file's compilation. A consumed
+file still requires current file-view permission and its authorized publication.
+For a selected relation, dependency analysis uses that relation's subtree while
+the original target document and digest remain the response authority. Native
+producer chains retain their transitive consumed file dependencies. Operational
+publication without a Preview target retains its complete existing admission.
+
+The same consumption boundary applies to physical Sources. Preview connection
+admission uses protected physical bindings that match the consumed semantic
+source references, together with consumed external publications. An unused
+authorized physical predecessor on another connection cannot choose or reject
+that query's connection. Every matching protected identity is retained; narrowing
+does not choose one ambiguous binding or repair a missing direct edge. The
+single-PostgreSQL-connection rule still rejects consumed physical/external inputs
+on different connections. Operational publication continues to validate its
+whole selection, including all selected Source connections.
+
 ```mermaid
 flowchart LR
   Code[Explicit Code SQL selection] --> SQL[ProjectCanvasTransformSql]

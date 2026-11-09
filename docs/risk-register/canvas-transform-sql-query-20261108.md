@@ -34,6 +34,19 @@ their distinct responsibilities.
   file producers, terminal closure and PostgreSQL AST through one shared
   preparation owner. SQL inspection returns a read model; row Preview alone
   adds its existing probe and credentials boundary.
+- Admit and validate the complete protected upstream graph before using the
+  existing semantic traversal to choose consumed file producers. Resolve those
+  producers only after checking the original target digest. An unused graph
+  predecessor must neither request file compilation nor enter SQL provenance.
+  Relation selection narrows dependency analysis without replacing the original
+  document/digest authority; transitive consumed references remain required.
+  Operational closure without a Preview target retains its full admission.
+- Apply that Preview consumption boundary to physical bindings before choosing
+  a connection. Keep every protected binding matching a consumed source
+  reference, using the existing identity comparison. An unused foreign Source
+  does not choose the query connection; ambiguous matches and missing direct
+  edges still reject. Consumed physical/external mixed connections and the
+  whole operational selection retain strict single-connection admission.
 - Require existing graph-view permission and, for file producers, file-view
   permission before analyzer access. Reject malformed scope/digest, stale
   revision, unavailable producer, mismatched field/connection contracts and
@@ -67,6 +80,20 @@ their distinct responsibilities.
   No Planning DB import or rebuild repairs the candidate.
 
 ## Evidence And Residual Limits
+
+The physical-binding continuation records five meaningful RED failures and an
+initial GREEN of 31 SQL/producer-row cases, followed by 88 passing tests in
+seven affected API suites, both typechecks and full API lint. It distinguishes consumed mixed
+connections from an unused foreign predecessor and retains ambiguity, missing
+direct-edge and strict operational refusals. Final scoped checks and integration
+gates remain separately evidenced.
+
+The semantic-provenance audit correction records a meaningful three-failure RED
+and seven passing API suites with 80 tests, plus both API typechecks and full
+API lint. The unused-file case now verifies no file authorization, authority
+lookup or analyzer invocation; selected-relation and transitive cases retain
+their actual dependencies and original response digest. These local checks do
+not replace independent review, native/browser acceptance or exact-head gates.
 
 [ED-20261108-canvas-transform-sql-query](../evidence/ED-20261108-canvas-transform-sql-query.md)
 records 1,040 contracts tests, 61 focused API tests, package/type/lint checks,

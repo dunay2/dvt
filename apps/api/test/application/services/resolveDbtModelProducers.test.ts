@@ -2,6 +2,8 @@ import { PlanRelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/pl
 import { create } from '@bufbuild/protobuf';
 import {
   DbtProjectGraphProjectionSchema,
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformSqlProjectionRequestSchema,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
   encodeDvtSubstraitPlanV1,
@@ -29,12 +31,14 @@ import type {
 import type { IWarehouseConnectionCatalog } from '../../../src/application/ports/warehouseSourceImport.js';
 import { DvtOperationalWorkloadProjector } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
+import { ProjectCanvasTransformSqlQuery } from '../../../src/application/services/projectCanvasTransformSqlQuery.js';
 import type { ProjectDbtGraphFromFilesUseCase } from '../../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import { ResolveDbtModelProducers } from '../../../src/application/services/resolveDbtModelProducers.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 import { publisherHarness } from '../../fixtures/dvtRepeatedSourcePublisher.js';
+import { buildDvtTerminalTransformPreviewDraft } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 const scope = { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' };
 const context: AuthorizedExecutionContext = {
@@ -177,6 +181,54 @@ function fixture(sql = 'select client_id from raw.client'): Readonly<{
 }
 
 describe('scoped dbt model producer binding', () => {
+  it('does not authorize or compile an unused file predecessor during protected SQL inspection', async () => {
+    const f = fixture();
+    f.authorize.mockResolvedValue({ ok: false, reason: 'missing_scope' });
+    const base = buildDvtTerminalTransformPreviewDraft();
+    const draft: WorkspaceGraphAuthoringDraft = {
+      ...base,
+      nodes: [...base.nodes, node],
+      nodeIds: [...base.nodeIds, node.id],
+      nodePositions: { ...base.nodePositions, [node.id]: { x: 0, y: 200 } },
+      edges: [
+        ...base.edges,
+        { id: 'unused-file', sourceId: node.id, targetId: 'transform-orders', relation: 'lineage' },
+      ],
+    };
+    const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
+      planner: new PlannerFacade(),
+      workspaceGraphDraftStore: {
+        read: async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          revision: 'saved',
+          draftPayload: draft,
+        }),
+      } as never,
+    });
+    const query = new ProjectCanvasTransformSqlQuery({
+      projection: new ResolveCanvasTransformProjection({
+        graphDraftResolver,
+        modelProducers: f.resolver,
+      }),
+    });
+    const target = draft.nodes.find((candidate) => candidate.id === 'transform-orders')!;
+    const result = await query.execute(
+      TransformSqlProjectionRequestSchema.parse({
+        canvasId: draft.canvas.id,
+        transformNodeId: target.id,
+        semanticPlanSha256: DvtTransformAuthoringAuthorityV1Schema.parse(
+          target.metadata?.transformAuthoring
+        ).semanticDocument.semanticPlan.sha256,
+      }),
+      context
+    );
+    expect(result.sql).toContain('raw.orders');
+    expect(result.provenance.modelRefs).toBeUndefined();
+    expect(f.authorize).not.toHaveBeenCalled();
+    expect(f.resolve).not.toHaveBeenCalled();
+    expect(f.analyze).not.toHaveBeenCalled();
+  });
+
   it('samples an independent persisted placement through planner selection, compilation and PostgreSQL projection', async () => {
     const f = fixture();
     const definition = { ...node, id: 'definition' };

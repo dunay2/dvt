@@ -1,13 +1,18 @@
 import {
   DvtTransformAuthoringAuthorityV1Schema,
   TransformSqlProjectionRequestSchema,
+  readWorkspaceDbtModelReference,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   type TransformSqlProjectionRequest,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import { projectExternalProducerAst } from '@dvt/postgres-projection';
-import { createExternalProducerSignature, indexSubstraitRelations } from '@dvt/substrait-analysis';
+import {
+  createExternalProducerSignature,
+  indexSubstraitRelations,
+  selectDvtSubstraitRelation,
+} from '@dvt/substrait-analysis';
 import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import {
@@ -24,11 +29,14 @@ import { ProjectCanvasTransformSqlQuery } from '../../../src/application/service
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
+import { buildDbtInputPreviewFixture } from '../../fixtures/dvtDbtInputPreviewFixture.js';
 import { buildDvtJoinPreviewDraft } from '../../fixtures/dvtJoinPreviewFixture.js';
 import {
+  consumerNode,
   producerDocument,
   withProducerDocument,
 } from '../../fixtures/dvtProducerPreviewFixture.js';
+import { buildDvtTerminalTransformPreviewDraft } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 const context: AuthorizedExecutionContext = {
   principal: {
@@ -54,7 +62,8 @@ const context: AuthorizedExecutionContext = {
 
 function harness(
   draft: WorkspaceGraphAuthoringDraft,
-  modelProducers?: IDbtModelProducerResolver
+  modelProducers?: IDbtModelProducerResolver,
+  targetId = 'transform-orders'
 ): Readonly<{
   query: ProjectCanvasTransformSqlQuery;
   read: Mock<
@@ -80,7 +89,7 @@ function harness(
     ...(modelProducers == null ? {} : { modelProducers }),
   });
   const query = new ProjectCanvasTransformSqlQuery({ projection });
-  const transform = draft.nodes.find((node) => node.id === 'transform-orders')!;
+  const transform = draft.nodes.find((node) => node.id === targetId)!;
   const semanticPlanSha256 = DvtTransformAuthoringAuthorityV1Schema.parse(
     transform.metadata?.transformAuthoring
   ).semanticDocument.semanticPlan.sha256;
@@ -88,7 +97,7 @@ function harness(
     query,
     read,
     request: TransformSqlProjectionRequestSchema.parse({
-      canvasId: 'canvas-joins',
+      canvasId: draft.activeCanvasId ?? draft.canvas.id,
       transformNodeId: transform.id,
       semanticPlanSha256,
     }),
@@ -196,7 +205,163 @@ async function withFileProducer(): Promise<
   return { draft, resolve };
 }
 
+async function withUnusedFileProducer(): Promise<
+  Readonly<{
+    draft: WorkspaceGraphAuthoringDraft;
+    resolve: Mock<IDbtModelProducerResolver['resolve']>;
+  }>
+> {
+  const file = await withFileProducer();
+  const original = file.draft.nodes.find((node) => readWorkspaceDbtModelReference(node) != null)!;
+  const unused = { ...original, id: 'unused-file' };
+  const base = buildDvtTerminalTransformPreviewDraft();
+  const draft: WorkspaceGraphAuthoringDraft = {
+    ...base,
+    nodes: [...base.nodes, unused],
+    nodeIds: [...base.nodeIds, unused.id],
+    nodePositions: { ...base.nodePositions, [unused.id]: { x: 0, y: 200 } },
+    edges: [
+      ...base.edges,
+      {
+        id: 'unused-file-target',
+        sourceId: unused.id,
+        targetId: 'transform-orders',
+        relation: 'lineage',
+      },
+    ],
+  };
+  const producers = await file.resolve([], context);
+  file.resolve.mockClear();
+  file.resolve.mockResolvedValue(new Map([[unused.id, producers.get(original.id)!]]));
+  return { draft, resolve: file.resolve };
+}
+
 describe('ProjectCanvasTransformSql', () => {
+  it.each(['first', 'last'] as const)(
+    'ignores an unused foreign physical predecessor placed %s in the protected node list',
+    async (position) => {
+      const base = buildDvtTerminalTransformPreviewDraft();
+      const source = base.nodes.find((node) => node.role === 'input')!;
+      const unused = globalThis.structuredClone(source);
+      unused.id = 'unused-foreign-source';
+      const ref = unused.metadata!.connectedSourceRef as {
+        sourceObjectId: string;
+        connectionRef: { connectionId: string };
+      };
+      ref.sourceObjectId = 'raw.unused';
+      ref.connectionRef.connectionId = 'other-connection';
+      unused.metadata!.tableName = 'unused';
+      const draft: WorkspaceGraphAuthoringDraft = {
+        ...base,
+        nodes: position === 'first' ? [unused, ...base.nodes] : [...base.nodes, unused],
+        nodeIds: [...base.nodeIds, unused.id],
+        nodePositions: { ...base.nodePositions, [unused.id]: { x: 0, y: 200 } },
+        edges: [
+          ...base.edges,
+          {
+            id: 'unused-foreign-target',
+            sourceId: unused.id,
+            targetId: 'transform-orders',
+            relation: 'lineage',
+          },
+        ],
+      };
+      const resolve = vi.fn<IDbtModelProducerResolver['resolve']>();
+      const h = harness(draft, { resolve });
+      const result = await h.query.execute(h.request, context);
+      expect(result.sql).toContain('raw.orders');
+      expect(result.provenance.sourceRefs.map((input) => input.sourceObjectId)).toEqual([
+        'raw.orders',
+      ]);
+      expect(result.provenance.modelRefs).toBeUndefined();
+      expect(resolve).not.toHaveBeenCalled();
+    }
+  );
+
+  it('chooses a native file-only target connection from its consumed publication', async () => {
+    const f = buildDbtInputPreviewFixture();
+    const target = f.draft.nodes.find((node) => node.id === f.targetId)!;
+    f.draft.nodes = f.draft.nodes.map((node) =>
+      node.id === target.id
+        ? withProducerDocument(
+            node,
+            selectDvtSubstraitRelation(producerDocument(node), f.modelRelationId)
+          )
+        : node
+    );
+    const physical = f.draft.nodes.find((node) => node.role === 'input')!;
+    const ref = physical.metadata!.connectedSourceRef as {
+      connectionRef: { connectionId: string };
+    };
+    ref.connectionRef.connectionId = 'other-connection';
+    const resolve = vi
+      .fn<IDbtModelProducerResolver['resolve']>()
+      .mockResolvedValue(f.externalProducers);
+    const h = harness(f.draft, { resolve });
+    const result = await h.query.execute(h.request, context);
+    expect(result.provenance.sourceRefs).toEqual([]);
+    expect(result.provenance.modelRefs).toEqual(
+      [...f.externalProducers.values()].map((producer) => producer.provenance)
+    );
+    expect(result.semanticPlanSha256).toBe(h.request.semanticPlanSha256);
+  });
+
+  it('does not resolve or claim an unused file predecessor of an admitted physical target', async () => {
+    const f = await withUnusedFileProducer();
+    const h = harness(f.draft, { resolve: f.resolve });
+    const before = JSON.stringify(f.draft);
+    const result = await h.query.execute(h.request, context);
+    expect(f.resolve).not.toHaveBeenCalled();
+    expect(result.provenance.modelRefs).toBeUndefined();
+    expect(result.provenance.sourceRefs).toHaveLength(1);
+    expect(result.sql).toContain('raw.orders');
+    expect(result.sql).not.toContain('ventas_por_cliente');
+    expect(JSON.stringify(f.draft)).toBe(before);
+  });
+
+  it('resolves a transitive consumed file through its native producer chain', async () => {
+    const f = buildDbtInputPreviewFixture();
+    const native = f.draft.nodes.find((node) => node.id === f.targetId)!;
+    const consumer = consumerNode(native, 'final-model');
+    const draft: WorkspaceGraphAuthoringDraft = {
+      ...f.draft,
+      nodes: [...f.draft.nodes, consumer],
+      nodeIds: [...f.draft.nodeIds, consumer.id],
+      nodePositions: { ...f.draft.nodePositions, [consumer.id]: { x: 600, y: 0 } },
+      edges: [
+        ...f.draft.edges,
+        { id: 'native-final', sourceId: native.id, targetId: consumer.id, relation: 'lineage' },
+      ],
+    };
+    const resolve = vi
+      .fn<IDbtModelProducerResolver['resolve']>()
+      .mockResolvedValue(f.externalProducers);
+    const h = harness(draft, { resolve }, consumer.id);
+    const result = await h.query.execute(h.request, context);
+    expect(resolve.mock.calls[0]![0].map((node) => node.id)).toEqual([
+      ...f.externalProducers.keys(),
+    ]);
+    expect(result.provenance.modelRefs).toEqual(
+      [...f.externalProducers.values()].map((producer) => producer.provenance)
+    );
+    expect(result.sql).toContain('JOIN');
+  });
+
+  it('rejects an invalid unused predecessor edge before resolving file models', async () => {
+    const f = await withUnusedFileProducer();
+    f.draft.edges.push({
+      id: 'invalid-source-input',
+      sourceId: 'unused-file',
+      targetId: 'source-orders',
+      relation: 'lineage',
+    });
+    const h = harness(f.draft, { resolve: f.resolve });
+    await expect(h.query.execute(h.request, context)).rejects.toMatchObject({
+      reason: 'projection_unsupported',
+    });
+    expect(f.resolve).not.toHaveBeenCalled();
+  });
+
   it('projects the real physical JOIN through the protected draft without a row probe or mutation', async () => {
     const draft = draftFixture(),
       before = JSON.stringify(draft),

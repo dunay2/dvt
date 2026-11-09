@@ -1,4 +1,12 @@
-/** Prepare one protected producer projection for SQL inspection and bounded row Preview. */
+/**
+ * Owned concern: prepare one protected producer projection shared by SQL
+ * inspection and bounded row Preview; row probing belongs to its consumer.
+ * Why: selection and producer admission must agree before any external work,
+ * rather than independently choosing dependencies for each response surface.
+ * Corner cases: validate the original native digest before file access, narrow
+ * relation analysis without replacing response authority, and preserve typed
+ * file denials and complete protected topology checks.
+ */
 import {
   DvtTransformAuthoringAuthorityV1Schema,
   parseExecutionSelection,
@@ -22,6 +30,7 @@ import {
   resolveDvtTerminalTransformClosure,
   type DvtTerminalTransformClosure,
 } from './resolveDvtTerminalTransformClosure.js';
+import { selectCanvasTransformProducerDependencies } from './selectCanvasTransformProducerDependencies.js';
 
 type ProjectionInput = Pick<
   TransformDataSampleRequest,
@@ -80,15 +89,32 @@ export class ResolveCanvasTransformProjection {
     )
       throw new CanvasTransformProjectionUnavailableError('canvas_changed');
     try {
-      const externalProducers = await this.deps.modelProducers?.resolve(nodes, context);
+      if (input.relationId !== undefined && input.semanticPlanSha256 === undefined)
+        throw new CanvasTransformProjectionUnavailableError('selection_unavailable');
+      if (
+        input.relationId !== undefined &&
+        authority.success &&
+        !authority.data.semanticDocument.sidecar.relations.some(
+          (relation) => relation.relationId === input.relationId
+        )
+      )
+        throw new CanvasTransformProjectionUnavailableError('relation_outside_output_plan');
+      const selection = {
+        draft: authorizedDraft.draft,
+        selectedNodeIds: resolved.value.nodeIds,
+        selectedEdgeIds: resolved.value.edgeIds,
+        previewTargetId: input.transformNodeId,
+      };
+      const dependencies = selectCanvasTransformProducerDependencies(selection, input.relationId);
+      const producerNodes = nodes.filter((node) => dependencies.externalNodeIds.has(node.id));
+      const externalProducers =
+        producerNodes.length === 0
+          ? undefined
+          : await this.deps.modelProducers?.resolve(producerNodes, context);
       const closure = resolveDvtTerminalTransformClosure(
-        {
-          draft: authorizedDraft.draft,
-          selectedNodeIds: resolved.value.nodeIds,
-          selectedEdgeIds: resolved.value.edgeIds,
-          previewTargetId: input.transformNodeId,
-        },
-        externalProducers
+        selection,
+        externalProducers,
+        input.relationId
       );
       if (closure.transform.id !== input.transformNodeId)
         throw new CanvasTransformProjectionUnavailableError('selection_unavailable');
@@ -97,8 +123,6 @@ export class ResolveCanvasTransformProjection {
         input.semanticPlanSha256 !== closure.semanticDocument.semanticPlan.sha256
       )
         throw new CanvasTransformProjectionUnavailableError('canvas_changed');
-      if (input.relationId !== undefined && input.semanticPlanSha256 === undefined)
-        throw new CanvasTransformProjectionUnavailableError('selection_unavailable');
       if (
         input.relationId !== undefined &&
         !closure.semanticDocument.sidecar.relations.some(
