@@ -69,6 +69,58 @@ Abort cleanup and the resolver's publication receipt still reject stale results.
 See the [auth contract](web-auth-project-onboarding-component.md) for the state
 diagram, ordering and negative tests.
 
+## Selected Text Interaction
+
+The shell owns one transient text-selection policy, before target-specific
+Canvas actions. Selecting text, including a double click on a word, keeps the
+browser selection and opens no application menu. Right click, Context Menu or
+Shift+F10 on that selection resolves one `ShellTextSelectionMenu`. With no
+selection the existing node, edge, field and background owners still receive
+the original gesture; the shell's bubbling native-default cancellation remains
+the final fallback. Monaco retains its editor-owned menu and clipboard commands.
+
+```mermaid
+flowchart LR
+  Gesture[Shell contextual gesture] --> Selection[Selected-text admission]
+  Selection -->|accepted snapshot| Menu[Shared selection menu]
+  Selection -->|none or editor-owned| Owner[Existing local menu owner]
+  Menu -->|explicit Copy| Clipboard[Browser clipboard port]
+  Menu -->|explicit lexical lookup| Link[Fixed encoded dictionary link]
+  Owner --> Fallback[Existing native-default fallback]
+```
+
+The boundary is a React composition over the real shell element and its React
+portals, with no document-wide gesture listener or second graph command owner.
+Only an accepted selection context gesture is consumed in capture. Ordinary
+selection and native Ctrl/Cmd+C remain untouched. Menu focus and Escape use the
+existing Radix primitive; dismissal restores the real opener. Snapshot lifetime
+is local to the boundary, never persisted, and changed or disconnected content
+cannot be copied from a stale menu. Clipboard failure is reported rather than
+presented as success.
+
+| Rail                            | Type    | DDD owner                                                        | Application port / adapter                                | Scope and authorization                                                                                  | Negative tests                                                                                                         |
+| ------------------------------- | ------- | ---------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `ResolveShellTextSelectionMenu` | query   | `ShellTextSelectionMenu` read model / `ShellTextSelection` value | `readShellTextSelection` / `ShellTextSelectionBoundary`   | Current shell gesture and visible selected text only; no workspace write or additional server permission | Empty, external, password, editor-owned and unrelated selections do not preempt the target menu                        |
+| `CopyShellTextSelection`        | command | `ShellTextSelection` value                                       | `copyShellTextSelection` / browser Clipboard API          | Explicit user selection of Copy; exact live snapshot; no network or persistence                          | Changed or disconnected content, absent clipboard and denied clipboard do not claim success or dispatch graph commands |
+| `LookupShellTextSelection`      | command | `ShellTextSelection` value                                       | `buildShellDictionaryLinks` / explicit ordinary hyperlink | A bounded lexical term only; fixed HTTPS dictionary origins, encoded term, user activation required      | No bulk text, multiline, password, automatic fetch, automatic window or arbitrary URL                                  |
+
+All three rails are accepted Web App Shell intents. They do not add backend
+routes, graph permissions, a dictionary service or a global click store. The
+selection menu uses existing presentation typography and menu components. Inputs
+and textareas preserve their selected substring; sensitive password inputs are
+excluded. Dictionary links use `noopener noreferrer` and send a term only after
+the user explicitly follows that link.
+
+Edge can independently display its browser-owned mini menu when text is selected.
+Its browser setting/policy is outside the application contract. DVT must not
+disable text selection, rewrite the browser profile or claim to suppress browser
+chrome as a substitute for owning its own context gesture.
+
+The previous fallback-only design left selected text without application actions.
+A per-card handler would repeat policy and miss chrome, drawers and portals; a
+global document listener would preempt unrelated surfaces. One shell admission
+policy plus existing local owners keeps selection and authoring separate.
+
 ## Shell Service Composition
 
 The shell is also the composition boundary for frontend service wiring.

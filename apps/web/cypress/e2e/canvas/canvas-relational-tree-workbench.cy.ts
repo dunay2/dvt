@@ -9,6 +9,7 @@ import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import { projectCanvasCanonicalGraphEditing } from '../../../src/app/views/canvas/canvasCanonicalGraphEditing';
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { createCanvasRelationalAuthoringDraft } from '../../../src/app/views/canvas/canvasRelationalAuthoringDraft';
 import { getE2eApiCalls, stubE2eApi } from '../../support/e2eApiStub';
 import {
@@ -497,6 +498,7 @@ describe('Workbench navigation', () => {
     };
     delete metadata.transformAuthoring;
     model.metadata = metadata;
+    Object.assign(initialDraft, normalizeProjectCanvasDraft(initialDraft));
     WorkspaceGraphAuthoringDraftSchema.parse(initialDraft);
     expect(initialDraft.nodeIds).to.include(model.id);
     expect(initialDraft.edges.filter((edge) => edge.targetId === model.id)).to.have.length(2);

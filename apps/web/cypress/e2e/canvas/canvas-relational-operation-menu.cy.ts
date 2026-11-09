@@ -63,9 +63,9 @@ function addFilterFromBackground(viewportSelector: string): void {
       ? 'model-background-add--pending'
       : 'model-background-add--applied'
   );
-  cy.get('[data-slot="popover-content"] [role="combobox"]')
-    .should('be.focused')
-    .type('Filter{enter}');
+  cy.get('[data-slot="popover-content"] [role="combobox"]').should('be.focused').type('Filter');
+  cy.get('[role="option"][data-selected="true"]').should('have.attr', 'data-operation', 'filter');
+  cy.get('[data-slot="popover-content"] [role="combobox"]').type('{enter}');
   cy.get('[role="listbox"]').should('not.exist');
   cy.get('[data-pending-operation="true"] [data-operator="filter"]').should('have.length', 1);
   cy.get('[data-slot="canvas-relational-tree-zoom"]').should(($zoom) => {

@@ -438,6 +438,9 @@ describe('Canvas happy path remains writable after create/save', () => {
     });
     visitWorkbenchCanvas('en');
     cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
+    // Account for the existing startup normalization, not a delayed management write.
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-indicator"]').should('not.exist');
     cy.then(() => {
       writesBeforeManagement = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
@@ -481,6 +484,63 @@ describe('Canvas happy path remains writable after create/save', () => {
     cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Managed warehouse');
     cy.get('@managementObjectReads.all').should('have.length', 0);
     cy.get('[data-slot="canvas-explorer"]').screenshot('project-connections--created');
+  });
+
+  it('keeps selected text separate from Canvas context and copies through one shell menu', () => {
+    // Selecting shell text used to expose only browser chrome; it must never reach Add or mutate a graph.
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitWorkbenchCanvas('en');
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-indicator"]').should('not.exist');
+    let writesBeforeSelection = 0;
+    cy.then(() => {
+      writesBeforeSelection = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.window().then((window) => {
+      const clipboard = cy.stub(window.navigator.clipboard, 'writeText').as('copySelectedText');
+      clipboard.resolves();
+    });
+    cy.get('#canvas-workspace-tab')
+      .focus()
+      .then(($tab) => {
+        const document = $tab[0]!.ownerDocument;
+        const range = document.createRange();
+        range.selectNodeContents($tab[0]!);
+        document.getSelection()!.removeAllRanges();
+        document.getSelection()!.addRange(range);
+      });
+    cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+    cy.get('#canvas-workspace-tab').rightclick();
+    cy.get('[data-slot="shell-text-selection-menu"]')
+      .should('be.visible')
+      .within(() => {
+        cy.get('[role="menuitem"]').should('have.length', 3);
+        cy.contains('[role="menuitem"]', /^Copy$/)
+          .should('be.focused')
+          .click();
+        cy.get('[role="status"]').should('contain.text', 'Copied');
+        cy.get('a[href="https://dle.rae.es/Canvas"]').should(
+          'have.attr',
+          'rel',
+          'noopener noreferrer'
+        );
+      });
+    cy.get('@copySelectedText').should('have.been.calledOnceWithExactly', 'Canvas');
+    cy.get('[data-slot="shell-text-selection-menu"]').screenshot('shell-selected-text-menu');
+    cy.get('[data-slot="shell-text-selection-menu"]').type('{esc}');
+    cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+    cy.get('#canvas-workspace-tab').should('be.focused');
+    cy.window().then((window) => {
+      expect(window.getSelection()?.toString()).to.equal('Canvas');
+      window.getSelection()?.removeAllRanges();
+    });
+    cy.get('[data-testid="canvas-viewport"] .react-flow__pane').rightclick(180, 160);
+    cy.get('[data-slot="canvas-context-menu"]').should('have.length', 1);
+    cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeSelection)
+    );
   });
 
   it('opens the existing Add search on background double click without zooming or placing before a choice', () => {

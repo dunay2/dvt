@@ -561,6 +561,14 @@ default without opening background actions or performing a mutation. Do not
 blanket-call `preventDefault` in capture before Radix handles an accepted target,
 intercept `document` globally, or add a second pane route for the same intent.
 
+The shared shell text-selection boundary first admits an actual selected-text
+context gesture through the accepted App Shell `ResolveShellTextSelectionMenu`,
+`CopyShellTextSelection` and `LookupShellTextSelection` rails documented in
+`../appshell/app-shell.md`. Only that accepted gesture is consumed before local
+handlers. Selecting or double-clicking text opens no Add menu and cannot create
+an instance. Monaco retains its own editor menu. Without a selected-text request,
+the existing Canvas target owners receive the original event unchanged.
+
 The shared `AppShellFrame` cancels any remaining native context-menu default in
 the bubbling phase, after component-owned handlers. This presentation boundary
 covers shell chrome, Elements, workbenches, inspector, drawer and their React

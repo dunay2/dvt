@@ -31,12 +31,20 @@ function modelPanels(
   const defaults = buildCanvasShellProps();
   return buildCanvasShellPanels({
     panelState: {
-      ...defaults.panels,
       inspectorNode,
+      inspectorTarget: null,
+      inspectorPreferredTabId: defaults.panels.inspectorPreferredTabId,
+      inspectorPreferredTabRequestId: defaults.panels.inspectorPreferredTabRequestId,
       inspectorGraphNodes: [...nodes],
+      inspectorGraphEdges: [...defaults.panels.inspectorGraphEdges],
       canEditInspectorNode: false,
       applyNodeDraft: onApplyNodeDraft,
       applyInspectorNodeDraft: vi.fn(),
+      activeRunId: defaults.panels.activeRunId,
+      registeredPlugins: new Set(defaults.panels.registeredPlugins),
+      runtimeCapabilities: undefined,
+      importedNodeFocusIds: [...defaults.panels.importedNodeFocusIds],
+      executionEnvironmentOptions: [...defaults.panels.executionEnvironmentOptions],
     },
     userPermissions: {
       ...defaults.panels.userPermissions,

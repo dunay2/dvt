@@ -85,6 +85,13 @@ Related command seams:
 
 ## Shared Background Add Gesture
 
+Selected text is a different intent from an authoring background gesture. The
+App Shell selected-text boundary owns its Copy and explicit dictionary actions;
+an accepted selection context gesture cannot reach graph actions. Double click
+on text keeps native selection. With no selection, all graph owners below retain
+their existing admission and command rails. See
+`../appshell/app-shell.md#selected-text-interaction`.
+
 The existing `canvasViewportInteraction` boundary admits a complete double click
 only on the owning authoring canvas background. It uses the nearest actual
 viewport boundary and excludes cards, edges, ports, controls, text editors,
