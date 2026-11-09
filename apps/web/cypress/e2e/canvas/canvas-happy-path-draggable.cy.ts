@@ -493,6 +493,7 @@ describe('Canvas happy path remains writable after create/save', () => {
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     cy.get('[data-slot="canvas-draft-save-indicator"]').should('not.exist');
     let writesBeforeSelection = 0;
+    let selectedTerm = '';
     cy.then(() => {
       writesBeforeSelection = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
@@ -504,10 +505,22 @@ describe('Canvas happy path remains writable after create/save', () => {
       .focus()
       .then(($tab) => {
         const document = $tab[0]!.ownerDocument;
+        const walker = document.createTreeWalker(
+          $tab[0]!,
+          document.defaultView!.NodeFilter.SHOW_TEXT
+        );
+        let text = walker.nextNode();
+        while (text != null && !text.textContent?.trim()) text = walker.nextNode();
+        const word = /[\p{L}\p{M}]+/u.exec(text?.textContent ?? '');
+        if (text == null || word == null)
+          throw new Error('The actual Canvas title must have a selectable word.');
+        selectedTerm = word[0];
         const range = document.createRange();
-        range.selectNodeContents($tab[0]!);
+        range.setStart(text, word.index);
+        range.setEnd(text, word.index + selectedTerm.length);
         document.getSelection()!.removeAllRanges();
         document.getSelection()!.addRange(range);
+        expect(document.getSelection()!.toString()).to.equal(selectedTerm);
       });
     cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
     cy.get('#canvas-workspace-tab').rightclick();
@@ -519,19 +532,24 @@ describe('Canvas happy path remains writable after create/save', () => {
           .should('be.focused')
           .click();
         cy.get('[role="status"]').should('contain.text', 'Copied');
-        cy.get('a[href="https://dle.rae.es/Canvas"]').should(
-          'have.attr',
-          'rel',
-          'noopener noreferrer'
-        );
+        cy.get('a')
+          .first()
+          .should(($link) => {
+            expect($link.attr('href')).to.equal(
+              `https://dle.rae.es/${encodeURIComponent(selectedTerm)}`
+            );
+            expect($link.attr('rel')).to.equal('noopener noreferrer');
+          });
       });
-    cy.get('@copySelectedText').should('have.been.calledOnceWithExactly', 'Canvas');
+    cy.get('@copySelectedText').should((clipboard) => {
+      expect(clipboard).to.have.been.calledOnceWithExactly(selectedTerm);
+    });
     cy.get('[data-slot="shell-text-selection-menu"]').screenshot('shell-selected-text-menu');
     cy.get('[data-slot="shell-text-selection-menu"]').type('{esc}');
     cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
     cy.get('#canvas-workspace-tab').should('be.focused');
     cy.window().then((window) => {
-      expect(window.getSelection()?.toString()).to.equal('Canvas');
+      expect(window.getSelection()?.toString()).to.equal(selectedTerm);
       window.getSelection()?.removeAllRanges();
     });
     cy.get('[data-testid="canvas-viewport"] .react-flow__pane').rightclick(180, 160);

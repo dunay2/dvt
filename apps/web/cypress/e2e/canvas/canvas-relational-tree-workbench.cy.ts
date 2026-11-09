@@ -545,6 +545,8 @@ describe('Workbench navigation', () => {
       'true'
     );
     cy.get('[data-slot="canvas-model-tab-close"]').click();
+    // A restored unpublished draft retains the existing unsaved-authoring guard.
+    cy.contains('[role="alertdialog"] button', 'Discard changes').click();
     cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
     cy.get('[role="alertdialog"]').should('not.exist');
     cy.then(() => {
