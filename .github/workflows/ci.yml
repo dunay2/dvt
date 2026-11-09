@@ -138,7 +138,8 @@ jobs:
 
       - name: Run full CI baseline
         run: >-
-          ${{ github.event_name == 'push' && 'pnpm ci:docs && pnpm ci:code' || 'pnpm ci:full' }}
+          ${{ github.event_name == 'push' && 'pnpm ci:docs && pnpm ci:code:static' || 'pnpm ci:full'
+          }}
         env:
           DVT_CI: '1'
           PLANNING_DB_INTEGRITY_SCOPE: bootstrap

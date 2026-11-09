@@ -188,7 +188,7 @@ function assess({ jobs, context }) {
   return failures;
 }
 
-test('hosted CI gives coverage one push owner and retains manual full validation', () => {
+test('hosted CI gives product tests one push owner and retains manual full validation', () => {
   assert.equal(aggregate.name, 'Test Suite Required for Merge');
   assert.equal(aggregate.if, 'always()');
   assert.deepEqual([...aggregate.needs].sort(), ['detect_test_matrix', ...lanes].sort());
@@ -207,6 +207,19 @@ test('hosted CI gives coverage one push owner and retains manual full validation
   const full = quality.jobs['full-ci'];
   const baseline = full.steps.find((step) => step.name === 'Run full CI baseline');
   const packageScripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
+  const staticChecks = ['pnpm arch:deps', 'pnpm type-check', 'pnpm lint:determinism'];
+  const delegates = new Set(['ci:code:static', 'ci:code', 'ci:full']);
+  function expandBaseline(command, ancestors = []) {
+    return command.split(/\s*&&\s*/u).flatMap((part) => {
+      const name = /^pnpm ([\w:-]+)$/u.exec(part)?.[1];
+      if (!delegates.has(name)) return [part];
+      assert.equal(ancestors.includes(name), false, `Baseline delegate cycle: ${name}`);
+      assert.equal(typeof packageScripts[name], 'string', `Missing baseline delegate: ${name}`);
+      return expandBaseline(packageScripts[name], [...ancestors, name]);
+    });
+  }
+  assert.deepEqual(expandBaseline('pnpm ci:code:static'), staticChecks);
+  assert.deepEqual(expandBaseline('pnpm ci:code'), [...staticChecks, 'turbo run test']);
   assert.equal(
     packageScripts['ci:full'],
     'pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine',
@@ -215,7 +228,7 @@ test('hosted CI gives coverage one push owner and retains manual full validation
   assert.deepEqual(quality.on.push.branches, ['main']);
   assert.ok(Object.hasOwn(quality.on, 'workflow_dispatch'));
   for (const [eventName, expected] of [
-    ['push', 'pnpm ci:docs && pnpm ci:code'],
+    ['push', 'pnpm ci:docs && pnpm ci:code:static'],
     ['workflow_dispatch', 'pnpm ci:full'],
     ['pull_request', null],
   ]) {
@@ -227,6 +240,17 @@ test('hosted CI gives coverage one push owner and retains manual full validation
       String(runInNewContext(expression, context))
     );
     assert.equal(command.trim(), expected, eventName);
+    assert.deepEqual(
+      expandBaseline(command.trim()),
+      [
+        'pnpm ci:docs',
+        ...staticChecks,
+        ...(eventName === 'workflow_dispatch'
+          ? ['turbo run test', 'pnpm test:coverage:engine']
+          : []),
+      ],
+      `${eventName}: actual delegates retain each obligation exactly once`
+    );
   }
   assert.equal(baseline.env.DVT_CI, '1');
 });
@@ -372,6 +396,32 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
       primaryExecutions.length,
       'No primary suite runs twice'
     );
+  }
+});
+
+test('Web builds dependencies for Vitest and nonempty browser partitions only', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const plan = web.steps.find((step) => step.id === 'web_plan');
+  const build = web.steps.find((step) => step.name === 'Build web dependency graph');
+  assert.ok(build && typeof build.if === 'string', 'Gate the existing dependency build');
+  assert.ok(web.steps.indexOf(plan) < web.steps.indexOf(build));
+  assert.ok(
+    web.steps.indexOf(build) <
+      web.steps.findIndex((step) => step.name === 'Run governed Web changed evidence (PR)')
+  );
+  assert.equal(build.run, 'node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...');
+  assert.notEqual(build['continue-on-error'], true);
+  for (const matrix of webMatrix) {
+    for (const required of ['true', 'false', '', undefined, true]) {
+      assert.equal(
+        runInNewContext(build.if, {
+          matrix,
+          steps: { web_plan: { outputs: { browser_required: required } } },
+        }),
+        matrix.phase === 'vitest' || required === 'true',
+        `${JSON.stringify(matrix)}: ${String(required)}`
+      );
+    }
   }
 });
 

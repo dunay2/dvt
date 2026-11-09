@@ -58,6 +58,7 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['test:coverage', 'runtime-root'],
   ['test:coverage:engine', 'runtime-root'],
   ['ci:code', 'runtime-root'],
+  ['ci:code:static', 'runtime-root'],
   ['ci:full', 'runtime-root'],
   ['preflight:affected', 'runtime-root'],
   ['preflight:affected:ci', 'runtime-root'],

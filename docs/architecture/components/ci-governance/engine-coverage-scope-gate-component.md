@@ -119,8 +119,12 @@ Within Test Suite, Engine Coverage Gate owns the entire engine test suite,
 including architecture, determinism and replay tests. The generic package matrix
 excludes engine, and no separate determinism/replay job repeats its collection.
 Local focus commands and real adapter/provider integrations remain independent.
-On a push to `main`, Code Quality runs the existing `ci:docs` and `ci:code`
-baseline without another coverage invocation. Engine Coverage Gate is the sole
+On a push to `main`, Code Quality runs `ci:docs` and the shared
+`ci:code:static` baseline without product tests or another coverage invocation.
+`ci:code:static` runs architecture dependencies, types, and determinism lint;
+`ci:code` adds `turbo run test` for complete standalone validation. Determinism
+lint now precedes tests so static failures stop that baseline earlier.
+Engine Coverage Gate is the sole
 coverage producer for that push, and `Test Suite Required for Merge` remains
 the required consumer of its result and fresh report. A manual Code Quality
 dispatch does not start Test Suite, so it retains `ci:full`, including coverage.
@@ -138,7 +142,7 @@ flowchart LR
     Scope[Shared semantic scope: union of engine triggers] --> Coverage[All engine tests with V8 once]
     Coverage --> Aggregate[Test Suite Required for Merge]
     Other[Other package and integration lanes] --> Aggregate
-    Push[Push to main] --> Baseline[Code Quality: ci:docs and ci:code]
+    Push[Push to main] --> Baseline[Code Quality: ci:docs and ci:code:static]
     Push --> Coverage
     Manual[Manual Code Quality or local full validation] --> Full[ci:full including coverage]
 ```

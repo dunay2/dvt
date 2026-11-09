@@ -136,41 +136,55 @@ skip expensive executable-contract and workspace preflight jobs, but a
 `ready_for_review` event must rerun those jobs for the current SHA when scope
 requires them. A skipped required job is a failure, not a success substitute.
 
-Current state: draft updates can run the same heavy preflight as a ready PR;
-the aggregate does not depend on `full-ci`, so on `main` its green result need
-not represent full CI completion.
+The admitted baseline for the single test-owner cut runs product tests twice on
+an automatic `main` push: Code Quality reaches `turbo run test` through
+`ci:code`, while Test Suite runs the same product suites and engine coverage.
+The existing aggregate already waits for `full-ci`; its required job names and
+event-specific failure policy remain the authority for that workflow.
 
 ```mermaid
 flowchart LR
-  Draft[Draft PR] --> Preflight[Heavy affected preflight]
-  Main[main push] --> Full[Full CI]
-  Main --> Aggregate[Code Quality aggregate]
-  Full -. not in needs .-> Aggregate
+  Main[Automatic main push] --> Full[Code Quality docs static checks and product tests]
+  Main --> Tests[Test Suite product tests and coverage]
+  Full --> Aggregate[Code Quality required aggregate]
+  Tests --> TestAggregate[Test Suite required aggregate]
 ```
 
-Target: static tool checks and scope detection remain on drafts, while heavy
-jobs are skipped until reviewability changes. The aggregate waits for every
-direct job and accepts `skipped` only when the event and scope explain it.
-Ready PRs require the applicable preflight; push and manual runs require
-`full-ci`; Markdown lint is required only for push or an opted-in manual run.
-This preserves final review coverage without building repeatedly during
-draft iterations.
+The shared `ci:code:static` delegate runs architecture dependencies, type checks,
+and determinism lint. `ci:code` composes that delegate with `turbo run test`;
+`ci:full` retains docs, the complete code baseline, and engine coverage. Static
+checks run before product tests, including determinism lint, so their failures
+stop the standalone baseline earlier without removing a validation obligation.
+
+An automatic `main` push selects `ci:docs` and `ci:code:static` in Code Quality.
+Test Suite owns the product tests and coverage for that push. A manual Code
+Quality dispatch selects `ci:full`, because dispatching one workflow does not
+start the other. Reusing the package delegate keeps one static command list;
+there is no additional runner, cache, or test-selection mechanism.
+
+Static tool checks and scope detection remain on drafts, while heavy jobs wait
+for reviewability. The aggregate waits for every direct job and accepts
+`skipped` only when the event and scope explain it. Ready PRs require the
+applicable preflight; push and manual runs require the existing `full-ci` job;
+Markdown lint is required only for push or an opted-in manual run.
 
 ```mermaid
 flowchart LR
-  Event[PR draft, PR ready, main or manual] --> Static[Static checks and scope]
-  Static -->|draft| Skip[Declared heavy-job skips]
-  Static -->|ready and affected| Preflight[Workspace preflight]
-  Static -->|main or manual| Full[Full CI]
-  Skip --> Aggregate[Required aggregate]
-  Preflight --> Aggregate
+  Main[Automatic main push] --> Static[Code Quality docs and shared static checks]
+  Main --> Tests[Test Suite product tests and coverage]
+  Manual[Code Quality manual dispatch] --> Full[ci:full docs static tests and coverage]
+  Static --> Aggregate[Code Quality required aggregate]
   Full --> Aggregate
+  Tests --> TestAggregate[Test Suite required aggregate]
   Aggregate -->|unexpected failure or skip| Reject[Fail]
+  TestAggregate -->|unexpected failure or skip| Reject
 ```
 
 Contract tests execute the actual aggregate script against draft, ready PR,
-push, and manual job-result scenarios, including negative cases for a skipped
-required preflight or `full-ci`. They also check that `converted_to_draft`
+push, and manual job-result scenarios, including missing, skipped, failed, and
+cancelled required jobs. They expand the real package delegates and event
+expression to retain the full standalone baseline and one automatic test owner.
+They also check that `converted_to_draft`
 cancels an older run and `ready_for_review` launches the applicable validation.
 
 ## Early pull-request metadata rejection

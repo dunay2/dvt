@@ -279,6 +279,7 @@ jobs:
           echo "DATABASE_URL=postgresql://dvt_proof:$PROOF_OWNER@$proof_address/postgres" >> "$GITHUB_ENV"
 
       - name: Build web dependency graph
+        if: matrix.phase == 'vitest' || steps.web_plan.outputs.browser_required == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
         env:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
