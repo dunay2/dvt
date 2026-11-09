@@ -1,5 +1,5 @@
 /**
- * Owned concern: mount the application and report its initial hydration step.
+ * Owned concern: start the pre-React bootstrap screen and mount the application.
  * Reason: HTML owns cascade registration; global overrides remain after App
  * so vendor styling keeps its existing priority.
  */
