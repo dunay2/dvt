@@ -29,6 +29,11 @@ import {
 } from '../../support/dbtProjectLive';
 import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
+  buildAuthorizationHeaders,
+  buildBearerAuth,
+  buildDraftReadUrl,
+} from '../../support/liveProtectedRequest';
+import {
   hasLiveProtectedRuntimeEnv,
   readLiveWorkspaceFile,
   resolveLiveWorkspaceSession,
@@ -679,7 +684,7 @@ describe('dbt project file projection live vertical', () => {
     let projection: DbtProjectGraphProjection;
     let compiledProjection: ReturnType<typeof TransformSqlProjectionResponseSchema.parse>;
     let sourceRef: ReturnType<typeof ConnectedSourceRefSchema.parse>;
-    const graphWrites: string[] = [];
+    let persistedDraftRecord: unknown;
     const fileWrites: string[] = [];
     const rowReads: string[] = [];
 
@@ -700,15 +705,24 @@ describe('dbt project file projection live vertical', () => {
       })
       .then((revision) => {
         draftRevision = revision;
+        return cy
+          .request({
+            method: 'GET',
+            url: buildDraftReadUrl(resolveLiveWorkspaceSession()),
+            headers: buildAuthorizationHeaders(),
+            auth: buildBearerAuth(),
+          })
+          .then((response) => {
+            expect(response.status).to.equal(200);
+            expect(response.body.record.revision).to.equal(draftRevision);
+            persistedDraftRecord = response.body.record;
+          });
       });
 
     cy.intercept(
       'GET',
       `**/workspace/graph/canvases/main-canvas/transforms/${MIXED_MODEL_ID}/sql?*`
     ).as('mixedModelSql');
-    cy.intercept('PUT', '**/workspace/graph/draft', (request) => {
-      graphWrites.push(request.url);
-    });
     cy.intercept('POST', '**/workspace/files/**', (request) => {
       fileWrites.push(request.url);
     });
@@ -787,9 +801,21 @@ describe('dbt project file projection live vertical', () => {
       );
     });
     cy.then(() => {
-      expect(graphWrites, 'inspection does not save native semantics').to.deep.equal([]);
       expect(fileWrites, 'inspection does not write project artifacts').to.deep.equal([]);
       expect(rowReads, 'SQL inspection does not execute row Preview').to.deep.equal([]);
+    });
+    // A real read checks both content and revision without intercepting the draft protocol.
+    cy.request({
+      method: 'GET',
+      url: buildDraftReadUrl(resolveLiveWorkspaceSession()),
+      headers: buildAuthorizationHeaders(),
+      auth: buildBearerAuth(),
+    }).then((response) => {
+      expect(response.status).to.equal(200);
+      expect(
+        response.body.record,
+        'inspection preserves the exact saved draft and revision'
+      ).to.deep.equal(persistedDraftRecord);
     });
     readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
       expect(response.body).to.have.property(

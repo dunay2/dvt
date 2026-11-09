@@ -1,6 +1,6 @@
 ---
 title: Authorized Canvas Transform SQL inspection
-status: active
+status: draft
 date: 2026-11-08
 owners:
   - API
