@@ -10,6 +10,29 @@ import {
 import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
 
 describe('model-session', () => {
+  afterEach(() => {
+    // A failed assertion must not leave this test's dirty Model blocking the next navigation.
+    const discard = '[data-slot="canvas-draft-discard"]';
+    const model = '[data-slot="canvas-model-editor"]';
+    cy.get('body').then(($body) => {
+      if ($body.find(discard).length > 0) {
+        cy.get(discard).should('be.enabled').click();
+        cy.get(model).should('not.exist');
+      } else if ($body.find(model).length > 0) {
+        cy.get('[data-slot="canvas-model-tab-close"]').click();
+        cy.get('body')
+          .should(($current) => {
+            expect($current.find(model).length === 0 || $current.find(discard).length > 0).to.equal(
+              true
+            );
+          })
+          .then(($current) => {
+            if ($current.find(discard).length > 0) cy.get(discard).should('be.enabled').click();
+          });
+        cy.get(model).should('not.exist');
+      }
+    });
+  });
   it('keeps editing or applies local composition changes before closing the Model', () => {
     openEditor();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
@@ -34,7 +57,34 @@ describe('model-session', () => {
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
-    cy.contains('[role="alertdialog"] button', 'Apply and continue').click();
+    cy.contains('[role="alertdialog"] button', 'Apply and continue')
+      .should(($button) => {
+        const button = $button[0]!;
+        const document = button.ownerDocument;
+        const bounds = button.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          bounds.left + bounds.width / 2,
+          bounds.top + bounds.height / 2
+        );
+        const layers = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '[data-slot="alert-dialog-overlay"], [data-slot="alert-dialog-content"]'
+          )
+        ).map((element) => ({
+          slot: element.dataset.slot,
+          id: element.id,
+          state: element.dataset.state,
+          ariaHidden: element.getAttribute('aria-hidden'),
+          pointerEvents: getComputedStyle(element).pointerEvents,
+          zIndex: getComputedStyle(element).zIndex,
+          parent: element.parentElement?.dataset.slot ?? element.parentElement?.tagName,
+        }));
+        expect(
+          hit === button || button.contains(hit),
+          `Modal hit test: ${JSON.stringify({ layers, modelEditors: document.querySelectorAll('[data-slot="canvas-model-editor"]').length, hit: hit?.outerHTML.slice(0, 300) })}`
+        ).to.equal(true);
+      })
+      .click();
     cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
     cy.wrap(null).should(() =>

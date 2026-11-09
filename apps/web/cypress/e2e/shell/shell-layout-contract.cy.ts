@@ -229,6 +229,17 @@ describe('Shell layout contract', () => {
     pressNativeKey('Escape');
     cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
     cy.get('[data-slot="shell-about-command"]').should('be.focused');
+    // Reopening must keep the modal buttons above their own animated backdrop.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      cy.get('[data-slot="shell-about-command"]').click();
+      cy.get('[data-slot="shell-about-dialog"]')
+        .should('be.visible')
+        .find('button')
+        .filter(':has(.sr-only)')
+        .click();
+      cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
+      cy.get('[data-slot="shell-about-command"]').should('be.focused');
+    }
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 640);
   });
 

@@ -61,6 +61,9 @@
   --focus-ring-width: calc(var(--spacing) / 2);
   --focus-ring-offset: calc(var(--spacing) / 2);
   --elevation-low: var(--shadow-sm);
+  --layer-modal: 50;
+  --layer-modal-content: 1;
+  --duration-modal: 200ms;
   --status-success: #22c55e;
   --status-running: #4f8cff;
   --status-degraded: #fbbf24;

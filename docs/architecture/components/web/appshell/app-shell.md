@@ -818,6 +818,39 @@ and pending Model edit guards without waiting for animations to finish. This
 dependency alignment repairs those existing interactions; it does not integrate
 unrelated dependency PRs or alter the governing queries.
 
+#### Modal Surface Composition
+
+Modal content and its backdrop form one DOM stacking unit. Independent body
+portals at the same level can change insertion order after a close/reopen cycle:
+the backdrop then captures clicks on otherwise enabled Apply and Discard
+buttons. This is a presentation defect, not permission or semantic validation.
+
+The shared Dialog and AlertDialog wrappers use the supported
+[content-inside-overlay composition](https://www.radix-ui.com/primitives/docs/components/dialog#scrollable-overlay).
+The backdrop contains its modal content; common theme tokens define the global
+modal layer, local content sublayer and matched animation duration. The backdrop
+owns the modal fade and content retains its zoom. Non-modal Dialog content has
+no backdrop and retains its own fade and global layer. A readonly per-Root modal
+flag selects this composition; Radix continues to own open state, focus,
+dismissal, presence and scroll locking. There is no second stack manager.
+
+```mermaid
+flowchart LR
+  Old[Sibling portals at equal levels] --> Reopen[Reopen changes insertion order]
+  Reopen --> Blocked[Backdrop intercepts buttons]
+  Radix[Existing Radix Root] --> Mode[Existing modal property]
+  Mode --> Pair[Backdrop containing modal content]
+  Pair --> Tokens[Shared layer and duration tokens]
+  Tokens --> Hit[Content receives its own pointer actions]
+  Mode --> Plain[Standalone non-modal content]
+```
+
+Regression proof covers repeated opening, controlled and uncontrolled dialogs,
+nested focus restoration and non-modal content. Native Model and About journeys
+must use reachable controls with normal pointer/keyboard actions, retaining
+Apply, Stay, Discard and persistence assertions. A force click, suppressed
+navigation guard, arbitrary wait or inflated global z-index is not a repair.
+
 ### Multi-Language Strategy
 
 - `shell/copy.ts` is the single copy authority for app bar text.
