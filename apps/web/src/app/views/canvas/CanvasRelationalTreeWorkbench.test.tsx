@@ -86,7 +86,9 @@ describe('Canvas relational-tree Workbench ', () => {
     const viewport = container.querySelector<HTMLElement>(
       '[data-slot="canvas-relational-tree-viewport"]'
     )!;
-    act(() => viewport.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
+    act(() => {
+      viewport.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+    });
     expect(document.querySelector('[cmdk-input]')).toBeNull();
   });
   it('shows the retained tree and precise recovery guidance without enabling semantic editing', async () => {

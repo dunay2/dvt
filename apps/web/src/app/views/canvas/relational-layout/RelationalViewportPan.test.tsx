@@ -93,12 +93,16 @@ describe('Relational viewport pan', () => {
       pointer('pointerdown', 100);
       pointer('pointermove', 70);
       pointer(terminal, 70);
-      act(() => surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
+      act(() => {
+        surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+      });
       expect(openAdd).not.toHaveBeenCalled();
       pointer('pointerdown', 50);
       pointer('pointermove', 50);
       pointer('pointerup', 50);
-      act(() => surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
+      act(() => {
+        surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+      });
       expect(openAdd).toHaveBeenCalledOnce();
     }
   );
@@ -106,12 +110,16 @@ describe('Relational viewport pan', () => {
     // Losing capture without pointerup must not leave a half gesture eligible for Add.
     pointer('pointerdown', 100);
     pointer('lostpointercapture', 100);
-    act(() => surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
+    act(() => {
+      surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+    });
     expect(openAdd).not.toHaveBeenCalled();
     pointer('pointerdown', 50);
     pointer('pointerup', 50);
     pointer('lostpointercapture', 50);
-    act(() => surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
+    act(() => {
+      surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+    });
     expect(openAdd).toHaveBeenCalledOnce();
   });
   it('does not bubble an admitted pan into an enclosing card or viewport', () => {

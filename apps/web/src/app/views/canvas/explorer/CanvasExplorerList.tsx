@@ -1,10 +1,11 @@
 /** Owned concern: project catalogue search and disclosure, independent of placement commands. */
-import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasExplorerListTemplate } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { CanvasExplorerConnections } from './CanvasExplorerConnections';
+import styles from './CanvasExplorer.module.css';
 
 export function CanvasExplorerList({
   items,
@@ -19,7 +20,8 @@ export function CanvasExplorerList({
   pending = false,
 }: Readonly<{
   items: readonly CanvasExplorerItem[];
-  onSelect: (id: string) => void;
+  /** Observe completion/failure without interpreting the caller-owned admission result. */
+  onSelect: (id: string) => unknown;
   disabled?: boolean;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
@@ -32,6 +34,14 @@ export function CanvasExplorerList({
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(true);
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [inspectionFailed, setInspectionFailed] = useState(false);
+  const inspectionAttempt = useRef(0);
+  useEffect(
+    () => () => {
+      inspectionAttempt.current += 1;
+    },
+    []
+  );
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const search = query.trim().toLocaleLowerCase();
   const searchIndex = useMemo(
@@ -75,11 +85,33 @@ export function CanvasExplorerList({
       }}
       query={query}
       onQuery={setQuery}
-      onSelect={onSelect}
+      onSelect={(id) => {
+        const attempt = ++inspectionAttempt.current;
+        setInspectionFailed(false);
+        const reportFailure = () => {
+          if (inspectionAttempt.current === attempt) setInspectionFailed(true);
+        };
+        try {
+          Promise.resolve(onSelect(id)).catch(reportFailure);
+        } catch {
+          reportFailure();
+        }
+      }}
       disabled={disabled}
       onDragStart={onDragStart}
       onAddModel={onAddModel}
-      status={status}
+      status={
+        inspectionFailed ? (
+          <>
+            <p className={styles.empty} role="alert">
+              {copy.inspectionFailed}
+            </p>
+            {status}
+          </>
+        ) : (
+          status
+        )
+      }
       countKnown={countKnown}
       pending={pending}
       connections={

@@ -43,6 +43,66 @@ const items: readonly CanvasExplorerItem[] = [
   },
 ];
 
+it('reports an actual inspection rejection without replacing the admitted selection', async () => {
+  // The UI boundary must observe a failed async handoff; selecting a row cannot create an instance.
+  let rejectInspection!: (error: Error) => void;
+  const inspection = new Promise<boolean>((_resolve, reject) => {
+    rejectInspection = reject;
+  });
+  inspection.catch(() => undefined);
+  const onSelect = vi.fn(() => inspection);
+  act(() => root.render(<CanvasExplorerList items={items} onSelect={onSelect} />));
+  await act(async () => {
+    fireEvent.click(screen.getAllByRole('button', { name: 'Orders' })[0]!, { detail: 0 });
+    rejectInspection(new Error('editor flush failed'));
+    await Promise.resolve();
+  });
+  expect(screen.getByRole('alert').textContent).toBe(
+    'Properties could not be opened. Please try again.'
+  );
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
+  expect(screen.getAllByRole('button', { name: 'Orders' })[0]!.getAttribute('aria-pressed')).toBe(
+    'false'
+  );
+});
+
+it('keeps cancellation quiet and ignores a superseded inspection rejection', async () => {
+  // A late failure from the previous click must not overwrite a newer admitted/cancelled handoff.
+  let rejectInspection!: (error: Error) => void;
+  const inspection = new Promise<boolean>((_resolve, reject) => {
+    rejectInspection = reject;
+  });
+  inspection.catch(() => undefined);
+  const onSelect = vi
+    .fn<() => boolean | Promise<boolean>>()
+    .mockReturnValueOnce(inspection)
+    .mockReturnValueOnce(false);
+  act(() => root.render(<CanvasExplorerList items={items} onSelect={onSelect} />));
+  await act(async () => {
+    fireEvent.click(screen.getAllByRole('button', { name: 'Orders' })[0]!, { detail: 0 });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Orders' })[0]!, { detail: 0 });
+    rejectInspection(new Error('superseded editor flush failed'));
+    await Promise.resolve();
+  });
+  expect(onSelect).toHaveBeenCalledTimes(2);
+  expect(screen.queryByRole('alert')).toBeNull();
+});
+
+it('reports synchronous inspection failures at the same shared boundary', () => {
+  // Commands may fail before returning a promise; both outcomes need the same visible feedback.
+  const onSelect = vi.fn(() => {
+    throw new Error('resource unavailable');
+  });
+  act(() => root.render(<CanvasExplorerList items={items} onSelect={onSelect} />));
+  act(() => {
+    fireEvent.click(screen.getAllByRole('button', { name: 'Orders' })[0]!, { detail: 0 });
+  });
+  expect(screen.getByRole('alert').textContent).toBe(
+    'Properties could not be opened. Please try again.'
+  );
+  expect(onSelect).toHaveBeenCalledOnce();
+});
+
 it('discloses real metadata without activating an unavailable model', () => {
   // Placement ACL must not prevent inspecting the catalogue's already-authorized metadata.
   const onSelect = vi.fn();
@@ -84,12 +144,18 @@ it('inspects only a single click and keeps keyboard activation immediate', () =>
     fireEvent.click(row, { detail: 2 });
     fireEvent.doubleClick(row);
   });
-  act(() => vi.runAllTimers());
+  act(() => {
+    vi.runAllTimers();
+  });
   expect(onSelect).not.toHaveBeenCalled();
   expect(row.getAttribute('aria-pressed')).toBe('false');
-  act(() => fireEvent.click(row, { detail: 1 }));
+  act(() => {
+    fireEvent.click(row, { detail: 1 });
+  });
   expect(onSelect).not.toHaveBeenCalled();
-  act(() => vi.runAllTimers());
+  act(() => {
+    vi.runAllTimers();
+  });
   expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
   act(() => {
     fireEvent.click(row, { detail: 0 });
@@ -102,7 +168,9 @@ it('reflects admitted inspection selection without optimistic local selection', 
   const onSelect = vi.fn();
   act(() => root.render(<CanvasExplorerList items={[items[0]!]} onSelect={onSelect} />));
   const row = screen.getByRole('button', { name: 'Orders' });
-  act(() => fireEvent.click(row, { detail: 0 }));
+  act(() => {
+    fireEvent.click(row, { detail: 0 });
+  });
   expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
   expect(row.getAttribute('aria-pressed')).toBe('false');
   act(() =>
@@ -135,18 +203,26 @@ it('cancels pending inspection when a real drag or catalogue replacement superse
   });
   expect(onDragStart).toHaveBeenCalledExactlyOnceWith('source', expect.anything());
   expect(onSelect).not.toHaveBeenCalled();
-  act(() => fireEvent.click(row, { detail: 1 }));
+  act(() => {
+    fireEvent.click(row, { detail: 1 });
+  });
   act(() => root.render(<CanvasExplorerList items={[items[1]!]} onSelect={onSelect} />));
-  act(() => vi.runAllTimers());
+  act(() => {
+    vi.runAllTimers();
+  });
   expect(onSelect).not.toHaveBeenCalled();
   act(() =>
     root.render(<CanvasExplorerList key="scope-a" items={[items[0]!]} onSelect={onSelect} />)
   );
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Orders' }), { detail: 1 }));
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Orders' }), { detail: 1 });
+  });
   act(() =>
     root.render(<CanvasExplorerList key="scope-b" items={[items[0]!]} onSelect={onSelect} />)
   );
-  act(() => vi.runAllTimers());
+  act(() => {
+    vi.runAllTimers();
+  });
   expect(onSelect).not.toHaveBeenCalled();
 });
 

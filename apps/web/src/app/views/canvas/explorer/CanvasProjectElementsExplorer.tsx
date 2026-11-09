@@ -100,12 +100,11 @@ export function CanvasProjectElementsExplorer({
       }}
       onSelect={(id) => {
         if (currentIds.has(id)) {
-          onInspectNode({ kind: 'canonical-node', nodeId: id });
-          return;
+          return onInspectNode({ kind: 'canonical-node', nodeId: id });
         }
         const model = models.find((item) => item.id === id);
         if (binding == null || model == null) return;
-        onInspectNode({
+        return onInspectNode({
           kind: 'dbt-file-model',
           binding,
           uniqueId: model.definitionIdentity.uniqueId,

@@ -160,7 +160,9 @@ it('retains the requested file when already open and accepts an explicit new sel
     await session.openProjectCode('models/customers.sql');
   });
   expect(session.projectCodeFileSelectionRequest).toEqual({ path: 'models/customers.sql' });
-  act(() => session.closeCodeWorkbench());
+  act(() => {
+    session.closeCodeWorkbench();
+  });
   expect(session.projectCodeWorkbenchOpen).toBe(false);
   await act(async () => {
     await session.openProjectCode();
