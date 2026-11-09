@@ -332,6 +332,46 @@ their contextual restoration menu. Both presentations share one item renderer an
 the same restore callback. No browser context-menu shortcut is required to recover
 from the all-hidden state; the drawer close control remains separate.
 
+### Native Proof Interaction Boundaries
+
+Native browser fixtures use the same interaction owners as the product:
+catalogue click inspects a model; catalogue drag creates an occurrence. The LIVE
+placement helper therefore has one drag path. Its legacy Source name refers to
+the existing `dvt:source` contract and Source facet, without introducing another
+catalogue entity. Registration, inspection and durable placement remain separate
+assertions, including an empty saved graph after inspection.
+
+The sample grid's table frame owns row scrolling. Its outer preview host may
+fit a small sample after compacting shell chrome. Native resize proofs exercise
+both explicit postures: a one-row sample must fit, while a bounded twenty-row
+sample must overflow the table frame. Both retain keyboard resize, first/last
+row reachability, minimum usable table height, visible actions and footer, and
+the original query and graph-write assertions. Neither posture conditionally
+omits its expected overflow or fit assertion.
+
+```mermaid
+flowchart LR
+  Click[Catalogue click] --> Inspector[Existing InspectCanvasNode]
+  Drag[Catalogue drag] --> Placement[Existing placement and durable draft write]
+  Sample[Bounded representative sample] --> Frame[Existing table frame owns row overflow]
+  Resize[Existing keyboard resize] --> Reachable[Rows actions and footer remain reachable]
+```
+
+Opening a Main Canvas Model preserves the current camera when its title is
+inside the visible viewport. When the title is clipped, the browser navigation
+seam reveals it through the existing public Fit control before the same visible,
+unforced double click. This is a user navigation gesture, not a direct camera,
+layout-store or graph mutation in the fixture.
+
+```mermaid
+flowchart LR
+  Target[Existing Model title] --> Bounds[Read title and Main viewport bounds]
+  Bounds -->|inside| Gesture[Visible unforced double click]
+  Bounds -->|clipped| Fit[Existing public Main Canvas Fit]
+  Fit --> Gesture
+  Gesture --> Editor[Existing Model editor]
+```
+
 ### Operational drawer layout command
 
 | Rail                               | Type    | Owner                | DDD object                             | Application port                                               | Adapter surface                                                                        | Scope and authorization                                                                          | Negative tests                                                                                                                                                                                                                     |

@@ -60,10 +60,27 @@ export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
   cy.get('#app-loading-screen').should('not.exist');
 }
 
+/** Reveal a clipped Main Canvas target through public Fit before the existing native gesture. */
 export function openWorkbenchModel(nodeId = 'join-transform'): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`)
-    .should('be.visible')
-    .dblclick();
+  const title = `.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`;
+  cy.get(title).then(($title) => {
+    const element = $title[0]!;
+    const viewport = element.closest('[data-testid="canvas-viewport"]');
+    if (viewport == null) throw new Error('Expected the Main Canvas Model viewport.');
+    const bounds = element.getBoundingClientRect();
+    const frame = viewport.getBoundingClientRect();
+    if (
+      bounds.left < frame.left ||
+      bounds.right > frame.right ||
+      bounds.top < frame.top ||
+      bounds.bottom > frame.bottom
+    ) {
+      cy.get('[data-testid="canvas-viewport"] .react-flow__controls-fitview')
+        .filter(':visible')
+        .click();
+    }
+  });
+  cy.get(title).should('be.visible').dblclick();
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
 }
 
