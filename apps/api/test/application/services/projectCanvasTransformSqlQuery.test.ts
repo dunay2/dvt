@@ -175,26 +175,24 @@ async function withFileProducer(): Promise<
     `select ${fields.map((field) => field.name).join(', ')} from raw.ventas_por_cliente`
   );
   if (parsed.status !== 'valid') throw new Error('Expected valid native compiled SELECT fixture.');
-  const resolve = vi
-    .fn<IDbtModelProducerResolver['resolve']>()
-    .mockResolvedValue(
-      new Map([
-        [
-          source.id,
-          {
-            document: external,
-            connection,
-            provenance: {
-              canvasId: 'file-owner',
-              uniqueId: 'model.demo.ventas_por_cliente',
-              contentSetSha256: 'b'.repeat(64),
-              analysisSha256: 'c'.repeat(64),
-            },
-            projection: projectExternalProducerAst(external, parsed.ast),
+  const resolve = vi.fn<IDbtModelProducerResolver['resolve']>().mockResolvedValue(
+    new Map([
+      [
+        source.id,
+        {
+          document: external,
+          connection,
+          provenance: {
+            canvasId: 'file-owner',
+            uniqueId: 'model.demo.ventas_por_cliente',
+            contentSetSha256: 'b'.repeat(64),
+            analysisSha256: 'c'.repeat(64),
           },
-        ],
-      ])
-    );
+          projection: projectExternalProducerAst(external, parsed.ast),
+        },
+      ],
+    ])
+  );
   return { draft, resolve };
 }
 

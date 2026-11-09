@@ -69,18 +69,16 @@ export function registerCanvasTransformSqlRoutes(
         if (!(error instanceof CanvasTransformProjectionUnavailableError)) throw error;
         const stale = error.reason === 'canvas_changed';
         const denied = error.reason === 'file_access_denied';
-        reply
-          .code(denied ? 403 : stale ? 409 : 422)
-          .send({
-            error: {
-              type: denied ? 'forbidden' : stale ? 'conflict' : 'unprocessable_entity',
-              reason: denied
-                ? HTTP_ERROR_REASON.transformSqlProjectionAccessDenied
-                : stale
-                  ? HTTP_ERROR_REASON.transformSqlProjectionStale
-                  : HTTP_ERROR_REASON.transformSqlProjectionFailed,
-            },
-          });
+        reply.code(denied ? 403 : stale ? 409 : 422).send({
+          error: {
+            type: denied ? 'forbidden' : stale ? 'conflict' : 'unprocessable_entity',
+            reason: denied
+              ? HTTP_ERROR_REASON.transformSqlProjectionAccessDenied
+              : stale
+                ? HTTP_ERROR_REASON.transformSqlProjectionStale
+                : HTTP_ERROR_REASON.transformSqlProjectionFailed,
+          },
+        });
       }
     }
   );

@@ -74,13 +74,11 @@ describe('RootShell chrome', () => {
       useApplicationLanguageStore.getState().configureApplicationLanguage(language);
       const mounted = await withTestQueryClient(
         createRootShellNode(createHealthyPlatformCapability(), ['/runs'], {
-          loadCapabilities: vi
-            .fn()
-            .mockResolvedValue({
-              apiVersion: '1.0.0',
-              minFrontendVersion: '0.0.1',
-              plugins: { monitoring: { available: true } },
-            }),
+          loadCapabilities: vi.fn().mockResolvedValue({
+            apiVersion: '1.0.0',
+            minFrontendVersion: '0.0.1',
+            plugins: { monitoring: { available: true } },
+          }),
         })
       );
       try {
