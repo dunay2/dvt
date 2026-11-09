@@ -345,6 +345,7 @@ describe('governed browser evidence routing', () => {
     expect(consumers).toEqual([
       'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts',
       'apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts',
       'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
       'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',

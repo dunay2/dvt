@@ -372,6 +372,25 @@ flowchart LR
   Gesture --> Editor[Existing Model editor]
 ```
 
+Native keyboard proofs share `pressNativeKey` for both plain keys and explicit
+Alt/Shift combinations. DOM focus alone does not establish Chromium's recipient:
+the adapter focuses the AUT window, verifies its focused control, sends complete
+virtual key codes and an explicit modifier mask, then checks receipt of the
+trusted key at that target. Its once-only document capture observer does not
+consume the event, so application capture handlers may still handle it normally.
+Per-scenario protocol senders cannot replace this delivery boundary. The routing
+guard retains the exact real consumer set and complete controlled-baseline
+obligation; adding a real consumer does not broaden support admission.
+
+```mermaid
+flowchart LR
+  Intent[Key and explicit modifier intent] --> Focus[AUT focus and control checks]
+  Focus --> Codes[Complete virtual codes and modifier mask]
+  Codes --> Browser[Existing Chromium native protocol]
+  Browser --> Receipt[Captured trusted key at the expected target]
+  Receipt --> Continue[Continue the existing semantic proof]
+```
+
 ### Operational drawer layout command
 
 | Rail                               | Type    | Owner                | DDD object                             | Application port                                               | Adapter surface                                                                        | Scope and authorization                                                                          | Negative tests                                                                                                                                                                                                                     |

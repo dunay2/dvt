@@ -8,6 +8,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
@@ -65,15 +66,8 @@ describe('Workbench pending binary operations', () => {
       connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
       cy.get('@original1').find(read).focus().should('be.focused');
       for (let step = 0; step < 4; step++) {
-        for (const type of ['keyDown', 'keyUp']) {
-          cy.then(() =>
-            Cypress.automation('remote:debugger:protocol', {
-              command: 'Input.dispatchKeyEvent',
-              // Chromium modifier bits: Alt (1) + Shift (8).
-              params: { type, key: 'ArrowDown', code: 'ArrowDown', modifiers: 9 },
-            })
-          );
-        }
+        // The shared adapter proves trusted delivery to this frame before moving the next step.
+        pressNativeKey('ArrowDown', { alt: true, shift: true });
       }
       revealWorkbenchCard('@original1');
       cy.get('@original1').find(read).rightclick();
