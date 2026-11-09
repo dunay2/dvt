@@ -274,7 +274,9 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     const input = container.querySelector<HTMLInputElement>('input')!;
     input.focus();
     const frame = vi.spyOn(window, 'requestAnimationFrame');
-    act(() => useApplicationLanguageStore.setState({ language: 'es' }));
+    await act(async () => {
+      useApplicationLanguageStore.setState({ language: 'es' });
+    });
 
     await act(async () => {
       (workbenchState.props!.onClose as () => void)();
