@@ -12,14 +12,15 @@ import {
   type CanvasExecutionSelectionIntent,
 } from '../../types/canvasExecutionSelection';
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
+import type { CanvasInspectorTarget } from '../../stores/canvasInspectorTarget';
 
 type MutableStoreState = CanvasHarnessState['store'] & {
   selectedNodes: string[];
   executionSelectionIntent: CanvasExecutionSelectionIntent;
   setSelectedNodes: MockFn;
   setExecutionSelectionIntent: MockFn;
-  inspectorNodeId: string | null;
-  setInspectorNode: MockFn;
+  inspectorTarget: CanvasInspectorTarget | null;
+  setInspectorTarget: MockFn;
   currentPlan: PlanViewModel | null;
   setCurrentPlan: MockFn;
 };
@@ -40,8 +41,8 @@ export function configureCanvasHarnessStoreStateMocks(state: CanvasHarnessState)
       storeState.selectedNodes = storeState.executionSelectionIntent.nodeIds;
     }
   );
-  storeState.setInspectorNode.mockImplementation((nodeId: string | null) => {
-    storeState.inspectorNodeId = nodeId;
+  storeState.setInspectorTarget.mockImplementation((target: CanvasInspectorTarget | null) => {
+    storeState.inspectorTarget = target;
   });
   storeState.setCurrentPlan.mockImplementation((plan: PlanViewModel | null) => {
     storeState.currentPlan = plan;

@@ -1,3 +1,5 @@
+import { projectSubstraitProducerGraph } from '@dvt/postgres-projection';
+import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 import { type CanonicalEdge } from '../../types/canonical';
 import { type CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -66,4 +68,20 @@ export function buildCanonicalTransform(): CanonicalNode {
       })
     )
   );
+}
+
+/** Exercise physical canonical fixtures without the protected SQL inspection query. */
+export async function projectCanvasFixtureToPostgresSql(
+  args: Readonly<{
+    transformNode: CanonicalNode;
+    nodes: readonly CanonicalNode[];
+    edges: readonly CanonicalEdge[];
+  }>
+): Promise<string> {
+  const { graph } = resolveCanvasSubstraitGraphBindings({
+    node: args.transformNode,
+    nodes: args.nodes,
+    edges: args.edges,
+  });
+  return (await projectSubstraitProducerGraph(graph)).sql;
 }

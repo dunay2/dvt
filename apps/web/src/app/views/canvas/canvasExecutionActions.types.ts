@@ -44,11 +44,9 @@ export type UseCanvasExecutionActionsParams = {
   sessionContext: SessionContextPort;
   executionEnvironmentId?: WorkspaceScope['environmentId'];
   shellFeedback: ShellFeedbackPort;
-  bottomDrawerVisible: boolean;
   currentPlan: PlanViewModel | null;
   setCurrentPlan: (plan: PlanViewModel | null) => void;
-  setBottomDrawerHeight: (height: number) => void;
-  toggleBottomDrawer: () => void;
+  showBottomDrawer: () => void;
   onRunStarted: (runId: string) => void;
 };
 

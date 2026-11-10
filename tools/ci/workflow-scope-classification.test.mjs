@@ -13,6 +13,13 @@ import {
   matchesAnyPattern,
 } from './scope-config.mjs';
 
+test('shared native browser preparation selects Web evidence on its own', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', [
+    '.github/actions/setup-native-browser/action.yml',
+  ]);
+  assert.equal(scope.web, true);
+});
+
 function* walk(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);

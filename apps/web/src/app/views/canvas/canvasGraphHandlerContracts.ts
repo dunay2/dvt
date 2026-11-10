@@ -5,6 +5,7 @@ import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasInspectorRequest } from '../../stores/canvasInspectorTarget';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
 
@@ -35,7 +36,10 @@ export type CanvasGraphInteractionEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
   reconcileSelectionAfterNodeRemoval: (remainingVisibleNodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
+  setInspectorNode: (
+    request: CanvasInspectorRequest | null,
+    preferredTabId?: string | null
+  ) => void | boolean;
   toggleInspectorPanel: () => void;
   onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
 };
@@ -247,7 +251,10 @@ export type CanvasSelectionState = {
 
 export type CanvasSelectionEffects = {
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
+  setInspectorNode: (
+    request: CanvasInspectorRequest | null,
+    preferredTabId?: string | null
+  ) => void | boolean;
   toggleInspectorPanel: () => void;
 };
 

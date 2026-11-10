@@ -15,6 +15,12 @@ const NAVIGATION_STYLESHEET = readArchitectureSiblingSource(
   'LeftNavigation.module.css'
 );
 
+function readNavigationRule(selector: string): string | undefined {
+  return [...NAVIGATION_STYLESHEET.matchAll(/([^{}]+)\{([^{}]*)\}/gu)].find((match) =>
+    match[1]!.split(',').some((candidate) => candidate.trim() === selector)
+  )?.[2];
+}
+
 describe('LeftNavigation stylesheet ownership', () => {
   it('consumes only declared classes from its direct stylesheet', () => {
     assertComponentStyleOwnership({
@@ -46,13 +52,13 @@ describe('LeftNavigation stylesheet ownership', () => {
   });
 
   it('keeps focus, active and hover appearance tied to semantic tokens', () => {
-    const focus = NAVIGATION_STYLESHEET.match(
-      /\.linkInteractive:focus-visible\s*\{([^}]+)\}/u
-    )?.[1];
-    const active = NAVIGATION_STYLESHEET.match(/\.linkActive\s*\{([^}]+)\}/u)?.[1];
-    const hover = NAVIGATION_STYLESHEET.match(/\.linkInteractive:hover\s*\{([^}]+)\}/u)?.[1];
+    const focus = readNavigationRule('.linkInteractive:focus-visible');
+    const active = readNavigationRule(".link[aria-current='page']");
+    const hover = readNavigationRule('.linkInteractive:hover');
+    expect(active).toBe(readNavigationRule(".link[aria-expanded='true']"));
     expect(focus).toContain('var(--focus-ring)');
-    expect(active).toContain('var(--status-running)');
+    expect(active).toContain('var(--primary)');
+    expect(active).not.toMatch(/--status-/u);
     expect(active).toContain('var(--surface-selected)');
     expect(hover).toContain('var(--surface-selected)');
     expect(hover).toContain('var(--text-strong)');

@@ -15,7 +15,12 @@ describe('Startup route readiness', () => {
   });
 
   it('settles the startup gate for the public login route', () => {
-    cy.visit('/login?returnTo=%2F');
+    // Hidden frames may pause painting; a committed React tree must still acknowledge mounting.
+    cy.visit('/login?returnTo=%2F', {
+      onBeforeLoad(window) {
+        cy.stub(window, 'requestAnimationFrame').returns(0);
+      },
+    });
 
     cy.contains('Login required').should('be.visible');
     cy.get('#app-loading-screen').should('have.attr', 'data-state', 'complete');

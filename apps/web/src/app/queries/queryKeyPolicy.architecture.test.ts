@@ -85,6 +85,17 @@ function sourceContainsRawCapabilitiesFetch(source: string): boolean {
 }
 
 describe('Query key policy (architecture)', () => {
+  it('keeps warehouse connection request ownership out of the Wizard loader and Inspector', async () => {
+    for (const path of [
+      'components/sourceImportWizard/useSourceImportWizardDataLoaders.ts',
+      'views/canvas/DvtSourceAuthoringSection.tsx',
+    ]) {
+      expect(await readRuntimeSource(path)).not.toMatch(/\.listWarehouseConnections\s*\(/);
+    }
+    expect(await readRuntimeSource('queries/warehouseConnectionQueries.ts')).toContain(
+      'port.listWarehouseConnections()'
+    );
+  });
   it('forbids inline queryKey arrays in runtime source files', async () => {
     const offenders = await findRuntimeSourcePaths((source) =>
       INLINE_QUERY_KEY_PATTERN.test(source)

@@ -444,6 +444,7 @@ export type CanvasViewCopy = {
   readonly reactFlowMinimapLabel: string;
   readonly reactFlowHandleLabel: string;
   readonly nodeWorkbenchCloseLabel: string;
+  readonly nodeWorkbenchCloseFailedMessage: string;
   readonly nodeWorkbenchMoreLabel: string;
   readonly sqlContextWorkbenchProjectTitle: string;
   readonly sqlContextWorkbenchProjectDescription: string;

@@ -18,7 +18,8 @@ import { CanvasWorkspaceTopBarIdentity } from '../views/canvas/CanvasWorkspaceMe
 import { topAppBarClasses } from './shell/chrome';
 import { resolveShellTopBarCopy } from './shell/copy';
 import { useOperationalDrawerContributionStore } from './shell/operationalDrawerContributionStore';
-import { ShellAppMenu } from './shell/ShellAppMenu';
+import AppBrandMark from './AppBrandMark';
+import styles from './shell/ShellChrome.module.css';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
@@ -37,7 +38,7 @@ export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
-  navigationModel,
+  routeHeading = null,
 }: ShellTopBarProps) {
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
@@ -66,7 +67,7 @@ export function ShellTopBar({
   const copy = resolveShellTopBarCopy(applicationLanguage);
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
   const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
-  const exposeWorkbenchMenus = focusMode || navigationDisposition.railMode === 'hidden';
+  const exposeWorkbenchMenus = focusMode || isWorkbenchShell;
   const shellViewControls = resolveShellViewControls(navigationDisposition);
   const projectIdentityBadge = buildProjectIdentityBadge({
     workspaceBootstrap,
@@ -81,13 +82,23 @@ export function ShellTopBar({
     <TooltipProvider>
       <header data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
         <div data-slot="shell-top-bar-context-cluster" className={topAppBarClasses.contextCluster}>
-          <ShellAppMenu
-            copy={copy}
-            navigationModel={navigationModel}
-            showNavigation={exposeWorkbenchMenus}
-          />
+          <span
+            data-slot="shell-brand-identity"
+            role="img"
+            aria-label="Raven"
+            className={styles.brandIdentity}
+          >
+            <AppBrandMark className={styles.appBrandMark} />
+          </span>
 
-          {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
+          {routeHeading != null ? (
+            <div className={styles.routeHeading} data-slot="shell-route-heading">
+              <routeHeading.icon aria-hidden="true" className={styles.routeHeadingIcon} />
+              <h1 className={styles.routeHeadingTitle}>{routeHeading.title}</h1>
+            </div>
+          ) : isWorkbenchShell ? (
+            <CanvasWorkspaceTopBarIdentity />
+          ) : null}
 
           {!isWorkbenchShell && (
             <>

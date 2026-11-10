@@ -1,0 +1,18 @@
+/* Each modal backdrop contains its content, so reopen order cannot cover its controls. */
+.backdrop {
+  z-index: var(--layer-modal);
+  animation-duration: var(--duration-modal);
+}
+
+.content {
+  animation-duration: var(--duration-modal);
+  transition-duration: var(--duration-modal);
+}
+
+.modalContent {
+  z-index: var(--layer-modal-content);
+}
+
+.nonModalContent {
+  z-index: var(--layer-modal);
+}

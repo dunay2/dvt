@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../testing/appServicesTestDoubles';
-import { act } from 'react';
+import { act, Suspense } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { waitForReactQuery } from '../testing/reactQueryHarness';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import AppProviders from './AppProviders';
+import type { BootstrapStepStatusCommand } from './bootstrap/appBootstrapCommands';
 
 const bootstrapScreenMocks = vi.hoisted(() => ({
-  setBootstrapStepStatus: vi.fn(),
+  setBootstrapStepStatus: vi.fn<(command: BootstrapStepStatusCommand) => void>(),
 }));
 
 vi.mock('./bootstrap/appBootstrapScreen', () => ({
@@ -37,6 +38,7 @@ describe('AppProviders', () => {
       root.unmount();
     });
     container.remove();
+    vi.restoreAllMocks();
 
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
     if (previousActEnvironment === undefined) {
@@ -44,6 +46,51 @@ describe('AppProviders', () => {
     } else {
       globalObject.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
     }
+  });
+
+  it('acknowledges only a committed provider tree without waiting for browser paint', () => {
+    // A one-shot animation frame left an otherwise ready startup gate stuck at four of five.
+    vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(0);
+    const pending = new Promise<never>(() => {});
+    function Pending(): never {
+      throw pending;
+    }
+    const overrides = createAppServicesTestOverrides();
+    act(() => {
+      root.render(
+        <Suspense fallback={<div>Pending tree</div>}>
+          <AppProviders overrides={overrides}>
+            <Pending />
+          </AppProviders>
+        </Suspense>
+      );
+    });
+    expect(container.textContent).toBe('Pending tree');
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalled();
+
+    bootstrapScreenMocks.setBootstrapStepStatus.mockImplementation((command: { step: string }) => {
+      if (command.step === 'hydrate')
+        expect(container.querySelector('[data-committed]')).not.toBeNull();
+    });
+    act(() => {
+      root.render(
+        <AppProviders overrides={overrides}>
+          <div data-committed>Committed</div>
+        </AppProviders>
+      );
+    });
+    act(() => {
+      root.render(
+        <AppProviders overrides={overrides}>
+          <div data-committed>Updated</div>
+        </AppProviders>
+      );
+    });
+    const hydration = bootstrapScreenMocks.setBootstrapStepStatus.mock.calls.filter(
+      ([command]) => command.step === 'hydrate'
+    );
+    expect(hydration).toEqual([[{ step: 'hydrate', status: 'complete' }]]);
+    expect(container.textContent).toBe('Updated');
   });
 
   it('provides app services and query client to route-level runtime hooks', async () => {

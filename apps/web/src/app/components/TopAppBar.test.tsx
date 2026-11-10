@@ -7,7 +7,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
@@ -18,19 +17,25 @@ import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasW
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './shell/copy';
 import { topAppBarClasses } from './shell/chrome';
+import {
+  buildShellNavigationModel,
+  resolveShellRouteHeading,
+  type ShellRouteHeading,
+} from '../shell/shellNavigationModel';
 import ShellTopBar from './TopAppBar';
-
-const TEST_NAVIGATION_MODEL = buildShellNavigationModel([]);
 
 describe('ShellTopBar workspace context', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  function renderShellTopBar(pathname: string): JSX.Element {
+  function renderShellTopBar(
+    pathname: string,
+    routeHeading: ShellRouteHeading | null = null
+  ): JSX.Element {
     return (
       <AppServicesProvider overrides={createAppServicesTestOverrides()}>
         <MemoryRouter initialEntries={[pathname]}>
-          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
+          <ShellTopBar routeHeading={routeHeading} />
         </MemoryRouter>
       </AppServicesProvider>
     );
@@ -152,6 +157,21 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   });
 
+  it('renders an opted-in route heading in the existing identity area', async () => {
+    const heading = resolveShellRouteHeading(buildShellNavigationModel([]), '/admin');
+    await act(async () => {
+      root.render(renderShellTopBar('/admin', heading));
+    });
+    const title = container.querySelector('[data-slot="shell-top-bar"] h1');
+    expect(title?.textContent).toBe('Admin & RBAC');
+    expect(title?.closest('[data-slot="shell-top-bar-context-cluster"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="shell-file-menu-trigger"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="shell-route-heading"] svg')?.getAttribute('aria-hidden')
+    ).toBe('true');
+  });
+
   it.each(['/canvas', '/runs/run_123'])(
     'keeps product workbench top bar low-noise on %s while separating workspace navigation from View controls',
     async (pathname) => {
@@ -189,24 +209,10 @@ describe('ShellTopBar workspace context', () => {
         expect(document.body.textContent).not.toContain('Workspace context');
       });
 
-      await act(async () => {
-        fireEvent.keyDown(document, { key: 'Escape' });
-        fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
-      });
-
-      await waitFor(() => {
-        const menuLinks = [
-          ...document.body.querySelectorAll<HTMLAnchorElement>(
-            '[data-slot="shell-menu-navigation-link"]'
-          ),
-        ];
-
-        expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
-        expect(
-          document.body.querySelector('[data-slot="shell-menu-workspace-context"]')
-        ).toBeNull();
-        expect(document.body.querySelector('[data-slot="shell-new-project-command"]')).toBeNull();
-      });
+      expect(
+        topBar?.querySelector('[data-slot="shell-brand-identity"]')?.getAttribute('aria-label')
+      ).toBe('Raven');
+      expect(topBar?.querySelector('[data-slot="shell-app-menu-trigger"]')).toBeNull();
 
       await act(async () => {
         fireEvent.keyDown(document, { key: 'Escape' });
@@ -407,32 +413,17 @@ describe('ShellTopBar workspace context', () => {
     expect(onStartRun).toHaveBeenCalledTimes(1);
   });
 
-  it('exposes Raven navigation when focus mode hides the global route rail', async () => {
+  it('keeps View recovery and project commands in focus mode without making the logo interactive', async () => {
     useUiLayoutStore.setState({ focusMode: true });
-
     await act(async () => {
       root.render(renderShellTopBar('/legacy'));
     });
-
-    const workspaceMenuTrigger = container.querySelector(
-      '[data-slot="shell-workspace-menu-trigger"]'
-    );
-
-    expect(workspaceMenuTrigger).not.toBeNull();
-
-    await act(async () => {
-      fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
-    });
-
-    await waitFor(() => {
-      const menuLinks = [
-        ...document.body.querySelectorAll<HTMLAnchorElement>(
-          '[data-slot="shell-menu-navigation-link"]'
-        ),
-      ];
-
-      expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
-    });
+    expect(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="shell-file-menu-trigger"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="shell-brand-identity"]')?.closest('button, a')
+    ).toBeNull();
   });
 
   it('resolves Spanish shell copy for the menu and workspace context labels', () => {
@@ -726,50 +717,6 @@ describe('ShellTopBar workspace context', () => {
     await waitFor(() => {
       expect(reopenedInput.isConnected).toBe(false);
       expect(document.activeElement).toBe(fileTrigger);
-    });
-  });
-
-  it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {
-    await act(async () => {
-      root.render(renderShellTopBar('/canvas'));
-    });
-
-    const appMenu = container.querySelector('[data-slot="shell-app-menu-trigger"]');
-    expect(appMenu?.textContent).toBe('');
-    expect(appMenu?.getAttribute('aria-label')).toBe('Raven');
-
-    await act(async () => {
-      fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
-    });
-
-    const aboutCommand = await waitFor(() => {
-      const command = document.body.querySelector<HTMLElement>('[data-slot="shell-about-command"]');
-
-      expect(command).not.toBeNull();
-      return command;
-    });
-
-    await act(async () => {
-      fireEvent.click(aboutCommand!);
-    });
-
-    const aboutDialog = await waitFor(() => {
-      const dialog = document.body.querySelector<HTMLElement>('[data-slot="shell-about-dialog"]');
-
-      expect(dialog).not.toBeNull();
-      return dialog;
-    });
-
-    expect(aboutDialog!.textContent).toContain('Compiled version');
-    expect(aboutDialog!.textContent).toMatch(/0\.0\.0|[0-9]+\.[0-9]+\.[0-9]+/);
-
-    await act(async () => {
-      fireEvent.keyDown(document, { key: 'Escape' });
-    });
-
-    await waitFor(() => {
-      expect(document.body.querySelector('[data-slot="shell-about-dialog"]')).toBeNull();
-      expect(document.activeElement).toBe(appMenu);
     });
   });
 });

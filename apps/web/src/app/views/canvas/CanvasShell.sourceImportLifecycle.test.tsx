@@ -32,6 +32,54 @@ describe('CanvasShell source import lifecycle', () => {
     unmountShell();
   });
 
+  it('opens management without inheriting the retained object selection', async () => {
+    // The gear must carry its intent through the shell, rather than reopen the retained source selection.
+    await renderShell({ sourceImportInitialSelection: { connectionId: 'old', sourceObjects: [] } });
+    await act(async () => {
+      const manage = shellState.canvasViewportProps?.onManageConnections as () => void;
+      manage();
+    });
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      entry: { intent: 'manage-connections' },
+    });
+    expect(
+      (shellState.sourceImportWizardProps?.entry as { initialSelection?: unknown }).initialSelection
+    ).toBeUndefined();
+  });
+
+  it('rejects a completion from an earlier import after management supersedes it', async () => {
+    // A stale request cannot consume the pending dbt continuation or complete against a newer dialog entry.
+    const onComplete = vi.fn();
+    const onConsumed = vi.fn();
+    await renderShell({
+      sourceImportInitialSelection: { kind: 'dbt-source-binding', sourceTableDeclarations: [] },
+      onSourceImportInitialSelectionConsumed: onConsumed,
+      graphCommands: { onSourceImportComplete: onComplete },
+    });
+    const earlierComplete = shellState.sourceImportWizardProps?.onComplete as (
+      result: ImportSourcesResult
+    ) => void;
+    await act(async () => {
+      (shellState.canvasViewportProps?.onManageConnections as () => void)();
+      earlierComplete(buildGraphDraftSourceImportResult());
+    });
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(onConsumed).not.toHaveBeenCalled();
+  });
+
+  it('does not reinterpret an old retained prefill as an entry in a new Canvas', async () => {
+    // A new owner invalidates an opening; retaining the same object must not grant it to another Canvas.
+    const initialSelection = { connectionId: 'old', sourceObjects: [] };
+    await renderShell({ sourceImportInitialSelection: initialSelection });
+    await renderShellProps(
+      buildCanvasShellProps({
+        sourceImportInitialSelection: initialSelection,
+        panels: { activeCanvasId: 'another-canvas' },
+      })
+    );
+    expect(shellState.sourceImportWizardProps).toBeNull();
+  });
+
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {
     const props = await renderShell({
       panels: {
@@ -65,7 +113,7 @@ describe('CanvasShell source import lifecycle', () => {
 
     expect(shellState.sourceImportWizardProps).toMatchObject({
       open: true,
-      initialSelection: undefined,
+      entry: { intent: 'import-sources', initialSelection: undefined },
     });
   });
 

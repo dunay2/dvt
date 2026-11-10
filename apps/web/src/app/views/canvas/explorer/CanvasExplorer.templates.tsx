@@ -1,109 +1,70 @@
 /**
- * Owned concern: passive explorer markup and accessible presentation.
- * @baseline GH-3610: persistent activity buttons retain access to the collapsed dock.
- * @decision Render graph and panels at stable positions; hidden panels leave the focus order.
- * @consequence Switching a panel cannot recreate the graph or lose a search input.
- * @version 1.0.0
+ * Owned concern: present retained Explorer docking and its standalone navigation actions.
+ * Reason: the one Elements body has a stable slot independent of the Elements/Git actions.
+ * Corner invariant: toggling navigation or an inline task cannot replace graph or catalogue DOM.
  */
-import { Workflow, Search, Plus, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
-import type { KeyboardEvent, ReactNode, RefObject } from 'react';
-import { createPortal } from 'react-dom';
-import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from '../../../components/ui/collapsible';
+import { PanelsTopLeft, Workflow, GitBranch, ChevronLeft, X } from 'lucide-react';
+import type { JSX } from 'react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip';
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
-  type ImperativePanelHandle,
 } from '../../../components/ui/resizable';
-import type { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import type {
+  CanvasExplorerNavigationAction,
+  CanvasExplorerTemplateProps,
+} from './CanvasExplorer.types';
 import styles from './CanvasExplorer.module.css';
-import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
 
-type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
-const panels = [
+const navigationActions = [
   { key: 'elements', icon: <Workflow aria-hidden="true" /> },
-  {
-    key: 'git',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-        <path d="m12 2 10 10-10 10L2 12Z" strokeLinejoin="round" />
-        <path d="m8 8 8 8M8 8v8" />
-        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-        <circle cx="8" cy="16" r="1.5" fill="currentColor" />
-        <circle cx="16" cy="16" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
+  { key: 'git', icon: <GitBranch aria-hidden="true" /> },
 ] as const;
-export type CanvasExplorerPanel = (typeof panels)[number]['key'];
-export type CanvasExplorerActivityRail = Readonly<{
-  target: HTMLElement | null;
-  codeVisible: boolean;
-}>;
 
-export function CanvasExplorerTemplate(
-  props: Readonly<{
-    id: string;
-    active: CanvasExplorerPanel | null;
-    visible: boolean;
-    dock: Readonly<{
-      panelRef: RefObject<ImperativePanelHandle>;
-      widthPercent: number;
-      minSize: number;
-      maxSize: number;
-      onResize: (size: number, previousSize: number | undefined) => void;
-    }>;
-    copy: Copy;
-    rootRef?: RefObject<HTMLDivElement>;
-    elements: ReactNode;
-    hasProjectFiles: boolean;
-    children: ReactNode;
-    workspaceTask?: ReactNode;
-    activityRail?: CanvasExplorerActivityRail;
-    onToggle: (key: CanvasExplorerPanel) => void;
-    onKeyToggle: (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>) => void;
-    onCollapse: () => void;
-    onClose: () => void;
-  }>
-): JSX.Element {
-  const availablePanels = panels.filter(({ key }) => key !== 'git' || props.hasProjectFiles);
+export function CanvasExplorerTemplate(props: CanvasExplorerTemplateProps): JSX.Element {
+  const availableActions = navigationActions.filter(
+    ({ key }) => key !== 'git' || props.hasProjectFiles
+  );
+  const railVisible = props.visible;
+  const isPanelExpanded = props.active === 'elements';
+  const isNavigationExpanded = (action: CanvasExplorerNavigationAction): boolean | undefined =>
+    action === 'git'
+      ? props.activityRail?.codeVisible
+      : props.activityRail?.codeVisible !== true && isPanelExpanded;
   const activityRail = (
-    <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
-      {availablePanels.map(({ key, icon }) => (
-        <button
-          key={key}
-          type="button"
-          id={`${props.id}-${key}-button`}
-          className={styles.activity}
-          data-slot={`canvas-explorer-${key}-toggle`}
-          aria-label={props.copy[key]}
-          title={props.copy[key]}
-          aria-expanded={
-            key === 'git'
-              ? props.activityRail?.codeVisible
-              : props.activityRail?.codeVisible !== true && props.active === key
-          }
-          aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
-          onClick={() => props.onToggle(key)}
-          onKeyDown={(event) => props.onKeyToggle(key, event)}
-        >
-          {icon}
-        </button>
+    <nav
+      className={styles.rail}
+      aria-label={props.copy.navigation}
+      hidden={!railVisible}
+      aria-hidden={!railVisible}
+      {...(railVisible ? {} : { inert: '' })}
+    >
+      {availableActions.map(({ key, icon }) => (
+        <Tooltip key={key}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              id={`${props.id}-${key}-button`}
+              className={styles.activity}
+              data-slot={`canvas-explorer-${key}-toggle`}
+              aria-label={props.copy[key]}
+              aria-expanded={isNavigationExpanded(key)}
+              aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
+              onClick={() => props.onToggle(key)}
+              onKeyDown={(event) => props.onKeyToggle(key, event)}
+            >
+              {icon}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{props.copy[key]}</TooltipContent>
+        </Tooltip>
       ))}
     </nav>
   );
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
-      {props.activityRail === undefined
-        ? activityRail
-        : props.activityRail.target === null
-          ? null
-          : createPortal(activityRail, props.activityRail.target)}
+      {props.shellOwned ? null : activityRail}
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
           ref={props.dock.panelRef}
@@ -115,40 +76,50 @@ export function CanvasExplorerTemplate(
           onResize={props.dock.onResize}
           className={props.active == null ? styles.hidden : styles.dock}
         >
-          {availablePanels.map(({ key }) =>
-            key === 'git' ? null : (
-              <section
-                key={key}
-                id={`${props.id}-${key}`}
-                aria-labelledby={`${props.id}-${key}-button`}
-                hidden={props.active !== key}
-                className={styles.panel}
+          <section
+            id={`${props.id}-elements`}
+            aria-label={props.copy.elements}
+            data-slot="canvas-explorer-panel"
+            hidden={!isPanelExpanded}
+            className={styles.panel}
+          >
+            <header className={styles.header}>
+              <h3 className={styles.heading}>
+                {props.heading == null ? null : (
+                  <PanelsTopLeft className={styles.headingIcon} aria-hidden="true" />
+                )}
+                <span
+                  className={styles.headingLabel}
+                  data-slot="canvas-explorer-heading-label"
+                  title={props.heading?.label ?? props.copy.elements}
+                >
+                  {props.heading?.label ?? props.copy.elements}
+                </span>
+              </h3>
+              {props.heading?.contextLabel ? (
+                <span className={styles.contextLabel}>{props.heading.contextLabel}</span>
+              ) : null}
+              <button
+                type="button"
+                className={styles.headerAction}
+                aria-label={props.copy.collapse}
+                title={props.copy.collapse}
+                onClick={props.onCollapse}
               >
-                <header className={styles.header}>
-                  <h3 className={styles.heading}>{props.copy[key]}</h3>
-                  <button
-                    type="button"
-                    className={styles.headerAction}
-                    aria-label={props.copy.collapse}
-                    title={props.copy.collapse}
-                    onClick={props.onCollapse}
-                  >
-                    <ChevronLeft aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.headerAction}
-                    aria-label={props.copy.close}
-                    title={props.copy.close}
-                    onClick={props.onClose}
-                  >
-                    <X aria-hidden="true" />
-                  </button>
-                </header>
-                {props[key]}
-              </section>
-            )
-          )}
+                <ChevronLeft aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={styles.headerAction}
+                aria-label={props.copy.close}
+                title={props.copy.close}
+                onClick={props.onClose}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </header>
+            {props.elements}
+          </section>
         </ResizablePanel>
         <ResizableHandle
           aria-label={props.copy.resize}
@@ -179,140 +150,6 @@ export function CanvasExplorerTemplate(
           )}
         </ResizablePanel>
       </ResizablePanelGroup>
-    </div>
-  );
-}
-
-export function CanvasExplorerMenuTemplate({
-  visible,
-  copy,
-  onVisibleChange,
-}: Readonly<{
-  visible: boolean;
-  copy: Copy;
-  onVisibleChange: (visible: boolean) => void;
-}>): JSX.Element {
-  return (
-    <DropdownMenuCheckboxItem
-      data-slot="canvas-explorer-view-command"
-      checked={visible}
-      onCheckedChange={onVisibleChange}
-    >
-      {copy.navigation}
-    </DropdownMenuCheckboxItem>
-  );
-}
-
-export function CanvasExplorerListTemplate({
-  categories,
-  collapsedCategories,
-  onCategoryOpenChange,
-  query,
-  copy,
-  disabled,
-  onQuery,
-  onSelect,
-  onDragStart,
-  categoryActions,
-}: Readonly<{
-  categories: ReadonlyMap<string | undefined, readonly CanvasExplorerItem[]>;
-  collapsedCategories: ReadonlySet<string>;
-  onCategoryOpenChange: (category: string, open: boolean) => void;
-  query: string;
-  copy: Copy;
-  disabled?: boolean;
-  onQuery: (value: string) => void;
-  onSelect: (id: string) => void;
-  onDragStart?: (id: string, event: React.DragEvent<HTMLButtonElement>) => void;
-  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
-}>): JSX.Element {
-  const renderItem = (item: CanvasExplorerItem) => {
-    const unavailable = disabled || item.disabled;
-    const draggable = !unavailable && item.draggable !== false && onDragStart != null;
-    return (
-      <li key={item.id}>
-        <button
-          type="button"
-          className={styles.item}
-          aria-pressed={item.selected === true}
-          title={item.description == null ? item.label : `${item.label} · ${item.description}`}
-          data-element-id={item.id}
-          disabled={unavailable}
-          onClick={() => onSelect(item.id)}
-          draggable={draggable}
-          onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
-        >
-          <span className={styles.itemText}>
-            <span className={styles.name}>{item.label}</span>{' '}
-            {item.description == null ? null : (
-              <span className={styles.description}>{item.description}</span>
-            )}
-          </span>
-        </button>
-      </li>
-    );
-  };
-  return (
-    <div className={styles.listPanel}>
-      <label className={styles.search}>
-        <Search aria-hidden="true" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => onQuery(event.currentTarget.value)}
-          aria-label={copy.search}
-          placeholder={copy.search}
-        />
-      </label>
-      <ul className={styles.list}>
-        {Array.from(categories, ([category, items]) => {
-          if (category == null) return items.map(renderItem);
-          const open = !collapsedCategories.has(category);
-          const action = categoryActions?.get(category);
-          return (
-            <li key={category}>
-              <Collapsible
-                open={open}
-                onOpenChange={(nextOpen) => onCategoryOpenChange(category, nextOpen)}
-              >
-                <div className={styles.categoryHeader}>
-                  <h4 className={styles.categoryHeading}>
-                    <CollapsibleTrigger
-                      className={styles.heading}
-                      aria-label={`${copy.elements}: ${category}`}
-                    >
-                      {open ? (
-                        <ChevronDown size={12} aria-hidden="true" />
-                      ) : (
-                        <ChevronRight size={12} aria-hidden="true" />
-                      )}
-                      {category}
-                    </CollapsibleTrigger>
-                  </h4>
-                  {action == null ? null : (
-                    <button
-                      type="button"
-                      className={styles.headerAction}
-                      aria-label={action.label}
-                      title={action.label}
-                      disabled={disabled || action.onAdd == null}
-                      onClick={(event) => action.onAdd?.(event.currentTarget)}
-                    >
-                      <Plus aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-                <CollapsibleContent>
-                  <ul className={styles.list}>{items.map(renderItem)}</ul>
-                </CollapsibleContent>
-              </Collapsible>
-            </li>
-          );
-        })}
-      </ul>
-      {Array.from(categories.values()).every((items) => items.length === 0) ? (
-        <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>
-      ) : null}
     </div>
   );
 }

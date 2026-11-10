@@ -23,15 +23,20 @@ describe('shell navigation disposition architecture', () => {
     expect(dispositionSource).toContain('workbench_route');
     expect(dispositionSource).toContain("'/canvas'");
     expect(dispositionSource).toContain("'/runs'");
-    expect(rootSource).toContain('resolveShellNavigationDisposition(location.pathname)');
-    expect(frameSource).toContain('navigationDisposition.railMode');
+    expect(readAppSource('components/TopAppBar.tsx')).toContain(
+      'resolveShellNavigationDisposition(location.pathname)'
+    );
+    expect(frameSource).toContain('ShellActivityRailProvider');
+    expect(frameSource).not.toContain('railMode');
+    expect(rootSource).not.toContain('resolveShellNavigationDisposition');
     expect(frameSource).not.toContain("pathname.startsWith('/canvas')");
   });
 
-  it('keeps global routes reachable through the shell menu when workbench routes hide the rail', () => {
+  it('keeps direct global routes in one shell projection without moving policy into Explorer', () => {
     const rootSource = readAppSource('Root.tsx');
     const topBarSource = readAppSource('components/TopAppBar.tsx');
-    const menuSource = readAppSource('components/shell/ShellAppMenu.tsx');
+    const railSource = readAppSource('components/LeftNavigation.tsx');
+    const explorerSource = readAppSource('views/canvas/explorer/CanvasExplorer.tsx');
     const entriesSource = readAppSource('components/shell/ShellMenu.templates.tsx');
     const componentDoc = readRepoSource(
       'docs/architecture/components/web/shell-navigation-disposition-component.md'
@@ -41,12 +46,17 @@ describe('shell navigation disposition architecture', () => {
       'buildShellRuntimeState(capabilitiesQuery.data, applicationLanguage).navigationModel'
     );
     expect(rootSource).toContain('navigationModel={navigationModel}');
-    expect(topBarSource).toContain('navigationModel');
-    expect(menuSource).toContain('ShellNavigationEntriesTemplate');
-    expect(menuSource).toContain('useNavigate');
-    expect(entriesSource).toContain('shell-menu-navigation-link');
-    expect(entriesSource).toContain('navigationModel.primaryItems');
-    expect(entriesSource).toContain('navigationModel.footerItems');
+    expect(topBarSource).not.toContain('navigationModel');
+    expect(railSource).toContain('navigationModel.primaryItems');
+    expect(railSource).toContain('navigationModel.footerItems');
+    expect(railSource).not.toMatch(/useShellRuntime|plugins\/registry|capabilitiesPort/u);
+    expect(entriesSource).not.toContain('ShellNavigationEntriesTemplate');
+    expect(explorerSource).not.toMatch(/shellNavigationModel|useNavigate|NavLink/u);
+    expect(railSource).toContain('shell-project-code-command');
+    expect(railSource).not.toContain('ShellActivityRailHost');
+    expect(readAppSource('views/canvas/explorer/CanvasExplorer.templates.tsx')).not.toContain(
+      'createPortal'
+    );
     expect(componentDoc).toContain('Public API');
     expect(componentDoc).toContain('Invariants');
     expect(componentDoc).toContain('Transitions');

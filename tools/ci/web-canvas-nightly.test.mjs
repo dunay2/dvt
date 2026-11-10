@@ -9,6 +9,21 @@ const nativeProofCommand =
   'pnpm --filter @dvt/web test:e2e:native --browser chrome --spec cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts';
 const workflow = yaml.load(readFileSync('.github/workflows/web-canvas-nightly.yml', 'utf8'));
 
+test('nightly reuses verified browser preparation without changing its browser policy', () => {
+  const steps = workflow.jobs['canvas-large-graph'].steps;
+  const preparation = steps.filter(
+    (step) => step.uses === './.github/actions/setup-native-browser'
+  );
+  assert.equal(preparation.length, 1);
+  assert.notEqual(preparation[0].with?.['pinned-chrome'], 'true');
+  assert.equal(preparation[0].if, undefined);
+  assert.notEqual(preparation[0]['continue-on-error'], true);
+  assert.ok(
+    steps.indexOf(preparation[0]) < steps.findIndex(({ run }) => run?.includes('test:e2e:native'))
+  );
+  assert.ok(!steps.some(({ run }) => run?.includes('cypress install')));
+});
+
 function assertNativeProof(steps) {
   const proofs = steps.filter(({ run }) => run?.includes('test:e2e:native'));
   assert.equal(proofs.length, 1, 'exactly one native proof must run');

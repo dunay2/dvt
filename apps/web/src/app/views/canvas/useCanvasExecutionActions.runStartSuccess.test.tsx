@@ -18,45 +18,12 @@ import {
 
 type ExecutionActionsHarness = ReturnType<typeof renderExecutionActionsHarness>;
 
-type StartedRunOperationsScenario = Readonly<{
-  name: string;
-  runId: string;
-  bottomDrawerVisible: boolean;
-  assertOperationsReveal: (args: {
-    setBottomDrawerHeight: ReturnType<typeof vi.fn<(height: number) => void>>;
-    toggleBottomDrawer: ReturnType<typeof vi.fn<() => void>>;
-  }) => void;
-}>;
-
-const startedRunOperationsScenarios: readonly StartedRunOperationsScenario[] = [
-  {
-    name: 'opens the bottom operational drawer when a run starts from a collapsed drawer',
-    runId: 'run-toggle-operations',
-    bottomDrawerVisible: false,
-    assertOperationsReveal: ({ setBottomDrawerHeight, toggleBottomDrawer }) => {
-      expect(toggleBottomDrawer).toHaveBeenCalledTimes(1);
-      expect(setBottomDrawerHeight).not.toHaveBeenCalled();
-    },
-  },
-  {
-    name: 'expands the bottom operational drawer when a run starts with the drawer already visible',
-    runId: 'run-expand-operations',
-    bottomDrawerVisible: true,
-    assertOperationsReveal: ({ setBottomDrawerHeight, toggleBottomDrawer }) => {
-      expect(setBottomDrawerHeight).toHaveBeenCalledWith(160);
-      expect(toggleBottomDrawer).not.toHaveBeenCalled();
-    },
-  },
-];
-
 async function renderRunStartHarness(
   args: {
     runsService?: ReturnType<typeof createRunsServiceMock>;
     currentPlan?: PlanViewModel | null;
     executionEnvironmentId?: string;
-    bottomDrawerVisible?: boolean;
-    setBottomDrawerHeight?: (height: number) => void;
-    toggleBottomDrawer?: () => void;
+    showBottomDrawer?: () => void;
   } = {}
 ): Promise<{
   runsService: ReturnType<typeof createRunsServiceMock>;
@@ -72,9 +39,7 @@ async function renderRunStartHarness(
     canonicalNodes: buildCanonicalNodes(),
     canonicalEdges: buildCanonicalEdges(),
     executionEnvironmentId: args.executionEnvironmentId,
-    bottomDrawerVisible: args.bottomDrawerVisible,
-    setBottomDrawerHeight: args.setBottomDrawerHeight,
-    toggleBottomDrawer: args.toggleBottomDrawer,
+    showBottomDrawer: args.showBottomDrawer,
   });
 
   await harness.render();
@@ -83,34 +48,6 @@ async function renderRunStartHarness(
     runsService,
     harness,
   };
-}
-
-async function expectStartedRunOperationsScenario(
-  scenario: StartedRunOperationsScenario
-): Promise<ExecutionActionsHarness> {
-  const setBottomDrawerHeight = vi.fn<(height: number) => void>();
-  const toggleBottomDrawer = vi.fn<() => void>();
-  const startedScenario = await renderRunStartHarness({
-    runsService: createRunsServiceMock({
-      startRun: vi.fn(async () => ({
-        runId: scenario.runId,
-        accepted: true,
-      })),
-    }),
-    bottomDrawerVisible: scenario.bottomDrawerVisible,
-    setBottomDrawerHeight,
-    toggleBottomDrawer,
-  });
-
-  await startedScenario.harness.clickStartRun();
-
-  scenario.assertOperationsReveal({
-    setBottomDrawerHeight,
-    toggleBottomDrawer,
-  });
-  expect(startedScenario.harness.onRunStarted).toHaveBeenCalledWith(scenario.runId);
-
-  return startedScenario.harness;
 }
 
 describe('useCanvasExecutionActions successful run start', () => {
@@ -197,7 +134,14 @@ describe('useCanvasExecutionActions successful run start', () => {
     );
   });
 
-  it.each(startedRunOperationsScenarios)('$name', async (scenario) => {
-    harness = await expectStartedRunOperationsScenario(scenario);
+  it('reveals operations through one command after an admitted Run without owning its geometry', async () => {
+    // Starting a Run used to overwrite a user-sized drawer with a hard-coded height.
+    const showBottomDrawer = vi.fn();
+    const started = await renderRunStartHarness({ showBottomDrawer });
+    harness = started.harness;
+    await harness.clickStartRun();
+    expect(showBottomDrawer).toHaveBeenCalledOnce();
+    expect(showBottomDrawer).toHaveBeenCalledWith();
+    expect(harness.onRunStarted).toHaveBeenCalledOnce();
   });
 });

@@ -150,11 +150,9 @@ export function useCanvasController() {
     sessionContext,
     executionEnvironmentId: draftReadModel?.record?.draft.canvas.environmentId,
     shellFeedback,
-    bottomDrawerVisible: store.bottomDrawerVisible,
     currentPlan: store.currentPlan,
     setCurrentPlan: store.setCurrentPlan,
-    setBottomDrawerHeight: store.setBottomDrawerHeight,
-    toggleBottomDrawer: store.toggleBottomDrawer,
+    showBottomDrawer: store.showBottomDrawer,
     onRunStarted: navigationActions.handleRunStarted,
   });
 

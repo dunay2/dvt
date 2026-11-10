@@ -35,6 +35,7 @@ See also:
 | Affected local PR preflight      | `pnpm preflight:affected`              | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                               |
 | Affected CI preflight            | `pnpm preflight:affected:ci`           | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
 | Local/manual full CI baseline    | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
+| Shared static code checks        | `pnpm ci:code:static`                  | [`package.json`](../../package.json)                                                                                                 |
 | Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)             |
 | Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                 |
 | AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                         |
@@ -111,21 +112,55 @@ adding a cache, prewarming tests, or changing worker isolation or required gates
 ## Hosted Vitest Groups
 
 Full Test Suite runs distribute the existing Web primary-suite composition across
-two concurrent jobs: `unit-architecture` runs unit then architecture; `presentation`
-runs presentation. Each uses the existing package delegates and catalog configs.
+five concurrent jobs: `unit` and `architecture` each run their existing delegate;
+`presentation-1`, `presentation-2` and `presentation-3` run the same presentation
+delegate with Vitest's native `--shard=1/3`, `--shard=2/3` and `--shard=3/3`.
+Every partition retains its existing config, per-file isolation, one CI fork and
+4 GB old-space limit. No test selection catalog, scheduler or result cache is added.
 Local `pnpm test:web:ci` still runs the complete composition. Ordinary web PRs
 allocate one Vitest `changed` group using the existing affected-suite router.
 
+The measured full run at `0f97c2b2` spent 615 seconds executing Presentation
+(682 seconds for its hosted job), making that job the Test Suite critical path.
+The previous matrix used two Presentation halves and a serial Unit/Architecture
+job. Thirds divide Presentation further, while separate Node jobs remove the
+serial Unit/Architecture path. Native sharding preserves all 382 current
+Presentation files without another selection inventory.
+
+The complete Test Suite target is at most 355 seconds against that run's
+710 seconds. This partition change does not establish that target: browser
+evidence still took about 572 seconds, and the new matrix has not been timed.
+Measure complete wall time and total runner time, because each extra job repeats
+setup. Local execution and ordinary changed PRs retain their current behavior.
+
+```mermaid
+flowchart LR
+  Full[Full Web obligations] --> Unit[Unit]
+  Full --> Architecture[Architecture]
+  Full --> First[Presentation shard 1 of 3]
+  Full --> Second[Presentation shard 2 of 3]
+  Full --> Third[Presentation shard 3 of 3]
+  Unit --> Required[Test Suite required aggregate]
+  Architecture --> Required
+  First --> Required
+  Second --> Required
+  Third --> Required
+  Required -->|missing failed cancelled or unexpected skip| Reject[Fail]
+```
+
 `tools/ci/test-suite-outcome.test.mjs` evaluates the workflow matrix and requires
-the full groups' command union to match the canonical package composition exactly
-once. Every selected group remains merge-blocking. Per-file isolation, worker
-and memory limits, and per-job deadlines stay unchanged. Separate runners repeat
-setup, so compare the critical path and summed runner durations when measuring.
+all three native shard selectors and each Unit/Architecture delegate exactly once.
+Applying the installed native sequencer to the configured test specifications
+verifies the complete, disjoint union without rerunning test bodies. Vitest 3.2.4
+`list --filesOnly` alone does not apply the shard selector. Every selected
+group remains merge-blocking through the existing matrix result and required
+aggregate; fail-fast stays disabled so failures do not hide sibling partitions'
+evidence. Per-job deadlines and all browser partitions stay unchanged.
 
 ## Browser Evidence Partitions
 
 The existing Test Suite workflow partitions both `controlled` and `available`
-browser obligations into three jobs through `selectWebCypressShard`. The policy
+browser obligations into six jobs each through `selectWebCypressShard`. The policy
 preserves catalog order and assigns each selected spec exactly once. Planning and
 execution use the same capability and shard selectors. The default local
 `phase=all` gate executes the three controlled partitions sequentially through
@@ -145,7 +180,9 @@ All selected browser evidence remains merge-blocking through the existing Test
 Suite aggregate. Native runtimes, assertions, deadlines, provider preparation and
 cleanup are unchanged. Parallel jobs repeat setup/build work: compare both the
 longest lane and summed runner durations when evaluating the improvement, rather
-than interpreting three partitions as a guaranteed threefold speedup.
+than interpreting six partitions as a guaranteed sixfold speedup. Report cold
+and warm preparation separately: the 50-percent complete-wall-time target is
+not established by adding partitions, and extra jobs increase runner consumption.
 
 ## Immutable Provisioning Image Cache
 
@@ -176,7 +213,7 @@ GitHub Actions cache transport is additionally checked in the actual workflow.
 
 ## Native Provider Browser Prerequisites
 
-The three `available` Web browser shards use Ubuntu 24.04, Node 22.23.3 and
+The six `available` Web browser shards use Ubuntu 24.04, Node 22.23.3 and
 Chrome stable 155.0.8059.84. The existing Test Suite workflow verifies the
 official Chrome package SHA256 and actual Cypress browser discovery before
 running provider-backed evidence. Chrome preparation runs only when the
@@ -520,22 +557,32 @@ Command semantics:
 - `pnpm docs:governance:remediation-queue:check` regenerates the queue that turns coverage gaps into component-scoped remediation tasks and fails when that actionable plan is stale.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
 - `pnpm docs:gov` also runs the changed-doc filename and ADR/evidence frontmatter gates, so new or changed docs fail locally on canonical naming and doc-class metadata violations without turning historical warning-only docs into global blockers.
-- `pnpm verify:changed` is the fast changed-slice gate. It stays on
-  changed-file docs, markdown, formatting, QA-artifact, and focused
-  adjacent-script gates without invoking root type-check or the full planning
-  DB suite for every planning workflow script edit.
-- Developer workflow verifier edits are routed to the narrow self-test for the
-  touched verifier. `scripts/verify-changed.*` runs
-  `scripts/verify-changed.test.cjs`, `scripts/verify-prepush.*` runs
-  `scripts/verify-prepush.test.cjs`, and the shared
-  `scripts/local-validation-plan.cjs` contract still runs both suites.
+- `pnpm verify:changed` composes the applicable changed-file checks and tests.
+  `scripts/local-validation-plan.cjs` owns their order; the selector in
+  `scripts/lib/changed-test-selection.cjs` owns affected test selection, and
+  `scripts/lib/local-test-coverage.cjs` removes only proven overlapping test
+  executions. The executor and successful pre-push receipt have separate owners
+  in `scripts/lib/local-validation-executor.cjs` and
+  `scripts/lib/prepush-validation-stamp.cjs`.
+- `pnpm verify:changed --iteration-base=<ref>` provides explicitly partial
+  feedback against a verified ancestor. Its frontier includes committed,
+  staged, unstaged, deleted and untracked files; it accepts no file filter.
+  This mode retains affected static and unit/presentation checks, omits native
+  browser and global Planning DB validation, and never writes an acceptance
+  receipt. Default verification and final pre-push retain their obligations.
+- `pnpm test:verify-prepush` owns the CLI, plan composition, selection,
+  coverage, step identity, executor and receipt contracts. Tests live beside
+  those owners. Aggregate coverage is identified by the actual command and
+  its complete arguments, not by a display name or a shared step identifier.
 - Changes to `run-selected-closure-live-proof` or `run-dev-stack` source/tests
   select the matching contract once through this same focused catalog for
   pre-push and PR Quality, retaining test-process Git-environment isolation.
-- CI tooling edits under `tools/ci/*.mjs` and changed `tools/ci/*.test.mjs`
-  route to direct adjacent `node --test` suites when that test file exists.
-  The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
-  audit, not the default local proof for a one-file AI iteration.
+- Workflow/action, root build, CI policy and command-composition changes select
+  the complete `pnpm test:ci-tools` contract once, before other selected tests.
+  Unknown command ownership also broadens that proof. The selector reports
+  which changed inputs caused this decision. Other changes retain their
+  focused routes; real adjacent tests are inferred only for known command
+  owners, with genuine cross-file dependencies kept explicit.
 - Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
   `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
   `workflow-scope.json` names additional invalidating inputs, not another copy
@@ -767,7 +814,10 @@ coverage, nor does removing the obsolete UI story remove a runtime invariant.
 
 - `CI - Code Quality`: ordinary pull requests run affected build/lint/type-check
   preflight through `pnpm preflight:affected:ci`. Pushes to `main` run
-  `pnpm ci:docs && pnpm ci:code`; Test Suite owns their Engine coverage.
+  `pnpm ci:docs && pnpm ci:code:static`; Test Suite owns their product tests and
+  Engine coverage. The static delegate runs architecture dependencies, types,
+  and determinism lint once. Standalone `ci:code` adds `turbo run test` after
+  those checks, so determinism lint fails before product test execution.
   Manual runs retain `pnpm ci:full`, including coverage, because dispatching
   Code Quality does not start Test Suite. CI tool contract tests remain separate.
   It does not own ADR-0000 traceability or affected PR package test execution.
@@ -935,8 +985,10 @@ Current workflow consumers:
   type-check. Package and dedicated tests stay owned by
   [`.github/workflows/test.yml`](../../.github/workflows/test.yml), avoiding a
   second affected Turbo test pass inside Code Quality. Pushes to `main` use
-  `pnpm ci:docs && pnpm ci:code`, leaving coverage to the mandatory Test Suite
-  lane; manual Code Quality and local full validation retain `pnpm ci:full`.
+  `pnpm ci:docs && pnpm ci:code:static`, leaving product tests and coverage to
+  the mandatory Test Suite lane; manual Code Quality and local full validation
+  retain `pnpm ci:full`. The shared package delegate avoids a second static
+  command list in the workflow.
   Its shared `any_code` and
   `workspace_global` policy now include `turbo.json`, so Turbo graph changes
   trigger affected-workspace preflight instead of falling through to
@@ -990,7 +1042,11 @@ Current workflow consumers:
   their `--phase=vitest` / `--phase=browser` selector and `GIT_BASE` pointing at
   the pull-request base ref. Local default execution still runs both. Browser
   dependencies and disposable PostgreSQL are provisioned only in the browser
-  phase when the complete plan requires them. Cancellation or failure of either
+  phase when the complete plan requires them. The Web dependency graph builds
+  for every Vitest partition and only browser partitions whose planner emits
+  `browser_required=true`; an empty or missing browser selection builds nothing.
+  The planner still validates the complete obligation before that condition.
+  Cancellation or failure of either
   phase rejects the existing required aggregate; fail-fast is disabled so the
   sibling can finish. Pushes to `main`, manual runs and root-sensitive PRs use the
   [hosted Vitest groups](#hosted-vitest-groups) and run
@@ -1002,7 +1058,7 @@ Current workflow consumers:
   so root `turbo run test` and the dedicated web lane mirror the same coverage.
   CI uses the suite catalog's one-worker isolated-fork topology to keep
   hosted-runner memory and process-exit behavior deterministic. The hosted `Web
-Frontend Tests` lane and the main/manual `Full CI` baseline both set the same web
+Frontend Tests` lane and the manual `Full CI` baseline both set the same web
   Vitest old-space value through `NODE_OPTIONS`, so the Vitest parent process
   and forked workers inherit the limit in GitHub Actions. Public web suite
   commands also run `test:deps` before their raw `*:run` delegates so split-suite
@@ -1217,3 +1273,31 @@ aborts startup; a previous local build is not a runtime prerequisite.
   output. It returns the readline handle to the caller, which retains reader
   closure and process lifetime ownership. Chunked, blank and trailing lines keep
   the same formatting; output adaptation does not own process termination.
+
+## Controlled Shell Bootstrap Variants
+
+`stubShellBootstrapApis` owns the controlled session and health bootstrap
+responses. Configure health variants through its `health` options before
+registration; provide `capabilities` explicitly when the scenario owns that
+response. Each owned endpoint is registered once. The existing healthy/ready
+defaults and absent default capabilities registration remain unchanged.
+
+The controlled fetch registry uses first-match semantics. Registering a second
+response for the same method and path does not override the bootstrap default.
+Do not change registry priority, infer expected results from the DOM, or copy the
+session/probe bootstrap into individual scenarios to work around that boundary.
+Fixture tests exercise the actual registry with real HTTP request/response
+primitives, including error status, headers, null bodies, reset and fallthrough.
+
+Reload creates a new browser Window. Reinstall the existing controlled fetch
+transport through the established `window:before:load` hook; let the application
+perform its normal protected admission again. Assert the new session read,
+retained route position and absence of unintended graph writes rather than
+suppressing startup requests or treating cached state as admission.
+
+Optional-probe expectations follow explicit build inputs. The ordinary client
+default enables the probes; a separate build with an explicitly empty
+`VITE_PLATFORM_HEALTH_OPTIONAL_PROBES` and an explicit
+`PLATFORM_HEALTH_EXPECT_OPTIONAL_DISABLED` Cypress expectation proves the
+not-requested posture. Keep the enabled/disabled expectations independent of
+observed DOM output and preserve their actual request assertions.

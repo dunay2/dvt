@@ -1,9 +1,13 @@
 /* Owned concern: protected-route session checking presentation. */
 .checking {
   display: flex;
-  height: 100vh;
+  height: 100%;
   align-items: center;
   justify-content: center;
   background: var(--surface-app);
   color: var(--text-default);
+}
+
+.initialChecking {
+  min-height: 100vh;
 }

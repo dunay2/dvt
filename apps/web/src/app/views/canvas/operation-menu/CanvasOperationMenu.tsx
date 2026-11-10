@@ -1,6 +1,6 @@
 /** Owned concern: accessible, compact discovery of already-admitted operation actions. */
 import { ChevronDown, Plus } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import {
   Command,
@@ -10,7 +10,14 @@ import {
   CommandItem,
   CommandList,
 } from '../../../components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '../../../components/ui/popover';
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+} from '../../../components/ui/popover';
+import { useCanvasRelationalOperationMenu } from './CanvasRelationalOperationMenuContext';
+import { matchesCanvasCatalogQuery } from '../canvasCatalogSearch';
 import { resolveCanvasRelationalOperationPresentation } from '../canvasRelationalOperationPresentation';
 import { writeCanvasRelationalOperationDrag } from '../canvasRelationalTreeDrag';
 import { canvasRelationalOperationPresentation } from '../canvasRelationalOperationPresentation';
@@ -26,10 +33,28 @@ export function CanvasOperationMenu({
   copy: CanvasOperationMenuCopy;
   onStage: (operation: CanvasMenuOperation) => void;
 }>): JSX.Element {
-  const [open, setOpen] = useState(false);
+  const [localOpen, setLocalOpen] = useState(false);
+  const scopedMenu = useCanvasRelationalOperationMenu();
+  const open = scopedMenu?.open ?? localOpen;
+  const setOpen = scopedMenu?.setOpen ?? setLocalOpen;
+  const request = scopedMenu?.request;
+  const virtualAnchor = useMemo(
+    () =>
+      request == null
+        ? undefined
+        : {
+            current: {
+              getBoundingClientRect: () =>
+                new DOMRect(request.screenPosition.x, request.screenPosition.y, 0, 0),
+              contextElement: request.opener,
+            },
+          },
+    [request]
+  );
   const descriptionId = useId();
   return (
     <Popover open={open} onOpenChange={setOpen}>
+      {virtualAnchor == null ? null : <PopoverAnchor virtualRef={virtualAnchor} />}
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -51,9 +76,22 @@ export function CanvasOperationMenu({
       <PopoverContent
         align="start"
         aria-label={copy.add}
+        onCloseAutoFocus={(event) => {
+          if (request?.opener.isConnected) {
+            event.preventDefault();
+            request.opener.focus();
+          }
+        }}
         className="w-80 max-w-[calc(100vw-1rem)] border-(--border-subtle) bg-(--surface-panel) p-0 font-sans text-(--text-strong)"
       >
-        <Command label={copy.add} className="bg-transparent text-inherit" loop>
+        <Command
+          label={copy.add}
+          className="bg-transparent text-inherit"
+          loop
+          filter={(value, query, keywords) =>
+            matchesCanvasCatalogQuery([value, ...(keywords ?? [])].join(' '), query) ? 1 : 0
+          }
+        >
           <CommandInput aria-label={copy.search} placeholder={copy.search} />
           <CommandList className="max-h-[min(24rem,var(--radix-popover-content-available-height))]">
             <CommandEmpty>{copy.empty}</CommandEmpty>

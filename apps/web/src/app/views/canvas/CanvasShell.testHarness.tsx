@@ -1,3 +1,8 @@
+import { ShellActivityRailProvider } from '../../components/shell/ShellActivityRail';
+import { LeftNavigationRail } from '../../components/LeftNavigation';
+import { resolveShellTopBarCopy } from '../../components/shell/copy';
+import { MemoryRouter } from 'react-router';
+import { Workflow } from 'lucide-react';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -185,6 +190,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       ],
       executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
       inspectorNode: null,
+      inspectorTarget: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
       inspectorGraphNodes: [],
@@ -234,6 +240,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       ...overrides?.chromeState,
     },
     graphCommands: {
+      onInspectNode: vi.fn(),
       onNodesChange: vi.fn(),
       onNodeDragStop: vi.fn(),
       onEdgesChange: vi.fn(),
@@ -284,7 +291,12 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
   };
 }
 
-export function createCanvasShellHarness(): {
+export function createCanvasShellHarness(
+  options?: Readonly<{
+    strictMode?: boolean;
+    initialEntries?: React.ComponentProps<typeof MemoryRouter>['initialEntries'];
+  }>
+): {
   container: HTMLDivElement;
   navigation: HTMLDivElement;
   render: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -329,7 +341,33 @@ export function createCanvasShellHarness(): {
       await act(async () => {
         root.render(
           <QueryClientProvider client={queryClient}>
-            <CanvasShell {...props} />
+            <ShellActivityRailProvider>
+              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
+                <LeftNavigationRail
+                  navigationModel={{
+                    primaryItems: [
+                      {
+                        to: '/canvas',
+                        label: 'Canvas',
+                        icon: Workflow,
+                        source: 'runtime',
+                        level: 'core',
+                      },
+                    ],
+                    footerItems: [],
+                  }}
+                  copy={resolveShellTopBarCopy('en')}
+                />
+                {options?.initialEntries == null ? null : options.strictMode ? (
+                  <React.StrictMode>
+                    <CanvasShell {...props} />
+                  </React.StrictMode>
+                ) : (
+                  <CanvasShell {...props} />
+                )}
+              </MemoryRouter>
+              {options?.initialEntries == null ? <CanvasShell {...props} /> : null}
+            </ShellActivityRailProvider>
           </QueryClientProvider>
         );
       });
@@ -339,7 +377,33 @@ export function createCanvasShellHarness(): {
       await act(async () => {
         root.render(
           <QueryClientProvider client={queryClient}>
-            <CanvasShell {...props} />
+            <ShellActivityRailProvider>
+              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
+                <LeftNavigationRail
+                  navigationModel={{
+                    primaryItems: [
+                      {
+                        to: '/canvas',
+                        label: 'Canvas',
+                        icon: Workflow,
+                        source: 'runtime',
+                        level: 'core',
+                      },
+                    ],
+                    footerItems: [],
+                  }}
+                  copy={resolveShellTopBarCopy('en')}
+                />
+                {options?.initialEntries == null ? null : options.strictMode ? (
+                  <React.StrictMode>
+                    <CanvasShell {...props} />
+                  </React.StrictMode>
+                ) : (
+                  <CanvasShell {...props} />
+                )}
+              </MemoryRouter>
+              {options?.initialEntries == null ? <CanvasShell {...props} /> : null}
+            </ShellActivityRailProvider>
           </QueryClientProvider>
         );
       });

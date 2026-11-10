@@ -58,12 +58,6 @@ const PRIMARY_NODE_WORKBENCH_SECTION_IDS = new Set<NodePropertySection['id']>([
   'code',
 ]);
 
-const SOURCE_OVERVIEW_LABEL = {
-  key: 'canvas.nodeWorkbench.source.overviewLabel',
-  fallback: 'Overview',
-  translations: { es: 'Resumen' },
-} as const;
-
 function isPrimarySection(section: NodePropertySection): boolean {
   return PRIMARY_NODE_WORKBENCH_SECTION_IDS.has(section.id);
 }
@@ -92,21 +86,6 @@ function renderTabBadge(section: NodePropertySection): JSX.Element | null {
       {section.tableRows.length}
     </Badge>
   ) : null;
-}
-
-function resolvePresentedSection(
-  section: NodePropertySection,
-  node: CanonicalNode,
-  applicationLanguage: string
-): NodePropertySection {
-  if (node.kind !== 'dvt:source' || section.id !== 'general') {
-    return section;
-  }
-
-  return {
-    ...section,
-    label: resolveString(SOURCE_OVERVIEW_LABEL, applicationLanguage),
-  };
 }
 
 function isApprovedWarehouseSourceSection(
@@ -182,15 +161,12 @@ export function NodePropertiesTabs({
           sectionPrefix: slotPrefix,
           code: `${slotPrefix}-code`,
         };
-  const presentedSections = model.sections.map((section) =>
-    resolvePresentedSection(section, node, applicationLanguage)
-  );
   const primarySections = resolvePrimarySections({
-    sections: presentedSections,
+    sections: model.sections,
     primarySectionIds,
   });
   const primarySectionIdsSet = new Set(primarySections.map((section) => section.id));
-  const overflowSections = presentedSections.filter(
+  const overflowSections = model.sections.filter(
     (section) => !primarySectionIdsSet.has(section.id)
   );
   const overflowItems = [
@@ -287,7 +263,7 @@ export function NodePropertiesTabs({
         ) : null}
       </div>
 
-      {presentedSections.map((section) => {
+      {model.sections.map((section) => {
         const beforeBody =
           sectionBeforeChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null);
         const afterBody = sectionAfterChildren?.[section.id];

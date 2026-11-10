@@ -21,8 +21,15 @@ export interface SourceImportWizardProps {
   onComplete?: (result: ImportSourcesResult) => void;
   onConnectionRenamed?: (connection: WarehouseConnection) => void | Promise<void>;
   sourceImportOptions?: readonly SourceImportOptionContribution[];
-  initialSelection?: SourceImportInitialSelection | null;
+  entry?: SourceImportWizardEntry;
 }
+
+export type SourceImportWizardEntry =
+  | Readonly<{ intent: 'manage-connections' }>
+  | Readonly<{
+      intent: 'import-sources';
+      initialSelection?: SourceImportInitialSelection | null;
+    }>;
 
 export type SourceImportInitialSelection =
   | Readonly<{
@@ -91,7 +98,6 @@ export function buildSourceImportFailure(
 
 export interface SourceImportWizardState {
   currentStep: WizardStep;
-  connections: WarehouseConnection[];
   selectedConnection: string | null;
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
@@ -108,7 +114,6 @@ export interface SourceImportWizardState {
   addTests: boolean;
   addFreshness: boolean;
   isProcessing: boolean;
-  isLoadingConnections: boolean;
   isCreatingConnection: boolean;
   isRenamingConnection: boolean;
   loadError: SourceImportFailure | null;

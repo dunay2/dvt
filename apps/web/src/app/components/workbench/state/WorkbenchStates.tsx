@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Card } from '../../ui/card';
 import { cn } from '../../ui/utils';
+import { useShellRouteHeading } from '../../shell/ShellRouteHeading';
 import {
   routeWorkbenchBodyPaddingClassName,
   routeWorkbenchClassName,
@@ -23,14 +24,18 @@ export function WorkbenchStateFrame({
   bodyClassName,
   slotPrefix = 'workbench-state',
 }: WorkbenchStateFrameProps) {
+  const shellHeading = useShellRouteHeading();
+  const showHeading = shellHeading?.title !== title;
   return (
     <div data-slot={`${slotPrefix}-frame`} className={routeWorkbenchClassName}>
-      <div
-        data-slot={`${slotPrefix}-header`}
-        className={cn(routeWorkbenchHeaderBandClassName, 'flex h-12 items-center px-4 py-0')}
-      >
-        <h1 className="text-lg font-semibold">{title}</h1>
-      </div>
+      {showHeading ? (
+        <div
+          data-slot={`${slotPrefix}-header`}
+          className={cn(routeWorkbenchHeaderBandClassName, 'flex h-12 items-center px-4 py-0')}
+        >
+          <h1 className="text-lg font-semibold">{title}</h1>
+        </div>
+      ) : null}
       <div
         data-slot={`${slotPrefix}-body`}
         className={cn(

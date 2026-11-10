@@ -21,8 +21,8 @@ describe('SourceImportWizard connection navigation', () => {
     harness = createSourceImportWizardHarness();
   });
 
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 

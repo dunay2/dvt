@@ -14,7 +14,22 @@ import type {
   SelectableRelationalSourceObject,
   SelectableSourceObject,
   WizardStep,
+  SourceImportWizardEntry,
+  SourceImportWizardState,
 } from './types';
+
+export function initializeSourceImportEntry(
+  base: SourceImportWizardState,
+  entry: SourceImportWizardEntry
+): SourceImportWizardState {
+  const selection = entry.intent === 'import-sources' ? entry.initialSelection : undefined;
+  const catalogue = selection != null && selection.kind !== 'dbt-source-binding' ? selection : null;
+  return {
+    ...base,
+    currentStep: catalogue == null ? 'connection' : 'selection',
+    selectedConnection: catalogue?.connectionId ?? null,
+  };
+}
 
 export const SOURCE_IMPORT_SECTIONS: readonly {
   id: SourceImportSection;

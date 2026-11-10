@@ -36,6 +36,7 @@ export function buildCanvasShellPanels({
     routePresentation.canvasDocuments.find(
       (canvas) => canvas.id === routePresentation.activeCanvasId
     ) ?? null;
+  const hasInspectorTarget = panelState.inspectorNode != null || panelState.inspectorTarget != null;
 
   return {
     authoringNodeKinds: resolveActiveCanvasAuthoringNodeKinds({
@@ -47,10 +48,11 @@ export function buildCanvasShellPanels({
     canvasDocuments: routePresentation.canvasDocuments,
     executionEnvironmentOptions: panelState.executionEnvironmentOptions,
     inspectorNode: panelState.inspectorNode,
-    inspectorPreferredTabId:
-      panelState.inspectorNode == null ? null : panelState.inspectorPreferredTabId,
-    inspectorPreferredTabRequestId:
-      panelState.inspectorNode == null ? 0 : panelState.inspectorPreferredTabRequestId,
+    inspectorTarget: panelState.inspectorTarget ?? null,
+    inspectorPreferredTabId: hasInspectorTarget ? panelState.inspectorPreferredTabId : null,
+    inspectorPreferredTabRequestId: hasInspectorTarget
+      ? panelState.inspectorPreferredTabRequestId
+      : 0,
     inspectorGraphNodes: panelState.inspectorGraphNodes,
     inspectorGraphEdges: panelState.inspectorGraphEdges,
     inspectorAuthoring: {
@@ -59,7 +61,7 @@ export function buildCanvasShellPanels({
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
     },
     relationalTreeAuthoring: {
-      canEditNode: panelState.canEditInspectorNode,
+      canEditNode: userPermissions.canEditEdges,
       onApplyNodeDraft: panelState.applyNodeDraft,
     },
     inspectorWorkbenchContributions: [],

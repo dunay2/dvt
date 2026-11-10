@@ -6,7 +6,10 @@ import { flushSync } from 'react-dom';
 
 import type { ContextMenuEvent } from './canvasContextMenuPresenter.types';
 import { resolveCanvasViewportContextMenuRequest } from './canvasContextMenuTargetPolicy';
-import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
+import {
+  resolveCanvasKeyboardAction,
+  resolveCanvasBackgroundAddMenuRequest,
+} from './canvasViewportInteraction';
 import { isCanvasElement } from '../../components/canvas/canvasNodeInteractionBoundary';
 import {
   buildCanvasAddNodeCatalogMenuModel,
@@ -149,6 +152,18 @@ export function useCanvasContextMenuPresenter({
       onOpenSourceImport,
       screenToFlowPosition,
     ]
+  );
+
+  const handleViewportDoubleClick = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (!canEditEdges) return;
+      const position = resolveCanvasBackgroundAddMenuRequest(event);
+      if (position == null) return;
+      event.preventDefault();
+      event.stopPropagation();
+      openAddNodeCatalog(position, event.currentTarget);
+    },
+    [canEditEdges, openAddNodeCatalog]
   );
 
   const handleViewportContextMenuKeyDown = useCallback(
@@ -312,6 +327,7 @@ export function useCanvasContextMenuPresenter({
     openAddNodeCatalog,
     handlePaneClick,
     handleViewportContextMenu,
+    handleViewportDoubleClick,
     handleViewportContextMenuKeyDown,
     handleEdgeContextMenu,
     handleCanvasAction,

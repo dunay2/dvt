@@ -1,5 +1,7 @@
 /**
  * Owned concern: explorer disclosure and shell visibility, not graph selection or authoring.
+ * Reason: the layout projection is the one owner of retained dock disclosure and width.
+ * Corner invariant: moving template contracts cannot remount the graph or the catalogue.
  * @baseline GH-3610: one retained panel, no graph mutation or automatic fit on toggle.
  * @decision Delegate layout to the existing resizable primitive and content to adapters.
  * @consequence Main and semantic views share interaction without sharing domain commands.
@@ -10,39 +12,26 @@ import {
   useId,
   useRef,
   type KeyboardEvent,
-  type DragEvent,
+  type JSX,
   type ReactNode,
   type RefObject,
 } from 'react';
+import { useShellActivityRail } from '../../../components/shell/ShellActivityRail';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CANVAS_EXPLORER_WIDTH, useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import type { ImperativePanelHandle } from '../../../components/ui/resizable';
-import {
-  CanvasExplorerTemplate,
-  type CanvasExplorerActivityRail,
-  type CanvasExplorerPanel,
-} from './CanvasExplorer.templates';
+import { CanvasExplorerTemplate } from './CanvasExplorer.templates';
+import type {
+  CanvasExplorerActivityRail,
+  CanvasExplorerHeading,
+  CanvasExplorerNavigationAction,
+  CanvasExplorerProjectWorkspace,
+} from './CanvasExplorer.types';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
-import type { CanonicalNode } from '../../../types/canonical';
-
-export type CanvasProjectElementsInput = Readonly<{
-  enabled: boolean;
-  items: readonly CanvasExplorerItem[];
-  canCreateInstances?: boolean;
-  onSelect: (id: string, definition?: CanonicalNode) => void;
-  onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
-}>;
-
-export type CanvasExplorerProjectWorkspace = Readonly<{
-  onActivate: () => Promise<boolean>;
-  onCanvas: () => void;
-  renderElements?: (input: CanvasProjectElementsInput) => ReactNode;
-}>;
 
 export function CanvasExplorer({
   elements,
+  heading,
   projectFiles,
   children,
   rootRef,
@@ -50,12 +39,14 @@ export function CanvasExplorer({
   activityRail,
 }: Readonly<{
   elements: ReactNode | ((enabled: boolean) => ReactNode);
+  heading?: CanvasExplorerHeading;
   projectFiles?: CanvasExplorerProjectWorkspace;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
   workspaceTask?: ReactNode;
   activityRail?: CanvasExplorerActivityRail;
 }>): JSX.Element {
+  const shellOwned = useShellActivityRail();
   const { mode, widthPercent } = useUiLayoutStore((state) => state.canvasExplorer);
   const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const expanded = mode === 'expanded';
@@ -69,7 +60,7 @@ export function CanvasExplorer({
   }, [widthPercent]);
   const id = useId();
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
-  const toggle = (key: CanvasExplorerPanel): void => {
+  const toggle = (key: CanvasExplorerNavigationAction): void => {
     if (key === 'git') {
       if (projectFiles != null) void projectFiles.onActivate().catch(() => undefined);
       return;
@@ -77,7 +68,10 @@ export function CanvasExplorer({
     projectFiles?.onCanvas();
     dispatch({ type: activityRail?.codeVisible === true ? 'expand' : 'toggle' });
   };
-  const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
+  const onKeyToggle = (
+    key: CanvasExplorerNavigationAction,
+    event: KeyboardEvent<HTMLButtonElement>
+  ): void => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     event.stopPropagation();
@@ -86,6 +80,7 @@ export function CanvasExplorer({
   return (
     <CanvasExplorerTemplate
       id={id}
+      heading={heading}
       active={visible && expanded ? 'elements' : null}
       visible={visible}
       dock={{
@@ -104,6 +99,7 @@ export function CanvasExplorer({
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       activityRail={activityRail}
+      shellOwned={shellOwned}
       elements={
         typeof elements === 'function'
           ? elements(visible && expanded && activityRail?.codeVisible !== true)
@@ -115,7 +111,9 @@ export function CanvasExplorer({
       onCollapse={() => {
         projectFiles?.onCanvas();
         dispatch({ type: 'collapse' });
-        document.getElementById(`${id}-elements-button`)?.focus();
+        document
+          .getElementById(shellOwned ? 'shell-canvas-navigation' : `${id}-elements-button`)
+          ?.focus();
       }}
       onClose={() => {
         projectFiles?.onCanvas();

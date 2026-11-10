@@ -94,7 +94,7 @@ describe('Canonical code inspection query lifecycle', () => {
     expect(project).not.toHaveBeenCalled();
   });
 
-  it('does not query until SQL is selected and reuses a ready result for the same input', async () => {
+  it('does not query canonical JSON and revalidates SQL after returning from another view', async () => {
     project.mockResolvedValue('select current_model');
     render();
     expect(project).not.toHaveBeenCalled();
@@ -108,9 +108,57 @@ describe('Canonical code inspection query lifecycle', () => {
     expect(container.querySelector('pre')?.textContent).toBe('select current_model');
     select('substrait');
     expect(container.querySelector('pre')?.textContent).toBe(PROPS.canonicalContent);
-    select('postgres-sql');
-    expect(project).toHaveBeenCalledOnce();
+    await act(async () => {
+      select('postgres-sql');
+    });
+    expect(project).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('pre')?.textContent).toBe('select current_model');
   });
+
+  it('keeps canonical JSON available without an authorized SQL query port', async () => {
+    // A standalone canonical inspector must not fall back to incomplete local SQL generation.
+    project.mockRestore();
+    render();
+    expect(container.querySelector('pre')?.textContent).toBe(PROPS.canonicalContent);
+    select('postgres-sql');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe('Projection failed');
+    expect(container.querySelector('pre')).toBeNull();
+    select('substrait');
+    expect(container.querySelector('pre')?.textContent).toBe(PROPS.canonicalContent);
+  });
+
+  it.each(['canvasId', 'scopeKey', 'query'] as const)(
+    'discards pending SQL when its %s owner changes',
+    async (field) => {
+      const pending = pendingProjection();
+      project.mockReturnValue(pending.promise);
+      const binding = {
+        canvasId: 'canvas-one',
+        scopeKey: 'tenant::project::dev',
+        query: { projectTransformSql: vi.fn() },
+      };
+      render({ ...PROPS, codeProjection: binding });
+      select('postgres-sql');
+      render({
+        ...PROPS,
+        codeProjection: {
+          ...binding,
+          ...(field === 'canvasId' ? { canvasId: 'canvas-two' } : {}),
+          ...(field === 'scopeKey' ? { scopeKey: 'tenant::other::dev' } : {}),
+          ...(field === 'query' ? { query: { projectTransformSql: vi.fn() } } : {}),
+        },
+      });
+      await act(async () => {
+        pending.resolve('select obsolete_owner');
+      });
+      expect(container.querySelector('select')?.value).toBe('substrait');
+      expect(container.querySelector('pre')?.textContent).toBe(PROPS.canonicalContent);
+      expect(project).toHaveBeenCalledOnce();
+    }
+  );
 
   it('reuses the same pending query across a canonical/SQL roundtrip', async () => {
     const pending = pendingProjection();

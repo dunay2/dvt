@@ -58,6 +58,7 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['test:coverage', 'runtime-root'],
   ['test:coverage:engine', 'runtime-root'],
   ['ci:code', 'runtime-root'],
+  ['ci:code:static', 'runtime-root'],
   ['ci:full', 'runtime-root'],
   ['preflight:affected', 'runtime-root'],
   ['preflight:affected:ci', 'runtime-root'],
@@ -156,12 +157,19 @@ const SCRIPT_FILE_RULES = [
     /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|(docs|documentation)-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(ai-efficiency-adoption|feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
     'docs-governance',
   ],
-  [/^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest)\.cjs$/u, 'docs-governance'],
+  [
+    /^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest|surface-matcher)\.cjs$/u,
+    'docs-governance',
+  ],
   [/^scripts\/lib\/component-source-responsibilities\.cjs$/u, 'docs-governance'],
   [/^scripts\/lib\/source-code-facts\.cjs$/u, 'ci-tooling'],
   [/^scripts\/lib\/python-source-facts\.cjs$/u, 'ci-tooling'],
   [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^scripts\/lib\/risk-document-records\.cjs$/u, 'docs-governance'],
+  [
+    /^scripts\/lib\/(changed-test-selection|local-test-coverage|local-validation-(plan-values|executor)|prepush-validation-stamp)\.cjs$/u,
+    'developer-workflow',
+  ],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
     /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|lib\/git-repository-environment|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,

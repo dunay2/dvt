@@ -36,6 +36,7 @@ export function DvtTransformOutputView({
   edges,
   canonicalContent,
   copy,
+  codeProjection,
 }: DvtTransformOutputViewProps): JSX.Element {
   const [activeView, setActiveView] = useState<TransformOutputViewId>('substrait');
   const [derivedSql, setDerivedSql] = useState<DerivedSqlState>({ status: 'idle' });
@@ -44,7 +45,8 @@ export function DvtTransformOutputView({
     derivedSql.status !== 'idle' &&
     derivedSql.input.transformNode === transformNode &&
     derivedSql.input.nodes === nodes &&
-    derivedSql.input.edges === edges;
+    derivedSql.input.edges === edges &&
+    derivedSql.input.codeProjection === codeProjection;
   const selectedView = isCurrentProjection ? activeView : 'substrait';
   const displayedCode =
     selectedView === 'substrait'
@@ -65,20 +67,17 @@ export function DvtTransformOutputView({
     () => () => {
       requestId.current += 1;
     },
-    []
+    [transformNode, nodes, edges, codeProjection]
   );
 
   const selectOutputView = (event: ChangeEvent<HTMLSelectElement>): void => {
     const nextView = event.currentTarget.value as TransformOutputViewId;
     setActiveView(nextView);
-    if (
-      nextView === 'substrait' ||
-      (isCurrentProjection && (derivedSql.status === 'ready' || derivedSql.status === 'loading'))
-    )
+    if (nextView === 'substrait' || (isCurrentProjection && derivedSql.status === 'loading'))
       return;
 
     const currentRequestId = ++requestId.current;
-    const input = { transformNode, nodes, edges };
+    const input = { transformNode, nodes, edges, codeProjection };
     setDerivedSql({ status: 'loading', input });
     void projectDvtSubstraitTransformOutputToPostgresSql(input).then(
       (sql) => {

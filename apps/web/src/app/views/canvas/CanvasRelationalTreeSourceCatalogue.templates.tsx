@@ -36,7 +36,7 @@ export function CanvasRelationalSourceCatalogueTemplate({
       </label>
       <ul className={styles.list} data-slot="canvas-relational-tree-source-list">
         {items.map((item) => (
-          <li key={item.key} className={styles.sourceRow}>
+          <li key={item.key} className={styles.actionRow}>
             <CanvasRelationalTreeSourceCard
               item={item}
               copy={copy}

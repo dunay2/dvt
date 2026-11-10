@@ -6,8 +6,8 @@ const SINGLE_CLICK_DELAY_MS = 500;
 
 type CanvasNodeActivation = Readonly<{
   activation: 'open' | 'inspect' | undefined;
-  onClick: MouseEventHandler<HTMLDivElement>;
-  onDoubleClick: MouseEventHandler<HTMLDivElement>;
+  onClick: MouseEventHandler<HTMLElement>;
+  onDoubleClick: MouseEventHandler<HTMLElement>;
   cancelPendingClick: () => void;
 }>;
 
@@ -32,7 +32,7 @@ export function useCanvasNodeActivation(
   }, []);
   useEffect(() => cancelPendingClick, [cancelPendingClick, nodeId]);
 
-  const onClick: MouseEventHandler<HTMLDivElement> = (event) => {
+  const onClick: MouseEventHandler<HTMLElement> = (event) => {
     cancelPendingClick();
     if (
       event.defaultPrevented ||
@@ -62,7 +62,7 @@ export function useCanvasNodeActivation(
     ownerDocument.addEventListener('keydown', cancelPendingClick, { capture: true, once: true });
   };
 
-  const onDoubleClick: MouseEventHandler<HTMLDivElement> = (event) => {
+  const onDoubleClick: MouseEventHandler<HTMLElement> = (event) => {
     cancelPendingClick();
     if (!isCanvasNodeEmbeddedControlTarget(event.target)) onOpenNode?.();
   };

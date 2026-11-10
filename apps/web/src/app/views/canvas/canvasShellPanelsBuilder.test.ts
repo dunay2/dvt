@@ -4,6 +4,7 @@ import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
 import type { CanvasShellPanelsBuilderArgs } from './canvasShellBuilder.types';
 import { buildTestCanvasKind, buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import { CANONICAL_NODE_STATUSES, type CanonicalNode } from '../../types/canonical';
+import type { CanvasInspectorTarget } from '../../stores/canvasInspectorTarget';
 
 const INSPECTOR_TEST_NODE_KIND = buildTestNodeKind('dvt:source', 'Source');
 
@@ -26,6 +27,7 @@ function buildArgs(
   return {
     panelState: {
       inspectorNode: null,
+      inspectorTarget: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
       inspectorGraphNodes: [],
@@ -77,6 +79,34 @@ function buildArgs(
 }
 
 describe('buildCanvasShellPanels', () => {
+  it.each([
+    null,
+    buildInspectorNode(),
+    buildInspectorNode({ id: 'unplaced-model', kind: 'dvt:transform', role: 'transform' }),
+  ])(
+    'keeps Model runtime authoring independent of the readonly Inspector target %j',
+    (inspectorNode) => {
+      // A stricter Properties admission must not disable another placed Model's pending editor.
+      const args = buildArgs();
+      const panels = buildCanvasShellPanels({
+        ...args,
+        panelState: { ...args.panelState, inspectorNode, canEditInspectorNode: false },
+      });
+      expect(panels.inspectorAuthoring.canEditNode).toBe(false);
+      expect(panels.relationalTreeAuthoring?.canEditNode).toBe(true);
+    }
+  );
+
+  it('cannot borrow Inspector editability when graph commands are readonly', () => {
+    const args = buildArgs();
+    const panels = buildCanvasShellPanels({
+      ...args,
+      userPermissions: { ...args.userPermissions, canEditEdges: false },
+      panelState: { ...args.panelState, canEditInspectorNode: true },
+    });
+    expect(panels.relationalTreeAuthoring?.canEditNode).toBe(false);
+  });
+
   it('derives active canvas authoring node kinds from the ready canvas kind', () => {
     const panels = buildCanvasShellPanels(buildArgs());
 
@@ -192,5 +222,40 @@ describe('buildCanvasShellPanels', () => {
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
     });
+  });
+
+  it('retains the file target preference without replacing the canonical catalogue', () => {
+    // GH-3765: a real file target has no canonical node; clearing its preference would lose explicit Code intent.
+    const args = buildArgs();
+    const target: CanvasInspectorTarget = {
+      kind: 'dbt-file-model',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'file-canvas',
+        authority: { kind: 'dbt-project-files', projectRoot: 'project' },
+      },
+      uniqueId: 'model.project.orders',
+      workspaceScope: args.routePresentation.workspaceScope,
+    };
+    const catalogue = [buildInspectorNode()];
+    const panels = buildCanvasShellPanels({
+      ...args,
+      panelState: {
+        ...args.panelState,
+        inspectorTarget: target,
+        inspectorNode: null,
+        inspectorPreferredTabId: 'code',
+        inspectorPreferredTabRequestId: 4,
+        inspectorGraphNodes: catalogue,
+        canEditInspectorNode: false,
+      },
+    });
+
+    expect(panels.inspectorTarget).toBe(target);
+    expect(panels.inspectorNode).toBeNull();
+    expect(panels.inspectorPreferredTabId).toBe('code');
+    expect(panels.inspectorPreferredTabRequestId).toBe(4);
+    expect(panels.inspectorGraphNodes).toBe(catalogue);
+    expect(panels.inspectorAuthoring.canEditNode).toBe(false);
   });
 });

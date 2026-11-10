@@ -106,7 +106,7 @@ describe('useCanvasController source import contract', () => {
 
     expect(harness.state.store.setCurrentPlan).toHaveBeenCalledWith(null);
     expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalled();
-    expect(harness.state.store.setInspectorNode).not.toHaveBeenCalled();
+    expect(harness.state.store.setInspectorTarget).not.toHaveBeenCalled();
     expect(harness.state.store.showInspectorPanel).not.toHaveBeenCalled();
     expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['workspace', 'graph-draft', 'tenant-a::project-a::dev'],
@@ -190,13 +190,13 @@ describe('useCanvasController source import contract', () => {
     const storeActions = harness.state.store as typeof harness.state.store & {
       setCurrentPlan: ReturnType<typeof vi.fn>;
       setSelectedNodes: ReturnType<typeof vi.fn>;
-      setInspectorNode: ReturnType<typeof vi.fn>;
+      setInspectorTarget: ReturnType<typeof vi.fn>;
       showInspectorPanel: ReturnType<typeof vi.fn>;
     };
 
     storeActions.setCurrentPlan.mockClear();
     storeActions.setSelectedNodes.mockClear();
-    storeActions.setInspectorNode.mockClear();
+    storeActions.setInspectorTarget.mockClear();
     storeActions.showInspectorPanel.mockClear();
     harness.state.queryClient.invalidateQueries.mockClear();
 
@@ -211,7 +211,7 @@ describe('useCanvasController source import contract', () => {
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(true);
     expect(storeActions.setCurrentPlan).not.toHaveBeenCalled();
     expect(storeActions.setSelectedNodes).not.toHaveBeenCalled();
-    expect(storeActions.setInspectorNode).not.toHaveBeenCalled();
+    expect(storeActions.setInspectorTarget).not.toHaveBeenCalled();
     expect(storeActions.showInspectorPanel).not.toHaveBeenCalled();
     expect(harness.state.queryClient.invalidateQueries).not.toHaveBeenCalled();
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([]);

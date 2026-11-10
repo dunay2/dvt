@@ -7,18 +7,18 @@ import type {
   TestWarehouseConnectionResult,
 } from '../../ports/workspace';
 import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
-import { buildSourceImportFailure, type SourceImportInitialSelection } from './types';
+import { buildSourceImportFailure } from './types';
 import { useSourceImportRequest } from './useSourceImportRequest';
 import type { SourceImportConnectionTestBinding } from './sourceImportConnectionTest.binding';
 
 export function useSourceImportConnectionTest(
   open: boolean,
   connectionId: string | null,
-  binding: SourceImportInitialSelection | null | undefined,
+  requestOwner: object | null | undefined,
   port: IWarehouseSourceImportPort
 ): SourceImportConnectionTestBinding {
   const { copy } = useSourceImportLocalization();
-  const scope = useMemo(() => ({}), [open, connectionId, binding, port]);
+  const scope = useMemo(() => ({}), [open, connectionId, requestOwner, port]);
   const { state, begin, succeed, fail, isCurrent } =
     useSourceImportRequest<TestWarehouseConnectionResult>(scope);
   const test = async () => {

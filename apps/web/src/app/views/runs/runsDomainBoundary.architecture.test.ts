@@ -369,6 +369,26 @@ describe('Runs domain boundary', () => {
     expect(runTableModelSource).toContain('isKnownRunField');
   });
 
+  it('keeps heading projection and semantic navigation free of a second state or route authority', () => {
+    const table = readAppSource('views/runs/RunOperationalTable.tsx');
+    const list = readAppSource('views/runs/RunListStateView.tsx');
+    const heading = readAppSource('components/shell/ShellRouteHeading.tsx');
+    const navigation = readAppSource('shell/shellNavigationModel.ts');
+    const style = readAppSource('views/runs/RunOperationalTable.module.css');
+    expect(table).toContain("from 'react-router'");
+    expect(table).not.toContain('onOpenRun');
+    expect(table).not.toContain("id: 'action'");
+    expect(list).not.toContain('useNavigate');
+    expect(list).not.toContain('max-w-6xl');
+    expect(heading).not.toMatch(/useState|useReducer|\/stores\/|\/queries\//u);
+    expect(navigation).toContain('view.placement.showRouteHeading');
+    expect(navigation).not.toContain("view.path === '/runs'");
+    expect(style).not.toMatch(/#[0-9a-fA-F]{3,8}\b|font-family:\s*['"]/u);
+    expect(style).toContain('var(--font-sans)');
+    expect(style).toContain('var(--font-mono)');
+    expect(style).toContain('var(--focus-ring-width)');
+  });
+
   it('keeps Runs presentation copy on the application-language token authority', () => {
     const copySource = readAppSource('views/runs/runStatesCopy.ts');
     const listSource = readAppSource('views/runs/RunListStateView.tsx');

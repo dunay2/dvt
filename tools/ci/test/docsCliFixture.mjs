@@ -35,9 +35,14 @@ export function createDocsRepository(t) {
   const root = mkdtempSync(join(tmpdir(), 'dvt-docs-cli-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   cpSync(join(repositoryRoot, 'tools/docs'), join(root, 'tools/docs'), { recursive: true });
-  mkdirSync(join(root, 'scripts'));
-  for (const script of ['git-local-changes.cjs', 'check-markdown-locations.cjs']) {
-    cpSync(join(repositoryRoot, 'scripts', script), join(root, 'scripts', script));
+  for (const script of [
+    'git-local-changes.cjs',
+    'lib/git-repository-environment.cjs',
+    'check-markdown-locations.cjs',
+  ]) {
+    const target = join(root, 'scripts', script);
+    mkdirSync(dirname(target), { recursive: true });
+    cpSync(join(repositoryRoot, 'scripts', script), target);
   }
   cpSync(join(repositoryRoot, 'package.json'), join(root, 'package.json'));
   symlinkSync(join(repositoryRoot, 'node_modules'), join(root, 'node_modules'), 'junction');

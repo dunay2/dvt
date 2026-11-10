@@ -9,7 +9,11 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { getEventListeners, once } from 'node:events';
 import path from 'node:path';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
+import { executeCommandPlan } from '../../scripts/lib/local-validation-executor.cjs';
 
 import {
   buildSpawnOptions,
@@ -483,6 +487,22 @@ test('native run cancellation retires owned preview and cannot publish late brow
   }
 });
 
+test('native browser cooperates with an inherited deadline without accepting a late result', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const pending = deferred();
+  const fixture = runnerFixture(undefined, () => pending.promise);
+  const run = runWebCypressNative({ env: { DVT_VALIDATION_DEADLINE_MS: '1010' } }, fixture.deps);
+  const rejected = assert.rejects(run, { exitCode: 124 });
+  await nextTurn();
+  assert.ok(fixture.events.includes('run'));
+  t.mock.timers.tick(10);
+  await rejected;
+  assert.equal(fixture.events.at(-1), 'stop');
+  pending.resolve(proof());
+  await nextTurn();
+  assert.deepEqual(fixture.messages, []);
+});
+
 test('native cancellation restores scoped environment immediately and late browser completion cannot overwrite it', async (t) => {
   const keys = [
     'ELECTRON_RUN_AS_NODE',
@@ -698,5 +718,129 @@ test(
     await closed;
     assert.throws(() => process.kill(-handle.child.pid, 0), { code: 'ESRCH' });
     assert.deepEqual(fixture.messages, []);
+  }
+);
+
+test(
+  'native CLI keeps its module child owned until the bounded parent retires the entire tree',
+  {
+    timeout: 15000,
+  },
+  async (t) => {
+    const root = mkdtempSync(path.join(tmpdir(), 'dvt-native-module-lifetime-'));
+    const modulePath = fileURLToPath(new URL('./run-web-cypress-native.mjs', import.meta.url));
+    const source = readFileSync(modulePath, 'utf8');
+    const cliStart = source.lastIndexOf('\nif (process.argv[1]');
+    assert.ok(cliStart > 0, 'exercise the actual CLI completion block');
+    const wrapper = path.join(root, 'native-cli-fixture.mjs');
+    const processOwnerUrl = new URL('../../scripts/live-proof-process.cjs', import.meta.url).href;
+    writeFileSync(
+      wrapper,
+      [
+        `import { runWebCypressNative as runNative } from ${JSON.stringify(pathToFileURL(modulePath).href)};`,
+        `import { spawnLiveProofProcess, terminateLiveProofProcess } from ${JSON.stringify(processOwnerUrl)};`,
+        `import { spawn } from 'node:child_process';`,
+        `import { pathToFileURL } from 'node:url';`,
+        `const deps = {`,
+        `  cypress: {cli:{parseRunArguments:async()=>({spec:'cypress/e2e/held.cy.ts'})},run:()=>{`,
+        `    const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore',windowsHide:true});`,
+        `    process.send({phase:'module-child',pid:child.pid}); return new Promise(()=>{});`,
+        `  }},`,
+        `  isPreviewReachable:async()=>false, waitForPreview:async()=>{},`,
+        `  spawnLiveProofProcess:(name)=>{`,
+        `    const handle=spawnLiveProofProcess(name,process.execPath,['-e',name==='native-web-preview'?'setInterval(()=>{},1000)':''],{stdio:'ignore'});`,
+        `    if(name==='native-web-preview') process.send({phase:'preview',pid:handle.child.pid}); return handle;`,
+        `  },`,
+        `  terminateLiveProofProcess:async(handle)=>{await terminateLiveProofProcess(handle); if(handle.name==='native-web-preview')process.send({phase:'preview-cleaned'});},`,
+        `  log:()=>{throw new Error('interrupted proof cannot publish acceptance');},`,
+        `};`,
+        `const runWebCypressNative=()=>runNative({argv:['--spec','cypress/e2e/held.cy.ts'],env:{...process.env,DVT_VALIDATION_DEADLINE_MS:String(Date.now()+1000)}},deps);`,
+        source.slice(cliStart),
+      ].join('\n')
+    );
+    const sentinel = spawnLiveProofProcess(
+      'unrelated-sentinel',
+      process.execPath,
+      ['-e', 'setInterval(()=>{},1000)'],
+      { stdio: 'ignore' }
+    );
+    let wrapperHandle;
+    const messages = [];
+    t.after(async () => {
+      if (wrapperHandle) await terminateLiveProofProcess(wrapperHandle);
+      for (const { pid } of messages) {
+        if (!pid) continue;
+        try {
+          process.kill(pid, 'SIGKILL');
+        } catch (error) {
+          if (error.code !== 'ESRCH') throw error;
+        }
+      }
+      await terminateLiveProofProcess(sentinel);
+      rmSync(root, { recursive: true, force: true });
+    });
+    const receipts = [];
+    const status = await executeCommandPlan(
+      [{ id: 'native-module', command: process.execPath, args: [wrapper] }],
+      {
+        shell: false,
+        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        stepTimeoutMs: 6000,
+        totalTimeoutMs: 10000,
+        cleanupTimeoutMs: 1000,
+        forceTimeoutMs: 2000,
+        spawnProcess: (...args) => {
+          wrapperHandle = spawnLiveProofProcess(...args);
+          wrapperHandle.child.on('message', (message) => messages.push(message));
+          return wrapperHandle;
+        },
+        onStepResult: (receipt) => receipts.push(receipt),
+        log: () => {},
+      }
+    );
+    assert.equal(status, 124);
+    assert.ok(
+      receipts[0].durationMs >= 6000,
+      'the wrapper retains its referenced module child until the parent deadline'
+    );
+    assert.ok(messages.some(({ phase }) => phase === 'preview-cleaned'));
+    const child = messages.find(({ phase }) => phase === 'module-child');
+    assert.ok(child?.pid, 'a real module child must have started');
+    assert.throws(() => process.kill(child.pid, 0), { code: 'ESRCH' });
+    assert.equal(sentinel.child.exitCode, null, 'unrelated process remains alive');
+    assert.equal(receipts[0].outcome, 'timed-out');
+  }
+);
+
+test(
+  'native CLI success closes naturally after its referenced child finishes',
+  { timeout: 5000 },
+  async (t) => {
+    const root = mkdtempSync(path.join(tmpdir(), 'dvt-native-cli-success-'));
+    const source = readFileSync(new URL('./run-web-cypress-native.mjs', import.meta.url), 'utf8');
+    const wrapper = path.join(root, 'success.mjs');
+    writeFileSync(
+      wrapper,
+      [
+        `import { spawn } from 'node:child_process';`,
+        `import { pathToFileURL } from 'node:url';`,
+        `const runWebCypressNative=async()=>{`,
+        `  const child=spawn(process.execPath,['-e','setTimeout(()=>{},100)'],{stdio:'ignore',windowsHide:true});`,
+        `  child.once('exit',()=>process.send('child-finished')); return 0;`,
+        `};`,
+        source.slice(source.lastIndexOf('\nif (process.argv[1]')),
+      ].join('\n')
+    );
+    const handle = spawnLiveProofProcess('native-cli-success', process.execPath, [wrapper], {
+      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+    });
+    t.after(async () => {
+      await terminateLiveProofProcess(handle);
+      rmSync(root, { recursive: true, force: true });
+    });
+    const messages = [];
+    handle.child.on('message', (message) => messages.push(message));
+    assert.deepEqual(await handle.completion, { code: 0, signal: null });
+    assert.deepEqual(messages, ['child-finished']);
   }
 );

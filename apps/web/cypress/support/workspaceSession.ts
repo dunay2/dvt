@@ -1,4 +1,4 @@
-import { installE2eApiFetchStub, resetE2eApiStubs, stubE2eJsonApi } from './e2eApiStub';
+import { installE2eApiFetchStub, resetE2eApiStubs, stubE2eApi, stubE2eJsonApi } from './e2eApiStub';
 
 export type E2eWorkspaceSession = {
   tenantId: string;
@@ -25,9 +25,13 @@ export const LIVE_WORKSPACE_SESSION: E2eWorkspaceSession = {
   environmentId: 'dev',
 };
 
-type ShellBootstrapApiOptions = {
+type BootstrapResponse = Awaited<ReturnType<Parameters<typeof stubE2eApi>[2]>>;
+
+export type ShellBootstrapApiOptions = {
   scopes?: readonly string[];
   projectIds?: readonly string[];
+  health?: Partial<Record<'healthz' | 'readyz' | 'version' | 'dbReady', BootstrapResponse>>;
+  capabilities?: BootstrapResponse;
 };
 
 export function seedE2eWorkspaceSession(
@@ -93,28 +97,26 @@ export function stubShellBootstrapApis(options: ShellBootstrapApiOptions = {}): 
     },
   });
 
-  stubE2eJsonApi('GET', '/healthz', {
-    ok: true,
-    status: 'healthy',
-    components: {
-      intentReconciler: {
-        status: 'healthy',
+  const healthDefaults = [
+    {
+      key: 'healthz',
+      path: '/healthz',
+      response: {
+        body: {
+          ok: true,
+          status: 'healthy',
+          components: { intentReconciler: { status: 'healthy' } },
+        },
       },
     },
-  });
-
-  stubE2eJsonApi('GET', '/readyz', {
-    ok: true,
-    status: 'ready',
-  });
-
-  stubE2eJsonApi('GET', '/version', {
-    name: 'dvt-api',
-    version: '1.0.0',
-  });
-
-  stubE2eJsonApi('GET', '/db/ready', {
-    ok: true,
-    reason: null,
-  });
+    { key: 'readyz', path: '/readyz', response: { body: { ok: true, status: 'ready' } } },
+    { key: 'version', path: '/version', response: { body: { name: 'dvt-api', version: '1.0.0' } } },
+    { key: 'dbReady', path: '/db/ready', response: { body: { ok: true, reason: null } } },
+  ] as const;
+  for (const probe of healthDefaults) {
+    const response = options.health?.[probe.key] ?? probe.response;
+    stubE2eApi('GET', probe.path, () => response);
+  }
+  const capabilities = options.capabilities;
+  if (capabilities !== undefined) stubE2eApi('GET', '/capabilities', () => capabilities);
 }

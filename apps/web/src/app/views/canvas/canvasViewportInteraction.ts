@@ -1,5 +1,5 @@
 /** Owned concern: share Canvas gesture admission and key-to-intent mapping. */
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useRef, type KeyboardEvent as ReactKeyboardEvent, type PointerEventHandler } from 'react';
 
 import {
   isCanvasElement,
@@ -23,6 +23,7 @@ export function resolveCanvasViewportInteraction(canDeleteWithKeyboard: boolean)
   return {
     flow: {
       ...CANVAS_POINTER_OPTIONS,
+      zoomOnDoubleClick: false,
       deleteKeyCode: canDeleteWithKeyboard ? CANVAS_DELETE_KEYS : null,
     },
     controls: { showInteractive: false },
@@ -88,10 +89,69 @@ export function isCanvasBackgroundTarget(
     !isCanvasInteractionControlTarget(target) &&
     !boundary.contains(
       target.closest(
-        '[data-relational-card-id], [data-slot="canvas-relational-card"], .react-flow__node'
+        '[data-relational-card-id], [data-slot="canvas-relational-card"], .react-flow__node, .react-flow__edge, .react-flow__handle, .react-flow__controls, .react-flow__minimap, [role="menu"], [role="dialog"], [role="search"]'
       )
     )
   );
+}
+
+/** Admit Add only on the nearest canvas background; callers retain menu and command ownership. */
+export function resolveCanvasBackgroundAddMenuRequest(
+  event: Pick<
+    MouseEvent,
+    'button' | 'detail' | 'target' | 'currentTarget' | 'clientX' | 'clientY' | 'defaultPrevented'
+  >
+): { x: number; y: number } | undefined {
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.detail !== 2 ||
+    !isCanvasBackgroundTarget(event.target, event.currentTarget)
+  )
+    return undefined;
+  return { x: event.clientX, y: event.clientY };
+}
+
+/** Keep drag/cancel history local to the owning viewport, shared by both renderers. */
+export function useCanvasBackgroundAddMenuGesture() {
+  const gesture = useRef<{ origin: { id: number; x: number; y: number } | null; moved: boolean }>({
+    origin: null,
+    moved: false,
+  });
+  const onPointerDownCapture: PointerEventHandler<HTMLDivElement> = (event) => {
+    gesture.current = {
+      moved: false,
+      origin: canStartCanvasBackgroundPan(event)
+        ? { id: event.pointerId, x: event.clientX, y: event.clientY }
+        : null,
+    };
+  };
+  const onPointerMoveCapture: PointerEventHandler<HTMLDivElement> = (event) => {
+    const origin = gesture.current.origin;
+    if (
+      origin?.id === event.pointerId &&
+      (origin.x !== event.clientX || origin.y !== event.clientY)
+    )
+      gesture.current.moved = true;
+  };
+  const onPointerUpCapture: PointerEventHandler<HTMLDivElement> = (event) => {
+    if (gesture.current.origin?.id === event.pointerId) gesture.current.origin = null;
+  };
+  const onPointerCancelCapture: PointerEventHandler<HTMLDivElement> = (event) => {
+    if (gesture.current.origin?.id !== event.pointerId) return;
+    gesture.current = { origin: null, moved: true };
+  };
+  return {
+    pointerHandlers: {
+      onPointerDownCapture,
+      onPointerMoveCapture,
+      onPointerUpCapture,
+      onPointerCancelCapture,
+      onLostPointerCaptureCapture: onPointerCancelCapture,
+    },
+    resolveRequest: (event: Parameters<typeof resolveCanvasBackgroundAddMenuRequest>[0]) =>
+      gesture.current.moved ? undefined : resolveCanvasBackgroundAddMenuRequest(event),
+  };
 }
 
 export function consumeCanvasDragClick(

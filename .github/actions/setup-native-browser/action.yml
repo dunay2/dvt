@@ -1,0 +1,98 @@
+# @ownedConcern Prepare verified browser dependencies; never execute or accept proof.
+# @baseline GH-3765: Test Suite and nightly repeat native browser downloads.
+# @decision Cache exact artifacts and retain verification on every restoration.
+# @consequence Corrupt hits fail before proof; runtime and cleanup owners stay unchanged.
+# @version 1.0.0
+name: Setup native browser
+description: Prepare the installed Cypress version and optionally the admitted Chrome binary
+inputs:
+  pinned-chrome:
+    description: Request the available-capability Chrome identity
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - id: identity
+      shell: bash
+      env:
+        PINNED_CHROME: ${{ inputs.pinned-chrome }}
+      run: |
+        test "$RUNNER_OS/$RUNNER_ARCH" = Linux/X64
+        case "$PINNED_CHROME" in true|false) ;; *) exit 1 ;; esac
+        version=$(node -p "require(require.resolve('cypress/package.json', {paths: ['./apps/web']})).version")
+        [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+        echo "cypress-version=$version" >> "$GITHUB_OUTPUT"
+        echo "cypress-cache=$HOME/.cache/Cypress" >> "$GITHUB_OUTPUT"
+        echo "cypress-path=$HOME/.cache/Cypress/$version" >> "$GITHUB_OUTPUT"
+        echo "chrome-archive=$RUNNER_TEMP/google-chrome-155.0.8059.84.deb" >> "$GITHUB_OUTPUT"
+    - id: restore-cypress
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: ${{ steps.identity.outputs.cypress-path }}
+        key:
+          native-cypress-${{ runner.os }}-${{ runner.arch }}-${{
+          steps.identity.outputs.cypress-version }}
+    - id: cypress
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.restore-cypress.outputs.cache-hit }}
+        CYPRESS_VERSION: ${{ steps.identity.outputs.cypress-version }}
+        CYPRESS_CACHE_FOLDER: ${{ steps.identity.outputs.cypress-cache }}
+        CYPRESS_BINARY_DIR: ${{ steps.identity.outputs.cypress-path }}
+      run: |
+        if [ "$CACHE_HIT" = true ]; then
+          test -f "$CYPRESS_BINARY_DIR/Cypress/Cypress"
+        else
+          pnpm --filter @dvt/web exec cypress install
+        fi
+        pnpm --filter @dvt/web exec cypress verify
+        test "$(pnpm --filter @dvt/web exec cypress version --component binary)" = "$CYPRESS_VERSION"
+    - id: save-cypress
+      if:
+        success() && steps.cypress.outcome == 'success' && steps.restore-cypress.outputs.cache-hit
+        != 'true'
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: ${{ steps.identity.outputs.cypress-path }}
+        key:
+          native-cypress-${{ runner.os }}-${{ runner.arch }}-${{
+          steps.identity.outputs.cypress-version }}
+    - id: restore-chrome
+      if: inputs.pinned-chrome == 'true'
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: ${{ steps.identity.outputs.chrome-archive }}
+        key: native-chrome-Linux-X64-155.0.8059.84-8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de
+    - id: chrome
+      if: inputs.pinned-chrome == 'true'
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.restore-chrome.outputs.cache-hit }}
+        CHROME_ARCHIVE: ${{ steps.identity.outputs.chrome-archive }}
+      run: |
+        version=155.0.8059.84
+        if [ "$CACHE_HIT" != true ]; then
+          curl --fail --location --max-time 90 \
+            "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${version}-1_amd64.deb" \
+            --output "$CHROME_ARCHIVE"
+        fi
+        test -f "$CHROME_ARCHIVE"
+        echo "8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de  $CHROME_ARCHIVE" | sha256sum --check --status
+        sudo dpkg --install "$CHROME_ARCHIVE"
+        test "$(google-chrome --product-version)" = "$version"
+        test "$(google-chrome-stable --product-version)" = "$version"
+        pnpm --filter @dvt/web exec cypress info | tee "$RUNNER_TEMP/dvt-native-browser-info.txt"
+        node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          import assert from "node:assert/strict";
+          const info = readFileSync(process.env.RUNNER_TEMP + "/dvt-native-browser-info.txt", "utf8").replace(/\x1b\[[0-9;]*m/g, "");
+          assert.match(info, /Name: chrome\r?\n\s*- Channel: stable\r?\n\s*- Version: 155\.0\.8059\.84\r?\n\s*- Executable: google-chrome\s/);
+        '
+    - id: save-chrome
+      if:
+        success() && steps.chrome.outcome == 'success' && steps.restore-chrome.outputs.cache-hit !=
+        'true'
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: ${{ steps.identity.outputs.chrome-archive }}
+        key: native-chrome-Linux-X64-155.0.8059.84-8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de

@@ -19,8 +19,8 @@ describe('SourceImportWizard metadata exploration', () => {
     harness = createSourceImportWizardHarness();
   });
 
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
   });
 
   it('uses contextual tabs to inspect source metadata without leaving the add-source surface', async () => {

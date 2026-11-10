@@ -331,6 +331,56 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('routes the real native keyboard support closure through the complete controlled baseline', () => {
+    // A shared input adapter omitted from routing made otherwise admitted shell changes fail closed.
+    const helperPath = 'apps/web/cypress/support/nativeKeyboard.ts';
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const target = resolve('cypress/support/nativeKeyboard.ts');
+    const consumers = [...browserModules.keys()]
+      .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .map((path) => `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`)
+      .sort();
+    expect(consumers).toEqual([
+      'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts',
+      'apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts',
+      'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
+      'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
+      'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
+    ]);
+    for (const consumer of consumers) {
+      expect(
+        Object.entries(WEB_CYPRESS_SPECS)
+          .filter(([, paths]) => paths.includes(consumer))
+          .map(([capability]) => capability),
+        consumer
+      ).toEqual(['controlled']);
+    }
+    const plan = resolveWebVitestChangedSuitePlan([helperPath]);
+    expect(plan.commandPlan).toEqual([]);
+    expect(plan.browserCommands).toMatchObject([
+      { capability: 'controlled', specPaths: WEB_CYPRESS_SPECS.controlled },
+    ]);
+    expect(plan.browserFiles).toEqual([helperPath, ...WEB_CYPRESS_SPECS.controlled]);
+  });
+
+  it('rejects unknown support mixed with native keyboard evidence before runtime filtering', () => {
+    // Exact helper admission must never turn an adjacent unsupported input into accepted evidence.
+    const helperPath = 'apps/web/cypress/support/nativeKeyboard.ts';
+    const unknown = 'apps/web/cypress/support/nativeKeyboardUnregistered.ts';
+    expect(() => resolveWebVitestChangedSuitePlan([helperPath, unknown])).toThrow(unknown);
+    expect(() => resolveWebVitestChangedSuitePlan([helperPath, unknown], { full: true })).toThrow(
+      unknown
+    );
+    expect(() =>
+      main(['--phase=browser', '--browser-capability=controlled', '--files', helperPath, unknown])
+    ).toThrow(unknown);
+    expect(spawnSync).not.toHaveBeenCalled();
+  });
+
   it('pins one Git comparison before discovery even if an alias moves before catalog reads', async () => {
     const childProcess = await import('node:child_process');
     const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
@@ -840,6 +890,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/e2e/new.cy.ts',
     'apps/web/cypress/support/e2e.ts',
     'apps/web/cypress/support/unregisteredRuntime.ts',
+    'apps/web/cypress/support/nativeKeyboardUnregistered.ts',
     'apps/web/cypress/support/semanticLive/unregistered.ts',
     'apps/web/cypress/support/relationalWorkbench/unregistered.ts',
     'apps/web/cypress/fixtures/new.json',
@@ -879,6 +930,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress.changed.ts',
     'apps/web/scripts/run-vitest-changed-suites.ts',
     '.github/workflows/test.yml',
+    '.github/actions/setup-native-browser/action.yml',
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
@@ -1190,6 +1242,7 @@ describe('governed browser evidence routing', () => {
       [
         ...expected,
         ...inputConsumers,
+        resolve('cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts'),
         resolve(transformStage.slice('apps/web/'.length)),

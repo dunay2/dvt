@@ -30,12 +30,10 @@ import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelecti
 
 type DbtProjectFileExecutionStore = Pick<
   CanvasStoreView,
-  | 'bottomDrawerVisible'
   | 'currentPlan'
   | 'selectedEnvironment'
-  | 'setBottomDrawerHeight'
+  | 'showBottomDrawer'
   | 'setCurrentPlan'
-  | 'toggleBottomDrawer'
   | 'userPermissions'
   | 'setExecutionSelectionIntent'
 >;
@@ -87,11 +85,9 @@ export function useDbtProjectFileExecution(args: {
     sessionContext,
     executionEnvironmentId: args.store.selectedEnvironment,
     shellFeedback,
-    bottomDrawerVisible: args.store.bottomDrawerVisible,
     currentPlan: args.store.currentPlan,
     setCurrentPlan: args.store.setCurrentPlan,
-    setBottomDrawerHeight: args.store.setBottomDrawerHeight,
-    toggleBottomDrawer: args.store.toggleBottomDrawer,
+    showBottomDrawer: args.store.showBottomDrawer,
     onRunStarted: navigation.handleRunStarted,
   });
   const executionSelectableNodeIds = useMemo(

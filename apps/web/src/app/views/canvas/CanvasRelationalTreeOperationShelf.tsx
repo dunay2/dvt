@@ -15,6 +15,8 @@ import { CanvasCardRemovalBar } from './CanvasCardRemovalBar';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { CanvasRemovalCard } from './canvasCardRemoval';
+import { useCanvasRelationalOperationMenu } from './operation-menu/CanvasRelationalOperationMenuContext';
+import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 
 export function CanvasRelationalTreeOperationShelf({
   copy,
@@ -29,13 +31,16 @@ export function CanvasRelationalTreeOperationShelf({
   const removal = useContext(CanvasCardRemovalContext);
   const removalCopy = resolveCanvasSemanticEditorCopy(language).cardRemoval;
   const menuCopy = resolveCanvasOperationMenuCopy(language);
+  const menu = useCanvasRelationalOperationMenu();
+  const layout = useRelationalLayout();
+  const canStage = editable && (menu?.enabled ?? true);
   const choices = [
-    resolveCanvasRelationalProjectionChoice(!editable),
-    ...resolveCanvasRelationalStagedOperationChoices(!editable),
+    resolveCanvasRelationalProjectionChoice(!canStage),
+    ...resolveCanvasRelationalStagedOperationChoices(!canStage),
   ];
   const items = buildCanvasOperationMenuItems({
     choices,
-    editable,
+    editable: canStage,
     copy,
   });
   const name = (card: CanvasRemovalCard) =>
@@ -78,7 +83,14 @@ export function CanvasRelationalTreeOperationShelf({
         <CanvasOperationMenu
           items={items}
           copy={menuCopy}
-          onStage={(next) => onStageOperation?.(next)}
+          onStage={(next) => {
+            if (!canStage) return;
+            const id = onStageOperation?.(next);
+            if (id != null && menu?.request != null) {
+              layout.autoFit.current = false;
+              layout.setPosition(id, menu.request.canvasPosition);
+            }
+          }}
         />
       </div>
     </section>

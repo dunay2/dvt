@@ -16,6 +16,7 @@ import {
 import type { AuthorizedExecutionContext } from '../../src/application/ports/authContract.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
+import { ResolveCanvasTransformProjection } from '../../src/application/services/resolveCanvasTransformProjection.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../src/domain/auth/types.js';
 import { PostgresCanvasTransformDataSampleProbe } from '../../src/infrastructure/postgres/PostgresCanvasTransformDataSampleProbe.js';
 import { buildDbtInputPreviewFixture } from '../fixtures/dvtDbtInputPreviewFixture.js';
@@ -82,17 +83,19 @@ describe.skipIf(adminUrl === undefined)(
         return lease!.url;
       });
       const useCase = new PreviewCanvasTransformRowsUseCase({
-        graphDraftResolver: new ResolveAuthorizedExecutableSubgraphService({
-          planner: new PlannerFacade(),
-          workspaceGraphDraftStore: {
-            read: async () => ({
-              schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-              revision: 'saved-native',
-              draftPayload: fixture.draft,
-            }),
-          } as never,
+        projection: new ResolveCanvasTransformProjection({
+          graphDraftResolver: new ResolveAuthorizedExecutableSubgraphService({
+            planner: new PlannerFacade(),
+            workspaceGraphDraftStore: {
+              read: async () => ({
+                schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+                revision: 'saved-native',
+                draftPayload: fixture.draft,
+              }),
+            } as never,
+          }),
+          modelProducers: { resolve: async () => fixture.externalProducers },
         }),
-        modelProducers: { resolve: async () => fixture.externalProducers },
         connectionCatalog: {
           getConnection: async () => ({
             id: 'local-postgres-proof',

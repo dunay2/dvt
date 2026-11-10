@@ -3,7 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
 
 import CanvasViewport from './CanvasViewport';
-import { DEFAULT_CANVAS_PALETTE_ID, type CanvasPaletteId } from './canvasPalette';
+import { DEFAULT_CANVAS_PALETTE_ID, type CanvasHexColor } from './canvasPalette';
 import {
   getCanvasViewportRegistryMock as getRegistryMock,
   resetCanvasViewportNodeTypeRegistryTestAdapter,
@@ -32,7 +32,7 @@ export function buildCanvasViewportProps(
     edges: [],
     nodeTypes: {},
     gridSize: 24,
-    canvasPalette: DEFAULT_CANVAS_PALETTE_ID as CanvasPaletteId,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID as CanvasHexColor,
     canvasGridVisible: true,
     canvasGridColor: '#94a3b8',
     canvasSnapToGrid: false,
@@ -44,6 +44,7 @@ export function buildCanvasViewportProps(
     onReconnect: vi.fn(),
     onViewportChange: vi.fn(),
     onDrop: vi.fn(),
+    onInspectNode: vi.fn(),
     onDragOver: vi.fn(),
     authoringNodeKinds: [],
     onCreateAuthoringNode: vi.fn(),

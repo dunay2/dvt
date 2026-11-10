@@ -283,18 +283,23 @@ behavior, Plugins route behavior, or backend contracts.
 [The bounded menu cut](https://github.com/dunay2/dvt/issues/3622), approved under
 issue #3296, replaces the older mixed `ShellMenu` placement. It does
 not accept the entire Figma migration or introduce another application rail.
+The later explicit [#3765 instruction](https://github.com/dunay2/dvt/issues/3765#issuecomment-6724940225)
+replaces its Raven-dropdown placement with direct icons in the existing left
+activity rail. Project, File, View, execution and authorization retain their
+owners. Raven becomes noninteractive identity.
 
-| Surface                | Owned concern                                                 | Existing authority                                           |
-| ---------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
-| Raven application menu | Global destinations when the navigation rail is hidden; About | `ListShellNavigationItems`, `GetCompiledApplicationMetadata` |
-| Project menu           | Granted project/environment selection, context and Git        | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`       |
-| File menu              | New Project and active project import/export, files and code  | `CreateProject`, existing Canvas workspace contribution      |
-| View menu              | Explorer/drawer recovery, focus mode and ES/EN preference     | Existing layout commands, `ConfigureApplicationLanguage`     |
-| Execution controls     | Existing explicit execution intent/readiness                  | Unchanged operational contribution                           |
+| Surface            | Owned concern                                                            | Existing authority                                                                                 |
+| ------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Left shell rail    | Single Canvas entry, contextual Git, remaining destinations; About below | `ListShellNavigationItems`, `ConfigureCanvasViewportPreferences`, `GetCompiledApplicationMetadata` |
+| Project menu       | Granted project/environment selection, context and Git                   | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`                                             |
+| File menu          | New Project and active project import/export, files and code             | `CreateProject`, existing Canvas workspace contribution                                            |
+| View menu          | Explorer/drawer recovery, focus mode and ES/EN preference                | Existing layout commands, `ConfigureApplicationLanguage`                                           |
+| Execution controls | Existing explicit execution intent/readiness                             | Unchanged operational contribution                                                                 |
 
 ```mermaid
 flowchart LR
-  Raven[Raven] --> Routes[Existing Router navigation and pending-edit guard]
+  Rail[Direct left shell links] --> Routes[Existing Router navigation and pending-edit guard]
+  Rail --> About[Existing About dialog and focus return]
   Project[Project] --> Scope[Granted scope port and read-only context]
   File[File] --> Contribution[Existing project/file commands]
   View[View] --> Layout[Existing layout and language preferences]
@@ -492,6 +497,34 @@ header controls reuse the shared 28 px Inspector icon-button token with no
 additional gap. Mutations remain on the existing authoring command handlers;
 moving the entrypoint introduces no second editor or navigation path.
 
+The authorized SQL continuation is governed by the
+[root-cause design](https://github.com/dunay2/dvt/issues/3765#issuecomment-6726292993)
+and the [SQL inspection query contract](../../../../contracts/data-access-modes.md#transform-sql-inspection).
+`ProjectCanvasTransformSql` supplies SQL for the selected native Model from the
+same protected producer preparation used by row Preview. In particular, a
+file-owned dbt producer requires its authorized compiled result, rather than its
+schema signature alone. The shared PostgreSQL projector's rejection of a missing
+external SQL publication must remain intact.
+
+The existing overlay supplies one scoped code-query bundle to the passive Code
+section. It carries the current Canvas identity and application query port;
+the request identifies the Model and expected semantic digest. The API resolves
+the persisted authorized graph, current file authority, native model result and
+existing target projection. It returns SQL and exact draft/model provenance;
+it neither reads database rows nor publishes a file. A native Model without an
+owned workspace path must not display an upstream file as its own code.
+
+```mermaid
+flowchart LR
+  Overlay[Existing inspector overlay owner] --> Bundle[Current Canvas and SQL query port]
+  Bundle --> Selection[Explicit SQL output selection]
+  Selection --> Query[ProjectCanvasTransformSql]
+  Query --> API[Shared protected producer preparation]
+  API --> View[Read-only Monaco SQL with current provenance]
+  Files[File-owned node reference] --> FileQuery[Existing GetWorkspaceFileContent]
+  FileQuery --> FileView[Shared read-only file Code surface]
+```
+
 Derived SQL belongs to the exact transform, nodes and edges references supplied
 to its query. A pending query is reused for repeated selection of those inputs;
 a ready result is reused only for those inputs. Changed references invalidate
@@ -500,6 +533,13 @@ requested again. This conservative constant-time invalidation also covers
 layout-only reference changes and schedules no automatic compilation. Failures
 remain visible and a subsequent explicit selection can retry. Older completions
 cannot overwrite a newer request.
+
+The ready SQL value is an authorized read snapshot, not a live file watcher.
+The bundle carries Canvas/query/scope identity, without a file revision or
+permission epoch. Opening project Code retains the Canvas subtree, so a file
+update alone does not invalidate that snapshot. Selecting canonical output and
+then SQL revalidates current file authority and permissions through the API.
+No polling, new authority store or automatic compilation is introduced.
 
 Canonical JSON and ready SQL use one shared Monaco rendering path. One compact
 row contains the accessible output selector using the shared Inspector form
@@ -581,6 +621,34 @@ column-row indicator opens the existing detail containing the complete plain
 text comment. Missing comments render as an em dash in detail. Long text wraps
 without horizontal overflow. DVT descriptions remain independently authored.
 
+Metadata presentation uses shared objects rather than CSS utility strings in the
+Source Overview composition. `NodePropertyFacts` owns passive label/value markup;
+`InspectorPropertyField` owns the label, content and optional edit action in an
+inline or stacked field. Neither component reads a store or authorizes a change.
+`InspectorMetadata.module.css` owns their layout and consumes the application's
+spacing, radius, surface and typography tokens. Property tables reuse its fact
+and value styles. The existing Inspector label/form typography remains shared.
+
+```mermaid
+flowchart LR
+  Before[Overview owns repeated CSS and field markup] --> Drift[Inconsistent metadata presentation]
+  Overview[Source Overview composition] --> Facts[Shared NodePropertyFacts]
+  Overview --> Field[Passive InspectorPropertyField]
+  Facts --> Styles[Inspector metadata CSS module]
+  Field --> Styles
+  Styles --> Tokens[Existing application tokens]
+  Overview --> Draft[Existing draft controller and authoring command]
+```
+
+The extraction preserves read-only admission, accessible names, plain-text
+comments, focus, Enter/blur commits and Escape cancellation. The field receives
+an explicit edit action from its caller and never creates an editing state or
+save command. Existing interaction tests exercise the real draft controller;
+they do not duplicate its state machine or assert CSS source strings. Shared
+property rendering and table regressions remain required. Rendered inspection
+at narrow and normal panel widths is separate evidence, not implied by these
+structural tests.
+
 ```mermaid
 flowchart LR
     Provider[Authorized provider catalog] --> Snapshot[Import or rebind snapshot]
@@ -631,11 +699,12 @@ forced-click workaround.
 | API                          | Kind                   | Responsibility                                                                                                  |
 | ---------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `ShellTopBar`                | shell renderer         | Composes concern-owned menus and unchanged execution/connection controls.                                       |
-| `ShellAppMenu`               | shell controller       | Coordinates guarded global navigation and About.                                                                |
+| `LeftNavigationRail`         | shell presentation     | Presents direct links from the existing navigation model and the active route host.                             |
+| `ShellAbout`                 | shell presentation     | Opens the existing compiled-metadata dialog and restores focus to its direct button.                            |
 | `ShellProjectMenu`           | shell controller       | Coordinates granted scope selection, context and Git.                                                           |
 | `ShellFileMenu`              | shell controller       | Coordinates project creation and the existing Canvas file contribution.                                         |
 | `ShellMenu`                  | shell controller       | Coordinates View preferences only.                                                                              |
-| `ShellMenu.templates`        | passive presentation   | Presents navigation, Project, File and View through existing Radix primitives.                                  |
+| `ShellMenu.templates`        | passive presentation   | Presents Project, File and View through existing Radix primitives.                                              |
 | `CanvasShellMainPanel`       | Canvas route renderer  | Places Canvas tabs, route-local toolbar, banners, viewport, and center-surface states.                          |
 | `CanvasToolbar`              | Canvas route renderer  | Renders graph/document commands only inside the Canvas workbench.                                               |
 | `CanvasTemplatePresentation` | presentation model     | Resolves route-visible first-canvas template title and description from a `CanvasKindRegistration` plus locale. |
@@ -643,13 +712,19 @@ forced-click workaround.
 
 ### Invariants
 
-- Canvas workbench routes do not mount a permanent left navigation rail.
+- Canvas shares the narrow shell rail with other routes. One Canvas entry opens
+  Elements idempotently when already on that route; Git follows separately,
+  remaining global links below, and About at the bottom. No second Elements icon.
 - Canvas graph/document editing commands remain route-local. The existing
   project/file contribution is rendered only inside File, not as loose top-bar
   controls.
 - `ShellTopBar` shows concern-owned menu triggers, health and the unchanged
   execution controls; it does not import Canvas controller hooks.
-- `Admin` and `Plugins` remain reachable when the rail is hidden.
+- `Admin` and `Plugins` remain direct links from the existing navigation model.
+  Explicit Focus mode retains its View recovery; there is no hidden logo menu.
+- Canvas and Git are shell-owned entries across routes and retained surfaces.
+  Shell presence suppresses standalone Explorer controls; no route activity
+  portal or active-surface scope remains.
 - The first-canvas state must not show disabled Plan, Run, Export, or Import
   controls before a canvas document exists.
 - Identity details remain read-only. Granted scope selection reuses
@@ -687,7 +762,8 @@ flowchart LR
   Router["React Router pathname"]
   Disposition["ResolveShellNavigationDisposition"]
   TopBar["ShellTopBar"]
-  AppMenu["ShellAppMenu"]
+  Rail["LeftNavigationRail and active contextual host"]
+  About["ShellAbout"]
   ProjectMenu["ShellProjectMenu"]
   FileMenu["ShellFileMenu"]
   ViewMenu["ShellMenu: View"]
@@ -698,7 +774,8 @@ flowchart LR
 
   Router --> Disposition
   Disposition --> TopBar
-  TopBar --> AppMenu
+  Navigation["Existing runtime navigation model"] --> Rail
+  Rail --> About
   TopBar --> ProjectMenu
   TopBar --> FileMenu
   TopBar --> ViewMenu
@@ -720,7 +797,8 @@ sequenceDiagram
   participant Draft as Workspace graph draft
 
   Operator->>Shell: Open /canvas
-  Shell->>Menus: Publish navigation, context, file contribution and view preferences
+  Shell->>Menus: Publish context, file contribution and view preferences
+  Operator->>Operator: Global destinations remain directly visible in the left rail
   Shell-->>Operator: Show concern-owned triggers and unchanged execution/health controls
   Canvas->>Host: Render first-canvas state
   Host-->>Operator: Show localized template choices
@@ -732,28 +810,29 @@ sequenceDiagram
 
 ### Consumers
 
-| Consumer                              | Use                                                                       |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| `RootShell`                           | Resolves route family and passes shell navigation model to the top bar.   |
-| `ShellTopBar`                         | Applies low-noise Canvas posture and owns the menu trigger.               |
-| `ShellAppMenu`                        | Coordinates hidden-rail navigation without bypassing pending-edit guards. |
-| `ShellProjectMenu`                    | Composes the existing granted scope selector and context read model.      |
-| `ShellFileMenu`                       | Reuses project creation and Canvas file commands; owns focus transfer.    |
-| `ShellMenu`                           | Coordinates View preferences without navigation or project actions.       |
-| `CanvasShellMainPanel`                | Applies Canvas route-local command placement.                             |
-| `CanvasPlaygroundHost`                | Resolves first-canvas template presentation and command title.            |
-| `CanvasToolbar.architecture.test.tsx` | Guards route-local toolbar ownership.                                     |
-| `Root.shellChrome.test.tsx`           | Guards no-rail and hidden-rail global navigation.                         |
+| Consumer                              | Use                                                                    |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| `RootShell`                           | Passes the existing navigation model to the direct left rail.          |
+| `ShellTopBar`                         | Applies route-family context and command posture; logo is identity.    |
+| `LeftNavigationRail`                  | Presents direct links without bypassing pending-edit guards.           |
+| `ShellAbout`                          | Presents compiled metadata and restores focus to its own trigger.      |
+| `ShellProjectMenu`                    | Composes the existing granted scope selector and context read model.   |
+| `ShellFileMenu`                       | Reuses project creation and Canvas file commands; owns focus transfer. |
+| `ShellMenu`                           | Coordinates View preferences without navigation or project actions.    |
+| `CanvasShellMainPanel`                | Applies Canvas route-local command placement.                          |
+| `CanvasPlaygroundHost`                | Resolves first-canvas template presentation and command title.         |
+| `CanvasToolbar.architecture.test.tsx` | Guards route-local toolbar ownership.                                  |
+| `Root.shellChrome.test.tsx`           | Guards direct navigation, active state and retained shell context.     |
 
 ### Command And Query Rails
 
-| Rail                                 | Type    | Owner                     | Use                                                             |
-| ------------------------------------ | ------- | ------------------------- | --------------------------------------------------------------- |
-| `ResolveShellNavigationDisposition`  | query   | Frontend shell            | Decides whether Canvas hides the rail.                          |
-| `ListShellNavigationItems`           | query   | Frontend shell            | Supplies global route destinations for rail and menu rendering. |
-| `GetEffectiveWorkspaceContext`       | query   | Frontend shell            | Supplies read-only workspace and draft posture labels.          |
-| `CreateCanvasDocumentCommand`        | command | Canvas document           | Persists the first canvas document after template selection.    |
-| `RenderCanvasContextualGraphSurface` | query   | Canvas graph presentation | Proves screen composition without creating product behavior.    |
+| Rail                                 | Type    | Owner                     | Use                                                                  |
+| ------------------------------------ | ------- | ------------------------- | -------------------------------------------------------------------- |
+| `ResolveShellNavigationDisposition`  | query   | Frontend shell            | Classifies the route family for shell context and command posture.   |
+| `ListShellNavigationItems`           | query   | Frontend shell            | Supplies direct global route destinations without another catalogue. |
+| `GetEffectiveWorkspaceContext`       | query   | Frontend shell            | Supplies read-only workspace and draft posture labels.               |
+| `CreateCanvasDocumentCommand`        | command | Canvas document           | Persists the first canvas document after template selection.         |
+| `RenderCanvasContextualGraphSurface` | query   | Canvas graph presentation | Proves screen composition without creating product behavior.         |
 
 No backend command/query rail changes are introduced by this component.
 
@@ -815,33 +894,96 @@ column names remain fully readable in detail. The existing facts projection,
 filtered navigation, focus restoration, transfer and local ordering own their
 semantics; density changes do not issue provider requests or persist a draft.
 
+### Model Authoring Target Admission
+
+Properties and the relational Model editor consume independent admission
+projections. The Inspector contract remains scoped to the inspected resource,
+including read-only unplaced definitions. The relational authoring contract uses
+the existing runtime graph permission; the shell intersects it with the selected
+Model's actual flow placement, resolved through its existing `modelData` lookup.
+Changing or closing the Inspector cannot disable an unrelated placed Model.
+An unplaced Model opened through the existing pencil remains read-only.
+
+```mermaid
+flowchart LR
+  InspectorTarget[Current Inspector target] --> InspectorAdmission[Inspector admission]
+  InspectorAdmission --> Properties[Properties]
+  Runtime[Existing graph command permission] --> Placement[Selected Model has a flow placement]
+  Placement --> Editor[Existing Model authoring session]
+  Editor --> Apply[Existing applyNodeDraft target guard]
+```
+
+A placed Model with a valid restored pending draft can remain editable before a
+published canonical tree exists. Its saved sources, staged operations and output
+identity remain authoritative. This correction does not manufacture a semantic
+tree, repair data, relax mutation membership or add a second permission store.
+[Target-independence rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6730107356).
+
+### Explicit Connection Management Entry
+
+The project Connections action opens the existing Source Import Wizard through
+an explicit `manage-connections` entry request. The same dialog/session owner
+stores one current request. Management starts at Connections and exposes the
+existing New connection form; selecting or creating a connection stays there.
+Retained source-object selection, dbt binding prefill and canvas placement belong
+only to the separate `import-sources` entry of that same Wizard.
+
+```mermaid
+flowchart LR
+  Manage[Connections action] --> Request[Current typed entry request]
+  Import[Import action with optional selection and placement] --> Request
+  Request --> Intent{Existing Wizard entry intent}
+  Intent -->|manage-connections| Connections[Connections and existing creation form]
+  Intent -->|import-sources| ImportFlow[Existing source import workflow]
+  Connections --> Port[Existing CreateWarehouseConnection port]
+```
+
+Current request identity and granted workspace scope govern asynchronous UI
+completion. An older request cannot advance, notify or consume a dbt continuation
+in a newer entry. Existing scoped cache receipt invalidation remains authoritative.
+No new modal, permission flag, backend endpoint or query is introduced.
+[Entry design](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729712973).
+
 ### Source Catalogue Presentation
 
 The existing `RenderCanvasContextualGraphSurface` query presents registered
-source definitions through `CanvasGraphExplorer` and the shared
-`CanvasExplorerList`. Sources use compact cards with a table icon, a minimum
+model definitions through `CanvasGraphExplorer` and the shared
+`CanvasExplorerList`. Models use a common icon and an independent Source badge, a minimum
 44 px hit target, 4 px separation and the available schema/connection as display
 context. Other explorer lists retain their existing presentation.
 
-The source projection excludes reference instances and preserves definition
+The catalogue projection excludes reference instances and preserves definition
 identity and catalogue order. Its derived rows change with the catalogue,
 independently from graph coordinates. The shared list prepares searchable text
 when its items change; an empty search returns those items directly. These are
 render-local projections, never a second source authority or a global cache.
 
-Click still inspects the definition. Drag still transfers only its identity to
-the existing guarded drop command. Filtering, card styling and keyboard focus
-must not place a node, write a draft or make a provider request. Missing display
+Click and keyboard activation inspect the definition through `InspectCanvasNode`;
+they never call instance admission or move the camera. Drag transfers only its
+identity to the existing guarded drop command. A double click cancels the pending
+single-click inspection through the shared gesture owner. Filtering, card styling and keyboard focus
+must not place a node or write a draft. Missing display
 metadata is omitted without inventing a connection or schema.
+
+Inspection and placement admission are independent: current unplaced definitions
+can open Properties, including read-only/unbound logical models, while unsupported
+mutation remains read-only. The one scoped interaction target distinguishes an
+actual canonical node ID from an actual dbt file binding/unique ID. File metadata
+is resolved only in the existing right workbench boundary against the current
+catalogue/Code root, not a target-selected root. Its graph context and file Code
+contributions stay local to that panel; the main catalogue, semantic graph and
+execution membership remain unchanged. Closing restores catalogue focus when
+there is no placed card. No executable definition is constructed for inspection.
+[Inspection boundary decision](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729355692).
 
 ```mermaid
 flowchart LR
-  Catalogue[Authorized source catalogue] --> Projection[Definition rows]
+  Catalogue[Authorized model catalogue] --> Projection[Definition rows]
   Projection --> Search[Shared local search]
   Search --> Card[Accessible compact card]
   Card --> Inspect[Existing inspect action]
   Card --> Drag[Existing identity drag]
-  Graph[Graph geometry] --> Elements[Existing element rows]
+  Graph[Graph geometry] --> Elements[Existing placed cards]
 ```
 
 ### Project Files In The Main Canvas Explorer
@@ -887,24 +1029,31 @@ Model, import-task and inspector visibility. `CanvasShellViewport` forwards
 this derived value; it does not reclassify workbench identities or own navigation
 state.
 
-The Main Canvas activity rail remains accessible in both Canvas and Code. The
-shell provides a stable local activity slot outside the retained panels that
-become hidden and inert. `CanvasExplorer` presents its single existing nav in that
-slot through a public React portal, retaining actions, keyboard behavior,
-disclosure, copy and CSS ownership. Standalone explorers retain their placement.
-The rail keeps its existing flex width; the graph, Code editor and project tree
-keep stable parents and geometry. Sources and Elements return through the existing
-Canvas action, while Git retains the same guarded Code opener.
+The shell owns stable Canvas and Git entries outside retained panels. Git is
+present whenever the existing navigation model includes Canvas, including other
+routes and Model. `CanvasExplorer` does not portal controls; the single Canvas link opens Elements
+using the existing layout `expand` event. If Code is selected it first invokes the
+existing `codeTab.onCanvas` contribution, without closing its session. Model stays
+selected and its Elements panel opens through the same shared preference. No
+command registry or controller import is added. Standalone explorers retain
+their local Elements control. Collapse remains in the panel header and returns
+focus to Canvas; repeated Canvas activation never collapses or resets width.
 
-During Model authoring the main activity slot is hidden and inert because the
-Model owns its separate explorer lifecycle. There must be one visible activity
-rail for the active workspace. This local placement slot does not introduce a
-global toolbar portal, another navigation store, a file mutation or a save policy.
+`CanvasCodeRouteEntry` translates the finite cross-route history-state request
+into the same `CanvasShell.openProjectCode` command. It waits for a real owner,
+defers work across StrictMode replay, consumes the request at the identical URL
+and dispatches only after observing its own Router replacement. Other history
+state is preserved; blocked or stale consumption does not dispatch. On Canvas,
+the shell invokes the published opener directly, preserving pending Model route
+guards. Code authority, flush, current-intent and activation remain in their
+existing owner. This transport is not a tab store, new command or file operation.
 
 ```mermaid
 flowchart LR
-  Explorer[Retained CanvasExplorer] --> Git[Git action]
-  Explorer --> Slot[Shared local activity slot outside hidden panels]
+  Shell[Stable shell rail] --> Git[Git action]
+  Git -->|outside Canvas| Router[Finite Router state request]
+  Router --> Entry[Canvas-owned consumption adapter]
+  Entry --> Opener
   Git --> Opener[Existing project Code opener with optional path]
   File[Existing File-menu entry] --> Opener
   CodeTab[Top Code tab] --> Opener
@@ -1036,3 +1185,52 @@ Acceptance:
 > Acceptance scope status: Active. Owner: Frontend / Shell / Canvas.
 >
 > Section status: Active. Owner: Frontend / Shell / Canvas. Colocation does not merge component responsibilities.
+
+## Audited Explorer Presentation Ownership
+
+Planning DB design `GH-3765-AUDITED-EXPLORER-OWNER-SEPARATION` records the
+[bounded audit decision](https://github.com/dunay2/dvt/issues/3765#issuecomment-6753033944).
+The retained dock, reusable catalogue sections and model rows previously shared
+one template file, and public contracts depended on its JSX navigation metadata.
+The dock also mapped two navigation actions to render its one Elements body.
+Separate these existing responsibilities without creating another registry,
+context, factory, compatibility barrel or command/query rail.
+
+```mermaid
+flowchart LR
+  Before[Combined dock and catalogue template] --> Dock[Retained dock and navigation]
+  Before --> Catalog[Section and model catalogue templates]
+  Types[Pure explorer contracts] --> Dock
+  Types --> Catalog
+  Layout[Existing CanvasExplorerState] --> Dock
+  Dock --> Stable[Stable graph and Elements DOM slots]
+  Catalog --> Inspect[Existing InspectCanvasNode]
+  Catalog --> Place[Existing drag placement]
+```
+
+`SYS-WEB-CANVAS-VIEWPORT` retains
+`RESP-WEB-VIEWPORT-EXPLORER-DISCLOSURE` and
+`RESP-WEB-VIEWPORT-LOCAL-LAYOUT`; `SYS-WEB-PROJECT-ELEMENTS-EXPLORER`
+retains `RESP-WEB-PROJECT-ELEMENTS-NAVIGATION`. Layout preferences reuse
+`ConfigureCanvasViewportPreferences` and its `CanvasViewportPreferences`
+object; graph-position persistence remains the separate `CanvasLayoutProjection`
+concern. The [rail clarification](https://github.com/dunay2/dvt/issues/3765#issuecomment-6753231602)
+records that existing authority without adding another command.
+`CanvasExplorer.types.ts`
+owns type-only explorer contracts; `CanvasExplorer.templates.tsx` owns retained
+docking and the two meaningful standalone Elements/Git actions;
+`CanvasExplorerCatalog.templates.tsx` owns section and model-list presentation.
+All consume the existing CSS module and semantic tokens. The one Elements body
+is explicit; Connections and Models remain meaningful business sections even
+when their current collection has one item.
+
+The corner invariant is stable DOM identity: collapse, close, Git availability
+and inline tasks cannot replace the graph or catalogue, lose search/disclosure,
+or restore hidden controls to focus order. Source remains a model facet;
+selection stays independent of metadata disclosure, clicks inspect and drag
+places through the existing owners. The UI layout store ignores retired
+`leftNavCollapsed` state through its allowlisted hydration rather than retaining
+a migration or alias. Rejected Inspector close keeps focus and reports current
+localized copy through the existing Canvas copy contract. Tests assert these
+observable invariants and dependency/style boundaries without fixing incidental
+template helper names or CSS selector spellings.

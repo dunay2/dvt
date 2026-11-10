@@ -16,12 +16,14 @@ import {
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/authContract.js';
 import type { ICanvasTransformDataSampleProbe } from '../../../src/application/ports/canvasTransformDataSample.js';
 import { CanvasTransformDataSampleUnavailableError } from '../../../src/application/ports/canvasTransformDataSample.js';
+import { CanvasTransformProjectionUnavailableError } from '../../../src/application/ports/canvasTransformSql.js';
 import type {
   IWarehouseConnectionCatalog,
   WarehouseConnectionCatalogEntry,
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
+import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import {
   buildDvtCrossPreviewDraft,
@@ -129,7 +131,9 @@ function harness(
     executeWithAuthorizedDraft,
     previewTransformRows,
     useCase: new PreviewCanvasTransformRowsUseCase({
-      graphDraftResolver: { executeWithAuthorizedDraft } as never,
+      projection: new ResolveCanvasTransformProjection({
+        graphDraftResolver: { executeWithAuthorizedDraft } as never,
+      }),
       connectionCatalog: catalog(),
       probe,
     }),
@@ -137,6 +141,23 @@ function harness(
 }
 
 describe('PreviewCanvasTransformRowsUseCase', () => {
+  it('retains the existing row-preview denial reason without probing rows after file access is refused', async () => {
+    const execute = vi
+      .fn()
+      .mockRejectedValue(new CanvasTransformProjectionUnavailableError('file_access_denied'));
+    const connections = catalog();
+    const previewTransformRows = vi.fn();
+    const useCase = new PreviewCanvasTransformRowsUseCase({
+      projection: { execute },
+      connectionCatalog: connections,
+      probe: { previewTransformRows },
+    });
+    await expect(useCase.execute(request, context())).rejects.toMatchObject({
+      reason: 'projection_unsupported',
+    });
+    expect(connections.getConnection).not.toHaveBeenCalled();
+    expect(previewTransformRows).not.toHaveBeenCalled();
+  });
   it('previews a saved model instance through its shared definition without a persisted edge to it', async () => {
     const original = harness();
     await original.useCase.execute(request, context());
@@ -168,7 +189,7 @@ describe('PreviewCanvasTransformRowsUseCase', () => {
       } as never,
     });
     const useCase = new PreviewCanvasTransformRowsUseCase({
-      graphDraftResolver: resolver,
+      projection: new ResolveCanvasTransformProjection({ graphDraftResolver: resolver }),
       connectionCatalog: catalog(),
       probe: { previewTransformRows: original.previewTransformRows },
     });

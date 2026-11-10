@@ -1,10 +1,15 @@
-/** Owned concern: prove DB responsibility references match current code without rewriting it. */
+/**
+ * Owned concern: prove DB responsibility references match current code without rewriting it.
+ * Why: prepared authority must retain the standalone validator's full negative contract.
+ * Corner: conflicting metadata and missing owners, symbols or tests keep the same error order.
+ */
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   validateResponsibilityBindings,
   extractQualifiedSourceSymbols,
   validateSourceResponsibilityReferences,
+  createSourceResponsibilityReferenceValidator,
 } = require('./component-source-responsibilities.cjs');
 
 const binding = (changes = {}) => ({
@@ -67,6 +72,74 @@ const validateReferences = (changes = {}) =>
     currentPaths: new Set(['src/model.ts', 'test/model.test.ts']),
     ...changes,
   });
+
+test('a prepared responsibility authority is indexed once and preserves validation errors', () => {
+  const responsibilities = [
+    { responsibilityId: 'RESP-READ', componentId: 'SYS-OWNER', description: 'Read.' },
+  ];
+  let scans = 0;
+  responsibilities[Symbol.iterator] = function* () {
+    scans += 1;
+    yield* Array.prototype.values.call(this);
+  };
+  const validate = createSourceResponsibilityReferenceValidator(responsibilities);
+  for (const changes of [
+    {},
+    { ownerComponentId: 'AMBIGUOUS' },
+    { content: 'export class Other {}' },
+    { currentPaths: new Set(['src/model.ts']) },
+    { bindings: [binding({ responsibilityId: 'RESP-ABSENT' })] },
+  ]) {
+    const input = {
+      path: 'src/model.ts',
+      content: source,
+      bindings: [binding()],
+      ownerComponentId: 'SYS-OWNER',
+      currentPaths: new Set(['src/model.ts', 'test/model.test.ts']),
+      ...changes,
+    };
+    const expected = validateSourceResponsibilityReferences({
+      ...input,
+      responsibilities: [...responsibilities],
+    });
+    const before = scans;
+    assert.deepEqual(validate(input), expected);
+    assert.equal(scans, before, 'prepared validation must not rebuild canonical authority');
+  }
+  assert.equal(scans, 6, 'one preparation plus five standalone fixture copies');
+  assert.deepEqual(
+    createSourceResponsibilityReferenceValidator(null)({
+      path: 'src/model.ts',
+      content: source,
+      bindings: [],
+      ownerComponentId: 'AMBIGUOUS',
+      currentPaths: new Set(),
+    }).errors,
+    [
+      'No responsibility bindings for src/model.ts.',
+      'Unresolved component owner for src/model.ts.',
+      'Source path src/model.ts is absent from the selected Git inventory.',
+      'Canonical responsibilities must be supplied.',
+    ]
+  );
+  for (const invalid of [
+    null,
+    [null],
+    [responsibilities[0], { ...responsibilities[0], description: 'Conflicting.' }],
+  ]) {
+    const input = {
+      path: 'src/model.ts',
+      content: source,
+      bindings: [binding()],
+      ownerComponentId: 'SYS-OWNER',
+      currentPaths: new Set(['src/model.ts', 'test/model.test.ts']),
+    };
+    assert.deepEqual(
+      createSourceResponsibilityReferenceValidator(invalid)(input),
+      validateSourceResponsibilityReferences({ ...input, responsibilities: invalid })
+    );
+  }
+});
 
 test('binding validation accepts an explicit empty replacement and normalizes without mutation', () => {
   assert.deepEqual(validateResponsibilityBindings([]), { bindings: [], errors: [] });

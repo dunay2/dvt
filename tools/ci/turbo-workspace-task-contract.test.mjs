@@ -115,9 +115,10 @@ test('API native recovery tests own their compiled consumer prerequisite', () =>
 
 test('root affected commands and CI matrix lint/build/typecheck steps use the Turbo workspace wrapper', () => {
   assert.equal(
-    rootPackage.scripts['ci:code'],
-    'pnpm arch:deps && pnpm type-check && turbo run test && pnpm lint:determinism'
+    rootPackage.scripts['ci:code:static'],
+    'pnpm arch:deps && pnpm type-check && pnpm lint:determinism'
   );
+  assert.equal(rootPackage.scripts['ci:code'], 'pnpm ci:code:static && turbo run test');
   assert.equal(rootPackage.scripts['ci:code'].includes('pnpm test'), false);
   assert.equal(
     rootPackage.scripts['ci:affected:build'],

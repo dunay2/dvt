@@ -30,14 +30,21 @@ describe('Templates workbench', () => {
   });
 
   it('is reachable from shell navigation and announces the active template', () => {
+    // Destinations stay directly discoverable; opening Templates must not require a brand menu.
     stubTemplatesRouteBootstrapApis();
     visitWithE2eWorkspaceSession('/plugins');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
-    cy.get('[data-slot="shell-app-menu-trigger"]').click();
-    cy.get('[data-slot="shell-menu-navigation-link"][href="/templates"]').click();
+    cy.get('[data-slot="shell-app-menu-trigger"]').should('not.exist');
+    cy.get('[data-slot="left-navigation-link"][href="/templates"]').should('be.visible').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
 
     cy.location('pathname').should('eq', '/templates');
+    cy.get('[data-slot="left-navigation-link"][href="/templates"]').should(
+      'have.attr',
+      'aria-current',
+      'page'
+    );
     cy.get('[data-slot="route-workbench-header"]').contains('Templates').should('be.visible');
     cy.contains('button[aria-pressed="true"]', 'Snowflake Task').should('be.visible');
     cy.get('input[name="taskName"]')

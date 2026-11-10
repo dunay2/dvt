@@ -17,13 +17,14 @@ import { WarehouseConnectionCreateForm } from './WarehouseConnectionCreateForm';
 import { WarehouseConnectionRenameForm } from './WarehouseConnectionRenameForm';
 
 interface ConnectionStepProps {
-  connections: WarehouseConnection[];
+  connections: readonly WarehouseConnection[];
   selectedConnection: string | null;
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
   renameConnectionFormOpen: boolean;
   renameConnectionForm: RenameWarehouseConnectionInput;
   isLoadingConnections: boolean;
+  hasConnectionSnapshot: boolean;
   isCreatingConnection: boolean;
   isRenamingConnection: boolean;
   isTestingConnection: boolean;
@@ -164,6 +165,7 @@ export function ConnectionStep({
   renameConnectionFormOpen,
   renameConnectionForm,
   isLoadingConnections,
+  hasConnectionSnapshot,
   isCreatingConnection,
   isRenamingConnection,
   isTestingConnection,
@@ -240,7 +242,9 @@ export function ConnectionStep({
                 className="mb-2 flex min-w-0 flex-col items-stretch gap-3 text-xs text-slate-300 md:flex-row md:items-start md:justify-between"
               >
                 <div className="min-w-0">
-                  <div>{formatConnectionCatalogSummary(connections.length, copy.connection)}</div>
+                  {hasConnectionSnapshot ? (
+                    <div>{formatConnectionCatalogSummary(connections.length, copy.connection)}</div>
+                  ) : null}
                   <div className="truncate text-slate-400">{copy.connection.catalogSource}</div>
                 </div>
                 <div
@@ -320,12 +324,12 @@ export function ConnectionStep({
               />
             ) : null}
 
-            {connections.length === 0 ? (
+            {hasConnectionSnapshot && connections.length === 0 ? (
               <Card className="border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
                 <div className="font-medium text-slate-100">{copy.connection.empty}</div>
                 <div className="mt-1">{copy.connection.emptyHint}</div>
               </Card>
-            ) : visibleConnections.length === 0 ? (
+            ) : hasConnectionSnapshot && visibleConnections.length === 0 ? (
               <Card className="border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
                 {copy.connection.noMatches}
               </Card>

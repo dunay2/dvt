@@ -9,9 +9,61 @@ import {
   canvasViewportScopeProps,
   resolveCanvasKeyboardAction,
   resolveCanvasViewportInteraction,
+  resolveCanvasBackgroundAddMenuRequest,
 } from './canvasViewportInteraction';
 
 describe('Canvas viewport interaction policy', () => {
+  it('reserves background double click for Add instead of React Flow zoom', () => {
+    // Both graph implementations must agree before adapting to their own Add catalog.
+    expect(resolveCanvasViewportInteraction(true).flow.zoomOnDoubleClick).toBe(false);
+    const surface = document.createElement('div');
+    surface.setAttribute('data-canvas-viewport', '');
+    const event = {
+      currentTarget: surface,
+      target: surface,
+      detail: 2,
+      button: 0,
+      clientX: 230,
+      clientY: 170,
+      defaultPrevented: false,
+    };
+    expect(resolveCanvasBackgroundAddMenuRequest(event)).toEqual({ x: 230, y: 170 });
+    expect(resolveCanvasBackgroundAddMenuRequest({ ...event, detail: 1 })).toBeUndefined();
+    expect(resolveCanvasBackgroundAddMenuRequest({ ...event, button: 2 })).toBeUndefined();
+    expect(
+      resolveCanvasBackgroundAddMenuRequest({ ...event, defaultPrevented: true })
+    ).toBeUndefined();
+  });
+  it.each([
+    ['node', 'class', 'react-flow__node'],
+    ['edge', 'class', 'react-flow__edge'],
+    ['port', 'class', 'react-flow__handle'],
+    ['card', 'data-relational-card-id', 'read'],
+    ['controls', 'class', 'react-flow__controls'],
+    ['menu', 'role', 'menu'],
+    ['dialog', 'role', 'dialog'],
+    ['search', 'role', 'search'],
+  ])(
+    'does not reinterpret a %s double click as a background action',
+    (_label, attribute, value) => {
+      const surface = document.createElement('div');
+      surface.setAttribute('data-canvas-viewport', '');
+      const child = document.createElement('div');
+      child.setAttribute(attribute!, value!);
+      surface.append(child);
+      expect(
+        resolveCanvasBackgroundAddMenuRequest({
+          currentTarget: surface,
+          target: child,
+          detail: 2,
+          button: 0,
+          clientX: 30,
+          clientY: 40,
+          defaultPrevented: false,
+        })
+      ).toBeUndefined();
+    }
+  );
   it('assigns nested viewport gestures to the nearest marked surface only', () => {
     const outer = document.createElement('div');
     const inner = document.createElement('div');

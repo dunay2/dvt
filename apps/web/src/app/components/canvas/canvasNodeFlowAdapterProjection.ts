@@ -158,7 +158,7 @@ export function projectCanvasNodeFlowAdapter({
       typeof data.onSelectNode === 'function' || typeof data.onInspectNode === 'function'
         ? (): void => {
             data.onSelectNode?.(nodeId);
-            data.onInspectNode?.(nodeId, role === 'input' ? 'columns' : 'general');
+            data.onInspectNode?.(nodeId, 'general');
           }
         : undefined,
     openNode:

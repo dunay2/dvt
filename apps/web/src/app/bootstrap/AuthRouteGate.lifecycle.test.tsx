@@ -11,7 +11,7 @@ import {
   controlledSessionClient,
   workspaceResponse,
 } from '../services/session/protectedRouteSessionContext.testSupport';
-import AuthRouteGate from './AuthRouteGate';
+import AuthRouteGate, { AuthRouteSurface } from './AuthRouteGate';
 
 const api = vi.hoisted(() => ({ getJson: vi.fn() }));
 vi.mock('../services/api/createApiClient', async (loadOriginal) => ({
@@ -43,7 +43,12 @@ function RoutesUnderTest({
         <Route
           element={
             <AuthRouteGate>
-              <Outlet />
+              <section data-testid="admitted-shell">
+                <nav aria-label="Persistent navigation">Workspace navigation</nav>
+                <AuthRouteSurface>
+                  <Outlet />
+                </AuthRouteSurface>
+              </section>
             </AuthRouteGate>
           }
         >
@@ -151,7 +156,7 @@ describe('AuthRouteGate publication lifetime', () => {
   });
 
   for (const target of ['/runs', '/canvas?next', '/canvas#next']) {
-    it.each(['allowed', 'denied'] as const)(
+    it.each(['allowed', 'denied', 'onboarding'] as const)(
       `keeps the requested ${target} from committing before its %s admission completes`,
       async (outcome) => {
         const committedRoutes: string[] = [];
@@ -161,6 +166,7 @@ describe('AuthRouteGate publication lifetime', () => {
             onProtectedCommit={(route) => committedRoutes.push(route)}
           />
         );
+        expect(mounted.container.querySelector('[data-testid="admitted-shell"]')).toBeNull();
         await act(async () => {
           transport.requests[0]!.resolve({});
         });
@@ -168,26 +174,43 @@ describe('AuthRouteGate publication lifetime', () => {
           transport.requests[1]!.resolve(workspaceResponse('initial'));
         });
         expect(committedRoutes).toEqual(['/canvas']);
+        const shell = mounted.container.querySelector('[data-testid="admitted-shell"]');
+        const navigation = mounted.container.querySelector('nav');
+        expect(shell).not.toBeNull();
         await act(async () => {
           fireEvent.click(mounted!.container.querySelectorAll('a')[1]!);
         });
         expect(transport.requests[2]!.endpoint).toBe('/session');
         expect(committedRoutes).not.toContain(target);
         expect(mounted.container.textContent).toContain('Checking session...');
+        expect(mounted.container.querySelector('[data-testid="admitted-shell"]')).toBe(shell);
+        expect(mounted.container.querySelector('nav')).toBe(navigation);
         await act(async () => {
           transport.requests[2]!.resolve({});
         });
         expect(committedRoutes).not.toContain(target);
         await act(async () => {
           if (outcome === 'allowed') transport.requests[3]!.resolve(workspaceResponse('current'));
+          else if (outcome === 'onboarding')
+            transport.requests[3]!.reject({
+              statusCode: 403,
+              endpoint: '/workspace/context',
+              responseBody: { error: { reason: 'workspace_context_not_granted' } },
+            });
           else transport.requests[3]!.reject({ statusCode: 401, endpoint: '/workspace/context' });
         });
         if (outcome === 'allowed') {
+          expect(mounted.container.querySelector('[data-testid="admitted-shell"]')).toBe(shell);
           expect(committedRoutes).toEqual(['/canvas', target]);
           expect(useSessionStore.getState().projectId).toBe('current');
         } else {
+          expect(mounted.container.querySelector('[data-testid="admitted-shell"]')).toBeNull();
           expect(committedRoutes).toEqual(['/canvas']);
-          expect(mounted.container.textContent).toContain('Login recovery');
+          if (outcome === 'onboarding') {
+            expect(
+              mounted.container.querySelector('[data-slot="project-onboarding-root"]')
+            ).not.toBeNull();
+          } else expect(mounted.container.textContent).toContain('Login recovery');
         }
       }
     );

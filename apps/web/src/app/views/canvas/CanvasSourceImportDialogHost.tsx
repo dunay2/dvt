@@ -4,7 +4,7 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import SourceImportWizard from '../../components/SourceImportWizard';
 import type { ImportSourcesResult } from '../../ports/workspace';
 import type { SourceImportOptionContribution } from '../../plugins/registry';
-import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
+import type { SourceImportWizardEntry } from '../../components/sourceImportWizard/types';
 import type { CanvasShellSourceImportPlacement } from './canvasShell.types';
 import { queryKeys } from '../../queries/queryKeys';
 
@@ -20,7 +20,7 @@ export async function refreshConnectionIdentityProjections(
 type CanvasSourceImportDialogHostProps = Readonly<{
   open: boolean;
   canvasId: string;
-  initialSelection?: SourceImportInitialSelection | null;
+  entry: SourceImportWizardEntry;
   placement?: CanvasShellSourceImportPlacement;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   onClose: () => void;
@@ -31,7 +31,7 @@ type CanvasSourceImportDialogHostProps = Readonly<{
 export function CanvasSourceImportDialogHost({
   open,
   canvasId,
-  initialSelection,
+  entry,
   placement,
   sourceImportOptions,
   onClose,
@@ -49,7 +49,7 @@ export function CanvasSourceImportDialogHost({
       onComplete={(result) => onComplete(result, placement)}
       onConnectionRenamed={() => refreshConnectionIdentityProjections(queryClient)}
       sourceImportOptions={sourceImportOptions}
-      initialSelection={initialSelection}
+      entry={entry}
     />
   );
 }

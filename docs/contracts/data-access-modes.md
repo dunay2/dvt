@@ -59,6 +59,15 @@ existing `SourceDataSampleResponse`. This is an in-place hard cut: `sampledAt`
 is removed from Source responses, not accepted as a legacy alternative.
 Transform responses use the same LIVE value object as described below.
 
+The project sidebar, import Wizard and manual-source Inspector consume the same
+scope-keyed `ListWarehouseConnections` query through the existing warehouse
+application port. This cache contains public connection metadata only, not data
+samples, health observations or credentials. Its tenant/project/environment key
+comes from the granted session; a scope change cannot reuse another scope's
+snapshot. Existing create/rename receipts update and invalidate their captured
+key. A connection reference on a model remains a reference to that shared
+resource, and a model can remain logically valid without a physical binding.
+
 The authorized connection catalog owns provider and binding identity. The
 provider probe owns `queriedAt`, the time it completed the bounded read in its
 read-only transaction; this is neither capture time nor a guarantee that the
@@ -115,6 +124,74 @@ in the application use case; view components only render facts and emit actions.
 | Source provenance         | Hidden authority        | Service Layer / WarehouseSourceDataSample      | `PreviewWarehouseSourceObjectRows` | Existing contracts, use case and PostgreSQL probe | Strict LIVE shape, binding/limit consistency, empty result and denials | No legacy response or retired API consumer            | Real protected Source read and provider-change proof | LOCAL and Transform provenance               |
 | Explicit refresh          | Responsibility overload | Presentation Model / Canvas source publication | Same query                         | Source sample hook and operational drawer         | Current selection, stale response, deletion, no automatic query        | View receives facts/actions, never credentials or SQL | Pointer/keyboard Refresh and unchanged tab behavior  | Automatic refresh and nested-scope refresh   |
 | Retire dead sample action | Duplicate semantics     | Remove obsolete adapter / Run evidence         | No new rail                        | Web Run/Sink ports, service and views             | Persisted evidence remains; no row-query action                        | Existing API retired-route rejection                  | Existing terminal Run proof remains green            | Reinterpreting historical execution evidence |
+
+## Transform SQL inspection
+
+The SQL inspection continuation is governed by
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6726292993).
+It declares a distinct read model for the existing Code surface; it does not
+execute a LIVE row read. A native Model consuming a file-owned dbt producer
+requires the server's authorized compiled publication as well as its schema
+signature. The browser cannot manufacture that SQL from the signature or use
+an upstream file as the selected Model's own source.
+
+| Query                       | DDD read model / application port                                          | Adapter                                                                                                                           | Scope and authorization                                                                                                                                                             | Negative paths                                                                                                                                                             |
+| --------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProjectCanvasTransformSql` | `TransformSqlProjectionResponse`; `ProjectCanvasTransformSqlQuery.execute` | GET `/workspace/graph/canvases/:canvasId/transforms/:transformNodeId/sql`; Web `ICanvasTransformSqlQueryPort.projectTransformSql` | Existing tenant/project/environment and `workspaceGraphDraftView`; file-model producers additionally use `workspaceFilesView`, current file authority and native compilation policy | Missing/malformed scope or semantic digest, 401/403, stale Canvas/digest, unsupported closure, changed producer fields/connection, malformed response and stale completion |
+
+The request contains only the selected Canvas and Transform identities and the
+expected canonical semantic-plan digest. The response names the protected draft
+revision, semantic digest, projected SQL and exact physical/model provenance.
+It contains no credentials, rows or publication command. The shared preparation
+owner resolves the protected draft and the existing producer/AST pipeline for
+both this query and `PreviewCanvasTransformRows`. Only row Preview continues to
+the connection catalog, credential resolver and bounded provider probe.
+
+Protected graph admission and semantic producer consumption are distinct. The
+complete upstream graph retains its scope authorization, topology and direct-edge
+checks. After checking the original target digest, shared preparation uses the
+existing semantic document traversal to select only consumed producer references
+before requesting file authorization or compilation. An unused file-model edge
+does not become SQL provenance or require that file's compilation. A consumed
+file still requires current file-view permission and its authorized publication.
+For a selected relation, dependency analysis uses that relation's subtree while
+the original target document and digest remain the response authority. Native
+producer chains retain their transitive consumed file dependencies. Operational
+publication without a Preview target retains its complete existing admission.
+
+The same consumption boundary applies to physical Sources. Preview connection
+admission uses protected physical bindings that match the consumed semantic
+source references, together with consumed external publications. An unused
+authorized physical predecessor on another connection cannot choose or reject
+that query's connection. Every matching protected identity is retained; narrowing
+does not choose one ambiguous binding or repair a missing direct edge. The
+single-PostgreSQL-connection rule still rejects consumed physical/external inputs
+on different connections. Operational publication continues to validate its
+whole selection, including all selected Source connections.
+
+```mermaid
+flowchart LR
+  Code[Explicit Code SQL selection] --> SQL[ProjectCanvasTransformSql]
+  SQL --> Shared[Authorized transform projection preparation]
+  Rows[PreviewCanvasTransformRows] --> Shared
+  Shared --> Producers[Current physical and native dbt producer closure]
+  Producers --> Projection[Existing PostgreSQL AST projection]
+  Projection --> CodeResult[SQL and revision provenance]
+  Projection --> Rows
+  Rows --> Probe[Bounded row probe]
+```
+
+Canonical JSON remains passive. Selecting SQL owns loading and currentness;
+pending identical selections are deduplicated, and a later SQL selection checks
+the current authorized publication using the existing native analyzer cache.
+SQL is a read snapshot authorized at the last explicit request. Changed
+transform/graph references or scoped query bindings invalidate its visible
+result; late or unmounted completions cannot become current. The SQL view does
+not subscribe to upstream file revisions or permission-revocation events.
+An accepted file update alone does not refresh a retained snapshot; returning
+to canonical output and selecting SQL again revalidates the current publication
+and permission. An unavailable query context
+rejects SQL inspection rather than lowering external publications locally.
 
 ## Transform LIVE preview
 

@@ -18,7 +18,13 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
-import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchProperties,
   revisitWorkbenchCanvas,
@@ -27,7 +33,20 @@ import {
 import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../../support/workspaceSession';
 
+function assertDisclosedModelPath(row: string, path: string): void {
+  const parent = '[data-slot="canvas-explorer-model-row"]';
+  cy.get(row)
+    .closest(parent)
+    .find('[data-slot="canvas-explorer-model-disclosure"]')
+    .then(($button) => {
+      if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
+    });
+  cy.get(row).closest(parent).find('dl').should('be.visible').and('contain.text', path);
+}
+
 describe('Canvas happy path remains writable after create/save', () => {
+  let initialDraft: ReturnType<typeof stubStatefulCanvasDraftAuthoring>;
+  let warehouseConnections: { id: string; name: string; type: 'postgres'; database: string }[];
   beforeEach(() => {
     stubShellBootstrapApis({
       scopes: ['workspace:files:view', 'workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -41,7 +60,168 @@ describe('Canvas happy path remains writable after create/save', () => {
       defaultWorkspace: E2E_PROJECT_WORKSPACE,
       availableWorkspaces: [E2E_PROJECT_WORKSPACE],
     });
-    stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
+    initialDraft = stubStatefulCanvasDraftAuthoring({
+      emptyCanvas: true,
+      canvasKind: 'transformation',
+    });
+    warehouseConnections = [
+      { id: 'warehouse', name: 'Project warehouse', type: 'postgres', database: 'analytics' },
+    ];
+    stubE2eApi('GET', '/workspace/warehouse/connections', () => ({ body: warehouseConnections }));
+  });
+
+  it('keeps Source models in one searchable catalog and metadata disclosure separate from placement', () => {
+    // A source facet must survive without a physical binding; an input seed must not acquire it.
+    let writesBeforeDisclosure = 0;
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    initialDraft.nodes.push(
+      {
+        id: 'catalog-client',
+        name: 'Customers',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+        metadata: { resourceType: 'source', schema: 'raw', tableIdentifier: 'client' },
+      },
+      {
+        id: 'catalog-revenue',
+        name: 'Revenue without physical connection',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+      },
+      {
+        id: 'catalog-seed',
+        name: 'Country seed',
+        pluginId: 'dbt',
+        kind: 'dbt:seed',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+        metadata: { resourceType: 'seed' },
+      }
+    );
+    visitWorkbenchCanvas('es');
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '3');
+    cy.get('[data-slot="canvas-explorer-models"]')
+      .should('contain.text', 'Customers')
+      .and('contain.text', 'Revenue without physical connection')
+      .and('contain.text', 'Country seed');
+    cy.get('[data-element-id="catalog-client"]').should('contain.text', 'Fuente');
+    cy.get('[data-element-id="catalog-seed"]').should('not.contain.text', 'Fuente');
+    cy.get('[data-slot="canvas-explorer-models"] [data-model-icon="model"]').should(
+      'have.length',
+      3
+    );
+    cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().focus();
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
+    cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Project warehouse');
+    // Entry normalization autosaves; wait for its real acknowledgement before measuring disclosure.
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+    cy.then(() => {
+      writesBeforeDisclosure = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(
+      '[data-slot="canvas-explorer-model-disclosure"][data-model-id="catalog-client"]'
+    ).focus();
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('[data-slot="canvas-explorer-model-disclosure"][data-model-id="catalog-client"]')
+      .should('have.attr', 'aria-expanded', 'true')
+      .and('be.focused');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDisclosure)
+    );
+    cy.get('[data-slot="canvas-explorer-models"] input[type="search"]').type('Fuente');
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '1');
+    cy.get('[data-element-id="catalog-client"]').should('be.visible');
+    cy.get('[data-element-id="catalog-seed"]').should('not.exist');
+    cy.get('[data-slot="canvas-explorer-models"] input[type="search"]')
+      .clear()
+      .type('no-such-model');
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '0');
+    cy.get('[data-slot="canvas-explorer-models"]').should('contain.text', 'No hay coincidencias.');
+    cy.get('[data-slot="canvas-explorer-models"] input[type="search"]').clear();
+    cy.get(
+      '[data-slot="canvas-explorer-model-disclosure"][data-model-id="catalog-client"]'
+    ).click();
+    cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().click();
+    cy.get('[data-element-id="catalog-client"]').should(($button) => {
+      const button = $button[0]!;
+      const document = button.ownerDocument;
+      const window = document.defaultView!;
+      const rootStyle = window.getComputedStyle(document.documentElement);
+      const roleSize = (role: string): number =>
+        Number.parseFloat(rootStyle.getPropertyValue(role)) * Number.parseFloat(rootStyle.fontSize);
+      const controlSize = roleSize('--text-ui');
+      const canvasTab = document.getElementById('canvas-workspace-tab')!;
+      expect(
+        Number.parseFloat(window.getComputedStyle(canvasTab).fontSize),
+        'surrounding Canvas tab'
+      ).to.be.at.least(controlSize);
+      for (const control of [
+        button,
+        document.querySelector('[data-slot="canvas-explorer"] h3')!,
+        document.querySelector('[data-slot="canvas-explorer-models"] button[aria-expanded]')!,
+        document.querySelector('[data-slot="canvas-explorer-models"] input[type="search"]')!,
+      ]) {
+        expect(
+          Number.parseFloat(window.getComputedStyle(control).fontSize),
+          'shared UI control scale'
+        ).to.equal(controlSize);
+      }
+      const facet = document.getElementById(button.getAttribute('aria-describedby')!);
+      expect(facet, 'the real Source property remains accessible').not.to.equal(null);
+      expect(Number.parseFloat(window.getComputedStyle(facet!).fontSize)).to.equal(
+        roleSize('--text-ui-micro')
+      );
+      expect(roleSize('--text-ui-micro')).to.be.lessThan(controlSize);
+    });
+    cy.contains('[data-slot="canvas-explorer"] h3', 'Explorador').should('be.visible');
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--connections-models');
+    cy.viewport(1544, 868);
+    cy.document().should((document) => {
+      expect(document.documentElement.scrollWidth).to.be.at.most(1544);
+    });
+    cy.get('[data-element-id="catalog-client"]').dblclick();
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    // Catalogue inspection must never take the placement rail, including an unplaced Source.
+    cy.get('[data-element-id="catalog-client"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Resumen');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('[data-element-id="catalog-client"]').should('have.attr', 'aria-pressed', 'true');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDisclosure)
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    // Check the actual placement control before the native gesture.
+    cy.get('[data-element-id="catalog-client"]')
+      .should('be.enabled')
+      .and('have.attr', 'draggable', 'true');
+    dragWorkbenchField('[data-element-id="catalog-client"]', '[data-testid="canvas-viewport"]');
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('.react-flow__node').first().find('[data-slot="canvas-node-shell"]').click(50, 18);
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-explorer-model-count"]').should('have.text', '3');
+    cy.get('#canvas-code-main-tab').should('not.exist');
+    cy.then(() => expect(getE2eApiCalls('/workspace/files', 'POST')).to.have.length(0));
+    // Element screenshots restore runner geometry asynchronously; capture after native gestures.
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-catalog--desktop');
   });
 
   it('creates independent file-model references through Elements without navigating to Code or creating SQL files', () => {
@@ -124,12 +304,33 @@ describe('Canvas happy path remains writable after create/save', () => {
     cy.get(modelRow)
       .should('be.visible')
       .and('not.be.disabled')
-      .and('contain.text', 'models/clientes.sql');
+      .and('contain.text', 'clientes')
+      .and('contain.text', 'SQL');
+    assertDisclosedModelPath(modelRow, 'models/clientes.sql');
+    // A discovered file model is inspected with its current authority before any definition exists.
+    cy.get(modelRow).click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Overview');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('contain.text', 'clientes');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('#canvas-code-main-tab').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get(modelRow).should('be.focused');
     dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 1);
     cy.get('.react-flow__node').invoke('attr', 'data-id').as('firstFileInstance');
-    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
+    assertDisclosedModelPath(modelRow, 'models/clientes.sql');
     cy.get(modelRow).click();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    // A second actual drag creates the independent reference; clicking the registered row cannot.
+    dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('#canvas-code-main-tab').should('not.exist');
     cy.wrap(null).should(() => {
@@ -164,7 +365,7 @@ describe('Canvas happy path remains writable after create/save', () => {
     });
     revisitWorkbenchCanvas();
     cy.get('.react-flow__node').should('have.length', 2);
-    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
+    assertDisclosedModelPath(modelRow, 'models/clientes.sql');
     openCanvasNodeOperations('clientes 2');
     clickCanvasContextMenuItem('Delete');
     cy.get('.react-flow__node').should('have.length', 1);
@@ -218,6 +419,248 @@ describe('Canvas happy path remains writable after create/save', () => {
     }
   });
 
+  it('opens connection management and creates through its scoped command without importing or placing models', () => {
+    // The Connections action used to inherit a source selection and hide creation in Browse.
+    cy.intercept('GET', '**/workspace/warehouse/connections/*/objects?*').as(
+      'managementObjectReads'
+    );
+    let writesBeforeManagement = 0;
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    stubE2eApi('POST', '/workspace/warehouse/connections', () => {
+      const created = {
+        id: 'managed-warehouse',
+        name: 'Managed warehouse',
+        type: 'postgres' as const,
+        database: 'analytics',
+      };
+      warehouseConnections.push(created);
+      return { statusCode: 201, body: created };
+    });
+    visitWorkbenchCanvas('en');
+    cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '1');
+    // Account for the existing startup normalization, not a delayed management write.
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-indicator"]').should('not.exist');
+    cy.then(() => {
+      writesBeforeManagement = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(
+      '[data-slot="canvas-explorer-connections"] button[aria-label="Configure connections"]'
+    ).click();
+    cy.get('[data-slot="source-import-workspace"]').within(() => {
+      cy.contains('h2', 'Connections').should('be.visible');
+      cy.contains('button', 'New connection').click();
+      cy.get('[data-slot="source-import-create-connection-name"]').type('Managed warehouse');
+      cy.get('[data-slot="source-import-create-connection-database"]').type('analytics');
+      cy.get('[data-slot="source-import-create-connection-credential-ref"]').type(
+        'postgres:managed-warehouse'
+      );
+      cy.contains('button', 'Create connection').click();
+      cy.contains('Managed warehouse').should('be.visible');
+      cy.get('[data-slot="source-import-connection-search"]').should('be.visible');
+      cy.contains('button', /^Done$/).click();
+    });
+    cy.get('[data-slot="source-import-workspace"]').should('not.exist');
+    cy.get(
+      '[data-slot="canvas-explorer-connections"] button[aria-label="Configure connections"]'
+    ).should('be.focused');
+    cy.get('[data-slot="canvas-explorer-connection-count"]').should('have.text', '2');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.then(() => {
+      const requests = getE2eApiCalls('/workspace/warehouse/connections', 'POST');
+      expect(requests).to.have.length(1);
+      expect(requests[0]!.body).to.deep.equal({
+        name: 'Managed warehouse',
+        type: 'postgres',
+        database: 'analytics',
+        credentialRef: 'postgres:managed-warehouse',
+      });
+      expect(getE2eApiCalls('/workspace/sources/import', 'POST')).to.have.length(0);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
+        writesBeforeManagement
+      );
+    });
+    cy.get('[data-slot="canvas-explorer-connections"] button[aria-expanded]').first().click();
+    cy.get('[data-slot="canvas-explorer-connections"]').should('contain.text', 'Managed warehouse');
+    cy.get('@managementObjectReads.all').should('have.length', 0);
+    cy.get('[data-slot="canvas-explorer"]').screenshot('project-connections--created');
+  });
+
+  it('keeps selected text separate from Canvas context and copies through one shell menu', () => {
+    // Selecting shell text used to expose only browser chrome; it must never reach Add or mutate a graph.
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitWorkbenchCanvas('en');
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-indicator"]').should('not.exist');
+    let writesBeforeSelection = 0;
+    let selectedTerm = '';
+    cy.then(() => {
+      writesBeforeSelection = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.window().then((window) => {
+      const clipboard = cy.stub(window.navigator.clipboard, 'writeText').as('copySelectedText');
+      clipboard.resolves();
+    });
+    cy.get('#canvas-workspace-tab')
+      .focus()
+      .then(($tab) => {
+        const document = $tab[0]!.ownerDocument;
+        const walker = document.createTreeWalker(
+          $tab[0]!,
+          document.defaultView!.NodeFilter.SHOW_TEXT
+        );
+        let text = walker.nextNode();
+        while (text != null && !text.textContent?.trim()) text = walker.nextNode();
+        const word = /[\p{L}\p{M}]+/u.exec(text?.textContent ?? '');
+        if (text == null || word == null)
+          throw new Error('The actual Canvas title must have a selectable word.');
+        selectedTerm = word[0];
+        const range = document.createRange();
+        range.setStart(text, word.index);
+        range.setEnd(text, word.index + selectedTerm.length);
+        document.getSelection()!.removeAllRanges();
+        document.getSelection()!.addRange(range);
+        expect(document.getSelection()!.toString()).to.equal(selectedTerm);
+      });
+    cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+    cy.get('#canvas-workspace-tab').rightclick();
+    cy.get('[data-slot="shell-text-selection-menu"]')
+      .should('be.visible')
+      .within(() => {
+        cy.get('[role="menuitem"]').should('have.length', 3);
+        cy.contains('[role="menuitem"]', /^Copy$/).should('be.focused');
+      });
+    let scrollBeforeActivation = 0;
+    cy.window().then((window) => {
+      window.focus();
+      scrollBeforeActivation = window.scrollY;
+    });
+    // Native defaults must neither scroll on Space nor dispatch a second Copy after keyup.
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('@copySelectedText').should((clipboard) => {
+      expect(clipboard).to.have.been.calledOnceWithExactly(selectedTerm);
+    });
+    pressNativeKey('Enter');
+    cy.get('[data-slot="shell-text-selection-menu"]').within(() => {
+      cy.get('[role="status"]').should('contain.text', 'Copied');
+      cy.get('a')
+        .first()
+        .should(($link) => {
+          expect($link.attr('href')).to.equal(
+            `https://dle.rae.es/${encodeURIComponent(selectedTerm)}`
+          );
+          expect($link.attr('rel')).to.equal('noopener noreferrer');
+        });
+    });
+    cy.get('@copySelectedText').should((clipboard) => {
+      expect(clipboard).to.have.callCount(2);
+      expect(clipboard).to.have.always.been.calledWithExactly(selectedTerm);
+    });
+    cy.window().then((window) => {
+      expect(window.scrollY).to.equal(scrollBeforeActivation);
+    });
+    cy.get('[data-slot="shell-text-selection-menu"]').screenshot('shell-selected-text-menu');
+    // The original defect affects anchors: observe activation while preventing any external window.
+    for (const key of [Cypress.Keyboard.Keys.SPACE, Cypress.Keyboard.Keys.ENTER]) {
+      if (key === Cypress.Keyboard.Keys.ENTER) cy.get('#canvas-workspace-tab').rightclick();
+      const activations: string[] = [];
+      let nativeKey: KeyboardEvent | undefined;
+      cy.get<HTMLAnchorElement>('[data-slot="shell-text-selection-menu"] a')
+        .first()
+        .focus()
+        .then(($link) => {
+          const link = $link[0]!;
+          link.addEventListener(
+            'click',
+            (event) => {
+              event.preventDefault();
+              activations.push(link.href);
+            },
+            { once: true }
+          );
+          link.addEventListener(
+            'keydown',
+            (event) => {
+              nativeKey = event;
+            },
+            { once: true }
+          );
+        });
+      cy.window().then((window) => {
+        window.focus();
+      });
+      cy.press(key);
+      cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+      cy.get('#canvas-workspace-tab').should('be.focused');
+      cy.then(() => {
+        expect(nativeKey?.isTrusted, 'dictionary activation uses a real keyboard gesture').to.equal(
+          true
+        );
+        expect(nativeKey?.key).to.equal(key === Cypress.Keyboard.Keys.SPACE ? ' ' : 'Enter');
+        expect(activations).to.deep.equal([
+          `https://dle.rae.es/${encodeURIComponent(selectedTerm)}`,
+        ]);
+      });
+    }
+    cy.get('#canvas-workspace-tab').should('be.focused');
+    cy.window().then((window) => {
+      expect(window.getSelection()?.toString()).to.equal(selectedTerm);
+      window.getSelection()?.removeAllRanges();
+    });
+    cy.get('[data-testid="canvas-viewport"] .react-flow__pane').rightclick(180, 160);
+    cy.get('[data-slot="canvas-context-menu"]').should('have.length', 1);
+    cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeSelection)
+    );
+  });
+
+  it('opens the existing Add search on background double click without zooming or placing before a choice', () => {
+    // Background Add has one command owner; it cannot inherit node Properties or double-click zoom.
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitWorkbenchCanvas('en');
+    const pane = '[data-testid="canvas-viewport"] .react-flow__pane';
+    let transform = '';
+    let writesBeforeMenu = 0;
+    cy.get('.react-flow__viewport').then(($viewport) => {
+      transform = $viewport.attr('style') ?? '';
+    });
+    cy.then(() => {
+      writesBeforeMenu = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(pane).click(220, 160);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+    cy.get(pane).dblclick(220, 160);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"] input[type="search"]').should(
+      'be.focused'
+    );
+    cy.get('.react-flow__viewport').should(($viewport) => {
+      expect($viewport.attr('style')).to.equal(transform);
+    });
+    cy.get('.react-flow__node').should('have.length', 0);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeMenu)
+    );
+    cy.get('[data-testid="canvas-viewport"]').screenshot('canvas-background-add-search');
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"] input[type="search"]').type(
+      '{esc}'
+    );
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+    cy.get('[data-slot="canvas-viewport-context-surface"]').should('be.focused');
+    cy.get(pane).dblclick(220, 160);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"] input[type="search"]').type(
+      'Model'
+    );
+    cy.get(
+      '[data-slot="canvas-context-menu-add-catalog-item"][data-registration-kind="dvt:transform"]'
+    ).click();
+    cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+  });
+
   it('creates and saves a model, reopens without a projection gap, and allows drag', () => {
     const copy = resolveCanvasViewCopy('en');
     cy.viewport(1280, 720);
@@ -254,12 +697,23 @@ describe('Canvas happy path remains writable after create/save', () => {
         cy.contains(copy.draftProjectionGapTitle).should('not.exist');
         cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
         cy.screenshot('canvas-happy-path-after-drag');
-        cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($button) => {
-          if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
-        });
+        cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
+          .click()
+          .should('have.attr', 'aria-expanded', 'true');
         cy.get(`[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`)
           .should('be.visible')
           .click();
+        cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+          'have.attr',
+          'aria-selected',
+          'true'
+        );
+        cy.get('.react-flow__node').should('have.length', 1);
+        cy.get('[data-slot="canvas-node-workbench-close"]').click();
+        dragWorkbenchField(
+          `[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`,
+          '[data-testid="canvas-viewport"]'
+        );
         cy.get('.react-flow__node').should('have.length', 2);
         cy.wrap(null).should(() => {
           const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as

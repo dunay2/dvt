@@ -1,4 +1,8 @@
-/** Owned concern: prove current Git files resolve against existing DB ownership authority. */
+/**
+ * Owned concern: prove current Git files resolve against existing DB ownership authority.
+ * Why: batching and indexing must not filter the physical inventory or canonical checks.
+ * Corner: ambiguous ownership and conflicting or missing references remain visible and failing.
+ */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -191,6 +195,67 @@ test('bound symbols and test references come from the selected SHA rather than t
 function readModel(repo, options = {}) {
   return createCurrentComponentFilesReadModelComponent({ gitReader: repo.reader(options) });
 }
+
+test('one current model preloads bound blobs and retains two bulk authority reads', async (t) => {
+  const repo = repository(t);
+  repo.write('proof.test.ts', 'export const proof = true;\n');
+  const bindings = Array.from({ length: 20 }, (_, index) => {
+    const sourcePath = `source-${index}.ts`;
+    repo.write(sourcePath, 'export function read() { return 1; }\n');
+    return {
+      componentId: 'SYS-TEST',
+      responsibilityId: `RESP-READ-${index}`,
+      path: sourcePath,
+      symbol: 'read',
+      role: 'implements',
+      testPaths: ['proof.test.ts'],
+      responsibilityComponentId: 'SYS-TEST',
+      description: `Read source ${index}`,
+      status: 'approved',
+    };
+  });
+  const reader = repo.reader({ headRef: repo.commit(repo.base) });
+  const commands = [];
+  const runGit = reader.runGit.bind(reader);
+  reader.runGit = (args, options) => {
+    commands.push(args);
+    return runGit(args, options);
+  };
+  const queries = [];
+  const client = {
+    async query(sql) {
+      queries.push(sql);
+      return { rows: sql.includes('component_source_responsibility') ? bindings : [unit()] };
+    },
+  };
+  const result = await createCurrentComponentFilesReadModelComponent({
+    gitReader: reader,
+  }).readCurrentComponentFiles(client);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.bindings.length, 20);
+  assert.equal(
+    queries.length,
+    2,
+    'units and bindings remain bulk queries in the existing snapshot'
+  );
+  assert.equal(commands.filter(([command]) => command === 'show').length, 0);
+  assert.equal(commands.filter(([command]) => command === 'cat-file').length, 1);
+  for (const binding of bindings) {
+    const file = result.files.find(({ path }) => path === binding.path);
+    assert.equal(file.owning_unit, 'SYS-TEST');
+    assert.deepEqual(file.responsibility_errors, []);
+    assert.equal(file.responsibility_bindings[0].description, binding.description);
+  }
+  assert.equal(result.tree[0].direct_file_count, result.files.length);
+  t.diagnostic(
+    JSON.stringify({
+      boundSources: 20,
+      legacyBlobProcesses: 20,
+      blobProcesses: 1,
+      bulkQueries: queries.length,
+    })
+  );
+});
 
 test('tree and profile include DB-created children without imported hierarchy rows', async (t) => {
   const repo = repository(t);

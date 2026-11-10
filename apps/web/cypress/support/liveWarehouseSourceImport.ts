@@ -201,17 +201,16 @@ function waitForPlacedSource(
   });
 }
 
+/** Placement is a drag gesture; an ordinary catalogue click belongs to inspection. */
 export function placeRegisteredSource(
   id: string,
   scope: WorkspaceGraphDraftScope,
   {
     position = { x: 220, y: 160 },
     dropTarget,
-    gesture = 'drag',
   }: Readonly<{
     position?: Readonly<{ x: number; y: number }>;
     dropTarget?: HTMLElement;
-    gesture?: 'click' | 'drag';
   }> = {}
 ): Cypress.Chainable<string> {
   let previousIds: string[] = [];
@@ -222,24 +221,18 @@ export function placeRegisteredSource(
     ];
   });
   const selector = `[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`;
-  if (gesture === 'click') {
-    cy.get(selector).click();
-  } else {
-    const dataTransfer = new DataTransfer();
-    cy.get(selector)
-      .should('have.attr', 'draggable', 'true')
-      .trigger('dragstart', { dataTransfer });
-    cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
-      const bounds = $pane[0]!.getBoundingClientRect();
-      cy.wrap(dropTarget ?? $pane)
-        .trigger('dragover', { dataTransfer })
-        .trigger('drop', {
-          dataTransfer,
-          clientX: bounds.left + position.x,
-          clientY: bounds.top + position.y,
-        });
-    });
-    cy.get(selector).trigger('dragend', { dataTransfer });
-  }
+  const dataTransfer = new DataTransfer();
+  cy.get(selector).should('have.attr', 'draggable', 'true').trigger('dragstart', { dataTransfer });
+  cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
+    const bounds = $pane[0]!.getBoundingClientRect();
+    cy.wrap(dropTarget ?? $pane)
+      .trigger('dragover', { dataTransfer })
+      .trigger('drop', {
+        dataTransfer,
+        clientX: bounds.left + position.x,
+        clientY: bounds.top + position.y,
+      });
+  });
+  cy.get(selector).trigger('dragend', { dataTransfer });
   return cy.then(() => waitForPlacedSource(id, scope, previousIds));
 }

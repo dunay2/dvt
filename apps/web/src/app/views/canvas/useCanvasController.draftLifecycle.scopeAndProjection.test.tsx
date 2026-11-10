@@ -32,7 +32,7 @@ function readLatestExecutionCall(
 
 function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): void {
   expect(harness.state.store.setSelectedNodes).toHaveBeenCalledWith([]);
-  expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
+  expect(harness.state.store.setInspectorTarget).toHaveBeenCalledWith(null, undefined);
   expect(harness.getLatestResult()?.inspectorNode).toBeNull();
 }
 
@@ -193,7 +193,11 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
       mode: 'explicit',
       nodeIds: ['node_2'],
     });
-    harness.state.store.inspectorNodeId = 'node_2';
+    harness.state.store.setInspectorTarget({
+      kind: 'canonical-node',
+      nodeId: 'node_2',
+      workspaceScope: harness.state.services.sessionContext.getWorkspaceScopeSnapshot(),
+    });
 
     await harness.renderProbe();
     await harness.renderProbe();

@@ -1,3 +1,4 @@
+/** Present exact capability facts independently from endpoint observation status. */
 import { Radio } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
@@ -5,6 +6,7 @@ import { adminViewCopy as copy } from './copy';
 import { getCapabilitiesEmptyState } from './adminViewModel';
 import { AdminStatusBadge } from './AdminStatusBadge';
 import type { AdminPlatformTabProps } from './platformTypes';
+import styles from './AdminPlatform.module.css';
 
 type CapabilitiesProps = Pick<
   AdminPlatformTabProps,
@@ -17,57 +19,54 @@ export function AdminCapabilitiesCard({
   capabilitiesError,
 }: Readonly<CapabilitiesProps>) {
   return (
-    <Card className="border-slate-700 bg-slate-900 p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <Radio className="size-5 text-cyan-400" />
+    <Card className={styles.card}>
+      <div className={styles.sectionHeading}>
+        <Radio aria-hidden="true" className={styles.sectionIcon} />
         <div>
-          <h3 className="font-semibold">{copy.sections.capabilitiesTitle}</h3>
-          <p className="text-sm text-slate-400">{copy.sections.capabilitiesSubtitle}</p>
+          <h3 className={styles.title}>{copy.sections.capabilitiesTitle}</h3>
+          <p className={styles.subtitle}>{copy.sections.capabilitiesSubtitle}</p>
         </div>
       </div>
-
-      <div className="space-y-3">
-        <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
-            {copy.labels.frontendCompatibility}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Badge variant="outline">apiVersion: {capabilitiesData?.apiVersion ?? 'n/a'}</Badge>
-            <Badge variant="outline">
-              minFrontendVersion: {capabilitiesData?.minFrontendVersion ?? 'n/a'}
-            </Badge>
-          </div>
+      {capabilitiesData != null && capabilitiesError ? (
+        <p className={styles.warning} role="status">
+          {copy.states.capabilitiesStale}
+        </p>
+      ) : null}
+      <div className={styles.inset}>
+        <div className={styles.label}>{copy.labels.frontendCompatibility}</div>
+        <div className={styles.compatibility}>
+          <Badge variant="outline">
+            apiVersion: {capabilitiesData?.apiVersion ?? copy.states.notObserved}
+          </Badge>
+          <Badge variant="outline">
+            minFrontendVersion: {capabilitiesData?.minFrontendVersion ?? copy.states.notObserved}
+          </Badge>
         </div>
-
-        <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
-          <div className="mb-3 text-xs uppercase tracking-wide text-slate-500">
-            {copy.labels.pluginAvailability}
-          </div>
-          <div className="space-y-2">
-            {capabilitiesData ? (
-              Object.entries(capabilitiesData.plugins).map(([pluginId, info]) => (
-                <div
-                  key={pluginId}
-                  className="flex items-center justify-between rounded border border-slate-800 px-3 py-2"
-                >
-                  <span className="font-mono text-sm text-slate-200">{pluginId}</span>
-                  <div className="flex items-center gap-2">
-                    {info.reason ? (
-                      <span className="text-xs text-slate-500">{info.reason}</span>
-                    ) : null}
-                    <AdminStatusBadge
-                      ok={info.available}
-                      label={info.available ? 'available' : 'blocked'}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-slate-400">
-                {getCapabilitiesEmptyState(capabilitiesLoading, capabilitiesError)}
+      </div>
+      <div className={styles.inset}>
+        <div className={styles.label}>{copy.labels.pluginAvailability}</div>
+        <div className={styles.pluginList}>
+          {capabilitiesData ? (
+            Object.entries(capabilitiesData.plugins).map(([pluginId, info]) => (
+              <div
+                key={pluginId}
+                className={styles.plugin}
+                data-slot="admin-plugin-capability"
+                data-plugin-id={pluginId}
+              >
+                <span className={styles.pluginId}>{pluginId}</span>
+                {info.reason ? <span className={styles.probeDetail}>{info.reason}</span> : null}
+                <AdminStatusBadge
+                  tone={info.available ? 'success' : 'warning'}
+                  label={info.available ? 'available' : 'blocked'}
+                />
               </div>
-            )}
-          </div>
+            ))
+          ) : (
+            <p className={styles.subtitle}>
+              {getCapabilitiesEmptyState(capabilitiesLoading, capabilitiesError)}
+            </p>
+          )}
         </div>
       </div>
     </Card>

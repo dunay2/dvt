@@ -178,6 +178,35 @@ flowchart LR
 
 ## Browser Evidence Boundary — GH-3540
 
+### Native keyboard support admission — GH-3765
+
+The shared `cypress/support/nativeKeyboard.ts` adapter belongs to the controlled
+runtime. Its five current import consumers are the Model output toggle, shell
+layout, route workbench slots, Canvas screen composition and Runs runtime specs; all five have
+exact controlled ownership in the existing browser catalog. They exercise real
+Chromium keyboard default actions with controlled application API responses.
+Native input alone does not make a consumer an available-provider proof.
+
+```mermaid
+flowchart LR
+  Path[Exact nativeKeyboard support change] --> Policy[Existing support capability map]
+  Closure[Real five-consumer import closure] --> Guard[Existing browser routing guard]
+  Policy --> Plan[Complete controlled browser baseline]
+  Guard --> Plan
+  Plan --> Runner[Existing native command and strict result validation]
+  Unknown[Unknown browser path, alone or mixed] --> Reject[Reject before execution]
+```
+
+`SUPPORT_CAPABILITIES` registers this exact helper as `['controlled']`. A shared
+helper change selects the complete current controlled inventory, preserving the
+existing baseline rather than narrowing execution to the five consumers.
+The existing architecture guard checks their real transitive import closure and
+runtime ownership, the resulting plan and rejection of an unregistered adjacent
+helper even when mixed with this admitted path. Reuse
+`RouteChangedWebVitestSuites` and `RunWebCypressNative`; no wildcard admission,
+catalog parser change, new runtime, nightly reclassification or unknown-path
+fallback is permitted.
+
 ### Large-graph browser cadence — GH-3604
 
 Issue #3604 admits a bounded cadence change under design
@@ -418,7 +447,8 @@ flowchart LR
   The existing required aggregate requires the
   complete matrix result; cancelled, failed or absent evidence still rejects.
 - `main`, manual and root-sensitive runs distribute the existing `test:web:ci`
-  delegates across `unit-architecture` and `presentation`, and execute the admitted
+  delegates across separate `unit` and `architecture` jobs plus three native
+  Presentation shards (`1/3`, `2/3`, `3/3`), and execute the admitted
   browser baseline with `--full --phase=browser`, partitioned by the same
   capability selector in CI. `--full` only adds
   browser baseline obligations to the router: executing it with the Vitest
@@ -556,33 +586,46 @@ passed. This is incomplete execution evidence, not a passing product result.
 
 ```text
 Before: complete admitted plan -> available [32 specs] -> 25-minute cancellation
-After:  complete admitted plan -> available 1/3 -> exact result validation
-                              -> available 2/3 -> exact result validation
-                              -> available 3/3 -> exact result validation
-All three producers -> existing required Test Suite matrix aggregate
+After:  complete admitted plan -> controlled 1..6/6 -> exact result validation
+                              -> available 1..6/6  -> exact result validation
+                              -> unavailable      -> exact result validation
+All selected producers -> existing required Test Suite matrix aggregate
 ```
 
-The existing browser policy partitions its ordered available spec list by
-zero-based index modulo three. Every spec belongs to exactly one shard; the
+The existing browser policy partitions each ordered spec list by zero-based
+index modulo the explicit partition count. Every spec belongs to exactly one shard; the
 union equals the unpartitioned catalog. Reuse the existing command builder,
 protected runtime and strict expected-spec result validator. Do not duplicate
 the catalog in YAML, parse command strings, add another runner or alter cases.
 
-The adapter accepts `--browser-shard=1/3`, `2/3` or `3/3` only together with
-`--phase=browser --browser-capability=available`. Omission preserves the complete
-local invocation. Complete plan admission and physical-path validation precede
+The adapter accepts `--browser-shard=index/count` only together with
+`--phase=browser` and capability `controlled` or `available`. Both values must
+be positive safe integers, with index no greater than count. Hosted execution
+uses six partitions per capability. Default local execution retains three
+sequential controlled batches and complete available/unavailable requests;
+explicit unpartitioned browser requests remain complete. The selector allocates
+no count-sized scheduler. Complete plan admission and physical-path validation precede
 shard selection, including in `--plan` mode. Invalid, repeated, out-of-phase
 or out-of-capability selectors reject before provisioning. A selected shard
-cannot silently admit an empty consumer list.
+cannot silently admit an empty available consumer list. A controlled partition
+with no assigned changed specs launches no browser, after validating the entire plan.
 
-The existing workflow creates all three available producers for PR and full
+The existing workflow creates all six controlled and six available producers for PR and full
 baseline execution. Container ownership, Turbo cache variant and screenshot
 artifact identities include the shard. Provider setup occurs only when the
 selected plan requires it. The unchanged 25-minute deadline and fail-fast-false
 policy apply to each producer; a failed, cancelled or missing shard blocks the
-existing required aggregate. Controlled, unavailable and Vitest ownership do
-not change. Three bootstraps replace one for this capability; lower total CPU
-is not claimed.
+existing required aggregate. Capability and Vitest ownership do not change.
+
+The GH-3765 performance cut increases hosted partitions from three to six after
+run `42735058665` measured a 572-second browser job within a 710-second Test Suite.
+The complete target is at most 355 seconds, not a proven result. Native dependency
+preparation is independently optimized; partitioning alone cannot remove its
+fixed cost. Six additional bootstraps increase runner consumption. Record cold
+and warm wall time, queue delay and total runner-minutes separately; neither
+lower total CPU nor a 50-percent gain may be inferred from partition counts.
+The local execution policy stays unchanged rather than multiplying its serial
+builds and launches. No spec, case, failure or cleanup check is removed.
 
 Separate focused policy/adapter tests prove disjoint complete coverage,
 unchanged runtime arguments, selector rejection and validation-before-filtering.
@@ -773,8 +816,9 @@ capture enumeration, read, projection, publication and cleanup. Closed reasons
 are missing, denied, invalid or failed; an unknown
 exception becomes failed. An independent UUID names the receipt in the existing
 diagnostics evidence directory as `lifecycle-<uuid>.json`, containing
-`{ schemaVersion: 1, failures: [...] }`. At most 16 failure records contain only
-`phase` and `code`. Cleanup or receipt-publication failures cannot erase earlier
+`{ schemaVersion: 1, failures: [...] }`. At most 16 failure records contain
+`phase` and `code`, with optional closed projection detail as defined below.
+Cleanup or receipt-publication failures cannot erase earlier
 classified failures. The lifecycle publishes this safe receipt; the existing
 runner preserves its generic rejection and exact-spec acceptance boundary.
 Raw exception messages,
@@ -800,7 +844,7 @@ flowchart LR
 | Passing assertions precede an opaque finalization failure             | Primitive obsession and hidden lifecycle evidence | Closed diagnostic value at the existing Gateway boundary              | Owned Chromium capture lifecycle                                                | RunWebCypressNative | Existing Diagnostics and Evidence modules and lifecycle tests | Successful operation plus invalid or unreadable capture rejects with a safe phase; cleanup remains exact        | Allowlisted metadata only; hostile exception payload stays private         | Affected hosted available shard with existing literal specs | Transport fixes without evidence, native observer or projection changes |
 | Generic runner rejection must remain private without losing diagnosis | Responsibility boundary                           | Publish safe evidence in lifecycle, retain proof acceptance in runner | Owned Chromium capture lifecycle and Web Cypress native runner support boundary | RunWebCypressNative | Existing lifecycle modules and selected-closure runner tests  | Failure receipt retained and no proof acceptance after finalization failure; arbitrary Cypress errors sanitized | Runner rejection remains generic; only lifecycle publishes closed metadata | Existing providers, assertions and authentication           | Runner production changes, workflow, catalog, timeout or retry changes  |
 
-The implementation uses five of the six admitted paths:
+The GH-3747 implementation uses five of the six admitted paths:
 `chromiumNetworkDiagnostics.ts`, `chromiumNetworkEvidence.ts`,
 `scripts/chromium-network-diagnostics.test.cjs`,
 `scripts/run-selected-closure-cypress.test.cjs` and this guide. The admitted
@@ -815,6 +859,60 @@ the affected hosted proof is repeated. Existing exact-spec acceptance, cleanup,
 required evidence, lint/typecheck, committed prepush and native implementation
 validation remain required. This section records the admitted change before
 implementation; completion evidence belongs to the issue and actual checks.
+
+###### Finite projection rejection details — GH-3765
+
+The prospective admission
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6756437694)
+keeps the existing component, command and disclosure boundary. PR #3834's
+available shard 1 passed all 24 cases, then rejected native completion 3.415
+seconds later. Its lifecycle receipt contains only `capture-projection/failed`;
+the process observer completed and the browser exited with code zero. The raw
+inputs were correctly removed. These facts locate a projection failure but do
+not establish truncation, a parser defect, a resource cause or a product defect.
+
+```mermaid
+flowchart LR
+  Cases[24 browser cases passed] --> Completion[Existing strict native completion]
+  Completion --> Projection[Same pure capture projection]
+  Projection --> Rejected[Same refusal and exact cleanup]
+  Rejected --> Old[Opaque phase and code]
+  Rejected --> Safe[Finite branch or exception class detail]
+  Safe --> Diagnosis[Next execution provides actual rejection reason]
+  Diagnosis --> Later[Semantic repair only with concrete evidence]
+```
+
+The pure mapper gives its three existing refusal branches a small typed error:
+`captureSyntax` identifies the existing capture syntax/completeness predicate,
+`logShape` identifies the existing log-envelope predicate, and `eventShape`
+identifies the existing per-event predicate. Their predicates and accepted
+captures remain identical. This distinguishes a known rejection branch without
+inventing a second parser or accepting malformed evidence.
+
+Only `capture-projection` failures may add optional `detail` to a schema-version-1
+lifecycle record. The closed values are the three branch names, `RangeError`,
+`TypeError`, `SyntaxError`, `ReferenceError`, `URIError`, `EvalError`,
+`AggregateError`, `Error` and `unknown`. Built-in classes are identified through
+`instanceof`, without reading an exception's name, message, stack or cause.
+`Error` denotes other Error instances; `unknown` covers other thrown values.
+A class observation does not establish why that exception occurred. Existing
+phase/code classification remains unchanged, including unknown failures.
+
+The evidence owner reconstructs only validated enumerated fields. It never
+copies arbitrary error properties, raw capture or process text, paths, URLs,
+credentials or hostile getters into the receipt. The 16-record bound, exact raw
+cleanup, generic runner rejection and zero proof acceptance after failed
+completion remain required. A classified rejection still exits unsuccessfully.
+The next hosted execution supplies diagnostic evidence; it is not an advance
+claim that the parser or browser is repaired.
+
+Tests cover each actual refusal branch, unchanged complete/terminated successful
+projections, built-in and unknown exception classification, hostile payload
+redaction, strict publication, exact cleanup and successful Cypress followed by
+rejected completion. The implementation stays within the two existing mapper
+and evidence modules, their two script suites, the existing selected-closure
+runner test and this guide. Process observation, production runners, workflow,
+parser conditions and application assertions remain unchanged.
 
 ##### Retained process evidence and ownership — GH-3735
 
@@ -1341,10 +1439,67 @@ Acceptance:
   pull-request base ref and their `--phase=vitest` / `--phase=browser` selection.
 - Given a push to `main`, a manual run, or a root-build-sensitive pull request
 - When the `Web Frontend Tests` job runs
-- Then the two full Vitest groups execute every primary-suite delegate exactly
-  once, while the browser phase executes
+- Then five full Vitest groups execute Unit and Architecture once each and the
+  complete, disjoint union of the three native Presentation shards, while the browser phase executes
   `pnpm test:web:changed --full --phase=browser`.
 - Either phase failing or being cancelled prevents the required aggregate
   from succeeding. Neither phase cancels its sibling on failure.
 
 > Acceptance scope status: Active. Owner: Frontend / CI.
+
+## Verified native browser preparation caches
+
+GH-3765-CI-BROWSER-PREPARATION-CACHE reuses `RunWebCypressNative` and
+`RouteChangedWebVitestSuites`. The Linux composite action
+`.github/actions/setup-native-browser/action.yml` owns dependency preparation
+shared by Test Suite and Canvas nightly. It does not select or execute tests,
+start previews, allocate providers, publish acceptance or change process cleanup.
+
+The historical hosted run `42735058665` spent 13 seconds preparing Cypress and
+44 seconds preparing pinned Chrome in available shard 2. These measurements
+justify reusing downloads; they are not promised savings or successful acceptance.
+The run failed diagnostic finalization. The 50-percent wall-time objective must
+be measured after integration, with cold and warm caches reported separately.
+
+```mermaid
+flowchart LR
+  Plan[Complete governed Web plan] --> Selected[Selected browser work]
+  Selected --> Restore[Exact dependency cache]
+  Restore --> Hit[Restored artifact]
+  Restore --> Miss[Bounded download or package installer]
+  Hit --> Verify[Verify artifact and exact version]
+  Miss --> Verify
+  Verify -->|failure| Reject[Fail before native proof]
+  Verify -->|success| Ready[Prepared dependency]
+  Ready --> Proof[Existing real proof and owned cleanup]
+  Verify --> Save[Save verified dependency only]
+```
+
+- Cypress caches only the installed package version's binary directory, keyed by
+  runner OS, architecture and that exact version. A miss installs through the
+  existing package delegate. Hits and misses both run `cypress verify` and compare
+  the actual binary version. A missing or corrupt hit fails; cache presence never
+  substitutes for verification. No broad restore key or verification bypass exists.
+- Only the available capability requests pinned Chrome. Its cache contains the
+  existing `.deb`, keyed by Linux/x64, version and the admitted SHA256. Every hit
+  and miss checks the checksum before installation, then both executable versions
+  and Cypress's discovered name, channel, version and executable. Other capabilities
+  and nightly retain their existing browser policy. An arbitrary runner Chrome
+  version cannot replace the admitted binary.
+- Cache misses download normally; download, installation and verification failures
+  remain failures. Save steps run only after successful verification. Neither
+  browser output nor credentials, database state, `node_modules` or test results
+  enter these caches.
+- The existing Python action caches pip downloads using the pinned Python version
+  and workflow dependency declaration fingerprint. Pinned pip installation still
+  runs every time; no virtual environment or transitive-version guarantee is added.
+- A change to the shared preparation action routes all three browser capabilities
+  through the existing execution-boundary catalog. Required results, native proof
+  commands, cleanup, timeout and diagnostic acceptance remain unchanged.
+
+Behavioral contracts execute the action's shell with bounded command doubles and
+temporary files: miss/hit ordering, missing restored files, checksum and binary
+identity rejection, installer failures, invalid inputs and no saving failed
+preparation. Workflow contracts retain capability gating, the exact nightly proof
+and executable browser-discovery checks. This is dependency reuse, not cached
+validation or a new orchestration layer.

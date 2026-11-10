@@ -22,3 +22,10 @@ export interface IDbtModelProducerResolver {
     context: AuthorizedExecutionContext
   ): Promise<ReadonlyMap<string, DbtModelProducer>>;
 }
+
+export class DbtModelProducerAccessDeniedError extends Error {
+  public constructor() {
+    super('Scoped file-model access is unavailable.');
+    this.name = 'DbtModelProducerAccessDeniedError';
+  }
+}

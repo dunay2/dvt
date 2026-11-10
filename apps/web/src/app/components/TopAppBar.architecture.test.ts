@@ -40,8 +40,6 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(topBarClassesSource).toContain("from './ShellChrome.module.css'");
     expect(topBarClassesSource).not.toMatch(/:\s*['"`]/u);
     for (const key of [
-      'appMenuButton',
-      'applicationMenuContent',
       'menuItemIcon',
       'menuTriggerIcon',
       'contextMenuContent',
@@ -71,7 +69,7 @@ describe('ShellTopBar workspace context architecture', () => {
     }
     for (const sourcePath of [
       'components/TopAppBar.tsx',
-      'components/shell/ShellAppMenu.tsx',
+      'components/shell/ShellAbout.tsx',
       'components/shell/ShellMenu.templates.tsx',
     ]) {
       expect(readAppSource(sourcePath), sourcePath).not.toMatch(
@@ -101,7 +99,7 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(readCssRule(cssSource, 'gitRef')).toMatch(/display:\s*none;/u);
     expect(readCssRule(readCssMedia(cssSource, 64), 'gitRef')).toMatch(/display:\s*flex;/u);
     const smallSource = readCssMedia(cssSource, 40);
-    expect(readCssRule(smallSource, 'appMenuButton')).toMatch(/margin-right:\s*0\.25rem;/u);
+    expect(readCssRule(smallSource, 'brandIdentity')).toMatch(/margin-right:\s*0\.25rem;/u);
     expect(smallSource).not.toMatch(/\.(?:shellBar|contextCluster|commandCluster)\b/u);
   });
 

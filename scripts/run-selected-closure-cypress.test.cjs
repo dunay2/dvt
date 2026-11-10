@@ -1,5 +1,7 @@
 /**
  * Owned concern: prove exact Cypress execution evidence independently of runtime provisioning.
+ * Why: passing Cypress cases cannot establish acceptance when native completion rejects.
+ * Corner: malformed receipts retain generic rejection, exact cleanup and zero proof acceptance.
  * @baseline GH-3578: process exit zero does not prove complete browser coverage.
  * @decision Exercise one shared result validator with exact spec lists and malformed receipts.
  * @consequence Single and batched LIVE requests cannot omit or duplicate executed evidence.
@@ -384,7 +386,7 @@ test('native proof stays rejected with a safe receipt when passing Cypress canno
     const text = fs.readFileSync(path.join(evidence, receipts[0]), 'utf8');
     assert.deepEqual(JSON.parse(text), {
       schemaVersion: 1,
-      failures: [{ phase: 'capture-projection', code: 'failed' }],
+      failures: [{ phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' }],
     });
     assert.doesNotMatch(text, /private|api_key|secret-token|apiBearerToken|output|stack|cause/iu);
   } finally {

@@ -1,4 +1,5 @@
 /** Owned concern: derive route-safe Canvas authoring scopes, recovery posture, and mutation capability from draft-session truth. */
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   deriveCanvasDraftAccessPosture,
@@ -98,7 +99,11 @@ function deriveCanvasUiScope(
     selectedNodeIds,
     inspectorNodeId,
     inspectableNodeIds: canonicalNodes
-      .filter((node) => node.role === 'input')
+      .filter(
+        (node) =>
+          (node.role === 'input' || node.role === 'transform') &&
+          workspaceNodeDefinitionId(node) == null
+      )
       .map((node) => node.id),
   });
 }

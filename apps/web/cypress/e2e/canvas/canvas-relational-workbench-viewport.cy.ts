@@ -276,16 +276,14 @@ describe('Workbench viewport', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
-    const git = `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`;
+    const git = `[data-slot="shell-project-code-command"]`;
     const code = '[data-slot="canvas-code-workspace-surface"]';
     const tree = `${code} [data-slot="route-workbench-left-panel"]`;
     const properties = `${code} [data-slot="route-workbench-right-panel"] [role="region"]`;
     cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
       expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
     });
-    cy.get(`${main} section[aria-labelledby$="-elements-button"] input[type="search"]`).type(
-      'customers'
-    );
+    cy.get(`${main} [data-slot="canvas-explorer-panel"] input[type="search"]`).type('customers');
     cy.get(`${main} .react-flow__viewport`).then(($viewport) => {
       const viewport = $viewport[0]!;
       const transform = viewport.getAttribute('style');
@@ -329,17 +327,10 @@ describe('Workbench viewport', () => {
       cy.get(properties).should('contain.text', 'notes/first.md');
       cy.get(`${properties} time`).should('have.attr', 'datetime', '2026-10-28T00:00:00Z');
       cy.screenshot('canvas-git-project-files');
-      for (const panel of ['elements']) {
-        cy.get(
-          `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-${panel}-toggle"]`
-        ).click();
-        cy.get(code).should('not.be.visible');
-        assertStationary();
-      }
-      cy.get(`${main} section[aria-labelledby$="-elements-button"] input`).should(
-        'have.value',
-        'customers'
-      );
+      cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
+      cy.get(code).should('not.be.visible');
+      assertStationary();
+      cy.get(`${main} [data-slot="canvas-explorer-panel"] input`).should('have.value', 'customers');
       cy.get(git).click();
       cy.get(code).should('be.visible');
       cy.get(tree).find('[data-workspace-path="notes/second.md"]').click();
@@ -397,9 +388,7 @@ describe('Workbench viewport', () => {
   describe('Explorer layout', () => {
     const main = '[data-slot="canvas-workspace-surface"]';
     const model = '[data-slot="canvas-relational-tree-workbench"]';
-    const mainElements =
-      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]';
-    const modelElements = `${model} [data-slot="canvas-explorer-elements-toggle"]`;
+    const canvasEntry = 'a[data-slot="left-navigation-link"][href="/canvas"]';
     const modelViewport = '[data-slot="canvas-relational-tree-viewport"]';
     const modelZoom = '[data-slot="canvas-relational-tree-zoom"]';
     const modelSearch = '[data-slot="canvas-relational-tree-sources"] input';
@@ -429,7 +418,7 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-explorer-view-command"]')
         .should('have.attr', 'aria-checked', 'false')
         .click();
-      cy.get(mainElements).should('be.visible').and('have.attr', 'aria-expanded', 'true');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'true');
     }
 
     function fitAndOpenModel(): void {
@@ -502,8 +491,8 @@ describe('Workbench viewport', () => {
         if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
         expandedViewportWidth = viewport.clientWidth;
       });
-      cy.get(modelElements).click().should('have.attr', 'aria-expanded', 'false');
-      cy.get(mainElements).should('have.attr', 'aria-expanded', 'false');
+      cy.get(`${model} button[aria-label="Collapse explorer"]:visible`).click();
+      cy.get(canvasEntry).should('be.focused').and('have.attr', 'aria-expanded', 'false');
       cy.get(modelViewport).should(($viewport) => {
         const viewport = $viewport[0];
         if (viewport === undefined) throw new Error('Expected the resized relational viewport.');
@@ -515,9 +504,11 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
       verifyCompleteTreeFit(modelViewport);
       cy.screenshot('semantic-editor-sources-collapsed');
-      cy.get(modelElements).focus();
+      cy.get(canvasEntry).focus();
       cy.press(Cypress.Keyboard.Keys.ENTER);
-      cy.get(modelElements).should('have.attr', 'aria-expanded', 'true');
+      cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true').click();
+      cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true');
+      cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
       assertExplorerWidth(model, 32);
       cy.get(modelSearch).should('have.value', 'customers').clear();
       cy.get('[data-slot="canvas-relational-tree-sources"]').should('have.length', 1);
@@ -582,10 +573,10 @@ describe('Workbench viewport', () => {
         retainedMainViewport = $viewport[0];
       });
       cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
-      cy.get(mainElements).should('be.visible').click();
+      cy.get(canvasEntry).should('be.visible').click();
       assertExplorerWidth(main, 15);
       cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
-      cy.get(mainElements).should('not.be.visible');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       reopenExplorerFromView();
       cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
       assertExplorerWidth(main, 15);
@@ -663,7 +654,7 @@ describe('Workbench viewport', () => {
       });
       resizeExplorer(model, 'RIGHT', 32);
       cy.get(`${model} button[aria-label="Collapse explorer"]`).click();
-      cy.get(mainElements).should('have.attr', 'aria-expanded', 'false');
+      cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'false');
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.then(() => {
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
@@ -674,17 +665,21 @@ describe('Workbench viewport', () => {
       // the completed presentation gestures above, not a fresh bootstrap.
       cy.on('window:before:load', installE2eApiFetchStub);
       cy.reload();
-      cy.get(mainElements).should('be.visible').and('have.attr', 'aria-expanded', 'false');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       cy.get(`${main} [data-panel-id$="-dock"]`).should('not.be.visible');
-      cy.get(mainElements).click();
+      cy.get(canvasEntry).click();
       assertExplorerWidth(main, 32);
       fitAndOpenModel();
       assertExplorerWidth(model, 32);
       cy.get(`${model} button[aria-label="Close explorer"]`).click();
-      cy.get(mainElements).should('not.be.visible');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       cy.reload();
-      cy.get(mainElements).should('not.be.visible');
+      cy.get(canvasEntry).should('be.visible').and('have.attr', 'aria-expanded', 'false');
       cy.get(`${main} [data-panel-id$="-dock"]`).should('not.be.visible');
+      // The one Canvas destination can also reopen a durably closed Explorer.
+      cy.get(canvasEntry).click().should('have.attr', 'aria-expanded', 'true');
+      assertExplorerWidth(main, 32);
+      cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
       reopenExplorerFromView();
       assertExplorerWidth(main, 32);
       fitAndOpenModel();
@@ -754,7 +749,7 @@ describe('DBT project Git browsing with real file authority', () => {
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${canvasId}&projectRoot=${projectRoot}`
     );
-    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`, {
+    cy.get(`[data-slot="shell-project-code-command"]`, {
       timeout: 60_000,
     }).should('be.visible');
     cy.get(`${main} .react-flow__node`).its('length').should('be.at.least', 2);
@@ -784,9 +779,7 @@ describe('DBT project Git browsing with real file authority', () => {
         viewport = $viewport[0]!;
         transform = viewport.getAttribute('style');
       });
-    cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`
-    ).click();
+    cy.get(`[data-slot="shell-project-code-command"]`).click();
     cy.wait('@actualFileTree')
       .its('response')
       .should((response) => {
@@ -884,9 +877,7 @@ describe('DBT project Git browsing with real file authority', () => {
         expect($viewport[0]).to.equal(viewport);
         expect($viewport.attr('style')).to.equal(transform);
       });
-    cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`
-    ).click();
+    cy.get(`[data-slot="shell-project-code-command"]`).click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
       'have.attr',
@@ -895,9 +886,7 @@ describe('DBT project Git browsing with real file authority', () => {
     );
     cy.get(properties).should('contain.text', secondPath);
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`
-    ).click();
+    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(code).should('not.be.visible');
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
@@ -974,9 +963,7 @@ describe('DBT project Git browsing with real file authority', () => {
         viewport = $viewport[0]!;
         transform = viewport.getAttribute('style');
       });
-    cy.get(
-      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]'
-    ).click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(`${code} [data-workspace-path="${sourcePath}"]`).click();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`)
       .should('be.visible')

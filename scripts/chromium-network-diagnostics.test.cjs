@@ -1,4 +1,8 @@
-/** Owned concern: prove opt-in capture ownership, export, rejection and exact raw-file cleanup. */
+/**
+ * Owned concern: prove opt-in capture ownership, export, rejection and exact raw-file cleanup.
+ * Why: passing assertions must not conceal completion failure or disclose private diagnostics.
+ * Corner: unknown exceptions and hostile getters stay private while cleanup remains exact.
+ */
 require('tsx/cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -12,9 +16,13 @@ const {
 } = require('../apps/web/cypress/node/chromiumNetworkDiagnostics.ts');
 const {
   ChromiumDiagnosticsError,
+  classifyChromiumFailure,
   finalizeChromiumCapture,
   publishChromiumLifecycleFailures,
 } = require('../apps/web/cypress/node/chromiumNetworkEvidence.ts');
+const {
+  ChromiumProjectionError,
+} = require('../apps/web/cypress/node/chromiumNetworkProjection.ts');
 
 function fixture(enabled = true) {
   const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-test-'));
@@ -536,7 +544,9 @@ for (const scenario of ['denied', 'ready-and-stop', 'operation-and-stop-fail']) 
 }
 
 for (const [scenario, failures] of [
-  ['malformed', [{ phase: 'capture-projection', code: 'failed' }]],
+  ['malformed', [{ phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' }]],
+  ['log-shape', [{ phase: 'capture-projection', code: 'failed', detail: 'logShape' }]],
+  ['event-shape', [{ phase: 'capture-projection', code: 'failed', detail: 'eventShape' }]],
   ['missing', [{ phase: 'capture-read', code: 'missing' }]],
   ['stop-rejection', [{ phase: 'observer-stop', code: 'failed' }]],
   [
@@ -544,7 +554,7 @@ for (const [scenario, failures] of [
     [
       { phase: 'native-operation', code: 'failed' },
       { phase: 'observer-stop', code: 'failed' },
-      { phase: 'capture-projection', code: 'failed' },
+      { phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' },
     ],
   ],
 ]) {
@@ -572,7 +582,16 @@ for (const [scenario, failures] of [
                   ? privateDetail
                   : JSON.stringify({
                       constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
-                      events: [{ type: 1, source: { id: 3 }, params: { body: privateDetail } }],
+                      events:
+                        scenario === 'log-shape'
+                          ? []
+                          : [
+                              {
+                                type: 1,
+                                source: { id: scenario === 'event-shape' ? privateDetail : 3 },
+                                params: { body: privateDetail },
+                              },
+                            ],
                     })
               );
             }
@@ -634,7 +653,11 @@ test('capture projection and cleanup failures both survive while other owned fil
       () => finalizeChromiumCapture(capture, projectRoot),
       (error) => {
         assert.ok(error instanceof ChromiumDiagnosticsError);
-        assert.deepEqual(error.failures[0], { phase: 'capture-projection', code: 'failed' });
+        assert.deepEqual(error.failures[0], {
+          phase: 'capture-projection',
+          code: 'failed',
+          detail: 'captureSyntax',
+        });
         assert.ok(
           error.failures.some(({ phase, code }) => phase === 'capture-cleanup' && code === 'denied')
         );
@@ -730,6 +753,17 @@ test('lifecycle publication bounds records and reconstructs only validated phase
     for (const invalid of [
       { phase: 'private unknown phase', code: 'failed' },
       { phase: 'capture-read', code: 'private unknown reason' },
+      { phase: 'capture-projection', code: 'failed', detail: 'https://private.invalid/secret' },
+      { phase: 'capture-read', code: 'failed', detail: 'RangeError' },
+      Object.defineProperty({ phase: 'capture-projection', code: 'failed' }, 'detail', {
+        get: () => assert.fail('publication must not invoke a detail getter'),
+      }),
+      Object.defineProperty({ code: 'failed' }, 'phase', {
+        get: () => assert.fail('publication must not invoke a phase getter'),
+      }),
+      Object.defineProperty({ phase: 'capture-projection' }, 'code', {
+        get: () => assert.fail('publication must not invoke a code getter'),
+      }),
     ]) {
       assert.throws(
         () => publishChromiumLifecycleFailures(projectRoot, [invalid]),
@@ -742,6 +776,114 @@ test('lifecycle publication bounds records and reconstructs only validated phase
       'invalid classifications must not publish'
     );
   } finally {
+    assert.ok(path.resolve(projectRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(projectRoot, { recursive: true });
+  }
+});
+
+test('projection exception detail observes only finite classes and never private getters', () => {
+  const { projectRoot } = fixture(false);
+  const privateDetail = 'https://private.invalid/?token=secret raw exception';
+  const failures = [];
+  try {
+    for (const [detail, error] of [
+      ['RangeError', new RangeError(privateDetail)],
+      ['TypeError', new TypeError(privateDetail)],
+      ['SyntaxError', new SyntaxError(privateDetail)],
+      ['ReferenceError', new ReferenceError(privateDetail)],
+      ['URIError', new URIError(privateDetail)],
+      ['EvalError', new EvalError(privateDetail)],
+      ['AggregateError', new AggregateError([], privateDetail)],
+      ['Error', new Error(privateDetail)],
+      ['Error', new ChromiumProjectionError('captureSyntax')],
+      ['unknown', {}],
+      ['unknown', privateDetail],
+      ['unknown', null],
+    ]) {
+      if (error !== null && typeof error === 'object') {
+        for (const key of ['name', 'message', 'stack', 'cause', 'code', 'reason', 'detail']) {
+          Object.defineProperty(error, key, {
+            get: () => assert.fail(`classification must not invoke ${key}`),
+          });
+        }
+      }
+      const code = error instanceof SyntaxError ? 'invalid' : 'failed';
+      const classified = classifyChromiumFailure('capture-projection', error);
+      assert.deepEqual(classified, [{ phase: 'capture-projection', code, detail }]);
+      assert.deepEqual(classifyChromiumFailure('native-operation', error), [
+        { phase: 'native-operation', code },
+      ]);
+      failures.push(...classified);
+    }
+    publishChromiumLifecycleFailures(projectRoot, failures);
+    const evidence = path.join(projectRoot, '.dvt/evidence/chromium-network');
+    const receipts = fs.readdirSync(evidence);
+    assert.equal(receipts.length, 1);
+    const text = fs.readFileSync(path.join(evidence, receipts[0]), 'utf8');
+    assert.deepEqual(JSON.parse(text), { schemaVersion: 1, failures });
+    assert.doesNotMatch(text, /private|secret|token|https|message|stack|cause/iu);
+  } finally {
+    assert.ok(path.resolve(projectRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(projectRoot, { recursive: true });
+  }
+});
+
+test('an inherent projection exception retains its class and the same exact cleanup', async (t) => {
+  const { projectRoot } = fixture(false);
+  const oldFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  const privateDetail = 'private process log https://private.invalid/?token=secret';
+  const sentinel = path.join(projectRoot, 'keep.txt');
+  fs.writeFileSync(sentinel, 'unrelated sentinel');
+  const originalSplit = String.prototype.split;
+  t.mock.method(String.prototype, 'split', function (separator, limit) {
+    'use strict';
+    if (this === privateDetail) throw new RangeError(privateDetail);
+    return Reflect.apply(originalSplit, this, [separator, limit]);
+  });
+  let ownedRoot;
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  try {
+    await assert.rejects(
+      withChromiumNetworkDiagnostics(
+        projectRoot,
+        async () => {
+          ownedRoot = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+          const capture = fs.mkdtempSync(path.join(ownedRoot, 'chrome-'));
+          fs.writeFileSync(
+            path.join(capture, 'netlog.json'),
+            JSON.stringify({
+              constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+              events: [{ type: 1, source: { id: 3 } }],
+            })
+          );
+          fs.writeFileSync(path.join(capture, 'process.log'), privateDetail);
+          return { passed: true };
+        },
+        async () => null
+      ),
+      (error) => {
+        assert.ok(error instanceof ChromiumDiagnosticsError);
+        assert.deepEqual(error.failures, [
+          { phase: 'capture-projection', code: 'failed', detail: 'RangeError' },
+        ]);
+        return true;
+      }
+    );
+    assert.equal(fs.existsSync(ownedRoot), false);
+    assert.equal(fs.readFileSync(sentinel, 'utf8'), 'unrelated sentinel');
+    const evidence = path.join(projectRoot, '.dvt/evidence/chromium-network');
+    const receipts = fs.readdirSync(evidence);
+    assert.equal(receipts.length, 1, 'no network report may publish after projection fails');
+    const text = fs.readFileSync(path.join(evidence, receipts[0]), 'utf8');
+    assert.deepEqual(JSON.parse(text), {
+      schemaVersion: 1,
+      failures: [{ phase: 'capture-projection', code: 'failed', detail: 'RangeError' }],
+    });
+    assert.doesNotMatch(text, /private|secret|token|https|message|stack|cause/iu);
+  } finally {
+    t.mock.restoreAll();
+    if (oldFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = oldFlag;
     assert.ok(path.resolve(projectRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
     fs.rmSync(projectRoot, { recursive: true });
   }

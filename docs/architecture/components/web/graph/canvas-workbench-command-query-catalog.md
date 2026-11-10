@@ -137,12 +137,35 @@ adds no rail, navigation store or data-acquisition path.
 
 ## Single project catalogue
 
-The single Elements activity presents project definitions under independently
-collapsible Sources and Models categories. Category additions delegate to the
-existing `ImportWarehouseSources` and `CreateCanvasAuthoringNode` adapters; they do not
-introduce a catalogue writer. Available connection objects, registered definitions
-and placed instances remain distinct. Repeated source placement uses the same
-guarded instance command and never creates a SQL file per placement.
+The single Elements activity presents independently collapsible Connections and
+Models sections. Models form one catalogue with one base icon; Source is an
+independent property badge, never a second entity type or section. The read-model
+adapter translates the existing explicit source resource discriminant (or an
+admitted legacy source kind when no more precise resource discriminant exists).
+It must not infer Source from the input role, SQL, dbt origin or a physical
+connection: seeds also have the input role, and valid logical models can remain
+unbound. This is presentation adaptation, not a backend migration or a persisted
+`isSource` field.
+
+Connection management and model creation delegate to the existing import Wizard
+and `CreateCanvasAuthoringNode` adapters. The import action retains the existing
+`ImportWarehouseSources` command. Available connections, registered model
+definitions and placed instances remain distinct. The native definition adapter
+excludes occurrence references; equal names do not imply equal identity. File
+definitions deduplicate only by their explicit Canvas owner and unique resource
+ID. Repeated placement uses the existing guarded command and never creates a
+SQL file per placement.
+
+Connections are shared project resources queried once through the existing
+`IWarehouseSourceImportPort.listWarehouseConnections` boundary and a registered
+React Query key containing the granted tenant, project and environment. The
+sidebar, import Wizard and manual-source Inspector share this query. Create and
+rename receipts update and invalidate only their captured scope. A late response
+or receipt from one scope cannot populate or select a connection in another.
+The connection DTO exposes only ID, name, type and database; listing does not
+test health. Counts require a successful snapshot, and empty, unavailable,
+loading, denied and refresh-error states remain distinguishable. No credentials
+or connection configuration are copied into model rows.
 
 New authoring definitions reserve identities from the canonical catalogue,
 including unplaced definitions, and from immediately admitted placements. The
@@ -151,9 +174,12 @@ definition ID. Visible cards determine placement only; they do not determine
 which identities are available. Placing an existing definition remains a
 separate instance action and preserves the registered definition.
 
-Activation in Elements requests creation, never file navigation or camera focus.
-Click uses the visible Canvas center and drag uses the dropped graph position;
-both reuse native node admission or the existing local reference-placement rail.
+Catalogue activation requests the existing `InspectCanvasNode` command and opens
+right Properties; it never creates an instance, focuses the camera or changes
+execution selection. Enter/Space has the same inspection intent. Only catalogue
+drag/drop uses the dropped graph position and existing guarded instance admission.
+Disclosure and menus remain independent, and the existing shared gesture arbiter
+cancels the pending inspection on double click, drag, replacement or unmount.
 Instances reference one registered definition and retain their own placement
 identity, name and position. They do not create a consumer Read, copy the model
 document or add a dependency edge to the original. The shared contract resolves
@@ -171,8 +197,46 @@ existing contextual graph query, not a new cache or mutation rail.
 remain scoped queries. Governed dbt file models use the existing instance
 admission when the current Canvas permits creation; read-only or unavailable
 admission remains disabled. The Code explorer owns file navigation.
-The existing shared list and creation catalogue own search, category disclosure,
-capability gating and focus. [Prospective design and negative tests](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
+The project Explorer uses the common dense UI typography roles from
+`styles/fonts.css`: UI for names, headings and search (the shell's 12 px control
+scale), caption for secondary metadata (11 px), and micro for badges/counts
+(10 px). This supersedes the initial 14/12 content-role choice without resizing
+the application's content typography. It retains one common Model icon, an informational Source
+badge and an optional SQL file-format label. The latter is derived only from an
+actual accepted `.sql` file path, independently of Source, plugin, connection or
+execution readiness. A logical inline SQL definition without such a file must
+not acquire that file-format label. Names remain the primary collapsed row
+content; actual secondary metadata stays in the accessible name/title, search
+and progressive detail. The Graph adapter supplies contextual Explorer/Project
+heading copy, while the internal Model catalogue keeps its existing heading and
+activity semantics. This adds no global theme, fixed dock width or preview
+wrapper. [Compact presentation refinement](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728465872),
+[shared UI typography](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728952540).
+
+The existing shared list owns model search, result counts, selection highlight
+and detail disclosure as separate presentation states. Search uses names and
+actual metadata, including the localized Source property. A sibling disclosure
+button can inspect metadata even when placement is unavailable; it must not
+activate, drag or open Properties. Native keyboard activation retains the
+existing inspection command; a pointer double click cannot open Properties or
+create an instance. Section and detail controls expose coherent `aria-expanded` and
+`aria-controls`. The dock retains the existing layout-state owner and resize
+persistence. The Model's internal relational input catalogue keeps its own
+existing owner. [Unified catalogue design and negative tests](https://github.com/dunay2/dvt/issues/3765#issuecomment-6727884137).
+
+The interaction owner stores one scoped Inspector target: an actual canonical
+node ID or a dbt file binding plus unique ID. The facade derives a canonical ID
+for existing graph consumers; file targets are not inserted into the draft or
+execution selection. Current catalogue definitions remain inspectable without a
+placed card or placement permission. Unsupported unplaced transform mutation
+stays read-only under the existing authoring guard. A conditional file adapter at
+the existing right workbench resolves the independently current project-root
+authority and renders real read-only metadata and file Code contributions. It
+does not replace the catalogue's graph array, allocate executable identities,
+copy connection configuration or add a query/cache/store. Scope, binding, root
+and confirmed membership revocation fail closed. Existing explicit tab requests
+and Overview request epochs remain authoritative.
+[Inspection intent and boundaries](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729355692).
 
 ## C&Q Summary
 
@@ -485,6 +549,13 @@ global pointer styles or disabling modal behavior.
 
 ### Canvas context-menu event ownership
 
+Canvas Add discovery uses one literal case-insensitive catalog search predicate
+for Main nodes and Model operations. IDs, actual labels and group keywords remain
+searchable. Keyboard Enter chooses an admitted matching result; a fuzzy character
+subsequence cannot introduce an unrelated operation. The policy remains internal
+to `ResolveCanvasContextMenu` and contextual presentation, with no new command or
+parallel operation catalog.
+
 Issue [#3629](https://github.com/dunay2/dvt/issues/3629) refines the existing
 `ResolveCanvasContextMenu` query and shared Radix trigger over the actual graph
 viewport, including its frame and sibling overlays. Background targets open one
@@ -496,6 +567,14 @@ opens. Excluded controls and nested fields without menu identity cancel that
 default without opening background actions or performing a mutation. Do not
 blanket-call `preventDefault` in capture before Radix handles an accepted target,
 intercept `document` globally, or add a second pane route for the same intent.
+
+The shared shell text-selection boundary first admits an actual selected-text
+context gesture through the accepted App Shell `ResolveShellTextSelectionMenu`,
+`CopyShellTextSelection` and `LookupShellTextSelection` rails documented in
+`../appshell/app-shell.md`. Only that accepted gesture is consumed before local
+handlers. Selecting or double-clicking text opens no Add menu and cannot create
+an instance. Monaco retains its own editor menu. Without a selected-text request,
+the existing Canvas target owners receive the original event unchanged.
 
 The shared `AppShellFrame` cancels any remaining native context-menu default in
 the bubbling phase, after component-owned handlers. This presentation boundary
@@ -1035,6 +1114,48 @@ Runtime rails and test-only rails must stay explicit:
 - new backend persistence, adapter authority, protected draft behavior, or
   cross-context ownership requires a catalog update and an ADR check before
   implementation.
+
+## Existing Connection And Inspection Entry Boundaries
+
+The Connections action enters the existing Wizard with `manage-connections`;
+source import enters it with `import-sources`. Both reuse the existing scoped
+Warehouse connection catalog and `ListWarehouseConnections` query. Creation
+remains `CreateWarehouseConnection`, owned by the Warehouse connection aggregate
+and exposed through `IWarehouseSourceImportPort.createWarehouseConnection`.
+The existing adapter, scope, authorization, validation and error contracts apply.
+Management neither invokes `ImportWarehouseSources` nor places a canvas instance.
+Negative proof covers retained import selections, late request completions,
+creation errors, scope changes and the unchanged import continuation.
+
+Normal card inspection for every role, including Source, requests
+`InspectCanvasNode` with internal `general`/Overview. Explicit Columns, Code and
+Inputs/Outputs requests retain their sections. The shared gesture arbiter still
+cancels pending Properties during double click, drag and owner replacement.
+No role-specific default, second timer or parallel command is admitted.
+
+## Background Add Entry And Independent Model Admission
+
+A complete double click on the owning graphical canvas background opens that
+canvas's existing searchable Add menu at the pointer. Main Canvas delegates to
+the existing `ResolveCanvasContextMenu` presenter and
+`CreateCanvasAuthoringNode` command. Applied and pending Model viewports share
+one scoped operation-menu request and the existing staging callbacks under
+`ConfigureCanvasDvtNode`; only explicit Apply commits semantic changes.
+`ProjectCanvasRelationalTree`, `RenderCanvasContextualGraphSurface` and
+`SaveWorkspaceGraphDraft` retain their current ownership and authorization.
+
+The shared background boundary rejects cards, edges, ports, controls, menus,
+inspectors and nested foreign viewports. A single background click or pan does
+not open Add. Main disables double-click zoom for this gesture. Model placement
+uses the existing screen-to-local projection under pan/zoom. Toolbar, keyboard
+and pointer entry share menu choices, availability, search and focus recovery.
+Text Code views and immutable comparison views gain no graphical Add command.
+
+Model editing permission is independent of the current Inspector target. The
+existing graph command permission and selected Model placement admit its
+authoring session; `applyNodeDraft` independently retains its exact target guard.
+Unplaced and globally read-only Models remain read-only. A restorable pending
+draft does not require an invented canonical output tree to expose authoring.
 
 ## Drift Rules
 

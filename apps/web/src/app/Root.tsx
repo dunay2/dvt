@@ -12,6 +12,8 @@ import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame, { APP_SHELL_MAIN_CONTENT_ID } from './components/shell/AppShellFrame';
 import BottomOperationalDrawer from './components/shell/BottomOperationalDrawer';
+import { ShellRouteHeadingProvider } from './components/shell/ShellRouteHeading';
+import { AuthRouteSurface } from './bootstrap/AuthRouteGate';
 import { resolveShellTopBarCopy } from './components/shell/copy';
 import {
   createCapabilitiesFallbackBootstrapCommand,
@@ -44,11 +46,9 @@ import {
 } from './rootOperabilityModel';
 import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
 import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
-import {
-  isCanvasRoute,
-  resolveShellNavigationDisposition,
-} from './shell/shellNavigationDisposition';
+import { isCanvasRoute } from './shell/shellNavigationDisposition';
 import { buildShellRuntimeState } from './shell/shellRuntimeModel';
+import { resolveShellRouteHeading } from './shell/shellNavigationModel';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
@@ -64,6 +64,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const previousPathnameRef = useRef(location.pathname);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const bottomDrawerHeight = useUiLayoutStore((state) => state.bottomDrawerHeight);
+  const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const closeCanvasContextualWorkbench = useCanvasInteractionStore(
     (state) => state.closeContextualWorkbench
@@ -123,14 +124,11 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     createInitialRouteBootstrapStartupReadinessState()
   );
   const bootstrapOperabilityActiveRef = useRef(true);
-  const navigationDisposition = useMemo(
-    () => resolveShellNavigationDisposition(location.pathname),
-    [location.pathname]
-  );
   const navigationModel = useMemo(
     () => buildShellRuntimeState(capabilitiesQuery.data, applicationLanguage).navigationModel,
     [applicationLanguage, capabilitiesQuery.data]
   );
+  const routeHeading = resolveShellRouteHeading(navigationModel, location.pathname);
   const bootstrapOperabilityTransition = useMemo(
     () =>
       buildRootBootstrapOperabilityTransition({
@@ -293,6 +291,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     <AppShellFrame
       bottomDrawer={<BottomOperationalDrawer />}
       bottomDrawerHeight={bottomDrawerHeight}
+      onBottomDrawerHeightChange={setBottomDrawerHeight}
       focusMode={focusMode}
       healthBanner={
         <ShellHealthBanner
@@ -306,20 +305,23 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
           }}
         />
       }
-      leftNavigation={<LeftNavigation />}
-      navigationDisposition={navigationDisposition}
+      leftNavigation={<LeftNavigation navigationModel={navigationModel} copy={shellCopy} />}
       showBottomDrawer={bottomDrawerVisible && bottomDrawerHeight > 0}
       skipToMainContentLabel={shellCopy.skipToMainContent}
       topBar={
         <TopAppBar
+          routeHeading={routeHeading}
           connectionDetail={shellHealth.connectionDetail}
           connectionStateOverride={shellHealth.connectionState}
           isConnectionChecking={shellHealth.isInitialHealthCheckPending}
-          navigationModel={navigationModel}
         />
       }
     >
-      <Outlet />
+      <ShellRouteHeadingProvider heading={routeHeading}>
+        <AuthRouteSurface>
+          <Outlet />
+        </AuthRouteSurface>
+      </ShellRouteHeadingProvider>
     </AppShellFrame>
   );
 }

@@ -1,10 +1,18 @@
 // @vitest-environment jsdom
 /** Open and inspect a Model without mutating or requesting its data. */
 import { act } from 'react';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { fireEvent, within } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
-import { getCanvasShellState } from './CanvasShell.testHarness';
+import { buildCanvasShellProps, getCanvasShellState } from './CanvasShell.testHarness';
+import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
+import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasShellPanels } from './canvasShell.types';
+import { projectCanvasCanonicalGraphEditing } from './canvasCanonicalGraphEditing';
+import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import {
@@ -14,8 +22,187 @@ import {
   mountModel,
 } from './CanvasShell.semanticEditor.test-support';
 
+function modelPanels(
+  nodes: readonly CanonicalNode[],
+  inspectorNode: CanonicalNode | null,
+  canMutate: boolean,
+  onApplyNodeDraft: ReturnType<typeof vi.fn>
+): CanvasShellPanels {
+  const defaults = buildCanvasShellProps();
+  return buildCanvasShellPanels({
+    panelState: {
+      inspectorNode,
+      inspectorTarget: null,
+      inspectorPreferredTabId: defaults.panels.inspectorPreferredTabId,
+      inspectorPreferredTabRequestId: defaults.panels.inspectorPreferredTabRequestId,
+      inspectorGraphNodes: [...nodes],
+      inspectorGraphEdges: [...defaults.panels.inspectorGraphEdges],
+      canEditInspectorNode: false,
+      applyNodeDraft: onApplyNodeDraft,
+      applyInspectorNodeDraft: vi.fn(),
+      activeRunId: defaults.panels.activeRunId,
+      registeredPlugins: new Set(defaults.panels.registeredPlugins),
+      runtimeCapabilities: undefined,
+      importedNodeFocusIds: [...defaults.panels.importedNodeFocusIds],
+      executionEnvironmentOptions: [...defaults.panels.executionEnvironmentOptions],
+    },
+    userPermissions: {
+      ...defaults.panels.userPermissions,
+      canEditEdges: canMutate,
+      canPersistGraphDraft: canMutate,
+      canManagePlugins: false,
+      canManageRBAC: false,
+    },
+    routePresentation: {
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'dev',
+        targetAdapter: 'temporal',
+      },
+      canvasDocument: defaults.panels.activeCanvas,
+      canvasDocuments: [...defaults.panels.canvasDocuments],
+      activeCanvasId: defaults.panels.activeCanvasId,
+      availableCanvasKinds: [],
+    },
+  });
+}
+
 describe('Canvas Model inspection', () => {
   setupSemanticEditorShell();
+  it.each(['none', 'closed', 'unplaced', 'other'] as const)(
+    'opens a placed pending Model independently of the %s Inspector',
+    async (inspected) => {
+      // Properties' stricter target guard previously disabled a valid saved Model draft.
+      const fixture = await createModelOutputDependencyFixture();
+      const editable = projectCanvasCanonicalGraphEditing(fixture.consumerDocument, [
+        fixture.producer.id,
+        fixture.right.id,
+      ])!;
+      const indexed = indexSubstraitRelations(fixture.consumerDocument);
+      if (!indexed.ok) throw indexed.error;
+      const definition = {
+        ...fixture.consumer,
+        metadata: {
+          relationalAuthoringDraft: createCanvasRelationalAuthoringDraft({
+            ...editable,
+            outputRelationId: indexed.index.rootId,
+            positions: new Map(),
+          }),
+        },
+      };
+      const placed = { ...definition, id: 'placed-pending-model', definitionId: definition.id };
+      const other = { ...definition, id: 'other-unplaced-model' };
+      const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+      const panels = modelPanels(
+        [fixture.source, fixture.producer, fixture.right, definition, placed, other],
+        inspected === 'none' ? null : inspected === 'other' ? other : definition,
+        true,
+        onApplyNodeDraft
+      );
+      await harness.render({
+        layout: { inspectorPanelVisible: inspected !== 'closed' && inspected !== 'none' },
+        panels: {
+          ...panels,
+          inspectorGraphEdges: fixture.edges.map((edge) =>
+            edge.targetId === definition.id ? { ...edge, targetId: placed.id } : edge
+          ),
+        },
+        graph: {
+          nodesWithImpact: [
+            {
+              id: placed.id,
+              position: { x: 200, y: 140 },
+              type: 'dbtNode',
+              data: { ...placed, pluginKind: placed.kind },
+            },
+          ],
+        },
+      });
+      const data = (
+        getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
+          data: { onOpenNode?: () => void };
+        }>
+      )[0]!.data;
+      await act(async () => {
+        data.onOpenNode?.();
+      });
+      const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]')!;
+      expect(editor.querySelector('[data-slot="canvas-relational-tree-unavailable"]')).toBeNull();
+      expect(
+        editor.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
+      ).not.toBeNull();
+      expect(editor.textContent).toContain('INNER JOIN');
+      const sources = [
+        ...editor.querySelectorAll<HTMLButtonElement>(
+          '[data-slot="canvas-relational-tree-source"]'
+        ),
+      ];
+      expect(sources).toHaveLength(2);
+      expect(sources.every((source) => source.draggable)).toBe(true);
+      expect(panels.inspectorAuthoring.canEditNode).toBe(false);
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([
+    { placed: false, canMutate: false },
+    { placed: false, canMutate: true },
+    { placed: true, canMutate: false },
+  ])(
+    'keeps a Model workspace readonly when target admission rejects (placed: $placed, graph writable: $canMutate)',
+    async ({ placed, canMutate }) => {
+      const fixture = buildSemanticWorkbenchFixture();
+      const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+      const panels = modelPanels(
+        [...fixture.sources, fixture.transform],
+        fixture.transform,
+        canMutate,
+        onApplyNodeDraft
+      );
+      // A graph command grant alone must not make an unplaced Properties target editable.
+      await harness.render({
+        layout: { inspectorPanelVisible: true },
+        panels: {
+          ...panels,
+          inspectorGraphEdges: fixture.edges,
+          relationalTreeAuthoring: { canEditNode: canMutate, onApplyNodeDraft },
+        },
+        graph: {
+          nodesWithImpact: placed
+            ? [
+                {
+                  id: fixture.transform.id,
+                  position: { x: 200, y: 140 },
+                  data: { ...fixture.transform, pluginKind: fixture.transform.kind },
+                },
+              ]
+            : [],
+        },
+      });
+      const pencil = harness.container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-open-semantic-editor"]'
+      )!;
+      expect(pencil).not.toBeNull();
+      await act(async () => {
+        pencil.click();
+      });
+      const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]')!;
+      expect(editor).not.toBeNull();
+      expect(
+        editor.querySelector('[data-slot="canvas-relational-tree-inspection"]')
+      ).not.toBeNull();
+      const sources = [
+        ...editor.querySelectorAll<HTMLButtonElement>(
+          '[data-slot="canvas-relational-tree-source"]'
+        ),
+      ];
+      expect(sources).toHaveLength(3);
+      expect(sources.every((source) => !source.draggable)).toBe(true);
+      expect(editor.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    }
+  );
   it('closes only Code while preserving the retained Model without preview or Apply', async () => {
     const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
@@ -135,10 +322,10 @@ describe('Canvas Model inspection', () => {
       const canvasPanel = panelFor(canvas);
       const viewport = harness.container.querySelector('[data-testid="canvas-viewport"]');
       const activityRail = within(harness.container).getByRole('navigation', {
-        name: 'Canvas explorer',
+        name: 'Navigation',
       });
       await act(async () =>
-        fireEvent.click(within(activityRail).getByRole('button', { name: 'Git' }))
+        fireEvent.click(within(activityRail).getByRole('link', { name: 'Git' }))
       );
       await act(async () => data.onOpenNode?.(fixture.transform.id));
       const model = navigation.querySelector<HTMLButtonElement>(
@@ -180,16 +367,23 @@ describe('Canvas Model inspection', () => {
         const activePanel = panelFor(target);
         expect(activePanel.getAttribute('aria-hidden')).toBe('false');
         expect(activePanel.hasAttribute('inert')).toBe(false);
-        const visibleRails = within(harness.container).getAllByRole('navigation', {
-          name: 'Canvas explorer',
+        const visibleRails = within(harness.container).queryAllByRole('navigation', {
+          name: 'Navigation',
         });
         expect(visibleRails).toHaveLength(1);
+        expect(visibleRails[0]).toBe(activityRail);
+        expect(activityRail.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
         if (target === model) {
-          expect(activityRail.closest('[hidden][inert]')).not.toBeNull();
-          expect(modelPanel.contains(visibleRails[0]!)).toBe(true);
-        } else {
-          expect(visibleRails[0]).toBe(activityRail);
-          expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
+          const canvasEntry = within(harness.container).getByRole('link', { name: 'Canvas' });
+          expect(modelPanel.contains(canvasEntry)).toBe(false);
+          expect(canvasEntry.closest('[hidden], [inert], [aria-hidden="true"]')).toBeNull();
+          await act(async () => {
+            useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'collapse' });
+            fireEvent.click(canvasEntry);
+          });
+          expect(model.getAttribute('aria-selected')).toBe('true');
+          expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
+          expect(panelFor(model)).toBe(modelPanel);
         }
         if (target === code) {
           codePanel ??= activePanel;

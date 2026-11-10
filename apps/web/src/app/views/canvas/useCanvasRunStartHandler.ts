@@ -1,3 +1,4 @@
+/** Start an admitted Run and delegate its operational reveal to the existing layout owner. */
 import { useCallback } from 'react';
 
 import { canvasViewCopy } from './copy';
@@ -11,44 +12,20 @@ import type { PlanRunReadinessEvaluation } from './canvasPlanReadiness';
 
 type UseCanvasRunStartHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
-  | 'bottomDrawerVisible'
-  | 'onRunStarted'
-  | 'runsService'
-  | 'sessionContext'
-  | 'setBottomDrawerHeight'
-  | 'shellFeedback'
-  | 'toggleBottomDrawer'
+  'onRunStarted' | 'runsService' | 'sessionContext' | 'showBottomDrawer' | 'shellFeedback'
 > & {
   observeReadiness: () => PlanRunReadinessEvaluation;
   setPlanModalOpen: SetPlanModalOpen;
 };
 
-function revealStartedRunOperations({
-  bottomDrawerVisible,
-  setBottomDrawerHeight,
-  toggleBottomDrawer,
-}: Pick<
-  UseCanvasExecutionActionsParams,
-  'bottomDrawerVisible' | 'setBottomDrawerHeight' | 'toggleBottomDrawer'
->): void {
-  if (bottomDrawerVisible) {
-    setBottomDrawerHeight(160);
-    return;
-  }
-
-  toggleBottomDrawer();
-}
-
 export function useCanvasRunStartHandler({
-  bottomDrawerVisible,
   observeReadiness,
   onRunStarted,
   runsService,
   sessionContext,
-  setBottomDrawerHeight,
+  showBottomDrawer,
   setPlanModalOpen,
   shellFeedback,
-  toggleBottomDrawer,
 }: UseCanvasRunStartHandlerArgs): () => Promise<void> {
   return useCallback(async () => {
     const result = await executeCanvasRunStartAction({
@@ -65,23 +42,17 @@ export function useCanvasRunStartHandler({
     }
 
     setPlanModalOpen(false);
-    revealStartedRunOperations({
-      bottomDrawerVisible,
-      setBottomDrawerHeight,
-      toggleBottomDrawer,
-    });
+    showBottomDrawer();
 
     shellFeedback.success(canvasViewCopy.runStartedMessage);
     onRunStarted(result.runId);
   }, [
-    bottomDrawerVisible,
     observeReadiness,
     onRunStarted,
     runsService,
     sessionContext,
-    setBottomDrawerHeight,
+    showBottomDrawer,
     setPlanModalOpen,
     shellFeedback,
-    toggleBottomDrawer,
   ]);
 }

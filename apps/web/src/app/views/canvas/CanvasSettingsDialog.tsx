@@ -21,7 +21,7 @@ import {
   DEFAULT_CANVAS_GRID_COLOR,
   normalizeCanvasHexColor,
   normalizeCanvasPaletteId,
-  type CanvasPaletteId,
+  type CanvasHexColor,
 } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasViewCopy } from './canvasCopy.types';
@@ -36,9 +36,9 @@ type CanvasSettingsDialogProps = Readonly<{
   canUseCostOverlay: boolean;
   costOverlayEnabled: boolean;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPalette: CanvasHexColor;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
   canAutoLayout: boolean;
   copy?: CanvasViewCopy;
@@ -46,9 +46,9 @@ type CanvasSettingsDialogProps = Readonly<{
   onToggleColumns: () => void;
   onToggleCostOverlay?: () => void;
   onGridSizeChange: (size: number) => void;
-  onCanvasPaletteChange: (color: CanvasPaletteId) => void;
+  onCanvasPaletteChange: (color: CanvasHexColor) => void;
   onToggleGridVisible: () => void;
-  onGridColorChange: (color: CanvasPaletteId) => void;
+  onGridColorChange: (color: CanvasHexColor) => void;
   onToggleSnapToGrid: () => void;
   onAutoLayout?: () => void;
   onRestoreFocus?: () => void;
@@ -105,7 +105,7 @@ type CanvasColorFieldProps = Readonly<{
   inputLabel: string;
   inputSlot: string;
   color: string;
-  fallback: CanvasPaletteId;
+  fallback: CanvasHexColor;
   onChange: (color: string) => void;
 }>;
 

@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react';
 
-export type CanvasPaletteId = `#${string}`;
+export type CanvasHexColor = `#${string}`;
 
-export const DEFAULT_CANVAS_PALETTE_ID: CanvasPaletteId = '#101826';
-export const DEFAULT_CANVAS_GRID_COLOR: CanvasPaletteId = '#94a3b8';
+export const DEFAULT_CANVAS_PALETTE_ID: CanvasHexColor = '#101826';
+export const DEFAULT_CANVAS_GRID_COLOR: CanvasHexColor = '#94a3b8';
 
 type Rgb = {
   readonly r: number;
@@ -12,7 +12,7 @@ type Rgb = {
 };
 
 export type CanvasPaletteTokens = {
-  readonly surface: CanvasPaletteId;
+  readonly surface: CanvasHexColor;
   readonly grid: string;
   readonly controlsSurface: string;
   readonly controlsButtonSurface: string;
@@ -30,7 +30,7 @@ export type CanvasPaletteTokens = {
   readonly previewAccent: string;
 };
 
-function expandShortHex(value: string): CanvasPaletteId {
+function expandShortHex(value: string): CanvasHexColor {
   const expanded = value
     .split('')
     .map((channel) => `${channel}${channel}`)
@@ -39,7 +39,7 @@ function expandShortHex(value: string): CanvasPaletteId {
   return `#${expanded}`;
 }
 
-function resolveHexPaletteId(value: string): CanvasPaletteId | null {
+function resolveHexPaletteId(value: string): CanvasHexColor | null {
   const normalizedValue = value.trim().toLowerCase();
   const withoutHash = normalizedValue.startsWith('#') ? normalizedValue.slice(1) : normalizedValue;
 
@@ -54,7 +54,7 @@ function resolveHexPaletteId(value: string): CanvasPaletteId | null {
   return null;
 }
 
-export function normalizeCanvasPaletteId(value: unknown): CanvasPaletteId {
+export function normalizeCanvasPaletteId(value: unknown): CanvasHexColor {
   if (typeof value !== 'string') {
     return DEFAULT_CANVAS_PALETTE_ID;
   }
@@ -62,10 +62,7 @@ export function normalizeCanvasPaletteId(value: unknown): CanvasPaletteId {
   return resolveHexPaletteId(value) ?? DEFAULT_CANVAS_PALETTE_ID;
 }
 
-export function normalizeCanvasHexColor(
-  value: unknown,
-  fallback: CanvasPaletteId
-): CanvasPaletteId {
+export function normalizeCanvasHexColor(value: unknown, fallback: CanvasHexColor): CanvasHexColor {
   if (typeof value !== 'string') {
     return fallback;
   }
@@ -73,7 +70,7 @@ export function normalizeCanvasHexColor(
   return resolveHexPaletteId(value) ?? fallback;
 }
 
-export function deriveCanvasGridStroke(color: CanvasPaletteId): string {
+export function deriveCanvasGridStroke(color: CanvasHexColor): string {
   return toRgba(hexToRgb(normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR)), 0.18);
 }
 
@@ -81,7 +78,7 @@ function clampChannel(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)));
 }
 
-function hexToRgb(hex: CanvasPaletteId): Rgb {
+function hexToRgb(hex: CanvasHexColor): Rgb {
   const value = hex.slice(1);
   return {
     r: Number.parseInt(value.slice(0, 2), 16),
@@ -99,7 +96,7 @@ function mixColor(base: Rgb, target: Rgb, ratio: number): Rgb {
   };
 }
 
-function toHex(color: Rgb): CanvasPaletteId {
+function toHex(color: Rgb): CanvasHexColor {
   const channel = (value: number) => clampChannel(value).toString(16).padStart(2, '0');
   return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}`;
 }
@@ -113,7 +110,7 @@ function resolveSurfaceContrast(surface: Rgb): string {
   return luminance > 0.48 ? '#0b1220' : '#f8fafc';
 }
 
-export function deriveCanvasPaletteTokens(surfaceHex: CanvasPaletteId): CanvasPaletteTokens {
+export function deriveCanvasPaletteTokens(surfaceHex: CanvasHexColor): CanvasPaletteTokens {
   const normalizedSurfaceHex = normalizeCanvasPaletteId(surfaceHex);
   const surface = hexToRgb(normalizedSurfaceHex);
   const white: Rgb = { r: 248, g: 250, b: 252 };
@@ -146,7 +143,7 @@ export function deriveCanvasPaletteTokens(surfaceHex: CanvasPaletteId): CanvasPa
   };
 }
 
-export function createCanvasPreviewStyle(surfaceHex: CanvasPaletteId): CSSProperties {
+export function createCanvasPreviewStyle(surfaceHex: CanvasHexColor): CSSProperties {
   const tokens = deriveCanvasPaletteTokens(surfaceHex);
 
   return {

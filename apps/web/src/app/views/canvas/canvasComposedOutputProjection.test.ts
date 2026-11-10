@@ -6,7 +6,7 @@ import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+import { projectCanvasFixtureToPostgresSql } from './canvasOutputProjection.test-support';
 import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
 import type { CanonicalNode } from '../../types/canonical';
 
@@ -78,14 +78,14 @@ describe('explicit SQL projection of composed inputs', () => {
       }));
       const before = JSON.stringify(transform);
       await expect(
-        projectDvtSubstraitTransformOutputToPostgresSql({
+        projectCanvasFixtureToPostgresSql({
           transformNode: transform,
           nodes: [...sources, transform],
           edges,
         })
       ).resolves.toBeTypeOf('string');
       await expect(
-        projectDvtSubstraitTransformOutputToPostgresSql({
+        projectCanvasFixtureToPostgresSql({
           transformNode: transform,
           nodes: [
             ...sources.map((node, ordinal) =>

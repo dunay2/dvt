@@ -1,9 +1,12 @@
 /** Owned concern: own Inspector and node workbench visual tokens. */
 
+// Labels must keep the dense UI scale outside a fact grid and on semantic headings.
+const inspectorControlTypography = 'text-[length:var(--text-ui)] leading-(--text-ui-line-height)';
+const inspectorLabel = `${inspectorControlTypography} font-normal text-(--text-muted)`;
+
 export const inspectorVisualClasses = {
   inspectorFields: 'space-y-3',
-  inspectorForm:
-    'text-xs [&_[data-slot=label]]:text-xs [&_[data-slot=input]]:text-xs [&_[data-slot=textarea]]:text-xs [&_[data-slot=select-trigger]]:text-xs [&_select]:text-xs',
+  inspectorForm: `${inspectorControlTypography} [&_:is([data-slot=label],[data-slot=input],[data-slot=textarea],[data-slot=select-trigger],select,button)]:text-[length:var(--text-ui)] [&_:is([data-slot=label],[data-slot=input],[data-slot=textarea],[data-slot=select-trigger],select,button)]:leading-(--text-ui-line-height)`,
   inspectorField: 'space-y-2',
   inspectorActions: 'flex items-center justify-end gap-2',
   inspectorFieldInclusionButton:
@@ -11,8 +14,8 @@ export const inspectorVisualClasses = {
   inspectorFieldInclusionIcon: 'size-3.5',
   inspectorCard: 'border-slate-700 bg-slate-950 p-3 text-slate-50',
   inspectorTitle: 'mb-2 text-sm font-medium text-slate-100',
-  inspectorLabel: 'text-slate-400',
-  inspectorLabelFixed: 'shrink-0 text-slate-400',
+  inspectorLabel,
+  inspectorLabelFixed: `shrink-0 ${inspectorLabel}`,
   inspectorBody: 'text-xs text-slate-300',
   inspectorMuted: 'text-sm text-slate-400',
   inspectorMutedBlock: 'space-y-2 text-sm text-slate-400',
@@ -82,13 +85,6 @@ export const inspectorPropertyClasses = {
   contribution: 'space-y-3 pt-1',
   contributionFill: 'flex min-h-0 flex-1 flex-col',
   header: 'flex items-center justify-between gap-3',
-  fact: 'contents',
-  value: { inspector: propertyValue, workbench: `${propertyValue} text-(--text-default)` },
-  facts: {
-    inspector: 'grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
-    workbench: 'grid grid-cols-[minmax(96px,0.36fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
-    relationship: 'grid grid-cols-[minmax(6rem,0.3fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm',
-  },
   records: {
     relationship: 'space-y-1',
     relationshipCard: `min-w-0 px-2 py-1.5 ${propertyPanel}`,

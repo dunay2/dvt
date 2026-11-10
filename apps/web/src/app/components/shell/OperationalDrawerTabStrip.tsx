@@ -1,7 +1,6 @@
 /** Owned concern: present closable operational tabs and restore hidden tabs. */
 import { X } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
-
 import {
   ContextMenu,
   ContextMenuContent,
@@ -9,18 +8,40 @@ import {
   ContextMenuLabel,
   ContextMenuTrigger,
 } from '../ui/context-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { cn } from '../ui/utils';
 import type {
   OperationalDrawerTab,
   OperationalDrawerTabId,
 } from './operationalDrawerContributionStore';
+import styles from './BottomOperationalDrawer.module.css';
 
-const classes = {
-  list: 'flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
-  tab: 'group flex h-9 items-center border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
-  close:
-    'ml-1 grid size-5 place-items-center rounded text-[var(--text-muted)] group-hover:bg-[var(--surface-hover)] group-hover:text-[var(--text-strong)]',
-  closeIcon: 'size-3',
-} as const;
+function RestoreTabItems({
+  kind,
+  hiddenTabs,
+  onRestoreTab,
+}: Readonly<{
+  kind: 'context' | 'dropdown';
+  hiddenTabs: readonly OperationalDrawerTab[];
+  onRestoreTab: (tab: OperationalDrawerTabId) => void;
+}>): JSX.Element {
+  const Item = kind === 'context' ? ContextMenuItem : DropdownMenuItem;
+  return (
+    <>
+      {hiddenTabs.map((tab) => (
+        <Item key={tab.id} data-restore-tab={tab.id} onSelect={() => onRestoreTab(tab.id)}>
+          {tab.label}
+        </Item>
+      ))}
+    </>
+  );
+}
 
 export function OperationalDrawerTabStrip({
   activeTab,
@@ -42,7 +63,36 @@ export function OperationalDrawerTabStrip({
   onSelectTab: (tab: OperationalDrawerTabId) => void;
   restoreTabsLabel: string;
   visibleTabs: readonly OperationalDrawerTab[];
-}>): JSX.Element {
+}>): JSX.Element | null {
+  const hasVisibleTabs = visibleTabs.length > 0;
+  if (!hasVisibleTabs && hiddenTabs.length === 0) return null;
+  if (!hasVisibleTabs) {
+    return (
+      <div
+        data-slot="bottom-operational-drawer-tabs"
+        className={styles.tabs}
+        role="group"
+        aria-label={restoreTabsLabel}
+      >
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              data-slot="bottom-operational-drawer-restore"
+              aria-label={restoreTabsLabel}
+              className={cn(styles.tab, styles.restoreAction)}
+            >
+              <span className={styles.tabLabel}>{restoreTabsLabel}</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>{restoreTabsLabel}</DropdownMenuLabel>
+            <RestoreTabItems kind="dropdown" hiddenTabs={hiddenTabs} onRestoreTab={onRestoreTab} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  }
   const moveFocus = (event: KeyboardEvent<HTMLButtonElement>, tabId: OperationalDrawerTabId) => {
     const currentIndex = visibleTabs.findIndex((tab) => tab.id === tabId);
     const offsets: Record<string, number> = {
@@ -68,7 +118,7 @@ export function OperationalDrawerTabStrip({
       <ContextMenuTrigger asChild>
         <div
           data-slot="bottom-operational-drawer-tabs"
-          className={classes.list}
+          className={styles.tabs}
           role="tablist"
           aria-orientation="horizontal"
           aria-label={ariaLabel}
@@ -85,7 +135,7 @@ export function OperationalDrawerTabStrip({
               tabIndex={activeTab === tab.id ? 0 : -1}
               data-slot="bottom-operational-drawer-tab"
               data-tab={tab.id}
-              className={classes.tab}
+              className={styles.tab}
               data-active={activeTab === tab.id}
               onClick={(event) => {
                 if ((event.target as HTMLElement).closest('[data-tab-close]') != null) {
@@ -103,7 +153,7 @@ export function OperationalDrawerTabStrip({
                 moveFocus(event, tab.id);
               }}
             >
-              <span>
+              <span className={styles.tabLabel}>
                 {tab.label}
                 {tab.count == null ? null : <span> {tab.count}</span>}
               </span>
@@ -112,9 +162,9 @@ export function OperationalDrawerTabStrip({
                 title={closeTabLabel.replace('{tab}', tab.label)}
                 data-slot="bottom-operational-drawer-tab-close"
                 data-tab-close={tab.id}
-                className={classes.close}
+                className={styles.tabClose}
               >
-                <X aria-hidden="true" className={classes.closeIcon} />
+                <X aria-hidden="true" className={styles.tabCloseIcon} />
               </span>
             </button>
           ))}
@@ -123,15 +173,7 @@ export function OperationalDrawerTabStrip({
       {hiddenTabs.length === 0 ? null : (
         <ContextMenuContent>
           <ContextMenuLabel>{restoreTabsLabel}</ContextMenuLabel>
-          {hiddenTabs.map((tab) => (
-            <ContextMenuItem
-              key={tab.id}
-              data-restore-tab={tab.id}
-              onSelect={() => onRestoreTab(tab.id)}
-            >
-              {tab.label}
-            </ContextMenuItem>
-          ))}
+          <RestoreTabItems kind="context" hiddenTabs={hiddenTabs} onRestoreTab={onRestoreTab} />
         </ContextMenuContent>
       )}
     </ContextMenu>

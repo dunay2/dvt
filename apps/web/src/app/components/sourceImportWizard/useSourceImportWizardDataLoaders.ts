@@ -39,33 +39,6 @@ interface LoaderParams {
 
 const unloadedPage = { loaded: false, loading: false, nextCursor: null } as const;
 
-export function useConnectionsLoader({ open, warehouseSourceImport, setState }: LoaderParams) {
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    const loadConnections = async () => {
-      setState((prev) => ({ ...prev, isLoadingConnections: true, loadError: null }));
-      try {
-        const connections = await warehouseSourceImport.listWarehouseConnections();
-        if (!cancelled) setState((prev) => ({ ...prev, connections }));
-      } catch (error) {
-        if (!cancelled) {
-          setState((prev) => ({
-            ...prev,
-            loadError: buildSourceImportFailure('load-connections', error),
-          }));
-        }
-      } finally {
-        if (!cancelled) setState((prev) => ({ ...prev, isLoadingConnections: false }));
-      }
-    };
-    void loadConnections();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, setState, warehouseSourceImport]);
-}
-
 function mergeSchemaSummaries(
   current: readonly SourceObjectCatalogSchemaSummary[],
   incoming: readonly SourceObjectCatalogSchemaSummary[]

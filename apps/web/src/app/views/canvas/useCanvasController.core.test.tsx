@@ -27,6 +27,80 @@ describe('useCanvasController core', () => {
     harness.cleanup();
   });
 
+  it.each([
+    { inspectedId: 'node_2', visibleIds: ['node_1'], editable: false, label: 'unplaced transform' },
+    { inspectedId: 'node_1', visibleIds: ['node_2'], editable: true, label: 'unplaced input' },
+    {
+      inspectedId: 'node_2',
+      visibleIds: ['node_1', 'node_2'],
+      editable: true,
+      label: 'placed transform',
+    },
+    {
+      inspectedId: 'missing',
+      visibleIds: ['node_1'],
+      editable: false,
+      label: 'missing definition',
+    },
+    {
+      inspectedId: 'node_1',
+      visibleIds: ['node_2'],
+      editable: false,
+      label: 'read-only input',
+      readOnly: true,
+    },
+  ])(
+    'matches the existing mutation admission for $label',
+    async ({ inspectedId, visibleIds, editable, readOnly }) => {
+      // GH-3765: inspection may reach catalogue definitions that the existing edit command cannot mutate.
+      harness.cleanup();
+      const record = buildRemoteDraftRecord({
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: { node_1: { x: 0, y: 0 }, node_2: { x: 100, y: 0 } },
+        edges: [],
+      });
+      const nodePositions = Object.fromEntries(visibleIds.map((id) => [id, { x: 0, y: 0 }]));
+      harness = await createHarnessWithDraft({
+        ...record,
+        draft: {
+          ...record.draft,
+          nodeIds: visibleIds,
+          nodePositions,
+          canvases: record.draft.canvases?.map((canvas) => ({
+            ...canvas,
+            nodeIds: visibleIds,
+            nodePositions,
+          })),
+        },
+      });
+      if (readOnly) {
+        const permissions = harness.state.store.userPermissions as { canEditEdges: boolean };
+        harness.state.store.userPermissions = { ...permissions, canEditEdges: false };
+      }
+      harness.state.store.setInspectorTarget({
+        kind: 'canonical-node',
+        nodeId: inspectedId,
+        workspaceScope: harness.state.services.sessionContext.getWorkspaceScopeSnapshot(),
+      });
+      await harness.renderProbe();
+
+      const result = harness.getLatestResult();
+      expect(result?.inspectorNode?.id ?? null).toBe(
+        inspectedId === 'missing' ? null : inspectedId
+      );
+      expect(result?.canEditInspectorNode).toBe(editable);
+      expect(result?.nodesWithImpact.map((node) => node.id)).toEqual(visibleIds);
+      if (inspectedId === 'node_2' && !editable) {
+        expect(
+          result?.applyInspectorNodeDraft({ name: 'Unsupported edit', description: '', tags: [] })
+        ).toEqual({
+          outcome: 'rejected',
+          reason: 'node_unavailable',
+        });
+      }
+    }
+  );
+
   it('maps protected draft semantics into graph state and injects overlay decorations', () => {
     const result = harness.getLatestResult();
     expect(result?.nodesWithImpact).toEqual(

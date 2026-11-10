@@ -2,6 +2,8 @@ import { PlanRelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/pl
 import { create } from '@bufbuild/protobuf';
 import {
   DbtProjectGraphProjectionSchema,
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformSqlProjectionRequestSchema,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
   encodeDvtSubstraitPlanV1,
@@ -21,6 +23,7 @@ import {
 } from '../../../src/application/ports/accessDecision.js';
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/authContract.js';
 import type { ICanvasTransformDataSampleProbe } from '../../../src/application/ports/canvasTransformDataSample.js';
+import { DbtModelProducerAccessDeniedError } from '../../../src/application/ports/dbtModelProducer.js';
 import type {
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
@@ -28,11 +31,14 @@ import type {
 import type { IWarehouseConnectionCatalog } from '../../../src/application/ports/warehouseSourceImport.js';
 import { DvtOperationalWorkloadProjector } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
+import { ProjectCanvasTransformSqlQuery } from '../../../src/application/services/projectCanvasTransformSqlQuery.js';
 import type { ProjectDbtGraphFromFilesUseCase } from '../../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
+import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import { ResolveDbtModelProducers } from '../../../src/application/services/resolveDbtModelProducers.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 import { publisherHarness } from '../../fixtures/dvtRepeatedSourcePublisher.js';
+import { buildDvtTerminalTransformPreviewDraft } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 const scope = { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' };
 const context: AuthorizedExecutionContext = {
@@ -175,6 +181,54 @@ function fixture(sql = 'select client_id from raw.client'): Readonly<{
 }
 
 describe('scoped dbt model producer binding', () => {
+  it('does not authorize or compile an unused file predecessor during protected SQL inspection', async () => {
+    const f = fixture();
+    f.authorize.mockResolvedValue({ ok: false, reason: 'missing_scope' });
+    const base = buildDvtTerminalTransformPreviewDraft();
+    const draft: WorkspaceGraphAuthoringDraft = {
+      ...base,
+      nodes: [...base.nodes, node],
+      nodeIds: [...base.nodeIds, node.id],
+      nodePositions: { ...base.nodePositions, [node.id]: { x: 0, y: 200 } },
+      edges: [
+        ...base.edges,
+        { id: 'unused-file', sourceId: node.id, targetId: 'transform-orders', relation: 'lineage' },
+      ],
+    };
+    const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
+      planner: new PlannerFacade(),
+      workspaceGraphDraftStore: {
+        read: async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          revision: 'saved',
+          draftPayload: draft,
+        }),
+      } as never,
+    });
+    const query = new ProjectCanvasTransformSqlQuery({
+      projection: new ResolveCanvasTransformProjection({
+        graphDraftResolver,
+        modelProducers: f.resolver,
+      }),
+    });
+    const target = draft.nodes.find((candidate) => candidate.id === 'transform-orders')!;
+    const result = await query.execute(
+      TransformSqlProjectionRequestSchema.parse({
+        canvasId: draft.canvas.id,
+        transformNodeId: target.id,
+        semanticPlanSha256: DvtTransformAuthoringAuthorityV1Schema.parse(
+          target.metadata?.transformAuthoring
+        ).semanticDocument.semanticPlan.sha256,
+      }),
+      context
+    );
+    expect(result.sql).toContain('raw.orders');
+    expect(result.provenance.modelRefs).toBeUndefined();
+    expect(f.authorize).not.toHaveBeenCalled();
+    expect(f.resolve).not.toHaveBeenCalled();
+    expect(f.analyze).not.toHaveBeenCalled();
+  });
+
   it('samples an independent persisted placement through planner selection, compilation and PostgreSQL projection', async () => {
     const f = fixture();
     const definition = { ...node, id: 'definition' };
@@ -215,8 +269,10 @@ describe('scoped dbt model producer binding', () => {
       sourceObjects: [],
     });
     const useCase = new PreviewCanvasTransformRowsUseCase({
-      graphDraftResolver,
-      modelProducers: f.resolver,
+      projection: new ResolveCanvasTransformProjection({
+        graphDraftResolver,
+        modelProducers: f.resolver,
+      }),
       connectionCatalog: { getConnection },
       probe: { previewTransformRows },
     });
@@ -343,10 +399,16 @@ describe('scoped dbt model producer binding', () => {
       'FROM raw.client'
     );
     expect(result.get(node.id)?.projection.projection.inputs).toEqual([]);
-    expect(result.get(node.id)?.provenance).toMatchObject({
+    // Provenance belongs to the compiled native analysis, not the earlier parse-only publication.
+    expect(f.projectValidatedAnalysis).toHaveBeenCalledWith(
+      { scope, canvasId: binding.canvasId },
+      { scope, analysis: await f.analyze.mock.results[0]!.value }
+    );
+    expect(result.get(node.id)?.provenance).toEqual({
       canvasId: binding.canvasId,
       uniqueId: reference.uniqueId,
       contentSetSha256: 'a'.repeat(64),
+      analysisSha256: 'b'.repeat(64),
     });
   });
   it('does no analyzer work for native-only selections', async () => {
@@ -390,7 +452,9 @@ describe('scoped dbt model producer binding', () => {
   it('does not gain file access from permission to view the native graph', async () => {
     const f = fixture();
     f.authorize.mockResolvedValue({ ok: false, reason: 'missing_scope' });
-    await expect(f.resolver.resolve([node], context)).rejects.toThrow('file-model access');
+    await expect(f.resolver.resolve([node], context)).rejects.toBeInstanceOf(
+      DbtModelProducerAccessDeniedError
+    );
     expect(f.resolve).not.toHaveBeenCalled();
     expect(f.analyze).not.toHaveBeenCalled();
   });

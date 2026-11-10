@@ -1,17 +1,25 @@
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+/** A diagnostic tone is explicit; absence is never coerced to a warning. */
+import { AlertTriangle, CheckCircle2, CircleHelp, XCircle } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
+import type { AdminStatusTone } from './adminViewModel';
+import styles from './AdminPlatform.module.css';
+
+const icons = {
+  neutral: CircleHelp,
+  success: CheckCircle2,
+  warning: AlertTriangle,
+  danger: XCircle,
+};
 
 export function AdminStatusBadge({
-  ok,
+  tone,
   label,
-}: Readonly<{
-  ok: boolean;
-  label: string;
-}>) {
+}: Readonly<{ tone: AdminStatusTone; label: string }>) {
+  const Icon = icons[tone];
   return (
-    <Badge className={cn(ok ? 'bg-green-700 text-white' : 'bg-amber-700 text-white')}>
-      {ok ? <CheckCircle2 className="mr-1 size-3" /> : <AlertTriangle className="mr-1 size-3" />}
+    <Badge className={cn(styles.badge, styles[tone])} data-tone={tone}>
+      <Icon aria-hidden="true" className={styles.badgeIcon} />
       {label}
     </Badge>
   );

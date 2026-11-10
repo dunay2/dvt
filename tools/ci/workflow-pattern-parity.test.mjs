@@ -607,7 +607,10 @@ test('code quality workflow exposes a stable merge-blocking outcome', () => {
     if (eventName === 'push' || (eventName === 'workflow_dispatch' && markdown)) {
       jobs['markdown-lint'].result = 'success';
     }
-    for (const [name, result] of Object.entries(overrides)) jobs[name].result = result;
+    for (const [name, result] of Object.entries(overrides)) {
+      if (result === undefined) delete jobs[name];
+      else jobs[name].result = result;
+    }
 
     const failures = [];
     runInNewContext(script.replace('${{ toJSON(needs) }}', JSON.stringify(jobs)), {
@@ -670,6 +673,48 @@ test('code quality workflow exposes a stable merge-blocking outcome', () => {
     }).length,
     0
   );
+  for (const [scenario, required] of [
+    [
+      { eventName: 'push' },
+      [
+        'ci-tool-contracts',
+        'detect-affected',
+        'ci-tool-executable-contracts',
+        'full-ci',
+        'markdown-lint',
+      ],
+    ],
+    [
+      { eventName: 'workflow_dispatch', markdown: true },
+      [
+        'ci-tool-contracts',
+        'detect-affected',
+        'ci-tool-executable-contracts',
+        'full-ci',
+        'markdown-lint',
+      ],
+    ],
+    [
+      { eventName: 'pull_request', changed: true, executable: true },
+      [
+        'ci-tool-contracts',
+        'detect-affected',
+        'ci-tool-executable-contracts',
+        'affected-preflight',
+      ],
+    ],
+  ]) {
+    for (const job of required) {
+      for (const result of ['skipped', 'failure', 'cancelled', undefined]) {
+        assert.notEqual(
+          assess({ ...scenario, overrides: { [job]: result } }).length,
+          0,
+          `${scenario.eventName}: required ${job} returned ${String(result)}`
+        );
+      }
+    }
+  }
+  assert.notEqual(assess({ eventName: 'schedule' }).length, 0);
 });
 
 test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {

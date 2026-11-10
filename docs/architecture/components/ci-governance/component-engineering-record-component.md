@@ -74,6 +74,52 @@ deleted paths, excluded paths, ambiguous owners, invalid parent relations, and
 unavailable Git/DB evidence. A temporary Git repository exercises actual file
 changes; live DuckDB paths verify the operator query against the existing DB.
 
+### Bounded Git acquisition within one validation — GH-3765
+
+The prospective admission
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6771344583)
+retains `ReadComponentFiles` and `ValidateFeatureMechanizationImplementation`.
+Owned concern: acquire the same selected Git sources and canonical responsibility
+authority with less repeated process and lookup work. The native gate's retained
+777-manifest result counts manifests, not SQL calls: its existing read-only,
+repeatable-read snapshot uses three bulk data reads. No isolated timing proves
+that this DB read caused the browser stall or the whole validation duration.
+
+```mermaid
+flowchart LR
+  Snapshot[Same Git and DB snapshot] --> Old[Per-source git show and repeated lookup construction]
+  Snapshot --> New[Bounded blob batches and invocation-local indices]
+  Old --> Rules[Same ownership and responsibility predicates]
+  New --> Rules
+  Rules --> Result[Identical rows, ordering and failures]
+```
+
+The existing Git reader retains a membership Set and selected-tree blob identity
+and size alongside its path inventory. It acquires requested committed sources
+through binary `git cat-file --batch` requests containing object IDs, not path
+delimiters. Response identity, blob type, byte length and complete framing are
+mandatory. The existing 32 MiB per-blob limit remains; total batch bytes and
+object count are bounded by splitting valid requests, without truncation. Source
+decoding retains Node's existing UTF-8 replacement behavior. Local worktree reads
+remain filesystem-backed, and explicit HEAD continues to exclude dirty edits.
+
+The diff reader preloads its existing changed-source set. The component query
+preloads its existing mandatory binding sources, indexes responsibility authority
+and first-description lookup once, and preserves complete ownership resolution,
+status checks, response ordering and tree construction. Its prepared reference
+validator shares every predicate and error order with the standalone validator.
+These values live only inside the current reader or query invocation; there is
+no persistent cache, filtered manifest authority or new registry. Cross-validator
+AST reuse with the feature checker is outside this bounded cut.
+
+Corner cases remain fail-closed for unavailable Git, missing or nonblob objects,
+malformed or incomplete batch responses, over-budget blobs, conflicting authority,
+ambiguous ownership, absent source/test paths and missing symbols. Spaces, Unicode
+and delimiter-like content must not alter source identity or content. Focused
+tests compare results and count actual Git processes and bulk DB reads on isolated
+fixtures, without claiming global speedup or native DB acceptance. The final
+candidate still requires its governed fresh DB evidence and integration gates.
+
 ## Atomic source responsibilities
 
 DB bindings connect concrete code to canonical responsibilities. The
@@ -680,6 +726,112 @@ engine pilot.
 | Engine pilot   | Engine root owns all package files directly                             | Split `SYS-RUNTIME-ENGINE-CORE` into child components and keep plan-ref cross-domain ownership |
 
 > Acceptance scope status: Review. Owner: Engineering / CI Governance / Architecture.
+
+## Bounded feature validation execution
+
+The existing `ValidateFeatureMechanizationImplementation` command owns this
+validation sequence. Its
+[prospective performance admission](https://github.com/dunay2/dvt/issues/3765#issuecomment-6775551304)
+retains `ReadComponentFiles`, the complete current Git inventory and every
+canonical responsibility binding. `SYS-CI-GOVERNANCE-ROOT` remains the physical
+owner with its existing `coverage-required` classification.
+
+The previous sequence constructed global source evidence before validating the
+manifest schema, then ran implementation policies even when schema errors were
+already known. Its surface guard also rebuilt the same regular expressions for
+every file and manifest. A green baseline took 284,659 ms; one real file required
+12,178 expression constructions for 4,440 distinct normalized allowed patterns.
+These measurements identify repeated work, without establishing a whole-CI
+percentage improvement.
+
+```mermaid
+flowchart LR
+  Previous[DB manifest rows] --> Heavy[Complete source evidence]
+  Heavy --> Late[Schema errors detected late]
+  Snapshot[One read-only authority snapshot] --> Schema[All-manifest schema and freshness]
+  Schema -->|invalid| Reject[Explicit early rejection]
+  Schema -->|valid| Sources[Complete source and binding evidence]
+  Sources --> Matcher[Invocation-local compiled surface matcher]
+  Matcher --> Policies[Unchanged implementation policies]
+```
+
+The checker retains orchestration and admission policies. The pure
+`FeatureMechanizationSurfaceMatcher` owns only existing pattern normalization,
+compilation and most-specific matching. It compiles each normalized expression
+once for a validation invocation and retains raw diagnostic order, manifest
+association and every maximum-specificity tie. Matching results never outlive
+that invocation. The existing wildcard grammar, forbidden-surface precedence
+and retirement requirement that no forbidden current file remains are unchanged.
+Moved methods have direct consumers in that helper; obsolete checker methods
+are removed, without compatibility wrappers or a parallel matching grammar.
+
+All DB manifests must pass the real schema validator before component/source
+work begins. Invalid metadata returns all schema errors and claims no source
+acceptance. A valid schema still checks all ownership, bindings, implemented
+symbols, referenced tests, changed declarations and Cypress boundaries in the
+same authority snapshot. No manifest or unchanged-file binding is filtered out.
+SourceFacts, Python parsing, compiler options, packages and persistent caches
+are outside this change.
+
+Focused tests cover early rejection, valid-schema source failures, wildcard and
+literal-path semantics, normalization, equal-specificity ties, raw forbidden
+diagnostic order, retirement and new-invocation freshness. Differential evidence
+must compare the real previous matcher with the new matcher over the same
+frozen manifest/file inputs. A baseline-input performance comparison is distinct
+from final validation of the new committed candidate and its reconciled native
+metadata. Record complete results and phase timings before claiming improvement.
+
+## Current-document application ports
+
+The prospective admission
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6772782368)
+extends the existing `ReconcileFeatureMechanizationCatalog` current-document
+selector. Two mandatory proposals still supply twelve imported source rows;
+their closed feature manifests are current consumers despite the proposal's
+Review frontmatter. The prepush manifest points two application ports at the
+CLI rather than the actual plan module. Updating only the source hash would
+leave those consumers stale. A local override would change authority, and a
+compatibility facade would preserve the wrong responsibility boundary.
+
+```mermaid
+flowchart LR
+  Old[Current document and stored ports name the old CLI] --> Gap[Symbol relocation cannot correct port fields]
+  Document[Exact committed feature manifest] --> Selector[Closed applicationPort selector]
+  Code[Actual committed target declaration] --> Selector
+  Selector --> CAS[Existing locked full-row comparison]
+  CAS --> Leaves[Only declared port leaves and source hash change]
+  Leaves --> Same[Same rail identity, status, evidence and canonical winners]
+```
+
+Owned concern: reconcile the declared application-port location from the current
+canonical document without replacing rail semantics. A reference may use
+`{field: applicationPort, index, from, to}`. The index selects an existing
+`commandQueryRails` entry; both literals are a repository JS/TS path followed by
+the same qualified symbol. Only the path may change. The committed feature,
+rail identity and remaining rail properties must match the existing manifest.
+Every changed port in that committed feature needs its exact selector.
+When that feature manifest exists, a hash-only request cannot conceal a missing,
+replaced or resized port catalog. Ordinary documentary hash refreshes without
+an embedded feature manifest retain their existing behavior.
+
+The destination literal must equal the committed manifest and resolve to one
+real, linkable implemented declaration at that same HEAD. Existing Git and
+SourceFacts proof rejects aliases, stubs and dirty, untracked or nonregular
+targets; proof is rechecked before commit. The patch changes the selected
+`raw_manifest.commandQueryRails[index].applicationPort` in each affected row.
+It changes `raw_rail.applicationPort` only when that entry matches the row's
+own name/type identity, with an exact existing port mirror. It never changes
+name, type, status, ownership, symbols, cycles or canonical winner identities.
+
+The existing JSONB leaf writer, full-row CAS, locks, scope checks, transaction,
+audit and replay rules remain in force. No arbitrary JSON pointer, local
+promotion or parallel operator is introduced. Reject missing proof, stale or
+duplicate selections, omitted changed ports, a different symbol/rail identity,
+source drift and unexpected canonical changes. Tests cover those refusals,
+lossless leaves, rollback and identical replay before native application.
+Historical cycle patch surfaces retain their original meaning. Proven absent
+declarations use the existing exact evidence-retirement rail; they receive no
+invented destination or compatibility alias.
 
 ## Lossless implementation-reference relocation
 

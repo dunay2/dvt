@@ -1,15 +1,26 @@
 /** Owned concern: translate requested drawer pixels into bounded resizable-panel percentages. */
-const MINIMUM_DRAWER_PERCENT = 12;
-const MAXIMUM_DRAWER_PERCENT = 90;
-const DEFAULT_DRAWER_PERCENT = 22;
+export const OPERATIONAL_DRAWER_HEIGHT = { default: 300, min: 160, precision: 0.01 } as const;
+export const OPERATIONAL_DRAWER_PERCENT = { min: 12, max: 90, default: 22 } as const;
+
+export function normalizeOperationalDrawerHeight(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.max(OPERATIONAL_DRAWER_HEIGHT.min, value)
+    : OPERATIONAL_DRAWER_HEIGHT.default;
+}
 
 export function resolveBottomDrawerDefaultSize(
   requestedHeight: number,
   viewportHeight: number
 ): number {
-  if (requestedHeight <= 0 || viewportHeight <= 0) return DEFAULT_DRAWER_PERCENT;
+  if (
+    !Number.isFinite(requestedHeight) ||
+    !Number.isFinite(viewportHeight) ||
+    requestedHeight <= 0 ||
+    viewportHeight <= 0
+  )
+    return OPERATIONAL_DRAWER_PERCENT.default;
   return Math.min(
-    MAXIMUM_DRAWER_PERCENT,
-    Math.max(MINIMUM_DRAWER_PERCENT, (requestedHeight / viewportHeight) * 100)
+    OPERATIONAL_DRAWER_PERCENT.max,
+    Math.max(OPERATIONAL_DRAWER_PERCENT.min, (requestedHeight / viewportHeight) * 100)
   );
 }

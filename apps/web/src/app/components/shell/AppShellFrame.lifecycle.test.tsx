@@ -25,18 +25,29 @@ it('retains drawer DOM, local input and focus when resize is followed by a shell
   const props = {
     bottomDrawer: <input aria-label="Data search" defaultValue="" />,
     bottomDrawerHeight: 320,
+    onBottomDrawerHeightChange: vi.fn(),
     focusMode: false,
     leftNavigation: null,
-    navigationDisposition: {
-      railMode: 'hidden',
-      footerMode: 'menu',
-      reason: 'workbench_route',
-    } as const,
     showBottomDrawer: true,
     skipToMainContentLabel: 'Skip',
     topBar: null,
     children: <div>Model</div>,
   };
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement
+  ) {
+    return {
+      height: this.dataset.panelGroupId === 'app-shell-vertical-panels' ? 800 : 0,
+      width: 1000,
+      x: 0,
+      y: 0,
+      top: 0,
+      bottom: 800,
+      left: 0,
+      right: 1000,
+      toJSON: () => ({}),
+    };
+  });
   vi.stubGlobal('innerHeight', 900);
   act(() => root.render(<AppShellFrame {...props} />));
   const input = container.querySelector('input')!;
@@ -52,9 +63,14 @@ it('retains drawer DOM, local input and focus when resize is followed by a shell
   expect(container.querySelector('input')).toBe(input);
   expect(input.value).toBe('orders');
   expect(document.activeElement).toBe(input);
+  expect(props.onBottomDrawerHeightChange).not.toHaveBeenCalled();
   expect(drawer.getAttribute('data-panel-size')).toBe(panelSize);
 
   act(() => root.render(<AppShellFrame {...props} bottomDrawerHeight={400} />));
+  // A height command must resize the same panel, rather than replacing focused content through a key.
+  expect(container.querySelector('input')).toBe(input);
+  expect(input.value).toBe('orders');
+  expect(document.activeElement).toBe(input);
   expect(
     container.querySelector('#app-shell-bottom-drawer-panel')?.getAttribute('data-panel-size')
   ).not.toBe(panelSize);

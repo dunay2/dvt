@@ -67,11 +67,9 @@ export function useCanvasExecutionActions({
   sessionContext,
   executionEnvironmentId,
   shellFeedback,
-  bottomDrawerVisible,
   currentPlan,
   setCurrentPlan,
-  setBottomDrawerHeight,
-  toggleBottomDrawer,
+  showBottomDrawer,
   onRunStarted,
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -150,14 +148,12 @@ export function useCanvasExecutionActions({
 
   const handleStartRun = useCanvasRunStartHandler({
     observeReadiness: () => observeExecution().planRunReadiness,
-    bottomDrawerVisible,
     onRunStarted,
     runsService,
     sessionContext: executionSessionContext,
-    setBottomDrawerHeight,
+    showBottomDrawer,
     setPlanModalOpen,
     shellFeedback,
-    toggleBottomDrawer,
   });
 
   return {

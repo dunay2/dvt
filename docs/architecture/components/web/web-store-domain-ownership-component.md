@@ -115,7 +115,6 @@ here before implementation so the DDD owner and C&Q rail are explicit.
 | `canvasInteractionStore.ts`  | `setCanvasViewport`         | command | Canvas authoring session aggregate | Canvas interaction updates           | Persists viewport by workspace key.                                                                |
 | `canvasInteractionStore.ts`  | `setCanvasNodePositions`    | command | Canvas authoring session aggregate | Canvas interaction updates           | Persists node positions by workspace key.                                                          |
 | `canvasInteractionStore.ts`  | `setInspectorNode`          | command | Canvas authoring session aggregate | Canvas interaction updates           | Sets inspector focus.                                                                              |
-| `uiLayoutStore.ts`           | `leftNavCollapsed`          | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current left navigation display.                                                                   |
 | `uiLayoutStore.ts`           | `canvasExplorer`            | query   | Web shell layout aggregate         | `RenderCanvasContextualGraphSurface` | Persisted disclosure mode and expanded width percentage shared by Canvas and Model.                |
 | `uiLayoutStore.ts`           | `inspectorPanelWidth`       | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current inspector width.                                                                           |
 | `uiLayoutStore.ts`           | `inspectorPanelVisible`     | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current inspector visibility.                                                                      |
@@ -126,7 +125,6 @@ here before implementation so the DDD owner and C&Q rail are explicit.
 | `uiLayoutStore.ts`           | `canvasPalette`             | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current Canvas palette preference.                                                                 |
 | `uiLayoutStore.ts`           | `activeTabs`                | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current shell tab list.                                                                            |
 | `uiLayoutStore.ts`           | `activeTabId`               | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current active shell tab.                                                                          |
-| `uiLayoutStore.ts`           | `toggleLeftNav`             | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles left navigation.                                                                           |
 | `uiLayoutStore.ts`           | `dispatchCanvasExplorer`    | command | Web shell layout aggregate         | `ConfigureCanvasViewportPreferences` | Central expand, collapse, toggle, close and resize transitions; unchanged state performs no write. |
 | `uiLayoutStore.ts`           | `setInspectorPanelWidth`    | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes inspector width.                                                                           |
 | `uiLayoutStore.ts`           | `setBottomDrawerHeight`     | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes bottom operational drawer height.                                                          |
@@ -151,6 +149,12 @@ here before implementation so the DDD owner and C&Q rail are explicit.
 | `authorizationStore.ts`      | `setUserPermissions`        | command | Web authorization read model       | Authorization capability display     | Replaces the effective permissions projection; no execution fallback.                              |
 
 ## Current Cross-Store Composition
+
+The retained Explorer uses `canvasExplorer` and `dispatchCanvasExplorer`;
+global navigation has no separate collapse flag or command. Layout hydration
+selects current supported fields explicitly, so legacy stored keys cannot
+restore retired runtime state. The negative hydration test protects that
+boundary without retaining compatibility actions.
 
 `useCanvasStoreFacade` is the active route-level composition seam. It reads the
 four stores explicitly and exposes the Canvas controller state needed by the
@@ -532,5 +536,11 @@ these questions without reading unrelated UI code:
 
 The current answer is encoded in this guide, the component map, and
 `webStoreDomainOwnership.architecture.test.ts`.
+
+The ownership fitness reads the leading JSDoc comment and checks its first
+semantic content against the expected store concern. Inline, multiline and
+wrapped JSDoc are equivalent; reason and corner-invariant documentation may
+follow the concern. A missing header, a different owner, ordinary block
+comments or an ownership phrase elsewhere in source do not satisfy the rule.
 
 > Section status: Active. Owner: Web / Architecture. Colocation does not merge component responsibilities.

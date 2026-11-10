@@ -68,6 +68,106 @@ Do not start by polling loops.
 
 Start with failed-job extraction first, then decide the minimal rerun set.
 
+## Bounded Local Validation Lifetime
+
+The existing `RunChangedSliceVerification` command owns local plan execution;
+`verify:prepush` and `ai:preflight` await that same executor. The existing
+`RunWebCypressNative` and disposable PostgreSQL proof owners retain resource
+cleanup. This change does not select fewer checks or change acceptance evidence.
+
+The validation modules have separate responsibilities. The previous shared plan
+module combined selection, composition and execution, while `verify:changed`
+imported the pre-push CLI to access its receipt implementation. That dependency
+made changes to process containment and receipt identity look like changes to
+test routing.
+
+```mermaid
+flowchart LR
+  CLI[Validation CLI] --> Plan[local-validation-plan: ordered obligations]
+  Plan --> Selection[changed-test-selection: affected tests]
+  Plan --> Coverage[local-test-coverage: complete deduplicated coverage]
+  CLI --> Executor[local-validation-executor: await execution and cleanup]
+  Executor --> Process[live-proof-process: owned OS process lifetime]
+  CLI -->|only after successful validation| Stamp[prepush-validation-stamp: exact input identity and persistence]
+```
+
+`scripts/lib/local-validation-executor.cjs` receives an already constructed plan
+and owns execution budgets, environment isolation, interruption and step results.
+It does not select checks or write receipts. `scripts/lib/prepush-validation-stamp.cjs`
+owns Git input fingerprints, validation-level matching and receipt persistence;
+it does not launch validation or decide when a CLI may write success. Both CLIs
+import these owners directly. Shared command values and labels belong to
+`scripts/lib/local-validation-plan-values.cjs`, not to an executable CLI.
+The existing plan and CLI modules do not re-export moved implementations.
+
+This separation preserves the existing receipt format and matching rules. Tests
+move with their behavior instead of being copied: executor tests exercise process
+lifetimes, receipt tests exercise identity and persistence, and CLI tests retain
+the awaited-success-before-stamp boundary. The existing `test:verify-prepush`
+command continues to cover the separated validation contracts.
+
+The previous execution boundary was synchronous and unbounded:
+
+```mermaid
+flowchart LR
+  Plan[Existing validation plan] --> Child[Blocking child command]
+  Child -->|eventual success| Stamp[Success stamp]
+  Child -->|never exits| Held[Validation remains held]
+```
+
+The executor now awaits owned asynchronous processes. Its initial per-step and
+total execution limits are both 120 minutes: the existing pre-push step itself
+invokes a complete nested changed-slice plan, so a short leaf-test limit would
+incorrectly terminate a valid compound step. These are containment limits, not
+performance targets. Nested commands inherit the earlier absolute deadline;
+starting another wrapper cannot renew the budget. Output silence is not used as
+a timeout signal.
+
+```mermaid
+flowchart LR
+  Plan[Unchanged validation obligations] --> Run[Owned async command and deadline]
+  Run -->|normal completion| Cleanup[Await owned cleanup]
+  Run -->|timeout or interruption| Cooperate[Native and DB owners clean up]
+  Cooperate -->|cleanup deadline exceeded| Force[Bounded owned-tree termination]
+  Cooperate --> Failed[Failed validation]
+  Force --> Failed
+  Cleanup -->|complete and zero exit| Next[Next step or success stamp]
+  Cleanup -->|failure| Failed
+```
+
+Execution and cleanup have separate bounded lifetimes: an interrupted step has
+60 seconds for cooperative cleanup and a further 5 seconds for forced process
+retirement. Native browser and LIVE
+database owners observe the inherited deadline themselves, including on Windows,
+where forced process termination cannot run JavaScript `finally` blocks. The
+executor allows cooperative cleanup before its existing process-tree adapter
+forces termination. A forced fallback reports resource cleanup as unconfirmed;
+it must never claim that a database was disposed merely because a PID exited.
+POSIX process groups do not include separately detached descendant groups;
+their existing owners must perform and await their own cleanup.
+
+Cypress's module API does not cancel its child process when a caller stops
+awaiting its promise. The native runner therefore sets its CLI exit status
+without calling `process.exit`: after interrupted preview cleanup, referenced
+Cypress processes keep their owning wrapper alive. The bounded parent executor
+can still retire that exact process tree. A rejected module promise alone is
+not a browser-retirement receipt, and forced retirement remains failed and
+unconfirmed for application-resource cleanup. This boundary is exercised with
+the actual CLI completion block and a real held module child, not only with a
+deferred JavaScript promise.
+
+Each completed step reports its identity, elapsed duration, exit/signal and
+outcome. Timeout, cancellation, spawn errors and cleanup failures stop the plan;
+a later zero exit during cleanup cannot change an interrupted step to success.
+All CLI callers await execution and cleanup before writing a validation stamp.
+An incomplete run writes no new success evidence. Validation errors and cleanup
+errors remain visible together. Limits and injected signals may be shortened in
+focused tests; malformed or unbounded limits fail before spawning a command.
+
+This boundary is tested with deferred completions, timeout/abort races, actual
+owned Node child trees, cooperative cleanup and unchanged unrelated processes.
+Full native browser/DB acceptance remains a separate required closeout gate.
+
 ## Generated Docs Rule In PR Flow
 
 If the slice touches planning/docs structure or workspace structure, run required generators before push:

@@ -25,6 +25,7 @@ import {
 import { WarehouseSourcePublicationChangedError } from '../../src/application/ports/warehouseSourceImport.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../src/application/services/previewWarehouseSourceObjectRowsUseCase.js';
+import { ResolveCanvasTransformProjection } from '../../src/application/services/resolveCanvasTransformProjection.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../src/domain/auth/types.js';
 import { PostgresCanvasTransformDataSampleProbe } from '../../src/infrastructure/postgres/PostgresCanvasTransformDataSampleProbe.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
@@ -185,16 +186,18 @@ it('refreshes a projected Transform from PostgreSQL without acquiring or publish
     current,
   ];
   const query = new PreviewCanvasTransformRowsUseCase({
-    graphDraftResolver: {
-      executeWithAuthorizedDraft: async () => ({
-        ok: true,
-        value: {
-          nodeIds: draft.nodeIds,
-          edgeIds: draft.edges.map((edge) => edge.id),
-          authorizedDraft: { draft, revision: 'proof-revision' },
-        },
-      }),
-    } as never,
+    projection: new ResolveCanvasTransformProjection({
+      graphDraftResolver: {
+        executeWithAuthorizedDraft: async () => ({
+          ok: true,
+          value: {
+            nodeIds: draft.nodeIds,
+            edgeIds: draft.edges.map((edge) => edge.id),
+            authorizedDraft: { draft, revision: 'proof-revision' },
+          },
+        }),
+      } as never,
+    }),
     connectionCatalog: {
       getConnection: async () => ({
         id: ref.connectionRef.connectionId,

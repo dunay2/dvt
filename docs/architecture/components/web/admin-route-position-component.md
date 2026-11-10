@@ -19,13 +19,14 @@ backend authorization.
 
 ## Public API
 
-| API                          | Owner                             | Responsibility                                                      |
-| ---------------------------- | --------------------------------- | ------------------------------------------------------------------- |
-| `AdminView`                  | `AdminView.tsx`                   | Compose the Admin route and bind active tab to URL search state.    |
-| `initialTab`                 | `AdminView.tsx`                   | Test/bootstrap fallback when the URL has no valid tab.              |
-| `resolveActiveAdminTab(...)` | `AdminView.tsx`                   | Resolve a valid Admin tab from `URLSearchParams`.                   |
-| `handleTabChange(...)`       | `AdminView.tsx`                   | Write the next valid tab to `?tab=...`.                             |
-| `useAdminViewData()`         | `views/admin/useAdminViewData.ts` | Supply platform, capabilities, role and audit data to passive tabs. |
+| API                              | Owner                             | Responsibility                                                                     |
+| -------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| `AdminView`                      | `AdminView.tsx`                   | Compose the Admin route and bind active tab to URL search state.                   |
+| `initialTab`                     | `AdminView.tsx`                   | Test/bootstrap fallback when the URL has no valid tab.                             |
+| `resolveActiveAdminTab(...)`     | `admin/adminRoutePosition.ts`     | Resolve a valid Admin section from `URLSearchParams`.                              |
+| `buildAdminSectionLocation(...)` | `admin/adminRoutePosition.ts`     | Build the selected `?tab=...` destination, retaining unrelated route state.        |
+| `adminSectionNavigation`         | `admin/adminRoutePosition.ts`     | Supply the one section definition and pure URL contract to the generic shell menu. |
+| `useAdminViewData()`             | `views/admin/useAdminViewData.ts` | Supply platform, capabilities, role and audit data to passive tabs.                |
 
 ## Invariants
 
@@ -36,6 +37,13 @@ backend authorization.
 - Admin route position must not bypass backend authorization or capability
   checks.
 - Presentation tabs are passive consumers of `useAdminViewData()` outputs.
+- The Admin icon opens its section menu; real links select sections through the
+  existing Router guards. Escape restores focus to the icon.
+- The shared top bar owns the visible Admin heading. AdminView does not repeat
+  a local header, centered TabsList or tabpanel tied to a removed tab trigger.
+- Same-route selection preserves unrelated search parameters and the hash.
+- Canvas, Git and the shell frame remain mounted while protected route content
+  follows its existing admission boundary.
 
 ## Transitions
 
@@ -44,12 +52,15 @@ backend authorization.
 ```mermaid
 sequenceDiagram
   participant Operator
+  participant Menu as Shell section menu
+  participant Position as Admin URL contract
   participant Admin as AdminView
   participant Router as React Router search params
 
-  Operator->>Admin: select Audit Log tab
-  Admin->>Admin: validate AdminTabId
-  Admin->>Router: set ?tab=audit
+  Operator->>Menu: select Audit Log
+  Menu->>Position: build section destination
+  Position-->>Menu: /admin?tab=audit
+  Menu->>Router: follow existing Router link
   Router-->>Admin: active tab resolves from URL
 ```
 
@@ -81,13 +92,15 @@ Indirect consumers:
 
 ## Semantic Encapsulation
 
-`AdminView.tsx` has one owned concern: render the Admin/RBAC route and keep its
-tab position URL-addressable. It should not absorb RBAC policy, fetch mapping,
+`AdminView.tsx` renders the selected passive Admin/RBAC section from its URL. The
+cohesive `adminRoutePosition` contract now has two consumers: AdminView and the
+shell menu. It owns IDs, fallback and URL construction once. This is a concern-
+owned extraction, not a generic shared route-state store. The route does not absorb RBAC policy, fetch mapping,
 platform health parsing, or audit-log filtering beyond composition.
 
-The component is intentionally not generalized into a shared route-tab helper.
-That abstraction should be introduced only after another route has the same
-route-position invariant and test coverage.
+The reusable shell menu renders optional navigation metadata. It delegates URL
+meaning to the owning route contract and does not create a generic route-tab
+state authority. An optional heading uses the existing shell navigation model.
 
 ## Negative Coverage
 

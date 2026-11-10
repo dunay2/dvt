@@ -54,6 +54,7 @@ export function CanvasNodeWorkbenchSections({
   authoring,
   activeRunId,
   onClose,
+  codeProjection,
 }: CanvasNodeWorkbenchPanelProps & { controller: CanvasNodeWorkbenchController }): JSX.Element {
   const {
     node,
@@ -106,6 +107,7 @@ export function CanvasNodeWorkbenchSections({
           transformNode={node}
           nodes={nodes}
           edges={edges}
+          codeProjection={codeProjection}
           {...(presentationTruth.code.kind === 'canonical'
             ? { canonicalContent: presentationTruth.code.content }
             : {})}

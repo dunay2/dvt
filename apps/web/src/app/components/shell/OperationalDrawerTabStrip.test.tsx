@@ -86,4 +86,38 @@ describe('OperationalDrawerTabStrip', () => {
     await act(async () => fireEvent.click(restore!));
     expect(onRestoreTab).toHaveBeenCalledWith('data');
   });
+
+  it('exposes a visible keyboard restore button after every tab has been hidden', async () => {
+    // Removing the redundant heading must not strand users after closing the last tab.
+    const onRestoreTab = vi.fn();
+    await act(async () => {
+      root.render(
+        <OperationalDrawerTabStrip
+          activeTab={null}
+          ariaLabel="Operaciones del Canvas"
+          closeTabLabel="Cerrar {tab}"
+          hiddenTabs={hiddenTabs}
+          onCloseTab={vi.fn()}
+          onRestoreTab={onRestoreTab}
+          onSelectTab={vi.fn()}
+          restoreTabsLabel="Mostrar ventanas"
+          visibleTabs={[]}
+        />
+      );
+    });
+
+    expect(container.querySelector('[role="tablist"]')).toBeNull();
+    const restoreTarget = container.querySelector<HTMLElement>(
+      'button[data-slot="bottom-operational-drawer-restore"]'
+    );
+    expect(restoreTarget?.tabIndex).toBe(0);
+    expect(restoreTarget?.getAttribute('aria-label')).toBe('Mostrar ventanas');
+    await act(async () => restoreTarget?.focus());
+    expect(document.activeElement).toBe(restoreTarget);
+    await act(async () => fireEvent.keyDown(restoreTarget!, { key: 'Enter' }));
+    const restore = document.body.querySelector<HTMLElement>('[data-restore-tab="data"]');
+    expect(restore).not.toBeNull();
+    await act(async () => fireEvent.click(restore!));
+    expect(onRestoreTab).toHaveBeenCalledWith('data');
+  });
 });

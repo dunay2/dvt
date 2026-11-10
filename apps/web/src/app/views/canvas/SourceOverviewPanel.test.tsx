@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import React, { act, useState } from 'react';
+import React, { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
+import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { SourceOverviewPanel } from './SourceOverviewPanel';
 
 const node: CanonicalNode = {
@@ -34,23 +34,6 @@ const node: CanonicalNode = {
     tableName: 'auth_audit_events',
     comment: 'Generic node comment without external database authority.',
     sourceComment: 'Database table documentation.\n  Literal <script>text</script>.',
-  },
-};
-
-const initialDraft: CanvasInspectorNodeDraft = {
-  name: 'aut',
-  description: node.description ?? '',
-  tags: ['source', 'dvt'],
-  dvt: {
-    kind: 'source',
-    schema: 'dvt',
-    table: 'auth_audit_events',
-    alias: 'local_postgres_proof_dvt_dvt',
-    connectionRef: {
-      schemaVersion: 'connection-ref.v1',
-      connectionId: 'local-postgres-proof',
-      provider: 'postgres',
-    },
   },
 };
 
@@ -93,20 +76,12 @@ const readModel: NodePropertiesReadModel = {
 
 function Harness({
   onApply,
-}: Readonly<{ onApply: (draft: CanvasInspectorNodeDraft) => void }>): JSX.Element {
-  const [draft, setDraft] = useState<CanvasInspectorNodeDraft>(initialDraft);
-  const [tagsText, setTagsText] = useState('source, dvt');
-  const draftController: CanvasNodeWorkbenchDraftController = {
-    draft,
-    tagsText,
-    onDraftChange: setDraft,
-    onTagsTextChange: setTagsText,
-    onDraftSubmitted: vi.fn(),
-    onResetDraft: () => {
-      setDraft(initialDraft);
-      setTagsText('source, dvt');
-    },
-  };
+  canEdit = true,
+}: Readonly<{
+  onApply: (draft: CanvasInspectorNodeDraft) => void;
+  canEdit?: boolean;
+}>): JSX.Element {
+  const draftController = useCanvasNodeWorkbenchDraftController(node);
 
   return (
     <SourceOverviewPanel
@@ -114,7 +89,7 @@ function Harness({
       nodes={[node]}
       edges={[]}
       readModel={readModel}
-      authoring={{ canEditNode: true, onApplyNodeDraft: onApply }}
+      authoring={{ canEditNode: canEdit, onApplyNodeDraft: onApply }}
       draftController={draftController}
     />
   );
@@ -185,5 +160,28 @@ describe('SourceOverviewPanel', () => {
 
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onApply.mock.calls[0]?.[0]).toMatchObject({ name: 'audit events' });
+  });
+
+  // A shared field must not introduce an action where authoring admission denied it.
+  it('keeps read-only metadata passive', () => {
+    const onApply = vi.fn();
+    act(() => root.render(<Harness onApply={onApply} canEdit={false} />));
+    expect(container.querySelector('button, input, textarea')).toBeNull();
+    expect(container.textContent).toContain('Authentication audit events');
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
+  // Moving the action and input into a shared template must not turn Escape blur into save.
+  it('cancels an activated field without committing its blur', async () => {
+    const onApply = vi.fn();
+    act(() => root.render(<Harness onApply={onApply} />));
+    const action = container.querySelector('[data-slot="source-dvt-name"] button');
+    await act(() => fireEvent.click(action!));
+    const input = container.querySelector('input[aria-label="Name"]')!;
+    await act(() => fireEvent.input(input, { target: { value: 'discarded' } }));
+    await act(() => fireEvent.keyDown(input, { key: 'Escape' }));
+    expect(onApply).not.toHaveBeenCalled();
+    expect(container.querySelector('input')).toBeNull();
+    expect(container.querySelector('[data-slot="source-dvt-name"]')?.textContent).toContain('aut');
   });
 });

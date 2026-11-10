@@ -4,20 +4,16 @@ import { resolveShellNavigationDisposition } from './shellNavigationDisposition'
 
 describe('resolveShellNavigationDisposition', () => {
   it.each(['/canvas', '/runs', '/runs/run_123', '/templates', '/plugins', '/admin'])(
-    'hides the permanent rail on product workbench route %s and moves global links to the menu',
+    'classifies product workbench route %s for command and context presentation',
     (pathname) => {
       expect(resolveShellNavigationDisposition(pathname)).toEqual({
-        railMode: 'hidden',
-        footerMode: 'menu',
         reason: 'workbench_route',
       });
     }
   );
 
-  it('keeps the permanent rail pinned only on uncataloged global shell routes', () => {
+  it('classifies uncataloged global shell routes without adding a navigation alternative', () => {
     expect(resolveShellNavigationDisposition('/legacy')).toEqual({
-      railMode: 'visible',
-      footerMode: 'pinned',
       reason: 'global_route',
     });
   });

@@ -220,12 +220,27 @@ describe('buildAppServices', () => {
     expect(appServices.workspaceAdminRead).toBeDefined();
     expect(appServices.warehouseSourceImport).toBeDefined();
     expect(appServices.workspaceFileContentCommand).toBeDefined();
+    expect(typeof appServices.canvasTransformSqlQuery.projectTransformSql).toBe('function');
     expect(appServices.runsService).toBeDefined();
     expect(appServices.plansService).toBeDefined();
     expect(typeof appServices.capabilitiesPort.loadCapabilities).toBe('function');
     expect(appServices.sessionContext.buildRunContext('run-1')).toMatchObject({ runId: 'run-1' });
     expect(typeof appServices.shellFeedback.error).toBe('function');
     expect(typeof appServices.shellFeedback.success).toBe('function');
+  });
+
+  it('uses the injected SQL read port without invoking it during service composition', () => {
+    const query = {
+      projectTransformSql: vi.fn(async () => {
+        throw new Error('Not requested');
+      }),
+    };
+    const services = buildAppServices({
+      ...createAppServicesTestOverrides(),
+      canvasTransformSqlQuery: query,
+    });
+    expect(services.canvasTransformSqlQuery).toBe(query);
+    expect(query.projectTransformSql).not.toHaveBeenCalled();
   });
 
   it('builds isolated test-double workspace services for independent composition roots', async () => {

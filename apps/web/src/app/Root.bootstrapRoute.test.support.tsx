@@ -7,6 +7,7 @@ import type { PlatformHealthCapabilityApi } from '../capabilities/platform-healt
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
 import { flushRouterUpdate } from './routerFlushSync';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
+import AuthRouteGate from './bootstrap/AuthRouteGate';
 import {
   createCompleteRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
@@ -29,6 +30,28 @@ const DEFAULT_CAPABILITIES = {
   minFrontendVersion: '1.0.0',
   plugins: {},
 };
+
+vi.mock('./services/api/createApiClient', async (loadOriginal) => {
+  const actual = await loadOriginal<typeof import('./services/api/createApiClient')>();
+  const { grantedSessionClient } =
+    await import('./services/session/protectedRouteSessionContext.testSupport');
+  const sessionClient = grantedSessionClient('root-shell-test');
+  return {
+    ...actual,
+    createApiClient: (
+      ...args: Parameters<typeof actual.createApiClient>
+    ): ReturnType<typeof actual.createApiClient> => {
+      const client = actual.createApiClient(...args);
+      return {
+        ...client,
+        getJson: <T,>(endpoint: string, init?: Parameters<typeof client.getJson>[1]): Promise<T> =>
+          endpoint === '/session' || endpoint === '/workspace/context'
+            ? sessionClient.getJson<T>(endpoint, init)
+            : client.getJson<T>(endpoint, init),
+      };
+    },
+  };
+});
 
 export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
   routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
@@ -126,7 +149,11 @@ export function createRootShellNode(
     [
       {
         path: '/',
-        element: <RootShell platformHealthCapability={capability} />,
+        element: (
+          <AuthRouteGate>
+            <RootShell platformHealthCapability={capability} />
+          </AuthRouteGate>
+        ),
         children: [
           createStaticRootChildRoute({
             id: 'test.workspace',

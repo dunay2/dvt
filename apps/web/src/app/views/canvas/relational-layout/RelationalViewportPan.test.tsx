@@ -4,13 +4,17 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRelationalViewportPan } from './useRelationalViewportPan';
+import { useCanvasBackgroundAddMenuGesture } from '../canvasViewportInteraction';
 
 const panBy = vi.fn();
+const openAdd = vi.fn();
 function Surface({ insideCard = false }: Readonly<{ insideCard?: boolean }>): JSX.Element {
   const viewport = useRelationalViewportPan(panBy);
+  const backgroundAdd = useCanvasBackgroundAddMenuGesture();
   return (
     <div data-slot={insideCard ? 'canvas-relational-card' : undefined}>
       <div
+        {...backgroundAdd.pointerHandlers}
         data-testid="surface"
         data-panning={viewport.panning}
         onPointerDown={viewport.onPointerDown}
@@ -19,6 +23,9 @@ function Surface({ insideCard = false }: Readonly<{ insideCard?: boolean }>): JS
         onPointerCancel={viewport.onPointerCancel}
         onLostPointerCapture={viewport.onLostPointerCapture}
         onClickCapture={viewport.onClickCapture}
+        onDoubleClick={(event) => {
+          if (backgroundAdd.resolveRequest(event) != null) openAdd();
+        }}
       >
         <button data-slot="canvas-relational-tree-node">Card</button>
         <div data-relational-card-id="output">
@@ -52,6 +59,7 @@ describe('Relational viewport pan', () => {
   };
   beforeEach(() => {
     panBy.mockClear();
+    openAdd.mockClear();
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     container = document.createElement('div');
     document.body.append(container);
@@ -78,6 +86,41 @@ describe('Relational viewport pan', () => {
     pointer('pointerup', 50);
     expect(surface.dataset.panning).toBe('false');
     expect(surface.releasePointerCapture).toHaveBeenCalledOnce();
+  });
+  it.each(['pointerup', 'pointercancel'])(
+    'does not turn a pan ending with %s into Add, then admits a fresh stationary double click',
+    (terminal) => {
+      pointer('pointerdown', 100);
+      pointer('pointermove', 70);
+      pointer(terminal, 70);
+      act(() => {
+        surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+      });
+      expect(openAdd).not.toHaveBeenCalled();
+      pointer('pointerdown', 50);
+      pointer('pointermove', 50);
+      pointer('pointerup', 50);
+      act(() => {
+        surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+      });
+      expect(openAdd).toHaveBeenCalledOnce();
+    }
+  );
+  it('cancels Add admission on unexpected capture loss, while normal pointer release keeps a fresh double click', () => {
+    // Losing capture without pointerup must not leave a half gesture eligible for Add.
+    pointer('pointerdown', 100);
+    pointer('lostpointercapture', 100);
+    act(() => {
+      surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+    });
+    expect(openAdd).not.toHaveBeenCalled();
+    pointer('pointerdown', 50);
+    pointer('pointerup', 50);
+    pointer('lostpointercapture', 50);
+    act(() => {
+      surface.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+    });
+    expect(openAdd).toHaveBeenCalledOnce();
   });
   it('does not bubble an admitted pan into an enclosing card or viewport', () => {
     const enclosingDrag = vi.fn();

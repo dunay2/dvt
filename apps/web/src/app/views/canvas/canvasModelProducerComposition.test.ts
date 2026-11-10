@@ -21,7 +21,7 @@ import { createPendingSourceOccurrence } from './relational-source-occurrence/pe
 import { compositionKinds } from './canvasCompositionSequence.test-support';
 import { readCanvasStagedCompositionSignature } from './canvasStagedOperation';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+import { projectCanvasFixtureToPostgresSql } from './canvasOutputProjection.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { sourceOccurrenceAppendRejection } from './relational-source-occurrence/sourceOccurrencePolicy';
 import { composeSourceRelation } from './canvasComposeSourceRelation';
@@ -273,7 +273,7 @@ describe('explicit composition consumes producer references', () => {
           resolveCanvasSubstraitGraphBindings({ node: consumer, nodes, edges: graph.edges })
             .connection.connectionId
         ).toBe('warehouse');
-        const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
+        const sql = await projectCanvasFixtureToPostgresSql({
           transformNode: consumer,
           nodes,
           edges: graph.edges,

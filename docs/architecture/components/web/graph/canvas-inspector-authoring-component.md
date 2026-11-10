@@ -103,6 +103,57 @@ changes the relation. Those operations require an explicit connected Transform.
 
 ## Focused Responsibilities
 
+### Standard Properties Entry And Section Copy
+
+`InspectCanvasNode` retains the existing command boundary in Canvas interaction
+presentation and the existing Inspector read model. Normal explicit Properties
+gestures request the internal `general` section; specific requests such as `code`,
+`columns`, and `inputs-outputs` retain their requested section. The interaction
+store's existing request epoch distinguishes a new inspection request from a
+background selection synchronization or an unrelated render.
+
+The card adapter follows this rule for every canonical role, including input
+models with the Source property. A normal card click or keyboard activation must
+not infer Columns from that role. Only an explicitly requested section overrides
+Overview. The complete Source gesture and the role matrix exercise this adapter
+boundary, while explicit-section and shared gesture-cancellation tests retain
+their existing responsibility.
+[All-card entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729714310).
+
+A background double click belongs to the owning canvas's existing Add menu. It
+does not inspect a node or open Model editing. Shared boundary admission excludes
+cards, edges, ports, controls, inspectors and nested canvases; the existing node
+gesture arbiter continues to separate normal Properties entry from node double
+click. Main and applied/pending Model backgrounds share the rule while retaining
+their current command owners and menu choices.
+
+The standard `general` label is **Overview** in English and **Resumen** in Spanish.
+The shared Canvas node-property copy and its default fallback own that label for
+Sources and Models. `NodePropertiesTabs` presents the read model without a
+Source-specific label override. Internal section IDs, plugin labels, authoring
+commands, and semantic state do not change.
+
+```mermaid
+flowchart LR
+  Normal[Normal Properties gesture] --> General[Explicit general preference]
+  Specific[Explicit Code or other section] --> Preserve[Preserve requested preference]
+  General --> Epoch[Existing interaction-store request epoch]
+  Preserve --> Epoch
+  Epoch --> Panel[Existing workbench request identity]
+  Background[Background sync or same request] --> Retain[Retain manual selection]
+  Panel --> Tabs[Passive property tabs]
+  Retain --> Tabs
+  Copy[Shared localized section copy] --> Model[Inspector read model]
+  Model --> Tabs
+```
+
+An explicit normal Properties request reopens Overview even when the same node
+previously displayed Code. A refresh of data for the same request does not reset
+a manually chosen tab. Code inspection requests remain Code. No render-time
+reset, second selection store, renamed section ID, or SQL controller change is
+needed. Handler, read-model, Panel request-identity, architecture, and native
+ready-Canvas tests cover these boundaries.
+
 | Module                                    | One reason to change                          |
 | ----------------------------------------- | --------------------------------------------- |
 | `canvasInspectorAuthoringModel.ts`        | Inspector draft projection and validation     |

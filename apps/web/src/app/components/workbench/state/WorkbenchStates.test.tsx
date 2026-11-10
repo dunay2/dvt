@@ -3,6 +3,8 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Activity } from 'lucide-react';
+import { ShellRouteHeadingProvider } from '../../shell/ShellRouteHeading';
 
 import {
   WorkbenchDegradedState,
@@ -49,6 +51,85 @@ describe('WorkbenchStates', () => {
     expect(frame).not.toBeNull();
     expect(header?.textContent).toContain('Runs');
     expect(body?.textContent).toContain('State body');
+  });
+
+  it.each(['Runs', 'Ejecuciones'])(
+    'omits only the title already rendered by the shell (%s)',
+    async (title) => {
+      // The old state-frame heading spent a second large band below the shell's identical title.
+      await act(async () => {
+        root.render(
+          <ShellRouteHeadingProvider heading={{ title, icon: Activity }}>
+            <WorkbenchStateFrame title={title} slotPrefix="runs-state">
+              <input aria-label="Retained body" defaultValue="filter" />
+            </WorkbenchStateFrame>
+          </ShellRouteHeadingProvider>
+        );
+      });
+      const input = container.querySelector('input');
+      input?.focus();
+      expect(container.querySelector('[data-slot="runs-state-header"]')).toBeNull();
+      await act(async () => {
+        root.render(
+          <ShellRouteHeadingProvider heading={null}>
+            <WorkbenchStateFrame title={title} slotPrefix="runs-state">
+              <input aria-label="Retained body" defaultValue="filter" />
+            </WorkbenchStateFrame>
+          </ShellRouteHeadingProvider>
+        );
+      });
+      expect(container.querySelector('h1')?.textContent).toBe(title);
+      expect(container.querySelector('input')).toBe(input);
+      expect(document.activeElement).toBe(input);
+    }
+  );
+
+  it('retains a distinct detail title and an embedded title without a shell heading', async () => {
+    // A shared shell caption must not hide a Run identity or another route's meaningful heading.
+    await act(async () => {
+      root.render(
+        <ShellRouteHeadingProvider heading={{ title: 'Runs', icon: Activity }}>
+          <WorkbenchStateFrame title="Run run_1">
+            <p>Detail</p>
+          </WorkbenchStateFrame>
+        </ShellRouteHeadingProvider>
+      );
+    });
+    expect(container.querySelector('h1')?.textContent).toBe('Run run_1');
+    await act(async () => {
+      root.render(
+        <WorkbenchStateFrame title="Runs">
+          <p>Embedded</p>
+        </WorkbenchStateFrame>
+      );
+    });
+    expect(container.querySelector('h1')?.textContent).toBe('Runs');
+  });
+
+  it('preserves error explanations and recovery actions when only the frame title is redundant', async () => {
+    // Matching a shell title must never hide a denial cause, empty-state explanation or real recovery link.
+    await act(async () => {
+      root.render(
+        <ShellRouteHeadingProvider heading={{ title: 'Runs', icon: Activity }}>
+          <WorkbenchErrorState
+            frameTitle="Runs"
+            title="Run list unavailable"
+            message="The current workspace is denied."
+          />
+          <WorkbenchEmptyState
+            frameTitle="Runs"
+            title="No runs available"
+            message="Start an execution from Canvas."
+            action={<a href="/canvas">Open Canvas</a>}
+          />
+        </ShellRouteHeadingProvider>
+      );
+    });
+    expect(container.querySelector('h1')).toBeNull();
+    expect(container.textContent).toContain('Run list unavailable');
+    expect(container.textContent).toContain('The current workspace is denied.');
+    expect(container.textContent).toContain('Start an execution from Canvas.');
+    expect(container.querySelector('a[href="/canvas"]')?.textContent).toBe('Open Canvas');
   });
 
   it('makes state-frame bodies independently scrollable inside fixed workbench shells', async () => {

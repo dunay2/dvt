@@ -106,7 +106,7 @@ describe('NodePropertiesTabs section content', () => {
       nodeId: node.id,
       nodeName: node.name,
       sections: [
-        { id: 'general', label: 'General', rows: [], tableRows: [] },
+        { id: 'general', label: 'Overview', rows: [], tableRows: [] },
         { id: 'code', label: 'Code', rows: [], tableRows: [], code: 'select * from orders' },
       ],
     };
@@ -126,7 +126,7 @@ describe('NodePropertiesTabs section content', () => {
     const model: NodePropertiesReadModel = {
       nodeId: node.id,
       nodeName: node.name,
-      sections: [{ id: 'general', label: 'General', rows: [], tableRows: [] }],
+      sections: [{ id: 'general', label: 'Overview', rows: [], tableRows: [] }],
     };
     const panels: InspectorPanelContribution[] = [
       {

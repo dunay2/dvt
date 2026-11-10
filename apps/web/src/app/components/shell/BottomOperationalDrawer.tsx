@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 import { Suspense, lazy } from 'react';
-import { Activity, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -115,21 +115,36 @@ export function BottomOperationalDrawer() {
     contribution?.tabs.filter((tab) => hiddenOperationalTabs.includes(tab.id)) ?? [];
 
   return (
-    <div data-slot="bottom-operational-drawer" className={styles.drawer}>
-      <div data-slot="bottom-operational-drawer-header" className={styles.header}>
-        <div data-slot="bottom-operational-drawer-title" className={styles.headerMain}>
-          <Activity className={styles.titleIcon} />
-          <span className={styles.title}>{drawerTitle}</span>
-          {model.runLabel && (
-            <Badge
-              variant="outline"
-              className={styles.runBadge}
-              data-slot="bottom-operational-drawer-run-badge"
-            >
-              {model.runLabel}
-            </Badge>
-          )}
-        </div>
+    <div
+      data-slot="bottom-operational-drawer"
+      className={styles.drawer}
+      role="region"
+      aria-label={drawerTitle}
+    >
+      <div data-slot="bottom-operational-drawer-controls" className={styles.controls}>
+        {contribution == null ? null : (
+          <OperationalDrawerTabStrip
+            activeTab={activeOperationalTab}
+            ariaLabel={contribution.copy.tabsAriaLabel}
+            closeTabLabel={copy.closeOperationalDrawerTab}
+            hiddenTabs={hiddenTabs}
+            onCloseTab={(tab) => setOperationalDrawerTabVisibility({ tab, visible: false })}
+            onRestoreTab={(tab) => setOperationalDrawerTabVisibility({ tab, visible: true })}
+            onSelectTab={setActiveOperationalTab}
+            restoreTabsLabel={copy.restoreOperationalDrawerTabs}
+            visibleTabs={visibleTabs}
+          />
+        )}
+        {model.runLabel && (
+          <Badge
+            variant="outline"
+            className={styles.runBadge}
+            data-slot="bottom-operational-drawer-run-badge"
+            title={model.runLabel}
+          >
+            {model.runLabel}
+          </Badge>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -141,20 +156,6 @@ export function BottomOperationalDrawer() {
           <X className={styles.closeIcon} />
         </Button>
       </div>
-
-      {contribution == null ? null : (
-        <OperationalDrawerTabStrip
-          activeTab={activeOperationalTab}
-          ariaLabel={contribution.copy.tabsAriaLabel}
-          closeTabLabel={copy.closeOperationalDrawerTab}
-          hiddenTabs={hiddenTabs}
-          onCloseTab={(tab) => setOperationalDrawerTabVisibility({ tab, visible: false })}
-          onRestoreTab={(tab) => setOperationalDrawerTabVisibility({ tab, visible: true })}
-          onSelectTab={setActiveOperationalTab}
-          restoreTabsLabel={copy.restoreOperationalDrawerTabs}
-          visibleTabs={visibleTabs}
-        />
-      )}
 
       <div data-slot="bottom-operational-drawer-body" className={styles.body}>
         <BottomOperationalDrawerBody

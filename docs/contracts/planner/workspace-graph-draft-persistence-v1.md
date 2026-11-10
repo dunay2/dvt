@@ -366,6 +366,20 @@ envelope.
   and consume planner-derived `ExecutableSubgraph` results instead of assuming
   whole-draft compile.
 
+## Inspector Is Transient Presentation
+
+Catalogue inspection uses one scoped tagged target in the existing Canvas
+interaction store. The target carries either an actual canonical node ID or a
+dbt project file binding/unique ID and the current tenant/project/environment.
+It is excluded from persistence, as Inspector selection was before. Existing
+graph consumers may derive the canonical-only ID; there is no second mutable
+selection, stored node snapshot or semantic graph entry for an inspected file.
+Opening Properties must not save the draft, allocate execution identities, alter
+layout or execution selection, or imply mutation permission. Placement remains
+the existing guarded drag/drop intent. This changes neither the draft wire
+schema nor backend persistence and requires no migration.
+[Inspector intent and scope](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729355692).
+
 ## Related
 
 - [Planner contracts index](./index.md)

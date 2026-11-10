@@ -1,20 +1,13 @@
 /**
- * Owned concern: mount the application and report its initial hydration step.
+ * Owned concern: start the pre-React bootstrap screen and mount the application.
  * Reason: HTML owns cascade registration; global overrides remain after App
  * so vendor styling keeps its existing priority.
  */
 import { createRoot } from 'react-dom/client';
 
 import App from './app/App.tsx';
-import {
-  setBootstrapStepStatus,
-  startBootstrapScreen,
-} from './app/bootstrap/appBootstrapScreen.ts';
-import { createHydrationCompleteBootstrapCommand } from './app/bootstrap/appBootstrapCommands.ts';
+import { startBootstrapScreen } from './app/bootstrap/appBootstrapScreen.ts';
 import './styles/index.css';
 
 startBootstrapScreen();
 createRoot(document.getElementById('root')!).render(<App />);
-requestAnimationFrame(() => {
-  setBootstrapStepStatus(createHydrationCompleteBootstrapCommand());
-});

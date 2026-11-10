@@ -1,26 +1,46 @@
-/** Owned concern: retain local list search and project matching rows, never mutate nodes. */
-import { useMemo, useState, type DragEvent } from 'react';
+/** Owned concern: project catalogue search and disclosure, independent of placement commands. */
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { CanvasExplorerListTemplate } from './CanvasExplorer.templates';
+import { CanvasExplorerListTemplate } from './CanvasExplorerCatalog.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import type { CanvasExplorerItem } from './canvasExplorerItems';
+import { CanvasExplorerConnections } from './CanvasExplorerConnections';
+import styles from './CanvasExplorer.module.css';
 
 export function CanvasExplorerList({
   items,
   onSelect,
   disabled,
   onDragStart,
-  categoryActions,
+  onAddModel,
+  onImport,
+  connections,
+  status,
+  countKnown = true,
+  pending = false,
 }: Readonly<{
   items: readonly CanvasExplorerItem[];
-  onSelect: (id: string) => void;
+  /** Observe completion/failure without interpreting the caller-owned admission result. */
+  onSelect: (id: string) => unknown;
   disabled?: boolean;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
+  onAddModel?: (opener: HTMLButtonElement) => void;
+  onImport?: () => void;
+  connections?: ReactNode;
+  status?: ReactNode;
+  countKnown?: boolean;
+  pending?: boolean;
 }>): JSX.Element {
   const [query, setQuery] = useState('');
-  const [collapsedCategories, setCollapsedCategories] = useState<ReadonlySet<string>>(
-    () => new Set()
+  const [open, setOpen] = useState(true);
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [inspectionFailed, setInspectionFailed] = useState(false);
+  const inspectionAttempt = useRef(0);
+  useEffect(
+    () => () => {
+      inspectionAttempt.current += 1;
+    },
+    []
   );
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const search = query.trim().toLocaleLowerCase();
@@ -28,9 +48,18 @@ export function CanvasExplorerList({
     () =>
       items.map((item) => ({
         item,
-        text: `${item.label} ${item.description ?? ''}`.toLocaleLowerCase(),
+        text: [
+          item.label,
+          item.description,
+          item.searchText,
+          ...(item.details ?? []).map((detail) => detail.value),
+          item.isSource ? copy.source : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLocaleLowerCase(),
       })),
-    [items]
+    [items, copy.source]
   );
   const matches = useMemo(() => {
     if (!search) return items;
@@ -40,34 +69,56 @@ export function CanvasExplorerList({
     }
     return result;
   }, [items, search, searchIndex]);
-  const categories = useMemo(() => {
-    const groups = new Map<string | undefined, CanvasExplorerItem[]>();
-    if (!search) for (const category of categoryActions?.keys() ?? []) groups.set(category, []);
-    for (const item of matches) {
-      const group = groups.get(item.category);
-      if (group) group.push(item);
-      else groups.set(item.category, [item]);
-    }
-    return groups;
-  }, [matches, search, categoryActions]);
   return (
     <CanvasExplorerListTemplate
-      categories={categories}
-      collapsedCategories={collapsedCategories}
-      onCategoryOpenChange={(category, open) => {
-        setCollapsedCategories((previous) => {
+      items={matches}
+      open={open}
+      onOpenChange={setOpen}
+      expandedIds={expandedIds}
+      onToggleDetails={(id) => {
+        setExpandedIds((previous) => {
           const next = new Set(previous);
-          if (open) next.delete(category);
-          else next.add(category);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
           return next;
         });
       }}
       query={query}
       onQuery={setQuery}
-      onSelect={onSelect}
+      onSelect={(id) => {
+        const attempt = ++inspectionAttempt.current;
+        setInspectionFailed(false);
+        const reportFailure = () => {
+          if (inspectionAttempt.current === attempt) setInspectionFailed(true);
+        };
+        try {
+          Promise.resolve(onSelect(id)).catch(reportFailure);
+        } catch {
+          reportFailure();
+        }
+      }}
       disabled={disabled}
       onDragStart={onDragStart}
-      categoryActions={categoryActions}
+      onAddModel={onAddModel}
+      status={
+        inspectionFailed ? (
+          <>
+            <p className={styles.empty} role="alert">
+              {copy.inspectionFailed}
+            </p>
+            {status}
+          </>
+        ) : (
+          status
+        )
+      }
+      countKnown={countKnown}
+      pending={pending}
+      connections={
+        connections ?? (
+          <CanvasExplorerConnections state={{ status: 'unavailable' }} onManage={onImport} />
+        )
+      }
       copy={copy}
     />
   );

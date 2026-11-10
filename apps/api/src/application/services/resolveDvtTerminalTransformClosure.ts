@@ -1,6 +1,11 @@
 /**
  * Owned concern: resolve protected producer dependencies for row previews,
  * retaining the bounded terminal authority for operational workload lowering.
+ * Why: topology grants the candidate scope; consumed semantics own Preview
+ * bindings, connection and provenance instead of an unrelated predecessor.
+ * Corner cases: keep every matching physical identity for ambiguity/direct-edge
+ * checks, preserve original target authority, and retain strict operational
+ * whole-selection admission when no Preview target is supplied.
  */
 import {
   ConnectedSourceRefSchema,
@@ -32,8 +37,10 @@ import { containsJoinRelation, containsSetRelation } from './dvtRelationFamily.j
 import {
   distinctDvtSourceDefinitions,
   hasExactDvtSourceCoverage,
+  sameConnectedSource,
   sameConnection,
 } from './dvtSourceCoverage.js';
+import { selectCanvasTransformProducerDependencies } from './selectCanvasTransformProducerDependencies.js';
 
 export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
@@ -55,11 +62,20 @@ export type DvtTerminalTransformClosure = {
 
 export function resolveDvtTerminalTransformClosure(
   input: DvtTransformSelection,
-  externalProducers: ReadonlyMap<string, DbtModelProducer> = new Map()
+  externalProducers: ReadonlyMap<string, DbtModelProducer> = new Map(),
+  previewRelationId?: string
 ): DvtTerminalTransformClosure {
   const selection = selectProtectedDvtTransforms(input);
-  const { draft, transform, transforms, edges } = selection;
-  const sources = selection.sources.map((node) => ({
+  const { draft, transform, edges } = selection;
+  const dependencies =
+    input.previewTargetId == null
+      ? undefined
+      : selectCanvasTransformProducerDependencies(input, previewRelationId);
+  const transforms =
+    dependencies == null
+      ? selection.transforms
+      : selection.transforms.filter((node) => dependencies.transformNodeIds.has(node.id));
+  const protectedSources = selection.sources.map((node) => ({
     node,
     ref: ConnectedSourceRefSchema.parse(node.metadata?.connectedSourceRef),
   }));
@@ -71,9 +87,6 @@ export function resolveDvtTerminalTransformClosure(
   }
   if ([...externalProducers.keys()].some((id) => !transforms.some((node) => node.id === id)))
     throw new Error('External producer binding is outside the selected closure.');
-  const connectionRef =
-    sources[0]?.ref.connectionRef ?? externalProducers.values().next().value?.connection;
-  if (connectionRef == null) throw new Error('An execution connection is required.');
   const authorities = transforms
     .filter((node) => !externalProducers.has(node.id))
     .map((node) => ({
@@ -94,20 +107,29 @@ export function resolveDvtTerminalTransformClosure(
           sidecar: external.sidecar,
         });
   if (semanticDocument == null) throw new Error('The selected model has no resolved publication.');
-  const documents = new Map(
-    authorities.map(({ node, authority: current }) => [
-      node.id,
-      {
-        plan: decodeDvtSubstraitPlanV1(current.semanticDocument),
-        sidecar: current.semanticDocument.sidecar,
-      },
-    ])
+  const documents =
+    dependencies?.documents ??
+    new Map(
+      authorities.map(({ node, authority: current }) => [
+        node.id,
+        {
+          plan: decodeDvtSubstraitPlanV1(current.semanticDocument),
+          sidecar: current.semanticDocument.sidecar,
+        },
+      ])
+    );
+  const semanticSources = [...documents.values()].flatMap((document) =>
+    document.sidecar.relations.flatMap(({ sourceRef }) => (sourceRef == null ? [] : [sourceRef]))
   );
-  const semanticSources = authorities.flatMap(({ authority: current }) =>
-    current.semanticDocument.sidecar.relations.flatMap(({ sourceRef }) =>
-      sourceRef == null ? [] : [sourceRef]
-    )
-  );
+  const sources =
+    dependencies == null
+      ? protectedSources
+      : protectedSources.filter(({ ref }) =>
+          semanticSources.some((source) => sameConnectedSource(source, ref))
+        );
+  const connectionRef =
+    sources[0]?.ref.connectionRef ?? externalProducers.values().next().value?.connection;
+  if (connectionRef == null) throw new Error('An execution connection is required.');
   if (
     connectionRef.provider !== 'postgres' ||
     sources.some(({ ref }) => !sameConnection(ref.connectionRef, connectionRef)) ||
@@ -120,7 +142,7 @@ export function resolveDvtTerminalTransformClosure(
         distinctDvtSourceDefinitions(sources).map(({ ref }) => ref),
         input.previewTargetId == null
       )) ||
-    (semanticSources.length === 0 && sources.length > 0)
+    (semanticSources.length === 0 && sources.length > 0 && input.previewTargetId == null)
   ) {
     throw new Error(
       'Transform semantic sources must exactly match the selected connected Sources on one PostgreSQL connection.'

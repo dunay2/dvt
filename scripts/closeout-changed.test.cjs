@@ -159,8 +159,8 @@ test('closeout helper regression tests are wired into changed and full prepush g
   const packageJson = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
   );
-  const { buildPrepushPlan } = require('./verify-prepush.cjs');
-  const { buildVerifyChangedPlan, commandLabel } = require('./verify-changed.cjs');
+  const { buildPrepushPlan, buildVerifyChangedPlan } = require('./local-validation-plan.cjs');
+  const { commandLabel } = require('./lib/local-validation-plan-values.cjs');
 
   assert.equal(
     packageJson.scripts['test:closeout-changed'],

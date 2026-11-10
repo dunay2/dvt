@@ -5,10 +5,16 @@ import React, { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import {
+  AppServicesProvider,
+  type AppServicesProviderProps,
+} from '../../services/AppServicesContext';
 
 const workbenchState = vi.hoisted(() => ({
   props: null as null | Record<string, unknown>,
@@ -52,10 +58,11 @@ const SOURCE_NODE = {
 
 function renderOverlay(
   root: Root,
-  overrides?: Partial<React.ComponentProps<typeof CanvasNodeWorkbenchOverlay>>
+  overrides?: Partial<React.ComponentProps<typeof CanvasNodeWorkbenchOverlay>>,
+  services?: AppServicesProviderProps['overrides']
 ): void {
   act(() => {
-    root.render(
+    const overlay = (
       <CanvasNodeWorkbenchOverlay
         layout={{
           focusMode: false,
@@ -64,6 +71,7 @@ function renderOverlay(
         }}
         panels={{
           activeRunId: 'run-42',
+          activeCanvasId: 'canvas-active',
           inspectorAuthoring: {
             canEditNode: true,
             onApplyNodeDraft: vi.fn(),
@@ -80,6 +88,13 @@ function renderOverlay(
         {...overrides}
       />
     );
+    root.render(
+      services === undefined ? (
+        overlay
+      ) : (
+        <AppServicesProvider overrides={services}>{overlay}</AppServicesProvider>
+      )
+    );
   });
 }
 
@@ -87,6 +102,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
   let container: HTMLDivElement;
   let root: Root;
   beforeEach(() => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -98,6 +114,22 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     container.remove();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    useApplicationLanguageStore.setState({ language: 'en' });
+  });
+
+  it('binds SQL inspection to the real optional service and active Canvas without querying on render', () => {
+    const query = {
+      projectTransformSql: vi.fn(async () => {
+        throw new Error('Not requested');
+      }),
+    };
+    const services = { canvasTransformSqlQuery: query };
+    renderOverlay(root, undefined, services);
+    const binding = workbenchState.props?.codeProjection;
+    expect(binding).toEqual({ canvasId: 'canvas-active', query, scopeKey: undefined });
+    renderOverlay(root, undefined, services);
+    expect(workbenchState.props?.codeProjection).toBe(binding);
+    expect(query.projectTransformSql).not.toHaveBeenCalled();
   });
 
   it('renders the existing inspector as a fixed sibling without node-relative geometry', () => {
@@ -145,6 +177,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     renderOverlay(root, {
       panels: {
         activeRunId: null,
+        activeCanvasId: 'canvas-active',
         inspectorAuthoring: { canEditNode: false, onApplyNodeDraft: vi.fn() },
         inspectorGraphEdges: [],
         inspectorGraphNodes: [SOURCE_NODE],
@@ -185,7 +218,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     { shell: true, newer: true },
   ])(
     'restores the card interaction owner (shell: $shell, newer focus: $newer)',
-    ({ shell, newer }) => {
+    async ({ shell, newer }) => {
       const card = document.createElement('div');
       card.className = 'react-flow__node';
       card.dataset.id = NODE.id;
@@ -206,8 +239,8 @@ describe('CanvasNodeWorkbenchOverlay', () => {
         closeFrame = callback;
         return 1;
       });
-      act(() => {
-        (workbenchState.props!.onClose as () => void)();
+      await act(async () => {
+        await (workbenchState.props!.onClose as () => Promise<void>)();
         if (newer) control.focus();
         closeFrame!(0);
       });
@@ -216,6 +249,100 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       control.remove();
     }
   );
+
+  it('retains the active Properties focus when the existing asynchronous close guard refuses', async () => {
+    const onHide = vi.fn(async () => false);
+    renderOverlay(root, { onHide });
+    const input = container.querySelector<HTMLInputElement>('input')!;
+    input.focus();
+    const frame = vi.spyOn(window, 'requestAnimationFrame');
+    await act(async () => {
+      await (workbenchState.props!.onClose as () => Promise<void>)();
+    });
+    expect(onHide).toHaveBeenCalledOnce();
+    expect(document.activeElement).toBe(input);
+    expect(frame).not.toHaveBeenCalled();
+  });
+
+  it('reports a rejected close in the current language without moving Properties focus', async () => {
+    // A retained Inspector must use current copy after a language change, even when its close owner is unchanged.
+    const failure = vi.spyOn(toast, 'error').mockReturnValue('close-failure');
+    const onHide = vi.fn(async () => {
+      throw new Error('close failed');
+    });
+    renderOverlay(root, { onHide });
+    const input = container.querySelector<HTMLInputElement>('input')!;
+    input.focus();
+    const frame = vi.spyOn(window, 'requestAnimationFrame');
+    await act(async () => {
+      useApplicationLanguageStore.setState({ language: 'es' });
+    });
+
+    await act(async () => {
+      (workbenchState.props!.onClose as () => void)();
+    });
+
+    expect(onHide).toHaveBeenCalledOnce();
+    expect(failure).toHaveBeenCalledExactlyOnceWith(
+      'No se pudieron cerrar las propiedades. Inténtalo de nuevo.'
+    );
+    expect(document.activeElement).toBe(input);
+    expect(frame).not.toHaveBeenCalled();
+  });
+
+  it('restores the actual catalogue opener when no placement exists', async () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    renderOverlay(root);
+    container.querySelector<HTMLInputElement>('input')!.focus();
+    let closeFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      closeFrame = callback;
+      return 1;
+    });
+    await act(async () => {
+      await (workbenchState.props!.onClose as () => Promise<void>)();
+    });
+    act(() => {
+      closeFrame!(0);
+    });
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
+  it('retains close ownership when the same Inspector publishes a refreshed callback', async () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    let resolve!: (accepted: boolean) => void;
+    renderOverlay(root, {
+      onHide: () =>
+        new Promise<boolean>((accept) => {
+          resolve = accept;
+        }),
+    });
+    container.querySelector<HTMLInputElement>('input')!.focus();
+    let closeFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      closeFrame = callback;
+      return 1;
+    });
+    act(() => {
+      (workbenchState.props!.onClose as () => void)();
+    });
+    // Hiding can recreate the facade callback; callback identity is not resource ownership.
+    renderOverlay(root, { onHide: vi.fn() });
+    await act(async () => {
+      resolve(true);
+    });
+    expect(closeFrame).toBeTypeOf('function');
+    act(() => {
+      closeFrame!(0);
+    });
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
 
   it.each(['focus', 'hidden', 'strategy', 'node'])(
     'does not mount an inactive inspector (%s)',
@@ -230,6 +357,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
           ? {
               panels: {
                 activeRunId: null,
+                activeCanvasId: 'canvas-active',
                 inspectorAuthoring: { canEditNode: false, onApplyNodeDraft: vi.fn() },
                 inspectorGraphEdges: [],
                 inspectorGraphNodes: [],

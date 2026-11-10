@@ -36,6 +36,15 @@ describe('CanvasShell graph base surface', () => {
   let unmountShell: () => void;
 
   beforeEach(() => {
+    // DOM capability only: jsdom cannot observe the real Tooltip's geometry.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+    );
     const harness = createCanvasShellHarness();
     container = harness.container;
     navigation = harness.navigation;
@@ -45,6 +54,54 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
+    vi.unstubAllGlobals();
+  });
+
+  it('forwards catalogue inspection without placing an instance or changing the retained viewport', async () => {
+    const onInspectNode = vi.fn();
+    const props = await renderShell({ graphCommands: { onInspectNode } });
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const request = { kind: 'canonical-node', nodeId: 'registered-model' } as const;
+    const inspect = getCanvasShellState().canvasViewportProps
+      ?.onInspectNode as typeof onInspectNode;
+    await act(async () => {
+      await inspect(request);
+    });
+    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith(request);
+    expect(props.graphCommands.onDrop).not.toHaveBeenCalled();
+    expect(props.panels.inspectorAuthoring.onApplyNodeDraft).not.toHaveBeenCalled();
+    expect(props.graph.nodesWithImpact).toEqual([]);
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+  });
+
+  it('opens the actual Code owner once from a consumed route request under StrictMode', async () => {
+    // Owner cleanup increments its intent on replay; transport must defer admission until replay ends.
+    unmountShell();
+    const harness = createCanvasShellHarness({
+      strictMode: true,
+      initialEntries: [
+        { pathname: '/canvas', state: { canvasWorkbench: 'code', foreign: 'retained' } },
+      ],
+    });
+    container = harness.container;
+    navigation = harness.navigation;
+    unmountShell = harness.unmount;
+    const open = vi.spyOn(useCanvasInteractionStore.getState(), 'openContextualWorkbench');
+    try {
+      await harness.render();
+      const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+      expect(editor).not.toBeNull();
+      expect(editor?.closest('[inert]')).toBeNull();
+      expect(container.querySelectorAll('[data-testid="sql-context-workbench"]')).toHaveLength(1);
+      expect(
+        navigation
+          .querySelector('[data-slot="canvas-code-main-tab"]')
+          ?.getAttribute('aria-selected')
+      ).toBe('true');
+      expect(open).toHaveBeenCalledOnce();
+    } finally {
+      open.mockRestore();
+    }
   });
 
   it.each(['button', 'Delete'] as const)(
@@ -59,7 +116,7 @@ describe('CanvasShell graph base surface', () => {
         const props = await renderShell();
         const viewport = container.querySelector('[data-testid="canvas-viewport"]');
         await act(async () =>
-          fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!)
+          fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!)
         );
         const code = navigation.querySelector<HTMLButtonElement>(
           '[data-slot="canvas-code-main-tab"]'
@@ -114,7 +171,7 @@ describe('CanvasShell graph base surface', () => {
   it.each(['rejected', 'failed'] as const)('retains Code when its flush is %s', async (outcome) => {
     await renderShell();
     await act(async () =>
-      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!)
+      fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!)
     );
     const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
     const editor = container.querySelector('[data-testid="sql-context-workbench"]');
@@ -134,7 +191,7 @@ describe('CanvasShell graph base surface', () => {
   it('keeps pending Code open and rejects a stale close after a newer Code activation', async () => {
     await renderShell();
     await act(async () =>
-      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!)
+      fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!)
     );
     const code = navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-code-main-tab"]')!;
     const canvas = navigation.querySelector<HTMLButtonElement>(
@@ -270,13 +327,12 @@ describe('CanvasShell graph base surface', () => {
     expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
     const activityRail = container
-      .querySelector('[data-slot="canvas-explorer-git-toggle"]')!
+      .querySelector('[data-slot="shell-project-code-command"]')!
       .closest('nav')!;
-    expect(
-      within(activityRail).getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')
-    ).toBe('true');
+    const canvasEntry = within(container).getByRole('link', { name: 'Canvas' });
+    expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+      fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!);
     });
     const editor = container.querySelector('[data-testid="sql-context-workbench"]');
     expect(editor).not.toBeNull();
@@ -293,15 +349,13 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelectorAll('[data-testid="project-files-explorer"]')).toHaveLength(1);
     expect(viewport?.closest('[inert]')).not.toBeNull();
     expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
-    expect(within(container).getByRole('navigation')).toBe(activityRail);
+    expect(within(container).getByRole('navigation', { name: 'Navigation' })).toBe(activityRail);
     expect(within(activityRail).queryByRole('button', { name: 'Sources' })).toBeNull();
-    expect(within(activityRail).getByRole('button', { name: 'Elements' })).not.toBeNull();
-    expect(within(activityRail).getByRole('button', { name: 'Git' })).not.toBeNull();
+    expect(within(container).queryByRole('button', { name: 'Elements' })).toBeNull();
+    expect(within(activityRail).getByRole('link', { name: 'Git' })).not.toBeNull();
+    expect(canvasEntry.getAttribute('aria-expanded')).toBe('false');
     expect(
-      within(activityRail).getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')
-    ).toBe('false');
-    expect(
-      within(activityRail).getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')
+      within(activityRail).getByRole('link', { name: 'Git' }).getAttribute('aria-expanded')
     ).toBe('true');
     expect(container.querySelector('[data-slot="canvas-contextual-workbench-overlay"]')).toBeNull();
     const files = container.querySelector('[data-testid="project-files-explorer"]');
@@ -337,25 +391,28 @@ describe('CanvasShell graph base surface', () => {
     expect(editor?.closest('[inert]')).toBeNull();
     expect(viewport?.closest('[inert]')).not.toBeNull();
     expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(true);
-    for (const destination of ['Elements']) {
-      const button = within(activityRail).getByRole('button', { name: destination });
-      await act(async () => fireEvent.keyDown(button, { key: 'Enter' }));
-      expect(viewport?.closest('[inert]')).toBeNull();
-      expect(button.getAttribute('aria-expanded')).toBe('true');
-      expect(
-        within(activityRail).getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')
-      ).toBe('false');
-      expect(codeTab?.getAttribute('aria-selected')).toBe('false');
-      await act(async () =>
-        fireEvent.click(within(activityRail).getByRole('button', { name: 'Git' }))
-      );
-      expect(within(container).getByRole('navigation')).toBe(activityRail);
-      expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
-      expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
-      expect(container.querySelector('[data-testid="project-files-explorer"]')).toBe(files);
-      expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
-      expect(viewport?.closest('[inert]')).not.toBeNull();
-    }
+    await act(async () => {
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'collapse' });
+      fireEvent.click(canvasEntry);
+    });
+    expect(viewport?.closest('[inert]')).toBeNull();
+    expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
+    expect(getCanvasShellState().codeFlush).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(canvasEntry);
+    });
+    expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      within(activityRail).getByRole('link', { name: 'Git' }).getAttribute('aria-expanded')
+    ).toBe('false');
+    expect(codeTab?.getAttribute('aria-selected')).toBe('false');
+    await act(async () => fireEvent.click(within(activityRail).getByRole('link', { name: 'Git' })));
+    expect(within(container).getByRole('navigation', { name: 'Navigation' })).toBe(activityRail);
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(container.querySelector('[data-testid="project-files-explorer"]')).toBe(files);
+    expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
+    expect(viewport?.closest('[inert]')).not.toBeNull();
   });
 
   it('delegates Git file requests to the authority-owned Code opener with its actual root', async () => {
@@ -373,7 +430,7 @@ describe('CanvasShell graph base surface', () => {
       },
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+      fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!);
     });
     expect(onOpenProjectCode).toHaveBeenCalledExactlyOnceWith(undefined);
     onOpenProjectCode.mockClear();
@@ -391,7 +448,7 @@ describe('CanvasShell graph base surface', () => {
     await renderShell({ workspaceCommands: { projectRoot: 'dbt/sales', onOpenProjectCode } });
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+      fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!);
     });
     expect(onOpenProjectCode).toHaveBeenCalledOnce();
     expect(viewport?.closest('[inert]')).toBeNull();
@@ -424,12 +481,15 @@ describe('CanvasShell graph base surface', () => {
             },
           },
         });
-        const git = container.querySelector<HTMLButtonElement>(
-          '[data-slot="canvas-explorer-git-toggle"]'
+        const git = container.querySelector<HTMLAnchorElement>(
+          '[data-slot="shell-project-code-command"]'
         )!;
-        git.focus();
-        await act(async () => fireEvent.keyDown(git, { key: 'Enter' }));
-        if (moved) elsewhere.focus();
+        await act(async () => git.focus());
+        // jsdom does not synthesize the anchor's native Enter activation click.
+        await act(async () => {
+          fireEvent.click(git, { detail: 0 });
+        });
+        if (moved) await act(async () => elsewhere.focus());
         await act(async () => settle(true));
         await act(async () => frames.splice(0).forEach((callback) => callback(0)));
         const panel = container.querySelector('[data-slot="canvas-code-workspace-surface"]');
@@ -930,7 +990,7 @@ describe('CanvasShell graph base surface', () => {
       },
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+      fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!);
     });
     expect(container.querySelector('[data-testid="dbt-project-file-code-panel"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();

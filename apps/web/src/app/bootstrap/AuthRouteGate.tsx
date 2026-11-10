@@ -1,5 +1,5 @@
 /** Owned concern: gate protected product routes behind authenticated session profile resolution. */
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
 import { completeBootstrapScreen, setBootstrapStepStatus } from './appBootstrapScreen';
@@ -15,7 +15,8 @@ import ProjectOnboardingView from '../views/ProjectOnboardingView';
 import styles from './AuthRouteGate.module.css';
 
 type AuthGateState =
-  { kind: 'checking' } | { kind: 'allowed' } | { kind: 'denied'; reason: AuthGateDeniedReason };
+  | { kind: 'checking' | 'rechecking' | 'allowed'; routeKey: string }
+  | { kind: 'denied'; routeKey: string; reason: AuthGateDeniedReason };
 
 type AuthGateDeniedReason =
   | 'unauthenticated'
@@ -24,6 +25,18 @@ type AuthGateDeniedReason =
   | 'session_check_failed';
 
 const sessionApiClient = createApiClient();
+const routeAdmissionContext = createContext<boolean | undefined>(undefined);
+
+export function AuthRouteSurface({
+  children,
+}: Readonly<{ children: React.ReactNode }>): JSX.Element {
+  const admitted = useContext(routeAdmissionContext);
+  return admitted === true ? (
+    <>{children}</>
+  ) : (
+    <div className={styles.checking}>Checking session...</div>
+  );
+}
 
 function hasWorkspaceContextNotGrantedBody(apiError: Pick<ApiError, 'responseBody'>): boolean {
   const body = apiError.responseBody;
@@ -60,18 +73,8 @@ export default function AuthRouteGate({
   children,
 }: Readonly<{ children: React.ReactNode }>): JSX.Element {
   const location = useLocation();
-  return (
-    <ProtectedRouteSessionAdmission key={`${location.pathname}${location.search}${location.hash}`}>
-      {children}
-    </ProtectedRouteSessionAdmission>
-  );
-}
-
-function ProtectedRouteSessionAdmission({
-  children,
-}: Readonly<{ children: React.ReactNode }>): JSX.Element {
-  const location = useLocation();
-  const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
+  const routeKey = `${location.pathname}${location.search}${location.hash}`;
+  const [state, setState] = useState<AuthGateState>({ kind: 'checking', routeKey });
 
   function handleProjectCreated(
     response: CreateProjectResponse,
@@ -89,29 +92,33 @@ function ProtectedRouteSessionAdmission({
       signal,
     });
     publication.assertCurrent();
-    setState({ kind: 'allowed' });
+    setState({ kind: 'allowed', routeKey });
   }
 
   useEffect(() => {
     const lifetime = new AbortController();
-    setState({ kind: 'checking' });
+    setState((previous) => ({
+      kind:
+        previous.kind === 'allowed' || previous.kind === 'rechecking' ? 'rechecking' : 'checking',
+      routeKey,
+    }));
     resolveProtectedRouteSessionContext(sessionApiClient, { signal: lifetime.signal })
       .then((publication) => {
         publication.assertCurrent();
-        setState({ kind: 'allowed' });
+        setState({ kind: 'allowed', routeKey });
       })
       .catch((error: unknown) => {
         if (lifetime.signal.aborted || error instanceof SessionContextDiscardedError) {
           return;
         }
 
-        setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
+        setState({ kind: 'denied', routeKey, reason: classifyProtectedRouteSessionError(error) });
       });
 
     return () => {
       lifetime.abort();
     };
-  }, [location.pathname, location.search, location.hash]);
+  }, [routeKey]);
 
   useEffect(() => {
     if (state.kind !== 'denied' || state.reason !== 'workspace_context_not_granted') {
@@ -136,8 +143,10 @@ function ProtectedRouteSessionAdmission({
     completeBootstrapScreen();
   }, [state]);
 
-  if (state.kind === 'checking') {
-    return <div className={styles.checking}>Checking session...</div>;
+  if (state.kind === 'checking' || (state.kind === 'denied' && state.routeKey !== routeKey)) {
+    return (
+      <div className={`${styles.checking} ${styles.initialChecking}`}>Checking session...</div>
+    );
   }
 
   if (state.kind === 'denied') {
@@ -160,5 +169,10 @@ function ProtectedRouteSessionAdmission({
     );
   }
 
-  return <>{children}</>;
+  // A changed URL is closed during render, before its revalidation effect starts.
+  return (
+    <routeAdmissionContext.Provider value={state.kind === 'allowed' && state.routeKey === routeKey}>
+      {children}
+    </routeAdmissionContext.Provider>
+  );
 }

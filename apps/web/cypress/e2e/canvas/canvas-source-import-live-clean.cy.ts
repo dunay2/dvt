@@ -194,7 +194,23 @@ describe('Canvas Source Import live', () => {
         .trigger('dragstart', { dataTransfer: canceledTransfer })
         .trigger('dragend', { dataTransfer: canceledTransfer });
       cy.get('.react-flow__node').should('not.exist');
-      placeRegisteredSource(id, session, { gesture: 'click' }).then((instanceId) => {
+      // Catalogue inspection must never create the occurrence subsequently proved by drag.
+      cy.get(`[data-slot="canvas-explorer"] [data-element-id="${id}"]:visible`).click();
+      cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
+      cy.contains('[data-slot="canvas-node-workbench-panel"] [role="tab"]', 'Overview').should(
+        'have.attr',
+        'data-state',
+        'active'
+      );
+      cy.get('.react-flow__node').should('not.exist');
+      cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
+        const inspected = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record
+          .draft;
+        expect(inspected.nodeIds).to.deep.equal([]);
+        expect(inspected.nodePositions).to.deep.equal({});
+      });
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      placeRegisteredSource(id, session).then((instanceId) => {
         let firstSavedPosition: { x: number; y: number } | undefined;
         cy.get(`.react-flow__node[data-id="${instanceId}"]`).should('be.visible');
         openWorkbenchProperties(instanceId);
@@ -225,7 +241,10 @@ describe('Canvas Source Import live', () => {
         placedDraft.nodes.filter((node) => workspaceNodeDefinitionId(node) != null)
       ).to.have.length(2);
     });
-    cy.get('button[aria-label="Import sources"]').should('be.visible').click();
+    // Public Fit leaves a viewport margin for the same background Add gesture after pan/reload.
+    cy.get('[data-testid="canvas-viewport"] .react-flow__controls-fitview').click();
+    cy.get('[data-testid="canvas-viewport"] .react-flow__pane').dblclick('topRight');
+    clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     importLivePostgresSource({ kind: 'graph-draft' }, 'after-placement');
     cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
       const saved = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;

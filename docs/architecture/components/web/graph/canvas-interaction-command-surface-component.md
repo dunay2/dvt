@@ -83,6 +83,68 @@ Related command seams:
   workbench open action. It is not a new command/query rail and does not
   own role, status, or catalog vocabularies.
 
+## Shared Background Add Gesture
+
+Selected text is a different intent from an authoring background gesture. The
+App Shell selected-text boundary owns its Copy and explicit dictionary actions;
+an accepted selection context gesture cannot reach graph actions. Double click
+on text keeps native selection. With no selection, all graph owners below retain
+their existing admission and command rails. See
+`../appshell/app-shell.md#selected-text-interaction`.
+
+The existing `canvasViewportInteraction` boundary admits a complete double click
+only on the owning authoring canvas background. It uses the nearest actual
+viewport boundary and excludes cards, edges, ports, controls, text editors,
+menus, dialogs, inspectors and nested canvases. It does not decide which node
+kinds or operations exist. A single click and a completed pan remain unchanged.
+
+```mermaid
+flowchart LR
+  Gesture[Background double click or keyboard context intent] --> Boundary[Shared nearest-viewport admission]
+  Boundary -->|Main| Presenter[Existing context presenter]
+  Presenter --> Catalog[Existing searchable node catalog]
+  Catalog -->|choose| Create[CreateCanvasAuthoringNode]
+  Boundary -->|Model applied or pending| Request[Scoped screen point and projected local point]
+  Toolbar[Existing Add operation toolbar] --> Request
+  Request --> Menu[One existing searchable operation menu]
+  Menu -->|choose| Stage[Existing stage operation and layout placement]
+  Stage -->|explicit Apply later| Apply[ConfigureCanvasDvtNode]
+```
+
+Main delegates to `openAddNodeCatalog` and disables React Flow's double-click
+zoom. Model uses one local presentation request shared by its operation toolbar
+and applied/pending viewport, with a real Radix point anchor. Selecting an
+operation reuses its existing staging callback and places the returned identity
+through the existing layout session and camera projection. Opening or closing
+the menu cannot create, connect, apply, publish, execute or persist graph state.
+
+Search focus, Escape and return focus use the actual opener. The named Model
+viewport also exposes the same menu through Context Menu or Shift+F10 at its
+center. Existing permission, disabled-reason and pending-form admission remain
+authoritative. No global listener, synthetic trigger, hidden button, second
+operation list or new domain command is introduced. Graphical product surfaces
+are Main Canvas and the applied/pending Model viewport; text Code views and the
+immutable comparison lab do not gain an authoring gesture.
+Main and Model share the existing literal, case-insensitive catalog search rule.
+The pure `matchesCanvasCatalogQuery` predicate replaces the Model primitive's
+default fuzzy subsequence scoring, using only real operation IDs, labels and
+group keywords. Searching a visible label such as Filter cannot leave an
+unrelated FULL OUTER JOIN selected merely because its characters form a fuzzy
+subsequence. An unmatched search admits no choice; disabled items retain their
+existing admission and reason. This changes discovery, not domain operation
+semantics or the global Command primitive.
+
+```mermaid
+flowchart LR
+  Query[Search text] --> Match[Shared literal catalog predicate]
+  Main[Main node catalog] --> Match
+  Model[Model admitted operations] --> Match
+  Match --> Results[Existing matching results and keyboard selection]
+  Results -->|explicit choice only| Owner[Existing creation or staging command]
+```
+
+[Background-entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6730107882).
+
 ## File Responsibilities
 
 - `canvasInteractionCommandSurface.ts`: pure pane/edge contextual menu read

@@ -50,9 +50,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
-  bottomDrawerVisible: boolean;
-  setBottomDrawerHeight: (height: number) => void;
-  toggleBottomDrawer: () => void;
+  showBottomDrawer: () => void;
 }>;
 
 type ControlledExecutionActionsHookHostProps = Readonly<
@@ -89,9 +87,7 @@ export type RenderExecutionActionsHarnessArgs = {
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan?: boolean;
   canRun?: boolean;
-  bottomDrawerVisible?: boolean;
-  setBottomDrawerHeight?: (height: number) => void;
-  toggleBottomDrawer?: () => void;
+  showBottomDrawer?: () => void;
 };
 
 type ResolvedExecutionActionsHarnessArgs = Omit<
@@ -113,9 +109,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'flushDraftForExecution'
   | 'canPlan'
   | 'canRun'
-  | 'bottomDrawerVisible'
-  | 'setBottomDrawerHeight'
-  | 'toggleBottomDrawer'
+  | 'showBottomDrawer'
 > & {
   currentPlan: PlanViewModel | null;
   initialPlan: PlanViewModel | null;
@@ -136,9 +130,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
-  bottomDrawerVisible: boolean;
-  setBottomDrawerHeight: (height: number) => void;
-  toggleBottomDrawer: () => void;
+  showBottomDrawer: () => void;
 };
 
 function ExecutionActionsHookView({
@@ -235,9 +227,7 @@ function resolveCommonHookProps(
     runAdmission: args.canRun
       ? { allowed: true }
       : { allowed: false, reason: 'authorization_denied' },
-    bottomDrawerVisible: args.bottomDrawerVisible,
-    setBottomDrawerHeight: args.setBottomDrawerHeight,
-    toggleBottomDrawer: args.toggleBottomDrawer,
+    showBottomDrawer: args.showBottomDrawer,
   };
 }
 
@@ -273,9 +263,7 @@ function resolveHarnessArgs(
     selectionIntent: args.selectionIntent ?? createCanvasExecutionSelectionIntent([]),
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,
-    bottomDrawerVisible: args.bottomDrawerVisible ?? false,
-    setBottomDrawerHeight: args.setBottomDrawerHeight ?? vi.fn<(height: number) => void>(),
-    toggleBottomDrawer: args.toggleBottomDrawer ?? vi.fn<() => void>(),
+    showBottomDrawer: args.showBottomDrawer ?? vi.fn<() => void>(),
   };
 }
 
@@ -517,8 +505,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
-  setBottomDrawerHeight: ResolvedExecutionActionsHarnessArgs['setBottomDrawerHeight'];
-  toggleBottomDrawer: ResolvedExecutionActionsHarnessArgs['toggleBottomDrawer'];
+  showBottomDrawer: ResolvedExecutionActionsHarnessArgs['showBottomDrawer'];
   queryClient: QueryClient;
 } {
   let currentArgs = resolveHarnessArgs(initialArgs);
@@ -589,8 +576,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     graphDbtWorkspaceArtifactPublicationCommand:
       currentArgs.graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery: currentArgs.graphDbtModelCompilationQuery,
-    setBottomDrawerHeight: currentArgs.setBottomDrawerHeight,
-    toggleBottomDrawer: currentArgs.toggleBottomDrawer,
+    showBottomDrawer: currentArgs.showBottomDrawer,
     queryClient,
   };
 }

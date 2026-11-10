@@ -1,30 +1,39 @@
 /**
  * Owned concern: adapt the main Canvas graph to the shared explorer.
  * @baseline GH-3610: registered sources need not have a placed card.
- * @decision Activate admitted definitions to create; transfer the same identity on drag.
- * @consequence Catalogue affordances reuse the guarded drop adapter's admission rule.
+ * @decision Inspect actual definitions on activation; transfer their identity only on drag.
+ * @consequence Inspection cannot enter the guarded placement command.
  * @version 1.0.0
  */
-import type { Node } from '@xyflow/react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
-import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
-import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
+import { CanvasExplorer } from './CanvasExplorer';
+import type {
+  CanvasExplorerActivityRail,
+  CanvasExplorerProjectWorkspace,
+} from './CanvasExplorer.types';
 import { CanvasExplorerList } from './CanvasExplorerList';
-import { projectCanvasExplorerSources } from './canvasExplorerItems';
+import { projectCanvasExplorerModels } from './canvasExplorerItems';
+import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import type {
+  CanvasInspectorCommand,
+  CanvasInspectorResource,
+} from '../../../stores/canvasInspectorTarget';
 
 export function CanvasGraphExplorer({
-  nodes,
-  onSelect,
+  onInspectNode,
+  inspectorTarget,
+  catalogueScopeKey,
   onImport,
+  onManageConnections,
   onAddModel,
   catalogue,
+  sourceCatalogueCanvasId,
   canPlaceSource = false,
   referencePlacementScope,
   importedSourceIds = [],
@@ -34,15 +43,18 @@ export function CanvasGraphExplorer({
   projectFiles,
   activityRail,
 }: Readonly<{
-  nodes: readonly Node[];
-  onSelect: (id: string, definition?: CanonicalNode) => void;
+  onInspectNode: CanvasInspectorCommand;
+  inspectorTarget?: CanvasInspectorResource | null;
+  catalogueScopeKey?: string;
   onImport?: () => void;
+  onManageConnections?: () => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
   children: ReactNode;
   workspaceTask?: ReactNode;
   projectFiles?: CanvasExplorerProjectWorkspace;
   activityRail?: CanvasExplorerActivityRail;
   catalogue?: readonly CanonicalNode[];
+  sourceCatalogueCanvasId?: string;
   canPlaceSource?: boolean;
   referencePlacementScope?: string;
   importedSourceIds?: readonly string[];
@@ -50,13 +62,9 @@ export function CanvasGraphExplorer({
 }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const rootRef = useRef<HTMLDivElement>(null);
-  const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
-  const models = useMemo(
-    () =>
-      (catalogue ?? []).filter(
-        (node) => node.role === 'transform' && workspaceNodeDefinitionId(node) == null
-      ),
-    [catalogue]
+  const definitions = useMemo(
+    () => projectCanvasExplorerModels(catalogue ?? [], sourceCatalogueCanvasId),
+    [catalogue, sourceCatalogueCanvasId]
   );
   const placeableIds = useMemo(
     () =>
@@ -74,30 +82,27 @@ export function CanvasGraphExplorer({
       ),
     [catalogue, canPlaceSource, referencePlacementScope]
   );
-  const items = [
-    ...sources.map((source) => ({
-      ...source,
-      category: copy.sources,
-      draggable: placeableIds.has(source.id),
-      disabled: !placeableIds.has(source.id),
-    })),
-    ...models.map((node) => ({
-      id: node.id,
-      label: node.name,
-      description: node.path,
-      category: copy.models,
-      draggable: placeableIds.has(node.id),
-      disabled: !placeableIds.has(node.id),
-      selected: nodes.some((placed) => placed.id === node.id && placed.selected),
-    })),
-  ];
-  const categoryActions = new Map<string, CanvasExplorerCategoryAction>([
-    [
-      copy.sources,
-      { label: copy.importSources, onAdd: onImport == null ? undefined : () => onImport() },
-    ],
-    [copy.models, { label: copy.addModel, onAdd: onAddModel }],
-  ]);
+  const inspectedCanonicalNode =
+    inspectorTarget?.kind === 'canonical-node'
+      ? catalogue?.find((node) => node.id === inspectorTarget.nodeId)
+      : undefined;
+  const inspectedDefinitionId =
+    inspectorTarget?.kind === 'canonical-node'
+      ? inspectedCanonicalNode == null
+        ? inspectorTarget.nodeId
+        : (workspaceNodeDefinitionId(inspectedCanonicalNode) ?? inspectedCanonicalNode.id)
+      : null;
+  const items = definitions.map((item) => ({
+    ...item,
+    draggable: placeableIds.has(item.id),
+    disabled: typeof onInspectNode !== 'function',
+    selected:
+      inspectorTarget?.kind === 'dbt-file-model'
+        ? item.definitionIdentity?.canvasId === inspectorTarget.binding.canvasId &&
+          item.definitionIdentity.uniqueId === inspectorTarget.uniqueId
+        : item.id === inspectedDefinitionId,
+  }));
+  const connections = <CanvasWarehouseConnections onManage={onManageConnections} />;
   const draggableIds = new Set(items.filter((item) => item.draggable).map((item) => item.id));
   const dragResource =
     draggableIds.size > 0
@@ -126,15 +131,19 @@ export function CanvasGraphExplorer({
   return (
     <CanvasExplorer
       rootRef={rootRef}
+      heading={{ label: copy.explorerTitle, contextLabel: copy.project }}
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={activityRail}
       elements={
         projectFiles?.renderElements == null ? (
           <CanvasExplorerList
+            key={catalogueScopeKey}
             items={items}
-            categoryActions={categoryActions}
-            onSelect={onSelect}
+            onAddModel={onAddModel}
+            onImport={onImport}
+            connections={connections}
+            onSelect={(id) => onInspectNode({ kind: 'canonical-node', nodeId: id })}
             onDragStart={dragResource}
           />
         ) : (
@@ -143,9 +152,13 @@ export function CanvasGraphExplorer({
               enabled,
               items,
               canCreateInstances: canPlaceSource && referencePlacementScope == null,
-              onSelect,
+              onInspectNode,
+              inspectorTarget,
+              catalogueScopeKey,
               onDragStart: dragResource,
-              categoryActions,
+              onAddModel,
+              onImport,
+              connections,
             })
         )
       }

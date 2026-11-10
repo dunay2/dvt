@@ -1,9 +1,21 @@
-/** Owned concern: lay out shell chrome slots from already-resolved presentation posture. */
-import { useMemo, type ReactNode } from 'react';
+/**
+ * Owned concern: lay out shell chrome slots from already-resolved presentation posture.
+ * @baseline Route content and resize admission retain their existing owners.
+ * @decision Keep slot composition here and semantic visual rules in the CSS module.
+ * @consequence Focus mode and drawer resizing cannot introduce a second route lifetime.
+ * @version 1.1.0
+ */
+import type { ReactNode } from 'react';
+import styles from './AppShellFrame.module.css';
 
-import type { ShellNavigationDisposition } from '../../shell/shellNavigationDisposition';
+import { ShellActivityRailProvider } from './ShellActivityRail';
+import { ShellTextSelectionBoundary } from './ShellTextSelectionBoundary';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
-import { resolveBottomDrawerDefaultSize } from './appShellPanelSizing';
+import { OPERATIONAL_DRAWER_PERCENT } from './appShellPanelSizing';
+import {
+  OPERATIONAL_DRAWER_GROUP_ID,
+  useOperationalDrawerResize,
+} from './useOperationalDrawerResize';
 
 type AppShellFrameProps = {
   readonly topBar: ReactNode;
@@ -11,9 +23,9 @@ type AppShellFrameProps = {
   readonly leftNavigation: ReactNode;
   readonly bottomDrawer: ReactNode;
   readonly bottomDrawerHeight: number;
+  readonly onBottomDrawerHeightChange: (height: number) => void;
   readonly children: ReactNode;
   readonly focusMode: boolean;
-  readonly navigationDisposition: ShellNavigationDisposition;
   readonly showBottomDrawer: boolean;
   readonly skipToMainContentLabel: string;
 };
@@ -26,101 +38,113 @@ export function AppShellFrame({
   leftNavigation,
   bottomDrawer,
   bottomDrawerHeight,
+  onBottomDrawerHeightChange,
   children,
   focusMode,
-  navigationDisposition,
   showBottomDrawer,
   skipToMainContentLabel,
 }: AppShellFrameProps) {
-  const showLeftNavigation = !focusMode && navigationDisposition.railMode === 'visible';
+  const showLeftNavigation = !focusMode;
   const showOperationalDrawer = !focusMode && showBottomDrawer;
-  // A default is a size request, not a continuously recomputed viewport constraint.
-  const bottomDrawerDefaultSize = useMemo(
-    () =>
-      resolveBottomDrawerDefaultSize(
-        bottomDrawerHeight,
-        typeof window === 'undefined' ? 0 : window.innerHeight
-      ),
-    [bottomDrawerHeight]
-  );
+  const drawerResize = useOperationalDrawerResize({
+    height: bottomDrawerHeight,
+    visible: showOperationalDrawer,
+    onHeightChange: onBottomDrawerHeightChange,
+  });
   const focusMainContent = (): void => {
     document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
   };
 
   return (
-    <div
-      data-slot="app-shell-frame"
-      className="app-shell-background h-screen w-screen overflow-hidden text-foreground"
-      // Bubble after component-owned menus; capture would prevent Radix from opening.
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      <a
-        data-slot="app-shell-skip-link"
-        href={`#${APP_SHELL_MAIN_CONTENT_ID}`}
-        onClick={(event) => {
-          event.preventDefault();
-          focusMainContent();
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            focusMainContent();
-          }
-        }}
-        className="sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-[var(--surface-elevated)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--text-strong)] focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
-      >
-        {skipToMainContentLabel}
-      </a>
-      <div className="flex h-full flex-col overflow-hidden">
-        {topBar}
-        {healthBanner}
+    <ShellActivityRailProvider>
+      <ShellTextSelectionBoundary>
+        <div
+          data-slot="app-shell-frame"
+          className={styles.frame}
+          // Bubble after component-owned menus; capture would prevent Radix from opening.
+          onContextMenu={(event) => event.preventDefault()}
+        >
+          <a
+            data-slot="app-shell-skip-link"
+            href={`#${APP_SHELL_MAIN_CONTENT_ID}`}
+            onClick={(event) => {
+              event.preventDefault();
+              focusMainContent();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                focusMainContent();
+              }
+            }}
+            className={styles.skipLink}
+          >
+            {skipToMainContentLabel}
+          </a>
+          <div className={styles.column}>
+            {topBar}
+            {healthBanner}
 
-        <div data-slot="app-shell-body" className="flex min-h-0 flex-1 overflow-hidden">
-          {showLeftNavigation && (
-            <div data-slot="app-shell-left-navigation" className="flex h-full shrink-0">
-              {leftNavigation}
-            </div>
-          )}
-
-          <div data-slot="app-shell-main" className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <ResizablePanelGroup direction="vertical" id="app-shell-vertical-panels">
-              <ResizablePanel
-                id="app-shell-route-outlet-panel"
-                order={1}
-                defaultSize={showOperationalDrawer ? 100 - bottomDrawerDefaultSize : 100}
-              >
-                <main
-                  id={APP_SHELL_MAIN_CONTENT_ID}
-                  tabIndex={-1}
-                  data-slot="app-shell-outlet"
-                  className="h-full w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
-                >
-                  {children}
-                </main>
-              </ResizablePanel>
-
-              {showOperationalDrawer && (
-                <>
-                  <ResizableHandle id="app-shell-bottom-drawer-resize-handle" withHandle />
-                  <ResizablePanel
-                    key={`bottom-drawer-${Math.round(bottomDrawerHeight)}`}
-                    id="app-shell-bottom-drawer-panel"
-                    order={2}
-                    defaultSize={bottomDrawerDefaultSize}
-                    minSize={12}
-                    maxSize={90}
-                  >
-                    <div data-slot="app-shell-bottom-drawer" className="h-full min-h-0">
-                      {bottomDrawer}
-                    </div>
-                  </ResizablePanel>
-                </>
+            <div data-slot="app-shell-body" className={styles.body}>
+              {showLeftNavigation && (
+                <div data-slot="app-shell-left-navigation" className={styles.navigation}>
+                  {leftNavigation}
+                </div>
               )}
-            </ResizablePanelGroup>
+
+              <div
+                data-slot="app-shell-main"
+                ref={drawerResize.groupHostRef}
+                className={styles.main}
+              >
+                <ResizablePanelGroup direction="vertical" id={OPERATIONAL_DRAWER_GROUP_ID}>
+                  <ResizablePanel
+                    id="app-shell-route-outlet-panel"
+                    order={1}
+                    defaultSize={showOperationalDrawer ? 100 - drawerResize.defaultSize : 100}
+                  >
+                    <main
+                      id={APP_SHELL_MAIN_CONTENT_ID}
+                      tabIndex={-1}
+                      data-slot="app-shell-outlet"
+                      className={styles.outlet}
+                    >
+                      {children}
+                    </main>
+                  </ResizablePanel>
+
+                  {showOperationalDrawer && (
+                    <>
+                      <ResizableHandle
+                        id="app-shell-bottom-drawer-resize-handle"
+                        withHandle
+                        onDragging={drawerResize.onDragging}
+                        onKeyDownCapture={drawerResize.onKeyDownCapture}
+                        onKeyUpCapture={drawerResize.onKeyUpCapture}
+                        onBlur={drawerResize.onBlur}
+                      />
+                      <ResizablePanel
+                        ref={drawerResize.panelRef}
+                        id="app-shell-bottom-drawer-panel"
+                        order={2}
+                        defaultSize={drawerResize.defaultSize}
+                        minSize={drawerResize.minSize}
+                        maxSize={OPERATIONAL_DRAWER_PERCENT.max}
+                        onResize={drawerResize.onResize}
+                      >
+                        <div data-slot="app-shell-bottom-drawer" className={styles.drawer}>
+                          {bottomDrawer}
+                        </div>
+                      </ResizablePanel>
+                    </>
+                  )}
+                </ResizablePanelGroup>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </ShellTextSelectionBoundary>
+    </ShellActivityRailProvider>
   );
 }
 

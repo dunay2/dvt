@@ -8,7 +8,11 @@ import {
 import { createExternalProducerSignature } from '@dvt/substrait-analysis';
 
 import { AUTHORIZATION_ACTION } from '../ports/accessDecision.js';
-import type { IDbtModelProducerResolver, DbtModelProducer } from '../ports/dbtModelProducer.js';
+import {
+  DbtModelProducerAccessDeniedError,
+  type IDbtModelProducerResolver,
+  type DbtModelProducer,
+} from '../ports/dbtModelProducer.js';
 import type { IDbtProjectAnalyzerPort } from '../ports/dbtProjectAnalysis.js';
 
 import type { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
@@ -61,7 +65,8 @@ export class ResolveDbtModelProducers implements IDbtModelProducerResolver {
     );
     const projectId = context.scope.projectId?.value;
     const environmentId = context.scope.environmentId?.value;
-    if (!permission.ok || projectId == null || environmentId == null)
+    if (!permission.ok) throw new DbtModelProducerAccessDeniedError();
+    if (projectId == null || environmentId == null)
       throw new Error('Scoped file-model access is unavailable.');
     const scope = { tenantId: context.scope.tenantId.value, projectId, environmentId };
     for (const [canvasId, group] of groups) {

@@ -8,8 +8,6 @@
 import styles from './ShellChrome.module.css';
 
 export const topAppBarClasses = {
-  appMenuButton: styles.appMenuButton,
-  applicationMenuContent: styles.applicationMenuContent,
   menuItemIcon: styles.menuItemIcon,
   menuTriggerIcon: styles.menuTriggerIcon,
   contextMenuContent: styles.contextMenuContent,

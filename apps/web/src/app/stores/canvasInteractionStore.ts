@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { isRecord } from '../types/canonicalGuards';
 import { areCanvasPositionsEqual, type CanvasPosition } from '../types/canvasPositions';
+import type { CanvasInspectorTarget } from './canvasInspectorTarget';
 
 import {
   createCanvasExecutionSelectionIntent,
@@ -54,7 +55,7 @@ interface CanvasInteractionState {
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   canvasLayouts: Record<string, WorkspaceCanvasLayout>;
-  inspectorNodeId: string | null;
+  inspectorTarget: CanvasInspectorTarget | null;
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
   contextualWorkbenchId: CanvasContextualWorkbenchId | null;
@@ -79,7 +80,10 @@ interface CanvasInteractionState {
     listId: CanvasInspectorListId,
     orderedIds: string[]
   ) => void;
-  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
+  setInspectorTarget: (
+    target: CanvasInspectorTarget | null,
+    preferredTabId?: string | null
+  ) => void;
   openContextualWorkbench: (workbenchId: CanvasContextualWorkbenchId, ownerKey: string) => void;
   closeContextualWorkbench: () => void;
 }
@@ -126,7 +130,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
       impactOverlayEnabled: false,
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
-      inspectorNodeId: null,
+      inspectorTarget: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
       contextualWorkbenchId: null,
@@ -275,12 +279,12 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             },
           };
         }),
-      setInspectorNode: (nodeId, preferredTabId = null) =>
+      setInspectorTarget: (target, preferredTabId = null) =>
         set((state) => ({
-          inspectorNodeId: nodeId,
-          inspectorPreferredTabId: nodeId == null ? null : preferredTabId,
+          inspectorTarget: target,
+          inspectorPreferredTabId: target == null ? null : preferredTabId,
           inspectorPreferredTabRequestId:
-            nodeId != null && preferredTabId != null
+            target != null && preferredTabId != null
               ? state.inspectorPreferredTabRequestId + 1
               : state.inspectorPreferredTabRequestId,
         })),

@@ -6,14 +6,13 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
-const {
-  buildPrepushPlan,
-  buildVerifyChangedPlan,
-  executeCommandPlan,
-} = require('../local-validation-plan.cjs');
+const { EventEmitter } = require('node:events');
+const { buildPrepushPlan, buildVerifyChangedPlan } = require('../local-validation-plan.cjs');
+
+const { executeCommandPlan } = require('./local-validation-executor.cjs');
 
 const repoRoot = path.resolve(__dirname, '../..');
-const launcher = path.join(repoRoot, 'scripts/local-validation-plan.cjs');
+const launcher = path.join(repoRoot, 'scripts/lib/local-validation-executor.cjs');
 
 function sandbox(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-git-isolation-'));
@@ -65,8 +64,9 @@ function runContaminatedPlan(root, plan, env, shell = true) {
       '-e',
       [
         `const { executeCommandPlan } = require(${JSON.stringify(launcher)});`,
-        `process.exitCode = executeCommandPlan(${JSON.stringify(plan)},`,
-        `{ repoRootPath: ${JSON.stringify(root)}, shell: ${JSON.stringify(shell)} });`,
+        `executeCommandPlan(${JSON.stringify(plan)},`,
+        `{ repoRootPath: ${JSON.stringify(root)}, shell: ${JSON.stringify(shell)} })`,
+        `.then(code => { process.exitCode = code; }).catch(error => { console.error(error); process.exitCode = 1; });`,
       ].join('\n'),
     ],
     { cwd: root, env, encoding: 'utf8', timeout: 60000 }
@@ -194,7 +194,7 @@ test('Git writes belong to the fixture', () => {
   assert.equal(fs.existsSync(path.join(fixture, '.git', 'index')), true);
 });
 
-test('ordinary validation commands preserve the caller Git and index environment', () => {
+test('ordinary validation commands preserve the caller Git and index environment', async () => {
   const before = { ...process.env };
   const files = ['apps/web/src/example.ts', 'scripts/local-validation-plan.cjs'];
   const plan = [...buildVerifyChangedPlan(files), ...buildPrepushPlan(files, { full: true })];
@@ -210,15 +210,23 @@ test('ordinary validation commands preserve the caller Git and index environment
   assert.ok(ordinary.some((step) => step.args.includes('scripts/type-check-prepush.cjs')));
   const seen = [];
   assert.equal(
-    executeCommandPlan(ordinary, {
+    await executeCommandPlan(ordinary, {
       spawn: (_command, _args, options) => {
         seen.push(options.env);
-        return { status: 0 };
+        const child = new EventEmitter();
+        queueMicrotask(() => {
+          child.exitCode = 0;
+          child.emit('exit', 0, null);
+        });
+        return child;
       },
     }),
     0
   );
-  for (const env of seen) assert.ok(env === undefined || env === process.env);
+  for (const env of seen) {
+    for (const [name, value] of Object.entries(before)) assert.equal(env[name], value, name);
+    assert.ok(Number(env.DVT_VALIDATION_DEADLINE_MS) > Date.now());
+  }
   assert.deepEqual({ ...process.env }, before);
 });
 

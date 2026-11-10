@@ -1,6 +1,7 @@
 import { resolveCopyLanguage } from '../../../src/app/copyLanguage';
 import { resolveRunStatesCopy } from '../../../src/app/views/runs/runStatesCopy';
 import { getLastE2eApiCall, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -8,13 +9,6 @@ import {
 } from '../../support/workspaceSession';
 
 function stubRunsRouteBootstrapApis(): void {
-  stubE2eJsonApi('GET', '/capabilities', {
-    apiVersion: '1.0.0',
-    minFrontendVersion: '0.0.1',
-    plugins: {
-      monitoring: { available: true },
-    },
-  });
   stubE2eJsonApi('GET', '/workspace/context', {
     defaultWorkspace: E2E_PROJECT_WORKSPACE,
     availableWorkspaces: [E2E_PROJECT_WORKSPACE],
@@ -46,7 +40,15 @@ function expectScopedRunRequest(path: string): void {
 
 describe('Runs runtime contract', () => {
   beforeEach(() => {
-    stubShellBootstrapApis();
+    stubShellBootstrapApis({
+      capabilities: {
+        body: {
+          apiVersion: '1.0.0',
+          minFrontendVersion: '0.0.1',
+          plugins: { monitoring: { available: true } },
+        },
+      },
+    });
     stubRunsRouteBootstrapApis();
   });
 
@@ -68,15 +70,69 @@ describe('Runs runtime contract', () => {
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     expectScopedRunRequest('/runs');
 
-    cy.window().then((window) => {
-      const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
-      cy.get('[data-slot="run-operational-table"]').within(() => {
-        cy.contains('run_e2e_1').should('be.visible');
-        cy.contains('button', copy.viewDetails).click();
-      });
-    });
+    // Run ID owns navigation now; the complete trusted Enter proves the browser's link action.
+    cy.get('[data-slot="run-operational-table"] a[href="/runs/run_e2e_1"]')
+      .should('be.visible')
+      .focus();
+    pressNativeKey('Enter');
     expectScopedRunRequest('/runs/run_e2e_1');
     expectScopedRunRequest('/runs/run_e2e_1/events');
+  });
+
+  it('uses one shell heading and keeps the token-based dense table contained beside the persistent rail', () => {
+    cy.viewport(1280, 800);
+    visitWithE2eWorkspaceSession('/runs');
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    let rail: HTMLElement;
+    cy.get<HTMLElement>('[data-slot="left-navigation-rail"]')
+      .should('be.visible')
+      .then((element) => {
+        rail = element[0]!;
+      });
+    cy.window().then((window) => {
+      const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
+      cy.get('[data-slot="shell-top-bar"] h1').should('have.text', copy.runsTitle);
+      cy.get('[data-slot="runs-state-header"]').should('not.exist');
+      cy.get('[data-slot="run-operational-table"] thead th')
+        .last()
+        .should('have.text', copy.runTableHeaders.status);
+      cy.get('[data-column="status"]').each((element) => {
+        expect(['right', 'end']).to.include(window.getComputedStyle(element[0]!).textAlign);
+      });
+      cy.get('[data-slot="run-operational-table"] a')
+        .first()
+        .then((element) => {
+          const computed = window.getComputedStyle(element[0]!);
+          expect(computed.fontFamily).to.include('IBM Plex Mono');
+          const tokenProbe = window.document.createElement('span');
+          tokenProbe.style.color = 'var(--text-strong)';
+          window.document.body.append(tokenProbe);
+          try {
+            expect(computed.color).to.equal(window.getComputedStyle(tokenProbe).color);
+          } finally {
+            tokenProbe.remove();
+          }
+        });
+    });
+    cy.viewport(400, 700);
+    cy.get<HTMLElement>('[data-slot="left-navigation-rail"]')
+      .should('be.visible')
+      .should((element) => {
+        expect(element[0], 'viewport changes retain the same navigation owner').to.equal(rail);
+      });
+    cy.get<HTMLElement>('[data-slot="run-operational-table"] [data-slot="table-container"]').should(
+      (element) => {
+        const container = element[0]!;
+        expect(container.scrollWidth, 'dense columns scroll locally').to.be.greaterThan(
+          container.clientWidth
+        );
+        const document = container.ownerDocument;
+        expect(
+          document.documentElement.scrollWidth,
+          'page width stays inside the viewport'
+        ).to.be.at.most(document.documentElement.clientWidth + 1);
+      }
+    );
   });
 
   it('renders completed result evidence from the snapshot read model', () => {

@@ -24,15 +24,17 @@ Primary code anchors:
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
 - [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
-- [ShellAppMenu.tsx](../../../../../apps/web/src/app/components/shell/ShellAppMenu.tsx)
+- [ShellAbout.tsx](../../../../../apps/web/src/app/components/shell/ShellAbout.tsx)
+- [ShellActivityRail.tsx](../../../../../apps/web/src/app/components/shell/ShellActivityRail.tsx)
 - [appBuildMetadata.ts](../../../../../apps/web/src/app/components/shell/appBuildMetadata.ts)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
 - [BottomOperationalDrawer.tsx](../../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx)
 - [bottomOperationalDrawerLogModel.ts](../../../../../apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts)
 
-`LeftNavigation.tsx` is a current implementation anchor, not the target Canvas
-workbench direction. `F-28` governs the next Canvas shell sequence and requires
-Canvas to render without a fixed left navigation rail.
+The explicit [#3765 navigation direction](https://github.com/dunay2/dvt/issues/3765#issuecomment-6724940225)
+uses one direct left rail on all routes. It supersedes the older hidden-rail and
+Raven-menu placement without changing route or command authority. Shared visual
+roles come from the bounded #3035 foundations delivery.
 
 Current shell regions:
 
@@ -40,7 +42,9 @@ Current shell regions:
 flowchart TB
   Root["Root shell"] --> Frame["AppShellFrame"]
   Frame --> TopBar["TopAppBar"]
-  TopBar --> AppMenu["ShellAppMenu"]
+  TopBar --> Identity["Raven identity only"]
+  Nav --> Activity["Capability-derived Canvas and Git entries"]
+  Nav --> About["ShellAbout"]
   Frame --> Health["ShellHealthBanner"]
   Frame --> Body["Shell body"]
   Body --> Nav["LeftNavigation"]
@@ -48,6 +52,74 @@ flowchart TB
   Main --> Outlet["Route outlet"]
   Main --> Operations["Operational drawer"]
 ```
+
+## Protected Route And Shell Lifetime
+
+`AuthRouteGate` owns the existing `GetProtectedRouteSession` admission. Initial
+checking renders no Root. Once admitted, protected navigation retains Root,
+AppShellFrame and the navigation DOM while `AuthRouteSurface` closes only the
+Outlet until the current session and workspace query succeeds. The requested
+pathname/search/hash must match the allowed identity during render, so no target
+route effects run before revalidation. Missing admission context fails closed.
+
+A current denial removes the protected shell and content in favor of existing
+login or project onboarding recovery. This is one admission state machine with
+a read-only presentation boundary, not an authentication cache or another store.
+Abort cleanup and the resolver's publication receipt still reject stale results.
+See the [auth contract](web-auth-project-onboarding-component.md) for the state
+diagram, ordering and negative tests.
+
+## Selected Text Interaction
+
+The shell owns one transient text-selection policy, before target-specific
+Canvas actions. Selecting text, including a double click on a word, keeps the
+browser selection and opens no application menu. Right click, Context Menu or
+Shift+F10 on that selection resolves one `ShellTextSelectionMenu`. With no
+selection the existing node, edge, field and background owners still receive
+the original gesture; the shell's bubbling native-default cancellation remains
+the final fallback. Monaco retains its editor-owned menu and clipboard commands.
+
+```mermaid
+flowchart LR
+  Gesture[Shell contextual gesture] --> Selection[Selected-text admission]
+  Selection -->|accepted snapshot| Menu[Shared selection menu]
+  Selection -->|none or editor-owned| Owner[Existing local menu owner]
+  Menu -->|explicit Copy| Clipboard[Browser clipboard port]
+  Menu -->|explicit lexical lookup| Link[Fixed encoded dictionary link]
+  Owner --> Fallback[Existing native-default fallback]
+```
+
+The boundary is a React composition over the real shell element and its React
+portals, with no document-wide gesture listener or second graph command owner.
+Only an accepted selection context gesture is consumed in capture. Ordinary
+selection and native Ctrl/Cmd+C remain untouched. Menu focus and Escape use the
+existing Radix primitive; dismissal restores the real opener. Snapshot lifetime
+is local to the boundary, never persisted, and changed or disconnected content
+cannot be copied from a stale menu. Clipboard failure is reported rather than
+presented as success.
+
+| Rail                            | Type    | DDD owner                                                        | Application port / adapter                                | Scope and authorization                                                                                  | Negative tests                                                                                                         |
+| ------------------------------- | ------- | ---------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `ResolveShellTextSelectionMenu` | query   | `ShellTextSelectionMenu` read model / `ShellTextSelection` value | `readShellTextSelection` / `ShellTextSelectionBoundary`   | Current shell gesture and visible selected text only; no workspace write or additional server permission | Empty, external, password, editor-owned and unrelated selections do not preempt the target menu                        |
+| `CopyShellTextSelection`        | command | `ShellTextSelection` value                                       | `copyShellTextSelection` / browser Clipboard API          | Explicit user selection of Copy; exact live snapshot; no network or persistence                          | Changed or disconnected content, absent clipboard and denied clipboard do not claim success or dispatch graph commands |
+| `LookupShellTextSelection`      | command | `ShellTextSelection` value                                       | `buildShellDictionaryLinks` / explicit ordinary hyperlink | A bounded lexical term only; fixed HTTPS dictionary origins, encoded term, user activation required      | No bulk text, multiline, password, automatic fetch, automatic window or arbitrary URL                                  |
+
+All three rails are accepted Web App Shell intents. They do not add backend
+routes, graph permissions, a dictionary service or a global click store. The
+selection menu uses existing presentation typography and menu components. Inputs
+and textareas preserve their selected substring; sensitive password inputs are
+excluded. Dictionary links use `noopener noreferrer` and send a term only after
+the user explicitly follows that link.
+
+Edge can independently display its browser-owned mini menu when text is selected.
+Its browser setting/policy is outside the application contract. DVT must not
+disable text selection, rewrite the browser profile or claim to suppress browser
+chrome as a substitute for owning its own context gesture.
+
+The previous fallback-only design left selected text without application actions.
+A per-card handler would repeat policy and miss chrome, drawers and portals; a
+global document listener would preempt unrelated surfaces. One shell admission
+policy plus existing local owners keeps selection and authoring separate.
 
 ## Shell Service Composition
 
@@ -59,16 +131,18 @@ instances for views and plugins through hooks.
 This prevents route-level components from constructing transports or selecting
 a second product data authority.
 
-## Shell Application Menu
+## Brand Identity And About
 
-The Raven brand in the top bar is the application-level menu surface. It owns
-small app-wide commands that should not consume persistent toolbar width.
+The Raven brand is noninteractive identity. Global navigation is directly visible
+in the left shell rail; About has a separate Info button at its bottom. The
+existing dialog opens with keyboard or pointer and restores focus to that button
+on dismissal. No menu, metadata endpoint or navigation catalogue is added.
 
 Current command/query rail:
 
-| Rail                             | Type  | Owner         | Surface                     |
-| -------------------------------- | ----- | ------------- | --------------------------- |
-| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAppMenu` About dialog |
+| Rail                             | Type  | Owner         | Surface             |
+| -------------------------------- | ----- | ------------- | ------------------- |
+| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAbout` dialog |
 
 `GetCompiledApplicationMetadata` reads compile-time bundle metadata from
 `import.meta.env.VITE_APP_VERSION` and `VITE_APP_BUILD_DATE`. It does not call
@@ -79,11 +153,36 @@ bundle is running in the browser, not which API build is reachable.
 flowchart LR
   Vite["vite.config.ts"] --> Env["VITE_APP_VERSION / VITE_APP_BUILD_DATE"]
   Env --> Query["resolveCompiledApplicationMetadata"]
-  Query --> Menu["ShellAppMenu"]
-  Menu --> Dialog["About Raven dialog"]
+  Query --> About["ShellAbout direct Info button"]
+  About --> Dialog["About Raven dialog"]
 ```
 
 ## Shell Navigation Ownership
+
+An existing navigation item may opt into a route heading and concern-owned
+section navigation. Root projects the active optional heading from that same
+model into ShellTopBar; a route does not publish a second title state.
+
+Admin uses this composition: its title occupies the existing top bar, and the
+left Admin icon opens Platform, Roles, Permissions and Audit Log through the
+existing Radix menu and Router. The route no longer repeats a large header or a
+centered tab list. The Admin URL contract owns valid section IDs, fallback and
+search/hash preservation; the shell menu merely presents those destinations.
+
+```mermaid
+flowchart LR
+  Admin["Admin route-position contract"] --> Model["Existing shell navigation model"]
+  Model --> Menu["Admin icon section menu"]
+  Menu --> Router["Existing Router admission"]
+  Router --> Content["Selected passive Admin section"]
+  Model --> Heading["Root active heading projection"]
+  Heading --> TopBar["Existing ShellTopBar"]
+```
+
+Canvas and Git retain their existing controls and DOM lifetime. Other navigation
+items remain direct links; no new registry, route store or permission policy is
+introduced. Section menu items are real links, while their trigger is a real
+button with menu semantics and existing focus/tooltip/geometry roles.
 
 The current left navigation implementation follows the same boundary rule as
 the rest of the shell:
@@ -93,20 +192,62 @@ the rest of the shell:
 - the rail renders plain navigation items and does not know plugin manifest
   structure, label resolution, or shell footer ownership.
 
-Target direction for Canvas workbench:
+Direct rail contract:
 
-- top menus and command palette provide command discovery;
-- Canvas view strip owns route-local projections;
-- fixed left navigation must not occupy the Canvas workbench surface;
-- on-demand context surfaces, drawers, and pinned user presentation preferences
-  must not become a second permanent navigation rail.
+- Canvas is the single first entry; Git follows whenever that Canvas capability
+  exists in the navigation model, independently of the current route or panel;
+- remaining global destinations follow in their model order below a divider;
+- About remains at the bottom, with constrained navigation scrolling;
+- `Root` supplies the existing capability-derived model once to `LeftNavigation`;
+- global links use Router and `aria-current`; on the Canvas route, its unmodified
+  primary activation opens Elements idempotently through the existing
+  `dispatchCanvasExplorer({ type: 'expand' })` command. Code returns through the
+  existing `codeTab.onCanvas` contribution; an active Model remains selected;
+- Canvas exposes Elements disclosure without a second Elements button. Git keeps
+  its independent disclosure and guarded owner. Modified/new-tab link activation
+  retains Router behavior. Collapse uses the panel header and returns focus to Canvas;
+- the existing shell footer contributions are not a new permission predicate;
+  route/session guards continue to decide authorization;
+- the shell owns both entries directly; Explorer does not portal navigation
+  from a route whose lifetime can end.
+
+Shell presence is a boolean presentation context. Without it, Explorer retains
+its standalone inline controls; with it, there are no duplicate activity controls.
+The DOM target, portal and active-surface scope are retired. Explicit Focus mode
+still suppresses shell chrome through its existing owner. Graph/editor identity
+and existing hidden/inert surface lifetimes remain unchanged.
+
+The [persistent Git entry supplement](https://github.com/dunay2/dvt/issues/3765#issuecomment-6725659498)
+reuses `SelectCanvasWorkbenchTab`. On Canvas, Git invokes the published Code
+opener directly, avoiding Router navigation through a pending Model guard.
+From another route its real `/canvas` link carries the finite Router state
+request `canvasWorkbench: 'code'`. Canvas consumes only that request, preserving
+other state and the full URL, before its existing owner admits Code. A blocked
+replace cannot open Code. Cancelable deferred effects protect StrictMode replay;
+changed authority, navigation and stale completion cannot claim admission.
+Modified/new-tab activation follows the ordinary Canvas href: history state is
+not a cross-window Code deep link. No last-project cache or global intent store
+is introduced.
+
+The unified Canvas activation is the explicit exception for layout preference
+writes: it opens a collapsed or closed dock at its retained width. Repeating it
+does not collapse, close Code, change Model, or create a semantic write. The shell
+depends on the existing workspace contribution contract, never a Canvas controller
+or another command registry. Standalone Explorer retains its local Elements control.
+
+Use the existing Lucide family at 20px/stroke 2 in 44px targets, with a 52px rail,
+4px inline padding and an inset divider. Only consumed navigation control/icon
+roles extend the existing spacing scale. Selection, focus and execution health
+remain different visual meanings. Preserve forced colors, reduced motion and
+hover/focus tooltip equivalence. See the
+[disposition contract](../shell-navigation-disposition-component.md) for the
+state diagram, active-surface rules and required browser evidence.
 
 Current flow:
 
 ```mermaid
 flowchart LR
-  Query["useCapabilitiesQuery()"] --> Runtime["useShellRuntime()"]
-  Runtime --> State["buildShellRuntimeState(capabilities)"]
+  Query["Root useCapabilitiesQuery()"] --> State["buildShellRuntimeState(capabilities)"]
   State --> Views["getShellNavigationViews(capabilities)"]
   Views --> Model["buildShellNavigationModel(navigationViews)"]
   Model --> Primary["primaryItems"]
@@ -143,14 +284,178 @@ flowchart TB
   Rail --> Link
 ```
 
+Navigation boundary rules:
+
+- `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
+  fixed shell footer item definitions;
+- only plugin-contributed `placement.kind === 'shell-nav'` views become
+  `primaryItems` inside the shell model;
+- Canvas owns Code, Lineage, Diff, Artifacts and Canvas Runs sessions. The
+  shell Git entry delegates to the existing Code command; it does not own a
+  second Code route or workbench session;
+- shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
+- the rail consumes render-ready navigation items and section descriptors,
+  preserving navigation chrome and routing as its owned concern.
+
 ## Bottom Operational Drawer Ownership
 
 The bottom drawer now follows the same separation rule as the rest of the shell:
 
 - shell copy and shell chrome stay in shell-owned modules;
 - the drawer resolves a small, explicit state model before rendering;
-- the render surface stays focused on header, badges, close action, and body slot ownership.
+- the render surface owns one controls row containing the existing tabs, optional
+  run badge and close action, followed directly by the content body;
+- the localized drawer title names its accessible region; it does not consume
+  a separate visible heading row;
+- the close button remains outside the tablist. With no route contribution, the
+  controls row contains only the real run badge and close action. Hidden tabs
+  remain restorable without rendering an empty tablist;
 - the drawer is a shell companion surface, not the durable run workspace authority.
+
+```mermaid
+flowchart TB
+  Region["Named operational region"] --> Controls["Existing tabs / optional run / close"]
+  Controls --> Body["Contribution or live-log content"]
+  State["Existing contribution, feed and layout owners"] --> Region
+```
+
+This composition recovers content space at the same drawer height. The shell
+frame still owns the resize separator and layout persistence; the drawer keeps
+the existing hide command, tab visibility commands and feed subscription.
+
+### Hidden Operational Tab Recovery
+
+When every operational tab is hidden, the compact controls row exposes a visible
+Restore tabs button. It opens the standard application dropdown by pointer or
+keyboard and delegates to the existing tab visibility command. Visible tabs retain
+their contextual restoration menu. Both presentations share one item renderer and
+the same restore callback. No browser context-menu shortcut is required to recover
+from the all-hidden state; the drawer close control remains separate.
+
+### Native Proof Interaction Boundaries
+
+Native browser fixtures use the same interaction owners as the product:
+catalogue click inspects a model; catalogue drag creates an occurrence. The LIVE
+placement helper therefore has one drag path. Its legacy Source name refers to
+the existing `dvt:source` contract and Source facet, without introducing another
+catalogue entity. Registration, inspection and durable placement remain separate
+assertions, including an empty saved graph after inspection.
+
+The sample grid's table frame owns row scrolling. Its outer preview host may
+fit a small sample after compacting shell chrome. Native resize proofs exercise
+both explicit postures: a one-row sample must fit, while a bounded twenty-row
+sample must overflow the table frame. Both retain keyboard resize, first/last
+row reachability, minimum usable table height, visible actions and footer, and
+the original query and graph-write assertions. Neither posture conditionally
+omits its expected overflow or fit assertion.
+
+```mermaid
+flowchart LR
+  Click[Catalogue click] --> Inspector[Existing InspectCanvasNode]
+  Drag[Catalogue drag] --> Placement[Existing placement and durable draft write]
+  Sample[Bounded representative sample] --> Frame[Existing table frame owns row overflow]
+  Resize[Existing keyboard resize] --> Reachable[Rows actions and footer remain reachable]
+```
+
+Opening a Main Canvas Model preserves the current camera when its title is
+inside the visible viewport. When the title is clipped, the browser navigation
+seam reveals it through the existing public Fit control before the same visible,
+unforced double click. This is a user navigation gesture, not a direct camera,
+layout-store or graph mutation in the fixture.
+
+```mermaid
+flowchart LR
+  Target[Existing Model title] --> Bounds[Read title and Main viewport bounds]
+  Bounds -->|inside| Gesture[Visible unforced double click]
+  Bounds -->|clipped| Fit[Existing public Main Canvas Fit]
+  Fit --> Gesture
+  Gesture --> Editor[Existing Model editor]
+```
+
+Native keyboard proofs share `pressNativeKey` for both plain keys and explicit
+Alt/Shift combinations. DOM focus alone does not establish Chromium's recipient:
+the adapter focuses the AUT window, verifies its focused control, sends complete
+virtual key codes and an explicit modifier mask, then checks receipt of the
+trusted key at that target. Its once-only document capture observer does not
+consume the event, so application capture handlers may still handle it normally.
+Per-scenario protocol senders cannot replace this delivery boundary. The routing
+guard retains the exact real consumer set and complete controlled-baseline
+obligation; adding a real consumer does not broaden support admission.
+
+```mermaid
+flowchart LR
+  Intent[Key and explicit modifier intent] --> Focus[AUT focus and control checks]
+  Focus --> Codes[Complete virtual codes and modifier mask]
+  Codes --> Browser[Existing Chromium native protocol]
+  Browser --> Receipt[Captured trusted key at the expected target]
+  Receipt --> Continue[Continue the existing semantic proof]
+```
+
+`revisitWorkbenchCanvas` owns proof reopening after an accepted save. A recorded
+PUT precedes its response and the React persistence acknowledgement; it cannot
+authorize a hard navigation. When a Model is open, this adapter first observes
+its existing localized Saved or Synced status, then closes its public tab and
+requires the editor to leave before navigating. Unapplied changes fail at the
+real close decision; the adapter cannot discard them or accept native dialogs.
+It captures the previous GET count after that handshake and still requires a
+fresh read. Main Canvas reopening retains its existing path.
+
+```mermaid
+flowchart LR
+  Request[Recorded save request] --> Status[Observe existing durable Model status]
+  Status --> Close[Existing public Model tab close]
+  Close -->|unapplied changes| Fail[Fail without discarding or unloading]
+  Close -->|editor left| Reopen[Existing hard navigation]
+  Reopen --> Fresh[Fresh draft GET and bootstrap acknowledgement]
+```
+
+### Operational drawer layout command
+
+| Rail                               | Type    | Owner                | DDD object                             | Application port                                               | Adapter surface                                                                        | Scope and authorization                                                                          | Negative tests                                                                                                                                                                                                                     |
+| ---------------------------------- | ------- | -------------------- | -------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConfigureOperationalDrawerLayout` | command | Web App Shell layout | `OperationalDrawerLayout` value object | Existing `uiLayoutStore` show, hide, toggle and resize actions | `Root`, `AppShellFrame`, `useOperationalDrawerResize`, Preview and Run reveal adapters | Authenticated browser-local preference; no server grant, protected draft or workspace-file write | Ignore non-finite/invalid resize and synchronized echoes; repair legacy zero height; preserve height through close/reopen/reload; no persistence for mount/restoration/container observation; no content remount on height updates |
+
+The existing `bottomDrawerVisible` and `bottomDrawerHeight` fields are one layout
+value. A synchronous transition owns `show`, `hide`, `toggle` and `resize`.
+Closing changes visibility and retains the last positive height. An implicit
+Preview or Run reveal uses `showBottomDrawer()` and preserves that height;
+execution adapters do not receive or interpret drawer geometry. An explicit
+height request remains supported. The canonical default is 300 CSS pixels and
+the minimum preference is 160; the panel library separately bounds the rendered
+percentage to the available group space.
+
+Legacy zero or invalid persisted geometry normalizes to the default, including
+while hidden. Hydration keeps its explicit allowlist: stored values cannot
+replace runtime actions or restore inspector visibility. Explorer transitions
+retain their synchronous `get`/transition/identity guard. They deliberately do
+not call the persist-wrapped setter for a no-op, because persist can write even
+when Zustand would retain the same state object.
+
+The Frame resize adapter measures the actual vertical panel group, rather than
+the browser viewport. Pointer dragging and keyboard resize events are the only
+geometry observations that publish a preference. Mount, restoration,
+programmatic resize, container measurement and matching echoes do not write it.
+The adapter uses the existing imperative Panel handle for a changed height
+request; it does not key the panel by height or own another saved size/visibility
+state. Input, focus and drawer DOM survive resize and unrelated shell renders.
+Hide and explicit Focus mode retain their existing unmount semantics; layout
+and contribution owners retain their own data across reopening.
+
+```mermaid
+flowchart LR
+  Gesture["Pointer or keyboard separator gesture"] --> Adapter["Scoped resize adapter"]
+  Adapter -->|"Measured CSS pixels"| Command["ConfigureOperationalDrawerLayout"]
+  Reveal["Preview / Run reveal"] --> Command
+  Command --> Transition["Pure layout transition"]
+  Transition --> Store["Existing uiLayoutStore fields and persistence"]
+  Store --> Frame["Root to Frame presentation contract"]
+  Frame -->|"Imperative size acknowledgement"| Adapter
+  Adapter -->|"No preference command"| Ignore["Mount / restore / container observation"]
+```
+
+Canvas color preferences use `CanvasHexColor`, the existing hexadecimal string
+contract with an intention-revealing name. Persisted keys, normalization and
+palette rendering remain unchanged; there is no second color type or alias.
 
 Current state model:
 
@@ -203,18 +508,6 @@ Rules for the shared seam:
   that shared semantics plus shared copy;
 - the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
 - the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
-
-Rules for this seam:
-
-- `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
-  fixed shell footer item definitions;
-- only plugin-contributed `placement.kind === 'shell-nav'` views become
-  `primaryItems` inside the shell model;
-- Canvas-scoped Code, Lineage, Diff, Artifacts, and Canvas Runs are owned by
-  the Canvas workbench tab rail, not by shell navigation;
-- shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
-- the rail consumes render-ready `{ to, label, icon }` items and stays focused
-  on navigation chrome and routing behavior.
 
 ## Shell Workspace Context Component
 
@@ -433,6 +726,43 @@ The app bar shows current branch and short SHA from bootstrap config.
 
 Tooltips show additional detail when available.
 
+### Admin Operational Health Truth
+
+The existing `OperationalReadinessQuery` and `GetRuntimeCapabilities` reads feed
+Admin diagnostics. The platform-health query and its publication timestamp are
+the observation authority. `adminViewModel` projects that observation once for
+both summary cards and endpoint details; components do not infer readiness from
+missing data or from transport availability alone. Aggregate connectivity reuses
+`buildShellHealthPresentationModel` rather than copying its policy.
+
+```mermaid
+flowchart LR
+  Policy["Caller probe configuration or client default"] --> Client["Existing HTTP health client"]
+  Client --> Query["Existing platform-health query"]
+  Query --> Projection["Admin diagnostic presentation"]
+  Projection --> Summary["Summary cards"]
+  Projection --> Details["Endpoint facts"]
+  Capabilities["Existing runtime capabilities query"] --> Plugins["Exact plugin availability and reason"]
+```
+
+Initial pending is Checking. A probe excluded by client configuration is Not
+requested; an observed optional 404/405 is Not exposed. Both are informational,
+with neutral presentation. A 401/403, network error, invalid JSON or unexpected
+server error is a probe failure. A valid not-ready response preserves the
+backend reason. A failed refresh with a cached snapshot explicitly labels the
+prior observation historical; it cannot appear as a current successful probe.
+Status text and icons accompany semantic tone, so color is not the only signal.
+
+API service version, API compatibility version and Raven bundle version are
+independent facts. A disabled `/version` endpoint does not borrow the bundle
+version. Disabled plugins preserve their backend-provided reason and remain
+distinct from optional probe availability.
+
+The development launcher inherits an explicit caller probe policy and otherwise
+leaves the default to the existing client. It does not impose an empty optional
+probe set. No diagnostic component creates a polling loop, another health store,
+an API route or a run-admission decision.
+
 ### Shell Menu Actions
 
 - Toggle Explorer panel
@@ -501,7 +831,7 @@ multi-language ready, and style-consistent.
 rendering to small UI components:
 
 - `ShellWorkspaceContextMenu` and `ShellProjectIdentityBadge`
-- `ShellAppMenu`
+- `AppBrandMark` as noninteractive identity
 - `ShellGitRef`
 - `ShellConnectionStatus`
 - `ShellMenu`
@@ -513,7 +843,7 @@ flowchart LR
   A[TopAppBar Composition Root] --> B[Session Store Selectors]
   A --> C[UI Layout Store Selectors]
   A --> D[resolveShellTopBarCopy locale]
-  A --> E[ShellAppMenu]
+  Rail[LeftNavigation] --> E[ShellAbout]
   E --> I[resolveCompiledApplicationMetadata]
   A --> F[ShellWorkspaceContextMenu]
   A --> G[ShellGitRef]
@@ -521,14 +851,82 @@ flowchart LR
   A --> J[ShellMenu]
 ```
 
-### Application Menu
+### About
 
-`ShellAppMenu` owns brand-level application commands. The current command is
-`About Raven`, backed by the `GetCompiledApplicationMetadata` query rail.
+`ShellAbout` owns the direct rail trigger and About dialog, backed by the existing
+`GetCompiledApplicationMetadata` query. The logo has no activation lifecycle.
+Global links belong to `LeftNavigation`, not this dialog or TopBar.
 
 The About dialog shows the compiled browser bundle version from
 `VITE_APP_VERSION` and the optional build date from `VITE_APP_BUILD_DATE`. It
 must not call backend `/version`, mutate workspace scope, or become a route.
+
+### Shared Overlay Interaction Authority
+
+Declared Radix primitives whose dependency graph reaches `DismissableLayer` must
+resolve to one physical installed layer implementation. Dialogs, alerts, menus,
+popovers, selects, hover cards, navigation menus and tooltips compose within the
+same browser document; their ordering cannot be split across independent layer
+contexts.
+
+A tooltip remains mounted while its closing animation runs. Separate dismissal
+implementations can each consider their own layer highest and let that closing
+tooltip consume Escape before an active dialog sees it. This prevented About
+from closing even though the browser delivered a trusted Escape event. Supported
+direct package versions and the governed lock align the existing primitives on
+one authority; the fix adds no Escape listener, forced transitive override,
+animation removal, timing wait or presentation store.
+
+```mermaid
+flowchart LR
+  Tooltip[Closing tooltip] --> Shared[One installed dismissal layer]
+  Dialog[Active dialog or alert] --> Shared
+  Menu[Menu popover select and navigation] --> Shared
+  Shared --> Order[One ordered layer context]
+  Order --> Escape[Escape dismisses the active overlay]
+  Escape --> Focus[Existing trigger focus restoration]
+```
+
+The installed-dependency architecture test includes every declared Radix root
+that reaches this authority. The real About consumer also tests Escape while a
+tooltip exit animation is retained. Native shell journeys retain trusted
+keyboard input and verify dialog dismissal, trigger focus, section-menu Escape
+and pending Model edit guards without waiting for animations to finish. This
+dependency alignment repairs those existing interactions; it does not integrate
+unrelated dependency PRs or alter the governing queries.
+
+#### Modal Surface Composition
+
+Modal content and its backdrop form one DOM stacking unit. Independent body
+portals at the same level can change insertion order after a close/reopen cycle:
+the backdrop then captures clicks on otherwise enabled Apply and Discard
+buttons. This is a presentation defect, not permission or semantic validation.
+
+The shared Dialog and AlertDialog wrappers use the supported
+[content-inside-overlay composition](https://www.radix-ui.com/primitives/docs/components/dialog#scrollable-overlay).
+The backdrop contains its modal content; common theme tokens define the global
+modal layer, local content sublayer and matched animation duration. The backdrop
+owns the modal fade and content retains its zoom. Non-modal Dialog content has
+no backdrop and retains its own fade and global layer. A readonly per-Root modal
+flag selects this composition; Radix continues to own open state, focus,
+dismissal, presence and scroll locking. There is no second stack manager.
+
+```mermaid
+flowchart LR
+  Old[Sibling portals at equal levels] --> Reopen[Reopen changes insertion order]
+  Reopen --> Blocked[Backdrop intercepts buttons]
+  Radix[Existing Radix Root] --> Mode[Existing modal property]
+  Mode --> Pair[Backdrop containing modal content]
+  Pair --> Tokens[Shared layer and duration tokens]
+  Tokens --> Hit[Content receives its own pointer actions]
+  Mode --> Plain[Standalone non-modal content]
+```
+
+Regression proof covers repeated opening, controlled and uncontrolled dialogs,
+nested focus restoration and non-modal content. Native Model and About journeys
+must use reachable controls with normal pointer/keyboard actions, retaining
+Apply, Stay, Discard and persistence assertions. A force click, suppressed
+navigation guard, arbitrary wait or inflated global z-index is not a repair.
 
 ### Multi-Language Strategy
 
@@ -543,6 +941,13 @@ must not call backend `/version`, mutate workspace scope, or become a route.
 - `shell/chrome.ts` contains reusable shell chrome tokens for recurring visual
   patterns.
 - Subcomponents consume these tokens instead of duplicating Tailwind strings.
+- `styles/fonts.css` owns the shared dense UI typography roles: `--text-ui`
+  (the existing 12 px control scale), `--text-ui-caption` (11 px), and
+  `--text-ui-micro` (10 px), with their line-height tokens. Shell chrome and the
+  project Explorer consume these roles; the content body/meta/mono scale and
+  root font size remain unchanged. Hierarchy uses weight and contrast rather
+  than enlarged sidebar text. Existing 14 px content remains on the body role.
+  [Shared UI typography decision](https://github.com/dunay2/dvt/issues/3765#issuecomment-6728952540).
 
 ### SRP Rules
 
@@ -760,6 +1165,47 @@ flowchart LR
 >
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
 
+## Selected-Text Presentation Boundary Audit
+
+Design `GH-3765-AUDITED-SELECTION-MENU-PRESENTATION` retains the existing
+`ResolveShellTextSelectionMenu`, `CopyShellTextSelection` and
+`LookupShellTextSelection` rails in Web App Shell. The route-owned
+`SYS-WEB-CANVAS-SHELL-CHROME` remains separate from this global interaction
+boundary; a Canvas route component does not acquire ownership of App Shell.
+`ShellTextSelection` remains an ephemeral value object; selection is neither
+graph state nor a persisted browser preference.
+
+The current Popover boundary combines selection admission, request lifetime,
+markup and keyboard navigation. Arrow navigation works, but a dictionary link
+with `role="menuitem"` does not inherit button activation on Space. The solution
+separates the menu view from admission and action ownership. The view normalizes
+Enter and Space into one explicit item activation and prevents scrolling and
+native duplicate activation. Repeated activation keys do not repeat commands.
+The boundary retains exact snapshot checks, clipboard feedback, virtual anchor
+and focus restoration. No document listener, alternate menu engine or dependency
+is added; the installed menu wrappers do not expose the same controlled virtual
+anchor contract.
+
+```mermaid
+flowchart LR
+  Gesture[Context gesture] --> Admission[Selection admission and lifetime]
+  Admission --> View[Selected-text menu presentation]
+  View --> Action[Existing explicit Copy or dictionary action]
+  View --> Focus[Radix Popover focus lifecycle]
+```
+
+`AppShellFrame` owns slot composition and drawer geometry. Its visual rules move
+to a CSS module using existing semantic tokens and the global
+`app-shell-background` class. Skip-link focus, main focus, retained route slots
+and resize behavior remain unchanged. Browser-owned selection chrome remains
+outside this application's authority.
+
+Regression evidence must exercise pointer and keyboard activation, denied and
+stale copy, stale dictionary selection, focus return and target-menu delegation.
+Keyboard link tests cancel navigation after observing the real activation;
+they must not open an external window. Existing shell frame and lifecycle
+tests continue to guard composition and retained content.
+
 <a id="section-app-bootstrap-screen-component"></a>
 
 ## App Bootstrap Screen Component
@@ -792,6 +1238,38 @@ The component is split into a pure Presentation Model and a DOM adapter:
 It does not own route-specific readiness, backend contract semantics, or Canvas
 draft truth. Those concerns publish into this component through typed route and
 health/bootstrap adapters.
+
+### Initial React Commit Acknowledgement
+
+The `hydrate` check represents a committed initial React tree, independently of
+browser painting. `main.tsx` starts the pre-React screen and mounts `App`;
+`AppProviders` publishes the existing hydration-complete command from its initial
+layout effect. Its services-ready effect remains a separate publisher. A render
+that suspends without committing must not acknowledge either lifecycle event.
+
+An animation frame is not a mounting acknowledgement: browsers may pause it in
+background tabs and hidden frames. The native full-branch failure retained a
+four-of-five startup snapshot with only `hydrate` pending even though the other
+publishers had settled. The regression withholds animation frames on the real
+public login route and preserves the original aggregate and visibility checks.
+This rules out a readiness dependency on paint without extending a deadline or
+removing the startup screen from test code.
+
+```mermaid
+flowchart LR
+  Old[Entry schedules one animation frame] --> Paused[Hidden or paused paint]
+  Paused --> Pending[Hydrate stays pending despite mounted React]
+  Commit[Existing AppProviders React commit] --> Command[Existing hydration command]
+  Command --> Gate[Existing five-check bootstrap aggregate]
+  Others[Independent services capabilities health and route owners] --> Gate
+  Gate --> Reveal[Existing CompleteAppBootstrapScreen]
+```
+
+The existing bootstrap aggregate, authorization, route readiness and completion
+commands retain their authority. No new timer, state flag, store or completion
+path is introduced. The supporting platform contracts are
+[browser animation-frame scheduling](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)
+and [React layout-effect timing](https://react.dev/reference/react/useLayoutEffect).
 
 ### Public API
 
@@ -987,8 +1465,9 @@ flowchart LR
 ### Consumers
 
 - `apps/web/index.html` owns the critical HTML and CSS shell.
-- `apps/web/src/main.tsx` starts the screen and completes the hydration step.
-- `apps/web/src/app/AppProviders.tsx` publishes service/provider readiness.
+- `apps/web/src/main.tsx` starts the screen and renders the app.
+- `apps/web/src/app/AppProviders.tsx` acknowledges its committed hydration and
+  separately publishes service/provider readiness.
 - `apps/web/src/app/Root.tsx` publishes capability, platform health, and active
   route posture.
 - `apps/web/src/app/routes.ts` publishes public-route bootstrap completion for

@@ -11,9 +11,13 @@ import {
   buildEnvironmentAccessScope,
 } from '../../../src/application/ports/accessDecision.js';
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/authContract.js';
-import type { DbtModelProducer } from '../../../src/application/ports/dbtModelProducer.js';
+import type {
+  DbtModelProducer,
+  IDbtModelProducerResolver,
+} from '../../../src/application/ports/dbtModelProducer.js';
 import { projectDvtPostgresTransform } from '../../../src/application/services/dvtPostgresTransformProjection.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
+import { ResolveCanvasTransformProjection } from '../../../src/application/services/resolveCanvasTransformProjection.js';
 import {
   resolveDvtTerminalTransformClosure,
   type DvtTerminalTransformClosure,
@@ -27,6 +31,7 @@ import {
   withProducerDocument,
 } from '../../fixtures/dvtProducerPreviewFixture.js';
 import { repeatedSourceInput } from '../../fixtures/dvtRepeatedSourceFixture.js';
+import { buildDvtTerminalTransformPreviewDraft } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 const context: AuthorizedExecutionContext = {
   principal: {
@@ -71,6 +76,7 @@ function harness(
   previewTransformRows: ReturnType<typeof vi.fn>;
   getConnection: ReturnType<typeof vi.fn>;
   executeWithAuthorizedDraft: ReturnType<typeof vi.fn>;
+  resolveModelProducers: ReturnType<typeof vi.fn<IDbtModelProducerResolver['resolve']>>;
   useCase: PreviewCanvasTransformRowsUseCase;
   request: TransformDataSampleRequest;
 }> {
@@ -102,19 +108,26 @@ function harness(
       authorizedDraft: { revision: 'revision-chain', draft },
     },
   }));
+  const resolveModelProducers = vi
+    .fn<IDbtModelProducerResolver['resolve']>()
+    .mockImplementation(async (nodes) => {
+      const requested = new Set(nodes.map((node) => node.id));
+      return new Map([...(externalProducers ?? [])].filter(([id]) => requested.has(id)));
+    });
   const useCase = new PreviewCanvasTransformRowsUseCase({
-    graphDraftResolver: { executeWithAuthorizedDraft } as never,
+    projection: new ResolveCanvasTransformProjection({
+      graphDraftResolver: { executeWithAuthorizedDraft } as never,
+      ...(externalProducers == null ? {} : { modelProducers: { resolve: resolveModelProducers } }),
+    }),
     connectionCatalog: { getConnection } as never,
     probe: { previewTransformRows },
-    ...(externalProducers == null
-      ? {}
-      : { modelProducers: { resolve: async () => externalProducers } }),
   });
   return {
     draft,
     previewTransformRows,
     getConnection,
     executeWithAuthorizedDraft,
+    resolveModelProducers,
     useCase,
     request: { canvasId: draft.canvas.id!, transformNodeId: targetId, limit: 20 },
   };
@@ -133,6 +146,142 @@ function closure(
 }
 
 describe('protected producer/consumer row preview', () => {
+  it('previews a valid target despite an unused foreign physical predecessor', async () => {
+    const base = buildProducerPreviewDraft();
+    const foreign = globalThis.structuredClone(base.nodes[0]!);
+    foreign.id = 'foreign-source';
+    const ref = foreign.metadata!.connectedSourceRef as { connectionRef: { connectionId: string } };
+    ref.connectionRef.connectionId = 'foreign';
+    const draft: WorkspaceGraphAuthoringDraft = {
+      ...base,
+      nodes: [...base.nodes, foreign],
+      nodeIds: [...base.nodeIds, foreign.id],
+      edges: [
+        ...base.edges,
+        { id: 'foreign-consumer', sourceId: foreign.id, targetId: 'consumer', relation: 'lineage' },
+      ],
+    };
+    const h = harness(draft);
+    const result = await h.useCase.execute(h.request, context);
+    expect(result.provenance.sourceRefs).toHaveLength(1);
+    expect(h.getConnection.mock.calls[0]![1]).toBe('local-postgres-proof');
+    expect(h.previewTransformRows).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a file-only selected relation independent of an unused foreign Source', async () => {
+    const fixture = buildDbtInputPreviewFixture();
+    const physical = fixture.draft.nodes.find((node) => node.role === 'input')!;
+    const ref = physical.metadata!.connectedSourceRef as {
+      connectionRef: { connectionId: string };
+    };
+    ref.connectionRef.connectionId = 'foreign';
+    const h = harness(fixture.draft, fixture.targetId, fixture.externalProducers);
+    const result = await h.useCase.execute(
+      TransformDataSampleRequestSchema.parse({
+        ...h.request,
+        relationId: fixture.modelRelationId,
+        semanticPlanSha256: fixture.semanticPlanSha256,
+      }),
+      context
+    );
+    expect(result.provenance.sourceRefs).toEqual([]);
+    expect(result.provenance.modelRefs).toEqual(
+      [...fixture.externalProducers.values()].map((producer) => producer.provenance)
+    );
+    expect(result.semanticPlanSha256).toBe(fixture.semanticPlanSha256);
+    expect(h.getConnection.mock.calls[0]![1]).toBe(
+      [...fixture.externalProducers.values()][0]!.connection.connectionId
+    );
+  });
+
+  it('rejects consumed physical and external inputs on different connections before probing rows', async () => {
+    const fixture = buildDbtInputPreviewFixture();
+    const physical = fixture.draft.nodes.find((node) => node.role === 'input')!;
+    const ref = physical.metadata!.connectedSourceRef as {
+      connectionRef: { connectionId: string };
+    };
+    ref.connectionRef.connectionId = 'foreign';
+    const target = fixture.draft.nodes.find((node) => node.id === fixture.targetId)!;
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      target.metadata!.transformAuthoring
+    );
+    for (const binding of authority.semanticDocument.sidecar.relations)
+      if (binding.sourceRef != null) binding.sourceRef.connectionRef.connectionId = 'foreign';
+    target.metadata!.transformAuthoring = authority;
+    expect(() =>
+      resolveDvtTerminalTransformClosure(
+        {
+          draft: fixture.draft,
+          selectedNodeIds: fixture.draft.nodeIds,
+          selectedEdgeIds: fixture.draft.edges.map((edge) => edge.id),
+          previewTargetId: fixture.targetId,
+        },
+        fixture.externalProducers
+      )
+    ).toThrow('one PostgreSQL connection');
+    const h = harness(fixture.draft, fixture.targetId, fixture.externalProducers);
+    await expect(h.useCase.execute(h.request, context)).rejects.toMatchObject({
+      reason: 'projection_unsupported',
+    });
+    expect(h.getConnection).not.toHaveBeenCalled();
+    expect(h.previewTransformRows).not.toHaveBeenCalled();
+  });
+
+  it('retains strict whole-selection connection admission for operational publication', () => {
+    const base = buildDvtTerminalTransformPreviewDraft();
+    const foreign = globalThis.structuredClone(base.nodes[0]!);
+    foreign.id = 'foreign-source';
+    const ref = foreign.metadata!.connectedSourceRef as { connectionRef: { connectionId: string } };
+    ref.connectionRef.connectionId = 'foreign';
+    const nodes = [...base.nodes, foreign];
+    const draft: WorkspaceGraphAuthoringDraft = {
+      ...base,
+      nodes,
+      nodeIds: nodes.map((node) => node.id),
+      nodePositions: { ...base.nodePositions, [foreign.id]: { x: 0, y: 200 } },
+      edges: [
+        ...base.edges,
+        {
+          id: 'foreign-target',
+          sourceId: foreign.id,
+          targetId: 'transform-orders',
+          relation: 'lineage',
+        },
+      ],
+    };
+    expect(() =>
+      resolveDvtTerminalTransformClosure({
+        draft,
+        selectedNodeIds: draft.nodeIds,
+        selectedEdgeIds: draft.edges.map((edge) => edge.id),
+      })
+    ).toThrow('one PostgreSQL connection');
+  });
+
+  it.each(['ambiguous-source', 'missing-direct-edge'] as const)(
+    'does not hide %s when selecting physical bindings',
+    async (reason) => {
+      const base = buildDvtTerminalTransformPreviewDraft();
+      if (reason === 'ambiguous-source') {
+        const duplicate = { ...base.nodes[0]!, id: 'duplicate-source' };
+        base.nodes.push(duplicate);
+        base.nodeIds.push(duplicate.id);
+        base.edges.push({
+          id: 'duplicate-target',
+          sourceId: duplicate.id,
+          targetId: 'transform-orders',
+          relation: 'lineage',
+        });
+      } else base.edges = [];
+      const h = harness(base, 'transform-orders');
+      await expect(h.useCase.execute(h.request, context)).rejects.toMatchObject({
+        reason: 'projection_unsupported',
+      });
+      expect(h.getConnection).not.toHaveBeenCalled();
+      expect(h.previewTransformRows).not.toHaveBeenCalled();
+    }
+  );
+
   it.each(['model', 'physical', 'join', 'whole'] as const)(
     'previews the %s target of a mixed dbt-model/physical-source JOIN',
     async (selection) => {
@@ -154,7 +303,14 @@ describe('protected producer/consumer row preview', () => {
         context
       );
       expect(result.relationId).toBe(relationId);
+      expect(result.semanticPlanSha256).toBe(fixture.semanticPlanSha256);
       expect(result.provenance.sourceRefs).toHaveLength(selection === 'model' ? 0 : 1);
+      expect(result.provenance.modelRefs ?? []).toHaveLength(selection === 'physical' ? 0 : 1);
+      expect(h.resolveModelProducers).toHaveBeenCalledTimes(selection === 'physical' ? 0 : 1);
+      if (selection !== 'physical')
+        expect(h.resolveModelProducers.mock.calls[0]![0].map((node) => node.id)).toEqual([
+          ...fixture.externalProducers.keys(),
+        ]);
       expect(h.previewTransformRows).toHaveBeenCalledOnce();
       const sql = h.previewTransformRows.mock.calls[0]![0].sql;
       expect(/\bJOIN\b/.test(sql)).toBe(selection === 'join' || selection === 'whole');
@@ -252,7 +408,7 @@ describe('protected producer/consumer row preview', () => {
     expect(result.outputs.map((field) => field.name)).toEqual(['published_id']);
   });
 
-  it.each(['missing-edge', 'cycle', 'mixed-connections', 'missing-producer'] as const)(
+  it.each(['missing-edge', 'cycle', 'missing-producer'] as const)(
     'rejects %s before acquiring credentials or issuing a query',
     async (reason) => {
       const base = buildProducerPreviewDraft();
@@ -279,43 +435,9 @@ describe('protected producer/consumer row preview', () => {
           ],
         };
       }
-      if (reason === 'mixed-connections') {
-        const source = base.nodes[0]!;
-        const ref = source.metadata!.connectedSourceRef as {
-          connectionRef: Record<string, unknown>;
-        };
-        const foreign = {
-          ...source,
-          id: 'foreign-source',
-          metadata: {
-            ...source.metadata,
-            connectedSourceRef: {
-              ...ref,
-              connectionRef: { ...ref.connectionRef, connectionId: 'foreign' },
-            },
-          },
-        };
-        draft = {
-          ...base,
-          nodes: [...base.nodes, foreign],
-          nodeIds: [...base.nodeIds, foreign.id],
-          edges: [
-            ...base.edges,
-            {
-              id: 'foreign-consumer',
-              sourceId: foreign.id,
-              targetId: 'consumer',
-              relation: 'lineage',
-            },
-          ],
-        };
-      }
-      if (reason === 'mixed-connections')
-        expect(() => closure(draft)).toThrow('one PostgreSQL connection');
-      else
-        await expect(projectDvtPostgresTransform(closure(draft))).rejects.toThrow(
-          reason === 'cycle' ? 'cycle' : 'authorized direct dependency'
-        );
+      await expect(
+        Promise.resolve().then(() => projectDvtPostgresTransform(closure(draft)))
+      ).rejects.toThrow(reason === 'cycle' ? 'cycle' : 'authorized direct dependency');
       const h = harness(draft);
       await expect(h.useCase.execute(h.request, context)).rejects.toMatchObject({
         reason: 'projection_unsupported',

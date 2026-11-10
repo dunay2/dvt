@@ -1,8 +1,10 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
-import { useState, type ReactNode } from 'react';
-import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
-import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
+import type { ReactNode } from 'react';
+import type {
+  CanvasExplorerActivityRail,
+  CanvasExplorerProjectWorkspace,
+} from './explorer/CanvasExplorer.types';
 import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   CanvasShellContextualWorkbenchSplit,
@@ -133,6 +135,14 @@ function CanvasShellViewport({
   activityRail: CanvasExplorerActivityRail;
   externalNodeSurfaceActive: boolean;
 }): JSX.Element {
+  const scope = panels.inspectorAuthoring.workspaceScope;
+  const catalogueScopeKey = JSON.stringify([
+    scope?.tenantId,
+    scope?.projectId,
+    scope?.environmentId,
+    panels.activeCanvasId,
+    projectFiles?.projectRoot,
+  ]);
   return (
     <CanvasViewport
       workspaceTask={workspaceTask}
@@ -145,7 +155,10 @@ function CanvasShellViewport({
       canSelectNodes={layout.canSelectNodes}
       nodesWithImpact={graph.nodesWithImpact}
       sourceCatalogue={panels.inspectorGraphNodes}
-      onInstantiateNode={graphCommands.onInstantiateNode}
+      sourceCatalogueCanvasId={panels.activeCanvasId ?? undefined}
+      onInspectNode={graphCommands.onInspectNode}
+      inspectorTarget={panels.inspectorTarget}
+      catalogueScopeKey={catalogueScopeKey}
       edges={graph.edges}
       nodeTypes={graph.nodeTypes}
       gridSize={graph.gridSize}
@@ -174,10 +187,15 @@ function CanvasShellViewport({
         onOpenSourceImport == null
           ? undefined
           : (flowPosition) =>
-              onOpenSourceImport(
-                undefined,
-                flowPosition == null ? undefined : { canvasPosition: flowPosition }
-              )
+              onOpenSourceImport({
+                intent: 'import-sources',
+                ...(flowPosition == null ? {} : { placement: { canvasPosition: flowPosition } }),
+              })
+      }
+      onManageConnections={
+        onOpenSourceImport == null
+          ? undefined
+          : () => onOpenSourceImport({ intent: 'manage-connections' })
       }
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
@@ -210,8 +228,6 @@ function CanvasShellMainSurface({
   | 'workspaceTask'
   | 'projectFiles'
 > & { inspector: ReactNode }): JSX.Element {
-  // Mounting the portal target must rerender its consumer; a ref alone would not.
-  const [activityRailTarget, setActivityRailTarget] = useState<HTMLDivElement | null>(null);
   const codeVisible = workspaceTask == null && projectFiles?.active === true;
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
@@ -223,7 +239,7 @@ function CanvasShellMainSurface({
     focusMode: layout.focusMode,
     inspectorPanelVisible: layout.inspectorPanelVisible,
     surfaceStrategy: layout.surfaceStrategy,
-    hasInspectorNode: panels.inspectorNode != null,
+    hasInspectorNode: panels.inspectorNode != null || panels.inspectorTarget != null,
   });
   // Suspend transient node surfaces and global Delete while another surface is active.
   const externalNodeSurfaceActive =
@@ -237,7 +253,7 @@ function CanvasShellMainSurface({
     <CanvasShellViewport
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
-      activityRail={{ target: activityRailTarget, codeVisible }}
+      activityRail={{ codeVisible }}
       externalNodeSurfaceActive={externalNodeSurfaceActive}
       inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
@@ -252,7 +268,6 @@ function CanvasShellMainSurface({
 
   const baseSurface = (
     <CanvasShellWorkspaceSurfaces
-      activityRailRef={setActivityRailTarget}
       viewport={
         modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
       }
@@ -333,6 +348,7 @@ export function CanvasShellMainPanel({
           <CanvasNodeWorkbenchOverlay
             layout={layout}
             panels={panels}
+            currentProjectRoot={projectFiles?.projectRoot}
             onHide={chromeCommands.onHideInspector}
             onOpenModelEditor={onOpenModelEditor}
           />

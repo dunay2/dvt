@@ -10,11 +10,14 @@ import type {
   IWarehouseSourceDataSampleQueryPort,
 } from '../../ports/workspace';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
-import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
+import type {
+  SourceImportInitialSelection,
+  SourceImportWizardEntry,
+} from '../../components/sourceImportWizard/types';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasHexColor } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
@@ -24,10 +27,11 @@ import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import type {
-  CreateCanvasAuthoringNode,
-  CanvasNodeInstantiationHandler,
-} from './canvasGraphHandlerContracts';
+  CanvasInspectorCommand,
+  CanvasInspectorTarget,
+} from '../../stores/canvasInspectorTarget';
 import type { CanvasSourceImportCompletionContext } from './canvasMutationHandlerContracts';
 import type { CanvasContextMenuPosition } from './canvasInteractionCommandSurface';
 import type {
@@ -84,6 +88,7 @@ export type CanvasShellPanels = {
   canvasDocuments: readonly ProjectCanvasDocument[];
   executionEnvironmentOptions: readonly WorkspaceOption[];
   inspectorNode: CanonicalNode | null;
+  inspectorTarget?: CanvasInspectorTarget | null;
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
   inspectorGraphNodes: readonly CanonicalNode[];
@@ -103,9 +108,9 @@ export type CanvasShellGraph = {
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPalette: CanvasHexColor;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
   viewport: CanvasViewport | null;
   frozenNodeIds: ReadonlySet<string>;
@@ -135,7 +140,7 @@ export type CanvasShellGraphCommands = {
   onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
-  onInstantiateNode?: CanvasNodeInstantiationHandler;
+  onInspectNode: CanvasInspectorCommand;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onToggleFrozenNode: (nodeId: string) => void;
   onCreateAuthoringNode?: CreateCanvasAuthoringNode;
@@ -148,16 +153,16 @@ export type CanvasShellGraphCommands = {
 };
 
 export type CanvasShellChromeCommands = {
-  onHideInspector: () => void;
+  onHideInspector: () => void | boolean | Promise<void | boolean>;
   onShowInspector: () => void;
   onAutoLayout?: () => void;
   onToggleCostOverlay?: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
   onGridSizeChange: (size: number) => void;
-  onCanvasPaletteChange: (color: CanvasPaletteId) => void;
+  onCanvasPaletteChange: (color: CanvasHexColor) => void;
   onToggleGridVisible: () => void;
-  onGridColorChange: (color: CanvasPaletteId) => void;
+  onGridColorChange: (color: CanvasHexColor) => void;
   onToggleSnapToGrid: () => void;
   onExportProjectSnapshot?: () => void;
   onImportProjectSnapshotFile?: (file: File) => void;
@@ -202,9 +207,13 @@ export type CanvasShellProps = Readonly<{
   ) => void;
 }>;
 
-export type CanvasShellOpenDataRegistryCommand = (
-  initialSelection?: SourceImportInitialSelection,
-  placement?: CanvasShellSourceImportPlacement
-) => void;
+export type CanvasShellDataRegistryRequest =
+  | Extract<SourceImportWizardEntry, { intent: 'manage-connections' }>
+  | (Extract<SourceImportWizardEntry, { intent: 'import-sources' }> &
+      Readonly<{
+        placement?: CanvasShellSourceImportPlacement;
+      }>);
+
+export type CanvasShellOpenDataRegistryCommand = (request?: CanvasShellDataRegistryRequest) => void;
 
 export type CanvasShellSourceImportPlacement = CanvasSourceImportCompletionContext;

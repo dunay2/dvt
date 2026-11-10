@@ -20,7 +20,7 @@ import {
   formatApiReachabilityReport,
   listFilesRecursive,
 } from './check-architecture-dependencies.mjs';
-import verifyPrepush from '../../scripts/verify-prepush.cjs';
+import { buildPrepushPlan } from '../../scripts/local-validation-plan.cjs';
 
 const DEPCRUISE_CONFIG = resolve('.dependency-cruiser.cjs');
 const REQUIRED_ARCH_DEPENDENCY_RULES = [
@@ -242,6 +242,31 @@ function collectDependencyViolations(files) {
   }
 }
 
+function assertArchitectureDependencyCiDelegation(scripts) {
+  const commands = (name) => {
+    assert.equal(typeof scripts?.[name], 'string', `Missing CI delegate: ${name}`);
+    assert.doesNotMatch(
+      scripts[name],
+      /[\r\n]/u,
+      `CI delegate must remain one command line: ${name}`
+    );
+    return scripts[name]
+      .split('&&')
+      .map((command) => command.replace(/^[ \t]+|[ \t]+$/gu, '').replace(/[ \t]+/gu, ' '));
+  };
+
+  assert.deepEqual(
+    commands('ci:code'),
+    ['pnpm ci:code:static', 'turbo run test'],
+    'ci:code must run the static delegate before product tests'
+  );
+  assert.deepEqual(
+    commands('ci:code:static'),
+    ['pnpm arch:deps', 'pnpm type-check', 'pnpm lint:determinism'],
+    'the static delegate must retain each fail-fast check in order'
+  );
+}
+
 test('root package exposes the architecture dependency guard', () => {
   const pkg = readJson('package.json');
 
@@ -249,11 +274,56 @@ test('root package exposes the architecture dependency guard', () => {
   assert.equal(pkg.scripts?.['arch:deps'], 'node tools/ci/check-architecture-dependencies.mjs');
   assert.equal(pkg.scripts?.['verify:prepush'], 'node scripts/verify-prepush.cjs');
   assert.ok(
-    verifyPrepush
-      .buildPrepushPlan(['apps/web/src/main.tsx'], { full: true })
-      .some((step) => step.id === 'arch-deps')
+    buildPrepushPlan(['apps/web/src/main.tsx'], { full: true }).some(
+      (step) => step.id === 'arch-deps'
+    )
   );
-  assert.match(pkg.scripts?.['ci:code'] ?? '', /pnpm arch:deps/);
+  assertArchitectureDependencyCiDelegation(pkg.scripts);
+});
+
+test('architecture dependency wiring accepts horizontal whitespace within the admitted delegation', () => {
+  assertArchitectureDependencyCiDelegation({
+    'ci:code': ' \t pnpm   ci:code:static\t &&\t turbo  run test ',
+    'ci:code:static': '\t pnpm\tarch:deps && pnpm  type-check&&pnpm lint:determinism\t',
+  });
+});
+
+test('architecture dependency wiring rejects missing, unreachable and masked checks', () => {
+  const scripts = readJson('package.json').scripts;
+  const missingGuard = 'pnpm type-check && pnpm lint:determinism';
+  const afterGuard = ' && pnpm type-check && pnpm lint:determinism';
+  const cases = [
+    ['missing delegate', { 'ci:code': 'turbo run test' }],
+    ['missing static script', { 'ci:code:static': undefined }],
+    ['removed architecture guard', { 'ci:code:static': missingGuard }],
+    ['orphan guard', { 'ci:code:static': missingGuard, 'unused:arch': 'pnpm arch:deps' }],
+    ['echo lookalike', { 'ci:code:static': `echo pnpm arch:deps${afterGuard}` }],
+    ['quoted lookalike', { 'ci:code:static': `echo "pnpm arch:deps"${afterGuard}` }],
+    ['LF-split invocation', { 'ci:code:static': `pnpm\narch:deps${afterGuard}` }],
+    ['CRLF-split invocation', { 'ci:code:static': `pnpm\r\narch:deps${afterGuard}` }],
+    ['masked guard failure', { 'ci:code:static': `pnpm arch:deps || true${afterGuard}` }],
+    [
+      'semicolon chain',
+      { 'ci:code:static': 'pnpm arch:deps; pnpm type-check && pnpm lint:determinism' },
+    ],
+    ['pipeline', { 'ci:code:static': `pnpm arch:deps | cat${afterGuard}` }],
+    ['static self cycle', { 'ci:code:static': `pnpm ci:code:static${afterGuard}` }],
+    ['code delegate cycle', { 'ci:code:static': `pnpm ci:code${afterGuard}` }],
+    ['missing product tests', { 'ci:code': 'pnpm ci:code:static' }],
+    ['missing type check', { 'ci:code:static': 'pnpm arch:deps && pnpm lint:determinism' }],
+    ['missing determinism lint', { 'ci:code:static': 'pnpm arch:deps && pnpm type-check' }],
+    [
+      'duplicate architecture guard',
+      { 'ci:code:static': `pnpm arch:deps && pnpm arch:deps${afterGuard}` },
+    ],
+  ];
+  for (const [label, overrides] of cases) {
+    assert.throws(
+      () => assertArchitectureDependencyCiDelegation({ ...scripts, ...overrides }),
+      { code: 'ERR_ASSERTION' },
+      label
+    );
+  }
 });
 
 test('PR quality gate runs the architecture dependency guard remotely', () => {

@@ -99,6 +99,7 @@ export const canvasViewAuthoringCopyByKey = {
   reactFlowMinimapLabel: 'Canvas minimap',
   reactFlowHandleLabel: 'Connection port',
   nodeWorkbenchCloseLabel: 'Close',
+  nodeWorkbenchCloseFailedMessage: 'Properties could not be closed. Please try again.',
   nodeWorkbenchMoreLabel: 'More',
   sqlContextWorkbenchProjectTitle: 'Project code',
   sqlContextWorkbenchProjectDescription: 'Workspace files in the active project scope.',

@@ -112,6 +112,36 @@ describe('SourceImportWizardFrame focus', () => {
     expect(document.body.querySelectorAll('[data-slot="dialog-footer"] button')).toHaveLength(2);
   });
 
+  it('returns management focus to its real opener after Done without a context-menu callback', async () => {
+    // The Connections gear has no context-menu opener, and the inline Dialog has no Radix Trigger.
+    function Harness(): JSX.Element {
+      const [open, setOpen] = useState(true);
+      return (
+        <SourceImportWizardFrame
+          open={open}
+          entryIntent="manage-connections"
+          activeContentId="connections"
+          isResultStep={false}
+          isProcessing={false}
+          canImport={false}
+          sections={<span>Connections</span>}
+          onClose={() => setOpen(false)}
+          onDone={vi.fn()}
+          onImport={vi.fn()}
+        >
+          <button type="button">Connection editor</button>
+        </SourceImportWizardFrame>
+      );
+    }
+    focusReturnTarget.focus();
+    await act(async () => root.render(<Harness />));
+    const done = document.querySelector<HTMLButtonElement>('[data-slot="dialog-footer"] button')!;
+    await act(async () => {
+      fireEvent.click(done);
+    });
+    await waitFor(() => expect(document.activeElement).toBe(focusReturnTarget));
+  });
+
   it('belongs to the workspace without a backdrop or outside-click dismissal', async () => {
     const onClose = vi.fn();
     const renderFrame = (open: boolean): void => {

@@ -4,6 +4,8 @@
  * @baseline ADR-0061: Planning DB owns component definitions; Git owns physical inventory.
  * @decision Share one read-only ownership snapshot across file and component-profile queries.
  * @consequence Missing or ambiguous ownership stays visible without importing stale projections.
+ * Why: one snapshot can acquire its mandatory blobs and index authority once.
+ * Corner: batching retains complete inventory, error ordering and all responsibility checks.
  * @version 1.0.0
  */
 const { buildOwnerMatcher } = require('../../check-governance-unit-coverage.cjs');
@@ -18,7 +20,7 @@ const {
 } = require('../component-source-responsibility-store.cjs');
 const {
   validateResponsibilityBindings,
-  validateSourceResponsibilityReferences,
+  createSourceResponsibilityReferenceValidator,
 } = require('../../lib/component-source-responsibilities.cjs');
 
 function createCurrentComponentFilesReadModelComponent(deps = {}) {
@@ -245,6 +247,11 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
       componentId: row.responsibilityComponentId,
       description: row.description,
     }));
+    const validateReferences = createSourceResponsibilityReferenceValidator(responsibilities);
+    const descriptions = new Map();
+    for (const row of responsibilities)
+      if (!descriptions.has(row.responsibilityId))
+        descriptions.set(row.responsibilityId, row.description);
     const paths = new Set(currentFiles);
     const errors = [];
     const byPath = new Map();
@@ -259,23 +266,22 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
         errors.push(
           'Noncanonical responsibility status ' + row.status + ': ' + row.responsibilityId
         );
+    if (typeof reader.readSources === 'function')
+      reader.readSources([...byPath.keys()].filter((filePath) => paths.has(filePath)));
     for (const file of files) {
       const bindings = byPath.get(file.path) || [];
       file.responsibility_bindings = bindings.map((binding) => ({
         ...binding,
-        description: responsibilities.find(
-          (row) => row.responsibilityId === binding.responsibilityId
-        )?.description,
+        description: descriptions.get(binding.responsibilityId),
       }));
       file.responsibility_errors =
         bindings.length === 0
           ? []
-          : validateSourceResponsibilityReferences({
+          : validateReferences({
               path: file.path,
               content: reader.readSource(file.path),
               bindings,
               ownerComponentId: file.component_unit,
-              responsibilities,
               currentPaths: paths,
             }).errors;
       errors.push(...file.responsibility_errors.map((error) => file.path + ': ' + error));

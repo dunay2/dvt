@@ -39,7 +39,7 @@ export type CanvasHarnessState = {
   store: {
     setCanvasViewport: MockFn;
     setCanvasNodePositions: MockFn;
-    setInspectorNode: MockFn;
+    setInspectorTarget: MockFn;
     setSelectedNodes: MockFn;
     setExecutionSelectionIntent: MockFn;
   } & Record<string, unknown>;

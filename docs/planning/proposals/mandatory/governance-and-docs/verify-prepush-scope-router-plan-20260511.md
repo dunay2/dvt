@@ -26,6 +26,15 @@ routes global governance checks only for governance-relevant diffs, and runs
 **Tech Stack:** Node.js CommonJS scripts, `node:test`, existing
 `git-local-changes.cjs`, package scripts, docs/governance validation commands.
 
+**Current application ports:** The
+[admitted CI ownership reconciliation](https://github.com/dunay2/dvt/issues/3765#issuecomment-6772782368)
+records `buildPrepushPlan` and `classifyPrepushScope` in
+`scripts/local-validation-plan.cjs`. `scripts/verify-prepush.cjs` remains their
+command adapter through its real `executePrepushPlan` wrapper. This changes the
+current port and symbol references below, while preserving historical cycle
+patch surfaces. Committed source hashes and catalog port leaves are reconciled
+separately through the existing reviewed native catalog operation.
+
 ---
 
 ## Owned Concern
@@ -92,11 +101,11 @@ flowchart TD
 
 ## Command And Query Rails
 
-| Rail                       | Type  | DDD owner                     | Implementation surface       | Result                                                               |
-| -------------------------- | ----- | ----------------------------- | ---------------------------- | -------------------------------------------------------------------- |
-| `BuildVerifyPrepushPlan`   | query | Repository CI governance      | `scripts/verify-prepush.cjs` | Returns the ordered validation steps for the local changed-file set. |
-| `ClassifyPrepushScope`     | query | Repository CI governance      | `scripts/verify-prepush.cjs` | Classifies changed files into scoped pre-push groups.                |
-| `ExecuteVerifyPrepushPlan` | query | Repository developer workflow | `scripts/verify-prepush.cjs` | Executes the planned checks and reports conditional groups.          |
+| Rail                       | Type  | DDD owner                     | Implementation surface              | Result                                                               |
+| -------------------------- | ----- | ----------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| `BuildVerifyPrepushPlan`   | query | Repository CI governance      | `scripts/local-validation-plan.cjs` | Returns the ordered validation steps for the local changed-file set. |
+| `ClassifyPrepushScope`     | query | Repository CI governance      | `scripts/local-validation-plan.cjs` | Classifies changed files into scoped pre-push groups.                |
+| `ExecuteVerifyPrepushPlan` | query | Repository developer workflow | `scripts/verify-prepush.cjs`        | Executes the planned checks and reports conditional groups.          |
 
 ## Routing Rules
 
@@ -200,7 +209,7 @@ commandQueryRails:
     type: query
     dddOwner: Repository CI governance
     object: VerifyPrepushPlan
-    applicationPort: scripts/verify-prepush.cjs buildPrepushPlan
+    applicationPort: scripts/local-validation-plan.cjs buildPrepushPlan
     adapterSurface: package.json verify:prepush
     scopeAuthorization: local developer pre-push validation
     negativeTests:
@@ -210,7 +219,7 @@ commandQueryRails:
     type: query
     dddOwner: Repository CI governance
     object: PrepushScopeClassification
-    applicationPort: scripts/verify-prepush.cjs classifyPrepushScope
+    applicationPort: scripts/local-validation-plan.cjs classifyPrepushScope
     adapterSurface: scripts/verify-prepush.cjs CLI
     scopeAuthorization: local changed-file read only
     negativeTests:
@@ -261,7 +270,7 @@ redGreenCycles:
     greenTest: node --test tools/ci/repository-change-scope.test.mjs scripts/verify-prepush.test.cjs tools/ci/workflow-scope-classification.test.mjs
 symbols:
   - name: buildPrepushPlan
-    path: scripts/verify-prepush.cjs
+    path: scripts/local-validation-plan.cjs
     dddOwner: Repository CI governance
     cqRails:
       - BuildVerifyPrepushPlan
@@ -272,7 +281,7 @@ symbols:
     unitTests:
       - node --test scripts/verify-prepush.test.cjs
   - name: classifyPrepushScope
-    path: scripts/verify-prepush.cjs
+    path: scripts/local-validation-plan.cjs
     dddOwner: Repository CI governance
     cqRails:
       - ClassifyPrepushScope

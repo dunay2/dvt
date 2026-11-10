@@ -29,7 +29,21 @@ const sample = {
   truncated: false,
 };
 
-function proveResizableDataGrid(host: string, screenshot: string): void {
+function createSampleRows(
+  value: string,
+  count: number,
+  extraValues: readonly string[] = []
+): typeof sample.rows {
+  return Array.from({ length: count }, (_, index) => ({
+    values: [index === 0 ? value : `${value} ${index + 1}`, ...extraValues],
+  }));
+}
+
+function proveResizableDataGrid(
+  host: string,
+  screenshot: string,
+  posture: 'fits' | 'scrolls'
+): void {
   const handle = '#app-shell-bottom-drawer-resize-handle';
   const grid = `${host} [data-slot="bottom-operational-data-grid"]`;
   const value = `${host} [data-slot="bottom-operational-data-value"]`;
@@ -40,22 +54,25 @@ function proveResizableDataGrid(host: string, screenshot: string): void {
     const container = element.closest(host);
     if (container === null) throw new Error('Expected the data-grid host.');
     const panel = container.getBoundingClientRect();
+    const tableFrame = element
+      .closest('[data-slot="bottom-operational-data-table-frame"]')
+      ?.getBoundingClientRect();
     const viewport = element.ownerDocument.defaultView!;
     // Scrolling rounds to device pixels; resizable panel bounds retain fractional CSS pixels.
     expect(bounds.top, 'content begins inside panel and viewport').to.be.at.least(
-      Math.max(0, panel.top) - 1
+      Math.max(0, panel.top, tableFrame?.top ?? panel.top) - 1
     );
     expect(bounds.bottom, 'content ends inside panel and viewport').to.be.at.most(
-      Math.min(panel.bottom, viewport.innerHeight) + 1
+      Math.min(panel.bottom, viewport.innerHeight, tableFrame?.bottom ?? panel.bottom) + 1
     );
     expect(bounds.left, 'content starts inside panel and viewport').to.be.at.least(
-      Math.max(0, panel.left) - 1
+      Math.max(0, panel.left, tableFrame?.left ?? panel.left) - 1
     );
     expect(bounds.right, 'content finishes inside panel and viewport').to.be.at.most(
-      Math.min(panel.right, viewport.innerWidth) + 1
+      Math.min(panel.right, viewport.innerWidth, tableFrame?.right ?? panel.right) + 1
     );
   };
-  // At this viewport, one step above minimum leaves a row below shell chrome.
+  // The table frame owns row scrolling; compacted shell chrome need not overflow its host.
   cy.get(handle).focus().trigger('keydown', { key: 'End' }).trigger('keydown', { key: 'ArrowUp' });
   cy.get(host)
     .should('have.css', 'overflow-y', 'auto')
@@ -68,9 +85,6 @@ function proveResizableDataGrid(host: string, screenshot: string): void {
       expect(panel.clientHeight, 'compact host can contain a data row').to.be.at.least(
         row.clientHeight
       );
-      expect(panel.scrollHeight, 'compact host exposes overflowing content').to.be.greaterThan(
-        panel.clientHeight
-      );
     });
   cy.get(`${host} [data-slot="bottom-operational-data-table-frame"]`).should(($frame) => {
     const frame = $frame[0];
@@ -78,7 +92,27 @@ function proveResizableDataGrid(host: string, screenshot: string): void {
     expect(frame.clientHeight, 'header and at least one compact row remain usable').to.be.at.least(
       54
     );
+    expect(getComputedStyle(frame).overflowY, 'the table frame owns row scrolling').to.equal(
+      'auto'
+    );
+    if (posture === 'scrolls') {
+      expect(frame.scrollHeight, 'bounded rows overflow the compact table frame').to.be.greaterThan(
+        frame.clientHeight
+      );
+    } else {
+      expect(frame.scrollHeight, 'a single row fits the compact table frame').to.be.at.most(
+        frame.clientHeight + 1
+      );
+    }
   });
+  cy.get(value).last().scrollIntoView().should('be.visible').should(fullyVisible);
+  if (posture === 'scrolls') {
+    cy.get(`${host} [data-slot="bottom-operational-data-table-frame"]`).should(($frame) => {
+      expect($frame[0]!.scrollTop, 'the last row is reached through the frame').to.be.greaterThan(
+        0
+      );
+    });
+  }
   cy.get(value).first().scrollIntoView().should('be.visible').should(fullyVisible);
   cy.get(handle).focus().trigger('keydown', { key: 'Home' });
   cy.get(host).scrollTo('top', { ensureScrollable: false });
@@ -98,10 +132,12 @@ export function registerCanvasNodeDataActionsProof(): void {
     let emptyResults = false;
     let sourceReads = 0;
     let transformReads = 0;
+    let sampleRowCount = 1;
     beforeEach(() => {
       emptyResults = false;
       sourceReads = 0;
       transformReads = 0;
+      sampleRowCount = 1;
       cy.viewport(1920, 1080);
       stubShellBootstrapApis({
         scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -128,7 +164,9 @@ export function registerCanvasNodeDataActionsProof(): void {
             columns: [...sample.columns, { name: 'unpublished', type: 'text', nullable: true }],
             rows: emptyResults
               ? []
-              : [{ values: [sourceReads === 1 ? 'Ada' : 'Grace', 'must stay hidden'] }],
+              : createSampleRows(sourceReads === 1 ? 'Ada' : 'Grace', sampleRowCount, [
+                  'must stay hidden',
+                ]),
             connectionId: 'local-postgres-proof',
             objectId: 'relation/dvt/raw/orders',
             provenance: {
@@ -176,7 +214,9 @@ export function registerCanvasNodeDataActionsProof(): void {
               limit: 20,
               navigation: 'bounded-first-page' as const,
             },
-            rows: emptyResults ? [] : [{ values: [transformReads === 1 ? 'Ada' : 'Grace'] }],
+            rows: emptyResults
+              ? []
+              : createSampleRows(transformReads === 1 ? 'Ada' : 'Grace', sampleRowCount),
             canvasId: url.pathname.split('/')[4],
             transformNodeId: 'dvt-transform-1',
             draftRevision: 'revision-1',
@@ -339,7 +379,25 @@ export function registerCanvasNodeDataActionsProof(): void {
       });
     }
 
+    it('keeps a fitting one-row preview reachable at the minimum drawer size', () => {
+      // Removing redundant chrome lets small samples fit; they must not need artificial overflow.
+      cy.viewport(1200, 600);
+      cy.get('.react-flow__controls-fitview').click();
+      const source = '.react-flow__node[data-id="source-1"]';
+      hoverWorkbenchCard(source);
+      cy.get(source).find('[data-slot="canvas-node-execute"]').focus().click();
+      waitForE2eApiCall(sourcePath, 'GET');
+      proveResizableDataGrid(
+        '[data-slot="bottom-operational-drawer-data"]',
+        'compact-fitting-data-grid',
+        'fits'
+      );
+      cy.then(() => expect(getE2eApiCalls(sourcePath, 'GET')).to.have.length(1));
+    });
+
     it('keeps nested Source and Transform LIVE preview actions separate', () => {
+      // A full bounded page proves actual scrolling independently of the amount of shell chrome.
+      sampleRowCount = sample.limit;
       cy.viewport(1200, 600);
       cy.get('.react-flow__controls-fitview').click();
       openWorkbenchModel('dvt-transform-1');
@@ -352,7 +410,8 @@ export function registerCanvasNodeDataActionsProof(): void {
       cy.get('[data-slot="bottom-operational-drawer-data"]').should('contain.text', 'Ada');
       proveResizableDataGrid(
         '[data-slot="bottom-operational-drawer-data"]',
-        'compact-source-data-grid'
+        'compact-source-data-grid',
+        'scrolls'
       );
       cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
       cy.then(() => {
@@ -393,7 +452,11 @@ export function registerCanvasNodeDataActionsProof(): void {
       cy.get(`${grid} button[aria-label="Copy cell"]`).should('be.disabled');
       cy.get(`${grid} input[type="search"]`).clear();
       cy.get(grid).should('contain.text', 'Grace');
-      proveResizableDataGrid('[data-slot="canvas-model-data"]', 'compact-operation-data-grid');
+      proveResizableDataGrid(
+        '[data-slot="canvas-model-data"]',
+        'compact-operation-data-grid',
+        'scrolls'
+      );
       cy.then(() => expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(2));
     });
 

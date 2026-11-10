@@ -11,6 +11,7 @@ vi.mock(
 );
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
+import type { CanvasProjectElementsInput } from './explorer/CanvasExplorer.types';
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';
@@ -46,6 +47,68 @@ describe('CanvasViewport', () => {
   afterEach(() => {
     unmountViewport();
     vi.useRealTimers();
+  });
+
+  it('opens Add at the background pointer without inspecting, zooming or creating before selection', async () => {
+    const registration = {
+      ...buildTestNodeKind('dvt:transform', 'Model'),
+      role: 'transform' as const,
+    };
+    const props = await renderViewport({ authoringNodeKinds: [registration] });
+    const surface = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    )!;
+    await act(async () => fireEvent.click(surface));
+    expect(
+      document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+    ).toBeNull();
+    await act(async () =>
+      fireEvent.doubleClick(surface, { clientX: 180, clientY: 240, detail: 2 })
+    );
+    expect(
+      document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+    ).not.toBeNull();
+    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+    expect(props.onInspectNode).not.toHaveBeenCalled();
+    expect(xyflowState.lastReactFlowProps?.zoomOnDoubleClick).toBe(false);
+    await act(async () =>
+      fireEvent.click(document.querySelector('[data-registration-kind="dvt:transform"]')!)
+    );
+    expect(props.onCreateAuthoringNode).toHaveBeenCalledExactlyOnceWith(registration, {
+      x: 280,
+      y: 200,
+    });
+  });
+
+  it.each(['node', 'edge', 'control', 'nested'])(
+    'does not open the background catalog from a %s gesture',
+    async (kind) => {
+      await renderViewport({ authoringNodeKinds: [buildTestNodeKind('dvt:transform', 'Model')] });
+      const surface = container.querySelector<HTMLElement>(
+        '[data-slot="canvas-viewport-context-surface"]'
+      )!;
+      const child = document.createElement(kind === 'control' ? 'button' : 'div');
+      if (kind === 'node') child.className = 'react-flow__node';
+      if (kind === 'edge') child.className = 'react-flow__edge';
+      if (kind === 'nested') child.setAttribute('data-canvas-viewport', '');
+      surface.append(child);
+      await act(async () => fireEvent.doubleClick(child, { detail: 2 }));
+      expect(
+        document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+      ).toBeNull();
+    }
+  );
+  it('keeps a read-only background side-effect free', async () => {
+    const props = await renderViewport({ canEditEdges: false });
+    const surface = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    )!;
+    await act(async () => fireEvent.doubleClick(surface, { detail: 2 }));
+    expect(
+      document.querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+    ).toBeNull();
+    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+    expect(props.onInspectNode).not.toHaveBeenCalled();
   });
 
   it.each([true, false])(
@@ -111,7 +174,6 @@ describe('CanvasViewport', () => {
           metadata: { authority: 'dbt-project-files', resourceType: 'model' },
         },
       ],
-      onInstantiateNode: vi.fn(),
     });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' }).draggable).toBe(true);
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(true);
@@ -120,13 +182,56 @@ describe('CanvasViewport', () => {
     );
   });
 
+  it('qualifies only actual file definitions with the explicit catalogue Canvas owner', async () => {
+    // Scoped file identity cannot be reconstructed from an id prefix or the Canvas layout key.
+    const renderElements = vi.fn((_input: CanvasProjectElementsInput) => null);
+    const onInspectNode = vi.fn();
+    await renderViewport({
+      onInspectNode,
+      sourceCatalogueCanvasId: 'file-canvas',
+      sourceCatalogue: [
+        {
+          id: 'model.demo.orders',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: {
+            authority: 'dbt-project-files',
+            resourceType: 'model',
+            dbtUniqueId: 'model.demo.orders',
+          },
+        },
+        {
+          id: 'native-model',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: { dbtUniqueId: 'model.demo.orders' },
+        },
+      ],
+      projectFiles: { onActivate: async () => true, onCanvas: () => undefined, renderElements },
+    });
+    const items = renderElements.mock.lastCall?.[0].items;
+    expect(items?.map((item) => item.definitionIdentity)).toEqual([
+      { canvasId: 'file-canvas', uniqueId: 'model.demo.orders' },
+      undefined,
+    ]);
+    expect(onInspectNode).not.toHaveBeenCalled();
+  });
+
   it.each([true, false])(
-    'creates at the visible center without focusing or opening a card (writable=%s)',
+    'inspects catalogue definitions without placement or camera movement (writable=%s)',
     async (writable) => {
-      const onInstantiateNode = vi.fn();
-      await renderViewport({
+      const onInspectNode = vi.fn();
+      const props = await renderViewport({
         canEditEdges: writable,
-        onInstantiateNode,
+        onInspectNode,
         sourceCatalogue: [
           {
             id: 'orders',
@@ -144,13 +249,13 @@ describe('CanvasViewport', () => {
       xyflowState.fitView.mockClear();
       xyflowState.setViewport.mockClear();
       await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
-      if (writable)
-        expect(onInstantiateNode).toHaveBeenCalledExactlyOnceWith(
-          'orders',
-          { x: 500, y: 270 },
-          undefined
-        );
-      else expect(onInstantiateNode).not.toHaveBeenCalled();
+      expect(onInspectNode).toHaveBeenCalledExactlyOnceWith({
+        kind: 'canonical-node',
+        nodeId: 'orders',
+      });
+      expect(props.onDrop).not.toHaveBeenCalled();
+      expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+      expect(props.onNodesChange).not.toHaveBeenCalled();
       expect(xyflowState.fitView).not.toHaveBeenCalled();
       expect(xyflowState.setViewport).not.toHaveBeenCalled();
     }

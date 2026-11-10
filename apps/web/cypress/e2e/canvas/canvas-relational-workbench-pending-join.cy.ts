@@ -8,8 +8,10 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
   openWorkbenchModel,
   dragWorkbenchSource,
   connectWorkbenchProducer,
@@ -65,15 +67,8 @@ describe('Workbench pending binary operations', () => {
       connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
       cy.get('@original1').find(read).focus().should('be.focused');
       for (let step = 0; step < 4; step++) {
-        for (const type of ['keyDown', 'keyUp']) {
-          cy.then(() =>
-            Cypress.automation('remote:debugger:protocol', {
-              command: 'Input.dispatchKeyEvent',
-              // Chromium modifier bits: Alt (1) + Shift (8).
-              params: { type, key: 'ArrowDown', code: 'ArrowDown', modifiers: 9 },
-            })
-          );
-        }
+        // The shared adapter proves trusted delivery to this frame before moving the next step.
+        pressNativeKey('ArrowDown', { alt: true, shift: true });
       }
       revealWorkbenchCard('@original1');
       cy.get('@original1').find(read).rightclick();
@@ -100,7 +95,7 @@ describe('Workbench pending binary operations', () => {
         expect(savedConfiguration).not.to.equal(undefined);
         expect(retained.operations[0]!.semanticDocument).to.equal(undefined);
       });
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get(join).click();
       cy.get('[data-slot="canvas-staged-operation-reconfigure"]').focus().click();
@@ -136,7 +131,7 @@ describe('Workbench pending binary operations', () => {
           outcome === 'apply' ? 2 : 1
         )
       );
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       if (outcome === 'cancel') {
         cy.get(join).click();
@@ -291,7 +286,7 @@ describe('Workbench pending binary operations', () => {
         2
       );
       cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(1));
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(
         'have.length',

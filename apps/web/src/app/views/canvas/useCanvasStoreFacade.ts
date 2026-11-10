@@ -2,10 +2,15 @@
 import { useCallback, useMemo } from 'react';
 import { useAuthorizationStore, type UserPermissions } from '../../stores/authorizationStore';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import {
+  isCanvasInspectorScopeCurrent,
+  type CanvasInspectorRequest,
+  type CanvasInspectorTarget,
+} from '../../stores/canvasInspectorTarget';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasHexColor } from './canvasPalette';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
@@ -24,9 +29,13 @@ type CanvasStoreFacade = {
     typeof useCanvasInteractionStore.getState
   >['setExecutionSelectionIntent'];
   inspectorNodeId: string | null;
+  inspectorTarget: CanvasInspectorTarget | null;
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
-  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
+  setInspectorNode: (
+    request: CanvasInspectorRequest | null,
+    preferredTabId?: string | null
+  ) => boolean;
   impactOverlayEnabled: boolean;
   toggleImpactOverlay: () => void;
   columnLevelLineageEnabled: boolean;
@@ -39,19 +48,17 @@ type CanvasStoreFacade = {
     typeof useCanvasInteractionStore.getState
   >['closeContextualWorkbench'];
   userPermissions: UserPermissions;
-  setBottomDrawerHeight: (height: number) => void;
-  bottomDrawerVisible: boolean;
-  toggleBottomDrawer: () => void;
+  showBottomDrawer: () => void;
   inspectorPanelVisible: boolean;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPalette: CanvasHexColor;
   setGridSize: (size: number) => void;
-  setCanvasPalette: (palette: CanvasPaletteId) => void;
+  setCanvasPalette: (palette: CanvasHexColor) => void;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColor: CanvasHexColor;
   canvasSnapToGrid: boolean;
   setCanvasGridVisible: (visible: boolean) => void;
-  setCanvasGridColor: (color: CanvasPaletteId) => void;
+  setCanvasGridColor: (color: CanvasHexColor) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
   canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
   setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
@@ -88,14 +95,61 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const setExecutionSelectionIntent = useCanvasInteractionStore(
     (state) => state.setExecutionSelectionIntent
   );
-  const inspectorNodeId = useCanvasInteractionStore((state) => state.inspectorNodeId);
+  const storedInspectorTarget = useCanvasInteractionStore((state) => state.inspectorTarget);
+  const workspaceScope = {
+    tenantId: selectedTenant,
+    projectId: selectedProject,
+    environmentId: selectedEnvironment,
+  };
+  const inspectorTarget = isCanvasInspectorScopeCurrent(
+    storedInspectorTarget?.workspaceScope,
+    workspaceScope
+  )
+    ? storedInspectorTarget
+    : null;
+  const inspectorNodeId =
+    inspectorTarget?.kind === 'canonical-node' ? inspectorTarget.nodeId : null;
   const inspectorPreferredTabId = useCanvasInteractionStore(
     (state) => state.inspectorPreferredTabId
   );
   const inspectorPreferredTabRequestId = useCanvasInteractionStore(
     (state) => state.inspectorPreferredTabRequestId
   );
-  const setInspectorNode = useCanvasInteractionStore((state) => state.setInspectorNode);
+  const setInspectorTarget = useCanvasInteractionStore((state) => state.setInspectorTarget);
+  const setInspectorNode = useCallback(
+    (request: CanvasInspectorRequest | null, preferredTabId?: string | null) => {
+      const current = useSessionStore.getState();
+      // Async file handoffs can retain this callback after the selected workspace changes.
+      if (
+        !isCanvasInspectorScopeCurrent(
+          {
+            tenantId: selectedTenant,
+            projectId: selectedProject,
+            environmentId: selectedEnvironment,
+          },
+          current
+        )
+      )
+        return false;
+      setInspectorTarget(
+        request == null
+          ? null
+          : {
+              ...(typeof request === 'string'
+                ? { kind: 'canonical-node' as const, nodeId: request }
+                : request),
+              workspaceScope: {
+                tenantId: selectedTenant,
+                projectId: selectedProject,
+                environmentId: selectedEnvironment,
+              },
+            },
+        preferredTabId
+      );
+      return true;
+    },
+    [selectedTenant, selectedProject, selectedEnvironment, setInspectorTarget]
+  );
   const impactOverlayEnabled = useCanvasInteractionStore((state) => state.impactOverlayEnabled);
   const toggleImpactOverlay = useCanvasInteractionStore((state) => state.toggleImpactOverlay);
   const columnLevelLineageEnabled = useCanvasInteractionStore(
@@ -112,12 +166,10 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     (state) => state.closeContextualWorkbench
   );
   const userPermissions = useAuthorizationStore((state) => state.userPermissions);
-  const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
-  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
+  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const showInspectorPanelStore = useUiLayoutStore((state) => state.showInspectorPanel);
   const hideInspectorPanelStore = useUiLayoutStore((state) => state.hideInspectorPanel);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
-  const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
@@ -162,6 +214,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     setSelectedNodes,
     setExecutionSelectionIntent,
     inspectorNodeId,
+    inspectorTarget,
     inspectorPreferredTabId,
     inspectorPreferredTabRequestId,
     setInspectorNode,
@@ -175,9 +228,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     currentRun,
     closeContextualWorkbench,
     userPermissions,
-    setBottomDrawerHeight,
-    bottomDrawerVisible,
-    toggleBottomDrawer,
+    showBottomDrawer,
     inspectorPanelVisible,
     gridSize,
     canvasPalette,

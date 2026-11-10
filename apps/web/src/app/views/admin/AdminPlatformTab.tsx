@@ -1,25 +1,21 @@
+/** Compose Admin operational diagnostics from one observed presentation model. */
 import { AdminCapabilitiesCard } from './AdminCapabilitiesCard';
 import { AdminPlatformSummaryCards } from './AdminPlatformSummaryCards';
 import { AdminProbeDetailsCard } from './AdminProbeDetailsCard';
 import type { AdminPlatformTabProps } from './platformTypes';
+import styles from './AdminPlatform.module.css';
 
 export function AdminPlatformTab({
-  connectionStatus,
-  platformHealthSnapshot,
+  health,
   capabilitiesData,
   capabilitiesLoading,
   capabilitiesError,
 }: Readonly<AdminPlatformTabProps>) {
   return (
-    <div className="mt-6 space-y-6">
-      <AdminPlatformSummaryCards
-        connectionStatus={connectionStatus}
-        platformHealthSnapshot={platformHealthSnapshot}
-        capabilitiesData={capabilitiesData}
-      />
-
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <AdminProbeDetailsCard platformHealthSnapshot={platformHealthSnapshot} />
+    <div className={styles.layout}>
+      <AdminPlatformSummaryCards health={health} />
+      <div className={styles.detailsGrid}>
+        <AdminProbeDetailsCard health={health} />
         <AdminCapabilitiesCard
           capabilitiesData={capabilitiesData}
           capabilitiesLoading={capabilitiesLoading}

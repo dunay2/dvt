@@ -1,14 +1,57 @@
-/** Owned concern: keyboard Model entry and workspace navigation, without authoring scenarios. */
-import { getE2eApiCalls } from '../../support/e2eApiStub';
+/** Owned concern: independent Model entry, retained relational authoring and workspace navigation. */
+import {
+  ConnectedSourceRefSchema,
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformSqlProjectionResponseSchema,
+  WorkspaceGraphAuthoringDraftSchema,
+} from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+
+import { projectCanvasCanonicalGraphEditing } from '../../../src/app/views/canvas/canvasCanonicalGraphEditing';
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
+import { createCanvasRelationalAuthoringDraft } from '../../../src/app/views/canvas/canvasRelationalAuthoringDraft';
+import { getE2eApiCalls, stubE2eApi } from '../../support/e2eApiStub';
 import {
   openWorkbenchProperties,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
+import { E2E_WORKSPACE_SESSION } from '../../support/workspaceSession';
+
+const SQL_ENDPOINT = '/workspace/graph/canvases/main-canvas/transforms/join-transform/sql';
 
 describe('Workbench navigation', () => {
+  let initialDraft: ReturnType<typeof stubWorkbenchScenario>;
   beforeEach(() => {
-    stubWorkbenchScenario('saved-join');
+    const draft = stubWorkbenchScenario('saved-join');
+    initialDraft = draft;
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      draft.nodes.find((node) => node.id === 'join-transform')?.metadata?.transformAuthoring
+    );
+    const semanticPlanSha256 = authority.semanticDocument.semanticPlan.sha256;
+    // This viewer proof consumes the server contract; SQL generation belongs to API proofs.
+    stubE2eApi('GET', SQL_ENDPOINT, ({ url }) => {
+      expect(Object.fromEntries(url.searchParams)).to.deep.equal({
+        ...E2E_WORKSPACE_SESSION,
+        semanticPlanSha256,
+      });
+      return {
+        body: TransformSqlProjectionResponseSchema.parse({
+          schemaVersion: 'canvas-transform-sql-projection.v1',
+          canvasId: 'main-canvas',
+          transformNodeId: 'join-transform',
+          draftRevision: 'rev-e2e-graph-ready',
+          semanticPlanSha256,
+          sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
+          provenance: {
+            sourceRefs: draft.nodes
+              .filter((node) => node.metadata?.connectedSourceRef != null)
+              .map((node) => ConnectedSourceRefSchema.parse(node.metadata?.connectedSourceRef)),
+          },
+        }),
+      };
+    });
   });
   it('keeps Canvas cards and zoom stationary while inspecting Source and Model properties', () => {
     cy.viewport(1280, 720);
@@ -33,11 +76,13 @@ describe('Workbench navigation', () => {
         const transform = viewport.getAttribute('style');
         const host = document.querySelector('[data-testid="canvas-viewport"]')!;
         const hostBounds = host.getBoundingClientRect();
-        const explorerToggle = document.querySelector(
-          '[data-slot="canvas-explorer-elements-toggle"]'
+        const canvasEntry = document.querySelector(
+          'a[data-slot="left-navigation-link"][href="/canvas"]'
         )!;
-        expect(explorerToggle.getAttribute('aria-expanded')).to.equal('true');
-        const dock = document.getElementById(explorerToggle.getAttribute('aria-controls')!)!;
+        expect(canvasEntry.getAttribute('aria-expanded')).to.equal('true');
+        const dock = document.querySelector(
+          '[data-slot="canvas-workspace-surface"] [data-slot="canvas-explorer-panel"]'
+        )!;
         const dockWidth = dock.getBoundingClientRect().width;
         expect(dockWidth, 'visible Explorer width before Properties').to.be.greaterThan(0);
         const nodeIds = ['source-customers', 'source-orders', 'join-transform'];
@@ -74,8 +119,24 @@ describe('Workbench navigation', () => {
                 expect(bounds.right).to.be.closeTo(1280, 30);
                 expect(bounds.width).to.be.at.most(450);
               });
+            // Normal Properties entry is Overview for every role, including a Source.
+            cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+              'have.attr',
+              'aria-selected',
+              'true'
+            );
             if (nodeId !== 'join-transform') {
+              cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
               cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
+                'have.attr',
+                'aria-selected',
+                'true'
+              );
+              // A new normal gesture must reopen Overview even for the same Source after Columns.
+              cy.get(
+                `.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`
+              ).click();
+              cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
                 'have.attr',
                 'aria-selected',
                 'true'
@@ -148,7 +209,7 @@ describe('Workbench navigation', () => {
     cy.get('[data-slot="canvas-model-editor"]').should('be.focused');
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.get(
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
+      '[data-slot="canvas-relational-tree-workbench"] button[aria-label="Collapse explorer"]:visible'
     ).should('be.focused');
     cy.get('[data-slot="canvas-model-view-tab"]').should('not.exist');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should('not.exist');
@@ -345,6 +406,9 @@ describe('Workbench navigation', () => {
       .should(($lines) => {
         expect($lines.text(), 'derived SQL uses the shared viewer').to.match(/\bselect\b/i);
       });
+    cy.then(() => {
+      expect(getE2eApiCalls(SQL_ENDPOINT, 'GET'), 'one authorized SQL read').to.have.length(1);
+    });
     cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
       expect(
         $editor[0]!.getBoundingClientRect().height,
@@ -405,5 +469,91 @@ describe('Workbench navigation', () => {
       .should('have.length', 1)
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
+  });
+
+  it('opens the saved relational draft directly without a published tree or prior Properties selection', () => {
+    // Model editing must resolve its own target; a previous Properties gesture must not be required to hydrate it.
+    const model = initialDraft.nodes.find((node) => node.id === 'join-transform');
+    if (model == null) throw new Error('The existing saved-join scenario must contain its Model.');
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      model.metadata?.transformAuthoring
+    );
+    const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+    const indexed = indexSubstraitRelations(document);
+    if (!indexed.ok) throw indexed.error;
+    const editable = projectCanvasCanonicalGraphEditing(document, [
+      'source-customers',
+      'source-orders',
+    ]);
+    if (editable == null)
+      throw new Error('The existing JOIN fixture must have a lossless authoring projection.');
+    const savedAuthoringDraft = createCanvasRelationalAuthoringDraft({
+      ...editable,
+      outputRelationId: indexed.index.rootId,
+      positions: new Map(),
+    });
+    const metadata: NonNullable<typeof model.metadata> = {
+      ...model.metadata,
+      relationalAuthoringDraft: savedAuthoringDraft,
+    };
+    delete metadata.transformAuthoring;
+    model.metadata = metadata;
+    Object.assign(initialDraft, normalizeProjectCanvasDraft(initialDraft));
+    WorkspaceGraphAuthoringDraftSchema.parse(initialDraft);
+    expect(initialDraft.nodeIds).to.include(model.id);
+    expect(initialDraft.edges.filter((edge) => edge.targetId === model.id)).to.have.length(2);
+    expect(savedAuthoringDraft.sources).to.have.length(2);
+    expect(savedAuthoringDraft.outputRelationId).to.equal(indexed.index.rootId);
+    expect(model.metadata).not.to.have.property('transformAuthoring');
+
+    cy.viewport(1280, 720);
+    visitWorkbenchCanvas();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]')
+      .should('be.visible')
+      .dblclick();
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-unavailable"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-editor"] [data-operator="read"]').should('have.length', 2);
+    cy.get('[data-slot="canvas-model-editor"] [data-operator="join"]')
+      .should('have.length', 1)
+      .and('contain.text', 'JOIN');
+    cy.get('[data-slot="canvas-relational-tree-output"]').should('contain.text', 'Customer orders');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'have.attr',
+      'data-connected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-relational-output-edge"]')
+      .should('have.attr', 'd')
+      .and('not.be.empty');
+
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').should('be.enabled').click();
+    cy.get('[role="listbox"]').should('be.visible');
+    cy.get('[data-operation="filter"]')
+      .should('have.attr', 'aria-disabled', 'false')
+      .scrollIntoView()
+      .click();
+    cy.get('[data-pending-operation="true"] [data-operator="filter"]').should('exist');
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').should('be.visible').click();
+    cy.get('[data-operator="filter"]').should('not.exist');
+    cy.get('[data-operator="join"]').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'have.attr',
+      'data-connected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    // A restored unpublished draft retains the existing unsaved-authoring guard.
+    cy.contains('[role="alertdialog"] button', 'Discard changes').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.get('[role="alertdialog"]').should('not.exist');
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+      expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(0);
+      expect(model.metadata?.relationalAuthoringDraft).to.deep.equal(savedAuthoringDraft);
+      expect(model.metadata).not.to.have.property('transformAuthoring');
+    });
   });
 });

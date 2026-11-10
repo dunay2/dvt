@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/** Owned concern: preserve accessible shell slots, target-menu ownership and focus across layout changes. */
 
 import React, { act } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,18 +14,6 @@ import {
 } from '../ui/context-menu';
 
 import { AppShellFrame } from './AppShellFrame';
-
-const PINNED_NAVIGATION_DISPOSITION = {
-  railMode: 'visible',
-  footerMode: 'pinned',
-  reason: 'global_route',
-} as const;
-
-const MENU_NAVIGATION_DISPOSITION = {
-  railMode: 'hidden',
-  footerMode: 'menu',
-  reason: 'workbench_route',
-} as const;
 
 describe('AppShellFrame', () => {
   let container: HTMLDivElement;
@@ -55,9 +44,10 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<input aria-label="Data search" onContextMenu={childHandler} />}
           bottomDrawerHeight={360}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           leftNavigation={<button onContextMenu={childHandler}>Elements</button>}
-          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+
           showBottomDrawer
           skipToMainContentLabel="Skip"
           topBar={<button onContextMenu={childHandler}>Project</button>}
@@ -101,9 +91,10 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={null}
           bottomDrawerHeight={0}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           leftNavigation={null}
-          navigationDisposition={MENU_NAVIGATION_DISPOSITION}
+
           showBottomDrawer={false}
           skipToMainContentLabel="Skip"
           topBar={null}
@@ -142,10 +133,11 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<div data-testid="bottom-operational-drawer">Operations drawer</div>}
           bottomDrawerHeight={360}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
-          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+
           showBottomDrawer
           skipToMainContentLabel="Skip to main content"
           topBar={<div data-testid="top-bar">Top bar</div>}
@@ -173,8 +165,8 @@ describe('AppShellFrame', () => {
     expect(body).not.toBeNull();
     expect(leftNavigation?.textContent).toContain('Left nav');
     expect(leftNavigation?.parentElement).toBe(body);
-    expect(leftNavigation?.className).toContain('flex');
-    expect(leftNavigation?.className).toContain('h-full');
+    // Guard the slot relationship; utility-class spelling is owned by external presentation.
+    expect(Array.from(body?.children ?? [])).toEqual([leftNavigation, main]);
     expect(main?.parentElement).toBe(body);
     expect(outlet?.textContent).toContain('Route outlet');
     expect(outlet?.closest('[data-slot="app-shell-main"]')).toBe(main);
@@ -209,10 +201,11 @@ describe('AppShellFrame', () => {
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
           bottomDrawerHeight={360}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
-          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
+
           showBottomDrawer
           skipToMainContentLabel="Skip to main content"
           topBar={<div>Top bar</div>}
@@ -233,16 +226,17 @@ describe('AppShellFrame', () => {
     expect(outlet?.textContent).toContain('Route outlet');
   });
 
-  it('hides permanent navigation when route posture uses menu navigation', async () => {
+  it('keeps direct navigation beside the outlet outside explicit focus mode', async () => {
     await act(async () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
           bottomDrawerHeight={0}
+          onBottomDrawerHeightChange={vi.fn()}
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
-          navigationDisposition={MENU_NAVIGATION_DISPOSITION}
+
           showBottomDrawer={false}
           skipToMainContentLabel="Skip to main content"
           topBar={<div>Top bar</div>}
@@ -252,7 +246,9 @@ describe('AppShellFrame', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).toBeNull();
+    expect(container.querySelector('[data-slot="app-shell-left-navigation"]')?.textContent).toBe(
+      'Left nav'
+    );
     expect(container.querySelector('[data-slot="app-shell-outlet"]')?.textContent).toContain(
       'Route outlet'
     );

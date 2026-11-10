@@ -32,6 +32,7 @@ authenticated users who have tenant scope but no effective project/workspace.
 | `/login`                                         | public route       | Public recovery surface for unauthenticated product navigation.                |
 | `RecoverLocalApiBearerSession`                   | command            | Dev-only local session recovery through the API auth component.                |
 | `AuthRouteGate`                                  | route gate         | Admit protected shell routes only after session and workspace context resolve. |
+| `AuthRouteSurface`                               | route presentation | Admit the current Outlet only from the gate's read-only current-route context. |
 | `resolveProtectedRouteSessionContext`            | query orchestrator | Query `/session`, then `/workspace/context`, then update browser projections.  |
 | `classifyProtectedRouteSessionError`             | mapper             | Convert API failures to source-owned route recovery vocabulary.                |
 | `sessionStore.setWorkspaceScopeSelectionContext` | projection command | Store granted workspace scope as projection, not independent authority.        |
@@ -44,6 +45,14 @@ authenticated users who have tenant scope but no effective project/workspace.
 - Each requested pathname, search and hash owns its admission lifetime. Changing
   that identity starts a fresh checking boundary before protected child effects
   run; navigating to the identical identity retains the current boundary.
+- Initial checking mounts no shell. After the first valid admission, subsequent
+  checking retains the same Root, frame and navigation DOM while blocking only
+  the protected Outlet. Denial replaces both shell and route with the existing
+  login or onboarding recovery; shell retention never grants route access.
+- The current requested identity must equal the allowed identity during render.
+  This closes the Outlet synchronously, before a revalidation effect starts.
+  `AuthRouteSurface` fails closed when its private admission context is absent;
+  it has no independent permission state or permissive default.
 - `/session` resolves before `/workspace/context`; workspace context is scoped by
   the authenticated principal.
 - Recovery distinguishes recognized denials and a missing session route from
@@ -90,7 +99,36 @@ stateDiagram-v2
   WorkspaceContextChecking --> WorkspaceOpen: granted tenant/project/workspace
   ProjectOnboarding --> WorkspaceOpen: CreateProject / SelectProjectScope
   WorkspaceOpen --> CanvasAuthoring: GetWorkspaceManifest then GetWorkspaceGraphDraft
+  WorkspaceOpen --> RouteRechecking: pathname, search or hash changes
+  RouteRechecking --> WorkspaceOpen: current session and workspace publication accepted
+  RouteRechecking --> PublicLogin: session denied or unavailable
+  RouteRechecking --> ProjectOnboarding: workspace context not granted
 ```
+
+### Persistent Shell And Protected Route Lifetime
+
+The keyed admission wrapper formerly replaced the entire shell on every route
+change. Removing only that key would still replace Root during checking. The
+existing `GetProtectedRouteSession` owner therefore retains its admitted-shell
+lifetime while projecting current-route admission to the Outlet boundary:
+
+```mermaid
+flowchart LR
+  Request[Changed route identity] --> Gate[Stable AuthRouteGate]
+  Gate --> State[checking / rechecking / allowed / denied]
+  State -->|initial checking| Initial[No protected shell]
+  State -->|allowed or rechecking| Shell[Retained Root and navigation]
+  Shell --> Surface[AuthRouteSurface]
+  State -->|allowed and exact current identity| Surface
+  Surface -->|admitted is true| Outlet[Current protected route]
+  Surface -->|otherwise| Pending[Checking session]
+  State -->|denied| Recovery[Replace shell with existing recovery]
+```
+
+This is presentation lifetime inside the existing admission state machine, not
+a cached authorization grant. Tests compose the real gate and resolver with
+controlled transport, proving both retained shell identity and absent route
+layout effects before current admission. The resolver remains the only publisher.
 
 ## Sequence
 
@@ -145,7 +183,9 @@ at the consuming port before replacing this publication boundary.
 - `apps/web/src/app/routes.ts` mounts `/login` outside the protected shell and
   wraps `/` product children in `AuthRouteGate`.
 - `apps/web/src/app/bootstrap/AuthRouteGate.tsx` owns route admission and
-  recovery navigation.
+  recovery navigation, including the read-only `AuthRouteSurface` boundary.
+- `apps/web/src/app/Root.tsx` places that boundary around its Outlet while the
+  already-admitted shell remains mounted across protected route revalidation.
 - `apps/web/src/app/services/session/protectedRouteSessionContext.ts` owns the
   session/workspace query order and projection update.
 - `apps/web/src/app/stores/sessionStore.ts` holds granted scope projection for
@@ -157,17 +197,18 @@ at the consuming port before replacing this publication boundary.
 
 ## Command/Query Rail
 
-| Rail                           | Type    | DDD owner                        | Application port / adapter surface                                 | Negative tests                                                       |
-| ------------------------------ | ------- | -------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `StartLogin`                   | command | `ReturnRoute` value object       | `/login` route                                                     | protected deep link without session redirects with return route      |
-| `RecoverLocalApiBearerSession` | command | `ReturnRoute` value object       | `/login` route via API auth component                              | missing refresh URL or unusable token leaves user on public recovery |
-| `GetSessionProfile`            | query   | `SessionProfile` read model      | `resolveProtectedRouteSessionContext` via `GET /session`           | missing, expired, malformed, or unauthorized session fails closed    |
-| `GetEffectiveWorkspaceContext` | query   | `SelectedScope` read model       | `resolveProtectedRouteSessionContext` via `GET /workspace/context` | revoked tenant, deleted project, stale browser storage, denied scope |
-| `ListProjects`                 | query   | `ProjectDescriptor` read model   | project onboarding catalog                                         | empty tenant returns onboarding, not sample graph data               |
-| `CreateProject`                | command | `Project` aggregate              | project onboarding command port                                    | duplicate project and unauthorized tenant are rejected               |
-| `GetWorkspaceManifest`         | query   | `WorkspaceManifest` read model   | workspace manifest query                                           | no selected project does not call `GetWorkspaceGraphDraft`           |
-| `GetWorkspaceGraphDraft`       | query   | `WorkspaceGraphDraft` read model | protected Canvas draft repository                                  | draft query is downstream of session and project admission           |
-| `EnableDemoProjectSeed`        | command | `DemoSeedPolicy`                 | explicit demo/test seed command                                    | fixture nodes cannot appear in clean startup without explicit seed   |
+| Rail                           | Type    | DDD owner                        | Application port / adapter surface                                   | Negative tests                                                                                         |
+| ------------------------------ | ------- | -------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `StartLogin`                   | command | `ReturnRoute` value object       | `/login` route                                                       | protected deep link without session redirects with return route                                        |
+| `RecoverLocalApiBearerSession` | command | `ReturnRoute` value object       | `/login` route via API auth component                                | missing refresh URL or unusable token leaves user on public recovery                                   |
+| `GetSessionProfile`            | query   | `SessionProfile` read model      | `resolveProtectedRouteSessionContext` via `GET /session`             | missing, expired, malformed, or unauthorized session fails closed                                      |
+| `GetProtectedRouteSession`     | query   | `ProtectedRouteSessionContext`   | `AuthRouteGate` and `AuthRouteSurface` through the existing resolver | missing provider or mismatched route cannot admit children; stale responses cannot retain denied shell |
+| `GetEffectiveWorkspaceContext` | query   | `SelectedScope` read model       | `resolveProtectedRouteSessionContext` via `GET /workspace/context`   | revoked tenant, deleted project, stale browser storage, denied scope                                   |
+| `ListProjects`                 | query   | `ProjectDescriptor` read model   | project onboarding catalog                                           | empty tenant returns onboarding, not sample graph data                                                 |
+| `CreateProject`                | command | `Project` aggregate              | project onboarding command port                                      | duplicate project and unauthorized tenant are rejected                                                 |
+| `GetWorkspaceManifest`         | query   | `WorkspaceManifest` read model   | workspace manifest query                                             | no selected project does not call `GetWorkspaceGraphDraft`                                             |
+| `GetWorkspaceGraphDraft`       | query   | `WorkspaceGraphDraft` read model | protected Canvas draft repository                                    | draft query is downstream of session and project admission                                             |
+| `EnableDemoProjectSeed`        | command | `DemoSeedPolicy`                 | explicit demo/test seed command                                      | fixture nodes cannot appear in clean startup without explicit seed                                     |
 
 ## Fowler Analysis
 

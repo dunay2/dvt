@@ -5,12 +5,12 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createMemoryRouter, RouterProvider, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { waitFor } from '@testing-library/dom';
 
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { ShellAppMenu } from '../../components/shell/ShellAppMenu';
+import { LeftNavigationRail } from '../../components/LeftNavigation';
 import { resolveShellTopBarCopy } from '../../components/shell/copy';
 import { buildShellNavigationModel } from '../../shell/shellNavigationModel';
 import { flushRouterUpdate } from '../../routerFlushSync';
@@ -501,7 +501,7 @@ describe('CanvasModelEditor navigation', () => {
     expect(container.textContent).toContain('Next route');
   });
 
-  it('keeps unapplied work when Raven navigation is cancelled and discards only on an explicit decision', async () => {
+  it('keeps unapplied work when direct shell navigation is cancelled and discards only on an explicit decision', async () => {
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
     const router = createMemoryRouter(
       [
@@ -509,10 +509,9 @@ describe('CanvasModelEditor navigation', () => {
           path: '/canvas',
           element: (
             <>
-              <ShellAppMenu
+              <LeftNavigationRail
                 copy={resolveShellTopBarCopy('en')}
                 navigationModel={buildShellNavigationModel([])}
-                showNavigation
               />
               <Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />
             </>
@@ -528,12 +527,9 @@ describe('CanvasModelEditor navigation', () => {
     await beginProjection(container);
 
     for (const decision of ['Keep editing', 'Discard changes']) {
-      await act(async () => {
-        fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
-      });
       const destination = await waitFor(() => {
         const link = document.querySelector<HTMLElement>(
-          '[data-slot="shell-menu-navigation-link"][href="/plugins"]'
+          '[data-slot="left-navigation-link"][href="/plugins"]'
         );
         expect(link).not.toBeNull();
         return link!;

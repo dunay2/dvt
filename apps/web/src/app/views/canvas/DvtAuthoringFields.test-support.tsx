@@ -11,6 +11,8 @@ import {
 } from './canvasInspectorAuthoringModel';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 import { beforeEach, afterEach, vi } from 'vitest';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 
 function DvtAuthoringFieldsHarness({
   node,
@@ -19,6 +21,7 @@ function DvtAuthoringFieldsHarness({
   section,
   warehouseSourceImport,
   externalConnectionId,
+  queryClient,
 }: Readonly<{
   node: CanonicalNode;
   nodes?: readonly CanonicalNode[];
@@ -26,6 +29,7 @@ function DvtAuthoringFieldsHarness({
   section?: 'all' | 'general' | 'columns' | 'code';
   warehouseSourceImport?: IWarehouseSourceImportPort;
   externalConnectionId?: string;
+  queryClient: QueryClient;
 }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
@@ -73,25 +77,29 @@ function DvtAuthoringFieldsHarness({
   if (!warehouseSourceImport) return fields;
 
   return (
-    <AppServicesProvider
-      overrides={{
-        ...createAppServicesTestOverrides(),
-        warehouseSourceImport,
-      }}
-    >
-      {fields}
-    </AppServicesProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          warehouseSourceImport,
+        }}
+      >
+        {fields}
+      </AppServicesProvider>
+    </QueryClientProvider>
   );
 }
 
 export function useAuthoringFieldsHarness() {
   let container: HTMLDivElement;
   let root: Root;
+  let queryClient: QueryClient;
   beforeEach(() => {
     useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    queryClient = createTestQueryClient();
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -101,6 +109,7 @@ export function useAuthoringFieldsHarness() {
       root.unmount();
     });
     container.remove();
+    queryClient.clear();
     useApplicationLanguageStore.setState({ language: 'en' });
     vi.clearAllMocks();
     vi.useRealTimers();
@@ -121,6 +130,7 @@ export function useAuthoringFieldsHarness() {
           edges={edges}
           section={section}
           warehouseSourceImport={warehouseSourceImport}
+          queryClient={queryClient}
           externalConnectionId={externalConnectionId}
         />
       );

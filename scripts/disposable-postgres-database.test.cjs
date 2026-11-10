@@ -65,6 +65,34 @@ test('signal cleanup stops the runner before dropping its database', async () =>
   assert.equal(emitter.listenerCount('SIGINT'), 0);
 });
 
+test('an inherited execution deadline awaits resource and database cleanup before failing', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const emitter = new EventEmitter();
+  const calls = [];
+  let finishShutdown;
+  const shutdown = new Promise((resolve) => {
+    finishShutdown = resolve;
+  });
+  emitter.exit = (code) => calls.push(`exit:${code}`);
+  const remove = installDisposablePostgresInterruptCleanup(
+    { dispose: async () => calls.push('drop') },
+    async () => {
+      calls.push('shutdown');
+      await shutdown;
+    },
+    emitter,
+    { env: { DVT_VALIDATION_DEADLINE_MS: '1010' } }
+  );
+  const completed = once(emitter, 'disposable-cleanup-complete');
+  t.mock.timers.tick(10);
+  assert.deepEqual(calls, ['shutdown']);
+  finishShutdown();
+  await completed;
+  assert.deepEqual(calls, ['shutdown', 'drop', 'exit:124']);
+  remove();
+  assert.equal(emitter.listenerCount('SIGTERM'), 0);
+});
+
 test(
   'real PostgreSQL allocation and cleanup leaves the persistent database untouched',
   {
@@ -94,6 +122,56 @@ test(
       assert.equal(result.rowCount, 0);
     } finally {
       await admin.end();
+    }
+  }
+);
+
+test(
+  'real PostgreSQL deadline cleanup removes only its leased database before reporting timeout',
+  {
+    skip: !process.env.DVT_TEST_DISPOSABLE_PG_URL,
+    timeout: 15000,
+  },
+  async () => {
+    const adminUrl = process.env.DVT_TEST_DISPOSABLE_PG_URL;
+    const clientFactory = (connectionString) =>
+      new Client({ connectionString, connectionTimeoutMillis: 3000, query_timeout: 3000 });
+    const lease = await allocateDisposablePostgresDatabase(adminUrl, 'deadline', { clientFactory });
+    const emitter = new EventEmitter();
+    const events = [];
+    emitter.exit = (code) => events.push(`exit:${code}`);
+    const completion = once(emitter, 'disposable-cleanup-complete');
+    const remove = installDisposablePostgresInterruptCleanup(
+      {
+        dispose: async () => {
+          await lease.dispose();
+          events.push('disposed');
+        },
+      },
+      async () => {
+        events.push('resources-stopped');
+      },
+      emitter,
+      { env: { DVT_VALIDATION_DEADLINE_MS: String(Date.now() + 50) } }
+    );
+    try {
+      await completion;
+      assert.deepEqual(events, ['resources-stopped', 'disposed', 'exit:124']);
+      const admin = clientFactory(adminUrl);
+      await admin.connect();
+      try {
+        const result = await admin.query('SELECT 1 FROM pg_database WHERE datname = $1', [
+          lease.name,
+        ]);
+        assert.equal(result.rowCount, 0);
+        const current = await admin.query('SELECT current_database() AS database');
+        assert.notEqual(current.rows[0].database, lease.name);
+      } finally {
+        await admin.end();
+      }
+    } finally {
+      remove();
+      await lease.dispose();
     }
   }
 );

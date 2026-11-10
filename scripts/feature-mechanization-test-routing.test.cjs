@@ -1,9 +1,8 @@
 /** Owned concern: every feature-mechanization implementation change runs its real regressions. */
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const fs = require('node:fs');
-const path = require('node:path');
 const { buildVerifyChangedPlan } = require('./local-validation-plan.cjs');
+const { effectiveNodeTestFiles, readParentSuiteMembers } = require('./lib/local-test-coverage.cjs');
 
 test('shared syntax facts select each semantic consumer regression once', () => {
   const suites = [
@@ -37,9 +36,7 @@ test('command changes select canonical catalog coverage once and unrelated produ
     ['scripts/lib/source-code-facts.cjs', suite, 'tools/ci/repository-command-catalog.mjs'],
   ]) {
     assert.equal(
-      buildVerifyChangedPlan(files).filter(
-        (step) => step.command === 'node' && step.args.includes(suite)
-      ).length,
+      effectiveNodeTestFiles(buildVerifyChangedPlan(files)).filter((file) => file === suite).length,
       1
     );
   }
@@ -65,9 +62,7 @@ test('an affected aggregate runs its included responsibility shard once', () => 
     ],
   ]) {
     assert.ok(
-      fs
-        .readFileSync(path.resolve(__dirname, '..', aggregate), 'utf8')
-        .includes("require('./" + shard.slice('scripts/'.length) + "');"),
+      readParentSuiteMembers(aggregate).includes(shard),
       'aggregate must actually include the shard'
     );
     const plan = buildVerifyChangedPlan([aggregate, source, shard]);
@@ -109,14 +104,17 @@ for (const [source, suite] of [
     'scripts/lib/feature-mechanization-git-diff.cjs',
     'scripts/lib/feature-mechanization-git-diff.test.cjs',
   ],
+  [
+    'scripts/lib/feature-mechanization-surface-matcher.cjs',
+    'scripts/lib/feature-mechanization-surface-matcher.test.cjs',
+  ],
 ]) {
   test(source + ' selects its regression once even when the test changes too', () => {
     for (const files of [[source], [suite], [source, suite]]) {
-      const matches = buildVerifyChangedPlan(files).filter(
-        (step) => step.command === 'node' && step.args.includes(suite)
+      const matches = effectiveNodeTestFiles(buildVerifyChangedPlan(files)).filter(
+        (file) => file === suite
       );
       assert.equal(matches.length, 1);
-      assert.deepEqual(matches[0].args, ['--test', suite]);
     }
   });
 }

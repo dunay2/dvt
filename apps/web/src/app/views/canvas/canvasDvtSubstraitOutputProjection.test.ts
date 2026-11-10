@@ -1,99 +1,45 @@
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import { describe } from 'vitest';
 import { expect } from 'vitest';
 import { it } from 'vitest';
-import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
-import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+import { vi } from 'vitest';
+import { ConnectedSourceRefSchema, TransformSqlProjectionResponseSchema } from '@dvt/contracts';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
-import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import { resolveDvtSubstraitProjectionSource } from './canvasDvtSubstraitProjection';
-import {
-  SOURCE,
-  TRANSFORM,
-  EDGE,
-  buildCanonicalTransform,
-} from './canvasOutputProjection.test-support';
+import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+
+import { SOURCE, EDGE, buildCanonicalTransform } from './canvasOutputProjection.test-support';
 
 describe('Canonical output projection', () => {
-  it('projects PostgreSQL SQL from the exact connected canonical revision', async () => {
+  it('reads SQL through the authorized projection query using only the selected canonical identity', async () => {
+    // External dbt producers require server-authorized SQL; local projection omitted that authority.
     const transform = buildCanonicalTransform();
-
-    const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
-      transformNode: transform,
-      nodes: [SOURCE, transform],
-      edges: [EDGE],
-    });
-
-    expect(sql.length).toBeGreaterThan(0);
-    const bound = resolveCanvasSubstraitGraphBindings({
-      node: transform,
-      nodes: [SOURCE, transform],
-      edges: [EDGE],
-    });
-    expect(
-      bound.index.relations.get(bound.index.rootId)!.fields.map((field) => field.fieldId)
-    ).toEqual(['output:order_id', 'output:customer']);
-  });
-  it('fails closed when the connected source no longer matches the canonical sidecar', async () => {
-    const transform = buildCanonicalTransform();
-
-    await expect(
-      projectDvtSubstraitTransformOutputToPostgresSql({
-        transformNode: transform,
-        nodes: [
-          {
-            ...SOURCE,
-            metadata: { ...SOURCE.metadata, tableName: 'other_orders' },
-          },
-          transform,
-        ],
-        edges: [EDGE],
+    const semanticPlanSha256 =
+      readDvtTransformAuthoringAuthority(transform)!.semanticDocument.semanticPlan.sha256;
+    const projectTransformSql = vi.fn(async () =>
+      TransformSqlProjectionResponseSchema.parse({
+        schemaVersion: 'canvas-transform-sql-projection.v1' as const,
+        canvasId: 'canvas-one',
+        transformNodeId: transform.id,
+        draftRevision: 'revision-one',
+        semanticPlanSha256,
+        sql: 'select authorized_output',
+        provenance: {
+          sourceRefs: [ConnectedSourceRefSchema.parse(SOURCE.metadata!.connectedSourceRef)],
+        },
       })
-    ).rejects.toThrow('source identities do not match');
-  });
-  it('projects a connected FilterRel from the exact canonical revision', async () => {
-    const source = resolveDvtSubstraitProjectionSource(SOURCE);
-    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
-    if (source == null || capability == null) throw new Error('Expected admitted filter fixtures.');
-    const filtered = await filterProjectionInputFixture(
-      createDvtSubstraitProjectionDraft({
-        source,
-        targetNodeId: TRANSFORM.id,
-        outputs: [
-          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-          { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
-        ],
-      }),
-      {
-        fieldId: 'output:customer',
-        dataType: 'text',
-        capabilityId: capability.capabilityId,
-        value: 'Ada',
-      }
     );
-    const transform = applyDvtSubstraitSemanticDocument(
-      TRANSFORM,
-      encodeDvtSubstraitSemanticDocument(filtered)
-    );
-
-    const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
+    const input = {
       transformNode: transform,
       nodes: [SOURCE, transform],
       edges: [EDGE],
+      codeProjection: { canvasId: 'canvas-one', query: { projectTransformSql } },
+    };
+    const sql = await projectDvtSubstraitTransformOutputToPostgresSql(input);
+    expect(projectTransformSql).toHaveBeenCalledExactlyOnceWith({
+      canvasId: 'canvas-one',
+      transformNodeId: transform.id,
+      semanticPlanSha256,
     });
-    expect(sql.length).toBeGreaterThan(0);
-    const bound = resolveCanvasSubstraitGraphBindings({
-      node: transform,
-      nodes: [SOURCE, transform],
-      edges: [EDGE],
-    });
-    expect(
-      [...bound.index.relations.values()].filter(
-        (entry) => entry.relation.relType.case === 'filter'
-      )
-    ).toHaveLength(1);
+    expect(sql).toBe('select authorized_output');
   });
 });

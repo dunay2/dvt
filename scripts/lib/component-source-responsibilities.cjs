@@ -1,4 +1,8 @@
-/** Owned concern: validate DB responsibility bindings against current source references. */
+/**
+ * Owned concern: validate DB responsibility bindings against current source references.
+ * Why: one current authority snapshot should not rebuild identical lookup maps per source.
+ * Corner: prepared and standalone validation retain every conflict, missing-reference and owner error.
+ */
 const { readSourceCodeFacts } = require('./source-code-facts.cjs');
 
 function validateResponsibilityBindings(input) {
@@ -89,23 +93,9 @@ function extractQualifiedSourceSymbols(file) {
   return [...symbols].sort();
 }
 
-function validateSourceResponsibilityReferences({
-  path,
-  content,
-  bindings,
-  ownerComponentId,
-  responsibilities,
-  currentPaths,
-}) {
-  const validated = validateResponsibilityBindings(bindings);
-  const errors = [...validated.errors];
-  const selected = validated.bindings.filter((binding) => binding.path === path);
-  if (!selected.length) errors.push(`No responsibility bindings for ${path}.`);
-  if (!ownerComponentId || ['UNOWNED', 'AMBIGUOUS'].includes(ownerComponentId))
-    errors.push(`Unresolved component owner for ${path}.`);
-  if (!(currentPaths instanceof Set) || !currentPaths.has(path))
-    errors.push(`Source path ${path} is absent from the selected Git inventory.`);
+function createSourceResponsibilityReferenceValidator(responsibilities) {
   const canonical = new Map();
+  const errors = [];
   if (!Array.isArray(responsibilities)) errors.push('Canonical responsibilities must be supplied.');
   for (const row of Array.isArray(responsibilities) ? responsibilities : []) {
     if (
@@ -129,6 +119,27 @@ function validateSourceResponsibilityReferences({
     }
     canonical.set(row.responsibilityId, row);
   }
+  return (input) => validatePreparedSourceReferences(input, canonical, errors);
+}
+
+function validateSourceResponsibilityReferences(input) {
+  return createSourceResponsibilityReferenceValidator(input.responsibilities)(input);
+}
+
+function validatePreparedSourceReferences(
+  { path, content, bindings, ownerComponentId, currentPaths },
+  canonical,
+  authorityErrors
+) {
+  const validated = validateResponsibilityBindings(bindings);
+  const errors = [...validated.errors];
+  const selected = validated.bindings.filter((binding) => binding.path === path);
+  if (!selected.length) errors.push(`No responsibility bindings for ${path}.`);
+  if (!ownerComponentId || ['UNOWNED', 'AMBIGUOUS'].includes(ownerComponentId))
+    errors.push(`Unresolved component owner for ${path}.`);
+  if (!(currentPaths instanceof Set) || !currentPaths.has(path))
+    errors.push(`Source path ${path} is absent from the selected Git inventory.`);
+  errors.push(...authorityErrors);
   let symbols = new Set();
   try {
     symbols = new Set(extractQualifiedSourceSymbols({ path, content }));
@@ -164,4 +175,5 @@ module.exports = {
   validateResponsibilityBindings,
   extractQualifiedSourceSymbols,
   validateSourceResponsibilityReferences,
+  createSourceResponsibilityReferenceValidator,
 };

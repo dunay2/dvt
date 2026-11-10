@@ -364,6 +364,13 @@ describe('Producer fields enter Input; Output is passive', () => {
     visitInputs(true, false, 'en', true);
     cy.viewport(1280, 720);
     node('source-orders').find('[data-slot="canvas-node-shell"]').click(40, 18);
+    // The card opens Overview; explicit column inspection still owns the published-column drag.
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
       'have.attr',
       'aria-selected',

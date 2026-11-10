@@ -1,12 +1,20 @@
-/** Owned concern: render the approved data-first Source Overview without duplicating mutation authority. */
+/**
+ * Owned concern: compose Source Overview facts and wire existing draft editing.
+ * @baseline Inspector presentation consumes the current read model and authoring authority.
+ * @decision Reuse shared property templates and the metadata CSS module.
+ * @consequence Layout is independent of permissions, draft validation and commit semantics.
+ * @version 1.0.0
+ */
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { SourceObjectSchema } from '@dvt/contracts';
 
 import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
+import { InspectorPropertyField } from '../../components/inspector/InspectorPropertyField';
+import { NodePropertyFacts } from '../../components/inspector/NodePropertyFacts';
+import styles from '../../components/inspector/InspectorMetadata.module.css';
 import type {
   NodePropertiesReadModel,
   NodePropertyRowId,
@@ -82,15 +90,6 @@ function readRowValue(
   return (
     model.sections.find((section) => section.id === sectionId)?.rows.find((row) => row.id === rowId)
       ?.value ?? null
-  );
-}
-
-function ExternalFact({ label, value }: Readonly<{ label: string; value: string }>): JSX.Element {
-  return (
-    <div className="contents">
-      <dt className={inspectorVisualClasses.inspectorLabel}>{label}</dt>
-      <dd className="min-w-0 break-words text-(--text-default)">{value}</dd>
-    </div>
   );
 }
 
@@ -191,26 +190,26 @@ export function SourceOverviewPanel({
   return (
     <div
       data-slot="canvas-source-overview"
-      className="min-w-0 divide-y divide-(--border-subtle) overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)"
+      className={`${inspectorVisualClasses.inspectorForm} ${styles.panel}`}
     >
-      <section data-slot="canvas-source-overview-external" className="min-w-0 space-y-2 p-3">
-        <div className="flex items-center justify-between gap-3">
+      <section data-slot="canvas-source-overview-external" className={styles.section}>
+        <div className={styles.header}>
           <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{copy.sourceMetadata}</h3>
-          <span className="text-xs text-(--status-readonly)">{copy.readOnly}</span>
+          <span className={styles.readOnly}>{copy.readOnly}</span>
         </div>
 
-        <dl className="grid grid-cols-[96px_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
-          <ExternalFact label={copy.kind} value={kind} />
-          <ExternalFact label={copy.schema} value={schema} />
-          <ExternalFact label={copy.table} value={table} />
-          <ExternalFact label={copy.columns} value={columnCount} />
-        </dl>
-        <div className="space-y-1 border-t border-(--border-subtle) pt-2">
+        <NodePropertyFacts
+          layout="compact"
+          rows={[
+            { label: copy.kind, value: kind },
+            { label: copy.schema, value: schema },
+            { label: copy.table, value: table },
+            { label: copy.columns, value: columnCount },
+          ]}
+        />
+        <div className={styles.comment}>
           <h4 className={inspectorVisualClasses.inspectorLabel}>{copy.sourceComment}</h4>
-          <p
-            data-slot="source-table-comment"
-            className="whitespace-pre-wrap text-xs text-(--text-default) [overflow-wrap:anywhere]"
-          >
+          <p data-slot="source-table-comment" className={styles.text}>
             {sourceComment.success ? (sourceComment.data ?? copy.empty) : copy.empty}
           </p>
         </div>
@@ -220,30 +219,20 @@ export function SourceOverviewPanel({
         ) : null}
       </section>
 
-      <section data-slot="canvas-source-overview-dvt" className="min-w-0 space-y-2 p-3">
+      <section data-slot="canvas-source-overview-dvt" className={styles.section}>
         <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{copy.dvtMetadata}</h3>
 
-        <div
-          data-slot="source-dvt-name"
-          className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-x-3"
+        <InspectorPropertyField
+          slot="source-dvt-name"
+          label={copy.name}
+          action={
+            authoring.canEditNode && editingField !== 'name'
+              ? { label: copy.edit, onSelect: () => setEditingField('name') }
+              : null
+          }
         >
-          <div className="contents">
-            <span className={inspectorVisualClasses.inspectorLabel}>{copy.name}</span>
-            {authoring.canEditNode && editingField !== 'name' ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="col-start-3 row-start-1 h-7 px-2"
-                onClick={() => setEditingField('name')}
-              >
-                {copy.edit}
-              </Button>
-            ) : null}
-          </div>
           {editingField === 'name' ? (
             <Input
-              className="col-start-2 row-start-1 h-7 min-w-0"
               autoFocus
               aria-label={copy.name}
               value={draft.name}
@@ -258,30 +247,20 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className="col-start-2 row-start-1 min-w-0 break-words text-xs font-medium text-(--text-strong)">
-              {draft.name}
-            </p>
+            <p className={styles.name}>{draft.name}</p>
           )}
-        </div>
+        </InspectorPropertyField>
 
-        <div className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-x-3">
-          <div className="contents">
-            <span className={inspectorVisualClasses.inspectorLabel}>{copy.tags}</span>
-            {authoring.canEditNode && editingField !== 'tags' ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="col-start-3 row-start-1 h-7 px-2"
-                onClick={() => setEditingField('tags')}
-              >
-                {copy.addTag}
-              </Button>
-            ) : null}
-          </div>
+        <InspectorPropertyField
+          label={copy.tags}
+          action={
+            authoring.canEditNode && editingField !== 'tags'
+              ? { label: copy.addTag, onSelect: () => setEditingField('tags') }
+              : null
+          }
+        >
           {editingField === 'tags' ? (
             <Input
-              className="col-start-2 row-start-1 h-7 min-w-0"
               autoFocus
               aria-label={copy.tags}
               value={draftController.tagsText}
@@ -290,10 +269,10 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap gap-1">
+            <div className={styles.tags}>
               {businessTags.length > 0 ? (
                 businessTags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="font-normal">
+                  <Badge key={tag} variant="secondary">
                     {tag}
                   </Badge>
                 ))
@@ -302,23 +281,17 @@ export function SourceOverviewPanel({
               )}
             </div>
           )}
-        </div>
+        </InspectorPropertyField>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className={inspectorVisualClasses.inspectorLabel}>{copy.description}</span>
-            {authoring.canEditNode && editingField !== 'description' ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2"
-                onClick={() => setEditingField('description')}
-              >
-                {copy.edit}
-              </Button>
-            ) : null}
-          </div>
+        <InspectorPropertyField
+          label={copy.description}
+          layout="block"
+          action={
+            authoring.canEditNode && editingField !== 'description'
+              ? { label: copy.edit, onSelect: () => setEditingField('description') }
+              : null
+          }
+        >
           {editingField === 'description' ? (
             <Textarea
               autoFocus
@@ -340,24 +313,29 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className="whitespace-pre-wrap text-xs text-(--text-default) [overflow-wrap:anywhere]">
-              {draft.description || copy.empty}
-            </p>
+            <p className={styles.text}>{draft.description || copy.empty}</p>
           )}
-        </div>
+        </InspectorPropertyField>
 
         {alias ? (
-          <details className="rounded-lg border border-(--border-subtle) bg-(--surface-elevated)">
-            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-(--text-strong)">
-              {copy.systemMetadata}
-            </summary>
-            <dl className="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-2 px-3 pb-3 text-xs">
-              <dt className={inspectorVisualClasses.inspectorLabel}>{copy.alias}</dt>
-              <dd className="min-w-0 break-all font-mono text-(--text-default)">
-                {alias}{' '}
-                <span className={inspectorVisualClasses.inspectorSubtle}>· {copy.derived}</span>
-              </dd>
-            </dl>
+          <details className={styles.disclosure}>
+            <summary className={styles.summary}>{copy.systemMetadata}</summary>
+            <NodePropertyFacts
+              layout="compact"
+              rows={[
+                {
+                  label: copy.alias,
+                  value: (
+                    <span className={styles.identifier}>
+                      {alias}{' '}
+                      <span className={inspectorVisualClasses.inspectorSubtle}>
+                        · {copy.derived}
+                      </span>
+                    </span>
+                  ),
+                },
+              ]}
+            />
           </details>
         ) : null}
       </section>

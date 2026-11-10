@@ -1,4 +1,5 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
+import type { CanvasInspectorRequest } from '../../stores/canvasInspectorTarget';
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeInputMapping,
@@ -32,7 +33,7 @@ export type UseCanvasGraphHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   setExecutionGate: CanvasEdgeCommandRunner['setExecutionGate'];
-  handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
+  handleInspectNode: (request: CanvasInspectorRequest, preferredTabId?: string | null) => boolean;
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleInstantiateNode: CanvasNodeInstantiationHandler;

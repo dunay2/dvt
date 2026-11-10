@@ -11,6 +11,22 @@ const SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('canvasShellPropsBuilder architecture', () => {
+  it('forwards inspection through the existing route command without click placement wiring', () => {
+    // GH-3765: catalogue click must never reacquire the retired centered-instance callback.
+    const shellTypes = readArchitectureSiblingSource(import.meta.dirname, 'canvasShell.types.ts');
+    const builderTypes = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'canvasShellBuilder.types.ts'
+    );
+    expect(SHELL_PROPS_BUILDER_SOURCE).toContain('inspectorTarget: controller.inspectorTarget');
+    expect(SHELL_PROPS_BUILDER_SOURCE).toContain('handleInspectNode: controller.handleInspectNode');
+    expect(builderTypes).toContain("| 'inspectorTarget'");
+    expect(builderTypes).toContain("| 'handleInspectNode'");
+    expect(shellTypes).toContain('onInspectNode: CanvasInspectorCommand');
+    expect(SHELL_PROPS_BUILDER_SOURCE).not.toMatch(/(?:on|handle)InstantiateNode/);
+    expect(builderTypes).not.toContain("| 'handleInstantiateNode'");
+  });
+
   it('adapts route-owned sources into concern-scoped shell builder contracts', () => {
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellLayoutBuilder'");
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellPanelsBuilder'");

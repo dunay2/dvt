@@ -5,6 +5,13 @@
  * @consequence Seeding preserves scope, optimistic revision and acknowledgement assertions.
  * @version 1.0.0
  */
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
+
+import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
+
 import { buildCanvasDraftSaveRequest } from './canvasDraftAuthoring';
 import type { CanvasDraftScenarioOptions } from './canvasDrafts/scenario';
 import {
@@ -16,7 +23,9 @@ import {
 import { resolveLiveWorkspaceSession } from './liveProtectedRuntime';
 
 export function seedLiveSelectedClosureDraft(
-  options: CanvasDraftScenarioOptions = {}
+  options: CanvasDraftScenarioOptions & {
+    draft?: WorkspaceGraphAuthoringDraft;
+  } = {}
 ): Cypress.Chainable<string> {
   const session = resolveLiveWorkspaceSession();
   const readUrl = buildDraftReadUrl(session);
@@ -42,16 +51,23 @@ export function seedLiveSelectedClosureDraft(
         expect(readResponse.body.kind).to.equal('not_found');
       }
 
+      const request = buildCanvasDraftSaveRequest(session, {
+        ...options,
+        expectedRevision,
+        idempotencyKey: `live-selected-closure-${Date.now()}`,
+      });
+      if (options.draft != null) {
+        request.draft = normalizeProjectCanvasDraft(
+          WorkspaceGraphAuthoringDraftSchema.parse(options.draft)
+        );
+      }
+
       return cy.request({
         method: 'PUT',
         url: `${readRequiredEnv('apiBaseUrl')}/workspace/graph/draft`,
         headers,
         auth: buildBearerAuth(),
-        body: buildCanvasDraftSaveRequest(session, {
-          ...options,
-          expectedRevision,
-          idempotencyKey: `live-selected-closure-${Date.now()}`,
-        }),
+        body: request,
       });
     })
     .then((saveResponse) => {

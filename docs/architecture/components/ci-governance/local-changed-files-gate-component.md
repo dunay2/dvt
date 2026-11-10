@@ -51,6 +51,7 @@ The component does not own:
 | ------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
 | `listLocalChangedFiles(options)`                  | `scripts/git-local-changes.cjs`      | Returns the canonical `LocalChangedFileSet` for changed-only local gates.     |
 | `resolveDiffBaseRefs(options)`                    | `scripts/git-local-changes.cjs`      | Resolves the base refs used for branch diff detection.                        |
+| `resolveIterationComparison(options)`             | `scripts/git-local-changes.cjs`      | Resolves the explicit ancestor base and observed head to commit identities.   |
 | `readLocalNameStatusDiff(base, head, git)`        | `check-governance-changed-files.cjs` | Returns name-status records for governance fingerprint validation.            |
 | `readUntrackedNameStatus(git)`                    | `check-governance-changed-files.cjs` | Converts untracked files into added name-status records.                      |
 | `validateFeatureImplementationManifests(options)` | `check-feature-mechanization.cjs`    | Validates that real diff files and added symbols match feature manifests.     |
@@ -187,6 +188,173 @@ before expensive tests, without reducing the successful run's coverage or changi
 the `--committed-tests` path. The existing integrated failure test exercises
 `main` through `executeVerifyChangedPlan`, not a synthetic successful executor.
 
+### Local validation responsibility boundaries
+
+The validation plan is a read model, not an operating-system executor or a test
+ownership catalog. The previous module mixed those concerns in 971 lines. Its
+162-entry routing table repeated 46 test self references, 36 adjacent source/test
+pairs and 63 routes into three existing parent suites, alongside 17 actual
+cross-file exceptions. Repeating that physical inventory makes removed files and
+new responsibilities difficult to review.
+
+| Owner module                                   | Concrete responsibility                                                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/local-validation-plan.cjs`            | Compose mechanical admission, selected tests and final checks in order; classify complete prepush obligations.                                          |
+| `scripts/lib/changed-test-selection.cjs`       | Select affected tests once using canonical file/command scope, existing adjacent tests and explicit cross-owner relations; explain CI-tools selection.  |
+| `scripts/lib/local-test-coverage.cjs`          | Read the existing bounded literal package aggregates and the three canonical parent-suite memberships; remove only test executions they actually cover. |
+| `scripts/lib/local-validation-plan-values.cjs` | Construct and describe immutable steps, normalize paths and enforce consistent step identities.                                                         |
+| `scripts/lib/local-validation-executor.cjs`    | Await bounded child execution and cleanup, propagate deadlines/failures and report observed results.                                                    |
+| `scripts/lib/prepush-validation-stamp.cjs`     | Compute exact Git input identity and read, match or write the existing acceptance receipt.                                                              |
+
+The CLI adapters import these concrete owners directly. Relocated functions are
+removed from the old module and CLI exports; compatibility facades, duplicate
+implementations and import barrels are not retained. Describing a plan never
+loads its process executor. `verify:changed` requests receipt operations from
+their owner rather than importing the prepush CLI.
+
+```mermaid
+flowchart LR
+  Before[One module: routing table, selection, membership, composition, execution] --> Drift[Repeated inventory and mixed change reasons]
+  CLI[CLI: acquire scope and await result] --> Compose[Plan composition]
+  Compose --> Select[Focused selection once]
+  Select --> Coverage[Effective aggregate membership]
+  Compose --> Values[Small step values and identity]
+  CLI --> Execute[Bounded executor]
+  Execute --> Lifetime[Existing owned process lifetime]
+  CLI --> Stamp[Exact Git receipt owner]
+```
+
+Known repository-command ownership plus a real adjacent test replaces repeated
+source/test pairs. A changed test selects itself. Application files and unknown
+command owners do not acquire inferred adjacent routes. The three existing
+query, operate and code-status parent suites remain the authority for their
+declared child contracts; their membership must be proven rather than inferred
+from an unrelated directory name. Keep the 17 cross-file exceptions explicit.
+Deleted production sources retain their existing test obligation when the test
+still exists. An unprovable required route rejects or broadens conservatively;
+absence must not become an empty successful selection.
+
+This is a documented conservative superset, not an exact-parity claim. The
+before frontier covers every tracked path, mixed scopes and virtual source
+deletions. The known-owner/adjacent rule has 23 reviewed existing candidates;
+two schema tests are already covered by their package aggregate, leaving 21
+additional effective suites. Each is selected only when its corresponding
+source changes, not on every iteration. No old effective obligation may vanish.
+The allowed differences are those reviewed additions, moved contract suites,
+removal of dead branches and exact duplicate execution, and visible rejection
+of conflicting step identities.
+
+The same ID and identical command/arguments/test kind deduplicate. Reusing an ID
+for a different execution rejects the plan; it must not silently discard a
+contract merely because two files share a basename. CI-tool selection is computed
+once, not repeated and hidden by this deduplication. Aggregate coverage uses the
+existing literal `node --test` semantics, not a general shell parser, scheduler
+or second test-member catalog. The existing `test:verify-prepush` delegate keeps
+the moved validation contracts in its complete test coverage.
+
+Tests follow these responsibilities: selection and exceptions, effective
+membership and no lost coverage, composition order, value identity, actual
+process lifetime, exact Git receipts, and CLI awaiting/no-stamp behavior. Move
+the existing assertions and real fixtures with their contract; do not duplicate
+the production routing table as a test oracle. One-off before/after semantic
+comparison is evidence for this refactor, while focused regression tests protect
+the enduring boundary cases. These boundaries reuse the existing command/query
+rails and acceptance rules; they add no scheduler, cache or parallel authority.
+
+### Explicit iteration scope
+
+`node scripts/verify-changed.cjs --iteration-base=<commit-ref>` requests partial
+feedback since an explicit ancestor commit. It reuses `ListLocalChangedFiles`,
+`BuildChangedSliceVerificationPlan` and `RunChangedSliceVerification`; it adds
+neither an acceptance rail nor a second changed-file reader. The default command,
+`--committed-tests` and `verify:prepush` retain their complete existing obligations
+and success-stamp semantics.
+
+The canonical Git adapter resolves the requested base and observed `HEAD` to
+commit identities at the repository root and proves ancestry. Its optional strict
+read path rejects missing or invalid refs, unknown shallow ancestry and every
+failed branch, index, worktree or untracked read. It does not substitute another
+base or accept caller filters that narrow this frontier. The result contains the
+union of changes after the resolved base, staged changes, unstaged changes and
+untracked non-ignored files. Child checks receive the resolved `GIT_BASE` and an
+empty `GIT_HEAD`, preserving their local-worktree behavior; the observed head is
+reported separately rather than presented as an immutable acceptance snapshot.
+
+The strict query takes the resolved base/head identities, verifies that `HEAD`
+still matches the observation and rechecks ancestry before acquisition. NUL-delimited
+paths preserve spaces and Unicode. Disabling rename coalescing exposes both old
+and new paths, and deletions remain part of the frontier. Strict Git reads remove
+foreign repository/index context while ordinary acceptance query defaults remain
+unchanged.
+
+Before execution, the command reports that frontier, the observed base/head and
+the reasons for CI-tool selection. It explicitly identifies the result as partial
+feedback: no native browser acceptance, no global Planning DB validation and no
+delivery acceptance. This mode cannot write a prepush success stamp. It runs the
+existing changed-file mechanical checks and selected tests, with Web restricted
+to its existing Vitest phase. It omits the global native implementation projection,
+inventory and integrity checks; their final acceptance obligation is unchanged.
+Selected Planning DB contract tests retain their real fixture and aggregate
+semantics. No filtered authority is substituted for the complete projection.
+
+Isolated documentation CLI fixtures copy the explicit dependency closure of the
+real changed-file reader, including its Git environment helper. They create each
+destination parent directory before copying. The production reader keeps its
+normal dependency structure; fixtures must exercise the real modules rather than
+omit a dependency or substitute a fake implementation.
+
+The comparison must describe the same repository frontier throughout selection
+and execution. Ambient `GIT_BASE` or `GIT_HEAD` values cannot override the explicit
+iteration request. The runner uses the actual repository root, not an incidental
+caller working directory. This mode does not persist per-check state, reuse
+acceptance results or cache a previous pass.
+
+### CI tooling composition feedback
+
+The existing repository-file scope and repository-command catalog classify
+configuration and script ownership; the planner reuses them rather than adding
+another path catalog. Canonical workflow, root-build and CI-policy configuration
+inputs, including known or uncatalogued CI JSON/YAML/TOML, require the complete
+CI-tools contracts. Production commands in the CI tooling,
+developer workflow or runtime-root domains require the existing complete
+`pnpm test:ci-tools` suite. Unknown production command ownership broadens to that
+suite, so an incomplete classification cannot silently select no contracts.
+Changed CI test files alone, unrelated documentation and application sources
+retain the existing focused routes. Application package/configuration files do
+not become root composition inputs merely because their basename matches one.
+
+The complete CI-tools suite runs once after static admission and before Web tests.
+When selected, it replaces the partial `tools/ci` test commands that the suite
+already owns; adjacent script tests and other obligations remain. Selection
+reasons name the triggering paths and the relevant composition category. The
+existing suite owns its members, so the planner never duplicates its membership
+catalog. This catches workflow/package-script contracts during local feedback,
+including contracts that cross module boundaries and are absent from an adjacent
+test selection.
+
+```mermaid
+flowchart LR
+  Previous[Implicit whole-branch feedback] --> Partial[Adjacent CI contracts]
+  Partial --> Late[Cross-module contract failure in remote CI]
+  Explicit[Explicit ancestor plus complete local frontier] --> Strict[Canonical strict Git read]
+  Strict --> Explain[Print partial scope and selection reasons]
+  Explain --> Static[Changed-file mechanical checks]
+  Static --> Tools[Complete CI tools when composition changes]
+  Tools --> Focused[Selected script contracts and Web Vitest]
+  Focused --> Feedback[Partial result without acceptance stamp]
+  Strict -->|unknown ancestry or read failure| Reject[Reject before execution]
+```
+
+The rationale is to reduce the feedback comparison scope without redefining
+delivery acceptance, and to spend the existing CI-tools test cost early when
+composition changes can invalidate distant contracts. A passing iteration cannot
+authorize merge. `verify:prepush` still validates the final complete candidate,
+including global native authority and browser obligations. Focused tests prove
+strict acquisition, complete local frontiers, rejection of narrowed/unknown input,
+complete-versus-partial suite deduplication, retained script obligations, explicit
+selection reasons and the absence of an iteration stamp. Default and committed
+mode regression tests protect their unchanged contracts.
+
 ### Complete Planning DB test coverage
 
 `BuildChangedSliceVerificationPlan` composes direct tests and the existing
@@ -218,10 +386,11 @@ flowchart LR
   Members -->|invalid declaration| Reject[Reject before execution]
 ```
 
-`scripts/verify-changed.test.cjs` proves the actual aggregate membership, schema
+`scripts/lib/local-test-coverage.test.cjs` proves the actual aggregate membership, schema
 and policy completeness, mixed direct/aggregate deduplication and retention of
-uncovered tests. The existing executor tests preserve test-environment isolation
-and failure without a success stamp.
+uncovered tests. The executor contract tests in
+`scripts/lib/local-validation-executor.test.cjs` preserve test-environment
+isolation and failure; the CLI tests retain failure without a success stamp.
 
 ### Changed-file lint execution
 
@@ -335,7 +504,7 @@ flowchart LR
   Budget -->|unavailable or over budget| Reject[Reject without success evidence]
 ```
 
-`scripts/verify-prepush.test.cjs` exercises a real Git deletion patch exceeding
+`scripts/lib/prepush-validation-stamp.test.cjs` exercises a real Git deletion patch exceeding
 1 MiB, complete-byte fingerprint parity and a tail-byte mutation beyond the old
 limit. Existing tests retain invalid-reference, Git-failure, mode, upstream and
 worktree invalidation coverage. The bounded design and acceptance obligations
@@ -349,8 +518,11 @@ are governed by issue #3004; this correction does not close its global scope.
   change inclusion for governance fingerprints.
 - `scripts/check-feature-mechanization.test.cjs` proves implementation-surface,
   symbol, forbidden-surface, and Cypress draft-boundary validation.
-- `scripts/verify-changed.test.cjs` proves fast changed-slice plan selection
-  and fail-fast execution.
+- `scripts/lib/changed-test-selection.test.cjs` proves focused test selection;
+  `scripts/local-validation-plan.test.cjs` proves composition and check order.
+- `scripts/lib/local-validation-executor.test.cjs` proves bounded fail-fast
+  execution. `scripts/verify-changed.test.cjs` retains CLI awaiting, failure and
+  no-stamp integration coverage.
 - `pnpm docs:feature-mechanization:implementation` proves changed files stay
   inside planned implementation rails.
 - `pnpm verify:prepush` proves the full local readiness gate.

@@ -68,6 +68,7 @@ export type UseCanvasContextMenuPresenterResult = Readonly<{
   ) => void;
   handlePaneClick: (event: PaneClickEvent) => void;
   handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
+  handleViewportDoubleClick: (event: ReactMouseEvent<HTMLDivElement>) => void;
   handleViewportContextMenuKeyDown: (event: ContextMenuKeyboardEvent) => void;
   handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']>;
   handleCanvasAction: (action: CanvasContextMenuCanvasAction) => void;

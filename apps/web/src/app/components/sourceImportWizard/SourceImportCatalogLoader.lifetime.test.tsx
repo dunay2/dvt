@@ -21,8 +21,8 @@ describe('Source Import catalogue request lifetimes', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     harness = createSourceImportWizardHarness();
   });
-  afterEach(() => {
-    harness.cleanup();
+  afterEach(async () => {
+    await harness.cleanup();
     vi.useRealTimers();
   });
 
