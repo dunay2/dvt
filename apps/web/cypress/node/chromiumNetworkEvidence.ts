@@ -1,4 +1,8 @@
-/** Owned concern: retain private observations and reconcile safe evidence at native completion. */
+/**
+ * Owned concern: retain private observations and reconcile safe evidence at native completion.
+ * Why: completion can fail after passing assertions, and only closed metadata may leave capture.
+ * Corner: rejected projection still cleans owned raw files and blocks proof acceptance.
+ */
 import {
   mkdirSync,
   readFileSync,
@@ -12,6 +16,7 @@ import { basename, join, resolve } from 'node:path';
 import { randomUuidV4 } from '@dvt/crypto';
 
 import {
+  ChromiumProjectionError,
   projectChromiumNetworkCapture,
   projectChromiumProcessLog,
 } from './chromiumNetworkProjection';
@@ -28,14 +33,49 @@ const failurePhases = [
   'capture-cleanup',
 ] as const;
 const failureCodes = ['missing', 'denied', 'invalid', 'failed'] as const;
+const projectionDetails = [
+  'captureSyntax',
+  'logShape',
+  'eventShape',
+  'RangeError',
+  'TypeError',
+  'SyntaxError',
+  'ReferenceError',
+  'URIError',
+  'EvalError',
+  'AggregateError',
+  'Error',
+  'unknown',
+] as const;
 type FailurePhase = (typeof failurePhases)[number];
 type FailureCode = (typeof failureCodes)[number];
-export type ChromiumLifecycleFailure = Readonly<{ phase: FailurePhase; code: FailureCode }>;
+type ProjectionFailureDetail = (typeof projectionDetails)[number];
+export type ChromiumLifecycleFailure = Readonly<{
+  phase: FailurePhase;
+  code: FailureCode;
+  detail?: ProjectionFailureDetail;
+}>;
 
 export class ChromiumDiagnosticsError extends Error {
   constructor(readonly failures: readonly ChromiumLifecycleFailure[]) {
     super('Chromium network diagnostics failed');
   }
+}
+
+function projectionFailureDetail(error: unknown): ProjectionFailureDetail {
+  if (error instanceof ChromiumProjectionError) {
+    const reason: unknown = Object.getOwnPropertyDescriptor(error, 'reason')?.value;
+    if (reason === 'captureSyntax' || reason === 'logShape' || reason === 'eventShape')
+      return reason;
+  }
+  if (error instanceof RangeError) return 'RangeError';
+  if (error instanceof TypeError) return 'TypeError';
+  if (error instanceof SyntaxError) return 'SyntaxError';
+  if (error instanceof ReferenceError) return 'ReferenceError';
+  if (error instanceof URIError) return 'URIError';
+  if (error instanceof EvalError) return 'EvalError';
+  if (error instanceof AggregateError) return 'AggregateError';
+  return error instanceof Error ? 'Error' : 'unknown';
 }
 
 export function classifyChromiumFailure(
@@ -53,17 +93,32 @@ export function classifyChromiumFailure(
         : error instanceof SyntaxError
           ? 'invalid'
           : 'failed';
-  return [{ phase, code }];
+  return [
+    {
+      phase,
+      code,
+      ...(phase === 'capture-projection' ? { detail: projectionFailureDetail(error) } : {}),
+    },
+  ];
 }
 
 export function publishChromiumLifecycleFailures(
   workspaceRoot: string,
   failures: readonly ChromiumLifecycleFailure[]
 ): void {
-  const records = failures.slice(0, 16).map(({ phase, code }) => {
-    if (!failurePhases.includes(phase) || !failureCodes.includes(code))
+  const records = failures.slice(0, 16).map((failure) => {
+    const phase: unknown = Object.getOwnPropertyDescriptor(failure, 'phase')?.value;
+    const code: unknown = Object.getOwnPropertyDescriptor(failure, 'code')?.value;
+    const detailDescriptor = Object.getOwnPropertyDescriptor(failure, 'detail');
+    const detail: unknown = detailDescriptor?.value;
+    if (
+      !failurePhases.some((value) => value === phase) ||
+      !failureCodes.some((value) => value === code) ||
+      (detailDescriptor !== undefined &&
+        (phase !== 'capture-projection' || !projectionDetails.some((value) => value === detail)))
+    )
       throw new Error('Invalid Chromium lifecycle failure');
-    return { phase, code };
+    return { phase, code, ...(detailDescriptor === undefined ? {} : { detail }) };
   });
   const directory = resolve(workspaceRoot, '.dvt/evidence/chromium-network');
   mkdirSync(directory, { recursive: true });

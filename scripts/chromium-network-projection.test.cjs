@@ -1,8 +1,13 @@
-/** Owned concern: prove sanitized Chromium error evidence without credential or payload publication. */
+/**
+ * Owned concern: prove sanitized Chromium error evidence without credential or payload publication.
+ * Why: finite rejection reasons must not turn malformed capture into accepted or disclosed data.
+ * Corner: complete and terminated captures retain their existing strict projection behavior.
+ */
 require('tsx/cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
+  ChromiumProjectionError,
   projectChromiumNetworkLog,
   projectChromiumNetworkCapture,
   projectChromiumProcessLog,
@@ -57,6 +62,30 @@ function netlog(url = 'http://user:secret@127.0.0.1:3300/workspace/graph/draft?t
       },
     ],
   };
+}
+
+for (const [reason, capture] of [
+  ['captureSyntax', 'https://private.invalid/?token=secret malformed capture'],
+  ['logShape', JSON.stringify({ constants: { logEventTypes: {} }, events: [] })],
+  [
+    'eventShape',
+    JSON.stringify({
+      constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+      events: [{ type: 1, source: { id: 'private-secret' } }],
+    }),
+  ],
+]) {
+  test(`capture refusal identifies only its existing finite branch: ${reason}`, () => {
+    assert.throws(
+      () => projectChromiumNetworkCapture(capture),
+      (error) => {
+        assert.equal(error.reason, reason);
+        assert.equal(error.constructor, ChromiumProjectionError);
+        assert.doesNotMatch(JSON.stringify(error), /private|secret|token|https/iu);
+        return true;
+      }
+    );
+  });
 }
 
 test('exports only event correlation, method, numeric error and safe loopback route', () => {

@@ -802,8 +802,9 @@ capture enumeration, read, projection, publication and cleanup. Closed reasons
 are missing, denied, invalid or failed; an unknown
 exception becomes failed. An independent UUID names the receipt in the existing
 diagnostics evidence directory as `lifecycle-<uuid>.json`, containing
-`{ schemaVersion: 1, failures: [...] }`. At most 16 failure records contain only
-`phase` and `code`. Cleanup or receipt-publication failures cannot erase earlier
+`{ schemaVersion: 1, failures: [...] }`. At most 16 failure records contain
+`phase` and `code`, with optional closed projection detail as defined below.
+Cleanup or receipt-publication failures cannot erase earlier
 classified failures. The lifecycle publishes this safe receipt; the existing
 runner preserves its generic rejection and exact-spec acceptance boundary.
 Raw exception messages,
@@ -829,7 +830,7 @@ flowchart LR
 | Passing assertions precede an opaque finalization failure             | Primitive obsession and hidden lifecycle evidence | Closed diagnostic value at the existing Gateway boundary              | Owned Chromium capture lifecycle                                                | RunWebCypressNative | Existing Diagnostics and Evidence modules and lifecycle tests | Successful operation plus invalid or unreadable capture rejects with a safe phase; cleanup remains exact        | Allowlisted metadata only; hostile exception payload stays private         | Affected hosted available shard with existing literal specs | Transport fixes without evidence, native observer or projection changes |
 | Generic runner rejection must remain private without losing diagnosis | Responsibility boundary                           | Publish safe evidence in lifecycle, retain proof acceptance in runner | Owned Chromium capture lifecycle and Web Cypress native runner support boundary | RunWebCypressNative | Existing lifecycle modules and selected-closure runner tests  | Failure receipt retained and no proof acceptance after finalization failure; arbitrary Cypress errors sanitized | Runner rejection remains generic; only lifecycle publishes closed metadata | Existing providers, assertions and authentication           | Runner production changes, workflow, catalog, timeout or retry changes  |
 
-The implementation uses five of the six admitted paths:
+The GH-3747 implementation uses five of the six admitted paths:
 `chromiumNetworkDiagnostics.ts`, `chromiumNetworkEvidence.ts`,
 `scripts/chromium-network-diagnostics.test.cjs`,
 `scripts/run-selected-closure-cypress.test.cjs` and this guide. The admitted
@@ -844,6 +845,60 @@ the affected hosted proof is repeated. Existing exact-spec acceptance, cleanup,
 required evidence, lint/typecheck, committed prepush and native implementation
 validation remain required. This section records the admitted change before
 implementation; completion evidence belongs to the issue and actual checks.
+
+###### Finite projection rejection details — GH-3765
+
+The prospective admission
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6756437694)
+keeps the existing component, command and disclosure boundary. PR #3834's
+available shard 1 passed all 24 cases, then rejected native completion 3.415
+seconds later. Its lifecycle receipt contains only `capture-projection/failed`;
+the process observer completed and the browser exited with code zero. The raw
+inputs were correctly removed. These facts locate a projection failure but do
+not establish truncation, a parser defect, a resource cause or a product defect.
+
+```mermaid
+flowchart LR
+  Cases[24 browser cases passed] --> Completion[Existing strict native completion]
+  Completion --> Projection[Same pure capture projection]
+  Projection --> Rejected[Same refusal and exact cleanup]
+  Rejected --> Old[Opaque phase and code]
+  Rejected --> Safe[Finite branch or exception class detail]
+  Safe --> Diagnosis[Next execution provides actual rejection reason]
+  Diagnosis --> Later[Semantic repair only with concrete evidence]
+```
+
+The pure mapper gives its three existing refusal branches a small typed error:
+`captureSyntax` identifies the existing capture syntax/completeness predicate,
+`logShape` identifies the existing log-envelope predicate, and `eventShape`
+identifies the existing per-event predicate. Their predicates and accepted
+captures remain identical. This distinguishes a known rejection branch without
+inventing a second parser or accepting malformed evidence.
+
+Only `capture-projection` failures may add optional `detail` to a schema-version-1
+lifecycle record. The closed values are the three branch names, `RangeError`,
+`TypeError`, `SyntaxError`, `ReferenceError`, `URIError`, `EvalError`,
+`AggregateError`, `Error` and `unknown`. Built-in classes are identified through
+`instanceof`, without reading an exception's name, message, stack or cause.
+`Error` denotes other Error instances; `unknown` covers other thrown values.
+A class observation does not establish why that exception occurred. Existing
+phase/code classification remains unchanged, including unknown failures.
+
+The evidence owner reconstructs only validated enumerated fields. It never
+copies arbitrary error properties, raw capture or process text, paths, URLs,
+credentials or hostile getters into the receipt. The 16-record bound, exact raw
+cleanup, generic runner rejection and zero proof acceptance after failed
+completion remain required. A classified rejection still exits unsuccessfully.
+The next hosted execution supplies diagnostic evidence; it is not an advance
+claim that the parser or browser is repaired.
+
+Tests cover each actual refusal branch, unchanged complete/terminated successful
+projections, built-in and unknown exception classification, hostile payload
+redaction, strict publication, exact cleanup and successful Cypress followed by
+rejected completion. The implementation stays within the two existing mapper
+and evidence modules, their two script suites, the existing selected-closure
+runner test and this guide. Process observation, production runners, workflow,
+parser conditions and application assertions remain unchanged.
 
 ##### Retained process evidence and ownership — GH-3735
 

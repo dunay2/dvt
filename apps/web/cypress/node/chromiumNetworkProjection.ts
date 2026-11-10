@@ -1,4 +1,8 @@
-/** Owned concern: project trusted Chromium net-log into credential-free correlation evidence. */
+/**
+ * Owned concern: project trusted Chromium net-log into credential-free correlation evidence.
+ * Why: a finite rejection branch diagnoses refusal without exposing private capture text.
+ * Corner: existing acceptance predicates stay strict; raw-file cleanup belongs to the lifecycle.
+ */
 import {
   findNodeAtLocation,
   getNodeValue,
@@ -6,6 +10,17 @@ import {
   printParseErrorCode,
   type ParseError,
 } from 'jsonc-parser';
+
+export class ChromiumProjectionError extends Error {
+  constructor(readonly reason: 'captureSyntax' | 'logShape' | 'eventShape') {
+    super(
+      reason === 'captureSyntax'
+        ? 'Invalid Chromium network capture'
+        : 'Invalid Chromium network log'
+    );
+  }
+}
+
 type NetworkEvent = Readonly<{
   kind: string;
   sourceId: number;
@@ -149,7 +164,7 @@ export function projectChromiumNetworkLog(
   const constants = record(input?.constants);
   const kinds = record(constants?.logEventTypes);
   if (kinds === null || !Array.isArray(input?.events) || input.events.length === 0)
-    throw new Error('Invalid Chromium network log');
+    throw new ChromiumProjectionError('logShape');
   const names = new Map(
     Object.entries(kinds).flatMap(([kind, code]) =>
       typeof code === 'number' &&
@@ -171,7 +186,7 @@ export function projectChromiumNetworkLog(
       typeof source?.id !== 'number' ||
       !Number.isSafeInteger(source.id)
     )
-      throw new Error('Invalid Chromium network log');
+      throw new ChromiumProjectionError('eventShape');
     const kind = names.get(event.type);
     if (kind === undefined) continue;
     const params = record(event.params);
@@ -244,7 +259,7 @@ export function projectChromiumNetworkCapture(
     (errors.length > 0 &&
       (tail === undefined || !/^\s*,?\s*$/u.test(text.slice(tail.offset + tail.length))))
   ) {
-    throw new Error('Invalid Chromium network capture');
+    throw new ChromiumProjectionError('captureSyntax');
   }
   return {
     ...projectChromiumNetworkLog(getNodeValue(root)),
