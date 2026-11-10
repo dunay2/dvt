@@ -1,13 +1,148 @@
-/** Owned concern: prove candidate evidence with real Git, including failure paths. */
+/**
+ * Owned concern: prove candidate evidence with real Git, including failure paths.
+ * Why: fewer processes must still acquire the complete selected content and framing.
+ * Corner: dirty worktrees, byte limits and malformed batch responses retain strict rejection.
+ */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { pathToFileURL } = require('node:url');
+const { execFileSync } = require('node:child_process');
 const { FeatureMechanizationGitDiffReader } = require('../check-feature-mechanization.cjs');
 
 const { repository } = require('./feature-mechanization-git-fixture.cjs');
+
+test('committed source acquisition batches real blobs and retains the existing decoded content', (t) => {
+  const repo = repository(t);
+  const names = Array.from({ length: 16 }, (_, index) => `source ${index} caf\u00e9.ts`);
+  for (const name of names) repo.write(name, `export const value = ${names.indexOf(name)};\n`);
+  repo.write('bytes.bin', Buffer.from([0x61, 0, 0xff, 0x62, 10]));
+  names.push('bytes.bin');
+  const head = repo.commit(repo.base);
+  const started = performance.now();
+  const expected = Object.fromEntries(
+    names.map((name) => [
+      name,
+      execFileSync('git', ['show', `${head}:${name}`], { cwd: repo.root, encoding: 'utf8' }),
+    ])
+  );
+  const legacyMs = performance.now() - started;
+  const reader = repo.reader({ headRef: head });
+  const calls = [];
+  const runGit = reader.runGit.bind(reader);
+  reader.runGit = (args, options) => {
+    calls.push(args);
+    return runGit(args, options);
+  };
+  const batchStarted = performance.now();
+  const diff = reader.read();
+  const batchMs = performance.now() - batchStarted;
+  assert.deepEqual(diff.fileContentsByPath, expected);
+  assert.equal(calls.filter(([command]) => command === 'show').length, 0);
+  assert.equal(calls.filter(([command]) => command === 'cat-file').length, 1);
+  const before = calls.length;
+  for (const name of names) assert.equal(reader.readSource(name), expected[name]);
+  assert.equal(calls.length, before, 'the invocation retains already acquired source');
+  t.diagnostic(
+    JSON.stringify({
+      sources: names.length,
+      legacyProcesses: names.length,
+      blobProcesses: 1,
+      legacyMs: Number(legacyMs.toFixed(3)),
+      completeReaderMs: Number(batchMs.toFixed(3)),
+    })
+  );
+});
+
+test('source membership does not repeatedly copy the full inventory', (t) => {
+  const repo = repository(t);
+  const reader = repo.reader({ headRef: repo.base });
+  const readCurrentFiles = reader.readCurrentFiles.bind(reader);
+  let inventories = 0;
+  reader.readCurrentFiles = () => {
+    inventories += 1;
+    return readCurrentFiles();
+  };
+  for (let index = 0; index < 20; index += 1) reader.readSource('model.ts');
+  assert.equal(inventories, 1);
+  const exposed = reader.readCurrentFiles();
+  exposed.push('not-selected.ts');
+  assert.throws(() => reader.readSource('not-selected.ts'), /Missing selected Git path/);
+});
+
+test('bounded batches split large valid source sets without truncating a blob', (t) => {
+  const repo = repository(t);
+  const source = 'a'.repeat(3 * 1024 * 1024);
+  repo.write('large-a.txt', source);
+  repo.write('large-b.txt', source + 'b');
+  const reader = repo.reader({ headRef: repo.commit(repo.base) });
+  const runGit = reader.runGit.bind(reader);
+  let batches = 0;
+  reader.runGit = (args, options) => {
+    if (args[0] === 'cat-file') batches += 1;
+    return runGit(args, options);
+  };
+  const diff = reader.read();
+  assert.equal(diff.fileContentsByPath['large-a.txt'], source);
+  assert.equal(diff.fileContentsByPath['large-b.txt'], source + 'b');
+  assert.equal(batches, 2);
+});
+
+test('small blob batches also bound object count independently of byte size', (t) => {
+  const repo = repository(t);
+  const names = Array.from({ length: 129 }, (_, index) => `small-${index}.ts`);
+  for (const name of names) repo.write(name, 'export const small = true;\n');
+  const reader = repo.reader({ headRef: repo.commit(repo.base) });
+  const runGit = reader.runGit.bind(reader);
+  const sizes = [];
+  reader.runGit = (args, options) => {
+    if (args[0] === 'cat-file') sizes.push(options.input.trim().split('\n').length);
+    return runGit(args, options);
+  };
+  reader.readSources(names);
+  assert.deepEqual(sizes, [128, 1]);
+  for (const name of names) assert.equal(reader.readSource(name), 'export const small = true;\n');
+});
+
+for (const corruption of ['missing', 'nonblob', 'identity', 'size', 'truncated', 'extra']) {
+  test(`a ${corruption} blob response rejects without publishing partial source`, (t) => {
+    const repo = repository(t);
+    repo.write('model.ts', 'export const model = 2;\n');
+    const reader = repo.reader({ headRef: repo.commit(repo.base) });
+    const runGit = reader.runGit.bind(reader);
+    reader.runGit = (args, options) => {
+      const output = runGit(args, options);
+      if (args[0] !== 'cat-file') return output;
+      const end = output.indexOf(10);
+      const header = output.subarray(0, end).toString('utf8');
+      if (corruption === 'missing') return Buffer.from(header.split(' ')[0] + ' missing\n');
+      if (corruption === 'truncated') return output.subarray(0, -1);
+      if (corruption === 'extra') return Buffer.concat([output, Buffer.from('unexpected')]);
+      const changed =
+        corruption === 'nonblob'
+          ? header.replace(' blob ', ' tree ')
+          : corruption === 'identity'
+            ? header.replace(/^[a-f0-9]+/, '0'.repeat(40))
+            : header.replace(/\d+$/, '1');
+      return Buffer.concat([Buffer.from(changed + '\n'), output.subarray(end + 1)]);
+    };
+    assert.throws(() => reader.read(), /Git (?:blob|evidence)/);
+    assert.equal(reader.sourceContents.size, 0);
+  });
+}
+
+test('an over-budget selected blob rejects before acquisition', (t) => {
+  const repo = repository(t);
+  const reader = repo.reader({ headRef: repo.base });
+  const runGit = reader.runGit.bind(reader);
+  reader.runGit = (args, options) => {
+    const output = runGit(args, options);
+    return args[0] === 'ls-tree' ? output.replace(/(blob [a-f0-9]+) +\d+/g, '$1 33554433') : output;
+  };
+  assert.throws(() => reader.readSource('model.ts'), /Git (?:blob|evidence)/);
+});
 
 test('an actual empty comparison succeeds', (t) => {
   const repo = repository(t);

@@ -74,6 +74,52 @@ deleted paths, excluded paths, ambiguous owners, invalid parent relations, and
 unavailable Git/DB evidence. A temporary Git repository exercises actual file
 changes; live DuckDB paths verify the operator query against the existing DB.
 
+### Bounded Git acquisition within one validation — GH-3765
+
+The prospective admission
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6771344583)
+retains `ReadComponentFiles` and `ValidateFeatureMechanizationImplementation`.
+Owned concern: acquire the same selected Git sources and canonical responsibility
+authority with less repeated process and lookup work. The native gate's retained
+777-manifest result counts manifests, not SQL calls: its existing read-only,
+repeatable-read snapshot uses three bulk data reads. No isolated timing proves
+that this DB read caused the browser stall or the whole validation duration.
+
+```mermaid
+flowchart LR
+  Snapshot[Same Git and DB snapshot] --> Old[Per-source git show and repeated lookup construction]
+  Snapshot --> New[Bounded blob batches and invocation-local indices]
+  Old --> Rules[Same ownership and responsibility predicates]
+  New --> Rules
+  Rules --> Result[Identical rows, ordering and failures]
+```
+
+The existing Git reader retains a membership Set and selected-tree blob identity
+and size alongside its path inventory. It acquires requested committed sources
+through binary `git cat-file --batch` requests containing object IDs, not path
+delimiters. Response identity, blob type, byte length and complete framing are
+mandatory. The existing 32 MiB per-blob limit remains; total batch bytes and
+object count are bounded by splitting valid requests, without truncation. Source
+decoding retains Node's existing UTF-8 replacement behavior. Local worktree reads
+remain filesystem-backed, and explicit HEAD continues to exclude dirty edits.
+
+The diff reader preloads its existing changed-source set. The component query
+preloads its existing mandatory binding sources, indexes responsibility authority
+and first-description lookup once, and preserves complete ownership resolution,
+status checks, response ordering and tree construction. Its prepared reference
+validator shares every predicate and error order with the standalone validator.
+These values live only inside the current reader or query invocation; there is
+no persistent cache, filtered manifest authority or new registry. Cross-validator
+AST reuse with the feature checker is outside this bounded cut.
+
+Corner cases remain fail-closed for unavailable Git, missing or nonblob objects,
+malformed or incomplete batch responses, over-budget blobs, conflicting authority,
+ambiguous ownership, absent source/test paths and missing symbols. Spaces, Unicode
+and delimiter-like content must not alter source identity or content. Focused
+tests compare results and count actual Git processes and bulk DB reads on isolated
+fixtures, without claiming global speedup or native DB acceptance. The final
+candidate still requires its governed fresh DB evidence and integration gates.
+
 ## Atomic source responsibilities
 
 DB bindings connect concrete code to canonical responsibilities. The
