@@ -621,6 +621,34 @@ column-row indicator opens the existing detail containing the complete plain
 text comment. Missing comments render as an em dash in detail. Long text wraps
 without horizontal overflow. DVT descriptions remain independently authored.
 
+Metadata presentation uses shared objects rather than CSS utility strings in the
+Source Overview composition. `NodePropertyFacts` owns passive label/value markup;
+`InspectorPropertyField` owns the label, content and optional edit action in an
+inline or stacked field. Neither component reads a store or authorizes a change.
+`InspectorMetadata.module.css` owns their layout and consumes the application's
+spacing, radius, surface and typography tokens. Property tables reuse its fact
+and value styles. The existing Inspector label/form typography remains shared.
+
+```mermaid
+flowchart LR
+  Before[Overview owns repeated CSS and field markup] --> Drift[Inconsistent metadata presentation]
+  Overview[Source Overview composition] --> Facts[Shared NodePropertyFacts]
+  Overview --> Field[Passive InspectorPropertyField]
+  Facts --> Styles[Inspector metadata CSS module]
+  Field --> Styles
+  Styles --> Tokens[Existing application tokens]
+  Overview --> Draft[Existing draft controller and authoring command]
+```
+
+The extraction preserves read-only admission, accessible names, plain-text
+comments, focus, Enter/blur commits and Escape cancellation. The field receives
+an explicit edit action from its caller and never creates an editing state or
+save command. Existing interaction tests exercise the real draft controller;
+they do not duplicate its state machine or assert CSS source strings. Shared
+property rendering and table regressions remain required. Rendered inspection
+at narrow and normal panel widths is separate evidence, not implied by these
+structural tests.
+
 ```mermaid
 flowchart LR
     Provider[Authorized provider catalog] --> Snapshot[Import or rebind snapshot]

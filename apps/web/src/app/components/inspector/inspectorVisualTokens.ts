@@ -85,13 +85,6 @@ export const inspectorPropertyClasses = {
   contribution: 'space-y-3 pt-1',
   contributionFill: 'flex min-h-0 flex-1 flex-col',
   header: 'flex items-center justify-between gap-3',
-  fact: 'contents',
-  value: { inspector: propertyValue, workbench: `${propertyValue} text-(--text-default)` },
-  facts: {
-    inspector: 'grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
-    workbench: 'grid grid-cols-[minmax(96px,0.36fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
-    relationship: 'grid grid-cols-[minmax(6rem,0.3fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm',
-  },
   records: {
     relationship: 'space-y-1',
     relationshipCard: `min-w-0 px-2 py-1.5 ${propertyPanel}`,

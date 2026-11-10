@@ -1,6 +1,7 @@
 /** Shared property cells, rendered as an Inspector table or workbench records. */
 import type { ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
+import metadataStyles from './InspectorMetadata.module.css';
 import type { NodePropertySection, NodePropertyTableRow } from './nodePropertiesContracts';
 import {
   inspectorPropertyClasses as styles,
@@ -133,11 +134,11 @@ function PropertyRecords({
           detailKeys.length === 0 ? null : (
             <dl className={styles.records.details}>
               {detailKeys.map((key) => (
-                <div key={key} className={styles.fact}>
+                <div key={key} className={metadataStyles.fact}>
                   <dt className={inspectorVisualClasses.inspectorLabel}>
                     {columnLabel(section, key)}
                   </dt>
-                  <dd className={styles.value.workbench}>
+                  <dd className={metadataStyles.value}>
                     <PropertyCell
                       section={section}
                       row={row}
