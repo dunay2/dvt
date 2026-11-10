@@ -295,9 +295,9 @@ test('Web keeps every bounded obligation with disjoint controlled and available 
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
   for (const [event, root, draft, groups] of [
     ['pull_request', false, false, ['changed']],
-    ['pull_request', true, false, ['unit-architecture', 'presentation']],
-    ['push', false, false, ['unit-architecture', 'presentation']],
-    ['workflow_dispatch', false, false, ['unit-architecture', 'presentation']],
+    ['pull_request', true, false, ['unit-architecture', 'presentation-1', 'presentation-2']],
+    ['push', false, false, ['unit-architecture', 'presentation-1', 'presentation-2']],
+    ['workflow_dispatch', false, false, ['unit-architecture', 'presentation-1', 'presentation-2']],
     ['pull_request', true, true, []],
   ]) {
     const context = webScenarioContext(event, root, draft);
@@ -390,11 +390,18 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
         );
       }
     }
-    assert.deepEqual(primaryExecutions.sort(), full ? [...primary].sort() : []);
+    // Native shards replace one complete presentation command; losing or repeating
+    // either half must fail this contract before the expensive hosted run starts.
+    const partitionedPrimary = primary.flatMap((command) =>
+      command === 'pnpm run test:presentation:run'
+        ? [`${command} --shard=1/2`, `${command} --shard=2/2`]
+        : [command]
+    );
+    assert.deepEqual(primaryExecutions.sort(), full ? partitionedPrimary.sort() : []);
     assert.equal(
       new Set(primaryExecutions).size,
       primaryExecutions.length,
-      'No primary suite runs twice'
+      'No primary suite or native partition runs twice'
     );
   }
 });

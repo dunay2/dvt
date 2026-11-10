@@ -112,16 +112,40 @@ adding a cache, prewarming tests, or changing worker isolation or required gates
 ## Hosted Vitest Groups
 
 Full Test Suite runs distribute the existing Web primary-suite composition across
-two concurrent jobs: `unit-architecture` runs unit then architecture; `presentation`
-runs presentation. Each uses the existing package delegates and catalog configs.
+three concurrent jobs: `unit-architecture` runs unit then architecture;
+`presentation-1` and `presentation-2` run the same presentation delegate with
+Vitest's native `--shard=1/2` and `--shard=2/2`. Both partitions retain the existing
+config, per-file isolation, one CI fork and 4 GB memory limit. No test selection
+catalog, scheduler or result cache is added.
 Local `pnpm test:web:ci` still runs the complete composition. Ordinary web PRs
 allocate one Vitest `changed` group using the existing affected-suite router.
 
+The measured full run at `0f97c2b2` spent 615 seconds executing Presentation
+(682 seconds for its hosted job), making that job the Test Suite critical path.
+Partitioning addresses that hosted path; it does not shorten local execution or
+prove a performance target before the new candidate runs. Browser evidence was
+the next longest path at about 572 seconds. Compare total runner time as well as
+wall time, because the extra worker repeats setup.
+
+```mermaid
+flowchart LR
+  Full[Full Web obligations] --> Unit[Unit and architecture]
+  Full --> First[Presentation shard 1 of 2]
+  Full --> Second[Presentation shard 2 of 2]
+  Unit --> Required[Test Suite required aggregate]
+  First --> Required
+  Second --> Required
+  Required -->|missing failed cancelled or unexpected skip| Reject[Fail]
+```
+
 `tools/ci/test-suite-outcome.test.mjs` evaluates the workflow matrix and requires
-the full groups' command union to match the canonical package composition exactly
-once. Every selected group remains merge-blocking. Per-file isolation, worker
-and memory limits, and per-job deadlines stay unchanged. Separate runners repeat
-setup, so compare the critical path and summed runner durations when measuring.
+both native shard selectors exactly once, with unit and architecture unchanged.
+Applying the installed native sequencer to the configured test specifications
+verifies the complete, disjoint union without rerunning test bodies. Vitest 3.2.4
+`list --filesOnly` alone does not apply the shard selector. Every selected
+group remains merge-blocking through the existing matrix result and required
+aggregate; fail-fast stays disabled so failures do not hide the other partition's
+evidence. Per-job deadlines and all browser partitions stay unchanged.
 
 ## Browser Evidence Partitions
 

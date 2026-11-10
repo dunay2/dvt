@@ -136,7 +136,7 @@ jobs:
         vitest_group: >-
           ${{ fromJSON((github.event_name != 'pull_request' ||
           needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
-          '["unit-architecture","presentation"]' || '["changed"]') }}
+          '["unit-architecture","presentation-1","presentation-2"]' || '["changed"]') }}
         include:
           - phase: browser
             capability: controlled
@@ -301,9 +301,10 @@ jobs:
           --filter @dvt/web run test:architecture:run
 
       - name: Run governed web presentation suite
-        if: matrix.vitest_group == 'presentation'
+        if: matrix.vitest_group == 'presentation-1' || matrix.vitest_group == 'presentation-2'
         run: >-
           pnpm --filter @dvt/web run test:deps && pnpm --filter @dvt/web run test:presentation:run
+          --shard=${{ matrix.vitest_group == 'presentation-1' && '1/2' || '2/2' }}
 
       - name: Run admitted live browser baseline
         if:
