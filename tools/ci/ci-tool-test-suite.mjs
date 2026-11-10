@@ -50,6 +50,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/precommit-hook-wiring.test.mjs',
   'tools/ci/risk-document-colocation.test.mjs',
   'tools/ci/run-web-cypress-native.test.mjs',
+  'tools/ci/setup-native-browser.test.mjs',
   'tools/ci/state-store-role-binding-architecture.test.mjs',
   'tools/ci/sync-docs-status-policy.test.mjs',
   'tools/ci/test-suite-outcome.test.mjs',

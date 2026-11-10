@@ -15,7 +15,11 @@ import {
   WEB_CYPRESS_CAPABILITIES,
   type WebCypressCatalogSnapshots,
 } from '../cypress.catalog';
-import { selectWebCypressShard, type WebCypressCapability } from '../cypress.changed';
+import {
+  selectWebCypressShard,
+  type WebCypressCapability,
+  type WebCypressShard,
+} from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
 type GitOutputRunner = (args: readonly string[], cwd: string) => string[];
@@ -26,7 +30,7 @@ type ChangedSuiteArgs = Readonly<{
   full: boolean;
   phase: WebEvidencePhase;
   browserCapability?: WebCypressCapability;
-  browserShard?: number;
+  browserShard?: WebCypressShard;
   files: readonly string[];
 }>;
 
@@ -48,7 +52,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
   const files: string[] = [];
   let phase: WebEvidencePhase = 'all';
   let browserCapability: WebCypressCapability | undefined;
-  let browserShard: number | undefined;
+  let browserShard: WebCypressShard | undefined;
   for (const arg of argv) {
     if (arg === '--') continue;
     if (!arg.startsWith('--')) {
@@ -57,7 +61,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     }
     const selectedPhase = WEB_EVIDENCE_PHASES.get(arg);
     const selectedCapability = WEB_BROWSER_CAPABILITIES.get(arg);
-    const selectedShard = /^--browser-shard=([1-3])\/3$/.exec(arg);
+    const selectedShard = /^--browser-shard=([1-9]\d*)\/([1-9]\d*)$/.exec(arg);
     const flag = arg.split('=', 1)[0]!;
     if (
       (selectedPhase === undefined &&
@@ -71,7 +75,14 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     flags.add(flag);
     phase = selectedPhase ?? phase;
     browserCapability = selectedCapability ?? browserCapability;
-    if (selectedShard) browserShard = Number(selectedShard[1]);
+    if (selectedShard) {
+      const index = Number(selectedShard[1]);
+      const count = Number(selectedShard[2]);
+      if (!Number.isSafeInteger(index) || !Number.isSafeInteger(count) || index > count) {
+        throw new Error(`Invalid browser shard selector: ${arg}`);
+      }
+      browserShard = { index, count };
+    }
   }
   const plan = flags.has('--plan');
   const full = flags.has('--full');
@@ -279,7 +290,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     )
     .flatMap((entry) =>
       args.phase === 'all' && entry.capability === 'controlled'
-        ? [1, 2, 3].map((index) => selectWebCypressShard(entry, index))
+        ? [1, 2, 3].map((index) => selectWebCypressShard(entry, { index, count: 3 }))
         : [selectWebCypressShard(entry, args.browserShard)]
     )
     .filter((entry) => entry !== undefined);

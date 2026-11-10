@@ -1,7 +1,7 @@
 /**
  * Owned concern: assign exact browser consumers to their real runtime evidence.
  * @baseline GH-3578/GH-3593/GH-3610/GH-3622: retained consumers keep their real runtime and owned journeys.
- * @decision GH-3656/GH-3747: partition controlled and available evidence; reuse the runtime command builder.
+ * @decision GH-3765: use explicit shard index/count; local and hosted execution keep separate budgets.
  * @consequence Unknown ownership rejects; CI shards preserve complete, disjoint spec execution.
  * @version 1.0.2
  */
@@ -113,6 +113,7 @@ const EXECUTION_BOUNDARIES = [
   'apps/web/vitest.suites.ts',
   'apps/web/scripts/run-vitest-changed-suites.ts',
   '.github/workflows/test.yml',
+  '.github/actions/setup-native-browser/action.yml',
   'scripts/run-selected-closure-live-proof.cjs',
   'scripts/run-selected-closure-cypress.cjs',
   'scripts/live-proof-process.cjs',
@@ -174,19 +175,24 @@ function buildBrowserCommand(
   };
 }
 
+export type WebCypressShard = Readonly<{ index: number; count: number }>;
+
 export function selectWebCypressShard(
   command: WebCypressCommand,
-  index?: number
+  shard?: WebCypressShard
 ): WebCypressCommand | undefined {
-  if (index === undefined) return command;
+  if (shard === undefined) return command;
   if (command.capability !== 'available' && command.capability !== 'controlled') {
     throw new Error('Browser shards require the controlled or available capability.');
   }
-  if (!Number.isInteger(index) || index < 1 || index > 3) {
-    throw new Error('Browser shard index must be 1, 2 or 3.');
+  const { index, count } = shard;
+  if (!Number.isSafeInteger(index) || !Number.isSafeInteger(count) || index < 1 || count < index) {
+    throw new Error(
+      'Browser shard requires positive safe integers with index no greater than count.'
+    );
   }
   if (command.specPaths.length === 0) throw new Error('Cannot partition empty browser evidence.');
-  const specPaths = command.specPaths.filter((_, position) => position % 3 === index - 1);
+  const specPaths = command.specPaths.filter((_, position) => position % count === index - 1);
   if (specPaths.length === 0 && command.capability === 'controlled') return undefined;
   if (specPaths.length === 0) throw new Error('Cannot execute an empty browser shard.');
   return buildBrowserCommand(command.capability, specPaths);

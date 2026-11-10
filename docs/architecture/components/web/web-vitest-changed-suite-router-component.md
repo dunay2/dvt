@@ -447,7 +447,8 @@ flowchart LR
   The existing required aggregate requires the
   complete matrix result; cancelled, failed or absent evidence still rejects.
 - `main`, manual and root-sensitive runs distribute the existing `test:web:ci`
-  delegates across `unit-architecture` and `presentation`, and execute the admitted
+  delegates across separate `unit` and `architecture` jobs plus three native
+  Presentation shards (`1/3`, `2/3`, `3/3`), and execute the admitted
   browser baseline with `--full --phase=browser`, partitioned by the same
   capability selector in CI. `--full` only adds
   browser baseline obligations to the router: executing it with the Vitest
@@ -585,33 +586,46 @@ passed. This is incomplete execution evidence, not a passing product result.
 
 ```text
 Before: complete admitted plan -> available [32 specs] -> 25-minute cancellation
-After:  complete admitted plan -> available 1/3 -> exact result validation
-                              -> available 2/3 -> exact result validation
-                              -> available 3/3 -> exact result validation
-All three producers -> existing required Test Suite matrix aggregate
+After:  complete admitted plan -> controlled 1..6/6 -> exact result validation
+                              -> available 1..6/6  -> exact result validation
+                              -> unavailable      -> exact result validation
+All selected producers -> existing required Test Suite matrix aggregate
 ```
 
-The existing browser policy partitions its ordered available spec list by
-zero-based index modulo three. Every spec belongs to exactly one shard; the
+The existing browser policy partitions each ordered spec list by zero-based
+index modulo the explicit partition count. Every spec belongs to exactly one shard; the
 union equals the unpartitioned catalog. Reuse the existing command builder,
 protected runtime and strict expected-spec result validator. Do not duplicate
 the catalog in YAML, parse command strings, add another runner or alter cases.
 
-The adapter accepts `--browser-shard=1/3`, `2/3` or `3/3` only together with
-`--phase=browser --browser-capability=available`. Omission preserves the complete
-local invocation. Complete plan admission and physical-path validation precede
+The adapter accepts `--browser-shard=index/count` only together with
+`--phase=browser` and capability `controlled` or `available`. Both values must
+be positive safe integers, with index no greater than count. Hosted execution
+uses six partitions per capability. Default local execution retains three
+sequential controlled batches and complete available/unavailable requests;
+explicit unpartitioned browser requests remain complete. The selector allocates
+no count-sized scheduler. Complete plan admission and physical-path validation precede
 shard selection, including in `--plan` mode. Invalid, repeated, out-of-phase
 or out-of-capability selectors reject before provisioning. A selected shard
-cannot silently admit an empty consumer list.
+cannot silently admit an empty available consumer list. A controlled partition
+with no assigned changed specs launches no browser, after validating the entire plan.
 
-The existing workflow creates all three available producers for PR and full
+The existing workflow creates all six controlled and six available producers for PR and full
 baseline execution. Container ownership, Turbo cache variant and screenshot
 artifact identities include the shard. Provider setup occurs only when the
 selected plan requires it. The unchanged 25-minute deadline and fail-fast-false
 policy apply to each producer; a failed, cancelled or missing shard blocks the
-existing required aggregate. Controlled, unavailable and Vitest ownership do
-not change. Three bootstraps replace one for this capability; lower total CPU
-is not claimed.
+existing required aggregate. Capability and Vitest ownership do not change.
+
+The GH-3765 performance cut increases hosted partitions from three to six after
+run `42735058665` measured a 572-second browser job within a 710-second Test Suite.
+The complete target is at most 355 seconds, not a proven result. Native dependency
+preparation is independently optimized; partitioning alone cannot remove its
+fixed cost. Six additional bootstraps increase runner consumption. Record cold
+and warm wall time, queue delay and total runner-minutes separately; neither
+lower total CPU nor a 50-percent gain may be inferred from partition counts.
+The local execution policy stays unchanged rather than multiplying its serial
+builds and launches. No spec, case, failure or cleanup check is removed.
 
 Separate focused policy/adapter tests prove disjoint complete coverage,
 unchanged runtime arguments, selector rejection and validation-before-filtering.
@@ -1425,10 +1439,67 @@ Acceptance:
   pull-request base ref and their `--phase=vitest` / `--phase=browser` selection.
 - Given a push to `main`, a manual run, or a root-build-sensitive pull request
 - When the `Web Frontend Tests` job runs
-- Then the two full Vitest groups execute every primary-suite delegate exactly
-  once, while the browser phase executes
+- Then five full Vitest groups execute Unit and Architecture once each and the
+  complete, disjoint union of the three native Presentation shards, while the browser phase executes
   `pnpm test:web:changed --full --phase=browser`.
 - Either phase failing or being cancelled prevents the required aggregate
   from succeeding. Neither phase cancels its sibling on failure.
 
 > Acceptance scope status: Active. Owner: Frontend / CI.
+
+## Verified native browser preparation caches
+
+GH-3765-CI-BROWSER-PREPARATION-CACHE reuses `RunWebCypressNative` and
+`RouteChangedWebVitestSuites`. The Linux composite action
+`.github/actions/setup-native-browser/action.yml` owns dependency preparation
+shared by Test Suite and Canvas nightly. It does not select or execute tests,
+start previews, allocate providers, publish acceptance or change process cleanup.
+
+The historical hosted run `42735058665` spent 13 seconds preparing Cypress and
+44 seconds preparing pinned Chrome in available shard 2. These measurements
+justify reusing downloads; they are not promised savings or successful acceptance.
+The run failed diagnostic finalization. The 50-percent wall-time objective must
+be measured after integration, with cold and warm caches reported separately.
+
+```mermaid
+flowchart LR
+  Plan[Complete governed Web plan] --> Selected[Selected browser work]
+  Selected --> Restore[Exact dependency cache]
+  Restore --> Hit[Restored artifact]
+  Restore --> Miss[Bounded download or package installer]
+  Hit --> Verify[Verify artifact and exact version]
+  Miss --> Verify
+  Verify -->|failure| Reject[Fail before native proof]
+  Verify -->|success| Ready[Prepared dependency]
+  Ready --> Proof[Existing real proof and owned cleanup]
+  Verify --> Save[Save verified dependency only]
+```
+
+- Cypress caches only the installed package version's binary directory, keyed by
+  runner OS, architecture and that exact version. A miss installs through the
+  existing package delegate. Hits and misses both run `cypress verify` and compare
+  the actual binary version. A missing or corrupt hit fails; cache presence never
+  substitutes for verification. No broad restore key or verification bypass exists.
+- Only the available capability requests pinned Chrome. Its cache contains the
+  existing `.deb`, keyed by Linux/x64, version and the admitted SHA256. Every hit
+  and miss checks the checksum before installation, then both executable versions
+  and Cypress's discovered name, channel, version and executable. Other capabilities
+  and nightly retain their existing browser policy. An arbitrary runner Chrome
+  version cannot replace the admitted binary.
+- Cache misses download normally; download, installation and verification failures
+  remain failures. Save steps run only after successful verification. Neither
+  browser output nor credentials, database state, `node_modules` or test results
+  enter these caches.
+- The existing Python action caches pip downloads using the pinned Python version
+  and workflow dependency declaration fingerprint. Pinned pip installation still
+  runs every time; no virtual environment or transitive-version guarantee is added.
+- A change to the shared preparation action routes all three browser capabilities
+  through the existing execution-boundary catalog. Required results, native proof
+  commands, cleanup, timeout and diagnostic acceptance remain unchanged.
+
+Behavioral contracts execute the action's shell with bounded command doubles and
+temporary files: miss/hit ordering, missing restored files, checksum and binary
+identity rejection, installer failures, invalid inputs and no saving failed
+preparation. Workflow contracts retain capability gating, the exact nightly proof
+and executable browser-discovery checks. This is dependency reuse, not cached
+validation or a new orchestration layer.

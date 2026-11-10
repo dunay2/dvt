@@ -930,6 +930,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress.changed.ts',
     'apps/web/scripts/run-vitest-changed-suites.ts',
     '.github/workflows/test.yml',
+    '.github/actions/setup-native-browser/action.yml',
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',

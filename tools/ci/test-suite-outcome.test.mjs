@@ -10,15 +10,31 @@ import { runInNewContext } from 'node:vm';
 import yaml from 'js-yaml';
 
 const workflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
+const browserPreparation = yaml.load(
+  readFileSync('.github/actions/setup-native-browser/action.yml', 'utf8')
+);
 const aggregate = workflow.jobs['test-suite-required'];
 const browserMatrix = [
   { phase: 'browser', capability: 'controlled', shard: 1 },
   { phase: 'browser', capability: 'controlled', shard: 2 },
   { phase: 'browser', capability: 'controlled', shard: 3 },
+  { phase: 'browser', capability: 'controlled', shard: 4 },
+  { phase: 'browser', capability: 'controlled', shard: 5 },
+  { phase: 'browser', capability: 'controlled', shard: 6 },
   { phase: 'browser', capability: 'available', shard: 1 },
   { phase: 'browser', capability: 'available', shard: 2 },
   { phase: 'browser', capability: 'available', shard: 3 },
+  { phase: 'browser', capability: 'available', shard: 4 },
+  { phase: 'browser', capability: 'available', shard: 5 },
+  { phase: 'browser', capability: 'available', shard: 6 },
   { phase: 'browser', capability: 'unavailable' },
+];
+const fullVitestGroups = [
+  'unit',
+  'architecture',
+  'presentation-1',
+  'presentation-2',
+  'presentation-3',
 ];
 const lanes = [
   'package-tests',
@@ -97,13 +113,11 @@ test('only available native browser shards use the admitted hosted platform and 
 
 test('the admitted Chrome prerequisite checks actual discovery and preserves no-browser planning', () => {
   const web = workflow.jobs['web-frontend-tests'];
-  const chrome = web.steps.find((step) => step.id === 'browser_chrome');
-  assert.ok(chrome, 'Declare the browser prerequisite in the existing workflow adapter');
+  const preparation = web.steps.find((step) => step.id === 'browser_dependencies');
+  const chrome = browserPreparation.runs.steps.find((step) => step.id === 'chrome');
+  assert.equal(preparation.uses, './.github/actions/setup-native-browser');
   assert.ok(
-    web.steps.indexOf(chrome) > web.steps.findIndex((step) => step.id === 'browser_dependencies')
-  );
-  assert.ok(
-    web.steps.indexOf(chrome) < web.steps.findIndex((step) => step.id === 'browser_postgres')
+    web.steps.indexOf(preparation) < web.steps.findIndex((step) => step.id === 'browser_postgres')
   );
   assert.notEqual(chrome['continue-on-error'], true);
   for (const [phase, capability, required, expected] of [
@@ -115,10 +129,13 @@ test('the admitted Chrome prerequisite checks actual discovery and preserves no-
     ['vitest', 'available', 'true', false],
   ]) {
     assert.equal(
-      runInNewContext(chrome.if, {
+      runInNewContext(preparation.if, {
         matrix: { phase, capability },
         steps: { web_plan: { outputs: { browser_required: required } } },
-      }),
+      }) &&
+        runInNewContext(preparation.with['pinned-chrome'].slice(3, -2), {
+          matrix: { capability },
+        }) === 'true',
       expected
     );
   }
@@ -295,9 +312,9 @@ test('Web keeps every bounded obligation with disjoint controlled and available 
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
   for (const [event, root, draft, groups] of [
     ['pull_request', false, false, ['changed']],
-    ['pull_request', true, false, ['unit-architecture', 'presentation-1', 'presentation-2']],
-    ['push', false, false, ['unit-architecture', 'presentation-1', 'presentation-2']],
-    ['workflow_dispatch', false, false, ['unit-architecture', 'presentation-1', 'presentation-2']],
+    ['pull_request', true, false, fullVitestGroups],
+    ['push', false, false, fullVitestGroups],
+    ['workflow_dispatch', false, false, fullVitestGroups],
     ['pull_request', true, true, []],
   ]) {
     const context = webScenarioContext(event, root, draft);
@@ -358,7 +375,7 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
       const planned = renderWebCommand(plan.run, context);
       assert.equal(
         planned,
-        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/3` : ''}${full ? ' --full' : ''}`
+        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/6` : ''}${full ? ' --full' : ''}`
       );
       const selected = executions.filter((step) => !step.if || runInNewContext(step.if, context));
       assert.equal(
@@ -378,7 +395,11 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
           dependencies,
           'Each runner prepares its own dependencies first'
         );
-        assert.ok(commands.length > 0);
+        const group = matrix.vitest_group;
+        const presentation = group.startsWith('presentation-');
+        const suite = presentation ? 'presentation' : group;
+        const selector = presentation ? ` --shard=${group.slice(-1)}/3` : '';
+        assert.deepEqual(commands, [`pnpm run test:${suite}:run${selector}`]);
         primaryExecutions.push(...commands);
       } else {
         assert.deepEqual(
@@ -391,10 +412,10 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
       }
     }
     // Native shards replace one complete presentation command; losing or repeating
-    // either half must fail this contract before the expensive hosted run starts.
+    // any third must fail this contract before the expensive hosted run starts.
     const partitionedPrimary = primary.flatMap((command) =>
       command === 'pnpm run test:presentation:run'
-        ? [`${command} --shard=1/2`, `${command} --shard=2/2`]
+        ? [`${command} --shard=1/3`, `${command} --shard=2/3`, `${command} --shard=3/3`]
         : [command]
     );
     assert.deepEqual(primaryExecutions.sort(), full ? partitionedPrimary.sort() : []);
@@ -476,10 +497,15 @@ test('Web provisions only the selected browser capability infrastructure', () =>
   const browserProvider = web.steps.find((step) => step.id === 'browser_provider');
   assert.match(browserProvider.run, /dbt-postgres==\d+\.\d+\.\d+/u);
   assert.match(browserProvider.run, /dbt-core==\d+\.\d+\.\d+/u);
-  assert.doesNotMatch(browserDependencies.run, /dbt|pip|python/u);
-  assert.match(browserDependencies.run, /cypress install/u);
-  assert.match(browserDependencies.run, /cypress verify/u);
+  assert.equal(browserDependencies.uses, './.github/actions/setup-native-browser');
+  const cypress = browserPreparation.runs.steps.find((step) => step.id === 'cypress');
+  assert.doesNotMatch(cypress.run, /dbt|pip|python/u);
+  assert.match(cypress.run, /cypress install/u);
+  assert.match(cypress.run, /cypress verify/u);
   assert.equal(browserDependencies.env?.CYPRESS_INSTALL_BINARY, undefined);
+  const python = web.steps.find((step) => step.id === 'browser_python');
+  assert.equal(python.with.cache, 'pip');
+  assert.equal(python.with['cache-dependency-path'], '.github/workflows/test.yml');
 });
 
 test('Web proof allocation and cleanup are bounded to the container created by this run', () => {

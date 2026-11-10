@@ -112,45 +112,55 @@ adding a cache, prewarming tests, or changing worker isolation or required gates
 ## Hosted Vitest Groups
 
 Full Test Suite runs distribute the existing Web primary-suite composition across
-three concurrent jobs: `unit-architecture` runs unit then architecture;
-`presentation-1` and `presentation-2` run the same presentation delegate with
-Vitest's native `--shard=1/2` and `--shard=2/2`. Both partitions retain the existing
-config, per-file isolation, one CI fork and 4 GB memory limit. No test selection
-catalog, scheduler or result cache is added.
+five concurrent jobs: `unit` and `architecture` each run their existing delegate;
+`presentation-1`, `presentation-2` and `presentation-3` run the same presentation
+delegate with Vitest's native `--shard=1/3`, `--shard=2/3` and `--shard=3/3`.
+Every partition retains its existing config, per-file isolation, one CI fork and
+4 GB old-space limit. No test selection catalog, scheduler or result cache is added.
 Local `pnpm test:web:ci` still runs the complete composition. Ordinary web PRs
 allocate one Vitest `changed` group using the existing affected-suite router.
 
 The measured full run at `0f97c2b2` spent 615 seconds executing Presentation
 (682 seconds for its hosted job), making that job the Test Suite critical path.
-Partitioning addresses that hosted path; it does not shorten local execution or
-prove a performance target before the new candidate runs. Browser evidence was
-the next longest path at about 572 seconds. Compare total runner time as well as
-wall time, because the extra worker repeats setup.
+The previous matrix used two Presentation halves and a serial Unit/Architecture
+job. Thirds divide Presentation further, while separate Node jobs remove the
+serial Unit/Architecture path. Native sharding preserves all 382 current
+Presentation files without another selection inventory.
+
+The complete Test Suite target is at most 355 seconds against that run's
+710 seconds. This partition change does not establish that target: browser
+evidence still took about 572 seconds, and the new matrix has not been timed.
+Measure complete wall time and total runner time, because each extra job repeats
+setup. Local execution and ordinary changed PRs retain their current behavior.
 
 ```mermaid
 flowchart LR
-  Full[Full Web obligations] --> Unit[Unit and architecture]
-  Full --> First[Presentation shard 1 of 2]
-  Full --> Second[Presentation shard 2 of 2]
+  Full[Full Web obligations] --> Unit[Unit]
+  Full --> Architecture[Architecture]
+  Full --> First[Presentation shard 1 of 3]
+  Full --> Second[Presentation shard 2 of 3]
+  Full --> Third[Presentation shard 3 of 3]
   Unit --> Required[Test Suite required aggregate]
+  Architecture --> Required
   First --> Required
   Second --> Required
+  Third --> Required
   Required -->|missing failed cancelled or unexpected skip| Reject[Fail]
 ```
 
 `tools/ci/test-suite-outcome.test.mjs` evaluates the workflow matrix and requires
-both native shard selectors exactly once, with unit and architecture unchanged.
+all three native shard selectors and each Unit/Architecture delegate exactly once.
 Applying the installed native sequencer to the configured test specifications
 verifies the complete, disjoint union without rerunning test bodies. Vitest 3.2.4
 `list --filesOnly` alone does not apply the shard selector. Every selected
 group remains merge-blocking through the existing matrix result and required
-aggregate; fail-fast stays disabled so failures do not hide the other partition's
+aggregate; fail-fast stays disabled so failures do not hide sibling partitions'
 evidence. Per-job deadlines and all browser partitions stay unchanged.
 
 ## Browser Evidence Partitions
 
 The existing Test Suite workflow partitions both `controlled` and `available`
-browser obligations into three jobs through `selectWebCypressShard`. The policy
+browser obligations into six jobs each through `selectWebCypressShard`. The policy
 preserves catalog order and assigns each selected spec exactly once. Planning and
 execution use the same capability and shard selectors. The default local
 `phase=all` gate executes the three controlled partitions sequentially through
@@ -170,7 +180,9 @@ All selected browser evidence remains merge-blocking through the existing Test
 Suite aggregate. Native runtimes, assertions, deadlines, provider preparation and
 cleanup are unchanged. Parallel jobs repeat setup/build work: compare both the
 longest lane and summed runner durations when evaluating the improvement, rather
-than interpreting three partitions as a guaranteed threefold speedup.
+than interpreting six partitions as a guaranteed sixfold speedup. Report cold
+and warm preparation separately: the 50-percent complete-wall-time target is
+not established by adding partitions, and extra jobs increase runner consumption.
 
 ## Immutable Provisioning Image Cache
 
@@ -201,7 +213,7 @@ GitHub Actions cache transport is additionally checked in the actual workflow.
 
 ## Native Provider Browser Prerequisites
 
-The three `available` Web browser shards use Ubuntu 24.04, Node 22.23.3 and
+The six `available` Web browser shards use Ubuntu 24.04, Node 22.23.3 and
 Chrome stable 155.0.8059.84. The existing Test Suite workflow verifies the
 official Chrome package SHA256 and actual Cypress browser discovery before
 running provider-backed evidence. Chrome preparation runs only when the

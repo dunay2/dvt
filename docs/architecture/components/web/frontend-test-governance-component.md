@@ -78,15 +78,16 @@ contract validation, or engine determinism tests.
   memory alone is not sufficient evidence to remove isolation. See the
   [benchmark evidence and closeout in issue #2900](https://github.com/dunay2/dvt/issues/2900).
 - The `Web Frontend Tests` matrix keeps separate Vitest and browser obligations.
-  Full hosted Vitest coverage uses two independent groups: `unit-architecture`
-  and `presentation`. Ordinary PRs allocate one `changed` group. Each group has
+  Full hosted Vitest coverage uses five independent groups: `unit`, `architecture`
+  and `presentation-1` through `presentation-3`. The three Presentation jobs use
+  native thirds of the same suite. Ordinary PRs allocate one `changed` group. Each group has
   a distinct job/cache identity; matrix fail-fast remains disabled and the
   existing required aggregate requires every selected result.
 - Ordinary web pull requests route through the same `pnpm test:web:changed`
   plan with `--phase=vitest` or `--phase=browser`. Local default execution
   remains both phases, and browser admission is never replaced by Vitest.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs distribute
-  the existing `test:web:ci` primary-suite composition across the two groups.
+  the existing `test:web:ci` primary-suite composition across the five groups.
   The workflow invokes the existing package delegates; their union must execute
   each primary suite exactly once. Local `pnpm test:web:ci` remains complete.
 - The package default `test` command delegates to the same primary-suite
@@ -185,8 +186,9 @@ Acceptance:
 
 - `.github/workflows/test.yml` contains a `web-frontend-tests` job.
 - The job runs `pnpm test:web:changed` for ordinary web pull requests.
-- Full hosted routes run every delegate in `pnpm test:web:ci` exactly once
-  across `unit-architecture` and `presentation`, retaining their existing configs.
+- Full hosted routes run Unit and Architecture once each and partition Presentation
+  into the complete, disjoint native shards `1/3`, `2/3` and `3/3`, retaining their
+  existing configs. Their union equals the complete `pnpm test:web:ci` composition.
 - The generic affected-package job no longer owns the web test step.
 
 #### Story 3 - Test support remains test-only

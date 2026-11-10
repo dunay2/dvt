@@ -40,9 +40,7 @@ jobs:
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Install native browser dependencies
-        run: |
-          pnpm --filter @dvt/web exec cypress install
-          pnpm --filter @dvt/web exec cypress verify
+        uses: ./.github/actions/setup-native-browser
 
       - name: Build and prove the canonical large Canvas
         run: >-
