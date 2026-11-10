@@ -48,6 +48,25 @@ test('changed-file CI builds its canonical hash dependency before loading the ch
   );
 });
 
+test('full governance has merge-base history while PRs and independent proofs stay shallow', () => {
+  // Manual bootstrap previously failed because its branch-only checkout omitted origin/main.
+  const { jobs } = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
+  for (const [id, job] of Object.entries(jobs)) {
+    const checkout = job.steps.find((step) => step.uses?.startsWith('actions/checkout@'));
+    if (!checkout) continue;
+    const depth = String(checkout.with['fetch-depth']).replace(/^\s*\$\{\{\s*|\s*\}\}\s*$/gu, '');
+    for (const event of ['pull_request', 'push', 'workflow_dispatch']) {
+      const expected =
+        id === 'pr-checks' ? (event === 'pull_request' ? 2 : 0) : id === 'detect-pr-scope' ? 2 : 1;
+      assert.equal(
+        Number(runInNewContext(depth, { github: { event_name: event } })),
+        expected,
+        `${id} checkout for ${event}`
+      );
+    }
+  }
+});
+
 test('combined scope preserves PR-only integration selection and manual opt-ins', () => {
   const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
   const outputs = workflow.jobs['detect-pr-scope']?.outputs ?? {};

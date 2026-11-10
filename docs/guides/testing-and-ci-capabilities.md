@@ -958,7 +958,7 @@ These files are the canonical source of truth for:
 - adapter-postgres, contracts, determinism, and coverage scope detection
 - Temporal integration scope detection
 
-Pull-request scope-diff consumers use shallow checkout (`fetch-depth: 1`) and
+Code Quality, Test Suite and Contracts scope-diff jobs use shallow checkout and
 then the shared [`fetch-scope-base`](../../.github/actions/fetch-scope-base/action.yml)
 action to fetch only the base branch ref needed for `origin/<base>...HEAD` or
 `origin/<base>` comparisons. This keeps GitHub as the authoritative merge gate
@@ -1093,9 +1093,10 @@ Frontend Tests` lane and the manual `Full CI` baseline both set the same web
   Workflow YAML edits are CI-policy changes for this scope as well: they keep
   PR metadata, changed-file validation, and CI contract coverage, but no longer
   imply Temporal or adapter-postgres runtime integration by themselves. Pushes
-  and manual full gates keep the full remote posture for those checks. The scope detector uses
-  shallow checkout plus `fetch-scope-base`; Temporal integration jobs keep
-  shallow checkout because they do not compute changed-file diffs.
+  and manual full gates keep the full remote posture for those checks. The scope
+  detector uses depth-two checkout; `emit-scope` acquires the exact PR base SHA
+  when missing. Temporal integration jobs keep shallow checkout because they do
+  not compute changed-file diffs.
 
 DB-authoritative implementation mechanization runs locally before merge, not
 against the imported CI database. The exact base/head SHAs, command and result
@@ -1133,6 +1134,13 @@ invalid metadata still rejects the aggregate even if independent proof work has
 already started. Ready PRs retain semantic selection, drafts explicitly justify
 skips, pushes retain the current governance posture without opening these three
 integrations, and manual runs retain each independent integration opt-in.
+
+PR checks retain a depth-two checkout. Full push/manual governance runs need
+complete history in that job because Planning DB bootstrap compares the current
+commit with `origin/main` using their actual merge base. A branch-only shallow
+checkout omitted that reference and failed the manual bootstrap. Scope detection
+and integration checkouts remain shallow; history is not an artifact passed
+between jobs, and the comparison base is never replaced with the current commit.
 
 Governance unit coverage also consumes `governance_tooling_changed` and
 `root_build_sensitive` from their actual `pr_quality_scope` projection. Reading
