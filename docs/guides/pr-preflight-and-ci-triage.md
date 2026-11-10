@@ -50,6 +50,15 @@ Unavailable DB or invalid comparison evidence blocks integration. This
 [single-team boundary](../planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary)
 is a local operator obligation, not a check independently enforced by GitHub.
 
+Changes confined to the Test Suite workflow or shared native-browser preparation
+action use the [hosted adapter validation boundary](../architecture/components/ci-governance/local-changed-files-gate-component.md#hosted-adapter-validation).
+The ordinary local gate retains complete CI contracts and relevant Vitest guards;
+the mandatory hosted matrix proves the adapter on its actual platform. Shared,
+root-policy or unclassified companions retain the complete local Web command.
+This automatic selection does not change the diff, receipt identity or acceptance
+requirement. Do not treat a local pass as hosted acceptance or use iteration mode
+as a substitute for the gate.
+
 ## Conflict Triage And Cleanup Safety
 
 Classify each conflicted file by its current owner and intended change before
