@@ -1,5 +1,11 @@
+/**
+ * Owned concern: validate store ownership, domain boundaries and discoverable contracts.
+ * Reason: ownership is a semantic header contract, independent of JSDoc line layout.
+ * Corner invariant: a later or lookalike phrase cannot stand in for the leading owned concern.
+ */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 
 import { describe, expect, it } from 'vitest';
 
@@ -52,6 +58,19 @@ function readRepoFile(relativePath: string): string {
 
 function repoFileExists(relativePath: string): boolean {
   return existsSync(path.join(REPO_ROOT, relativePath));
+}
+
+function hasOwnedConcernHeader(source: string, expectedConcern: string): boolean {
+  const text = source.trimStart();
+  const comment = ts.getLeadingCommentRanges(text, 0)?.[0];
+  if (comment?.kind !== ts.SyntaxKind.MultiLineCommentTrivia || !text.startsWith('/**'))
+    return false;
+  const content = text
+    .slice(3, comment.end - 2)
+    .replace(/\r?\n\s*\*?/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  return content.startsWith(expectedConcern);
 }
 
 describe('web store domain ownership architecture', () => {
@@ -148,12 +167,37 @@ describe('web store domain ownership architecture', () => {
   });
 
   it('keeps every store module labeled with its owned concern', () => {
+    // Expanded reason/corner documentation must not fail an incidental one-line prefix check.
     for (const module of STORE_MODULES) {
       const source = readRepoFile(module.relativePath);
-
-      expect(source.trimStart().startsWith('/** Owned concern:'), module.label).toBe(true);
-      expect(source, module.label).toContain(module.ownedConcern);
+      expect(hasOwnedConcernHeader(source, module.ownedConcern), module.label).toBe(true);
     }
+  });
+
+  it.each([
+    ['inline', '/** Owned concern: preserve layout. */\nexport const state = {};', true],
+    [
+      'multiline',
+      '/**\n * Owned concern: preserve layout.\n * Reason: shared retention.\n */\nexport const state = {};',
+      true,
+    ],
+    [
+      'wrapped CRLF',
+      ' \r\n/**\r\n * Owned concern: preserve\r\n * layout.\r\n */\r\nexport const state = {};',
+      true,
+    ],
+    ['missing', 'export const state = {};', false],
+    ['ordinary block', '/* Owned concern: preserve layout. */\nexport const state = {};', false],
+    ['later comment', 'export const state = {};\n/** Owned concern: preserve layout. */', false],
+    ['lookalike string', 'const label = "/** Owned concern: preserve layout. */";', false],
+    [
+      'different owner',
+      '/** Owned concern: execute work.\n * Reason: Owned concern: preserve layout.\n */',
+      false,
+    ],
+  ] as const)('checks ownership rather than formatting for %s', (_label, source, accepted) => {
+    // These counterexamples keep relaxed whitespace handling from accepting misplaced or wrong ownership.
+    expect(hasOwnedConcernHeader(source, 'Owned concern: preserve layout')).toBe(accepted);
   });
 
   it('guards store ownership semantics instead of only checking file thinness', () => {

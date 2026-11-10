@@ -537,4 +537,10 @@ these questions without reading unrelated UI code:
 The current answer is encoded in this guide, the component map, and
 `webStoreDomainOwnership.architecture.test.ts`.
 
+The ownership fitness reads the leading JSDoc comment and checks its first
+semantic content against the expected store concern. Inline, multiline and
+wrapped JSDoc are equivalent; reason and corner-invariant documentation may
+follow the concern. A missing header, a different owner, ordinary block
+comments or an ownership phrase elsewhere in source do not satisfy the rule.
+
 > Section status: Active. Owner: Web / Architecture. Colocation does not merge component responsibilities.
