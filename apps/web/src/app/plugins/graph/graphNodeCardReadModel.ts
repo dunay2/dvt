@@ -1,5 +1,5 @@
-import { resolveCanvasModelIdentity } from '../../views/canvas/canvasModelIdentity';
 /** Owned concern: choose the strategy-owned graph node card projection. */
+import { resolveCanvasModelIdentity } from '../../views/canvas/canvasModelIdentity';
 import type { CanonicalNode } from '../../types/canonical';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
