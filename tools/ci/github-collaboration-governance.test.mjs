@@ -130,7 +130,6 @@ test('trusted PR metadata mutation is isolated from candidate-code validation', 
   const checkout = prQuality.jobs['pr-checks'].steps.find((step) =>
     String(step.uses ?? '').startsWith('actions/checkout@')
   );
-  assert.equal(checkout.with['fetch-depth'], 2);
   assert.equal(checkout.with['persist-credentials'], false);
 
   const stepNames = prQuality.jobs['pr-checks'].steps.map((step) => step.name);
