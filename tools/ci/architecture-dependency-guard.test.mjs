@@ -20,7 +20,7 @@ import {
   formatApiReachabilityReport,
   listFilesRecursive,
 } from './check-architecture-dependencies.mjs';
-import verifyPrepush from '../../scripts/verify-prepush.cjs';
+import { buildPrepushPlan } from '../../scripts/local-validation-plan.cjs';
 
 const DEPCRUISE_CONFIG = resolve('.dependency-cruiser.cjs');
 const REQUIRED_ARCH_DEPENDENCY_RULES = [
@@ -274,9 +274,9 @@ test('root package exposes the architecture dependency guard', () => {
   assert.equal(pkg.scripts?.['arch:deps'], 'node tools/ci/check-architecture-dependencies.mjs');
   assert.equal(pkg.scripts?.['verify:prepush'], 'node scripts/verify-prepush.cjs');
   assert.ok(
-    verifyPrepush
-      .buildPrepushPlan(['apps/web/src/main.tsx'], { full: true })
-      .some((step) => step.id === 'arch-deps')
+    buildPrepushPlan(['apps/web/src/main.tsx'], { full: true }).some(
+      (step) => step.id === 'arch-deps'
+    )
   );
   assertArchitectureDependencyCiDelegation(pkg.scripts);
 });

@@ -2,28 +2,40 @@
 {
   const fs = require('node:fs');
   const path = require('node:path');
-  const os = require('node:os');
-  const { execFileSync } = require('node:child_process');
-  const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
   const test = require('node:test');
   const assert = require('node:assert/strict');
+  const { buildPrepushStamp } = require('./lib/prepush-validation-stamp.cjs');
 
-  const {
-    buildPrepushPlan,
-    buildPrepushStamp,
-    classifyPrepushScope,
-    commandLabel,
-    isPrepushStampValid,
-    main,
-    parseArgs,
-    readPrepushStamp,
-    validationLevelSatisfies,
-  } = require('./verify-prepush.cjs');
+  const { buildPrepushPlan, classifyPrepushScope } = require('./local-validation-plan.cjs');
+  const { commandLabel } = require('./lib/local-validation-plan-values.cjs');
+  const { main, parseArgs } = require('./verify-prepush.cjs');
 
   function stepIds(plan) {
     return plan.map((step) => step.id);
   }
+
+  test('prepush does not stamp a pending or rejected asynchronous validation', async () => {
+    let rejectExecution;
+    const calls = [];
+    const validation = new Promise((_, reject) => {
+      rejectExecution = reject;
+    });
+    const pending = main([], {
+      changedFiles: ['sample.ts'],
+      stateFingerprint: 'tree',
+      validationFingerprint: 'inputs',
+      readPrepushStamp: () => null,
+      printPrepushPlan: () => {},
+      executePrepushPlan: () => validation,
+      writePrepushStamp: () => calls.push('stamp'),
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepEqual(calls, []);
+    rejectExecution(Object.assign(new Error('deadline exceeded'), { exitCode: 124 }));
+    await assert.rejects(pending, { exitCode: 124 });
+    assert.deepEqual(calls, []);
+  });
 
   function assertIncludes(ids, expectedId) {
     assert.ok(ids.includes(expectedId), `Expected ${expectedId} in ${ids.join(', ')}`);
@@ -146,238 +158,7 @@
     assert.deepEqual(parseArgs(['--full', '--hook']), { dryRun: false, full: true, hook: true });
   });
 
-  test('prepush validation stamp skips only equivalent or stronger validation', () => {
-    const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
-    const defaultStamp = buildPrepushStamp(changedFiles, {
-      full: false,
-      stateFingerprint: 'same-tree',
-      validationFingerprint: 'same-validation-inputs',
-    });
-    const fullStamp = buildPrepushStamp(changedFiles, {
-      full: true,
-      stateFingerprint: 'same-tree',
-      validationFingerprint: 'same-validation-inputs',
-    });
-    const expectedDefault = buildPrepushStamp(changedFiles, {
-      full: false,
-      stateFingerprint: 'same-tree',
-      validationFingerprint: 'same-validation-inputs',
-    });
-    const expectedFull = buildPrepushStamp(changedFiles, {
-      full: true,
-      stateFingerprint: 'same-tree',
-      validationFingerprint: 'same-validation-inputs',
-    });
-
-    assert.equal(validationLevelSatisfies('full', 'default'), true);
-    assert.equal(validationLevelSatisfies('default', 'full'), false);
-    assert.equal(isPrepushStampValid(defaultStamp, expectedDefault), true);
-    assert.equal(isPrepushStampValid(defaultStamp, expectedFull), false);
-    assert.equal(isPrepushStampValid(fullStamp, expectedDefault), true);
-    assert.equal(
-      isPrepushStampValid(
-        { ...fullStamp, changedFiles: ['apps/web/src/app/Other.tsx'] },
-        expectedDefault
-      ),
-      false
-    );
-  });
-
-  test('prepush validation stamp can survive branch upstream changes for the same content', () => {
-    const changedFiles = ['scripts/planning-db-schema.test.cjs'];
-    const stamp = buildPrepushStamp(changedFiles, {
-      full: false,
-      stateFingerprint: 'manual-main-upstream-state',
-      validationFingerprint: 'same-head-and-diff',
-    });
-    const expectedAfterBranchPush = buildPrepushStamp(changedFiles, {
-      full: false,
-      stateFingerprint: 'new-branch-upstream-state',
-      validationFingerprint: 'same-head-and-diff',
-    });
-    const expectedDifferentContent = buildPrepushStamp(changedFiles, {
-      full: false,
-      stateFingerprint: 'new-branch-upstream-state',
-      validationFingerprint: 'different-head-or-diff',
-    });
-
-    assert.equal(isPrepushStampValid(stamp, expectedAfterBranchPush), true);
-    assert.equal(isPrepushStampValid(stamp, expectedDifferentContent), false);
-  });
-
-  function prepushRepository(t) {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-prepush-identity-'));
-    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-    const env = {
-      ...createGitRepositoryEnvironment(),
-      GIT_AUTHOR_NAME: 'Prepush fixture',
-      GIT_AUTHOR_EMAIL: 'fixture@example.invalid',
-      GIT_COMMITTER_NAME: 'Prepush fixture',
-      GIT_COMMITTER_EMAIL: 'fixture@example.invalid',
-    };
-    delete env.GIT_BASE;
-    delete env.GIT_HEAD;
-    const git = (...args) => execFileSync('git', args, { cwd: root, env, encoding: 'utf8' }).trim();
-    const write = (name, content) => fs.writeFileSync(path.join(root, name), content);
-    const commit = (parent) => {
-      git('add', '--all');
-      const head = git(
-        'commit-tree',
-        git('write-tree'),
-        ...(parent ? ['-p', parent] : []),
-        '-m',
-        'Fixture'
-      );
-      git('update-ref', 'HEAD', head);
-      return head;
-    };
-    git('init', '--quiet', '--initial-branch=fixture');
-    write('sample.txt', 'before\n');
-    const base = commit();
-    git('update-ref', 'refs/remotes/origin/main', base);
-    write('sample.txt', 'after\n');
-    const head = commit(base);
-    const inspect = (baseRef = 'origin/main', headRef, failure) => {
-      const script = `
-        const { buildPrepushStamp, listPrepushChangedFiles } = require(${JSON.stringify(__filename.replace('.test.cjs', '.cjs'))});
-        const options = { repoRootPath: process.cwd() };
-        if (${JSON.stringify(failure)} !== undefined) options.runGitText = (args) => {
-          if (args[0] === ${JSON.stringify(failure)}) throw new Error('Required Git query failed');
-          return require('node:child_process').execFileSync('git', args, { encoding: 'utf8' });
-        };
-        console.log(JSON.stringify(buildPrepushStamp(listPrepushChangedFiles(options), options)));
-      `;
-      return JSON.parse(
-        execFileSync(process.execPath, ['-e', script], {
-          cwd: root,
-          env: { ...env, GIT_BASE: baseRef, ...(headRef ? { GIT_HEAD: headRef } : {}) },
-          encoding: 'utf8',
-          stdio: ['ignore', 'pipe', 'pipe'],
-        })
-      );
-    };
-    return { root, git, write, commit, base, head, inspect };
-  }
-
-  test('real Git identities reuse equivalent aliases without hiding changed inputs or modes', (t) => {
-    const { git, write, commit, base, head, inspect } = prepushRepository(t);
-    const local = inspect(); // First push has no upstream: the validation is still usable.
-    assert.deepEqual(inspect(base), local, 'base alias and SHA identify the same validation');
-
-    const snapshot = inspect(base, 'HEAD');
-    assert.deepEqual(inspect('origin/main', head), snapshot);
-    assert.equal(
-      isPrepushStampValid(snapshot, local),
-      false,
-      'snapshot is not worktree validation'
-    );
-    assert.equal(
-      isPrepushStampValid(inspect(base, base), snapshot),
-      false,
-      'selected head changed'
-    );
-
-    git('update-ref', 'refs/heads/tracking', base);
-    git('branch', '--set-upstream-to=tracking');
-    const tracked = inspect();
-    assert.notEqual(tracked.stateFingerprint, local.stateFingerprint);
-    assert.equal(tracked.validationFingerprint, local.validationFingerprint);
-    assert.equal(isPrepushStampValid(tracked, local), true);
-
-    git('update-ref', 'refs/remotes/origin/main', head);
-    assert.equal(isPrepushStampValid(inspect(), local), false, 'base ref moved');
-    git('update-ref', 'refs/remotes/origin/main', base);
-    commit(head);
-    assert.equal(
-      isPrepushStampValid(inspect(), local),
-      false,
-      'HEAD changed even with identical tree'
-    );
-    git('update-ref', 'HEAD', head);
-
-    write('sample.txt', 'staged\n');
-    git('add', 'sample.txt');
-    const staged = inspect();
-    assert.equal(isPrepushStampValid(staged, local), false);
-    write('sample.txt', 'unstaged\n');
-    const unstaged = inspect();
-    assert.equal(isPrepushStampValid(unstaged, staged), false);
-    write('extra.txt', 'one\n');
-    const untracked = inspect();
-    write('extra.txt', 'two\n');
-    assert.equal(isPrepushStampValid(inspect(), untracked), false, 'untracked bytes changed');
-
-    assert.throws(() => inspect('missing-base'), 'unresolved base must fail closed');
-    assert.throws(() => inspect(base, 'missing-head'), 'unresolved selected head must fail closed');
-    assert.throws(() => inspect(base, undefined, 'diff'), 'failed diff is not empty evidence');
-    assert.throws(
-      () => inspect(base, undefined, 'ls-files'),
-      'failed inventory is not empty evidence'
-    );
-  });
-
-  test('real Git retirement evidence stays complete beyond 1 MiB and invalidates tail changes', (t) => {
-    const { root, git, write, commit, head, inspect } = prepushRepository(t);
-    git('config', 'core.autocrlf', 'false');
-    const retired = Array.from({ length: 77 }, (_, index) => `retired-${index}.md`);
-    const content = `${'Governed retirement evidence '.repeat(3)}µ\n`.repeat(256);
-    for (const filename of retired) write(filename, content);
-    write('zz-tail.txt', 'before\n');
-    const base = commit(head);
-    git('update-ref', 'refs/remotes/origin/main', base);
-    git('rm', '--', ...retired);
-    write('zz-tail.txt', 'tail-one\n');
-    git('add', 'zz-tail.txt');
-
-    const environment = { ...createGitRepositoryEnvironment(), GIT_BASE: base };
-    delete environment.GIT_HEAD;
-    const diff = execFileSync('git', ['diff', '--cached', '--binary', '--diff-filter=ACMRD'], {
-      cwd: root,
-      env: environment,
-      encoding: 'utf8',
-      maxBuffer: 32 * 1024 * 1024,
-    });
-    assert.ok(Buffer.byteLength(diff) > 1024 * 1024, 'real deletion patch exceeds old budget');
-    assert.ok(diff.includes('deleted file mode 100644'));
-    assert.ok(diff.includes(`--- a/${retired[0]}`));
-    assert.ok(diff.includes(`--- a/${retired.at(-1)}`));
-    assert.ok(
-      Buffer.byteLength(diff.slice(0, diff.lastIndexOf('+tail-one'))) > 1024 * 1024,
-      'changed tail bytes are beyond the old budget in the same native Git patch'
-    );
-    const oracleScript = `
-      const { buildPrepushStamp, listPrepushChangedFiles } = require(${JSON.stringify(__filename.replace('.test.cjs', '.cjs'))});
-      const options = {
-        repoRootPath: process.cwd(),
-        runGitText: (args) => require('node:child_process').execFileSync('git', args, {
-          encoding: 'utf8', maxBuffer: 32 * 1024 * 1024
-        })
-      };
-      console.log(JSON.stringify(buildPrepushStamp(listPrepushChangedFiles(options), options)));
-    `;
-    const oracle = JSON.parse(
-      execFileSync(process.execPath, ['-e', oracleScript], {
-        cwd: root,
-        env: environment,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
-    );
-    const actual = inspect(base);
-    assert.deepEqual(actual, oracle, 'default acquisition hashes the same complete real Git bytes');
-    assert.equal(actual.changedFiles.length, retired.length + 1);
-    assert.deepEqual(inspect(base), actual, 'identical complete bytes preserve the stamp');
-
-    write('zz-tail.txt', 'tail-two\n');
-    git('add', 'zz-tail.txt');
-    const mutated = inspect(base);
-    assert.deepEqual(mutated.changedFiles, actual.changedFiles);
-    assert.notEqual(mutated.validationFingerprint, actual.validationFingerprint);
-    assert.notEqual(mutated.stateFingerprint, actual.stateFingerprint);
-    assert.equal(isPrepushStampValid(actual, mutated), false, 'tail mutation cannot reuse success');
-  });
-
-  test('manual prepush reuses a matching validation stamp before rerunning changed checks', () => {
+  test('manual prepush reuses a matching validation stamp before rerunning changed checks', async () => {
     const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
     const stamp = buildPrepushStamp(changedFiles, {
       full: false,
@@ -386,7 +167,7 @@
     });
     const calls = [];
 
-    const status = main([], {
+    const status = await main([], {
       changedFiles,
       stateFingerprint: 'same-tree',
       validationFingerprint: 'same-validation-inputs',
@@ -400,7 +181,7 @@
     assert.deepEqual(calls, []);
   });
 
-  test('manual full prepush does not reuse a default changed validation stamp', () => {
+  test('manual full prepush does not reuse a default changed validation stamp', async () => {
     const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
     const defaultStamp = buildPrepushStamp(changedFiles, {
       full: false,
@@ -409,7 +190,7 @@
     });
     const calls = [];
 
-    const status = main(['--full'], {
+    const status = await main(['--full'], {
       changedFiles,
       stateFingerprint: 'same-tree',
       validationFingerprint: 'same-validation-inputs',
@@ -421,51 +202,6 @@
 
     assert.equal(status, 0);
     assert.deepEqual(calls, ['execute', 'write']);
-  });
-
-  test('failed changed input preserves a receipt only reusable for its exact validated state', (t) => {
-    const { root, write, base } = prepushRepository(t);
-    const comparisonRefs = ['GIT_BASE', 'GIT_HEAD'].map((key) => [key, process.env[key]]);
-    t.after(() => {
-      for (const [key, value] of comparisonRefs) {
-        if (value === undefined) delete process.env[key];
-        else process.env[key] = value;
-      }
-    });
-    process.env.GIT_BASE = base;
-    delete process.env.GIT_HEAD;
-    let executions = 0;
-    let fail = true;
-    const options = {
-      repoRootPath: root,
-      printPrepushPlan: () => {},
-      executePrepushPlan: () => {
-        executions += 1;
-        if (fail) throw new Error('Validation failed');
-      },
-    };
-    assert.throws(() => main([], options), /Validation failed/);
-    assert.equal(readPrepushStamp(options), null, 'failure cannot fabricate evidence');
-    fail = false;
-    main([], options);
-    const successful = readPrepushStamp(options);
-    assert.ok(successful);
-
-    write('sample.txt', 'broken\n');
-    fail = true;
-    main(['--plan'], options);
-    assert.equal(executions, 2, 'planning does not execute validation');
-    assert.throws(() => main([], options), /Validation failed/);
-    assert.deepEqual(readPrepushStamp(options), successful);
-    write('sample.txt', 'after\n');
-    main(['--hook'], options);
-    assert.equal(executions, 3, 'restoring exact validated inputs avoids another run');
-
-    fail = false;
-    write('sample.txt', 'fixed differently\n');
-    main([], options);
-    assert.equal(executions, 4, 'different content must execute validation');
-    assert.notDeepEqual(readPrepushStamp(options), successful);
   });
 
   test('scope classification exposes reasons for skipped conditional groups', () => {
@@ -514,9 +250,21 @@
     );
 
     assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
-    assert.equal(
-      packageJson.scripts['test:verify-prepush'],
-      'node --test scripts/verify-prepush.test.cjs'
+    const [command, flag, ...members] = packageJson.scripts['test:verify-prepush'].split(/\s+/u);
+    assert.equal(command, 'node');
+    assert.equal(flag, '--test');
+    assert.deepEqual(
+      members.sort(),
+      [
+        'scripts/verify-prepush.test.cjs',
+        'scripts/verify-changed.test.cjs',
+        'scripts/local-validation-plan.test.cjs',
+        'scripts/lib/changed-test-selection.test.cjs',
+        'scripts/lib/local-test-coverage.test.cjs',
+        'scripts/lib/local-validation-plan-values.test.cjs',
+        'scripts/lib/local-validation-executor.test.cjs',
+        'scripts/lib/prepush-validation-stamp.test.cjs',
+      ].sort()
     );
     assert.equal(packageJson.scripts['pr:closeout'], 'node scripts/pr-closeout.cjs');
     assert.equal(

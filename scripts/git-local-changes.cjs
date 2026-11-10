@@ -1,6 +1,7 @@
 /** Owned concern: expose the canonical local changed-file query rail for CI governance gates. */
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
+const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -19,8 +20,100 @@ function defaultRunGitLines(args, options = {}) {
     cwd: options.repoRootPath || process.cwd(),
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
+    ...(options.env ? { env: options.env } : {}),
   });
-  return parseGitLines(output);
+  return args.includes('-z')
+    ? output.split('\0').filter(Boolean).map(toPosix)
+    : parseGitLines(output);
+}
+
+function resolveIterationComparison(options = {}) {
+  const { baseRef } = options;
+  if (
+    typeof baseRef !== 'string' ||
+    baseRef.trim() !== baseRef ||
+    !baseRef ||
+    /^-/u.test(baseRef) ||
+    /[\r\n\0]/u.test(baseRef)
+  ) {
+    throw new Error('Iteration requires an explicit ancestor commit ref.');
+  }
+  const runGitLines = options.runGitLines || defaultRunGitLines;
+  const repoOptions = {
+    repoRootPath: options.repoRootPath,
+    env: createGitRepositoryEnvironment(),
+  };
+  try {
+    const resolve = (ref) => {
+      const result = runGitLines(
+        ['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`],
+        repoOptions
+      );
+      if (result.length !== 1 || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(result[0])) {
+        throw new Error(`Invalid commit identity: ${ref}`);
+      }
+      return result[0];
+    };
+    const baseSha = resolve(baseRef);
+    const headSha = resolve('HEAD');
+    runGitLines(['merge-base', '--is-ancestor', baseSha, headSha], repoOptions);
+    return { baseSha, headSha };
+  } catch (cause) {
+    throw new Error(
+      'Unable to establish iteration comparison: require an existing ancestor commit and known ancestry.',
+      { cause }
+    );
+  }
+}
+
+function listStrictLocalChangedFiles(options) {
+  const commitPattern = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
+  if (
+    !commitPattern.test(options.baseRef || '') ||
+    !commitPattern.test(options.headRef || '') ||
+    options.includeUntracked === false ||
+    options.diffFilter !== undefined ||
+    options.pathspecs?.length
+  ) {
+    throw new Error(
+      'Strict iteration requires exact base/head commit identities and the complete local frontier.'
+    );
+  }
+  const runGitLines = options.runGitLines || defaultRunGitLines;
+  const repoOptions = {
+    repoRootPath: options.repoRootPath,
+    env: createGitRepositoryEnvironment(),
+  };
+  try {
+    const currentHead = runGitLines(
+      ['rev-parse', '--verify', '--end-of-options', 'HEAD^{commit}'],
+      repoOptions
+    );
+    if (currentHead.length !== 1 || currentHead[0] !== options.headRef) {
+      throw new Error('Observed HEAD changed before strict iteration acquisition.');
+    }
+    runGitLines(['merge-base', '--is-ancestor', options.baseRef, options.headRef], repoOptions);
+    const sources = [
+      [
+        'diff',
+        '--no-ext-diff',
+        '--no-renames',
+        '--name-only',
+        '-z',
+        options.baseRef,
+        options.headRef,
+      ],
+      ['diff', '--no-ext-diff', '--no-renames', '--cached', '--name-only', '-z'],
+      ['diff', '--no-ext-diff', '--no-renames', '--name-only', '-z'],
+      ['ls-files', '--others', '--exclude-standard', '-z'],
+    ];
+    return unique(sources.flatMap((args) => runGitLines(args, repoOptions))).sort();
+  } catch (cause) {
+    throw new Error(
+      'Unable to read strict iteration frontier for the observed HEAD; no fallback is permitted.',
+      { cause }
+    );
+  }
 }
 
 function safeGitLines(runGitLines, args, options) {
@@ -134,6 +227,7 @@ function listCommittedChangedFiles(options = {}) {
 }
 
 function listLocalChangedFiles(options = {}) {
+  if (options.strict) return listStrictLocalChangedFiles(options);
   const runGitLines = options.runGitLines || defaultRunGitLines;
   const repoOptions = { repoRootPath: options.repoRootPath };
   const diffFilter = options.diffFilter || 'ACMR';
@@ -191,6 +285,7 @@ module.exports = {
   listLocalChangedFiles,
   parseGitLines,
   resolveDiffBaseRefs,
+  resolveIterationComparison,
   toAbsoluteRepoPath,
   toPosix,
 };

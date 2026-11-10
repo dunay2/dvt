@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { reportChangedWebDuplication } = require('./web-code-duplication.cjs');
-const { buildFocusedChangedTestPlan } = require('./local-validation-plan.cjs');
+const { buildFocusedChangedTestPlan } = require('./lib/changed-test-selection.cjs');
 
 const first = 'apps/web/src/app/first.ts';
 const second = 'apps/web/src/app/second.ts';

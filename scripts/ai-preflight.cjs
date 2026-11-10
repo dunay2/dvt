@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 /** Owned concern: run AI-local autofix before governed pre-push validation. */
 {
-  const { commandLabel, executeCommandPlan } = require('./local-validation-plan.cjs');
-
-  function step(id, command, ...args) {
-    return Object.freeze({ id, command, args });
-  }
+  const { executeCommandPlan } = require('./lib/local-validation-executor.cjs');
+  const { commandLabel, step } = require('./lib/local-validation-plan-values.cjs');
 
   function parseArgs(argv = process.argv.slice(2)) {
     const parsed = {
@@ -53,32 +50,31 @@
     });
   }
 
-  function main(argv = process.argv.slice(2)) {
+  async function main(argv = process.argv.slice(2)) {
     const args = parseArgs(argv);
     const plan = buildAgentPreflightPlan({ full: args.full });
 
     printAgentPreflightPlan(plan);
     if (!args.dryRun) {
-      executeAgentPreflightPlan(plan);
+      await executeAgentPreflightPlan(plan);
     }
   }
 
   if (require.main === module) {
-    try {
-      main();
-    } catch (error) {
+    main().catch((error) => {
       console.error(`[ai:preflight] ${error.message}`);
-      process.exit(1);
-    }
+      process.exitCode =
+        Number.isInteger(error.exitCode) && error.exitCode > 0 && error.exitCode <= 255
+          ? error.exitCode
+          : 1;
+    });
   }
 
   module.exports = {
     buildAgentPreflightPlan,
-    commandLabel,
     executeAgentPreflightPlan,
     main,
     parseArgs,
     printAgentPreflightPlan,
-    step,
   };
 }

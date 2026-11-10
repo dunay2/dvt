@@ -2,6 +2,57 @@ const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
 const test = require('node:test');
 const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
+const { createProcessLifetime, readValidationDeadline } = require('./live-proof-process.cjs');
+
+test('a shared absolute deadline aborts once and disposes signal handlers', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const processRef = new EventEmitter();
+  const lifetime = createProcessLifetime({
+    env: { DVT_VALIDATION_DEADLINE_MS: '1010' },
+    processRef,
+  });
+  assert.equal(lifetime.deadline, 1010);
+  assert.equal(lifetime.signal.aborted, false);
+  context.mock.timers.tick(10);
+  assert.equal(lifetime.signal.aborted, true);
+  assert.equal(lifetime.signal.reason.exitCode, 124);
+  processRef.emit('SIGINT');
+  assert.equal(lifetime.signal.reason.exitCode, 124, 'first interruption remains authoritative');
+  lifetime.dispose();
+  assert.equal(processRef.listenerCount('SIGINT'), 0);
+  assert.equal(processRef.listenerCount('SIGTERM'), 0);
+});
+
+test('lifetime rejects malformed deadlines and retains already aborted caller cancellation', () => {
+  for (const value of ['0', '-1', 'NaN', 'Infinity', '1.5', '']) {
+    assert.throws(() => readValidationDeadline({ DVT_VALIDATION_DEADLINE_MS: value }), /deadline/);
+  }
+  const controller = new AbortController();
+  const reason = new Error('caller stopped');
+  controller.abort(reason);
+  const processRef = new EventEmitter();
+  const lifetime = createProcessLifetime({ signal: controller.signal, env: {}, processRef });
+  assert.equal(lifetime.signal.reason, reason);
+  lifetime.dispose();
+  assert.equal(processRef.listenerCount('SIGTERM'), 0);
+});
+
+test('Windows deadline cooperation waits for cleanup before considering forced retirement', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const child = { pid: 456, exitCode: null, signalCode: null };
+  const cleanup = terminateLiveProofProcess(
+    { name: 'cooperative-windows', child },
+    {
+      platform: 'win32',
+      cooperativeTimeoutMs: 100,
+      spawn: () => assert.fail('A cooperative exit must not invoke taskkill'),
+    }
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  child.exitCode = 124;
+  context.mock.timers.tick(50);
+  await cleanup;
+});
 
 test('live processes own POSIX groups, observe spawn failures and retain their exit result', async () => {
   const child = new EventEmitter();

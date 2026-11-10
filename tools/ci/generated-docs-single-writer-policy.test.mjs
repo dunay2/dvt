@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
-import verifyPrepush from '../../scripts/verify-prepush.cjs';
+import { buildPrepushPlan } from '../../scripts/local-validation-plan.cjs';
 
 const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 
@@ -32,9 +32,9 @@ test('generated-doc policy command is wired into docs governance gates', () => {
   assert.match(rootPackage.scripts['ci:docs'], /\bpnpm docs:gov:generated-policy\b/);
   assert.equal(rootPackage.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
   assert.ok(
-    verifyPrepush
-      .buildPrepushPlan(['docs/generated-docs-policy.json'], { full: true })
-      .some((step) => step.id === 'docs-gov-generated-policy')
+    buildPrepushPlan(['docs/generated-docs-policy.json'], { full: true }).some(
+      (step) => step.id === 'docs-gov-generated-policy'
+    )
   );
 });
 

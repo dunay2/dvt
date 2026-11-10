@@ -14,6 +14,19 @@ import {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
+test('local validation owners remain explicit without classifying arbitrary library modules', () => {
+  for (const owner of [
+    'changed-test-selection',
+    'local-test-coverage',
+    'local-validation-plan-values',
+    'local-validation-executor',
+    'prepush-validation-stamp',
+  ]) {
+    assert.equal(classifyScriptFilePath(`scripts/lib/${owner}.cjs`).domain, 'developer-workflow');
+  }
+  assert.equal(classifyScriptFilePath('scripts/lib/unclassified-validator.cjs').domain, 'unknown');
+});
+
 test('responsibility helpers have explicit purposes without admitting arbitrary helpers', () => {
   for (const [file, domain] of [
     ['scripts/lib/component-source-responsibilities.cjs', 'docs-governance'],

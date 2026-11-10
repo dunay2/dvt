@@ -5,11 +5,8 @@ const path = require('node:path');
 const test = require('node:test');
 
 const packageJson = require('../package.json');
-const {
-  buildVerifyChangedPlan,
-  commandLabel: verifyChangedCommandLabel,
-} = require('./verify-changed.cjs');
-const { buildPrepushPlan, commandLabel: prepushCommandLabel } = require('./verify-prepush.cjs');
+const { buildVerifyChangedPlan, buildPrepushPlan } = require('./local-validation-plan.cjs');
+const { commandLabel } = require('./lib/local-validation-plan-values.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const scriptPath = path.join(__dirname, 'planning-db-surface-inventory-check.cjs');
@@ -278,16 +275,14 @@ test('package scripts expose and gate the DB surface inventory check', () => {
   assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
 
   assert.match(
-    buildVerifyChangedPlan(['scripts/planning-db-import.cjs'])
-      .map(verifyChangedCommandLabel)
-      .join('\n'),
+    buildVerifyChangedPlan(['scripts/planning-db-import.cjs']).map(commandLabel).join('\n'),
     /pnpm planning:db:inventory:check/
   );
-  assert.deepEqual(buildPrepushPlan(['scripts/planning-db-import.cjs']).map(prepushCommandLabel), [
+  assert.deepEqual(buildPrepushPlan(['scripts/planning-db-import.cjs']).map(commandLabel), [
     'pnpm verify:changed',
   ]);
   assert.match(
-    buildPrepushPlan([], { full: true }).map(prepushCommandLabel).join('\n'),
+    buildPrepushPlan([], { full: true }).map(commandLabel).join('\n'),
     /pnpm planning:db:inventory:check/
   );
 });

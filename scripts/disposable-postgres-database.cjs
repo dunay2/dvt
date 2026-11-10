@@ -3,6 +3,7 @@
 /** Owns the exact PostgreSQL database lifecycle of one live proof invocation. */
 const { randomBytes } = require('node:crypto');
 const { Client } = require('pg');
+const { createProcessLifetime, readValidationDeadline } = require('./live-proof-process.cjs');
 
 function validateAdminUrl(adminUrl) {
   const parsed = new URL(adminUrl);
@@ -19,6 +20,12 @@ function validateAdminUrl(adminUrl) {
 }
 
 async function allocateDisposablePostgresDatabase(adminUrl, label, options = {}) {
+  const deadline = readValidationDeadline(options.env ?? process.env);
+  if (deadline !== undefined && deadline <= Date.now()) {
+    throw Object.assign(new Error('Proof database allocation exceeded its execution deadline'), {
+      exitCode: 124,
+    });
+  }
   if (!/^[a-z][a-z0-9_]{0,19}$/.test(label)) {
     throw new Error(
       'Disposable proof database label must be bounded lowercase SQL identifier text'
@@ -32,6 +39,11 @@ async function allocateDisposablePostgresDatabase(adminUrl, label, options = {})
   const admin = clientFactory(adminUrl);
   await admin.connect();
   try {
+    if (deadline !== undefined && deadline <= Date.now()) {
+      throw Object.assign(new Error('Proof database allocation exceeded its execution deadline'), {
+        exitCode: 124,
+      });
+    }
     await admin.query(`CREATE DATABASE "${name}"`);
   } finally {
     await admin.end();
@@ -57,7 +69,13 @@ async function allocateDisposablePostgresDatabase(adminUrl, label, options = {})
   };
 }
 
-function installDisposablePostgresInterruptCleanup(lease, shutdown, processRef = process) {
+function installDisposablePostgresInterruptCleanup(
+  lease,
+  shutdown,
+  processRef = process,
+  options = {}
+) {
+  const lifetime = createProcessLifetime({ ...options, processRef });
   let interrupted = false;
   const onSignal = (signal, exitCode) => {
     if (interrupted) return;
@@ -80,14 +98,14 @@ function installDisposablePostgresInterruptCleanup(lease, shutdown, processRef =
       processRef.emit('disposable-cleanup-complete');
     })();
   };
-  const onSigint = () => onSignal('SIGINT', 130);
-  const onSigterm = () => onSignal('SIGTERM', 143);
+  const onAbort = () =>
+    onSignal(lifetime.signal.reason.message, lifetime.signal.reason.exitCode ?? 1);
   const remove = () => {
-    processRef.off('SIGINT', onSigint);
-    processRef.off('SIGTERM', onSigterm);
+    lifetime.signal.removeEventListener('abort', onAbort);
+    lifetime.dispose();
   };
-  processRef.on('SIGINT', onSigint);
-  processRef.on('SIGTERM', onSigterm);
+  lifetime.signal.addEventListener('abort', onAbort, { once: true });
+  if (lifetime.signal.aborted) onAbort();
   return remove;
 }
 

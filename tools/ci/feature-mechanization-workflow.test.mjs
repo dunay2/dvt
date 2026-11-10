@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import yaml from 'js-yaml';
 import validationPlan from '../../scripts/local-validation-plan.cjs';
+import { commandLabel } from '../../scripts/lib/local-validation-plan-values.cjs';
+import { buildFocusedChangedTestPlan } from '../../scripts/lib/changed-test-selection.cjs';
 
 const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
 const steps = workflow.jobs['pr-checks'].steps;
@@ -29,13 +31,11 @@ test('PR and full CI retain manifest checks without claiming DB implementation v
 
 test('local verification keeps the real implementation gate while committed CI tests stay DB-free', () => {
   const files = ['apps/web/src/app/views/canvas/CanvasView.tsx'];
-  const commands = validationPlan.buildVerifyChangedPlan(files).map(validationPlan.commandLabel);
+  const commands = validationPlan.buildVerifyChangedPlan(files).map(commandLabel);
   assert.ok(commands.includes(implementationCommand));
   assert.ok(scripts['docs:gov'].split(' && ').includes(implementationCommand));
   assert.match(scripts['docs:feature-mechanization:implementation'], /--implementation\b/u);
-  const focusedCommands = validationPlan
-    .buildFocusedChangedTestPlan(files)
-    .map(validationPlan.commandLabel);
+  const focusedCommands = buildFocusedChangedTestPlan(files).map(commandLabel);
   assert.ok(!focusedCommands.includes(implementationCommand));
 });
 

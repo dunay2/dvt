@@ -14,6 +14,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import {
   spawnLiveProofProcess,
   terminateLiveProofProcess,
+  createProcessLifetime,
 } from '../../scripts/live-proof-process.cjs';
 import {
   validateCypressProofSpecs,
@@ -239,6 +240,25 @@ async function withOwnedProcess(handle, options, runtime, work) {
 }
 
 export async function runWebCypressNative(options = {}, deps = {}) {
+  const lifetime = createProcessLifetime({
+    env: options.env,
+    signal: options.signal,
+    processRef: options.processRef,
+  });
+  try {
+    const result = await runWebCypressNativeOperation(
+      { ...options, signal: lifetime.signal, checkDeadline: lifetime.checkDeadline },
+      deps
+    );
+    lifetime.checkDeadline();
+    lifetime.signal.throwIfAborted();
+    return result;
+  } finally {
+    lifetime.dispose();
+  }
+}
+
+async function runWebCypressNativeOperation(options, deps) {
   try {
     return await executeNativeCypress(options, deps);
   } catch (error) {
@@ -319,6 +339,7 @@ async function executeNativeCypress(options, deps) {
     );
     return { code: 0, evidence };
   });
+  options.checkDeadline?.();
   options.signal?.throwIfAborted();
   if (result.evidence) {
     (deps.log ?? console.log)(
@@ -329,25 +350,15 @@ async function executeNativeCypress(options, deps) {
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const lifetime = new AbortController();
-  const interrupt = (signal, exitCode) =>
-    lifetime.abort(
-      Object.assign(new Error(`Native Cypress interrupted by ${signal}`), { exitCode })
-    );
-  const onSigint = () => interrupt('SIGINT', 130);
-  const onSigterm = () => interrupt('SIGTERM', 143);
-  process.on('SIGINT', onSigint);
-  process.on('SIGTERM', onSigterm);
-  runWebCypressNative({ signal: lifetime.signal })
-    .finally(() => {
-      process.off('SIGINT', onSigint);
-      process.off('SIGTERM', onSigterm);
-    })
+  runWebCypressNative()
     .then((code) => {
-      process.exit(code);
+      process.exitCode = code;
     })
     .catch((error) => {
       console.error(error);
-      process.exit(error?.exitCode ?? 1);
+      process.exitCode =
+        Number.isInteger(error?.exitCode) && error.exitCode > 0 && error.exitCode <= 255
+          ? error.exitCode
+          : 1;
     });
 }

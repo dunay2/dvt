@@ -545,22 +545,32 @@ Command semantics:
 - `pnpm docs:governance:remediation-queue:check` regenerates the queue that turns coverage gaps into component-scoped remediation tasks and fails when that actionable plan is stale.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
 - `pnpm docs:gov` also runs the changed-doc filename and ADR/evidence frontmatter gates, so new or changed docs fail locally on canonical naming and doc-class metadata violations without turning historical warning-only docs into global blockers.
-- `pnpm verify:changed` is the fast changed-slice gate. It stays on
-  changed-file docs, markdown, formatting, QA-artifact, and focused
-  adjacent-script gates without invoking root type-check or the full planning
-  DB suite for every planning workflow script edit.
-- Developer workflow verifier edits are routed to the narrow self-test for the
-  touched verifier. `scripts/verify-changed.*` runs
-  `scripts/verify-changed.test.cjs`, `scripts/verify-prepush.*` runs
-  `scripts/verify-prepush.test.cjs`, and the shared
-  `scripts/local-validation-plan.cjs` contract still runs both suites.
+- `pnpm verify:changed` composes the applicable changed-file checks and tests.
+  `scripts/local-validation-plan.cjs` owns their order; the selector in
+  `scripts/lib/changed-test-selection.cjs` owns affected test selection, and
+  `scripts/lib/local-test-coverage.cjs` removes only proven overlapping test
+  executions. The executor and successful pre-push receipt have separate owners
+  in `scripts/lib/local-validation-executor.cjs` and
+  `scripts/lib/prepush-validation-stamp.cjs`.
+- `pnpm verify:changed --iteration-base=<ref>` provides explicitly partial
+  feedback against a verified ancestor. Its frontier includes committed,
+  staged, unstaged, deleted and untracked files; it accepts no file filter.
+  This mode retains affected static and unit/presentation checks, omits native
+  browser and global Planning DB validation, and never writes an acceptance
+  receipt. Default verification and final pre-push retain their obligations.
+- `pnpm test:verify-prepush` owns the CLI, plan composition, selection,
+  coverage, step identity, executor and receipt contracts. Tests live beside
+  those owners. Aggregate coverage is identified by the actual command and
+  its complete arguments, not by a display name or a shared step identifier.
 - Changes to `run-selected-closure-live-proof` or `run-dev-stack` source/tests
   select the matching contract once through this same focused catalog for
   pre-push and PR Quality, retaining test-process Git-environment isolation.
-- CI tooling edits under `tools/ci/*.mjs` and changed `tools/ci/*.test.mjs`
-  route to direct adjacent `node --test` suites when that test file exists.
-  The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
-  audit, not the default local proof for a one-file AI iteration.
+- Workflow/action, root build, CI policy and command-composition changes select
+  the complete `pnpm test:ci-tools` contract once, before other selected tests.
+  Unknown command ownership also broadens that proof. The selector reports
+  which changed inputs caused this decision. Other changes retain their
+  focused routes; real adjacent tests are inferred only for known command
+  owners, with genuine cross-file dependencies kept explicit.
 - Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
   `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
   `workflow-scope.json` names additional invalidating inputs, not another copy

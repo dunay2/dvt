@@ -163,6 +163,10 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/python-source-facts\.cjs$/u, 'ci-tooling'],
   [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^scripts\/lib\/risk-document-records\.cjs$/u, 'docs-governance'],
+  [
+    /^scripts\/lib\/(changed-test-selection|local-test-coverage|local-validation-(plan-values|executor)|prepush-validation-stamp)\.cjs$/u,
+    'developer-workflow',
+  ],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
     /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|lib\/git-repository-environment|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,

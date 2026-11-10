@@ -3,13 +3,16 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { EventEmitter } = require('node:events');
 
 const {
   buildAgentPreflightPlan,
-  commandLabel,
+
   executeAgentPreflightPlan,
   parseArgs,
 } = require('./ai-preflight.cjs');
+
+const { commandLabel } = require('./lib/local-validation-plan-values.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 
@@ -53,13 +56,18 @@ test('agent preflight fixes changed files before running the governed prepush ga
   ]);
 });
 
-test('agent preflight executes the autofix and validation plan in order', () => {
+test('agent preflight executes the autofix and validation plan in order', async () => {
   const calls = [];
 
-  executeAgentPreflightPlan(buildAgentPreflightPlan(), {
+  await executeAgentPreflightPlan(buildAgentPreflightPlan(), {
     spawn: (command, args) => {
       calls.push(commandLabel({ command, args }));
-      return { status: 0 };
+      const child = new EventEmitter();
+      queueMicrotask(() => {
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+      });
+      return child;
     },
   });
 

@@ -2,8 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import verifyChanged from '../../scripts/verify-changed.cjs';
-import verifyPrepush from '../../scripts/verify-prepush.cjs';
+import { buildVerifyChangedPlan, buildPrepushPlan } from '../../scripts/local-validation-plan.cjs';
 import { createDocsRepository } from './test/docsCliFixture.mjs';
 
 const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
@@ -24,10 +23,10 @@ test('changed-doc governance commands remain wired into docs and pre-push gates'
   assert.equal(rootPackage.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
   const files = ['docs/guides/testing-and-ci-capabilities.md'];
   assert.deepEqual(
-    verifyPrepush.buildPrepushPlan(files).map((step) => step.id),
+    buildPrepushPlan(files).map((step) => step.id),
     ['verify-changed']
   );
-  const steps = verifyChanged.buildVerifyChangedPlan(files).map((step) => step.id);
+  const steps = buildVerifyChangedPlan(files).map((step) => step.id);
   assert.ok(steps.includes('docs-gov-filenames-changed'));
   assert.ok(steps.includes('docs-gov-frontmatter-changed'));
 });

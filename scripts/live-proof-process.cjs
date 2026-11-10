@@ -1,5 +1,66 @@
-/** Owns process-tree lifetime for the selected-closure live proof. */
+/** Owns process lifetime and cooperative deadlines shared by validation and native proofs. */
 const { spawn } = require('node:child_process');
+
+const VALIDATION_DEADLINE_ENV = 'DVT_VALIDATION_DEADLINE_MS';
+
+function readValidationDeadline(env = process.env) {
+  const raw = env[VALIDATION_DEADLINE_ENV];
+  if (raw === undefined) return undefined;
+  if (!/^\d+$/u.test(String(raw)) || !Number.isSafeInteger(Number(raw)) || Number(raw) <= 0) {
+    throw new Error('Validation deadline must be a positive integer epoch timestamp');
+  }
+  return Number(raw);
+}
+
+/** Cooperate on the same deadline even where OS termination cannot run finally blocks. */
+function createProcessLifetime(options = {}) {
+  const inherited = readValidationDeadline(options.env ?? process.env);
+  const deadline = Math.min(options.deadline ?? Infinity, inherited ?? Infinity);
+  if (deadline !== Infinity && (!Number.isSafeInteger(deadline) || deadline <= 0)) {
+    throw new Error('Process deadline must be a positive integer epoch timestamp');
+  }
+  const remaining = deadline - Date.now();
+  if (deadline !== Infinity && remaining > 2_147_483_647) {
+    throw new Error('Process deadline exceeds the supported timer range');
+  }
+  const controller = new AbortController();
+  const processRef = options.processRef ?? process;
+  const interrupt = (message, exitCode) =>
+    controller.abort(Object.assign(new Error(message), { exitCode }));
+  const onSigint = () => interrupt('Process interrupted by SIGINT', 130);
+  const onSigterm = () => interrupt('Process interrupted by SIGTERM', 143);
+  const onAbort = () =>
+    controller.abort(
+      options.signal.reason instanceof Error
+        ? options.signal.reason
+        : new Error('Process interrupted by caller')
+    );
+  const checkDeadline = () => {
+    if (deadline !== Infinity && Date.now() >= deadline) {
+      interrupt('Process execution deadline exceeded', 124);
+    }
+  };
+  let timer;
+  processRef.on('SIGINT', onSigint);
+  processRef.on('SIGTERM', onSigterm);
+  if (options.signal?.aborted) onAbort();
+  else options.signal?.addEventListener('abort', onAbort, { once: true });
+  if (deadline !== Infinity) {
+    if (remaining <= 0) checkDeadline();
+    else timer = setTimeout(checkDeadline, remaining);
+  }
+  return {
+    deadline,
+    signal: controller.signal,
+    checkDeadline,
+    dispose() {
+      clearTimeout(timer);
+      processRef.off('SIGINT', onSigint);
+      processRef.off('SIGTERM', onSigterm);
+      options.signal?.removeEventListener('abort', onAbort);
+    },
+  };
+}
 
 function spawnLiveProofProcess(name, command, args, options = {}, deps = {}) {
   const child = (deps.spawn ?? spawn)(command, args, {
@@ -74,15 +135,29 @@ async function terminateLiveProofProcess(handle, options = {}) {
 
   if (platform === 'win32') {
     if (exited()) return;
+    const cooperativeTimeoutMs = options.cooperativeTimeoutMs ?? 0;
+    if (
+      cooperativeTimeoutMs > 0 &&
+      (await waitUntil(
+        exited,
+        Math.min(Date.now() + cooperativeTimeoutMs, options.deadline ?? Infinity)
+      ))
+    )
+      return;
+    options.onForcedTermination?.();
+    const deadline = Math.min(Date.now() + forceTimeoutMs, options.deadline ?? Infinity);
     await new Promise((resolve, reject) => {
       const killer = (options.spawn ?? spawn)('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
         stdio: 'ignore',
         windowsHide: true,
       });
-      const timeout = setTimeout(() => {
-        killer.kill();
-        reject(new Error(`taskkill timed out for ${name}`));
-      }, forceTimeoutMs);
+      const timeout = setTimeout(
+        () => {
+          killer.kill();
+          reject(new Error(`taskkill timed out for ${name}`));
+        },
+        Math.max(0, deadline - Date.now())
+      );
       killer.once('error', (error) => {
         clearTimeout(timeout);
         reject(error);
@@ -93,7 +168,7 @@ async function terminateLiveProofProcess(handle, options = {}) {
         else reject(new Error(`taskkill failed for ${name}: exit ${code}, signal ${signal}`));
       });
     });
-    if (!(await waitUntil(exited, Date.now() + forceTimeoutMs))) {
+    if (!exited() && !(await waitUntil(exited, deadline))) {
       throw new Error(`${name} did not exit after forced termination`);
     }
     return;
@@ -106,8 +181,10 @@ async function terminateLiveProofProcess(handle, options = {}) {
     ['SIGTERM', gracefulTimeoutMs],
     ['SIGKILL', forceTimeoutMs],
   ]) {
-    if (signal === 'SIGKILL')
+    if (signal === 'SIGKILL') {
+      options.onForcedTermination?.();
       deadline = Math.min(Date.now() + timeoutMs, options.deadline ?? Infinity);
+    }
     let gone = false;
     try {
       await signalGroup(signal, deadline);
@@ -129,4 +206,10 @@ async function terminateLiveProofProcess(handle, options = {}) {
   throw new Error(`${name} did not exit after forced termination`);
 }
 
-module.exports = { spawnLiveProofProcess, terminateLiveProofProcess };
+module.exports = {
+  spawnLiveProofProcess,
+  terminateLiveProofProcess,
+  createProcessLifetime,
+  readValidationDeadline,
+  VALIDATION_DEADLINE_ENV,
+};
