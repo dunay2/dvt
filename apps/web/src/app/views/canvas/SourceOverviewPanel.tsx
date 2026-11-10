@@ -191,7 +191,7 @@ export function SourceOverviewPanel({
   return (
     <div
       data-slot="canvas-source-overview"
-      className="min-w-0 divide-y divide-(--border-subtle) overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)"
+      className={`${inspectorVisualClasses.inspectorForm} min-w-0 divide-y divide-(--border-subtle) overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)`}
     >
       <section data-slot="canvas-source-overview-external" className="min-w-0 space-y-2 p-3">
         <div className="flex items-center justify-between gap-3">
