@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-06",
+  "generated": "2026-11-10",
   "repo": {
     "sha": "local"
   },
@@ -1299,6 +1299,7 @@
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
         "Bind producer fields to stable consumer input slots as provenance, not copied semantics.",
         "Compose one catalog from standard candidates, admissions, and product gaps.",
+        "Exchange target identity, expected semantic digest, authorized SQL and exact producer provenance.",
         "Explore a protected Transform through semantic identity and server-owned bounds, never client SQL.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
@@ -1326,6 +1327,7 @@
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/canvas/TransformDataSample.v1.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/TransformSqlProjection.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/index.ts",
         "packages/@dvt/contracts/src/contracts/data-access/DataAccess.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtInputBindings.v1.ts",

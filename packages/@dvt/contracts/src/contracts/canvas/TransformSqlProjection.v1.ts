@@ -1,4 +1,10 @@
-/** Read-only SQL inspection for one protected canonical Transform revision. */
+/**
+ * Owned concern: define revision-bound SQL inspection contracts for one protected Canvas Transform.
+ * @baseline ADR-0064: Substrait Semantic Reference And Bounded Logical Profile
+ * @decision Exchange target identity, expected semantic digest, authorized SQL and exact producer provenance.
+ * @consequence SQL remains a derived read model without granting row execution or semantic write authority.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { isSha256HexString } from '../../utils/contractPrimitives.js';
