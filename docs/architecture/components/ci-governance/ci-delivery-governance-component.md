@@ -156,6 +156,24 @@ and determinism lint. `ci:code` composes that delegate with `turbo run test`;
 checks run before product tests, including determinism lint, so their failures
 stop the standalone baseline earlier without removing a validation obligation.
 
+The existing `CheckArchitectureDependencyGuardWiring` fitness checks this
+two-level delegation as fail-fast command chains. It normalizes horizontal
+spaces and tabs, rejects CR/LF within either script, and requires the static checks followed by the existing product
+test command; it does not require `arch:deps` to appear inline in `ci:code`.
+Missing delegates, removed checks, lookalike text, error-masking operators and
+cyclic aliases fail the fitness. This keeps the architecture obligation
+reachable without duplicating the runtime command list or interpreting a
+general shell language.
+
+```mermaid
+flowchart LR
+  Code[ci:code] --> Static[ci:code:static]
+  Static --> Arch[arch:deps]
+  Arch --> Types[type-check]
+  Types --> Lint[lint:determinism]
+  Lint --> Tests[turbo run test]
+```
+
 An automatic `main` push selects `ci:docs` and `ci:code:static` in Code Quality.
 Test Suite owns the product tests and coverage for that push. A manual Code
 Quality dispatch selects `ci:full`, because dispatching one workflow does not
