@@ -33,14 +33,6 @@ function countWorkflowCommand(workflow, command) {
   return workflow.split(command).length - 1;
 }
 
-function namedWorkflowStep(workflow, name) {
-  const marker = `      - name: ${name}`;
-  const start = workflow.indexOf(marker);
-  assert.notEqual(start, -1, `workflow must contain step: ${name}`);
-  const next = workflow.indexOf('\n      - name:', start + marker.length);
-  return workflow.slice(start, next === -1 ? workflow.length : next);
-}
-
 test('changed-file CI builds its canonical hash dependency before loading the checker', () => {
   const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
   const steps = workflow.jobs['pr-checks'].steps;
@@ -310,10 +302,12 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
     '.github/actions/prepare-planning-db/action.yml',
     'utf8'
   );
-  const prepareDbStep = namedWorkflowStep(
-    prQualityGate,
-    'Prepare planning DB for DB-backed validation'
-  );
+  // YAML folds formatted conditions; assert the value Actions reads, not source wrapping.
+  const prepareDbCondition = yaml
+    .load(prQualityGate)
+    .jobs['pr-checks'].steps.find(
+      (step) => step.name === 'Prepare planning DB for DB-backed validation'
+    ).if;
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
   const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
   const inventoryGateIndex = prQualityGate.indexOf('pnpm planning:db:inventory:check');
@@ -324,17 +318,17 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
   assert.ok(prepareDbIndex < prepareDbActionIndex);
   assert.ok(prepareDbActionIndex < inventoryGateIndex);
   assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
-  assertWorkflowExcludes(prepareDbStep, 'feature_mechanization_relevant');
+  assertWorkflowExcludes(prepareDbCondition, 'feature_mechanization_relevant');
   assertWorkflowContains(
-    prepareDbStep,
+    prepareDbCondition,
     'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
   );
   assertWorkflowContains(
-    prepareDbStep,
+    prepareDbCondition,
     'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_structure_changed == true'
   );
   assertWorkflowContains(
-    prepareDbStep,
+    prepareDbCondition,
     'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).governance_global_relevant == true'
   );
   assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
@@ -351,7 +345,7 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
   assert.equal(
     countWorkflowCommand(
-      prepareDbStep,
+      prepareDbCondition,
       'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).governance_global_relevant == true'
     ),
     1,

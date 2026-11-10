@@ -270,8 +270,14 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     prQualityGate,
     'run: node scripts/planning-db/knowledge-intake-retirement-guard.cjs --committed'
   );
+  // The parsed condition is stable across the formatter's YAML line folding.
+  const inventoryStep = yaml
+    .load(prQualityGate)
+    .jobs['pr-checks'].steps.find(
+      (step) => step.name === 'Validate Planning DB inventory for committed changes'
+    );
   assertWorkflowContains(
-    prQualityGate,
+    inventoryStep.if,
     'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:inventory:check');
