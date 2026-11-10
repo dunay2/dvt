@@ -1,0 +1,63 @@
+/* Model identity consumes the same compact type, spacing and semantic color tokens as the Inspector. */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: calc(var(--spacing) * 4);
+  height: calc(var(--spacing) * 4);
+  color: var(--focus-ring);
+}
+.icon > svg {
+  width: 100%;
+  height: 100%;
+}
+.icon[data-size='header'] {
+  width: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 8);
+  padding: calc(var(--spacing) * 1.5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+}
+.identity,
+.choice {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  min-width: 0;
+}
+.identity {
+  gap: calc(var(--spacing) * 3);
+}
+.text {
+  min-width: 0;
+}
+.title,
+.subtitle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.field {
+  padding-block: calc(var(--spacing) * 2);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.trigger {
+  width: 100%;
+  min-width: 0;
+  height: calc(var(--spacing) * 8);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.option {
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.hint {
+  margin-top: var(--spacing);
+  color: var(--text-muted);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}

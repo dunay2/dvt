@@ -28,7 +28,7 @@ export function useCanvasInspectorDraftSubmission({
   const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft, context), [draft, context]);
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
   const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
-  const commitDbtModelDraft = (nextDraft: typeof draft): void => {
+  const commitDraft = (nextDraft: typeof draft): void => {
     draftController.onDraftChange(nextDraft);
     const nextErrors = validateCanvasInspectorNodeDraft(nextDraft, context);
     if (!authoring.canEditNode || Object.keys(nextErrors).length > 0) return;
@@ -39,9 +39,9 @@ export function useCanvasInspectorDraftSubmission({
     errors,
     isDirty,
     canApply,
-    commitDbtModelDraft,
+    commitDraft,
     commitCurrentDbtModelDraft: () => {
-      if (isDbtCompatibleModel(node)) commitDbtModelDraft(draft);
+      if (isDbtCompatibleModel(node)) commitDraft(draft);
     },
     applyDraft: () => {
       if (!canApply) return;

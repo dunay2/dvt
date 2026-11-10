@@ -11,6 +11,11 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  applyCanvasModelIconPreference,
+  isCanvasModelIconAllowed,
+  readCanvasModelIconPreference,
+} from './canvasModelIdentity';
 import { retainIncompleteCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
 import {
   applyDbtNodeAuthoringMetadata,
@@ -86,6 +91,9 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     name: node.name,
     description: node.description ?? '',
     tags,
+    ...(readCanvasModelIconPreference(node) === 'auto'
+      ? {}
+      : { modelIcon: readCanvasModelIconPreference(node) }),
     ...(hasDbtCompatibility && node.kind !== 'dbt:test'
       ? { dbt: createDbtNodeAuthoringMetadata(node) }
       : {}),
@@ -156,6 +164,13 @@ export function validateCanvasInspectorNodeDraft(
   draft: CanvasInspectorNodeDraft,
   context?: CanvasInspectorNodeDraftValidationContext
 ): CanvasInspectorNodeDraftErrors {
+  if (
+    draft.modelIcon != null &&
+    draft.modelIcon !== 'auto' &&
+    (context == null || !isCanvasModelIconAllowed(context.node, draft.modelIcon))
+  ) {
+    return { modelIcon: 'node_icon_incompatible' };
+  }
   const normalizedName = normalizeNodeName(draft.name);
   if (normalizedName.length === 0) {
     return {
@@ -194,6 +209,13 @@ export function validateCanvasInspectorNodeDraft(
   if (!CanvasTagsV1Schema.safeParse(normalizedTags).success) {
     return { tags: 'node_tags_invalid' };
   }
+  // Metadata edits preserve existing semantics, including incomplete authoring state.
+  if (
+    context != null &&
+    hasCanvasInspectorNodeDraftChanges(context.node, draft) &&
+    !hasSemanticDraftChanges(context.node, draft)
+  )
+    return {};
   if (
     draft.relationalAuthoringDraft != null &&
     !DvtRelationalAuthoringDraftV1Schema.safeParse(draft.relationalAuthoringDraft).success
@@ -326,6 +348,7 @@ export function hasCanvasInspectorNodeDraftChanges(
     node.name !== normalizeNodeName(draft.name) ||
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
     !areInspectorValuesEqual(originalDraft.tags, draftTags) ||
+    (originalDraft.modelIcon ?? 'auto') !== (draft.modelIcon ?? 'auto') ||
     !areInspectorValuesEqual(originalDraft.dbt ?? null, draft.dbt ?? null) ||
     !areInspectorValuesEqual(originalDraft.dbtTest ?? null, draft.dbtTest ?? null) ||
     !areInspectorValuesEqual(originalDraft.dvt ?? null, draft.dvt ?? null) ||
@@ -347,12 +370,18 @@ export function applyCanvasInspectorNodeDraft(
   workspaceScope?: WorkspaceScope
 ): CanonicalNode {
   const tags = normalizeNodeTags(draft.tags);
-  const baseNode: CanonicalNode = {
-    ...node,
-    name: normalizeNodeName(draft.name),
-    description: normalizeNodeDescription(draft.description),
-    tags,
-  };
+  const baseNode = applyCanvasModelIconPreference(
+    {
+      ...node,
+      name: normalizeNodeName(draft.name),
+      description: normalizeNodeDescription(draft.description),
+      tags,
+    },
+    draft.modelIcon ?? 'auto'
+  );
+
+  if (hasCanvasInspectorNodeDraftChanges(node, draft) && !hasSemanticDraftChanges(node, draft))
+    return baseNode;
 
   let applied = baseNode;
   if (draft.dbtTest) applied = applyDbtTestAuthoringMetadata(baseNode, draft.dbtTest);
@@ -377,6 +406,21 @@ export function applyCanvasInspectorNodeDraft(
   if (incomplete === null) delete metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY];
   else metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY] = incomplete;
   return { ...applied, metadata };
+}
+
+function hasSemanticDraftChanges(node: CanonicalNode, draft: CanvasInspectorNodeDraft): boolean {
+  const semanticFields = [
+    'dbt',
+    'dbtTest',
+    'dvt',
+    'relationalAuthoringDraft',
+    'objectFilePostgres',
+    'httpJsonArtifact',
+  ] as const;
+  const original = createCanvasInspectorNodeDraft(node);
+  return semanticFields.some(
+    (field) => !areInspectorValuesEqual(original[field] ?? null, draft[field] ?? null)
+  );
 }
 
 export function canonicalizeCanvasInspectorNodeDraft(

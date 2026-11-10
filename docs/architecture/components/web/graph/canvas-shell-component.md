@@ -612,6 +612,25 @@ the protected Model save flow. A matching class string is not visual evidence.
 
 ### Native Source Overview And Provider Comments
 
+Model cards and the Overview inspector share the compatible identity projection
+`canvasModelIdentity`. The optional `metadata.modelIcon` preference belongs to the
+model definition; instances inherit it through `definitionId`. Automatic stores
+no override. A validated dbt file reference or the existing dbt compatibility
+metadata admits dbt/SQL; native DVT Transform authoring admits Substrait; a validated
+PostgreSQL source reference admits PostgreSQL/SQL; HTTP JSON acquisition admits API.
+Unknown or incompatible saved preferences render the automatic identity. The
+Inspector command rejects incompatible choices. No icon selection changes a
+provider, grants a capability or rewrites SQL/Substrait authority.
+
+Overview submits through `ConfigureCanvasDvtNode` and the existing Inspector draft
+port. Common metadata-only edits preserve unchanged semantic drafts, so an icon
+change cannot normalize or reconstruct a plan. The existing scoped
+`SaveWorkspaceGraphDraft` rail persists definition metadata in
+`workspace_graph_drafts.draft_json`; no new store, endpoint or migration is involved.
+`ModelIdentityIcon` and its CSS module own the shared vector presentation using
+application typography, spacing, surface and focus tokens. Provider/connection
+facts and Source badges remain independent of the selected icon.
+
 The narrow Source Overview uses full-width stacked source and DVT sections,
 compact label/value facts, and activated inline editing. It retains readable
 font sizes rather than splitting the panel into two narrow columns. Table

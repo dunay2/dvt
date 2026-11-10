@@ -1,4 +1,5 @@
 /** Owned concern: choose the strategy-owned graph node card projection. */
+import { resolveCanvasModelIdentity } from '../../views/canvas/canvasModelIdentity';
 import type { CanonicalNode } from '../../types/canonical';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
@@ -103,6 +104,7 @@ export function projectGraphNodeCardViewProps(
         }
       : null,
     icon: kindMeta.icon,
+    modelIcon: resolveCanvasModelIdentity(node)?.icon,
     borderClass: kindMeta.borderClass,
     selected,
     hovered,

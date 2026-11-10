@@ -8,6 +8,7 @@ import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSecti
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
 import { SourceOverviewPanel } from './SourceOverviewPanel';
+import { CanvasModelIdentityField } from './CanvasModelIdentityField';
 import type {
   CanvasNodeWorkbenchController,
   CanvasNodeWorkbenchPanelProps,
@@ -151,6 +152,19 @@ export function CanvasNodeWorkbenchSections({
       );
     }
   }
+
+  sectionBeforeChildren.general = (
+    <>
+      <CanvasModelIdentityField
+        node={node}
+        nodes={nodes}
+        edges={edges}
+        authoring={authoring}
+        draftController={draftController}
+      />
+      {sectionBeforeChildren.general}
+    </>
+  );
 
   return (
     <NodePropertiesTabs

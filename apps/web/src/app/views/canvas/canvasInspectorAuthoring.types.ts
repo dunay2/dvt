@@ -22,11 +22,13 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 import type { CanvasColumnMappingSource } from './canvasColumnMappingModel';
+import type { CanvasModelIconPreference } from './canvasModelIdentity';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
   description: string;
   tags: readonly string[];
+  modelIcon?: CanvasModelIconPreference;
   dbt?: DbtNodeAuthoringMetadata;
   dbtTest?: DbtTestAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
@@ -40,6 +42,7 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   name?: CanvasInspectorNodeDraftErrorCode;
   description?: CanvasInspectorNodeDraftErrorCode;
   tags?: CanvasInspectorNodeDraftErrorCode;
+  modelIcon?: 'node_icon_incompatible';
   dbt?: Partial<Record<keyof DbtNodeAuthoringMetadata, CanvasInspectorNodeDraftErrorCode>>;
   dbtTest?: DbtTestAuthoringMetadataErrors;
   dvt?: DvtNodeAuthoringMetadataErrors;

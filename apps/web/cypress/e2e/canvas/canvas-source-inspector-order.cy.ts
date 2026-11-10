@@ -111,6 +111,42 @@ function dragBefore(movedSelector: string, targetSelector: string): void {
 describe('Canvas Source Inspector ordering', () => {
   beforeEach(() => stubCanvas());
 
+  it('changes a compatible icon by keyboard and retains the choice after reload', () => {
+    // A visual preference must use the saved model definition, not component-local state.
+    visitCanvas();
+    openSourceSection('general');
+    cy.get('[role="combobox"][aria-label="Icon"]').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.contains('[role="option"]', /^Model$/).focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[role="combobox"][aria-label="Icon"]').should('be.focused');
+    cy.get('.react-flow__node[data-id="source-orders"] [data-model-icon="model"]').should(
+      'be.visible'
+    );
+    cy.get('[data-slot="canvas-source-provider-icon"] [data-model-icon="model"]').should(
+      'be.visible'
+    );
+    // Startup may also save the draft; wait for this preference's own persisted payload.
+    cy.wrap(null, { timeout: 20_000 }).should(() => {
+      const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft: ReturnType<typeof normalizeProjectCanvasDraft> } | undefined;
+      expect(
+        request?.draft.nodes.find((node) => node.id === 'source-orders')?.metadata?.modelIcon
+      ).to.equal('model');
+    });
+    // Reinstall the transport fixture on the fresh page; retain its saved server record.
+    visitCanvas();
+    cy.get('.react-flow__node[data-id="source-orders"] [data-model-icon="model"]').should(
+      'be.visible'
+    );
+    openSourceSection('general');
+    cy.get('[role="combobox"][aria-label="Icon"]').click();
+    cy.contains('[role="option"]', 'Automatic').click();
+    cy.get('[data-slot="canvas-source-provider-icon"] [data-model-icon="postgres"]').should(
+      'be.visible'
+    );
+  });
+
   it('reorders fields and outputs without mutating the graph and restores both orders', () => {
     cy.viewport(1440, 900);
     visitCanvas();
