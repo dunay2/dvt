@@ -14,6 +14,10 @@ import {
 } from './graphCardVisualTokens';
 import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
 import { GraphNodeCardTitle } from './GraphNodeCardTitle';
+import {
+  ModelIdentityIcon,
+  MODEL_IDENTITY_LABELS,
+} from '../../components/inspector/ModelIdentityIcon';
 
 export function GraphNodeCardView({
   materializationControl,
@@ -21,6 +25,7 @@ export function GraphNodeCardView({
   cardModel,
   tags,
   icon: Icon,
+  modelIcon,
   borderClass,
   selected,
   hovered,
@@ -67,16 +72,27 @@ export function GraphNodeCardView({
       <div className={graphNodeCardLayoutClasses.body}>
         <div data-slot="graph-node-card-header" className={graphNodeCardLayoutClasses.header}>
           <div className={graphNodeCardLayoutClasses.titleRow}>
-            {Icon && (
-              <Icon
-                size={18}
+            {modelIcon != null ? (
+              <span
                 data-slot="graph-node-card-icon"
-                data-tone={cardModel.accentTone}
-                className={cn(
-                  graphNodeCardLayoutClasses.icon,
-                  graphNodeCardLayoutClasses.iconTone[cardModel.accentTone]
-                )}
-              />
+                title={MODEL_IDENTITY_LABELS[modelIcon]}
+                role="img"
+                aria-label={MODEL_IDENTITY_LABELS[modelIcon]}
+              >
+                <ModelIdentityIcon icon={modelIcon} />
+              </span>
+            ) : (
+              Icon && (
+                <Icon
+                  size={18}
+                  data-slot="graph-node-card-icon"
+                  data-tone={cardModel.accentTone}
+                  className={cn(
+                    graphNodeCardLayoutClasses.icon,
+                    graphNodeCardLayoutClasses.iconTone[cardModel.accentTone]
+                  )}
+                />
+              )
             )}
             <GraphNodeCardTitle cardModel={cardModel} />
           </div>

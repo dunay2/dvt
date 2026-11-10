@@ -35,7 +35,7 @@ export function CanvasInspectorAuthoringSection({
   const draft = draftController.draft;
   const setDraft = draftController.onDraftChange;
 
-  const { errors, isDirty, canApply, commitDbtModelDraft, commitCurrentDbtModelDraft, applyDraft } =
+  const { errors, isDirty, canApply, commitDraft, commitCurrentDbtModelDraft, applyDraft } =
     useCanvasInspectorDraftSubmission({ node, nodes, edges, authoring, draftController });
   const showGeneral = section === 'all' || section === 'general';
   const showDvtAuthoring =
@@ -111,7 +111,7 @@ export function CanvasInspectorAuthoringSection({
               errors={errors}
               section={section === 'code' ? 'code' : 'general'}
               onChange={setDraft}
-              onCommitModelChange={commitDbtModelDraft}
+              onCommitModelChange={commitDraft}
             />
           ) : null}
 
