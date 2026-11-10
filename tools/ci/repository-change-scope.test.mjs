@@ -6,6 +6,31 @@ import {
   classifyRepositoryFileScope,
 } from './repository-change-scope.mjs';
 
+test('identifies hosted Web adapters without changing their existing workflow obligations', () => {
+  for (const file of [
+    '.github/workflows/test.yml',
+    './.github/actions/setup-native-browser/action.yml',
+    '.github\\actions\\setup-native-browser\\action.yml',
+  ]) {
+    const scope = classifyRepositoryFileScope(file);
+    assert.equal(scope.hostedWebTestAdapter, true, file);
+    assert.equal(scope.workflowPolicyInput, true, file);
+    assert.equal(scope.changedFileValidationRelevant, true, file);
+    assert.equal(scope.runtimeWorkspaceFanout, false, file);
+  }
+  // An adjacent workflow, action or runtime must not inherit the platform exception.
+  for (const file of [
+    '.github/workflows/test.yaml',
+    '.github/workflows/web-canvas-nightly.yml',
+    '.github/actions/setup-node-pnpm/action.yml',
+    'tools/ci/run-web-cypress-native.mjs',
+    'apps/web/cypress.config.ts',
+    'scripts/new-python.py',
+  ]) {
+    assert.equal(classifyRepositoryFileScope(file).hostedWebTestAdapter, false, file);
+  }
+});
+
 test('classifies root CI policy config as code validation without workspace fan-out', () => {
   const fileScope = classifyRepositoryFileScope('.dependency-cruiser.cjs');
 

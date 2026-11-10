@@ -1447,6 +1447,21 @@ Acceptance:
 
 > Acceptance scope status: Active. Owner: Frontend / CI.
 
+## Local validation of hosted adapters
+
+The [local gate owner](../ci-governance/local-changed-files-gate-component.md#hosted-adapter-validation)
+selects the existing Vitest phase for changes confined to hosted adapters and
+positively classified compatible inputs. The router receives the original
+complete file frontier: `test.yml` still selects its twelve governance guard
+files, while the preparation action alone selects no Vitest suite. That action's
+executable Bash contracts remain in the complete CI-tools suite. No coverage is
+invented for it and no browser runtime is executed locally for that isolated
+adapter change. Mixed runtime or unknown inputs preserve the full Web command.
+
+Hosted routing, matrix coverage, required-result validation and nightly cadence
+do not change. A local receipt never substitutes for the candidate's mandatory
+hosted result.
+
 ## Verified native browser preparation caches
 
 GH-3765-CI-BROWSER-PREPARATION-CACHE reuses `RunWebCypressNative` and

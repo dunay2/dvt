@@ -11,6 +11,7 @@ const { currentSchemaSources } = require('../../tools/planning-db/schema/manifes
 const { classifyRepositoryFileScope } = require('../../tools/ci/repository-change-scope.mjs');
 const {
   classifyScriptFilePath,
+  isGovernanceToolingCommand,
   isRepositoryCommandFile,
 } = require('../../tools/ci/repository-command-catalog.mjs');
 const {
@@ -171,16 +172,14 @@ function ciToolSteps(files) {
   return steps;
 }
 
-function webChanged(files) {
-  return files.some(
+function webTestPhase(files) {
+  const runtimeChanged = files.some(
     (file) =>
       file.startsWith('apps/web/') ||
       [
         'apps/api/package.json',
         'apps/api/vitest.integration.config.ts',
         'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
-        '.github/workflows/test.yml',
-        '.github/actions/setup-native-browser/action.yml',
         'scripts/run-selected-closure-live-proof.cjs',
         'scripts/run-selected-closure-cypress.cjs',
         'scripts/live-proof-process.cjs',
@@ -188,22 +187,41 @@ function webChanged(files) {
         'tools/ci/run-web-cypress-native.mjs',
       ].includes(file)
   );
+  const scopes = files.map((file) => classifyRepositoryFileScope(file, { repoRootPath: repoRoot }));
+  if (!runtimeChanged && !scopes.some((scope) => scope.hostedWebTestAdapter)) return null;
+  // Only positive ownership evidence may remove the local browser obligation.
+  const hostedOnly =
+    !runtimeChanged &&
+    scopes.every(
+      (scope) =>
+        scope.hostedWebTestAdapter ||
+        (!scope.rootCiPolicyInput &&
+          !scope.workflowPolicyInput &&
+          !scope.runtimeWorkspaceFanout &&
+          (scope.path.startsWith('docs/') ||
+            (scope.commandClass != null && isGovernanceToolingCommand(scope.commandClass))))
+    );
+  return hostedOnly ? 'vitest' : 'all';
 }
 
 function buildFocusedChangedTestPlan(files, options = {}) {
   const changedFiles = normalizeChangedFiles(files);
   const ci = ciToolSteps(changedFiles);
   const plan = [];
-  if (options.includeWeb) pushSteps(plan, ci);
-  if (options.includeWeb && webChanged(changedFiles))
-    pushSteps(plan, [
-      testStep(
-        'test-web-changed',
-        'pnpm',
-        'test:web:changed',
-        ...(options.iteration ? ['--phase=vitest'] : [])
-      ),
-    ]);
+  if (options.includeWeb) {
+    pushSteps(plan, ci);
+    const webPhase = webTestPhase(changedFiles);
+    if (webPhase !== null) {
+      pushSteps(plan, [
+        testStep(
+          'test-web-changed',
+          'pnpm',
+          'test:web:changed',
+          ...(options.iteration || webPhase === 'vitest' ? ['--phase=vitest'] : [])
+        ),
+      ]);
+    }
+  }
   const sourceFacts = changedFiles.some((file) =>
     [
       'scripts/lib/source-code-facts.cjs',

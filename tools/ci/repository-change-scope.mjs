@@ -52,6 +52,11 @@ const FEATURE_MECHANIZATION_WORKFLOW_POLICY_INPUTS = new Set([
   '.github/actions/prepare-planning-db/action.yml',
 ]);
 
+const HOSTED_WEB_TEST_ADAPTERS = new Set([
+  '.github/workflows/test.yml',
+  '.github/actions/setup-native-browser/action.yml',
+]);
+
 export function normalizeRepositoryPath(filePath) {
   return String(filePath || '')
     .replaceAll('\\', '/')
@@ -226,6 +231,7 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
     rootBuildInput,
     rootCiPolicyInput,
     workflowPolicyInput,
+    hostedWebTestAdapter: HOSTED_WEB_TEST_ADAPTERS.has(normalizedPath),
     ciConfigurationInput,
     knownCiConfigurationInput,
     uncataloguedCiConfigurationInput,

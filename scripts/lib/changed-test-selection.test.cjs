@@ -106,19 +106,71 @@ test('CI iteration composition selects the complete CI tools suite before Web ex
   }
 });
 
-test('shared browser preparation alone selects its Web router once after CI tooling', () => {
+test('hosted adapters retain CI contracts and the unchanged Vitest frontier without local browser work', () => {
+  const workflow = '.github/workflows/test.yml';
   const action = '.github/actions/setup-native-browser/action.yml';
-  for (const options of [undefined, { iteration: true }]) {
-    const plan = buildVerifyChangedPlan([action, action], options);
+  for (const inputs of [
+    [workflow],
+    [action],
+    [action, workflow],
+    [workflow, 'docs/guides/pr-preflight-and-ci-triage.md'],
+    [action, 'tools/ci/test-suite-outcome.test.mjs'],
+    [workflow, 'scripts/lib/changed-test-selection.cjs'],
+  ]) {
+    for (const files of [inputs, [...inputs].reverse(), [...inputs, ...inputs]]) {
+      for (const options of [undefined, { iteration: true }]) {
+        const plan = buildVerifyChangedPlan(Object.freeze(files), options);
+        const web = plan.filter((step) => step.id === 'test-web-changed');
+        const ci = plan.filter((step) => step.args.includes('test:ci-tools'));
+        assert.equal(web.length, 1);
+        assert.equal(ci.length, 1);
+        assert.deepEqual(web[0].args, ['test:web:changed', '--phase=vitest'], files.join());
+        assert.ok(plan.indexOf(ci[0]) < plan.indexOf(web[0]));
+        assert.ok(effectiveNodeTestFiles(plan).includes('tools/ci/test-suite-outcome.test.mjs'));
+      }
+    }
+  }
+});
+
+test('hosted adapters cannot reduce shared, root or unclassified runtime obligations', () => {
+  // Undefined classification and an explicitly unknown domain are distinct refusal cases.
+  for (const companion of [
+    'apps/web/src/app/views/CodeView.tsx',
+    'apps/api/src/server.ts',
+    'packages/@dvt/engine/src/WorkflowEngine.ts',
+    'scripts/live-proof-process.cjs',
+    'tools/ci/run-web-cypress-native.mjs',
+    'package.json',
+    'tsconfig.tools.json',
+    'eslint.config.cjs',
+    'tools/ci/policy/not-yet-catalogued.yaml',
+    '.github/workflows/new-workflow.yml',
+    '.github/actions/setup-node-pnpm/action.yml',
+    'scripts/unclassified-runtime.cjs',
+    '.github/scripts/new-runtime.sh',
+    '.github/scripts/new-runtime.js',
+    'scripts/new-python.py',
+    'unknown.config',
+  ]) {
+    const files = ['.github/workflows/test.yml', companion];
+    const plan = buildVerifyChangedPlan(files);
     const web = plan.filter((step) => step.id === 'test-web-changed');
-    const ci = plan.filter((step) => step.args.includes('test:ci-tools'));
-    assert.equal(web.length, 1);
-    assert.equal(ci.length, 1);
-    assert.deepEqual(web[0].args, [
+    assert.equal(web.length, 1, companion);
+    assert.deepEqual(web[0].args, ['test:web:changed'], companion);
+    const iteration = buildVerifyChangedPlan(files, { iteration: true });
+    assert.deepEqual(iteration.find((step) => step.id === 'test-web-changed').args, [
       'test:web:changed',
-      ...(options?.iteration ? ['--phase=vitest'] : []),
+      '--phase=vitest',
     ]);
-    assert.ok(plan.indexOf(ci[0]) < plan.indexOf(web[0]));
+  }
+});
+
+test('hosted classification does not enable Web in callers that exclude it', () => {
+  const plan = buildFocusedChangedTestPlan(['.github/workflows/test.yml']);
+  assert.ok(!plan.some((step) => step.id === 'test-web-changed'));
+  assert.equal(plan.filter((step) => step.args.includes('test:ci-tools')).length, 1);
+  for (const file of ['docs/guides/pr-preflight-and-ci-triage.md', 'scripts/new-python.py']) {
+    assert.ok(!buildVerifyChangedPlan([file]).some((step) => step.id === 'test-web-changed'));
   }
 });
 
@@ -398,7 +450,6 @@ test('live browser runtime inputs select the existing Web router without broad A
   const files = [
     'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
     'apps/api/vitest.integration.config.ts',
-    '.github/workflows/test.yml',
     'apps/api/package.json',
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',

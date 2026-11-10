@@ -261,6 +261,55 @@ comparison is evidence for this refactor, while focused regression tests protect
 the enduring boundary cases. These boundaries reuse the existing command/query
 rails and acceptance rules; they add no scheduler, cache or parallel authority.
 
+### Hosted adapter validation
+
+`ClassifyChangedCiScope` owns the `hostedWebTestAdapter` classification for the
+Test Suite workflow and shared native-browser preparation action.
+`BuildChangedSliceVerificationPlan` consumes that classification rather than
+maintaining another list of their paths. These adapters run on GitHub's Linux
+workers; executing the application in Windows does not execute their YAML/Bash.
+
+Previously, either adapter selected the complete local Web command as well as
+its required hosted execution:
+
+```mermaid
+flowchart LR
+  Adapter[Hosted adapter change] --> Tools[CI contracts]
+  Tools --> Local[Local Vitest and browser runtime]
+  Local --> Hosted[Required hosted runtime]
+```
+
+The local plan now selects `test:web:changed --phase=vitest` when at least one
+hosted adapter changed and every accompanying input is positively known to be
+compatible: documentation or a command accepted by the existing governance
+tooling classifier, without a root-policy or runtime-fanout obligation. Shared
+Web/runtime inputs, root build or CI-policy inputs, other workflow adapters/configs,
+and unclassified files retain the complete Web command. Absence of a command
+classification is not evidence that an input is safe to exclude.
+
+```mermaid
+flowchart LR
+  Diff[Unchanged complete file frontier] --> Scope[Canonical classification]
+  Scope --> Tools[Complete CI contracts once]
+  Tools --> Decision{Only hosted adapters and compatible inputs?}
+  Decision -->|Yes| Vitest[Existing Vitest phase]
+  Decision -->|No| Full[Existing complete Web command]
+  Vitest --> Hosted[Unchanged required hosted matrix]
+  Full --> Hosted
+```
+
+This is separation of adapter and runtime responsibilities, not an iteration
+waiver. Git comparison, independent gates, execution, receipts and hosted
+selection remain unchanged. The local receipt proves its local obligations;
+the required hosted aggregate must independently accept the same candidate.
+No result cache, new runner, scope override or filtered diff is introduced.
+
+| Scenario                  | Opportunity         | Fowler pattern           | DDD owner                               | Command/query rail                  | Implementation surfaces                | Unit/package proof                                                                                    | Architecture proof                        | User-flow proof                          | Out of scope                           |
+| ------------------------- | ------------------- | ------------------------ | --------------------------------------- | ----------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------- | -------------------------------------- |
+| Hosted adapter only       | Duplicate execution | Adapter boundary         | Existing changed-slice plan             | `BuildChangedSliceVerificationPlan` | Canonical classifier and selector      | CI contracts once, preserved Vitest phase and ordering                                                | Existing actual-workflow matrix contracts | Required hosted candidate                | New scheduler or test suppression      |
+| Adapter plus shared input | Boundary drift      | Conservative composition | Same plan                               | `ClassifyChangedCiScope`            | Same owners                            | Runtime, root policy and unknown companions retain full; input order/duplicates do not change outcome | Original complete frontier retained       | Existing complete selected browser proof | Minimal routing of mixed changes       |
+| Missing hosted evidence   | Hidden authority    | Fail-closed acceptance   | Existing Test Suite evidence read model | `ValidateTestSuiteEvidenceResult`   | Existing required aggregate, unchanged | Existing failed/skipped/missing result negatives                                                      | Required main ruleset and matrix coverage | Candidate hosted execution               | Changing protection or nightly cadence |
+
 ### Explicit iteration scope
 
 `node scripts/verify-changed.cjs --iteration-base=<commit-ref>` requests partial
