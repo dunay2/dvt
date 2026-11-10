@@ -12,12 +12,17 @@ const steps = workflow.jobs['pr-checks'].steps;
 const scripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
 const implementationCommand = 'pnpm docs:feature-mechanization:implementation';
 
-test('the normal mechanization test command includes its real Git regressions', () => {
-  assert.ok(
-    scripts['test:docs:feature-mechanization']
-      .split(/\s+/)
-      .includes('scripts/lib/feature-mechanization-git-diff.test.cjs')
-  );
+test('the normal mechanization test command includes its real Git and surface regressions', () => {
+  for (const suite of [
+    'scripts/lib/feature-mechanization-git-diff.test.cjs',
+    'scripts/lib/feature-mechanization-surface-matcher.test.cjs',
+  ])
+    assert.equal(
+      scripts['test:docs:feature-mechanization'].split(/\s+/).filter((file) => file === suite)
+        .length,
+      1,
+      suite
+    );
 });
 
 test('PR and full CI retain manifest checks without claiming DB implementation validation', () => {

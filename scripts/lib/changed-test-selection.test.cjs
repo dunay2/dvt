@@ -106,6 +106,22 @@ test('CI iteration composition selects the complete CI tools suite before Web ex
   }
 });
 
+test('shared browser preparation alone selects its Web router once after CI tooling', () => {
+  const action = '.github/actions/setup-native-browser/action.yml';
+  for (const options of [undefined, { iteration: true }]) {
+    const plan = buildVerifyChangedPlan([action, action], options);
+    const web = plan.filter((step) => step.id === 'test-web-changed');
+    const ci = plan.filter((step) => step.args.includes('test:ci-tools'));
+    assert.equal(web.length, 1);
+    assert.equal(ci.length, 1);
+    assert.deepEqual(web[0].args, [
+      'test:web:changed',
+      ...(options?.iteration ? ['--phase=vitest'] : []),
+    ]);
+    assert.ok(plan.indexOf(ci[0]) < plan.indexOf(web[0]));
+  }
+});
+
 test('CI iteration complete selection absorbs partial CI tests and retains adjacent script coverage', () => {
   const plan = buildVerifyChangedPlan(
     [

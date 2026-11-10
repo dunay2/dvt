@@ -157,7 +157,10 @@ const SCRIPT_FILE_RULES = [
     /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|(docs|documentation)-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(ai-efficiency-adoption|feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
     'docs-governance',
   ],
-  [/^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest)\.cjs$/u, 'docs-governance'],
+  [
+    /^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest|surface-matcher)\.cjs$/u,
+    'docs-governance',
+  ],
   [/^scripts\/lib\/component-source-responsibilities\.cjs$/u, 'docs-governance'],
   [/^scripts\/lib\/source-code-facts\.cjs$/u, 'ci-tooling'],
   [/^scripts\/lib\/python-source-facts\.cjs$/u, 'ci-tooling'],

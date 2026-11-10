@@ -104,6 +104,10 @@ for (const [source, suite] of [
     'scripts/lib/feature-mechanization-git-diff.cjs',
     'scripts/lib/feature-mechanization-git-diff.test.cjs',
   ],
+  [
+    'scripts/lib/feature-mechanization-surface-matcher.cjs',
+    'scripts/lib/feature-mechanization-surface-matcher.test.cjs',
+  ],
 ]) {
   test(source + ' selects its regression once even when the test changes too', () => {
     for (const files of [[source], [suite], [source, suite]]) {
