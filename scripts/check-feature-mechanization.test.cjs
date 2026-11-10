@@ -1,4 +1,7 @@
-/** Owned concern: prove feature mechanization manifest and implementation guard behavior. */
+/** Owned concern: prove feature mechanization manifest and implementation guard behavior.
+ * Why: early metadata rejection must preserve complete valid-source validation.
+ * Corner: unchanged bindings, retirement and raw forbidden errors still reject.
+ */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -237,6 +240,123 @@ test('implementation evidence shares one Git inventory and one read-only DB snap
   assert.equal(calls.filter((sql) => sql.includes('ranked_manifest_rows')).length, 1);
   assert.equal(calls.filter((sql) => sql.includes('component_source_responsibility')).length, 1);
   assert.equal(calls.at(-1), 'commit');
+});
+
+test('all schema errors reject before component source work in the same authority snapshot', async (t) => {
+  const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+  const repo = repository(t);
+  const badCoverage = structuredClone(validManifest);
+  delete badCoverage.symbols[0].cypressCoverage;
+  const openFeature = structuredClone(validManifest);
+  openFeature.featureId = 'OTHER';
+  openFeature.noHumanDecisionsRemaining = false;
+  const calls = [];
+  const client = {
+    query: async (sql) => {
+      calls.push(sql);
+      if (sql.includes('ranked_manifest_rows'))
+        return {
+          rows: [badCoverage, openFeature].map((raw_manifest) => ({
+            source_path: 'https://example.invalid/design',
+            raw_manifest,
+          })),
+        };
+      if (
+        sql.includes('governance_component_definition_query') ||
+        sql.includes('component_source_responsibility')
+      )
+        throw new Error('Expensive source work ran before schema rejection');
+      return { rows: [] };
+    },
+  };
+  const result = await readImplementationEvidence({ client, gitReader: repo.reader() });
+  assert.equal(result.manifestValidation.manifestCount, 2);
+  assert.equal(result.manifestValidation.errors.length, 2);
+  assert.match(result.manifestValidation.errors.join('\n'), /missing cypressCoverage/);
+  assert.match(
+    result.manifestValidation.errors.join('\n'),
+    /OTHER must set noHumanDecisionsRemaining/
+  );
+  assert.equal(calls.filter((sql) => sql.includes('ranked_manifest_rows')).length, 1);
+  assert.match(calls[0], /begin.*repeatable read.*read only/iu);
+  assert.equal(calls.at(-1), 'commit');
+});
+
+test('valid schema still checks broken bindings in unchanged source files', async (t) => {
+  const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+  const repo = repository(t);
+  repo.write('unchanged.cjs', 'function actual() { return 1; }\n');
+  repo.write('unchanged.test.cjs', 'module.exports = {};\n');
+  const baseRef = repo.commit(repo.base);
+  repo.write('changed.cjs', 'const changed = 1;\n');
+  const headRef = repo.commit(baseRef);
+  const client = {
+    query: async (sql) => {
+      if (sql.includes('ranked_manifest_rows'))
+        return {
+          rows: [{ source_path: 'https://example.invalid/design', raw_manifest: validManifest }],
+        };
+      if (sql.includes('governance_component_definition_query'))
+        return {
+          rows: [{ id: 'SYS-MODEL', level: 'component', status: 'canonical', owns: ['*.cjs'] }],
+        };
+      if (sql.includes('component_source_responsibility'))
+        return {
+          rows: [
+            {
+              componentId: 'SYS-MODEL',
+              responsibilityComponentId: 'SYS-MODEL',
+              responsibilityId: 'RESP-MODEL',
+              description: 'Implement current model behavior.',
+              status: 'approved',
+              path: 'unchanged.cjs',
+              symbol: 'missing',
+              role: 'implements',
+              testPaths: ['unchanged.test.cjs'],
+            },
+          ],
+        };
+      return { rows: [] };
+    },
+  };
+  const result = await readImplementationEvidence({
+    client,
+    gitReader: repo.reader({ baseRef, headRef }),
+  });
+  assert.deepEqual(result.manifestValidation.errors, []);
+  assert.ok(!result.diff.changedFiles.includes('unchanged.cjs'));
+  assert.match(result.sourceErrors.join('\n'), /Missing implemented symbol unchanged\.cjs#missing/);
+});
+
+test('a guard rebuilds invocation matching and preserves retirement and raw forbidden errors', () => {
+  const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+  const entries = [
+    {
+      manifest: {
+        featureId: 'OWNED',
+        allowedImplementationSurfaces: ['scripts/**'],
+        forbiddenImplementationSurfaces: ['scripts/old.cjs first', 'scripts/old.cjs second'],
+      },
+    },
+  ];
+  const guard = new FeatureImplementationGuard(entries, {
+    changedFiles: ['scripts/old.cjs', 'scripts/current.md'],
+    deletedFiles: ['scripts/old.cjs'],
+    currentFiles: ['scripts/current.md'],
+  });
+  assert.deepEqual(guard.validate().errors, []);
+  guard.currentFiles.push('scripts/old.cjs');
+  assert.deepEqual(guard.validate().errors, [
+    'scripts/old.cjs matches forbiddenImplementationSurfaces pattern scripts/old.cjs first.',
+  ]);
+  entries[0].manifest.allowedImplementationSurfaces = ['different/**'];
+  assert.ok(
+    guard
+      .validate()
+      .errors.some((error) =>
+        error.includes('scripts/current.md is outside allowedImplementationSurfaces')
+      )
+  );
 });
 
 test('extractFeatureMechanizationManifests reads feature-mechanization fenced blocks', () => {

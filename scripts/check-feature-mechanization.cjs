@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 /**
  * Owned concern: validate feature mechanization manifests and real implementation diffs.
- *
- * Validate feature mechanization manifests.
+ * Why: reject malformed authority before acquiring complete source evidence.
+ * Corner: valid authority retains every current binding and implementation policy.
  */
 
 const fs = require('node:fs');
 const { readSourceCodeFacts } = require('./lib/source-code-facts.cjs');
 const path = require('node:path');
 const { FeatureMechanizationGitDiffReader } = require('./lib/feature-mechanization-git-diff.cjs');
+const {
+  FeatureMechanizationSurfaceMatcher,
+} = require('./lib/feature-mechanization-surface-matcher.cjs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
   extractFeatureMechanizationManifests,
@@ -46,6 +49,8 @@ class FeatureImplementationGuard {
 
   validate() {
     const errors = [];
+    this.surfaceMatcher = new FeatureMechanizationSurfaceMatcher(this.manifestEntries);
+    this.retirementOwnerManifestEntries = null;
 
     this.validateAllowedImplementationSurfaces(errors);
     this.validateForbiddenImplementationSurfaces(errors);
@@ -64,14 +69,18 @@ class FeatureImplementationGuard {
   }
 
   validateAllowedImplementationSurfaces(errors) {
-    const allowedPatterns = this.collectSurfacePatterns('allowedImplementationSurfaces');
+    const allowedPatterns = this.surfaceMatcher.collectSurfacePatterns(
+      'allowedImplementationSurfaces'
+    );
 
     for (const filePath of this.changedFiles) {
       if (this.isPermittedRetirement(filePath)) {
         continue;
       }
 
-      if (allowedPatterns.some((pattern) => this.matchesSurface(filePath, pattern))) {
+      if (
+        allowedPatterns.some((pattern) => this.surfaceMatcher.matchesSurface(filePath, pattern))
+      ) {
         continue;
       }
 
@@ -87,12 +96,12 @@ class FeatureImplementationGuard {
         continue;
       }
 
-      const forbiddenPatterns = this.collectSurfacePatterns(
+      const forbiddenPatterns = this.surfaceMatcher.collectSurfacePatterns(
         'forbiddenImplementationSurfaces',
-        this.findMostSpecificManifestEntriesAllowingFile(filePath)
+        this.surfaceMatcher.findMostSpecificManifestEntriesAllowingFile(filePath)
       );
       const matchingPattern = forbiddenPatterns.find((pattern) =>
-        this.matchesSurface(filePath, pattern)
+        this.surfaceMatcher.matchesSurface(filePath, pattern)
       );
       if (!matchingPattern) {
         continue;
@@ -114,14 +123,15 @@ class FeatureImplementationGuard {
       return false;
     }
 
-    return this.collectSurfacePatterns(
-      'forbiddenImplementationSurfaces',
-      owningManifestEntries
-    ).some(
-      (pattern) =>
-        this.matchesSurface(filePath, pattern) &&
-        !this.currentFiles.some((currentFile) => this.matchesSurface(currentFile, pattern))
-    );
+    return this.surfaceMatcher
+      .collectSurfacePatterns('forbiddenImplementationSurfaces', owningManifestEntries)
+      .some(
+        (pattern) =>
+          this.surfaceMatcher.matchesSurface(filePath, pattern) &&
+          !this.currentFiles.some((currentFile) =>
+            this.surfaceMatcher.matchesSurface(currentFile, pattern)
+          )
+      );
   }
 
   findRetirementOwnerManifestEntries() {
@@ -135,7 +145,9 @@ class FeatureImplementationGuard {
         continue;
       }
 
-      for (const entry of this.findMostSpecificManifestEntriesAllowingFile(changedFile)) {
+      for (const entry of this.surfaceMatcher.findMostSpecificManifestEntriesAllowingFile(
+        changedFile
+      )) {
         owningFeatureIds.add(entry.manifest.featureId);
       }
     }
@@ -206,64 +218,6 @@ class FeatureImplementationGuard {
     }
   }
 
-  collectSurfacePatterns(fieldName, manifestEntries = this.manifestEntries) {
-    const patterns = [];
-
-    for (const entry of manifestEntries) {
-      for (const rawPattern of entry.manifest[fieldName] || []) {
-        const normalized = this.normalizeSurfacePattern(rawPattern);
-        if (normalized) {
-          patterns.push({
-            raw: rawPattern,
-            normalized,
-          });
-        }
-      }
-    }
-
-    return patterns;
-  }
-
-  findManifestEntriesAllowingFile(filePath) {
-    return this.manifestEntries.filter((entry) =>
-      this.collectSurfacePatterns('allowedImplementationSurfaces', [entry]).some((pattern) =>
-        this.matchesSurface(filePath, pattern)
-      )
-    );
-  }
-
-  findMostSpecificManifestEntriesAllowingFile(filePath) {
-    const matches = this.manifestEntries
-      .map((entry) => {
-        const matchingAllowedPatterns = this.collectSurfacePatterns(
-          'allowedImplementationSurfaces',
-          [entry]
-        ).filter((pattern) => this.matchesSurface(filePath, pattern));
-
-        if (matchingAllowedPatterns.length === 0) {
-          return null;
-        }
-
-        return {
-          entry,
-          specificity: Math.max(
-            ...matchingAllowedPatterns.map((pattern) => this.surfacePatternSpecificity(pattern))
-          ),
-        };
-      })
-      .filter(Boolean);
-
-    if (matches.length === 0) {
-      return [];
-    }
-
-    const maxSpecificity = Math.max(...matches.map((match) => match.specificity));
-
-    return matches
-      .filter((match) => match.specificity === maxSpecificity)
-      .map((match) => match.entry);
-  }
-
   collectDeclaredSymbols() {
     const declaredSymbols = new Set();
 
@@ -278,54 +232,6 @@ class FeatureImplementationGuard {
     }
 
     return declaredSymbols;
-  }
-
-  normalizeSurfacePattern(rawPattern) {
-    if (!isNonEmptyString(rawPattern)) {
-      return null;
-    }
-
-    return toPosix(rawPattern.trim().split(/\s+/)[0]).replace(/^\.\//, '');
-  }
-
-  matchesSurface(filePath, pattern) {
-    const normalizedFilePath = toPosix(filePath).replace(/^\.\//, '');
-    const normalizedPattern = pattern.normalized.replace(/^\.\//, '');
-    const regex = new RegExp(`^${this.globPatternToRegex(normalizedPattern)}$`);
-
-    return regex.test(normalizedFilePath);
-  }
-
-  surfacePatternSpecificity(pattern) {
-    return pattern.normalized.replace(/\*\*/g, '').replace(/\*/g, '').length;
-  }
-
-  globPatternToRegex(pattern) {
-    let regex = '';
-
-    for (let index = 0; index < pattern.length; index += 1) {
-      const char = pattern[index];
-      const nextChar = pattern[index + 1];
-
-      if (char === '*' && nextChar === '*') {
-        regex += '.*';
-        index += 1;
-        continue;
-      }
-
-      if (char === '*') {
-        regex += '[^/]*';
-        continue;
-      }
-
-      regex += this.escapeRegex(char);
-    }
-
-    return regex;
-  }
-
-  escapeRegex(value) {
-    return value.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
   }
 
   extractAddedCodeSymbols(filePath, addedLines) {
@@ -844,12 +750,19 @@ async function readImplementationEvidence(options = {}) {
         hashes.set(file, sha256HexUtf8(content));
     }
     assertFeatureMechanizationAuthorityFresh(rows, hashes);
+    const manifestEntries = normalizeDbFeatureMechanizationManifestRows(rows);
+    const manifestValidation = validateFeatureMechanizationManifestEntries(manifestEntries, {
+      requiredFeatureIds: options.requiredFeatureIds,
+    });
+    if (manifestValidation.errors.length)
+      return { diff, manifestEntries, manifestValidation, sourceErrors: [] };
     const model = await createCurrentComponentFilesReadModelComponent({
       gitReader,
     }).readCurrentComponentFiles(client);
     return {
       diff,
-      manifestEntries: normalizeDbFeatureMechanizationManifestRows(rows),
+      manifestEntries,
+      manifestValidation,
       sourceErrors: model.errors,
     };
   });
@@ -968,11 +881,12 @@ async function main() {
     let result;
     let evidence;
     try {
-      evidence = await readImplementationEvidence({ baseRef: args.baseRef });
-      manifestEntries = evidence.manifestEntries;
-      result = validateFeatureMechanizationManifestEntries(manifestEntries, {
+      evidence = await readImplementationEvidence({
+        baseRef: args.baseRef,
         requiredFeatureIds: args.requiredFeatureIds,
       });
+      manifestEntries = evidence.manifestEntries;
+      result = evidence.manifestValidation;
     } catch (error) {
       const nestedMessages = Array.isArray(error?.errors)
         ? error.errors
@@ -994,18 +908,20 @@ async function main() {
     }
 
     const allErrors = [...result.errors];
-    const selectedManifestEntries =
-      requiredFeatureIds.size === 0
-        ? manifestEntries
-        : manifestEntries.filter((entry) => requiredFeatureIds.has(entry.manifest.featureId));
-    const diff = evidence.diff;
-    const implementationResult = validateFeatureImplementationManifests(
-      selectedManifestEntries,
-      diff
-    );
+    if (result.errors.length === 0) {
+      const selectedManifestEntries =
+        requiredFeatureIds.size === 0
+          ? manifestEntries
+          : manifestEntries.filter((entry) => requiredFeatureIds.has(entry.manifest.featureId));
+      const diff = evidence.diff;
+      const implementationResult = validateFeatureImplementationManifests(
+        selectedManifestEntries,
+        diff
+      );
 
-    allErrors.push(...implementationResult.errors);
-    allErrors.push(...evidence.sourceErrors);
+      allErrors.push(...implementationResult.errors);
+      allErrors.push(...evidence.sourceErrors);
+    }
 
     if (allErrors.length > 0) {
       console.error('[docs:feature-mechanization] FAILED');

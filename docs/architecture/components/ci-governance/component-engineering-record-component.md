@@ -727,6 +727,60 @@ engine pilot.
 
 > Acceptance scope status: Review. Owner: Engineering / CI Governance / Architecture.
 
+## Bounded feature validation execution
+
+The existing `ValidateFeatureMechanizationImplementation` command owns this
+validation sequence. Its
+[prospective performance admission](https://github.com/dunay2/dvt/issues/3765#issuecomment-6775551304)
+retains `ReadComponentFiles`, the complete current Git inventory and every
+canonical responsibility binding. `SYS-CI-GOVERNANCE-ROOT` remains the physical
+owner with its existing `coverage-required` classification.
+
+The previous sequence constructed global source evidence before validating the
+manifest schema, then ran implementation policies even when schema errors were
+already known. Its surface guard also rebuilt the same regular expressions for
+every file and manifest. A green baseline took 284,659 ms; one real file required
+12,178 expression constructions for 4,440 distinct normalized allowed patterns.
+These measurements identify repeated work, without establishing a whole-CI
+percentage improvement.
+
+```mermaid
+flowchart LR
+  Previous[DB manifest rows] --> Heavy[Complete source evidence]
+  Heavy --> Late[Schema errors detected late]
+  Snapshot[One read-only authority snapshot] --> Schema[All-manifest schema and freshness]
+  Schema -->|invalid| Reject[Explicit early rejection]
+  Schema -->|valid| Sources[Complete source and binding evidence]
+  Sources --> Matcher[Invocation-local compiled surface matcher]
+  Matcher --> Policies[Unchanged implementation policies]
+```
+
+The checker retains orchestration and admission policies. The pure
+`FeatureMechanizationSurfaceMatcher` owns only existing pattern normalization,
+compilation and most-specific matching. It compiles each normalized expression
+once for a validation invocation and retains raw diagnostic order, manifest
+association and every maximum-specificity tie. Matching results never outlive
+that invocation. The existing wildcard grammar, forbidden-surface precedence
+and retirement requirement that no forbidden current file remains are unchanged.
+Moved methods have direct consumers in that helper; obsolete checker methods
+are removed, without compatibility wrappers or a parallel matching grammar.
+
+All DB manifests must pass the real schema validator before component/source
+work begins. Invalid metadata returns all schema errors and claims no source
+acceptance. A valid schema still checks all ownership, bindings, implemented
+symbols, referenced tests, changed declarations and Cypress boundaries in the
+same authority snapshot. No manifest or unchanged-file binding is filtered out.
+SourceFacts, Python parsing, compiler options, packages and persistent caches
+are outside this change.
+
+Focused tests cover early rejection, valid-schema source failures, wildcard and
+literal-path semantics, normalization, equal-specificity ties, raw forbidden
+diagnostic order, retirement and new-invocation freshness. Differential evidence
+must compare the real previous matcher with the new matcher over the same
+frozen manifest/file inputs. A baseline-input performance comparison is distinct
+from final validation of the new committed candidate and its reconciled native
+metadata. Record complete results and phase timings before claiming improvement.
+
 ## Current-document application ports
 
 The prospective admission
