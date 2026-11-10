@@ -1,3 +1,7 @@
+/** Owned concern: catalog transaction and Git evidence integration.
+ * Why: an admitted metadata move must not conceal an invalid implementation.
+ * Corner: failed proof or winner checks roll every row and receipt back.
+ */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
@@ -426,6 +430,230 @@ test('catalog writer rolls the entire batch back on stale rows, scope, reference
   }
 });
 
+async function withPortRepository(content, run) {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { execFileSync } = require('node:child_process');
+  const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-catalog-port-'));
+  const git = (...args) =>
+    execFileSync('git', args, {
+      cwd: directory,
+      env: createGitRepositoryEnvironment(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+  const manifest = {
+    featureId: 'EXAMPLE',
+    mechanizationStatus: 'closed',
+    commandQueryRails: [{ ...row.raw_rail, applicationPort: 'scripts/owner.cjs BuildPlan' }],
+  };
+  try {
+    git('init');
+    git('config', 'user.name', 'Catalog port fixture');
+    git('config', 'user.email', 'fixture@example.invalid');
+    git('config', 'core.autocrlf', 'false');
+    fs.mkdirSync(path.join(directory, 'scripts'));
+    fs.mkdirSync(path.join(directory, 'docs'));
+    fs.writeFileSync(path.join(directory, 'scripts/owner.cjs'), content);
+    fs.writeFileSync(
+      path.join(directory, 'docs/current.md'),
+      `\`\`\`feature-mechanization\n${JSON.stringify(manifest)}\n\`\`\`\n`
+    );
+    git('add', '.');
+    const commit = git('commit-tree', git('write-tree'), '-m', 'Application port fixture');
+    git('update-ref', 'HEAD', commit);
+    await run({ directory, git, fs, path, commit, manifest });
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+test('application-port proof uses real committed declarations and refuses aliases, stubs and dirty targets', async () => {
+  const {
+    verifyApplicationPortTarget,
+  } = require('../planning-db/catalog-reconciliation-write.cjs');
+  for (const [content, accepted] of [
+    ['function BuildPlan() { return [1]; }\nmodule.exports = { BuildPlan };\n', true],
+    ['const BuildPlan = () => [1];\n', true],
+    ['function BuildPlan() {}\n', false],
+    ['function BuildPlan() { return undefined; }\n', false],
+    ['function BuildPlan() { throw new Error("not implemented"); }\n', false],
+    ['const BuildPlan = Other;\n', false],
+    ['const BuildPlan = { retained: true };\n', false],
+    ['module.exports = { BuildPlan: Other };\n', false],
+    ['function BuildPlan() { return 1; }\nfunction BuildPlan() { return 2; }\n', false],
+  ])
+    await withPortRepository(content, ({ directory, commit }) => {
+      const read = () =>
+        verifyApplicationPortTarget(
+          {
+            commit,
+            path: 'scripts/owner.cjs',
+            symbol: 'BuildPlan',
+          },
+          { repoRoot: directory }
+        );
+      if (!accepted) return assert.throws(read, /CATALOG/);
+      const proof = read();
+      assert.equal(proof.implemented, true);
+      assert.equal(proof.head, commit);
+      assert.equal(proof.symbol, 'BuildPlan');
+      assert.match(proof.contentSha256, /^[a-f0-9]{64}$/u);
+    });
+  await withPortRepository(
+    'function BuildPlan() { return [1]; }\n',
+    ({ directory, commit, fs, path, git }) => {
+      const read = (overrides = {}) =>
+        verifyApplicationPortTarget(
+          {
+            commit,
+            path: 'scripts/owner.cjs',
+            symbol: 'BuildPlan',
+            ...overrides,
+          },
+          { repoRoot: directory }
+        );
+      assert.throws(() => read({ commit: 'a'.repeat(40) }), /HEAD/);
+      assert.throws(() => read({ path: 'scripts/missing.cjs' }), /tracked|exist|HEAD|clean/u);
+      fs.writeFileSync(
+        path.join(directory, 'scripts/untracked.cjs'),
+        'function BuildPlan() { return 1; }'
+      );
+      assert.throws(() => read({ path: 'scripts/untracked.cjs' }), /tracked|clean/u);
+      fs.appendFileSync(path.join(directory, 'scripts/owner.cjs'), '// dirty\n');
+      assert.throws(() => read(), /unmodified relative to HEAD/u);
+      git('add', 'scripts/owner.cjs');
+      assert.throws(() => read(), /unmodified relative to HEAD/u);
+    }
+  );
+  await withPortRepository(
+    'function BuildPlan() { return [1]; }\n',
+    ({ directory, commit, git }) => {
+      const blob = git('rev-parse', `${commit}:scripts/owner.cjs`);
+      git('update-index', '--cacheinfo', `120000,${blob},scripts/owner.cjs`);
+      const nonregular = git(
+        'commit-tree',
+        git('write-tree'),
+        '-p',
+        commit,
+        '-m',
+        'Nonregular port fixture'
+      );
+      git('update-ref', 'HEAD', nonregular);
+      assert.throws(
+        () =>
+          verifyApplicationPortTarget(
+            {
+              commit: nonregular,
+              path: 'scripts/owner.cjs',
+              symbol: 'BuildPlan',
+            },
+            { repoRoot: directory }
+          ),
+        /regular|unmodified relative to HEAD/u
+      );
+    }
+  );
+});
+
+test('application-port writer retains transactional rollback, exact leaf SQL, replay and proof recheck', async () => {
+  const { applyCatalogReconciliation } = require('../planning-db/catalog-reconciliation-write.cjs');
+  await withPortRepository(
+    'function BuildPlan() { return [1]; }\n',
+    async ({ directory, commit, manifest, fs, path }) => {
+      const prepare = (failure) => {
+        const f = catalogWriterFixture(failure);
+        for (const entry of f.rows) {
+          entry.row.source_path = 'docs/current.md';
+          Object.assign(entry.row.raw_manifest, {
+            featureId: 'EXAMPLE',
+            mechanizationStatus: 'closed',
+            commandQueryRails: [
+              { ...manifest.commandQueryRails[0], applicationPort: 'scripts/old.cjs BuildPlan' },
+            ],
+          });
+          entry.row.raw_rail.applicationPort = 'scripts/old.cjs BuildPlan';
+        }
+        f.request.changes = f.rows.map(({ origin, row: target }) => ({
+          origin,
+          railId: target.rail_id,
+          expectedRowSha256: catalogRowHash(target),
+          currentDocument: {
+            commit,
+            path: target.source_path,
+            references: [
+              {
+                field: 'applicationPort',
+                index: 0,
+                from: 'scripts/old.cjs BuildPlan',
+                to: 'scripts/owner.cjs BuildPlan',
+              },
+            ],
+          },
+        }));
+        return f;
+      };
+      const f = prepare();
+      const originals = structuredClone(f.rows);
+      assert.equal(
+        (await applyCatalogReconciliation(f.request, { client: f.client, repoRoot: directory }))
+          .changed,
+        2
+      );
+      for (const [index, entry] of f.rows.entries()) {
+        assert.equal(entry.row.raw_rail.applicationPort, 'scripts/owner.cjs BuildPlan');
+        assert.equal(
+          entry.row.raw_manifest.commandQueryRails[0].applicationPort,
+          'scripts/owner.cjs BuildPlan'
+        );
+        assert.deepEqual(entry.row.raw_manifest.symbols, originals[index].row.raw_manifest.symbols);
+        assert.deepEqual(
+          entry.row.raw_manifest.redGreenCycles,
+          originals[index].row.raw_manifest.redGreenCycles
+        );
+        assert.equal(entry.row.rail_status, 'implemented');
+        assert.equal(entry.row.imported_at, originals[index].row.imported_at);
+      }
+      assert.equal(
+        (await applyCatalogReconciliation(f.request, { client: f.client, repoRoot: directory }))
+          .idempotent,
+        true
+      );
+      assert.equal(f.audits.length, 2);
+      for (const failure of ['winner', 'audit', 'metadata', 'proof-recheck']) {
+        const rejected = prepare(failure);
+        const before = structuredClone(rejected.rows);
+        if (failure === 'proof-recheck') {
+          const query = rejected.client.query;
+          rejected.client.query = async (sql, values) => {
+            const result = await query(sql, values);
+            if (sql.startsWith('insert'))
+              fs.appendFileSync(path.join(directory, 'scripts/owner.cjs'), '// changed\n');
+            return result;
+          };
+        }
+        await assert.rejects(
+          applyCatalogReconciliation(rejected.request, {
+            client: rejected.client,
+            repoRoot: directory,
+          }),
+          /CATALOG|Audit failure|unmodified relative to HEAD/u
+        );
+        assert.deepEqual(rejected.rows, before);
+        assert.equal(rejected.audits.length, 0);
+        assert.equal(rejected.calls.at(-1), 'rollback');
+        if (failure === 'proof-recheck')
+          fs.writeFileSync(
+            path.join(directory, 'scripts/owner.cjs'),
+            'function BuildPlan() { return [1]; }\n'
+          );
+      }
+    }
+  );
+});
+
 function catalogWriterFixture(failure) {
   const rows = [
     { origin: 'imported', row: structuredClone(row) },
@@ -541,7 +769,27 @@ function catalogWriterFixture(failure) {
           const parameter = new RegExp(`${field} = \\$(\\d+)`, 'u').exec(sql);
           if (parameter) entry.row[field] = values[Number(parameter[1]) - 1];
         }
-        if (sql.includes('jsonb_set')) {
+        const document = command.changes.find(
+          (change) => change.railId === entry.row.rail_id
+        )?.currentDocument;
+        if (document) {
+          assert.match(sql, /raw_manifest = jsonb_set/u);
+          assert.match(sql, /raw_rail = jsonb_set/u);
+          assert.ok(
+            values.some(
+              (value) =>
+                Array.isArray(value) && value.join('/') === 'commandQueryRails/0/applicationPort'
+            )
+          );
+          assert.ok(
+            values.some((value) => Array.isArray(value) && value.join('/') === 'applicationPort')
+          );
+          for (const ref of document.references) {
+            assert.ok(values.includes(JSON.stringify(ref.to)));
+            entry.row.raw_manifest.commandQueryRails[ref.index].applicationPort = ref.to;
+            entry.row.raw_rail.applicationPort = ref.to;
+          }
+        } else if (sql.includes('jsonb_set')) {
           const patch = JSON.parse(
             values.find(
               (value) => typeof value === 'string' && value.startsWith('{"referenceOnly":')

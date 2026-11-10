@@ -1,4 +1,7 @@
-/** Owned concern: atomically reconcile catalog metadata with Git proof and audited CAS. */
+/** Owned concern: atomically reconcile catalog metadata with Git proof and audited CAS.
+ * Why: committed source ownership must be proved before updating catalog leaves.
+ * Corner: changed evidence or authority rolls back the complete transaction.
+ */
 const path = require('node:path');
 const fs = require('node:fs');
 const { execFileSync } = require('node:child_process');
@@ -17,6 +20,7 @@ const {
 const {
   buildCurrentDocumentSql,
   historicalDocumentTarget,
+  applicationPortTarget,
 } = require('./catalog-current-document.cjs');
 const {
   validateImplementationReferenceRelocation,
@@ -108,9 +112,100 @@ function verifyCurrentSourceContent(source, expectedPath, options = {}) {
   };
 }
 
+function verifySourceDeclaration(endpoint, proof, options, current) {
+  const repoRoot = options.repoRoot || path.resolve(__dirname, '..', '..');
+  const bytes = execFileSync('git', ['cat-file', 'blob', proof.blob], {
+    cwd: repoRoot,
+    env: createGitRepositoryEnvironment(),
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (current) {
+    const staged = execFileSync(
+      'git',
+      ['--literal-pathspecs', 'ls-files', '--stage', '-z', '--', endpoint.path],
+      {
+        cwd: repoRoot,
+        env: createGitRepositoryEnvironment(),
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+    if (
+      !new RegExp(`^100(?:644|755) ${proof.blob} 0\\t`, 'u').test(staged) ||
+      staged.split('\0').length !== 2 ||
+      !fs.readFileSync(path.resolve(repoRoot, endpoint.path)).equals(bytes)
+    )
+      throw new Error(
+        'CATALOG-IMPLEMENTATION-SOURCE: Target index and working bytes must match the committed blob.'
+      );
+  }
+  const facts = readSourceCodeFacts({ path: endpoint.path, content: bytes.toString('utf8') });
+  const matches = facts.declarations.filter((fact) => fact.qualifiedName === endpoint.symbol);
+  if (matches.length !== 1 || !matches[0].linkable || matches[0].kind === 'alias')
+    throw new Error(
+      'CATALOG-IMPLEMENTATION-DECLARATION: One actual linkable declaration required, not an export alias.'
+    );
+  const fact = matches[0];
+  if (['function', 'arrow_function', 'method', 'class'].includes(fact.kind)) {
+    if (!fact.implemented)
+      throw new Error('CATALOG-IMPLEMENTATION-STUB: A real implementation is required.');
+    if (fact.body) {
+      const meaningful = ts.isBlock(fact.body)
+        ? fact.body.statements.filter(
+            (statement) =>
+              !ts.isEmptyStatement(statement) &&
+              !(ts.isExpressionStatement(statement) && ts.isStringLiteral(statement.expression))
+          )
+        : [fact.body];
+      if (
+        !meaningful.length ||
+        (meaningful.length === 1 &&
+          (/^(?:return\s*(?:undefined|void\s+0)?\s*;?|undefined|void\s+0)$/u.test(
+            meaningful[0].getText(fact.source).trim()
+          ) ||
+            /^(?:throw\s+new\s+Error\s*\(\s*['"](?:not implemented|todo|stub)[^'"]*['"]\s*\)\s*;?)$/iu.test(
+              meaningful[0].getText(fact.source).trim()
+            )))
+      )
+        throw new Error(
+          'CATALOG-IMPLEMENTATION-STUB: Empty or placeholder function is not a relocation target.'
+        );
+    }
+  } else if (fact.kind === 'variable' && fact.node) {
+    if (
+      !fact.node.initializer ||
+      ts.isIdentifier(fact.node.initializer) ||
+      ts.isPropertyAccessExpression(fact.node.initializer) ||
+      ts.isElementAccessExpression(fact.node.initializer)
+    )
+      throw new Error(
+        'CATALOG-IMPLEMENTATION-DECLARATION: A constant must remain an initialized declaration, not an alias.'
+      );
+  }
+  return {
+    kind: fact.kind,
+    implemented: fact.implemented === true,
+    blob: proof.blob,
+    contentSha256: sha256Hex(bytes),
+    head: proof.head,
+  };
+}
+
+function verifyApplicationPortTarget(target, options = {}) {
+  const proof = verifyCurrentSourceContent(target, target.path, options);
+  const declaration = verifySourceDeclaration(target, proof, options, true);
+  if (
+    !['function', 'arrow_function', 'method', 'class'].includes(declaration.kind) ||
+    !declaration.implemented
+  )
+    throw new Error('CATALOG-DOCUMENT: Application port must be an implemented declaration.');
+  return { ...proof, ...declaration, symbol: target.symbol };
+}
+
 function verifyImplementationReferenceRelocationSources(relocation, options = {}) {
   validateImplementationReferenceRelocation(relocation);
-  const repoRoot = options.repoRoot || path.resolve(__dirname, '..', '..');
   const declarations = [];
   const proven = new Set();
   for (const selector of relocation.selectors) {
@@ -124,82 +219,7 @@ function verifyImplementationReferenceRelocationSources(relocation, options = {}
         index === 0
           ? verifyHistoricalSource(source, endpoint.path, { ...options, requireAbsent: false })
           : verifyCurrentSourceContent(source, endpoint.path, options);
-      const bytes = execFileSync('git', ['cat-file', 'blob', proof.blob], {
-        cwd: repoRoot,
-        env: createGitRepositoryEnvironment(),
-        encoding: null,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        maxBuffer: 16 * 1024 * 1024,
-      });
-      if (index === 1) {
-        const staged = execFileSync(
-          'git',
-          ['--literal-pathspecs', 'ls-files', '--stage', '-z', '--', endpoint.path],
-          {
-            cwd: repoRoot,
-            env: createGitRepositoryEnvironment(),
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'pipe'],
-          }
-        );
-        if (
-          !new RegExp(`^100(?:644|755) ${proof.blob} 0\\t`, 'u').test(staged) ||
-          staged.split('\0').length !== 2 ||
-          !fs.readFileSync(path.resolve(repoRoot, endpoint.path)).equals(bytes)
-        )
-          throw new Error(
-            'CATALOG-IMPLEMENTATION-SOURCE: Target index and working bytes must match the committed blob.'
-          );
-      }
-      const facts = readSourceCodeFacts({ path: endpoint.path, content: bytes.toString('utf8') });
-      const matches = facts.declarations.filter((fact) => fact.qualifiedName === endpoint.symbol);
-      if (matches.length !== 1 || !matches[0].linkable || matches[0].kind === 'alias')
-        throw new Error(
-          'CATALOG-IMPLEMENTATION-DECLARATION: One actual linkable declaration required, not an export alias.'
-        );
-      const fact = matches[0];
-      if (['function', 'arrow_function', 'method', 'class'].includes(fact.kind)) {
-        if (!fact.implemented)
-          throw new Error('CATALOG-IMPLEMENTATION-STUB: A real implementation is required.');
-        if (fact.body) {
-          const meaningful = ts.isBlock(fact.body)
-            ? fact.body.statements.filter(
-                (statement) =>
-                  !ts.isEmptyStatement(statement) &&
-                  !(ts.isExpressionStatement(statement) && ts.isStringLiteral(statement.expression))
-              )
-            : [fact.body];
-          if (
-            !meaningful.length ||
-            (meaningful.length === 1 &&
-              (/^(?:return\s*(?:undefined|void\s+0)?\s*;?|undefined|void\s+0)$/u.test(
-                meaningful[0].getText(fact.source).trim()
-              ) ||
-                /^(?:throw\s+new\s+Error\s*\(\s*['"](?:not implemented|todo|stub)[^'"]*['"]\s*\)\s*;?)$/iu.test(
-                  meaningful[0].getText(fact.source).trim()
-                )))
-          )
-            throw new Error(
-              'CATALOG-IMPLEMENTATION-STUB: Empty or placeholder function is not a relocation target.'
-            );
-        }
-      } else if (fact.kind === 'variable' && fact.node) {
-        if (
-          !fact.node.initializer ||
-          ts.isIdentifier(fact.node.initializer) ||
-          ts.isPropertyAccessExpression(fact.node.initializer) ||
-          ts.isElementAccessExpression(fact.node.initializer)
-        )
-          throw new Error(
-            'CATALOG-IMPLEMENTATION-DECLARATION: A constant must remain an initialized declaration, not an alias.'
-          );
-      }
-      resolved.push({
-        kind: fact.kind,
-        blob: proof.blob,
-        contentSha256: sha256Hex(bytes),
-        head: proof.head,
-      });
+      resolved.push(verifySourceDeclaration(endpoint, proof, options, index === 1));
     }
     if (
       resolved[0].kind !== resolved[1].kind ||
@@ -375,16 +395,25 @@ async function applyCatalogReconciliation(input, options = {}) {
           const targetKey = `document-target:${document.commit}:${ref.to}`;
           if (!sourceProofs.has(targetKey)) {
             const historical = historicalDocumentTarget(ref);
+            const port = ref.field === 'applicationPort' && applicationPortTarget(ref.to);
             sourceProofs.set(
               targetKey,
-              historical
-                ? verifyHistoricalSource(historical, ref.from, options)
-                : verifyCurrentSourceContent(
-                    { commit: document.commit, path: ref.to },
-                    ref.to,
-                    options
-                  )
+              port
+                ? verifyApplicationPortTarget({ commit: document.commit, ...port }, options)
+                : historical
+                  ? verifyHistoricalSource(historical, ref.from, options)
+                  : verifyCurrentSourceContent(
+                      { commit: document.commit, path: ref.to },
+                      ref.to,
+                      options
+                    )
             );
+          }
+          if (ref.field === 'applicationPort') {
+            const proof = sourceProofs.get(key);
+            proof.applicationPorts ??= [];
+            const target = sourceProofs.get(targetKey);
+            if (!proof.applicationPorts.includes(target)) proof.applicationPorts.push(target);
           }
         }
       }
@@ -467,7 +496,7 @@ async function applyCatalogReconciliation(input, options = {}) {
         entry.documentaryTargets = currentDocument.references.map((ref) =>
           sourceProofs.get(`document-target:${currentDocument.commit}:${ref.to}`)
         );
-        const columns = buildCurrentDocumentSql(currentDocument, { bind, beforeSnapshot });
+        const columns = buildCurrentDocumentSql(currentDocument, { bind, beforeSnapshot, before });
         for (const [column, expression] of Object.entries(columns)) {
           assignments.push(`${column} = ${expression}`);
           preserved.push(`${column} = (${expression})`);
@@ -607,6 +636,15 @@ async function applyCatalogReconciliation(input, options = {}) {
             'CATALOG-IMPLEMENTATION-PROOF: Target proof changed during reconciliation.'
           );
       }
+      for (const proof of sourceProofs.values()) {
+        if (
+          proof.symbol &&
+          catalogRowHash(verifyApplicationPortTarget(proof, options)) !== catalogRowHash(proof)
+        )
+          throw new Error(
+            'CATALOG-DOCUMENT: Application-port proof changed during reconciliation.'
+          );
+      }
       const head = execFileSync('git', ['rev-parse', '--verify', 'HEAD^{commit}'], {
         cwd: options.repoRoot || path.resolve(__dirname, '..', '..'),
         env: createGitRepositoryEnvironment(),
@@ -636,4 +674,5 @@ module.exports = {
   verifyEvidenceRetirementHistory,
   verifyCurrentSourceContent,
   verifyImplementationReferenceRelocationSources,
+  verifyApplicationPortTarget,
 };

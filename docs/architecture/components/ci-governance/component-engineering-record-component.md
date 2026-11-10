@@ -727,6 +727,58 @@ engine pilot.
 
 > Acceptance scope status: Review. Owner: Engineering / CI Governance / Architecture.
 
+## Current-document application ports
+
+The prospective admission
+[#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6772782368)
+extends the existing `ReconcileFeatureMechanizationCatalog` current-document
+selector. Two mandatory proposals still supply twelve imported source rows;
+their closed feature manifests are current consumers despite the proposal's
+Review frontmatter. The prepush manifest points two application ports at the
+CLI rather than the actual plan module. Updating only the source hash would
+leave those consumers stale. A local override would change authority, and a
+compatibility facade would preserve the wrong responsibility boundary.
+
+```mermaid
+flowchart LR
+  Old[Current document and stored ports name the old CLI] --> Gap[Symbol relocation cannot correct port fields]
+  Document[Exact committed feature manifest] --> Selector[Closed applicationPort selector]
+  Code[Actual committed target declaration] --> Selector
+  Selector --> CAS[Existing locked full-row comparison]
+  CAS --> Leaves[Only declared port leaves and source hash change]
+  Leaves --> Same[Same rail identity, status, evidence and canonical winners]
+```
+
+Owned concern: reconcile the declared application-port location from the current
+canonical document without replacing rail semantics. A reference may use
+`{field: applicationPort, index, from, to}`. The index selects an existing
+`commandQueryRails` entry; both literals are a repository JS/TS path followed by
+the same qualified symbol. Only the path may change. The committed feature,
+rail identity and remaining rail properties must match the existing manifest.
+Every changed port in that committed feature needs its exact selector.
+When that feature manifest exists, a hash-only request cannot conceal a missing,
+replaced or resized port catalog. Ordinary documentary hash refreshes without
+an embedded feature manifest retain their existing behavior.
+
+The destination literal must equal the committed manifest and resolve to one
+real, linkable implemented declaration at that same HEAD. Existing Git and
+SourceFacts proof rejects aliases, stubs and dirty, untracked or nonregular
+targets; proof is rechecked before commit. The patch changes the selected
+`raw_manifest.commandQueryRails[index].applicationPort` in each affected row.
+It changes `raw_rail.applicationPort` only when that entry matches the row's
+own name/type identity, with an exact existing port mirror. It never changes
+name, type, status, ownership, symbols, cycles or canonical winner identities.
+
+The existing JSONB leaf writer, full-row CAS, locks, scope checks, transaction,
+audit and replay rules remain in force. No arbitrary JSON pointer, local
+promotion or parallel operator is introduced. Reject missing proof, stale or
+duplicate selections, omitted changed ports, a different symbol/rail identity,
+source drift and unexpected canonical changes. Tests cover those refusals,
+lossless leaves, rollback and identical replay before native application.
+Historical cycle patch surfaces retain their original meaning. Proven absent
+declarations use the existing exact evidence-retirement rail; they receive no
+invented destination or compatibility alias.
+
 ## Lossless implementation-reference relocation
 
 `RecordFeatureMechanizationRail` uses its existing catalog-reconciliation mode
