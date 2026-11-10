@@ -24,32 +24,9 @@ const policyPath = 'tools/ci/policy/adapter-postgres-relevance.json';
 const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
 const workflowScopePolicyPath = 'tools/ci/policy/workflow-scope.json';
 const workflowScopePolicy = JSON.parse(readFileSync(workflowScopePolicyPath, 'utf8'));
-const PR_QUALITY_GOVERNANCE_COMMANDS = [
-  'pnpm docs:gov:filenames:changed',
-  'pnpm docs:gov:frontmatter:changed',
-  'pnpm docs:governance:unit-coverage',
-  'pnpm traceability:adr0',
-  'pnpm docs:feature-mechanization',
-  'pnpm qa:artifact:check',
-  'pnpm arch:deps',
-];
+
 const DRAFT_AWARE_PR_TYPES =
   'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
-
-test('changed-file CI builds its canonical hash dependency before loading the checker', () => {
-  const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
-  const steps = workflow.jobs['pr-checks'].steps;
-  const checkerIndex = steps.findIndex((step) =>
-    step.run?.includes('node scripts/check-changed.cjs')
-  );
-  const setupIndex = steps.findIndex((step) => step.uses === './.github/actions/setup-node-pnpm');
-  assert.ok(setupIndex >= 0 && setupIndex < checkerIndex);
-  assert.deepEqual(
-    steps[checkerIndex].run.trim().split(/\s*&&\s*/u),
-    ['pnpm --filter @dvt/crypto build', 'node scripts/check-changed.cjs'],
-    'the checker must not run if its workspace dependency build fails'
-  );
-});
 
 test('every scope consumer acquires its committed diff once through the shared entrypoint', () => {
   for (const name of ['ci', 'test', 'contracts', 'pr-quality-gate', 'codeql']) {
@@ -94,49 +71,6 @@ test('CodeQL consumes shared scope for PR, push, manual and scheduled events', (
     }
   }
   assert.throws(() => evaluate({ workflow_scope: '' }));
-});
-
-test('combined scope preserves PR-only integration selection and manual opt-ins', () => {
-  const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
-  const outputs = workflow.jobs['pr-checks'].outputs;
-  const keys = [
-    'temporal_changed',
-    'temporal_transformation_changed',
-    'temporal_postgres_changed',
-    'adapter_postgres_changed',
-  ];
-  for (const event of ['pull_request', 'push', 'workflow_dispatch']) {
-    for (const selected of [true, false]) {
-      for (const manual of [true, false]) {
-        const selectedScope = Object.fromEntries(keys.map((key) => [key, selected]));
-        const manualOutputs = Object.fromEntries(
-          keys.map((key) => [
-            key,
-            key !== 'adapter_postgres_changed' && event === 'workflow_dispatch' && manual
-              ? 'true'
-              : '',
-          ])
-        );
-        for (const key of keys) {
-          const expression = outputs[key].replace(/^\s*\$\{\{\s*|\s*\}\}\s*$/gu, '');
-          const actual = runInNewContext(expression, {
-            github: { event_name: event },
-            steps: {
-              scope: { outputs: { pr_quality_scope: JSON.stringify(selectedScope) } },
-              wd_scope: { outputs: manualOutputs },
-            },
-            fromJSON: JSON.parse,
-            toJSON: JSON.stringify,
-          });
-          assert.equal(
-            actual,
-            event === 'pull_request' ? String(selected) : manualOutputs[key],
-            `${event}:${selected}:${manual}:${key}`
-          );
-        }
-      }
-    }
-  }
 });
 
 test('Turbo cache uses a fresh writer key and a stable per-producer restore prefix', () => {
@@ -218,14 +152,6 @@ function listYamlFiles(directory) {
     }
     return /\.ya?ml$/u.test(entry.name) ? [entryPath] : [];
   });
-}
-
-function namedWorkflowStep(workflow, name) {
-  const marker = `      - name: ${name}`;
-  const start = workflow.indexOf(marker);
-  assert.notEqual(start, -1, `workflow must contain step: ${name}`);
-  const next = workflow.indexOf('\n      - name:', start + marker.length);
-  return workflow.slice(start, next === -1 ? workflow.length : next);
 }
 
 test('adapter-postgres policy stays wired into the PR quality gate and test workflow', () => {
@@ -329,11 +255,13 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     .jobs['pr-checks'].steps.find((step) => step.run?.includes('node scripts/check-changed.cjs'));
   assert.ok(
     lintStep.if.includes(
-      'fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true'
+      'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).changed_file_validation_relevant == true'
     )
   );
   assert.ok(
-    lintStep.if.includes('fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true')
+    lintStep.if.includes(
+      'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true'
+    )
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm lint:md:changed');
   assertWorkflowContains(prQualityGate, 'run: pnpm verify:changed --committed-tests');
@@ -344,7 +272,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   );
   assertWorkflowContains(
     prQualityGate,
-    'fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
+    'fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:inventory:check');
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check --bootstrap');
@@ -394,11 +322,6 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
       ...EXECUTABLE_CI_TOOL_TESTS,
     ],
   });
-});
-
-test('PR quality does not materialize human documentation indexes', () => {
-  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-  assertWorkflowExcludes(prQualityGate, 'pnpm docs:sync:check');
 });
 
 test('contracts and test workflows consume semantic scope outputs instead of inline filters', () => {
@@ -497,20 +420,6 @@ test('engine coverage scope is a semantic superset of engine workspace policy', 
   for (const path of engineCoverageCanaries) {
     assert.ok(matchesAnyPattern(path, workflowScopePolicy.workspace_engine));
     assert.ok(matchesAnyPattern(path, TEST_SCOPE_PATTERNS.coverage_relevant));
-  }
-});
-
-test('PR quality gate keeps merge-blocking non-projection governance commands wired', () => {
-  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-
-  assertWorkflowContains(prQualityGate, 'pnpm docs:gov:locations -- --changed-only');
-  assert.doesNotMatch(
-    prQualityGate,
-    /if:\s*github\.event_name == 'pull_request'[^\n]*steps\.scope\.outputs\.docs_changed[^\n]*\n\s*run: pnpm docs:gov:locations\n/u
-  );
-
-  for (const command of PR_QUALITY_GOVERNANCE_COMMANDS) {
-    assertWorkflowContains(prQualityGate, command);
   }
 });
 
@@ -715,85 +624,6 @@ test('code quality workflow exposes a stable merge-blocking outcome', () => {
     }
   }
   assert.notEqual(assess({ eventName: 'schedule' }).length, 0);
-});
-
-test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {
-  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-
-  assertWorkflowContains(
-    prQualityGate,
-    'fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant'
-  );
-  assertWorkflowContains(
-    prQualityGate,
-    'fromJSON(steps.scope.outputs.workflow_scope).traceability_adr0_relevant'
-  );
-  assertWorkflowContains(
-    prQualityGate,
-    'fromJSON(steps.scope.outputs.workflow_scope).feature_mechanization_relevant'
-  );
-  assertWorkflowContains(
-    prQualityGate,
-    'fromJSON(steps.scope.outputs.workflow_scope).code_validation_relevant'
-  );
-});
-
-test('PR quality gate prepares planning DB for its remaining DB-backed consumers', () => {
-  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-  const preparePlanningDbAction = readFileSync(
-    '.github/actions/prepare-planning-db/action.yml',
-    'utf8'
-  );
-  const prepareDbStep = namedWorkflowStep(
-    prQualityGate,
-    'Prepare planning DB for DB-backed validation'
-  );
-  const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
-  const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
-  const inventoryGateIndex = prQualityGate.indexOf('pnpm planning:db:inventory:check');
-
-  assert.notEqual(prepareDbIndex, -1);
-  assert.notEqual(prepareDbActionIndex, -1);
-  assert.notEqual(inventoryGateIndex, -1);
-  assert.ok(prepareDbIndex < prepareDbActionIndex);
-  assert.ok(prepareDbActionIndex < inventoryGateIndex);
-  assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
-  assertWorkflowExcludes(prepareDbStep, 'feature_mechanization_relevant');
-  assertWorkflowContains(
-    prepareDbStep,
-    'fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
-  );
-  assertWorkflowContains(
-    prepareDbStep,
-    'fromJSON(steps.scope.outputs.workflow_scope).docs_structure_changed == true'
-  );
-  assertWorkflowContains(
-    prepareDbStep,
-    'fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true'
-  );
-  assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
-  assertWorkflowExcludes(prQualityGate, 'DVT_GIT_EVIDENCE_REPO');
-  assert.doesNotMatch(prQualityGate, /import-governance:/u);
-  assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
-  const cryptoBuildIndex = preparePlanningDbAction.indexOf('pnpm --filter @dvt/crypto build');
-  const schemaLoadIndex = preparePlanningDbAction.indexOf('node scripts/planning-db-schema.cjs');
-  const planningImportIndex = preparePlanningDbAction.indexOf('pnpm planning:db:import');
-  assert.notEqual(cryptoBuildIndex, -1);
-  assert.notEqual(schemaLoadIndex, -1);
-  assert.ok(cryptoBuildIndex < schemaLoadIndex, 'build crypto before its first schema consumer');
-  assert.ok(cryptoBuildIndex < planningImportIndex);
-  assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
-  assert.equal(
-    countWorkflowCommand(
-      prepareDbStep,
-      'fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true'
-    ),
-    1,
-    'governance scope must activate the single current-schema preparation action'
-  );
-  assertWorkflowContains(prQualityGate, 'GIT_BASE:');
-  assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
-  assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
 });
 
 test('the canonical docs sync rail consumes existing Planning DB authority without importing', () => {

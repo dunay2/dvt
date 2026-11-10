@@ -1,3 +1,6 @@
+# Owned concern: schedule scoped PR proofs and require their actual outcomes.
+# Why: independent integrations consume scope rather than completed governance work.
+# Corner: missing scope or skipped selected evidence must reject the required result.
 name: PR Quality Gate
 
 on:
@@ -38,27 +41,54 @@ permissions:
   pull-requests: read
 
 jobs:
+  detect-pr-scope:
+    name: Detect PR Quality scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    outputs:
+      workflow_scope: ${{ steps.scope.outputs.workflow_scope }}
+      pr_quality_scope: ${{ steps.scope.outputs.pr_quality_scope }}
+      temporal_changed:
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_changed) || github.event_name
+        == 'workflow_dispatch' && github.event.inputs.run_temporal_integration || 'false' }}
+      temporal_transformation_changed:
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_transformation_changed) ||
+        github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.run_temporal_transformation_integration || 'false' }}
+      temporal_postgres_changed:
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_postgres_changed) ||
+        github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.run_temporal_postgres_integration || 'false' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Validate adapter-postgres policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
+
+      - name: Detect workflow scope
+        id: scope
+        run: node tools/ci/emit-scope.mjs
+        env:
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
+          GIT_HEAD: ${{ github.sha }}
+
   pr-checks:
     name: PR Quality Checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: [detect-pr-scope]
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
-    outputs:
-      temporal_changed:
-        ${{ github.event_name == 'pull_request' &&
-        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_changed) ||
-        steps.wd_scope.outputs.temporal_changed }}
-      temporal_transformation_changed:
-        ${{ github.event_name == 'pull_request' &&
-        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_transformation_changed) ||
-        steps.wd_scope.outputs.temporal_transformation_changed }}
-      temporal_postgres_changed:
-        ${{ github.event_name == 'pull_request' &&
-        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_postgres_changed) ||
-        steps.wd_scope.outputs.temporal_postgres_changed }}
-      adapter_postgres_changed:
-        ${{ github.event_name == 'pull_request' &&
-        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).adapter_postgres_changed) || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -87,19 +117,6 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
 
-      - name: Validate workflow scope policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
-
-      - name: Detect workflow scope
-        id: scope
-        run: node tools/ci/emit-scope.mjs
-        env:
-          GIT_BASE: ${{ github.event.pull_request.base.sha }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Validate adapter-postgres policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
-
       - name: Enforce forbidden generated files policy
         run: node scripts/check-forbidden-tracked-files.cjs
 
@@ -121,8 +138,8 @@ jobs:
       - name: Validate changed file format and lint
         if:
           github.event_name == 'pull_request' &&
-          (fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true ||
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true)
+          (fromJSON(needs.detect-pr-scope.outputs.workflow_scope).changed_file_validation_relevant
+          == true || fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true)
         run: pnpm --filter @dvt/crypto build && node scripts/check-changed.cjs
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -131,7 +148,7 @@ jobs:
       - name: Lint changed Markdown
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true
         run: pnpm lint:md:changed
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -140,7 +157,8 @@ jobs:
       - name: Run focused committed-diff tests
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).changed_file_validation_relevant ==
+          true
         run: pnpm verify:changed --committed-tests
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -158,19 +176,19 @@ jobs:
         run: ARC_JSON=arc.json node tools/ci/doc-check.mjs
         env:
           DOCS_ONLY_SCOPE:
-            ${{ fromJSON(steps.scope.outputs.workflow_scope).any_code != true &&
-            fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true }}
+            ${{ fromJSON(needs.detect-pr-scope.outputs.workflow_scope).any_code != true &&
+            fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true }}
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Prepare planning DB for DB-backed validation
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true ||
-          fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true ||
-          fromJSON(steps.scope.outputs.workflow_scope).docs_structure_changed == true)) ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
-          'true')
+          (fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant ==
+          true || fromJSON(needs.detect-pr-scope.outputs.workflow_scope).governance_global_relevant
+          == true || fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_structure_changed
+          == true)) || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
         env:
           GIT_BASE:
@@ -181,13 +199,15 @@ jobs:
       - name: Validate Planning DB inventory for committed changes
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant ==
+          true
         run: pnpm planning:db:inventory:check
 
       - name: Validate Planning DB integrity for committed changes
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant ==
+          true
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
@@ -208,7 +228,7 @@ jobs:
       - name: Enforce changed Markdown location policy
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:locations -- --changed-only
 
       - name: Enforce Markdown location policy
@@ -226,19 +246,19 @@ jobs:
       - name: Enforce changed docs filename policy
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:filenames:changed
 
       - name: Enforce changed docs frontmatter policy
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:frontmatter:changed
 
       - name: Enforce changed docs links
         if:
           github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:links:changed
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -247,11 +267,11 @@ jobs:
       - name: Validate governance unit coverage
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true ||
-          fromJSON(steps.scope.outputs.workflow_scope).governance_tooling_changed == true ||
-          fromJSON(steps.scope.outputs.workflow_scope).root_build_sensitive == true)) ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
-          'true')
+          (fromJSON(needs.detect-pr-scope.outputs.workflow_scope).governance_global_relevant == true
+          || fromJSON(needs.detect-pr-scope.outputs.pr_quality_scope).governance_tooling_changed ==
+          true || fromJSON(needs.detect-pr-scope.outputs.pr_quality_scope).root_build_sensitive ==
+          true)) || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:unit-coverage
 
       - name: Build Git governance runtime dependency
@@ -268,24 +288,25 @@ jobs:
       - name: Validate feature mechanization manifests
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).feature_mechanization_relevant == true) ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
-          'true')
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).feature_mechanization_relevant ==
+          true) || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization
 
       - name: ADR-0000 traceability gate
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).traceability_adr0_relevant == true) ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).traceability_adr0_relevant == true)
+          || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
           'true')
         run: pnpm traceability:adr0
 
       - name: Validate QA artifacts
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true) || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          'true')
         run: pnpm qa:artifact:check
 
       - name: Fetch architecture push comparison base
@@ -299,8 +320,8 @@ jobs:
       - name: Validate architecture dependency boundaries
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          fromJSON(steps.scope.outputs.workflow_scope).code_validation_relevant == true) ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).code_validation_relevant == true)
+          || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
           'true')
         run: pnpm arch:deps
         env:
@@ -309,30 +330,13 @@ jobs:
             github.event_name == 'push' && github.event.before || 'origin/main' }}
           GIT_HEAD: ${{ github.sha }}
 
-      - name: Set temporal_changed for workflow_dispatch
-        id: wd_scope
-        if:
-          github.event_name == 'workflow_dispatch' && (github.event.inputs.run_temporal_integration
-          == 'true' || github.event.inputs.run_temporal_transformation_integration == 'true' ||
-          github.event.inputs.run_temporal_postgres_integration == 'true')
-        run: |
-          if [[ "${{ github.event.inputs.run_temporal_integration }}" == "true" ]]; then
-            echo "temporal_changed=true" >> $GITHUB_OUTPUT
-          fi
-          if [[ "${{ github.event.inputs.run_temporal_transformation_integration }}" == "true" ]]; then
-            echo "temporal_transformation_changed=true" >> $GITHUB_OUTPUT
-          fi
-          if [[ "${{ github.event.inputs.run_temporal_postgres_integration }}" == "true" ]]; then
-            echo "temporal_postgres_changed=true" >> $GITHUB_OUTPUT
-          fi
-
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [pr-checks]
+    needs: [detect-pr-scope]
     if: >-
-      needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name !=
+      needs.detect-pr-scope.outputs.temporal_changed == 'true' && (github.event_name !=
       'workflow_dispatch' ||
        github.event.inputs.run_temporal_integration == 'true')
     steps:
@@ -357,9 +361,9 @@ jobs:
     name: PostgreSQL adapters and object-file integration
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [pr-checks]
+    needs: [detect-pr-scope]
     if: >-
-      needs.pr-checks.outputs.temporal_postgres_changed == 'true' && (github.event_name !=
+      needs.detect-pr-scope.outputs.temporal_postgres_changed == 'true' && (github.event_name !=
       'workflow_dispatch' ||
        github.event.inputs.run_temporal_postgres_integration == 'true')
     services:
@@ -407,10 +411,14 @@ jobs:
       - name: Provision non-bypass Postgres app role
         run: node scripts/provision-postgres-app-role.cjs
 
+      - name: Prepare HET1 worker runtime dependencies
+        run: node scripts/build-workspace-runtime-deps.cjs dvt-temporal-worker
+
       - name: Prove adapter-postgres app-role runtime and direct RLS
         run:
-          pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
-          PostgresTenantRlsEnforcement.integration.test.ts
+          pnpm --filter @dvt/adapter-postgres exec vitest run --config vitest.config.ts
+          test/PostgresAppRoleRuntime.integration.test.ts
+          test/PostgresTenantRlsEnforcement.integration.test.ts
 
       - name: Start HET1 object-store and Temporal services
         run: |
@@ -435,9 +443,6 @@ jobs:
           docker logs dvt-het1-temporal
           exit 1
 
-      - name: Prepare HET1 worker runtime dependencies
-        run: node scripts/build-workspace-runtime-deps.cjs dvt-temporal-worker
-
       - name: Prove object-file to PostgreSQL worker vertical
         run: >-
           pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts
@@ -447,10 +452,10 @@ jobs:
     name: Temporal adapter integration (transformation runtime)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [pr-checks]
+    needs: [detect-pr-scope]
     if: >-
-      needs.pr-checks.outputs.temporal_transformation_changed == 'true' && (github.event_name !=
-      'workflow_dispatch' ||
+      needs.detect-pr-scope.outputs.temporal_transformation_changed == 'true' && (github.event_name
+      != 'workflow_dispatch' ||
        github.event.inputs.run_temporal_transformation_integration == 'true')
     steps:
       - name: Checkout
@@ -476,6 +481,7 @@ jobs:
     timeout-minutes: 5
     needs:
       [
+        detect-pr-scope,
         pr-checks,
         temporal-integration,
         temporal-transformation-integration,
@@ -488,13 +494,71 @@ jobs:
         with:
           script: |
             const jobs = ${{ toJSON(needs) }};
-            // Consider only explicit failures as blocking; ignore skipped/neutral jobs
-            const failedJobs = Object.entries(jobs)
-              .filter(([_, job]) => ['failure', 'cancelled'].includes(job.result))
-              .map(([name, _]) => name);
-
-            if (failedJobs.length > 0) {
-              core.setFailed(`❌ The following checks failed: ${failedJobs.join(', ')}`);
-            } else {
-              core.info('✅ All PR quality checks passed!');
+            const failures = [];
+            const isPr = context.eventName === 'pull_request';
+            const draft = isPr && context.payload.pull_request?.draft === true;
+            if (!['pull_request', 'push', 'workflow_dispatch'].includes(context.eventName)) {
+              failures.push(`Unsupported event: ${context.eventName}`);
             }
+            if (isPr && typeof context.payload.pull_request?.draft !== 'boolean') {
+              failures.push('Missing pull-request draft posture');
+            }
+            const outputs = jobs['detect-pr-scope']?.outputs ?? {};
+            const scopes = {};
+            if (!draft) {
+              for (const name of ['workflow_scope', 'pr_quality_scope']) {
+                try {
+                  const parsed = JSON.parse(outputs[name]);
+                  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    throw new Error('Expected scope object');
+                  }
+                  scopes[name] = parsed;
+                } catch {
+                  failures.push(`Invalid scope: ${name}`);
+                }
+              }
+              for (const key of ['any_code', 'changed_file_validation_relevant', 'docs_changed',
+                'planning_db_inventory_relevant', 'governance_global_relevant',
+                'docs_structure_changed',
+                'feature_mechanization_relevant', 'traceability_adr0_relevant',
+                'code_validation_relevant']) {
+                if (typeof scopes.workflow_scope?.[key] !== 'boolean') {
+                  failures.push(`Invalid workflow scope: ${key}`);
+                }
+              }
+              for (const key of ['governance_tooling_changed', 'root_build_sensitive']) {
+                if (typeof scopes.pr_quality_scope?.[key] !== 'boolean') {
+                  failures.push(`Invalid PR Quality scope: ${key}`);
+                }
+              }
+            }
+            const required = { 'detect-pr-scope': !draft, 'pr-checks': !draft };
+            for (const [job, key, input] of [
+              ['temporal-integration', 'temporal_changed', 'run_temporal_integration'],
+              ['temporal-transformation-integration', 'temporal_transformation_changed',
+                'run_temporal_transformation_integration'],
+              ['temporal-postgres-integration', 'temporal_postgres_changed',
+                'run_temporal_postgres_integration'],
+            ]) {
+              const manual = String(context.payload.inputs?.[input] ?? 'false');
+              const selected = isPr ? scopes.pr_quality_scope?.[key]
+                : context.eventName === 'workflow_dispatch' && manual === 'true';
+              if (!draft && (typeof scopes.pr_quality_scope?.[key] !== 'boolean'
+                || !['true', 'false'].includes(outputs[key])
+                || outputs[key] !== String(selected)
+                || (context.eventName === 'workflow_dispatch'
+                  && !['true', 'false'].includes(manual)))) {
+                failures.push(`Invalid integration scope: ${key}`);
+              }
+              required[job] = !draft && selected === true;
+            }
+            for (const [job, selected] of Object.entries(required)) {
+              const expected = selected ? 'success' : 'skipped';
+              if (jobs[job]?.result !== expected) {
+                failures.push(`${job}: expected ${expected}, got ${jobs[job]?.result}`);
+              }
+            }
+            for (const job of Object.keys(jobs)) {
+              if (!(job in required)) failures.push(`Unclassified result: ${job}`);
+            }
+            if (failures.length) core.setFailed(failures.join('; '));

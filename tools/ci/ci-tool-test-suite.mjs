@@ -47,6 +47,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/generated-docs-single-writer-policy.test.mjs',
   'tools/ci/github-collaboration-governance.test.mjs',
   'tools/ci/package-test-matrix.test.mjs',
+  'tools/ci/pr-quality-workflow-contract.test.mjs',
   'tools/ci/precommit-hook-wiring.test.mjs',
   'tools/ci/risk-document-colocation.test.mjs',
   'tools/ci/run-web-cypress-native.test.mjs',

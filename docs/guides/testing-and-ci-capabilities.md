@@ -1105,6 +1105,70 @@ GitHub does not independently enforce this local control. Repository manifest
 validation is DB-free and does not alone trigger CI database preparation; other
 DB-backed governance checks retain their existing preparation.
 
+## Independent PR Quality Integrations
+
+[GH-3765's admitted scheduling cut](https://github.com/dunay2/dvt/issues/3765#issuecomment-6779547814)
+keeps the existing `EmitWorkflowCapabilityScopes` and
+`ValidateTestSuiteEvidenceResult` queries. PR Quality's integration jobs consume
+scope flags; they do not consume the completed governance job's artifacts or DB.
+Run 42895601852 finished scope at 20:28:29Z but delayed integrations until
+20:32:30/31Z behind 244 seconds of unrelated checks.
+
+```mermaid
+flowchart LR
+  Before[Scope inside PR checks] --> Serial[Completed governance checks]
+  Serial --> Delayed[Integration proofs]
+  Scope[One fast scope job] --> Checks[PR Quality Checks]
+  Scope --> Proofs[Independently selected integrations]
+  Scope --> Result[Existing All Checks required aggregate]
+  Checks --> Result
+  Proofs --> Result
+```
+
+The fast job runs the existing policy validation and scope emitter once, without
+dependency installation. PR checks and the three integration jobs consume its
+outputs directly. There is no second path classifier or compatibility output
+step. PR metadata remains checked before dependency installation in PR checks;
+invalid metadata still rejects the aggregate even if independent proof work has
+already started. Ready PRs retain semantic selection, drafts explicitly justify
+skips, pushes retain the current governance posture without opening these three
+integrations, and manual runs retain each independent integration opt-in.
+
+Governance unit coverage also consumes `governance_tooling_changed` and
+`root_build_sensitive` from their actual `pr_quality_scope` projection. Reading
+those fields from `workflow_scope` previously produced undefined values. The
+consumer correction retains the classifier and activates the existing check
+when either real flag requires it, even without global governance scope.
+
+`All Checks Required for Merge` directly needs the detector and every producer.
+Its actual `github-script` body requires successful detection and PR checks,
+valid scope booleans and success from each selected proof. Missing or malformed
+scope, failed/cancelled/neutral results, unjustified skips and unsupported events
+reject. A failed detector cannot produce acceptance through downstream skips.
+Only explicit non-selection or draft posture permits a skipped result.
+
+The PostgreSQL proof prepares its existing worker runtime closure once before
+running its two explicit Vitest file filters. This closure includes
+adapter-postgres. Direct `pnpm exec vitest` avoids package pretest recursion and
+does not forward a standalone `--` before those paths. The previous command
+accidentally ran all 47 files and 304 cases, duplicating Test Suite; the intended
+AppRole five and TenantRls eight cases remain real database proofs. Test Suite
+retains the full suite, and the separate object-file worker vertical remains.
+The same MinIO source/Go pins, real services, role provisioning and readiness
+checks are retained. Image caching is a separate concern.
+
+`pr-quality-workflow-contract.test.mjs` owns these scheduling, execution and
+result contracts. It receives the former PR Quality assertions from the general
+workflow parity suite and executes the actual result script with bounded event
+and result inputs. Filename filtering uses the installed Vitest parser. The
+existing CI test catalog discovers the file and keeps it in its executable
+partition; it adds no new test registry or acceptance model.
+
+Measure final hosted wall time, queue, individual steps and runner-minutes.
+The observed Test Suite duration of 454 seconds still limits the complete
+required pipeline: this change does not prove 50 percent against the green
+527-second baseline, whose halfway threshold is 263.5 seconds.
+
 ## Runtime Dependency Preparation Rail
 
 `PrepareWorkspaceRuntimeDependencies` names the existing operational command,
