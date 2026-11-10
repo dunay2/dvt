@@ -126,7 +126,14 @@ describe('Canvas Source Inspector ordering', () => {
     cy.get('[data-slot="canvas-source-provider-icon"] [data-model-icon="model"]').should(
       'be.visible'
     );
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    // Startup may also save the draft; wait for this preference's own persisted payload.
+    cy.wrap(null, { timeout: 20_000 }).should(() => {
+      const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft: ReturnType<typeof normalizeProjectCanvasDraft> } | undefined;
+      expect(
+        request?.draft.nodes.find((node) => node.id === 'source-orders')?.metadata?.modelIcon
+      ).to.equal('model');
+    });
     // Reinstall the transport fixture on the fresh page; retain its saved server record.
     visitCanvas();
     cy.get('.react-flow__node[data-id="source-orders"] [data-model-icon="model"]').should(
