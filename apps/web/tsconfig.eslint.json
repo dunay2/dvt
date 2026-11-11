@@ -1,4 +1,10 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*", "cypress/**/*", "scripts/**/*.ts", "*.config.ts"]
+  "include": [
+    "src/**/*",
+    "cypress/**/*",
+    "scripts/**/*.ts",
+    "*.config.ts",
+    "vitest/**/*.ts"
+  ]
 }

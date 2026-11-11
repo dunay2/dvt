@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 
 import { readRepoFile, webRoot } from './vitestSuites.architecture.support';
 
@@ -29,7 +30,14 @@ describe('web Vitest suite governance documentation', () => {
     expect(webIndex).toContain('Web Vitest changed suite router component');
     expect(userStories).toContain('F-14');
     expect(suiteCatalog).toContain('WEB_VITEST_PRIMARY_SUITE_NAMES');
-    expect(suiteCatalog).toContain('classifyWebVitestFile');
+    const classifier = readFileSync(resolve(webRoot, 'vitest/classification.ts'), 'utf8');
+    expect(classifier).toContain('classifyWebVitestFile');
+    const ast = ts.createSourceFile('vitest.suites.ts', suiteCatalog, ts.ScriptTarget.Latest, true);
+    expect(ast.statements.some(ts.isFunctionDeclaration)).toBe(false);
+    expect(ast.statements.some(ts.isExportDeclaration)).toBe(false);
+    expect(
+      ast.statements.filter(ts.isImportDeclaration).every((node) => node.importClause?.isTypeOnly)
+    ).toBe(true);
     expect(componentGuide).toContain('exactly one primary suite');
     expect(webIndex).toContain('Frontend test governance component');
   });
