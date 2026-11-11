@@ -130,9 +130,10 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       .as('draftBeforeImport', { type: 'static' });
     visitCanvas(session);
 
+    // The rail entry is a link: availability is expressed through ARIA, not :enabled.
     cy.get('[data-slot="shell-project-code-command"]', { timeout: 30_000 })
       .should('be.visible')
-      .should('be.enabled')
+      .should('not.have.attr', 'aria-disabled', 'true')
       .click();
     cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]')
       .scrollIntoView()

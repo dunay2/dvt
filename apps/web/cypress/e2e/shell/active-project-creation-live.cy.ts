@@ -99,18 +99,21 @@ describe('Active project creation live vertical', () => {
           .contains(projectName)
           .click();
         cy.get('[data-slot="shell-workspace-menu-trigger"]')
-          .should('have.attr', 'aria-label')
-          .and('contain', projectName);
-        cy.reload();
-        cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
-        cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 }).should(
-          'have.attr',
-          'aria-label',
-          `Project settings: ${projectName}`
-        );
-        cy.get('[data-slot="canvas-playground-empty-state"] h2')
-          .contains('Canvas')
-          .should('be.visible');
+          .invoke('attr', 'aria-label')
+          .should('contain', projectName)
+          .then((projectLabel) => {
+            // Keep the full localized identity across reload, including Spanish sessions.
+            cy.reload();
+            cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+            cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 }).should(
+              'have.attr',
+              'aria-label',
+              projectLabel
+            );
+            cy.get('[data-slot="canvas-playground-empty-state"] h2')
+              .contains('Canvas')
+              .should('be.visible');
+          });
       });
   });
 });

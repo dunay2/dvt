@@ -139,9 +139,7 @@ function openReadOnlyDbtProjectCodeFile(path: string): void {
   cy.get('[data-slot="shell-project-code-command"]')
     .scrollIntoView()
     .should('be.visible')
-    .and(($item) => {
-      expect($item.attr('data-disabled')).to.be.undefined;
-    })
+    .and('not.have.attr', 'aria-disabled', 'true')
     .click();
   cy.get('[data-slot="canvas-code-main-tab"]')
     .should('be.visible')

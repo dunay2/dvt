@@ -653,9 +653,7 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="shell-project-code-command"]')
       .should('be.visible')
-      .should(($item) => {
-        expect($item.attr('data-disabled')).to.be.undefined;
-      })
+      .should('not.have.attr', 'aria-disabled', 'true')
       .click();
     cy.get('[data-slot="canvas-code-main-tab"]')
       .should('be.visible')
