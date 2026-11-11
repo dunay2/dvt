@@ -44,10 +44,17 @@ afterEach(async () => {
   useApplicationLanguageStore.setState({ language: 'en' });
 });
 
-async function renderExplorer(projectRoot?: string): Promise<void> {
+async function renderExplorer(
+  projectRoot?: string,
+  onImportDbtProject?: () => void
+): Promise<void> {
   const view = (
     <AppServicesProvider overrides={services}>
-      <CanvasProjectFilesExplorer projectRoot={projectRoot} onOpenFile={onOpenFile} />
+      <CanvasProjectFilesExplorer
+        projectRoot={projectRoot}
+        onOpenFile={onOpenFile}
+        onImportDbtProject={onImportDbtProject}
+      />
     </AppServicesProvider>
   );
   if (mounted) await mounted.render(view);
@@ -148,6 +155,25 @@ it('treats an empty bound root as empty instead of exposing outside files', asyn
   await waitForReactQuery(() => screen.queryByText(copy.routeEmptyMessage) != null);
   expect(screen.queryByRole('button')).toBeNull();
 });
+
+// Moving import into Code must not make an empty or failed file query a dead end.
+it.each(['loading', 'empty', 'error'] as const)(
+  'keeps the admitted import action reachable during %s',
+  async (state) => {
+    const onImport = vi.fn();
+    if (state === 'loading') listFiles.mockImplementation(() => new Promise(() => {}));
+    else if (state === 'empty') listFiles.mockResolvedValue([]);
+    else listFiles.mockRejectedValue(new Error('unavailable'));
+    await renderExplorer(undefined, onImport);
+    if (state === 'error') await waitForReactQuery(() => screen.queryByRole('alert') != null);
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Import dbt project' }))
+    );
+    expect(onImport).toHaveBeenCalledOnce();
+    expect(onOpenFile).not.toHaveBeenCalled();
+    expect(saveFileContent).not.toHaveBeenCalled();
+  }
+);
 
 it.each(['tenantId', 'projectId', 'environmentId'] as const)(
   'isolates cached trees when %s changes',

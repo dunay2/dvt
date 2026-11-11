@@ -9,15 +9,7 @@ import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellLayout } from './canvasShell.types';
 
 function focusWorkspaceScopeControls(): void {
-  document
-    .querySelector<HTMLElement>(
-      [
-        '[data-slot="shell-workspace-context-trigger"]',
-        '[data-slot="shell-workspace-menu-trigger"]',
-        '[data-slot="select-trigger"]',
-      ].join(',')
-    )
-    ?.focus();
+  document.querySelector<HTMLElement>('[data-slot="shell-workspace-menu-trigger"]')?.focus();
 }
 
 function renderCanvasShellReadOnlyBanner(

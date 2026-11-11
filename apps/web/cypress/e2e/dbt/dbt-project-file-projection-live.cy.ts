@@ -653,8 +653,7 @@ describe('dbt project file projection live vertical', () => {
       'aria-expanded',
       'true'
     );
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(
       `[data-slot="canvas-code-workspace-surface"] [data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
     )

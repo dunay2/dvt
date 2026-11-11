@@ -2,7 +2,7 @@
 title: Shell Workspace Context Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-06
+last_reviewed: 2026-11-11
 planning_type: architecture
 ---
 
@@ -12,7 +12,7 @@ planning_type: architecture
 
 Shell workspace context is the App Shell component that presents the active
 tenant, project, environment, deployment adapter, and draft-scope posture
-without allowing the main screen to change workspace ownership.
+in the left-rail Project menu without giving presentation ownership of scope changes.
 
 It is a shell-owned Presentation Model boundary. It projects existing session
 scope into read-only identity labels and read-only context details. The on-demand
@@ -29,25 +29,24 @@ graph state, Git operations, or route-local workbench commands.
 
 ## Public API
 
-| API                              | Kind                | Rail                           | Contract                                                                                     |
-| -------------------------------- | ------------------- | ------------------------------ | -------------------------------------------------------------------------------------------- |
-| `ProjectIdentityBadge`           | read model          | `GetEffectiveWorkspaceContext` | Carries active tenant, project, environment, deployment adapter, compact id, slug, and draft |
-| `ProjectIdentityBadgeInput`      | query input         | `GetEffectiveWorkspaceContext` | Supplies session ids and bootstrap option labels                                             |
-| `buildProjectIdentityBadge`      | projection function | `GetEffectiveWorkspaceContext` | Resolves labels and preserves raw ids when labels are unavailable                            |
-| `ShellProjectIdentityBadge`      | passive view        | `GetEffectiveWorkspaceContext` | Renders breadcrumb-style identity labels with no mutation affordance                         |
-| `ShellWorkspaceContextMenu`      | details UI          | shell context display          | Opens read-only details and the existing granted-scope selector                              |
-| `ShellWorkspaceContextDetails`   | passive view        | shell context display          | Displays tenant, project, environment, and deployment adapter without mutation controls      |
-| `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof         | Guards ownership, docs, invariants, and read-only posture                                    |
+| API                              | Kind                | Rail                           | Contract                                                                                            |
+| -------------------------------- | ------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`           | read model          | `GetEffectiveWorkspaceContext` | Carries active tenant, project, environment, deployment adapter, compact id, slug, and draft        |
+| `ProjectIdentityBadgeInput`      | query input         | `GetEffectiveWorkspaceContext` | Supplies session ids and bootstrap option labels                                                    |
+| `buildProjectIdentityBadge`      | projection function | `GetEffectiveWorkspaceContext` | Resolves labels and preserves raw ids when labels are unavailable                                   |
+| `ShellProjectMenu`               | details UI          | shell context display          | Opens read-only details, the granted-scope selector, project creation and existing snapshot actions |
+| `ShellWorkspaceContextDetails`   | passive view        | shell context display          | Displays tenant, project, environment, and deployment adapter without mutation controls             |
+| `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof         | Guards ownership, docs, invariants, and read-only posture                                           |
 
 The browser posture proof is the Canvas-first shell composition check.
 
 ## Invariants
 
-- workspace context is breadcrumb-style read-only content on the main screen;
-- the persistent top bar renders a read-only identity badge;
+- workspace context is read-only content in the left-rail Project menu;
+- the top bar has no File or Project menu; Code owns file import and the file tree;
 - the persistent top bar does not render tenant, project, or environment
   comboboxes;
-- `ShellWorkspaceContextMenu` does not render tenant, project, or environment
+- `ShellProjectMenu` does not render tenant, project, or environment
   comboboxes;
 - tenant, project, environment, and deployment adapter labels are read-only;
 - scope changes use `SelectWorkspaceScope` with a complete server-granted identity;
@@ -63,23 +62,22 @@ The browser posture proof is the Canvas-first shell composition check.
 stateDiagram-v2
   [*] --> SessionScope
   SessionScope --> IdentityProjection: buildProjectIdentityBadge
-  IdentityProjection --> BadgeVisible: render ShellProjectIdentityBadge
-  BadgeVisible --> ContextMenuClosed: context details hidden
-  ContextMenuClosed --> ContextMenuOpen: user opens Context
+  IdentityProjection --> ContextMenuClosed: label the Project rail trigger
+  ContextMenuClosed --> ContextMenuOpen: user opens Project
   ContextMenuOpen --> ReadOnlyDetails: show tenant/project/environment
-  ReadOnlyDetails --> ContextMenuClosed: close Context
+  ReadOnlyDetails --> ContextMenuClosed: close Project
 ```
 
 ## Consumers
 
-| Consumer                        | Consumption rule                                                              |
-| ------------------------------- | ----------------------------------------------------------------------------- |
-| `ShellTopBar`                   | Composes badge, context details, Git ref, health, and global shell menus      |
-| `Root.shellChrome.test.support` | Verifies rendered shell posture from the mounted root shell                   |
-| Canvas workbench                | Reads session scope through route-owned queries and controllers               |
-| Runs and other routes           | React through existing session-aware data loading, not through this component |
-| Cypress Stage 1 posture proof   | Verifies badge, no comboboxes, and read-only context details                  |
-| F-28-A feature mechanization    | Tracks the public API, rails, Fowler signals, and closeout commands           |
+| Consumer                        | Consumption rule                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `LeftNavigationRail`            | Composes Project and About while TopAppBar retains View, execution and health          |
+| `Root.shellChrome.test.support` | Verifies rendered shell posture from the mounted root shell                            |
+| Canvas workbench                | Reads session scope through route-owned queries and controllers                        |
+| Runs and other routes           | React through existing session-aware data loading, not through this component          |
+| Cypress Stage 1 posture proof   | Verifies the single Project entry, no top-bar comboboxes and read-only context details |
+| F-28-A feature mechanization    | Tracks the public API, rails, Fowler signals, and closeout commands                    |
 
 ## Component Flow
 
@@ -88,8 +86,7 @@ flowchart LR
   Store["sessionStore scope ids"] --> Input["ProjectIdentityBadgeInput"]
   Bootstrap["WorkspaceBootstrapConfig"] --> Input
   Input --> Projection["buildProjectIdentityBadge"]
-  Projection --> Badge["ShellProjectIdentityBadge"]
-  Projection --> Menu["ShellWorkspaceContextMenu"]
+  Projection --> Menu["ShellProjectMenu"]
   Menu --> Details["ShellWorkspaceContextDetails"]
   Details --> Fields["tenant / project / environment / deployment adapter read-only fields"]
 ```
@@ -100,8 +97,7 @@ flowchart LR
 flowchart TB
   subgraph Shell["Web shell presentation"]
     BadgeModel["ProjectIdentityBadge"]
-    BadgeView["ShellProjectIdentityBadge"]
-    Menu["ShellWorkspaceContextMenu"]
+    Menu["ShellProjectMenu"]
     Details["ShellWorkspaceContextDetails"]
   end
 
@@ -115,8 +111,7 @@ flowchart TB
     Persistence["Save / export / import"]
   end
 
-  BadgeModel --> BadgeView
-  BadgeView --> Menu
+  BadgeModel --> Menu
   Menu --> Details
   Shell -. "must not own" .-> OutOfScope
 ```
@@ -128,8 +123,8 @@ The architecture guard in
 checks more than import shape. It validates:
 
 - each module declares its owned concern;
-- the top bar composes the read model, badge, and context details;
-- badge and details components remain passive; the menu composes the existing scope selector;
+- the rail composes the existing project read model and command owners;
+- details remain passive; the menu delegates scope selection, creation and snapshots;
 - no direct tenant/project/environment setters bypass `SelectWorkspaceScope`;
 - available scopes and accepted selection remain server-granted;
 - local component docs, user stories, and mailbox analysis exist;
@@ -146,7 +141,7 @@ F-28-A manifest, and the architecture guard in the same PR when they alter:
 
 - public API shape;
 - command/query rail ownership;
-- visible top-bar context behavior;
+- visible project-menu context behavior;
 - read-only detail behavior;
 - fallback or unavailable-state copy;
 - any consumer listed above.
@@ -166,31 +161,30 @@ keep Stage 1 acceptance tied to scenarios instead of only file structure.
 
 ### Scenario Matrix
 
-| Scenario | User intent                         | Expected behavior                                               | Guard                 |
-| -------- | ----------------------------------- | --------------------------------------------------------------- | --------------------- |
-| S1       | Confirm current workspace           | Top bar shows breadcrumb-style project identity and environment | Unit, Cypress         |
-| S2       | Avoid accidental scope switching    | Tenant/project/environment controls are hidden from top bar     | Unit, architecture    |
-| S3       | Verify tenant context               | Context menu shows tenant as read-only content                  | Architecture, Cypress |
-| S4       | Verify project context              | Context menu shows project as read-only content                 | Architecture, Cypress |
-| S5       | Verify environment context          | Context menu shows environment as read-only content             | Architecture, Cypress |
-| S6       | Work with unavailable option labels | Badge displays raw ids instead of inventing labels or grants    | Unit                  |
-| S7       | Keep Git reference passive          | Git ref remains read-only and separate from workspace context   | Architecture          |
-| S8       | Preserve route authority            | Canvas/Runs read session scope through existing route queries   | Regression tests      |
+| Scenario | User intent                         | Expected behavior                                                      | Guard                 |
+| -------- | ----------------------------------- | ---------------------------------------------------------------------- | --------------------- |
+| S1       | Confirm current workspace           | Project trigger names the active project; its menu shows scope details | Unit, Cypress         |
+| S2       | Avoid accidental scope switching    | Tenant/project/environment controls are hidden from top bar            | Unit, architecture    |
+| S3       | Verify tenant context               | Project menu shows tenant as read-only content                         | Architecture, Cypress |
+| S4       | Verify project context              | Project menu shows project as read-only content                        | Architecture, Cypress |
+| S5       | Verify environment context          | Project menu shows environment as read-only content                    | Architecture, Cypress |
+| S6       | Work with unavailable option labels | Badge displays raw ids instead of inventing labels or grants           | Unit                  |
+| S7       | Keep Git reference passive          | Known Git branch and SHA remain read-only in Project                   | Architecture          |
+| S8       | Preserve route authority            | Canvas/Runs read session scope through existing route queries          | Regression tests      |
 
 ### User Stories
 
 #### US-SWC-1: Read Current Workspace
 
 As an operator, I want the persistent shell to show the active project and
-environment as breadcrumb-style context so I can stay oriented while working in
-Canvas.
+environment in a single Project menu so I can stay oriented while working in Canvas.
 
 Acceptance:
 
 - given a selected tenant, project, and environment;
-- when the shell top bar renders;
-- then it shows `ShellProjectIdentityBadge`;
-- and the badge has no mutation control.
+- when the left rail renders;
+- then its Project trigger names the active project;
+- opening it shows read-only details and existing governed actions.
 
 #### US-SWC-2: Keep Scope Controls Out Of Main Chrome
 
@@ -212,7 +206,7 @@ so displaying context cannot create or expand tenant grants.
 
 Acceptance:
 
-- given the Context menu is opened;
+- given the Project menu is opened;
 - when tenant context is shown;
 - then it is rendered as read-only content;
 - and no direct `setTenantId` or tenant command mirror exists; selection delegates
@@ -225,7 +219,7 @@ while explicit project changes use the existing granted-scope command.
 
 Acceptance:
 
-- given the Context menu is opened;
+- given the Project menu is opened;
 - when project context is shown;
 - then it is rendered as read-only content;
 - and no direct `setProjectId` or project command mirror exists; selection delegates
@@ -238,7 +232,7 @@ read-only so ambient shell chrome cannot construct unvalidated runtime context.
 
 Acceptance:
 
-- given the Context menu is opened;
+- given the Project menu is opened;
 - when environment context is shown;
 - then it is rendered as read-only content;
 - and no direct `setEnvironmentId` or environment command mirror exists; selection
@@ -263,9 +257,9 @@ Stage 1 so branch management does not appear without a governed Git rail.
 
 Acceptance:
 
-- given the top bar renders Git branch and SHA context;
-- when the workspace Context menu is opened;
-- then Git controls are not part of the context details;
+- given a known Git branch or SHA;
+- when the workspace Project menu is opened;
+- then Project shows those values as read-only context;
 - and no branch-switch command is introduced.
 
 #### US-SWC-8: Preserve Route Authority
@@ -289,7 +283,7 @@ flowchart LR
   Stories --> Browser["Canvas Stage 1 Cypress posture proof"]
   Arch --> Docs["Component guide and mailbox analysis"]
   Unit --> Model["ProjectIdentityBadge"]
-  Browser --> Posture["No comboboxes + read-only Context details"]
+  Browser --> Posture["No top-bar project menu + read-only Project details"]
 ```
 
 ### Drift Triggers

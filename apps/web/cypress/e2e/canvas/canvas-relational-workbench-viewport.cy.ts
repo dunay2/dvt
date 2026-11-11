@@ -387,15 +387,13 @@ describe('Workbench viewport', () => {
           expect($current[0]).to.equal(editor)
         );
       });
-      cy.get('[data-slot="shell-file-menu-trigger"]').click();
-      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="shell-project-code-command"]').click();
       cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'notes/second.md');
       cy.get('[data-slot="canvas-workspace-tab"]').click();
       cy.get(code).should('not.be.visible');
       cy.get(main).should('not.have.attr', 'inert');
       assertStationary();
-      cy.get('[data-slot="shell-file-menu-trigger"]').click();
-      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="shell-project-code-command"]').click();
       cy.get(code)
         .should('be.visible')
         .find('.monaco-editor .view-lines')
@@ -884,8 +882,7 @@ describe('DBT project Git browsing with real file authority', () => {
       secondPath
     );
     cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
       'have.attr',
       'data-file-path',
@@ -911,8 +908,7 @@ describe('DBT project Git browsing with real file authority', () => {
     cy.get('[data-slot="canvas-workspace-tab"]').click();
     cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(code).should('not.be.visible');
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
       'have.attr',

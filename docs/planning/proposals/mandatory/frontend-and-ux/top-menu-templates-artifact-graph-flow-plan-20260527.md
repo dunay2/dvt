@@ -82,6 +82,25 @@ The user-facing target is:
 - If the user only wants to execute SQL, the Run menu must expose that product
   intent as a distinct path from full graph execution.
 
+## 2026-11-11 Accepted Project Entry Consolidation
+
+[GH-3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6788472442)
+supersedes the historical top-menu placement below. Global destinations use the
+existing left rail. Project context, granted scope selection, creation and
+snapshot import/export share its Project settings entry. Code owns workspace
+files and dbt import, including projects before their first Canvas. File and the
+duplicate Explorer dialog are removed. Multiple canvas documents remain selectable
+in Project through the existing callback; a single document needs no submenu.
+
+`ResolveCanvasProjectSnapshotActions`, `ExportProjectSnapshot`,
+`ImportProjectSnapshot`, `ImportDbtProject`, `CreateProject`,
+`SelectWorkspaceScope` and the existing workspace-file queries retain their
+owners and authorization. There is no backend migration or new command catalog.
+The current implementation contract is
+[Canvas Shell](../../../../architecture/components/web/graph/canvas-shell-component.md)
+and the [App Shell](../../../../architecture/components/web/appshell/app-shell.md).
+The earlier iterations remain design history, not current navigation requirements.
+
 ## 2026-05-28 Double-Role Iteration: Canvas Command Menus
 
 ### Demanding User Stories

@@ -2,7 +2,7 @@
  * Owned concern: resolve copy for global shell chrome without owning route behavior.
  * @baseline GH-3622: menu responsibility labels must follow the active application language.
  * @decision Extend the existing EN/ES catalog, not component-local strings.
- * @consequence File and View update reactively without reloading or changing command metadata.
+ * @consequence Project and View update reactively without reloading or changing command metadata.
  * @version 1.0.0
  */
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
@@ -16,12 +16,10 @@ export type ShellTopBarCopy = {
   readonly aboutVersionLabel: string;
   readonly aboutBuildDateLabel: string;
   readonly aboutBuildDateUnavailable: string;
-  readonly workspaceMenu: string;
-  readonly fileMenu: string;
+  readonly projectSettings: string;
   readonly workspacePanels: string;
   readonly globalNavigation: string;
   readonly workspaceContext: string;
-  readonly showWorkspaceContext: string;
   readonly currentProject: string;
   readonly availableProjects: string;
   readonly noAlternativeProjects: string;
@@ -53,7 +51,6 @@ export type ShellTopBarCopy = {
   readonly projectScopeAria: string;
   readonly environmentScopeAria: string;
   readonly deploymentScopeAria: string;
-  readonly gitTooltip: string;
   readonly checking: string;
   readonly checkingTooltip: string;
   readonly offline: string;
@@ -82,15 +79,10 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   aboutVersionLabel: { key: 'shell.about.versionLabel', fallback: 'Compiled version' },
   aboutBuildDateLabel: { key: 'shell.about.buildDateLabel', fallback: 'Build date' },
   aboutBuildDateUnavailable: { key: 'shell.about.buildDateUnavailable', fallback: 'Not published' },
-  workspaceMenu: { key: 'shell.workspaceMenu', fallback: 'Workspace' },
-  fileMenu: { key: 'shell.fileMenu', fallback: 'File' },
+  projectSettings: { key: 'shell.projectSettings', fallback: 'Project settings' },
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
   globalNavigation: { key: 'shell.globalNavigation', fallback: 'Navigation' },
   workspaceContext: { key: 'shell.workspaceContext', fallback: 'Workspace context' },
-  showWorkspaceContext: {
-    key: 'shell.showWorkspaceContext',
-    fallback: 'Show project and workspace context',
-  },
   currentProject: { key: 'shell.currentProject', fallback: 'Current project' },
   availableProjects: {
     key: 'shell.availableProjects',
@@ -149,7 +141,6 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
     key: 'shell.deploymentScopeAria',
     fallback: 'Deployment adapter (read only)',
   },
-  gitTooltip: { key: 'shell.gitTooltip', fallback: 'Current Git branch and commit SHA' },
   checking: { key: 'shell.checking', fallback: 'Checking' },
   checkingTooltip: {
     key: 'shell.checkingTooltip',
@@ -187,12 +178,10 @@ const COPY_ES: ShellTopBarCopy = {
   aboutVersionLabel: 'Versión compilada',
   aboutBuildDateLabel: 'Fecha de build',
   aboutBuildDateUnavailable: 'No publicada',
-  workspaceMenu: 'Espacio de trabajo',
-  fileMenu: 'Archivo',
+  projectSettings: 'Configuración del proyecto',
   workspacePanels: 'Paneles',
   globalNavigation: 'Navegación',
   workspaceContext: 'Contexto del proyecto',
-  showWorkspaceContext: 'Mostrar el contexto del proyecto y del espacio de trabajo',
   currentProject: 'Proyecto actual',
   availableProjects: 'Proyectos disponibles en esta sesión',
   noAlternativeProjects: 'No hay otro proyecto disponible en esta sesión.',
@@ -224,7 +213,6 @@ const COPY_ES: ShellTopBarCopy = {
   projectScopeAria: 'Scope de proyecto (solo lectura)',
   environmentScopeAria: 'Scope de entorno (solo lectura)',
   deploymentScopeAria: 'Adaptador de despliegue (solo lectura)',
-  gitTooltip: 'Rama Git y SHA actuales',
   checking: 'Comprobando',
   checkingTooltip: 'Comprobando endpoints de salud de la plataforma',
   offline: 'Sin conexión',
@@ -259,12 +247,10 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     aboutVersionLabel: resolveString(COPY_BY_KEY.aboutVersionLabel, locale),
     aboutBuildDateLabel: resolveString(COPY_BY_KEY.aboutBuildDateLabel, locale),
     aboutBuildDateUnavailable: resolveString(COPY_BY_KEY.aboutBuildDateUnavailable, locale),
-    workspaceMenu: resolveString(COPY_BY_KEY.workspaceMenu, locale),
-    fileMenu: resolveString(COPY_BY_KEY.fileMenu, locale),
+    projectSettings: resolveString(COPY_BY_KEY.projectSettings, locale),
     workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
     globalNavigation: resolveString(COPY_BY_KEY.globalNavigation, locale),
     workspaceContext: resolveString(COPY_BY_KEY.workspaceContext, locale),
-    showWorkspaceContext: resolveString(COPY_BY_KEY.showWorkspaceContext, locale),
     currentProject: resolveString(COPY_BY_KEY.currentProject, locale),
     availableProjects: resolveString(COPY_BY_KEY.availableProjects, locale),
     noAlternativeProjects: resolveString(COPY_BY_KEY.noAlternativeProjects, locale),
@@ -296,7 +282,6 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     projectScopeAria: resolveString(COPY_BY_KEY.projectScopeAria, locale),
     environmentScopeAria: resolveString(COPY_BY_KEY.environmentScopeAria, locale),
     deploymentScopeAria: resolveString(COPY_BY_KEY.deploymentScopeAria, locale),
-    gitTooltip: resolveString(COPY_BY_KEY.gitTooltip, locale),
     checking: resolveString(COPY_BY_KEY.checking, locale),
     checkingTooltip: resolveString(COPY_BY_KEY.checkingTooltip, locale),
     offline: resolveString(COPY_BY_KEY.offline, locale),

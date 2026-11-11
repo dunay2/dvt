@@ -527,7 +527,10 @@ describe('Canvas workbench screen composition', () => {
         expect($brand[0]!.getAttribute('tabindex')).not.to.equal('0');
       });
     cy.get('@topBar').should('contain.text', 'Vista');
-    cy.get('@topBar').should('contain.text', 'Proyecto: E2E Project');
+    cy.get('@topBar').find('[data-slot="shell-workspace-menu-trigger"]').should('not.exist');
+    cy.get('[data-slot="left-navigation-rail"] [data-slot="shell-workspace-menu-trigger"]')
+      .should('have.attr', 'aria-label')
+      .and('contain', 'E2E Project');
     cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-workspace-context-trigger"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
@@ -613,6 +616,15 @@ describe('Canvas workbench screen composition', () => {
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
 
+    // A new project must be able to import before a Canvas exists, without creating one.
+    cy.get('[data-slot="shell-project-code-command"]').click();
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').click();
+    cy.get('[data-slot="dbt-project-import-dialog"]').should('be.visible');
+    cy.get('[data-slot="dbt-project-cancel-command"]').click();
+    cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').should('be.focused');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
     cy.get('[data-slot="canvas-playground-template-choice"]').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     cy.get('@topBar')
@@ -632,23 +644,10 @@ describe('Canvas workbench screen composition', () => {
       .and('not.contain.text', 'Abrir código del proyecto');
     cy.get('body').type('{esc}');
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-explore-project-command"]')
-      .should('be.visible')
-      .should(($item) => {
-        expect($item.attr('data-disabled')).to.be.undefined;
-      })
-      .click();
-    cy.get('[data-slot="canvas-project-explorer-dialog"]')
-      .should('be.visible')
-      .and('contain.text', 'Canvas')
-      .and('contain.text', 'Canvas actual');
-    cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
-    cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
+    cy.get('[data-slot="shell-file-menu-trigger"]').should('not.exist');
+    cy.get('[data-slot="canvas-project-explorer-dialog"]').should('not.exist');
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+    cy.get('[data-slot="shell-project-code-command"]')
       .should('be.visible')
       .should(($item) => {
         expect($item.attr('data-disabled')).to.be.undefined;
@@ -676,14 +675,17 @@ describe('Canvas workbench screen composition', () => {
       .click()
       .should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-    cy.contains(
-      '[data-slot="shell-workspace-scope-selector"] button',
-      'Alternate Project / staging'
-    ).click();
+    // Scope choices must participate in Radix arrow navigation, not require pointer focus.
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').focus();
+    pressNativeKey('Enter');
+    cy.focused().should('have.attr', 'role', 'menuitemradio').and('contain.text', 'E2E Project');
+    pressNativeKey('ArrowDown');
+    cy.focused().should('contain.text', 'Alternate Project / staging');
+    pressNativeKey('Enter');
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
-      'contain.text',
-      'Proyecto: Alternate Project'
+      'have.attr',
+      'aria-label',
+      'Configuración del proyecto: Alternate Project'
     );
     cy.get('[data-slot="shell-active-canvas-identity"]')
       .should('contain.text', 'Alternate staging canvas')
@@ -718,9 +720,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
     cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'source-1');
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="shell-file-menu-trigger"]').should('have.attr', 'aria-expanded', 'true');
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').should('be.visible').click();
+    cy.get('[data-slot="shell-project-code-command"]').should('be.visible').click();
     cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
     cy.get(
@@ -754,7 +754,7 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.contains(
-      '[data-slot="shell-workspace-scope-selector"] button',
+      '[data-slot="shell-workspace-scope-selector"] [role="menuitemradio"]',
       'E2E Project / e2e-env'
     ).click();
     cy.get('[data-slot="run-operational-table"]', { timeout: 20_000 })
@@ -882,25 +882,22 @@ describe('Canvas workbench screen composition', () => {
       .click();
     cy.get('[role="dialog"]').should('not.exist');
     cy.get('.react-flow__node').should('have.length.at.least', 1);
-    cy.get('[data-slot="shell-file-menu-trigger"]').focus().type('{enter}');
-    cy.get('[data-slot="canvas-workspace-explore-project-command"]').click();
-    cy.get('[data-slot="canvas-project-explorer-dialog"]')
+    // The same Project entry must remain usable at mobile width, without a second dialog.
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
+    cy.get('[role="menu"]')
       .should('be.visible')
-      .and('contain.text', 'Cerrar')
-      .and(($dialog) => {
-        const rect = $dialog.get(0).getBoundingClientRect();
+      .and(($menu) => {
+        const rect = $menu.get(0).getBoundingClientRect();
         expect(rect.left).to.be.at.least(0);
         expect(rect.right).to.be.at.most(390);
         expect(rect.top).to.be.at.least(0);
         expect(rect.bottom).to.be.at.most(844);
       });
-    cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
-    cy.get('[data-slot="canvas-project-explorer-dialog"]').should('not.exist');
-    cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
+    cy.focused().type('{esc}');
+    cy.get('[role="menu"]').should('not.exist');
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
     for (const zoom of [1, 2] as const) {
       if (zoom === 2) {
@@ -1022,7 +1019,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('.react-flow').should('have.css', 'background-color', 'rgb(34, 51, 68)');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').click();
     cy.get('[data-slot="dbt-project-import-dialog"]')
       .should('be.visible')
@@ -1030,7 +1027,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="dbt-project-cancel-command"]').click();
     cy.get('[data-slot="dbt-project-import-dialog"]').should('not.exist');
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
+    cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').should('be.focused');
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-language-menu"]').should('contain.text', 'Idioma');
@@ -1041,6 +1038,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-language-option-en"]').click();
     cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'View');
     cy.get('html').should('have.attr', 'lang', 'en');
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-slot="canvas-context-menu"]')
@@ -1246,8 +1244,7 @@ describe('Canvas workbench screen composition', () => {
       [ORPHAN_PATH, ORPHAN_SQL],
       [MODEL_PATH, MODEL_SQL],
     ] as const) {
-      cy.get('[data-slot="shell-file-menu-trigger"]').click();
-      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="shell-project-code-command"]').click();
       cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
       cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
       cy.get(

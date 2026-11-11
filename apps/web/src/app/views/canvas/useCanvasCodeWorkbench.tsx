@@ -1,11 +1,12 @@
 /**
  * Owned concern: adapt the project Code editor lifecycle to the existing contextual workbench contract.
- * @baseline GH-3622: File now owns the code opener; pending drafts retain their existing guards.
- * @decision Capture the File trigger through the existing focus lifecycle.
+ * @baseline GH-3765: Code navigation is direct; pending drafts retain their existing guards.
+ * @decision Capture the Code rail opener through the existing focus lifecycle.
  * @consequence Closing code restores its opener without creating a new editor or navigation rail.
  * @version 1.0.0
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type {
   CanvasShellContextualWorkbench,
@@ -26,16 +27,25 @@ export function useCanvasCodeWorkbench(
   canvasId: string | null,
   copy: ReturnType<typeof resolveCanvasViewCopy>,
   focus: ReturnType<typeof useCanvasWorkbenchFocus>,
-  workspaceCommands?: CanvasShellWorkspaceCommands
+  workspaceCommands?: CanvasShellWorkspaceCommands,
+  workspaceScope?: WorkspaceScope
 ) {
   const id = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
   const owner = useCanvasInteractionStore((state) => state.contextualWorkbenchOwnerKey);
   const open = useCanvasInteractionStore((state) => state.openContextualWorkbench);
   const close = useCanvasInteractionStore((state) => state.closeContextualWorkbench);
+  // Before the first Canvas, files still belong to the admitted project. No graph is created.
   const ownerKey =
-    layout.surfaceStrategy == null || canvasId == null
-      ? null
-      : `${layout.surfaceStrategy.id}:${canvasId}`;
+    canvasId != null && layout.surfaceStrategy != null
+      ? `${layout.surfaceStrategy.id}:${canvasId}`
+      : workspaceScope == null
+        ? null
+        : JSON.stringify([
+            'project-files',
+            workspaceScope.tenantId,
+            workspaceScope.projectId,
+            workspaceScope.environmentId,
+          ]);
   const scopedId = owner === ownerKey ? id : null;
   const [activeOwnerKey, setActiveOwnerKey] = useState<string | null>(null);
   const activationIntent = useRef(0);
@@ -123,7 +133,7 @@ export function useCanvasCodeWorkbench(
     async (path?: string): Promise<boolean> => {
       const intent = ++activationIntent.current;
       const focusedBeforeAdmission = document.activeElement;
-      capture('[data-slot="shell-file-menu-trigger"]');
+      capture('[data-slot="shell-project-code-command"]');
       if (ownerKey == null) return false;
       try {
         if (workspaceCommands?.onOpenProjectCode != null) {
@@ -152,6 +162,7 @@ export function useCanvasCodeWorkbench(
     [capture, enter, workspaceCommands?.onOpenProjectCode, ownerKey, scopedId, open]
   );
   return {
+    available: ownerKey != null,
     layout: shellLayout,
     openProjectCode,
     showCanvas,

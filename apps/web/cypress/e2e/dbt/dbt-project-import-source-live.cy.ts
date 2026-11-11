@@ -130,7 +130,7 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       .as('draftBeforeImport', { type: 'static' });
     visitCanvas(session);
 
-    cy.get('[data-slot="shell-file-menu-trigger"]', { timeout: 30_000 })
+    cy.get('[data-slot="shell-project-code-command"]', { timeout: 30_000 })
       .should('be.visible')
       .should('be.enabled')
       .click();

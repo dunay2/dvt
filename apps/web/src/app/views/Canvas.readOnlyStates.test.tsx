@@ -58,7 +58,7 @@ describe('Canvas route access states', () => {
 
   it('keeps the viewport visible and shows limited access when the draft boundary is read_only', async () => {
     const scopeTrigger = document.createElement('button');
-    scopeTrigger.dataset.slot = 'shell-workspace-context-trigger';
+    scopeTrigger.dataset.slot = 'shell-workspace-menu-trigger';
     document.body.append(scopeTrigger);
 
     await renderCanvasRouteWithController(harness, {

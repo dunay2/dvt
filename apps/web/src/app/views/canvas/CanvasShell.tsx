@@ -1,8 +1,8 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
- * @baseline GH-3622: opening project files from File must return focus to the same owner.
- * @decision Preserve existing dialogs, commands and route state; change only the recovery target.
- * @consequence Scope recovery remains Project and no shell menu authors graph state.
+ * @baseline GH-3765: Code owns file import and the rail owns project context.
+ * @decision Compose existing guarded sessions and route-owned commands without duplicate dialogs.
+ * @consequence Import returns focus to Code; project navigation never authors graph state.
  * @version 1.0.0
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -14,7 +14,6 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { CanvasModelEditor } from './CanvasModelEditor';
-import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
 import { CanvasProjectFilesExplorer } from './explorer/CanvasProjectFilesExplorer';
@@ -64,7 +63,8 @@ export default function CanvasShell({
     panels.activeCanvasId,
     copy,
     focus,
-    workspaceCommands
+    workspaceCommands,
+    panels.inspectorAuthoring.workspaceScope
   );
   const operationData = useCanvasOperationDataTab(semanticCopy);
   const outputInspection = useCanvasOutputExpressionInspection(
@@ -124,7 +124,6 @@ export default function CanvasShell({
     [panels, inspectorContributions]
   );
 
-  const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const openProjectCode = useCallback(
@@ -136,13 +135,17 @@ export default function CanvasShell({
     },
     [code.openProjectCode, model.setActive, outputInspection.workbench]
   );
-  const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
-  const restoreProjectExplorerFocus = useCallback(() => {
-    document
-      .querySelector<HTMLButtonElement>('[data-slot="shell-file-menu-trigger"]')
-      ?.focus({ preventScroll: true });
+  const restoreDbtImportFocus = useCallback(() => {
+    const importAction = document.querySelector<HTMLElement>(
+      '[data-slot="canvas-workspace-import-dbt-project-command"]'
+    );
+    const opener =
+      importAction != null && importAction.closest('[inert], [hidden]') == null
+        ? importAction
+        : document.querySelector<HTMLElement>('[data-slot="shell-project-code-command"]');
+    opener?.focus({ preventScroll: true });
   }, []);
   const sourceImportOptions = useMemo(
     () => getSourceImportOptions(panels.runtimeCapabilities),
@@ -253,7 +256,7 @@ export default function CanvasShell({
       )}
       <CanvasShellMainPanel
         projectFiles={
-          panels.activeCanvasId == null || layout.surfaceStrategy == null
+          !code.available
             ? undefined
             : {
                 projectRoot: workspaceCommands?.projectRoot,
@@ -261,6 +264,9 @@ export default function CanvasShell({
                   <CanvasProjectFilesExplorer
                     projectRoot={workspaceCommands?.projectRoot}
                     onOpenFile={(path) => void openProjectCode(path)}
+                    onImportDbtProject={
+                      onDbtProjectImported == null ? undefined : openDbtProjectImport
+                    }
                   />
                 ),
                 panel:
@@ -336,14 +342,15 @@ export default function CanvasShell({
         chromeState={chromeState}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
+        onSelectCanvas={canvasCommands.onSelectCanvas}
         onOpenSourceImport={openSourceImport}
-        onOpenProjectExplorer={
-          workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer
+        onOpenProjectCode={
+          code.available
+            ? () => {
+                void openProjectCode();
+              }
+            : undefined
         }
-        onOpenProjectCode={() => {
-          void openProjectCode();
-        }}
-        onImportDbtProject={onDbtProjectImported == null ? undefined : openDbtProjectImport}
         onOpenCanvasSettings={openCanvasSettings}
         onOpenModelEditor={openModel}
         contextMenuPresenter={contextMenuPresenter}
@@ -388,14 +395,6 @@ export default function CanvasShell({
           )
         }
       />
-      <CanvasProjectExplorerDialog
-        open={projectExplorerOpen}
-        activeCanvasId={panels.activeCanvasId}
-        canvasDocuments={panels.canvasDocuments}
-        onSelectCanvas={canvasCommands.onSelectCanvas}
-        onClose={() => setProjectExplorerOpen(false)}
-        onRestoreFocus={restoreProjectExplorerFocus}
-      />
       <CanvasSettingsDialog
         open={canvasSettingsOpen}
         impactOverlayEnabled={chromeState.impactOverlayEnabled}
@@ -423,7 +422,7 @@ export default function CanvasShell({
       <DbtProjectImportDialog
         open={dbtProjectImportOpen}
         onClose={() => setDbtProjectImportOpen(false)}
-        onRestoreFocus={restoreProjectExplorerFocus}
+        onRestoreFocus={restoreDbtImportFocus}
         onImported={(result, declarations) => {
           setDbtProjectImportOpen(false);
           onDbtProjectImported?.(result, declarations);

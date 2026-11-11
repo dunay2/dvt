@@ -35,9 +35,8 @@ type CanvasShellMainPanelProps = Readonly<{
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
-  onOpenProjectExplorer?: () => void;
   onOpenProjectCode?: () => void;
-  onImportDbtProject?: () => void;
+  onSelectCanvas?: (canvasId: string) => void;
   onOpenCanvasSettings?: () => void;
   onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
@@ -55,9 +54,8 @@ function CanvasShellMenuContributionRegistrars({
   panels,
   chromeState,
   chromeCommands,
-  onOpenProjectExplorer,
   onOpenProjectCode,
-  onImportDbtProject,
+  onSelectCanvas,
   projectFiles,
   workspaceTask,
 }: Pick<
@@ -65,9 +63,8 @@ function CanvasShellMenuContributionRegistrars({
   | 'panels'
   | 'chromeState'
   | 'chromeCommands'
-  | 'onOpenProjectExplorer'
   | 'onOpenProjectCode'
-  | 'onImportDbtProject'
+  | 'onSelectCanvas'
   | 'projectFiles'
   | 'workspaceTask'
 >): JSX.Element {
@@ -75,16 +72,14 @@ function CanvasShellMenuContributionRegistrars({
   return (
     <CanvasWorkspaceMenuContributionRegistrar
       activeCanvas={panels.activeCanvas}
+      canvasDocuments={panels.canvasDocuments}
+      onSelectCanvas={onSelectCanvas}
       canExportProjectSnapshot={chromeState.canExportProjectSnapshot}
       canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
-      canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
       canOpenProjectCode={typeof onOpenProjectCode === 'function'}
-      canImportDbtProject={typeof onImportDbtProject === 'function'}
       onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
       onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
-      onOpenProjectExplorer={onOpenProjectExplorer}
       onOpenProjectCode={onOpenProjectCode}
-      onImportDbtProject={onImportDbtProject}
       codeTab={
         projectFiles?.panel == null
           ? undefined
@@ -273,7 +268,7 @@ function CanvasShellMainSurface({
       }
       editor={modelWorkspaceOpen ? layout.centerSurface : null}
       editorVisible={workspaceTask == null && layout.centerSurfaceVisible === true}
-      hasWorkspaceTabs={panels.activeCanvas != null}
+      hasWorkspaceTabs={panels.activeCanvas != null || projectFiles?.panel != null}
       code={
         projectFiles?.panel == null ? undefined : (
           <RouteWorkbenchFrame
@@ -305,9 +300,8 @@ export function CanvasShellMainPanel({
   graphCommands,
   chromeCommands,
   onOpenSourceImport,
-  onOpenProjectExplorer,
   onOpenProjectCode,
-  onImportDbtProject,
+  onSelectCanvas,
   onOpenCanvasSettings,
   onOpenModelEditor,
   contextMenuPresenter,
@@ -325,9 +319,8 @@ export function CanvasShellMainPanel({
         panels={panels}
         chromeState={chromeState}
         chromeCommands={chromeCommands}
-        onOpenProjectExplorer={onOpenProjectExplorer}
         onOpenProjectCode={onOpenProjectCode}
-        onImportDbtProject={onImportDbtProject}
+        onSelectCanvas={onSelectCanvas}
         projectFiles={projectFiles}
         workspaceTask={workspaceTask}
       />

@@ -6,6 +6,7 @@ import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
 import { canvasCodeRouteEntryState } from '../views/canvas/CanvasCodeRouteEntry';
 import { ShellAbout } from './shell/ShellAbout';
+import { ShellProjectMenu } from './shell/ShellProjectMenu';
 import { ShellNavigationSectionMenu } from './shell/ShellNavigationSectionMenu';
 import type { ShellTopBarCopy } from './shell/copy';
 import styles from './LeftNavigation.module.css';
@@ -140,6 +141,7 @@ export function LeftNavigationRail({
           </nav>
         </div>
         <div className={styles.footer}>
+          <ShellProjectMenu copy={copy} />
           <ShellAbout copy={copy} />
         </div>
       </TooltipProvider>

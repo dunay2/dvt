@@ -3,7 +3,7 @@
 /** Owned concern: prove CanvasShell contextual dialogs without source-import contract noise. */
 import { DbtProjectImportResultSchema } from '@dvt/contracts';
 import { act } from 'react';
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -33,65 +33,7 @@ describe('CanvasShell contextual dialogs', () => {
 
   afterEach(() => {
     unmountShell();
-  });
-
-  it('opens a contextual project explorer from the viewport command using real canvas documents', async () => {
-    const onSelectCanvas = vi.fn();
-
-    await renderShell({
-      panels: {
-        activeCanvasId: 'sales-canvas',
-        activeCanvas: {
-          id: 'sales-canvas',
-          title: 'Sales canvas',
-          kind: 'dbt',
-          environmentId: 'dev',
-        },
-        canvasDocuments: [
-          {
-            id: 'sales-canvas',
-            title: 'Sales canvas',
-            kind: 'dbt',
-            environmentId: 'dev',
-          },
-          {
-            id: 'dvt-flow',
-            title: 'DVT flow',
-            kind: 'transformation',
-            environmentId: 'dev',
-          },
-        ],
-      },
-      canvasCommands: {
-        onSelectCanvas,
-      },
-    });
-
-    await act(async () => {
-      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectExplorer?.();
-    });
-
-    await waitFor(() =>
-      expect(
-        document.body.querySelector('[data-slot="canvas-project-explorer-dialog"]')
-      ).not.toBeNull()
-    );
-    const projectExplorer = document.body.querySelector(
-      '[data-slot="canvas-project-explorer-dialog"]'
-    );
-    expect(projectExplorer?.textContent).toContain('Sales canvas');
-    expect(projectExplorer?.textContent).toContain('DVT flow');
-
-    const dvtFlowButton = Array.from(projectExplorer?.querySelectorAll('button') ?? []).find(
-      (button) => button.textContent === 'Open DVT flow'
-    );
-    expect(dvtFlowButton).toBeDefined();
-
-    await act(async () => {
-      dvtFlowButton?.click();
-    });
-
-    expect(onSelectCanvas).toHaveBeenCalledWith('dvt-flow');
+    vi.unstubAllGlobals();
   });
 
   it('opens contextual canvas settings from the viewport command using view commands', async () => {
@@ -150,7 +92,87 @@ describe('CanvasShell contextual dialogs', () => {
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
   });
 
-  it('imports a dbt project from Workspace and delegates navigation from the server receipt', async () => {
+  it('opens Code and dbt import before the first Canvas without creating a document', async () => {
+    // Moving import out of File must not strand a new project with no Canvas owner.
+    const props = await renderShell({
+      panels: {
+        activeCanvasId: null,
+        activeCanvas: null,
+        canvasDocuments: [],
+        inspectorAuthoring: {
+          canEditNode: true,
+          onApplyNodeDraft: vi.fn(),
+          workspaceScope: {
+            tenantId: 'tenant',
+            projectId: 'project',
+            environmentId: 'dev',
+            targetAdapter: 'temporal',
+          },
+        },
+      },
+      layout: { surfaceStrategy: undefined, centerSurface: <div>Start Canvas</div> },
+      onDbtProjectImported: vi.fn(),
+    });
+    await act(async () => {
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.();
+    });
+    const importButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-workspace-import-dbt-project-command"]'
+    );
+    expect(importButton).not.toBeNull();
+    await act(async () => {
+      importButton?.click();
+    });
+    expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: true });
+    expect(props.graphCommands.onCreateAuthoringNode).not.toHaveBeenCalled();
+    expect(props.canvasCommands.onSelectCanvas).not.toHaveBeenCalled();
+  });
+
+  it('does not publish Code admission without a Canvas or workspace scope', async () => {
+    await renderShell({
+      panels: { activeCanvasId: null, activeCanvas: null, canvasDocuments: [] },
+      layout: { surfaceStrategy: undefined },
+    });
+    expect(
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.canOpenProjectCode
+    ).toBe(false);
+    expect(
+      container.querySelector('[data-slot="canvas-workspace-import-dbt-project-command"]')
+    ).toBeNull();
+  });
+
+  it('restores import focus to the durable Code rail after its authority changes', async () => {
+    // The import receipt can replace the Code tree; its old button is then no longer an opener.
+    // jsdom has no layout observer; the real rail Tooltip still mounts during focus restoration.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+    );
+    await renderShell({ onDbtProjectImported: vi.fn() });
+    await act(async () => {
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.();
+    });
+    expect(
+      container.querySelector('[data-slot="canvas-workspace-import-dbt-project-command"]')
+    ).not.toBeNull();
+    const restoreFocus = shellState.dbtProjectImportDialogProps?.onRestoreFocus as () => void;
+    await renderShell({ panels: { activeCanvasId: 'imported-canvas' } });
+    expect(
+      container.querySelector('[data-slot="canvas-workspace-import-dbt-project-command"]')
+    ).toBeNull();
+    await act(async () => {
+      restoreFocus();
+    });
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-slot="shell-project-code-command"]')
+    );
+  });
+
+  it('imports a dbt project from Code and delegates navigation from the server receipt', async () => {
     const onDbtProjectImported = vi.fn();
     const result = DbtProjectImportResultSchema.parse({
       schemaVersion: 'dbt-project-import-result.v1',
@@ -175,7 +197,14 @@ describe('CanvasShell contextual dialogs', () => {
     await renderShell({ onDbtProjectImported });
 
     await act(async () => {
-      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onImportDbtProject?.();
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.();
+    });
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-workspace-import-dbt-project-command"]'
+        )
+        ?.click();
     });
 
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: true });

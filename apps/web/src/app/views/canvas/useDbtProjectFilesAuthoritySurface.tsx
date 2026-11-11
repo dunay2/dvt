@@ -297,7 +297,6 @@ export function useDbtProjectFilesAuthoritySurface({
     canvasCommands: controller.canvasCommands,
     runControls,
     workspaceCommands: {
-      canOpenProjectExplorer: false,
       projectRoot,
       onOpenProjectCode: controller.openProjectCode,
     },

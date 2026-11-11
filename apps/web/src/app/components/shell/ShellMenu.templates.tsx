@@ -8,8 +8,7 @@
 import type { RefObject } from 'react';
 import {
   Activity,
-  BriefcaseBusiness,
-  Folder,
+  FolderCog,
   FolderPlus,
   Languages,
   Maximize2,
@@ -17,6 +16,9 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
+import { Trigger as RailMenuTrigger } from '@radix-ui/react-dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import navigationStyles from '../LeftNavigation.module.css';
 import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { CanvasExplorerViewMenu } from '../../views/canvas/explorer/CanvasExplorerViewMenu';
 import { Button } from '../ui/button';
@@ -50,6 +52,11 @@ export function ShellProjectMenuTemplate({
   gitBranch,
   gitSha,
   onScopeSelected,
+  triggerRef,
+  newProjectLabel,
+  onNewProject,
+  onSnapshotFileSelected,
+  onCloseAutoFocus,
 }: MenuLifecycle &
   Readonly<{
     copy: ShellTopBarCopy;
@@ -57,22 +64,38 @@ export function ShellProjectMenuTemplate({
     gitBranch: string;
     gitSha: string;
     onScopeSelected: () => void;
+    triggerRef: RefObject<HTMLButtonElement>;
+    newProjectLabel: string;
+    onNewProject: () => void;
+    onSnapshotFileSelected: () => void;
+    onCloseAutoFocus: (event: Event) => void;
   }>) {
   const hasKnownGitContext = gitBranch !== 'detached' || gitSha !== 'unknown';
   return (
     <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          data-slot="shell-workspace-menu-trigger"
-          variant="ghost"
-          size="sm"
-          className={topAppBarClasses.menuButton}
-        >
-          <BriefcaseBusiness aria-hidden="true" className={topAppBarClasses.menuTriggerIcon} />
-          {`${copy.projectScope}: ${badge.projectLabel}`}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className={topAppBarClasses.contextMenuContent}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <RailMenuTrigger asChild>
+            <button
+              ref={triggerRef}
+              type="button"
+              data-slot="shell-workspace-menu-trigger"
+              aria-label={`${copy.projectSettings}: ${badge.projectLabel}`}
+              className={`${navigationStyles.link} ${navigationStyles.linkInteractive}`}
+            >
+              <FolderCog aria-hidden="true" className={navigationStyles.icon} />
+            </button>
+          </RailMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="right">{`${copy.projectSettings}: ${badge.projectLabel}`}</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent
+        side="right"
+        align="end"
+        className={topAppBarClasses.contextMenuContent}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
+        <DropdownMenuLabel>{copy.projectSettings}</DropdownMenuLabel>
         <DropdownMenuLabel>{copy.workspaceContext}</DropdownMenuLabel>
         <div data-slot="shell-menu-workspace-context" className={topAppBarClasses.menuContextBody}>
           <ShellWorkspaceContextDetails badge={badge} copy={copy} />
@@ -88,58 +111,12 @@ export function ShellProjectMenuTemplate({
             </div>
           </>
         ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-export function ShellFileMenuTemplate({
-  open,
-  onOpenChange,
-  copy,
-  newProjectLabel,
-  triggerRef,
-  onNewProject,
-  onProjectCodeSelected,
-  onSnapshotFileSelected,
-  onCloseAutoFocus,
-}: MenuLifecycle &
-  Readonly<{
-    copy: ShellTopBarCopy;
-    newProjectLabel: string;
-    triggerRef: RefObject<HTMLButtonElement>;
-    onNewProject: () => void;
-    onProjectCodeSelected: () => void;
-    onSnapshotFileSelected: () => void;
-    onCloseAutoFocus: (event: Event) => void;
-  }>) {
-  return (
-    <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          ref={triggerRef}
-          data-slot="shell-file-menu-trigger"
-          variant="ghost"
-          size="sm"
-          className={topAppBarClasses.menuButton}
-        >
-          <Folder aria-hidden="true" className={topAppBarClasses.menuTriggerIcon} />
-          {copy.fileMenu}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className={topAppBarClasses.contextMenuContent}
-        onCloseAutoFocus={onCloseAutoFocus}
-      >
+        <DropdownMenuSeparator />
         <DropdownMenuItem data-slot="shell-new-project-command" onSelect={onNewProject}>
           <FolderPlus aria-hidden="true" className={topAppBarClasses.menuItemIcon} />
           {newProjectLabel}
         </DropdownMenuItem>
-        <CanvasWorkspaceMenuControls
-          onProjectCodeSelected={onProjectCodeSelected}
-          onSnapshotFileSelected={onSnapshotFileSelected}
-        />
+        <CanvasWorkspaceMenuControls onSnapshotFileSelected={onSnapshotFileSelected} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

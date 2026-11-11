@@ -13,6 +13,7 @@ import { AppServicesProvider } from '../../services/AppServicesContext';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './copy';
 import { ShellWorkspaceScopeSelector } from './ShellWorkspaceScopeSelector';
+import { DropdownMenu, DropdownMenuContent } from '../ui/dropdown-menu';
 
 describe('ShellWorkspaceScopeSelector', () => {
   let container: HTMLDivElement;
@@ -50,29 +51,74 @@ describe('ShellWorkspaceScopeSelector', () => {
         <AppServicesProvider
           overrides={{ ...createAppServicesTestOverrides(), workspaceScopeSelection: port }}
         >
-          <ShellWorkspaceScopeSelector copy={resolveShellTopBarCopy('en')} />
+          <DropdownMenu open modal={false}>
+            <DropdownMenuContent>
+              <ShellWorkspaceScopeSelector copy={resolveShellTopBarCopy('en')} />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </AppServicesProvider>
       );
     });
 
-    expect(container.textContent).toContain('Projects available in this session');
-    expect(container.textContent).toContain('No other project is available in this session.');
+    expect(document.body.textContent).toContain('Projects available in this session');
+    expect(document.body.textContent).toContain('No other project is available in this session.');
+  });
+
+  it('retains the menu and accepted scope when selection is rejected', async () => {
+    // A stale grant must not close the menu or mark the requested scope accepted.
+    const selected = { tenantId: 'tenant', projectId: 'a', environmentId: 'dev' };
+    const rejected = { ...selected, projectId: 'b' };
+    const snapshot = createSelectionSnapshot(selected, [selected, rejected]);
+    const onOpenChange = vi.fn();
+    const onScopeSelected = vi.fn();
+    const port: WorkspaceScopeSelectionPort = {
+      getSelection: () => snapshot,
+      subscribeSelection: () => () => undefined,
+      selectWorkspaceScope: (requestedScope) => ({
+        status: 'rejected',
+        reason: 'workspace_scope_unavailable',
+        requestedScope,
+        selectedScope: selected,
+      }),
+    };
+    await act(async () => {
+      root.render(
+        <AppServicesProvider
+          overrides={{ ...createAppServicesTestOverrides(), workspaceScopeSelection: port }}
+        >
+          <DropdownMenu open modal={false} onOpenChange={onOpenChange}>
+            <DropdownMenuContent>
+              <ShellWorkspaceScopeSelector
+                copy={resolveShellTopBarCopy('en')}
+                onScopeSelected={onScopeSelected}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </AppServicesProvider>
+      );
+    });
+    const choices = document.body.querySelectorAll<HTMLElement>('[role="menuitemradio"]');
+    await act(async () => {
+      fireEvent.click(choices[1]!);
+    });
+    expect(onScopeSelected).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(choices[0]?.getAttribute('aria-checked')).toBe('true');
+    expect(choices[1]?.getAttribute('aria-checked')).toBe('false');
   });
 
   it.each([
     {
       interaction: 'pointer click',
-      activate: (button: HTMLButtonElement) => fireEvent.click(button),
+      activate: (button: HTMLElement) => fireEvent.click(button),
     },
     {
       interaction: 'Enter',
-      activate: (button: HTMLButtonElement) =>
-        fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' }),
+      activate: (button: HTMLElement) => fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' }),
     },
     {
       interaction: 'Space',
-      activate: (button: HTMLButtonElement) =>
-        fireEvent.keyDown(button, { key: ' ', code: 'Space' }),
+      activate: (button: HTMLElement) => fireEvent.keyDown(button, { key: ' ', code: 'Space' }),
     },
   ])(
     'selects an explicitly listed server-granted project with $interaction',
@@ -111,19 +157,23 @@ describe('ShellWorkspaceScopeSelector', () => {
           <AppServicesProvider
             overrides={{ ...createAppServicesTestOverrides(), workspaceScopeSelection: port }}
           >
-            <ShellWorkspaceScopeSelector
-              copy={resolveShellTopBarCopy('en')}
-              onScopeSelected={onScopeSelected}
-            />
+            <DropdownMenu open modal={false}>
+              <DropdownMenuContent>
+                <ShellWorkspaceScopeSelector
+                  copy={resolveShellTopBarCopy('en')}
+                  onScopeSelected={onScopeSelected}
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
           </AppServicesProvider>
         );
       });
 
-      const projectBButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
-        (button) => button.textContent?.includes('Analytics')
-      );
+      const projectBButton = [
+        ...document.body.querySelectorAll<HTMLElement>('[role="menuitemradio"]'),
+      ].find((button) => button.textContent?.includes('Analytics'));
       expect(projectBButton).toBeDefined();
-      expect(container.textContent).not.toContain('project-b');
+      expect(document.body.textContent).not.toContain('project-b');
 
       await act(async () => {
         activate(projectBButton!);
@@ -131,7 +181,7 @@ describe('ShellWorkspaceScopeSelector', () => {
 
       expect(selectWorkspaceScope).toHaveBeenCalledWith(projectB);
       expect(onScopeSelected).toHaveBeenCalledOnce();
-      expect(projectBButton?.getAttribute('aria-pressed')).toBe('true');
+      expect(projectBButton?.getAttribute('aria-checked')).toBe('true');
     }
   );
 });

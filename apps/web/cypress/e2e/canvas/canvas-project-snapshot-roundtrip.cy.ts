@@ -51,10 +51,10 @@ describe('Canvas project snapshot round trip', () => {
     clickCanvasAddCatalogAction('create-node', 'dvt:transform');
   }
 
-  function openFileMenuIfClosed(): void {
+  function openProjectMenuIfClosed(): void {
     cy.get('body').then(($body) => {
       if ($body.find('[data-slot="canvas-workspace-import-input"]').length === 0) {
-        cy.get('[data-slot="shell-file-menu-trigger"]').click();
+        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
       }
     });
   }
@@ -70,10 +70,10 @@ describe('Canvas project snapshot round trip', () => {
     cy.get('[data-slot="canvas-workspace-export-command"]').click();
   }
 
-  function assertSnapshotSelectionClosedFile(): void {
+  function assertSnapshotSelectionClosedProject(): void {
     cy.get('[data-slot="canvas-workspace-import-input"]').should('not.exist');
-    cy.get('[data-slot="shell-file-menu-trigger"]')
-      .should('have.attr', 'data-state', 'closed')
+    cy.get('[data-slot="shell-workspace-menu-trigger"]')
+      .should('have.attr', 'aria-expanded', 'false')
       .and('be.focused');
   }
 
@@ -93,7 +93,7 @@ describe('Canvas project snapshot round trip', () => {
     addSqlTransformNode();
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     clickVisibleWorkspaceExportSnapshotCommand();
 
     cy.readFile(downloadPath).then((contents) => {
@@ -121,7 +121,7 @@ describe('Canvas project snapshot round trip', () => {
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('not.exist');
-    openFileMenuIfClosed();
+    openProjectMenuIfClosed();
     cy.get('[data-slot="canvas-workspace-export-command"]').should(($command) => {
       expect($command.attr('data-disabled'), 'settled initial draft').to.be.undefined;
     });
@@ -137,18 +137,18 @@ describe('Canvas project snapshot round trip', () => {
       },
       { force: true }
     );
-    assertSnapshotSelectionClosedFile();
+    assertSnapshotSelectionClosedProject();
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
         saveCountBeforeRejectedImport
       );
     });
 
-    openFileMenuIfClosed();
+    openProjectMenuIfClosed();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(downloadPath, {
       force: true,
     });
-    assertSnapshotSelectionClosedFile();
+    assertSnapshotSelectionClosedProject();
     cy.then(() => waitForDraftSaveCount(saveCountBeforeRejectedImport + 1));
 
     visitReadyCanvas();

@@ -256,8 +256,7 @@ describe('Central project Code workflow files', () => {
 
     visitWithE2eWorkspaceSession('/canvas');
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
 
     waitForE2eApiCall('/workspace/files', 'GET');
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET');
@@ -301,8 +300,7 @@ describe('Central project Code workflow files', () => {
           );
         },
       });
-      cy.get('[data-slot="shell-file-menu-trigger"]').click();
-      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="shell-project-code-command"]').click();
       waitForE2eApiCall('/workspace/files', 'GET');
       cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
       cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
