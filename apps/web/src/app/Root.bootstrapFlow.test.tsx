@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/** Prove bootstrap readiness follows its dependencies and the accessible health pilot. */
 import { waitFor, within } from '@testing-library/dom';
 import type { CapabilitiesPort } from './ports/capabilities';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -110,7 +111,11 @@ describe('RootShell bootstrap flow', () => {
           status: 'pending',
         });
       });
-      expect(view.getByText('Checking')).toBeTruthy();
+      const healthPilot = view.getByRole('img', { name: 'Checking' });
+      expect(healthPilot.getAttribute('data-connection-state')).toBe('checking');
+      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith(
+        expect.objectContaining({ step: 'health', status: 'complete' })
+      );
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
     } finally {
       await mounted.cleanup();
