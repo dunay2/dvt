@@ -4,11 +4,9 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import {
-  resolveWebVitestChangedSuitePlan,
-  type WebVitestChangedSuiteName,
-  WEB_VITEST_CHANGED_SUITE_COMMANDS,
-} from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
+import { type WebVitestChangedSuiteName } from '../../vitest.suites';
+import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
 import { suiteMatchesFile } from './vitestSuites.architecture.support';
 
 describe('web Vitest changed-file routing', () => {

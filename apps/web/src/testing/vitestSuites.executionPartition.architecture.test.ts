@@ -3,15 +3,14 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BaseSequencer, createVitest } from 'vitest/node';
-import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
+import { main } from '../../scripts/run-vitest-changed-suites';
+import { parseChangedSuiteArgs } from '../../scripts/changed-suite-args';
 import {
   selectWebVitestExecutionPartition,
   WEB_VITEST_EXECUTION_GROUPS,
 } from '../../scripts/vitest-execution-partitions';
-import {
-  resolveWebVitestChangedSuitePlan,
-  WEB_VITEST_CHANGED_SUITE_COMMANDS,
-} from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
+import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
 import { listWebVitestFiles, suiteMatchesFile, webRoot } from './vitestSuites.architecture.support';
 
 vi.mock('node:child_process', async (original) => ({

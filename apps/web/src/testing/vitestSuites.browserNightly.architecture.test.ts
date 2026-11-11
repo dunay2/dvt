@@ -9,7 +9,7 @@ import {
   WEB_CYPRESS_SPECS,
   resolveWebCypressChangedPlan,
 } from '../../cypress.changed';
-import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 
 const nightly = 'apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts';
 const authoring = 'apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts';
