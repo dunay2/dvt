@@ -506,6 +506,8 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="app-shell-outlet"]').then(($outlet) => {
       cy.get('[data-slot="shell-menu-trigger"]').click();
       cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+      // Radix restores trigger focus; leave it before checking the pointer-only hide path.
+      cy.get('[data-slot="app-shell-outlet"]').click('bottomRight');
       hoverWorkbenchCard('[data-slot="app-shell-frame"]');
       cy.get('[data-slot="shell-top-bar"]').should(($header) => {
         expect($header[0]!.getBoundingClientRect().bottom).to.be.at.most(0);
