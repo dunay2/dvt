@@ -16,6 +16,7 @@
     "apps/web/src/app/plugins/registry.ts",
     "apps/web/src/app/stores/authorizationStore.ts",
     "scripts/planning-db-query.cjs",
+    "scripts/lib/component-source-responsibilities.cjs",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/dist/**"

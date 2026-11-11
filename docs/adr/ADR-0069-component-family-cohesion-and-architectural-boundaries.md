@@ -175,8 +175,12 @@ receipts. Avoid global rescans per child and another unconditional CI job.
 
 Accepted by the repository user on 2026-11-11; acceptance is recorded in
 [#3850](https://github.com/dunay2/dvt/issues/3850). This accepts the decision,
-without claiming implemented enforcement. Implementation requires an admitted
-design, GitHub tracking and the following evidence:
+without claiming complete automated enforcement. Section 5 already reuses
+`scripts/lib/component-source-responsibilities.cjs` to reject invalid binding
+shapes, missing responsibility owners, mismatched ownership and missing qualified
+source symbols. Its ADR-0000 trace covers those existing checks, not semantic
+family acceptance. Further implementation requires an admitted design, GitHub
+tracking and the following evidence:
 
 1. Review of the motivating CI family before topology mutation, including SRP,
    actual ports, commands/queries, sibling rationale and physical source mapping.
