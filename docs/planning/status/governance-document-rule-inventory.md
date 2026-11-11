@@ -2,7 +2,7 @@
 title: Governance Document And Rule Inventory
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-09-22
+last_reviewed: 2026-11-11
 planning_type: status
 ---
 
@@ -86,6 +86,10 @@ an active startup route, work queue, or reason to retain obsolete documents.
   current implementation status, not a behavioral specification.
 - [Command And Query Rail Governance](../../architecture/command-query-rail-governance.md)
   — externally observable behavior ownership.
+- [ADR-0069](../../adr/ADR-0069-component-family-cohesion-and-architectural-boundaries.md)
+  — family cohesion, SRP, ports, command/query boundaries and logical-to-source
+  traceability. Apply its review criteria; automated enforcement needs separate
+  implementation evidence.
 - [Fowler Opportunity Planning Governance](../../architecture/fowler-opportunity-planning-governance.md)
   — non-trivial design analysis and allowed implementation surfaces.
 
