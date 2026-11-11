@@ -895,6 +895,13 @@ describe('Canvas workbench screen composition', () => {
       .should('be.visible');
     cy.press(Cypress.Keyboard.Keys.ESC);
     cy.get('[role="tooltip"]').should('not.exist');
+    // Activating the help target also works without hover and never submits disabled Run.
+    cy.get('[data-slot="shell-run-status-indicator"]').blur().click();
+    cy.get('[role="tooltip"]').should('have.text', 'Vista previa obligatoria');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.then(() => expect(getE2eApiCalls('/runs', 'POST')).to.have.length(0));
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[role="tooltip"]').should('not.exist');
     cy.get('[data-slot="canvas-playground-template-choice"]')
       .should('have.text', 'Empezar Canvas')
       .and('be.enabled')

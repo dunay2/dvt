@@ -438,6 +438,26 @@ describe('ShellTopBar workspace context', () => {
     expect(contribution.runs.onStartRun).not.toHaveBeenCalled();
   });
 
+  it('reveals disabled Run help on tap without invoking the command', async () => {
+    // Touch users have no hover; the blocked command must still explain its prerequisite.
+    const contribution = buildCanvasRunContribution();
+    useOperationalDrawerContributionStore.setState({ contribution });
+    await act(async () => root.render(renderShellTopBar('/canvas')));
+    const target = container.querySelector<HTMLElement>(
+      '[data-slot="shell-run-status-indicator"]'
+    )!;
+    await act(async () => fireEvent.click(target));
+    await waitFor(() =>
+      expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Preview required')
+    );
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]')?.disabled
+    ).toBe(true);
+    expect(contribution.runs.onStartRun).not.toHaveBeenCalled();
+    await act(async () => fireEvent.keyDown(document, { key: 'Escape' }));
+    await waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+  });
+
   it('localizes Canvas run status, command, and accessible name from the application preference', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     useOperationalDrawerContributionStore.setState({

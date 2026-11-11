@@ -4,6 +4,7 @@
  * @consequence A disabled command retains native gating and a focusable help target.
  */
 import { Play } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -40,6 +41,7 @@ export function ShellRunStatusIndicator({
   contribution,
   copy,
 }: ShellRunStatusIndicatorProps): JSX.Element | null {
+  const [helpOpen, setHelpOpen] = useState(false);
   if (contribution?.source !== 'canvas') {
     return null;
   }
@@ -48,7 +50,7 @@ export function ShellRunStatusIndicator({
   const runDisabled = contribution.runs.activeRunId != null || !contribution.runs.canStartRun;
 
   return (
-    <Tooltip>
+    <Tooltip open={helpOpen} onOpenChange={setHelpOpen}>
       <TooltipTrigger asChild>
         <div
           data-slot="shell-run-status-indicator"
@@ -56,6 +58,12 @@ export function ShellRunStatusIndicator({
           role="group"
           tabIndex={runDisabled ? 0 : undefined}
           aria-label={copy.canvasRunStatusTemplate.replace('{status}', statusLabel)}
+          onClick={(event) => {
+            if (!runDisabled) return;
+            // A tap has no hover; prevent Radix's click dismissal only for blocked Run help.
+            event.preventDefault();
+            setHelpOpen(true);
+          }}
         >
           <Button
             type="button"
