@@ -341,6 +341,9 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
     cy.get('.react-flow__controls-fitview').click();
     const overlay = '[data-slot="canvas-node-workbench-overlay"]';
+    // Fit changes screen coordinates; the title remains outside the editable icon control.
+    const sourceTitle =
+      '.react-flow__node[data-id="source-1"] [data-slot="graph-node-card-title"], .react-flow__node[data-id="source-1"] [data-slot="graph-node-source-identity-trigger"]';
     let inspectorAppeared = false;
     let observer: MutationObserver;
     cy.document().then((document) => {
@@ -349,7 +352,7 @@ describe('Canvas ready node authoring', () => {
       });
       observer.observe(document.body, { childList: true, subtree: true });
     });
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick(8, 8);
+    cy.get(sourceTitle).should('be.visible').dblclick();
     // Wait beyond the single-click decision interval to catch a deferred inspector.
     cy.wait(600);
     cy.get(overlay).should('not.exist');
@@ -358,7 +361,7 @@ describe('Canvas ready node authoring', () => {
       expect(inspectorAppeared, 'Source double click never inspects').to.equal(false);
     });
     cy.get('.react-flow__controls-fitview').click();
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').click(8, 8);
+    cy.get(sourceTitle).should('be.visible').click();
     cy.get(overlay).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__controls-fitview').click();
@@ -697,7 +700,10 @@ describe('Canvas ready node authoring', () => {
     cy.contains('.react-flow__node', 'Src Orders').as('sourceNode').should('be.visible');
     const sourceCard = '.react-flow__node[data-id="src_orders"] [data-slot="graph-node-card"]';
     assertComputedColorRole(sourceCard, 'border-top-color', '--status-success');
-    cy.get('@sourceNode').click(8, 8);
+    cy.get('@sourceNode')
+      .find('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]')
+      .should('be.visible')
+      .click();
     cy.get(sourceCard).should(($card) => {
       const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
       expect(style.boxShadow, 'selection remains separate from the healthy border').to.contain(
