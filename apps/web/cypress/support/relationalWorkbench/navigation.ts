@@ -132,7 +132,15 @@ export function openWorkbenchProperties(nodeId: string): void {
   });
   cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   cy.get('body').should('not.have.css', 'pointer-events', 'none');
-  cy.get(node).find('[data-slot="canvas-node-shell"]').should('be.focused');
+  // Source identity owns focus; a normal title delegates focus to its card shell.
+  cy.get(node)
+    .find<HTMLElement>(
+      '[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]'
+    )
+    .should('have.length', 1)
+    .closest<HTMLElement>('[tabindex="0"]')
+    .should('have.length', 1)
+    .and('be.focused');
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
 }
 
