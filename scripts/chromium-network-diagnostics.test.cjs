@@ -23,6 +23,46 @@ const {
 const {
   ChromiumProjectionError,
 } = require('../apps/web/cypress/node/chromiumNetworkProjection.ts');
+const cypressConfig = require('../apps/web/cypress.config.ts').default;
+
+test('desktop launch profile preserves unrelated flags and leaves other browser families alone', () => {
+  // Linux headless device defaults must not silently select the touch-only presentation branch.
+  const hooks = new Map();
+  cypressConfig.e2e.setupNodeEvents((event, handler) => hooks.set(event, handler), {});
+  const launch = {
+    args: [
+      '--existing',
+      '--blink-settings=foo=true,primaryPointerType=2',
+      '--blink-settings=bar=false',
+    ],
+  };
+  const prepare = hooks.get('before:browser:launch');
+  assert.equal(typeof prepare, 'function');
+  assert.equal(prepare({ family: 'firefox' }, launch), launch);
+  assert.equal(launch.args.length, 3);
+  assert.equal(prepare({ family: 'chromium' }, launch), launch);
+  assert.ok(launch.args.includes('--existing'));
+  const settings = launch.args.filter((argument) => argument.startsWith('--blink-settings='));
+  assert.equal(settings.length, 1);
+  assert.deepEqual(
+    Object.fromEntries(
+      settings[0]
+        .slice('--blink-settings='.length)
+        .split(',')
+        .map((setting) => setting.split('='))
+    ),
+    {
+      foo: 'true',
+      bar: 'false',
+      primaryHoverType: '2',
+      availableHoverTypes: '2',
+      primaryPointerType: '4',
+      availablePointerTypes: '4',
+    }
+  );
+  prepare({ family: 'chromium' }, launch);
+  assert.equal(launch.args.length, 2, 'launch composition is idempotent');
+});
 
 function fixture(enabled = true) {
   const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-test-'));
@@ -205,11 +245,18 @@ test('failed-spec snapshot survives raw overwrite without snapshotting successfu
       workspaceRoot,
       async () => {
         const hooks = new Map();
-        configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {
-          projectRoot: path.join(workspaceRoot, 'apps/web'),
-        });
+        cypressConfig.e2e.setupNodeEvents(
+          (event, handler) => {
+            assert.equal(hooks.has(event), false, 'profile and capture share one launch hook');
+            hooks.set(event, handler);
+          },
+          { projectRoot: path.join(workspaceRoot, 'apps/web') }
+        );
         const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
-        const raw = launch.args[0].slice('--log-net-log='.length);
+        assert.ok(launch.args.some((argument) => argument.includes('primaryPointerType=4')));
+        const raw = launch.args
+          .find((argument) => argument.startsWith('--log-net-log='))
+          .slice('--log-net-log='.length);
         const afterSpec = hooks.get('after:spec');
         assert.equal(typeof afterSpec, 'function');
         afterSpec(spec, undefined);

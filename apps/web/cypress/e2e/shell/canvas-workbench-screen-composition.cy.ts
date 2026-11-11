@@ -154,6 +154,12 @@ function assertNoSeriousAccessibilityViolations(context: string): void {
 function clearBrowserEmulation(): void {
   cy.then(() =>
     Cypress.automation('remote:debugger:protocol', {
+      command: 'Emulation.setTouchEmulationEnabled',
+      params: { enabled: false },
+    })
+  );
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
       command: 'Emulation.clearDeviceMetricsOverride',
     })
   );
@@ -500,6 +506,12 @@ describe('Canvas workbench screen composition', () => {
     // Auto-hide must not trap users in Focus or replace the route they are working on.
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.window().should((window) => {
+      expect(
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches,
+        'desktop input profile'
+      ).to.equal(true);
+    });
     cy.get('[data-slot="shell-top-bar"]').should(($header) => {
       expect($header[0]!.getBoundingClientRect().height).to.be.at.most(32);
     });
@@ -509,6 +521,16 @@ describe('Canvas workbench screen composition', () => {
       // Radix restores trigger focus; leave it before checking the pointer-only hide path.
       cy.get('[data-slot="app-shell-outlet"]').click('bottomRight');
       hoverWorkbenchCard('[data-slot="app-shell-frame"]');
+      cy.get('[role="menu"]').should('not.exist');
+      cy.get('[data-slot="app-shell-header-host"]')
+        .should('have.attr', 'data-focus-mode', 'true')
+        .and(($host) => {
+          expect($host[0]!.matches(':hover'), 'pointer is outside header').to.equal(false);
+          expect(
+            $host[0]!.querySelector(':focus-visible'),
+            'keyboard focus is outside header'
+          ).to.equal(null);
+        });
       cy.get('[data-slot="shell-top-bar"]').should(($header) => {
         expect($header[0]!.getBoundingClientRect().bottom).to.be.at.most(0);
       });
@@ -533,6 +555,34 @@ describe('Canvas workbench screen composition', () => {
       });
       cy.get('[data-slot="app-shell-left-navigation"]').should('be.visible');
     });
+  });
+
+  it('retains visible Focus controls for a coarse pointer without hover', () => {
+    // Touch users must retain an exit from Focus without discovering a hover-only edge.
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.then(() =>
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Emulation.setTouchEmulationEnabled',
+        params: { enabled: true, maxTouchPoints: 1 },
+      })
+    );
+    cy.window().should((window) => {
+      expect(
+        window.matchMedia('(hover: none) and (pointer: coarse)').matches,
+        'touch input profile'
+      ).to.equal(true);
+    });
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+    cy.get('[data-slot="app-shell-outlet"]').click('bottomRight');
+    cy.get('[data-slot="app-shell-header-host"]').should('have.attr', 'data-focus-mode', 'true');
+    cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+      expect($header[0]!.getBoundingClientRect().top).to.equal(0);
+    });
+    cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').click();
+    cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+    cy.get('[data-slot="app-shell-left-navigation"]').should('be.visible');
   });
 
   it('keeps Canvas startup commands route-local and global navigation directly visible on the left', () => {
