@@ -329,12 +329,13 @@ function openAndValidateDbtImport(language: 'en' | 'es'): void {
   cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').click();
   cy.get('[data-slot="dbt-project-import-root"]').clear().type(PROJECT_ROOT);
   cy.get('[data-slot="dbt-project-import-canvas-id"]').clear().type(CANVAS_ID);
-  cy.contains('button', copy.validate).click();
+  cy.get('[data-slot="dbt-project-import-dialog"]').contains('button', copy.validate).click();
   cy.get('[data-slot="dbt-project-import-dialog"]', { timeout: 20_000 }).should(
     'contain.text',
     copy.ready
   );
-  cy.contains('button', copy.import).click();
+  // The Code action shares the Spanish import label; confirm only inside the active dialog.
+  cy.get('[data-slot="dbt-project-import-dialog"]').contains('button', copy.import).click();
 }
 
 function assertSeriousAccessibility(): void {
