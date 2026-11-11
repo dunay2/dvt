@@ -50,6 +50,7 @@ export function useCanvasControllerPresentation({
       onRemoveNode: graphHandlers.handleRemoveNode,
       onAttachSchemaToNode: graphHandlers.handleAttachSchemaToNode,
       onSetNodeMaterialization: inspectorCommands.setNodeMaterialization,
+      onSetNodeIcon: inspectorCommands.setNodeIcon,
     },
     columnActions: {
       onMapCanvasInput: graphHandlers.handleMapCanvasInput,

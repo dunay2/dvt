@@ -1,11 +1,12 @@
 /**
  * Owned concern: present authoritative Source identity in the node workbench header.
  * @baseline GH-3578: adjacent provider text already conveys the decorative glyph's meaning.
- * @decision Keep the glyph hidden from assistive technology, without a redundant ARIA label.
+ * @decision Keep the decorative fallback hidden; an editable identity retains its named control.
  * @consequence Provider and connection facts remain accessible once, with no invented fallback.
  * @version 1.0.0
  */
 import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import type { ReactNode } from 'react';
 import { ModelIdentityIcon } from '../../components/inspector/ModelIdentityIcon';
 import styles from '../../components/inspector/ModelIdentity.module.css';
 import { resolveCanvasModelIdentity } from './canvasModelIdentity';
@@ -37,7 +38,8 @@ function resolveProviderPresentation(provider: string | null): SourceProviderPre
 /** Preserve provider facts independently from the chosen presentation icon. */
 export function SourceNodeWorkbenchHeaderIdentity({
   node,
-}: Readonly<{ node: CanonicalNode }>): JSX.Element {
+  identityControl,
+}: Readonly<{ node: CanonicalNode; identityControl?: ReactNode }>): JSX.Element {
   const metadata = metadataOf(node);
   const connectedSourceRef = ConnectedSourceRefSchema.safeParse(metadata.connectedSourceRef);
   const provider = connectedSourceRef.success
@@ -56,8 +58,13 @@ export function SourceNodeWorkbenchHeaderIdentity({
 
   return (
     <div data-slot="canvas-source-workbench-header-identity" className={styles.identity}>
-      <div data-slot="canvas-source-provider-icon" aria-hidden="true">
-        <ModelIdentityIcon icon={resolveCanvasModelIdentity(node)!.icon} size="header" />
+      <div
+        data-slot="canvas-source-provider-icon"
+        aria-hidden={identityControl == null ? true : undefined}
+      >
+        {identityControl ?? (
+          <ModelIdentityIcon icon={resolveCanvasModelIdentity(node)!.icon} size="header" />
+        )}
       </div>
 
       <div className={styles.text}>

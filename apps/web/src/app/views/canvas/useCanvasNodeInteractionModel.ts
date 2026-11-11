@@ -1,4 +1,8 @@
-import { useMemo } from 'react';
+/** Project governed Canvas actions and command feedback into passive node presentation data. */
+import { useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
+import { getApplicationLanguage } from '../../stores/applicationLanguageStore';
+import type { CanvasModelIconPreference } from './canvasModelIdentity';
 import type { Node } from '@xyflow/react';
 import { getGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
@@ -58,6 +62,18 @@ export function useCanvasNodeInteractionModel({
 }: Args): Node[] {
   const changeMaterialization = useCanvasMaterializationAction(
     cardActions.onSetNodeMaterialization
+  );
+  const changeModelIcon = useCallback(
+    (nodeId: string, value: CanvasModelIconPreference) => {
+      const result = cardActions.onSetNodeIcon?.(nodeId, value);
+      if (result?.outcome === 'rejected')
+        toast.error(
+          getApplicationLanguage().startsWith('es')
+            ? 'No se pudo cambiar el icono del modelo.'
+            : 'The model icon could not be changed.'
+        );
+    },
+    [cardActions.onSetNodeIcon]
   );
   const graphNodeCardStrategies = useMemo(
     () => getGraphNodeCardStrategies(runtimeCapabilities),
@@ -121,6 +137,8 @@ export function useCanvasNodeInteractionModel({
         });
         const data = {
           ...projected.data,
+          onChangeModelIcon:
+            canMutateGraph && cardActions.onSetNodeIcon ? changeModelIcon : undefined,
           activeRunId: overlayModel.activeRunId,
           runStatusByNodeId: overlayModel.runStatusByNodeId,
           overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
@@ -154,6 +172,8 @@ export function useCanvasNodeInteractionModel({
       columnLevelLineageEnabled,
       cardActions.onInspectNode,
       cardActions.onSetNodeMaterialization,
+      cardActions.onSetNodeIcon,
+      changeModelIcon,
       changeMaterialization,
       cardActions.onDuplicateNode,
       cardActions.onRemoveNode,

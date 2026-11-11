@@ -7,6 +7,7 @@ import {
   applyCanvasInspectorNodeDraftWithInputsToSession,
 } from './canvasInspectorAuthoringCommand';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { isCanvasModelIconAllowed, type CanvasModelIconPreference } from './canvasModelIdentity';
 import {
   canConfigureNativeMaterialization,
   withDvtTransformMaterialization,
@@ -132,9 +133,32 @@ export function useCanvasInspectorCommands({
     [canEditNode, canonicalNodesById, runDraftSessionCommand, workspaceScope]
   );
 
+  // Resolve the current aggregate inside the command: card data is only a presentation snapshot.
+  const setNodeIcon = useCallback(
+    (nodeId: string, modelIcon: CanvasModelIconPreference): CanvasInspectorNodeDraftApplyResult =>
+      runDraftSessionCommand((currentSession) => {
+        const node = resolveCanvasDraftNodes(currentSession, canonicalNodesById).find(
+          (candidate) => candidate.id === nodeId
+        );
+        if (!canEditNode || node == null)
+          return { outcome: 'rejected', reason: 'node_unavailable' } as const;
+        if (!isCanvasModelIconAllowed(node, modelIcon))
+          return { outcome: 'rejected', reason: 'invalid_draft' } as const;
+        return applyCanvasInspectorNodeDraftToSession({
+          canonicalNodesById,
+          draftSession: currentSession,
+          node,
+          workspaceScope,
+          draft: { ...createCanvasInspectorNodeDraft(node), modelIcon },
+        });
+      }),
+    [canEditNode, canonicalNodesById, runDraftSessionCommand, workspaceScope]
+  );
+
   return {
     applyNodeDraft,
     applyInspectorNodeDraft,
     setNodeMaterialization,
+    setNodeIcon,
   };
 }

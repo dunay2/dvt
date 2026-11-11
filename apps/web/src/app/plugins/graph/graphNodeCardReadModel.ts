@@ -67,6 +67,7 @@ export function projectGraphNodeCardViewProps(
       )
     : node.tags.map((tag) => ({ value: tag, label: tag }));
   const inspectNode = data.onInspectNode;
+  const changeIcon = data.onChangeModelIcon;
   const openOperationalDetails = data.onOpenOperationalDetails;
   const {
     columnPortDirections,
@@ -104,7 +105,9 @@ export function projectGraphNodeCardViewProps(
         }
       : null,
     icon: kindMeta.icon,
-    modelIcon: resolveCanvasModelIdentity(node)?.icon,
+    modelIdentity: resolveCanvasModelIdentity(node) ?? undefined,
+    onChangeModelIcon:
+      typeof changeIcon === 'function' ? (value) => changeIcon(node.id, value) : undefined,
     borderClass: kindMeta.borderClass,
     selected,
     hovered,

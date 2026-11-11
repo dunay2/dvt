@@ -7,7 +7,10 @@ import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
-import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
+import {
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  WorkspaceGraphAuthoringDraftSchema,
+} from '@dvt/contracts';
 import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import { createCanvasNodeInstance } from './canvasNodeInstance';
 import {
@@ -19,6 +22,11 @@ import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthoringCommand';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import documents from '../../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 
 const model: CanonicalNode = {
   id: 'model',
@@ -35,6 +43,45 @@ const dbt: CanonicalNode = {
 };
 
 describe('model identity admission', () => {
+  // A visual Join claim must follow the canonical definition, including after later edits.
+  it('offers Join only for canonical joins and removes stale operation preferences', () => {
+    const joined = applyDvtSubstraitSemanticDocument(model, documents.two);
+    expect(resolveCanvasModelIdentity(joined)?.choices).toContain('join');
+    const selected = applyCanvasInspectorNodeDraft(joined, {
+      ...createCanvasInspectorNodeDraft(joined),
+      modelIcon: 'join',
+    });
+    expect(resolveCanvasModelIdentity(selected)?.icon).toBe('join');
+    expect(readDvtTransformAuthoringAuthority(selected)?.semanticDocument).toEqual(
+      readDvtTransformAuthoringAuthority(joined)!.semanticDocument
+    );
+    const projection = projectedModel(sourceNode(), ['order_id']);
+    const changed = { ...projection, metadata: { ...projection.metadata, modelIcon: 'join' } };
+    expect(resolveCanvasModelIdentity(changed)?.choices).not.toContain('join');
+    expect(resolveCanvasModelIdentity(changed)?.icon).toBe('substrait');
+    expect(
+      resolveCanvasModelIdentity({ ...model, name: 'Join', tags: ['join'] })?.choices
+    ).not.toContain('join');
+    expect(
+      resolveCanvasModelIdentity({
+        ...joined,
+        metadata: {
+          ...joined.metadata,
+          [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {},
+        },
+      })?.choices
+    ).not.toContain('join');
+    expect(
+      resolveCanvasModelIdentity({
+        ...dbt,
+        metadata: {
+          ...dbt.metadata,
+          sql: 'select * from a join b using (id)',
+        },
+      })?.choices
+    ).not.toContain('join');
+  });
+
   it('offers dbt only through the existing compatibility authority, never a name or tag', () => {
     expect(resolveCanvasModelIdentity(dbt)).toMatchObject({
       icon: 'dbt',

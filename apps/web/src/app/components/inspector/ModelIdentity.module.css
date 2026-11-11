@@ -61,3 +61,32 @@
   font-size: var(--text-ui);
   line-height: var(--text-ui-line-height);
 }
+
+.iconTrigger {
+  flex: none;
+  width: calc(var(--spacing) * 6);
+  height: calc(var(--spacing) * 6);
+  padding: var(--spacing);
+  justify-content: center;
+  gap: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+}
+.iconTrigger[data-identity-size='header'] {
+  width: calc(var(--spacing) * 10);
+  height: calc(var(--spacing) * 10);
+}
+.iconTrigger > svg {
+  display: none;
+}
+.iconTrigger:hover,
+.iconTrigger[data-state='open'] {
+  background: var(--surface-elevated);
+  border-color: var(--border-default);
+}
+.iconTrigger:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
