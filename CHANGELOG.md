@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.21.0 (2026-11-11)
+
+## What's Changed
+* fix(web): Compact code inspection and inspector header actions by @dunay2 in https://github.com/dunay2/dvt/pull/3740
+* fix(web): Keep Canvas cards stationary when inspecting properties by @dunay2 in https://github.com/dunay2/dvt/pull/3745
+* feat(web): Add project files to the Canvas Git activity by @dunay2 in https://github.com/dunay2/dvt/pull/3746
+* refactor(ci): Modularize Planning DB and consolidate retained Code presentation by @dunay2 in https://github.com/dunay2/dvt/pull/3769
+* test(ci): Partition Planning DB query and projection suites by responsibility by @dunay2 in https://github.com/dunay2/dvt/pull/3768
+* feat(web): Integrate real dbt reference cards into Code by @dunay2 in https://github.com/dunay2/dvt/pull/3777
+* fix(web): Resolve dbt references from the normal Code entry by @dunay2 in https://github.com/dunay2/dvt/pull/3778
+* fix(web): Keep the activity rail available in Canvas and Code by @dunay2 in https://github.com/dunay2/dvt/pull/3779
+* fix(web): Eliminate browser type errors and stabilize Code inspection by @dunay2 in https://github.com/dunay2/dvt/pull/3788
+* ci(ci): Partition controlled browser evidence across existing CI shards by @dunay2 in https://github.com/dunay2/dvt/pull/3795
+* ci(ci): Balance available browser evidence within existing shards by @dunay2 in https://github.com/dunay2/dvt/pull/3796
+* perf(api): Reuse eligible native dbt analysis across queries by @dunay2 in https://github.com/dunay2/dvt/pull/3797
+* ci(web): Partition Vitest and retain safe browser failure diagnostics by @dunay2 in https://github.com/dunay2/dvt/pull/3798
+* fix(web): Avoid automatic retries for dbt analysis queries by @dunay2 in https://github.com/dunay2/dvt/pull/3799
+* feat(web): Unify Canvas instances and project Code navigation by @dunay2 in https://github.com/dunay2/dvt/pull/3805
+* feat(adapters): Integrate bounded PostgreSQL projection fusion by @dunay2 in https://github.com/dunay2/dvt/pull/3806
+* refactor(ci): Share tenant-only bootstrap across protected proof runners by @dunay2 in https://github.com/dunay2/dvt/pull/3808
+* feat(adapters): Complete admitted PostgreSQL presentation rules by @dunay2 in https://github.com/dunay2/dvt/pull/3809
+* fix(api): Preview dbt inputs within mixed model joins by @dunay2 in https://github.com/dunay2/dvt/pull/3810
+* fix(web): Preserve model samples and registered definition identities by @dunay2 in https://github.com/dunay2/dvt/pull/3811
+* fix(web): Centralize native context menu suppression in the shell by @dunay2 in https://github.com/dunay2/dvt/pull/3812
+* fix(web): Keep missing Model inputs editable for explicit repair by @dunay2 in https://github.com/dunay2/dvt/pull/3813
+* fix(web): Close the Code tab through its guarded editor lifecycle by @dunay2 in https://github.com/dunay2/dvt/pull/3814
+* fix(web): Preserve Model layout and separate Canvas click intents by @dunay2 in https://github.com/dunay2/dvt/pull/3815
+* fix(web): Remove Code tab when its session closes by @dunay2 in https://github.com/dunay2/dvt/pull/3816
+* refactor(web): Consolidate Canvas surface and strategy decisions by @dunay2 in https://github.com/dunay2/dvt/pull/3817
+* fix(web): Persist Explorer layout through one state machine by @dunay2 in https://github.com/dunay2/dvt/pull/3819
+* refactor(web): Converge Canvas card typography and semantic visual tokens by @dunay2 in https://github.com/dunay2/dvt/pull/3820
+* fix(web): Restore consistent Canvas workbench interactions by @dunay2 in https://github.com/dunay2/dvt/pull/3834
+* chore(ci): Remove obsolete task-specific mechanization aliases by @dunay2 in https://github.com/dunay2/dvt/pull/3835
+* perf(ci): Remove duplicate validation and unblock integration proofs by @dunay2 in https://github.com/dunay2/dvt/pull/3836
+* feat(web): Add compatible model identity icons by @dunay2 in https://github.com/dunay2/dvt/pull/3838
+* feat(web): Edit model identity directly from Canvas icons by @dunay2 in https://github.com/dunay2/dvt/pull/3841
+* perf(ci): Partition selected Web suites across hosted PR jobs by @dunay2 in https://github.com/dunay2/dvt/pull/3843
+* chore(deps): Consolidate reviewed runtime and CI dependencies by @dunay2 in https://github.com/dunay2/dvt/pull/3844
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.20.1...v0.21.0
+
 ## 0.20.1 (2026-10-27)
 
 ## What's Changed
