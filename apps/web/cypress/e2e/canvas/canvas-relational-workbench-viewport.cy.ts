@@ -2,8 +2,9 @@
  * Owned concern: zoom and source-rail layout preserve the draft, search and graph fit.
  * @baseline SaveWorkspaceGraphDraft: viewport gestures do not persist draft changes.
  * @decision Measure all writes after the hydrated model has been durably synchronized.
+ * @decision Observe rendered Fit centering before capturing the camera for a pan gesture.
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
- * @version 1.0.1
+ * @version 1.0.2
  */
 import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
 
@@ -187,6 +188,28 @@ describe('Workbench viewport', () => {
     cy.get(`${main} .react-flow__controls-interactive`).should('not.exist');
     cy.get(`${main} .react-flow__controls-fitview`).click();
     cy.get(viewport).should(($viewport) => {
+      // Fit is queued; the initial zoom already satisfies < 1 and is not its completion signal.
+      const frame = $viewport[0]!.closest('.react-flow__pane')!.getBoundingClientRect();
+      const nodes = Array.from($viewport[0]!.querySelectorAll<HTMLElement>('.react-flow__node'))
+        .filter((node) => node.offsetWidth > 0 && node.offsetHeight > 0)
+        .map((node) => node.getBoundingClientRect());
+      expect(nodes.length, 'measured nodes fitted into the Canvas').to.be.greaterThan(0);
+      const centerX =
+        (Math.min(...nodes.map((node) => node.left)) +
+          Math.max(...nodes.map((node) => node.right))) /
+        2;
+      const centerY =
+        (Math.min(...nodes.map((node) => node.top)) +
+          Math.max(...nodes.map((node) => node.bottom))) /
+        2;
+      expect(centerX, 'Fit centers the graph horizontally').to.be.closeTo(
+        frame.left + frame.width / 2,
+        2
+      );
+      expect(centerY, 'Fit centers the graph vertically').to.be.closeTo(
+        frame.top + frame.height / 2,
+        2
+      );
       camera = new DOMMatrixReadOnly($viewport[0]!.style.transform);
       expect(camera.a).to.be.lessThan(1);
     });
