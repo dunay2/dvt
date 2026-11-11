@@ -6,6 +6,7 @@
  * @version 1.0.1
  */
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
+import { openCanvasNodeOperations } from '../canvasExecutionSelection';
 import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
@@ -121,14 +122,8 @@ export function editWorkbenchInspector(inspectorSelector: string): void {
 /** Properties is a contextual action; Model double-click belongs to the semantic editor. */
 export function openWorkbenchProperties(nodeId: string): void {
   const node = `.react-flow__node[data-id="${nodeId}"]`;
-  cy.get(node, { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
-    .focus()
-    .should('be.focused')
-    // Body controls can take focus before the menu captures its opener.
-    .find('[data-slot="graph-node-card-icon"]')
-    .rightclick();
+  // The icon owns identity selection; use the shared title gesture for node commands.
+  openCanvasNodeOperations(nodeId);
   cy.document().then((document) => {
     cy.contains(
       '[data-slot="canvas-node-context-menu-item"]',

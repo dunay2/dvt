@@ -5,6 +5,7 @@ import {
   connectWorkbenchProducer,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
+import { workbenchOperationSearch } from '../../support/relationalWorkbench/operationMenu';
 import {
   openPendingRelationalOperationChooser,
   stubPendingComposition,
@@ -28,7 +29,7 @@ describe('Canonical operation discovery', () => {
     stubPendingComposition();
     visitWorkbenchCanvas();
     openPendingRelationalOperationChooser();
-    cy.get('[role="combobox"]').type('INNER JOIN{enter}');
+    workbenchOperationSearch().type('INNER JOIN{enter}');
     cy.get('[data-operator="join"]').should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should('be.visible');
