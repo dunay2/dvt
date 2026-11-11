@@ -50,6 +50,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0061   | GitHub MVP task authority and Planning DB architecture boundary                                 | Accepted                 | 2026-07-31                       | [ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md](./ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md) |
 | ADR-0062   | Server-owned effective workspace context                                                        | Accepted                 | 2026-05-10                       | [ADR-0062-server-owned-effective-workspace-context.md](./ADR-0062-server-owned-effective-workspace-context.md)                                               |
 | ADR-0063   | Planning DB current-schema rebuild                                                              | Accepted                 | 2026-08-08                       | [ADR-0063-planning-db-current-schema-rebuild.md](./ADR-0063-planning-db-current-schema-rebuild.md)                                                           |
+| ADR-0069   | Component Family Cohesion And Architectural Boundaries                                          | Accepted                 | 2026-11-11                       | [ADR-0069-component-family-cohesion-and-architectural-boundaries.md](./ADR-0069-component-family-cohesion-and-architectural-boundaries.md)                   |
 
 ## Usage rules
 
@@ -62,4 +63,4 @@ Canonical catalog of ADRs in this repository.
 - [ADR landing page](./index.md)
 - [ADR implementation status](./adr-implementation-status.md)
 
-_Last updated: 2026-08-08_
+_Last updated: 2026-11-11_

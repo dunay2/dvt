@@ -1,5 +1,10 @@
 /**
+ * @file scripts/lib/component-source-responsibilities.cjs
  * Owned concern: validate DB responsibility bindings against current source references.
+ * @baseline ADR-0069: Component Family Cohesion And Architectural Boundaries
+ * @decision Section 5 - Reject invalid responsibility owners and missing qualified source symbols.
+ * @consequence Source-binding evidence does not certify semantic family cohesion.
+ * @version 1.0.0
  * Why: one current authority snapshot should not rebuild identical lookup maps per source.
  * Corner: prepared and standalone validation retain every conflict, missing-reference and owner error.
  */

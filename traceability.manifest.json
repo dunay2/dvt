@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-10",
+  "generated": "2026-11-11",
   "repo": {
     "sha": "local"
   },
@@ -1405,6 +1405,14 @@
         "packages/@dvt/traceability-service/src/lineage/warningContract.ts"
       ],
       "title": "ADR-0067 - Canonical Artifact Authority and Compiled-Code Hard Cut"
+    },
+    {
+      "number": "ADR-0069",
+      "decisions": [
+        "Section 5 - Reject invalid responsibility owners and missing qualified source symbols."
+      ],
+      "implemented_by": ["scripts/lib/component-source-responsibilities.cjs"],
+      "title": "ADR-0069 - Component Family Cohesion And Architectural Boundaries"
     }
   ]
 }
