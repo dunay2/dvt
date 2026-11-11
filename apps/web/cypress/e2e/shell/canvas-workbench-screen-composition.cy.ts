@@ -899,7 +899,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-run-status-indicator"]').blur().click();
     cy.get('[role="tooltip"]').should('have.text', 'Vista previa obligatoria');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
-    cy.then(() => expect(getE2eApiCalls('/runs', 'POST')).to.have.length(0));
+    cy.then(() => expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0));
     cy.press(Cypress.Keyboard.Keys.ESC);
     cy.get('[role="tooltip"]').should('not.exist');
     cy.get('[data-slot="canvas-playground-template-choice"]')
