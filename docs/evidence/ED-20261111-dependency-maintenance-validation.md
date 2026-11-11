@@ -75,6 +75,10 @@ The observability tests exercise nested asynchronous span parentage, context aft
 manager changes major version. Its [published peer contract](https://github.com/open-telemetry/opentelemetry-js/blob/v3.1.0/packages/opentelemetry-context-async-hooks/package.json)
 accepts API 1.9.1; its Node minimum is satisfied by the repository's 22.23.3.
 This does not claim migration of the remaining tracing SDK to version 3.
+After the normal API runtime dependency build, `pnpm --filter dvt-api
+proof:start-run-otel` also passes all three cases. This verifies API-to-Engine-to-
+Temporal span parentage, bounded attributes and rejection paths with a controlled
+Temporal client; it is not evidence of a native Temporal server execution.
 
 The lockfile retains pnpm's compatible transitive resolutions, including
 TypeScript ESLint internal ranges and Vitest peer-qualified snapshots. No
@@ -134,8 +138,11 @@ replacement PR before integration. None is inferred from a focused pass or a
 routed skip.
 
 The initial native implementation gate rejected the observability manifest's
-missing allowed-surface admission. That is a governance failure to reconcile
-through its owning native rail; it is not a product failure or a reason to weaken
-the validator. The original dependency PRs remain open until the replacement is
-integrated. No hook is bypassed, quality rule relaxed, new debt entry, production
-stub or fake success path is introduced.
+missing allowed-surface admission. The [audited native admission](https://github.com/dunay2/dvt/issues/3842#issuecomment-6784385669)
+now references the existing StartRun rail and retains `SYS-OBSERVABILITY-ROOT`
+ownership, allowing only the adapter manifest. The corrected implementation gate
+passes all 782 DB manifests; it does not replace fresh final-SHA acceptance.
+No validator or product contract changed to resolve this governance failure.
+The original dependency PRs remain open until the replacement is integrated.
+No hook is bypassed, quality rule relaxed, new debt entry, production stub or fake
+success path is introduced.
