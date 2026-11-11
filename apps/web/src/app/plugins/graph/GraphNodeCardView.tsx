@@ -14,10 +14,7 @@ import {
 } from './graphCardVisualTokens';
 import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
 import { GraphNodeCardTitle } from './GraphNodeCardTitle';
-import {
-  ModelIdentityIcon,
-  MODEL_IDENTITY_LABELS,
-} from '../../components/inspector/ModelIdentityIcon';
+import { ModelIdentitySelect } from '../../components/inspector/ModelIdentitySelect';
 
 export function GraphNodeCardView({
   materializationControl,
@@ -25,7 +22,8 @@ export function GraphNodeCardView({
   cardModel,
   tags,
   icon: Icon,
-  modelIcon,
+  modelIdentity,
+  onChangeModelIcon,
   borderClass,
   selected,
   hovered,
@@ -72,14 +70,14 @@ export function GraphNodeCardView({
       <div className={graphNodeCardLayoutClasses.body}>
         <div data-slot="graph-node-card-header" className={graphNodeCardLayoutClasses.header}>
           <div className={graphNodeCardLayoutClasses.titleRow}>
-            {modelIcon != null ? (
-              <span
-                data-slot="graph-node-card-icon"
-                title={MODEL_IDENTITY_LABELS[modelIcon]}
-                role="img"
-                aria-label={MODEL_IDENTITY_LABELS[modelIcon]}
-              >
-                <ModelIdentityIcon icon={modelIcon} />
+            {modelIdentity != null ? (
+              <span data-slot="graph-node-card-icon">
+                <ModelIdentitySelect
+                  identity={modelIdentity}
+                  modelName={cardModel.title}
+                  onChange={onChangeModelIcon}
+                  presentation="icon"
+                />
               </span>
             ) : (
               Icon && (

@@ -22,9 +22,11 @@ const node: CanonicalNode = {
 function Harness({
   canEdit,
   onApply,
+  presentation = 'field',
 }: {
   canEdit: boolean;
   onApply: (draft: CanvasInspectorNodeDraft) => void;
+  presentation?: 'field' | 'icon';
 }): JSX.Element {
   const draftController = useCanvasNodeWorkbenchDraftController(node);
   return (
@@ -34,6 +36,7 @@ function Harness({
       edges={[]}
       authoring={{ canEditNode: canEdit, onApplyNodeDraft: onApply }}
       draftController={draftController}
+      presentation={presentation}
     />
   );
 }
@@ -54,11 +57,45 @@ describe('model identity field', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows identity without a mutation control when editing is not permitted', () => {
+  it.each(['field', 'icon'] as const)(
+    'keeps the %s passive when editing is not permitted',
+    (presentation) => {
+      const onApply = vi.fn();
+      act(() =>
+        root.render(<Harness canEdit={false} onApply={onApply} presentation={presentation} />)
+      );
+      expect(container.querySelector('[data-model-icon="substrait"]')).not.toBeNull();
+      expect(queryByRole(container, 'combobox')).toBeNull();
+      expect(onApply).not.toHaveBeenCalled();
+    }
+  );
+
+  // A control inside a Canvas card must not also invoke the card's select/edit/drag commands.
+  it('isolates icon gestures and blocks the browser context menu without changing the model', () => {
     const onApply = vi.fn();
-    act(() => root.render(<Harness canEdit={false} onApply={onApply} />));
-    expect(container.textContent).toContain('Substrait');
-    expect(queryByRole(container, 'combobox')).toBeNull();
+    const parentGesture = vi.fn();
+    act(() =>
+      root.render(
+        <div
+          onClick={parentGesture}
+          onDoubleClick={parentGesture}
+          onPointerDown={parentGesture}
+          onContextMenu={parentGesture}
+        >
+          <Harness canEdit onApply={onApply} presentation="icon" />
+        </div>
+      )
+    );
+    const trigger = getByRole(container, 'combobox', { name: 'Change icon: Orders' });
+    // Native pointer capture and dragging are exercised by Cypress, not emulated by jsdom.
+    for (const type of ['click', 'dblclick', 'contextmenu']) {
+      const event = new MouseEvent(type, { bubbles: true, cancelable: true });
+      act(() => {
+        trigger.dispatchEvent(event);
+      });
+      if (type === 'contextmenu') expect(event.defaultPrevented).toBe(true);
+    }
+    expect(parentGesture).not.toHaveBeenCalled();
     expect(onApply).not.toHaveBeenCalled();
   });
 

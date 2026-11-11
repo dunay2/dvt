@@ -631,6 +631,19 @@ change cannot normalize or reconstruct a plan. The existing scoped
 application typography, spacing, surface and focus tokens. Provider/connection
 facts and Source badges remain independent of the selected icon.
 
+`ModelIdentitySelect` is the shared controlled selector for Overview and direct
+card/header icon activation. The Inspector header uses its existing draft
+controller; card actions resolve the current model inside the existing Inspector
+command owner before applying a preference. Read-only icons remain passive.
+The selector isolates pointer, click, double-click, keyboard and context-menu
+events from Canvas gestures; keyboard dismissal restores focus to its trigger.
+
+The overlapping-sets Join mark is admitted only when the canonical Substrait
+relation index contains a join or cross relation. Names, tags, SQL text and input
+counts cannot admit it. Invalid/missing semantics omit the choice; removing the
+operation makes a saved Join preference render Automatic. The choice does not
+change the semantic document or manufacture an analysis for a dbt file reference.
+
 The narrow Source Overview uses full-width stacked source and DVT sections,
 compact label/value facts, and activated inline editing. It retains readable
 font sizes rather than splitting the panel into two narrow columns. Table

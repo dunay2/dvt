@@ -1,5 +1,7 @@
+/** Carry existing Canvas command capabilities into the node interaction presentation contract. */
 import type { Node } from '@xyflow/react';
 import type { CanvasInspectorNodeDraftApplyResult } from './canvasInspectorAuthoring.types';
+import type { CanvasModelIconPreference } from './canvasModelIdentity';
 import type {
   GraphNodeColumn,
   GraphNodeInputMapping,
@@ -16,6 +18,10 @@ import type {
 } from './canvasAlgebraicComposition';
 
 export type CanvasCardActions = {
+  onSetNodeIcon?: (
+    nodeId: string,
+    value: CanvasModelIconPreference
+  ) => CanvasInspectorNodeDraftApplyResult;
   onInspectNode: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;

@@ -16,7 +16,9 @@ import {
 const longColumnName = 'external_customer_account_identifier_from_partner_system';
 const longColumnType = 'character varying(2048) COLLATE "en_US.utf8"';
 
-function stubCanvas(): void {
+function stubCanvas(
+  substraitInnerJoin = false
+): ReturnType<typeof stubStatefulCanvasDraftAuthoring> {
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
   stubE2eJsonApi('GET', '/workspace/context', {
     defaultWorkspace: E2E_PROJECT_WORKSPACE,
@@ -31,6 +33,7 @@ function stubCanvas(): void {
     canvasKind: 'transformation',
     columnMapping: true,
     sourceInspectorOrdering: true,
+    substraitInnerJoin,
   });
   Object.assign(
     draft,
@@ -61,6 +64,7 @@ function stubCanvas(): void {
       ),
     })
   );
+  return draft;
 }
 
 function visitCanvas(): void {
@@ -109,7 +113,68 @@ function dragBefore(movedSelector: string, targetSelector: string): void {
 }
 
 describe('Canvas Source Inspector ordering', () => {
-  beforeEach(() => stubCanvas());
+  beforeEach(() => {
+    stubCanvas();
+  });
+
+  it('offers the sets icon for a canonical join and saves only its visual preference', () => {
+    // Reuse the real canonical JOIN scenario; a name or two incoming edges must not be enough.
+    const draft = stubCanvas(true);
+    const semantics = structuredClone(
+      draft.nodes.find((node) => node.id === 'join-transform')?.metadata?.transformAuthoring
+    );
+    visitCanvas();
+    const card = '.react-flow__node[data-id="join-transform"]';
+    cy.get(`${card} [data-model-icon-trigger="icon"]`).click();
+    cy.contains('[role="option"]', /^Join$/).click();
+    cy.get(`${card} [data-model-icon="join"]`).should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    cy.wrap(null, { timeout: 20_000 }).should(() => {
+      const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft: ReturnType<typeof normalizeProjectCanvasDraft> } | undefined;
+      const saved = request?.draft.nodes.find((node) => node.id === 'join-transform');
+      expect(saved?.metadata?.modelIcon).to.equal('join');
+      expect(saved?.metadata?.transformAuthoring).to.deep.equal(semantics);
+    });
+    cy.get(`${card} [data-slot="canvas-node-shell"]`).rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"] [data-model-icon="join"]').should(
+      'be.visible'
+    );
+    cy.get('[role="combobox"][aria-label="Icon"]').should('contain.text', 'Join');
+  });
+
+  it('edits directly from card and header icons without selecting, opening or moving the node', () => {
+    // Icon controls must not escape into React Flow selection, drag or double-click editor commands.
+    visitCanvas();
+    const card = '.react-flow__node[data-id="source-orders"]';
+    cy.get(card).invoke('attr', 'style').as('initialCardStyle');
+    cy.get('.react-flow__node').its('length').as('initialNodeCount');
+    cy.get(`${card} [data-model-icon-trigger="icon"]`).click();
+    cy.get('[role="option"]').should('have.length', 4);
+    cy.contains('[role="option"]', /^SQL$/).click();
+    cy.get(`${card} [data-model-icon="sql"]`).should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    cy.get('@initialCardStyle').then((style) => cy.get(card).should('have.attr', 'style', style));
+    cy.get('@initialNodeCount').then((count) =>
+      cy.get('.react-flow__node').should('have.length', count)
+    );
+    cy.wrap(null, { timeout: 20_000 }).should(() => {
+      const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft: ReturnType<typeof normalizeProjectCanvasDraft> } | undefined;
+      expect(
+        request?.draft.nodes.find((node) => node.id === 'source-orders')?.metadata?.modelIcon
+      ).to.equal('sql');
+    });
+    openSourceSection('general');
+    cy.get('[data-slot="canvas-source-provider-icon"] [role="combobox"]').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.contains('[role="option"]', /^Model$/).focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="canvas-source-provider-icon"] [role="combobox"]').should('be.focused');
+    cy.get(`${card} [data-model-icon="model"]`).should('be.visible');
+    cy.get('[role="combobox"][aria-label="Icon"]').should('contain.text', 'Model');
+  });
 
   it('changes a compatible icon by keyboard and retains the choice after reload', () => {
     // A visual preference must use the saved model definition, not component-local state.

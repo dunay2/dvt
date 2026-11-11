@@ -11,11 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import { cn } from '../../components/ui/utils';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
 import { CanvasNodeWorkbenchSections } from './CanvasNodeWorkbenchSections';
-import {
-  ModelIdentityIcon,
-  MODEL_IDENTITY_LABELS,
-} from '../../components/inspector/ModelIdentityIcon';
-import { resolveCanvasModelIdentity } from './canvasModelIdentity';
+import { CanvasModelIdentityField } from './CanvasModelIdentityField';
 import {
   useCanvasNodeWorkbenchController,
   type CanvasNodeWorkbenchPanelProps,
@@ -28,7 +24,16 @@ export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): 
   const { node, copy, semanticEditorCopy, semanticDvtTransform, containsCanonicalCodeOutput } =
     controller;
   const { onClose, onOpenSemanticEditor } = props;
-  const identity = resolveCanvasModelIdentity(node);
+  const identityControl = (
+    <CanvasModelIdentityField
+      node={node}
+      nodes={props.nodes}
+      edges={props.edges}
+      authoring={props.authoring}
+      draftController={controller.draftController}
+      presentation="icon"
+    />
+  );
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
   return (
     <div
@@ -38,18 +43,10 @@ export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): 
       <div className={inspectorVisualClasses.contextPanelHeaderRow}>
         <div className="min-w-0 flex-1">
           {node.kind === 'dvt:source' ? (
-            <SourceNodeWorkbenchHeaderIdentity node={node} />
+            <SourceNodeWorkbenchHeaderIdentity node={node} identityControl={identityControl} />
           ) : (
             <div className="flex min-w-0 items-center gap-2">
-              {identity == null ? null : (
-                <span
-                  title={MODEL_IDENTITY_LABELS[identity.icon]}
-                  role="img"
-                  aria-label={MODEL_IDENTITY_LABELS[identity.icon]}
-                >
-                  <ModelIdentityIcon icon={identity.icon} size="header" />
-                </span>
-              )}
+              {identityControl}
               <div
                 data-slot="canvas-node-workbench-status"
                 className={cn('size-2 shrink-0 rounded-full', dotClass)}

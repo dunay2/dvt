@@ -189,6 +189,23 @@ describe('useCanvasInspectorCommands', () => {
     expect(latest!.session).toBe(baseline);
   });
 
+  // Cards must submit through the same scoped aggregate command, never mutate their projected data.
+  it('changes identity on the current model and rejects incompatible, missing and read-only targets', () => {
+    act(() => root.render(<Harness />));
+    const baseline = bootstrapInput();
+    expect(latest!.commands.setNodeIcon(model.id, 'dbt').outcome).toBe('rejected');
+    expect(latest!.commands.setNodeIcon('missing', 'model').outcome).toBe('rejected');
+    expect(latest!.session).toBe(baseline);
+    act(() => {
+      expect(latest!.commands.setNodeIcon(model.id, 'model').outcome).toBe('applied');
+    });
+    expect(latest!.session.localNodeCatalog?.[model.id]?.metadata?.modelIcon).toBe('model');
+    const updated = latest!.session;
+    act(() => root.render(<Harness canEditNode={false} />));
+    expect(latest!.commands.setNodeIcon(model.id, 'substrait').outcome).toBe('rejected');
+    expect(latest!.session).toBe(updated);
+  });
+
   it('does not change materialization in read-only posture', () => {
     act(() => root.render(<Harness canEditNode={false} />));
     const baseline = latest!.session;
