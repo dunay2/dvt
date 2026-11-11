@@ -7,7 +7,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
  */
 .brandIdentity {
   display: flex;
-  height: 2rem;
+  height: var(--shell-control-height);
   flex-shrink: 0;
   align-items: center;
   gap: 0.5rem;
@@ -80,7 +80,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 
 .shellBar {
   display: flex;
-  min-height: 2.5rem;
+  min-height: var(--shell-header-height);
   min-width: 0;
   flex-shrink: 0;
   flex-wrap: wrap;
@@ -88,7 +88,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   gap: 0.25rem;
   border-bottom: 1px solid var(--border-default);
   background: var(--surface-shell);
-  padding: 0.25rem 0.375rem;
+  padding: 0 0.375rem;
   color: var(--text-default);
 }
 
@@ -189,7 +189,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 }
 
 .menuButton {
-  height: 2rem;
+  height: var(--shell-control-height);
   gap: 0.375rem;
   padding-inline: 0.5rem;
   color: var(--text-default);
@@ -246,7 +246,7 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 
 @media (min-width: 48rem) {
   .shellBar {
-    height: 2.5rem;
+    height: var(--shell-header-height);
     flex-wrap: nowrap;
     gap: 0.5rem;
     padding: 0 0.75rem;

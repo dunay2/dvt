@@ -74,13 +74,17 @@ describe('ShellTopBar workspace context architecture', () => {
   it('preserves header wrapping below 48rem and the 48rem/64rem responsive CSS contracts', () => {
     const cssSource = readAppSource('components/shell/ShellChrome.module.css');
     expect(readCssRule(cssSource, 'shellBar')).toMatch(/flex-wrap:\s*wrap;/u);
-    expect(readCssRule(cssSource, 'shellBar')).toMatch(/min-height:\s*2\.5rem;/u);
+    expect(readCssRule(cssSource, 'shellBar')).toMatch(
+      /min-height:\s*var\(--shell-header-height\);/u
+    );
     for (const className of ['contextCluster', 'commandCluster']) {
       expect(readCssRule(cssSource, className)).toMatch(/width:\s*100%;/u);
     }
     expect(readCssRule(cssSource, 'commandCluster')).toMatch(/flex-wrap:\s*wrap;/u);
     const mediumSource = readCssMedia(cssSource, 48);
-    expect(readCssRule(mediumSource, 'shellBar')).toMatch(/height:\s*2\.5rem;/u);
+    expect(readCssRule(mediumSource, 'shellBar')).toMatch(
+      /height:\s*var\(--shell-header-height\);/u
+    );
     expect(readCssRule(mediumSource, 'contextCluster')).toMatch(/flex:\s*1;/u);
     expect(readCssRule(mediumSource, 'commandCluster')).toMatch(/flex-shrink:\s*0;/u);
     for (const className of ['contextCluster', 'commandCluster']) {

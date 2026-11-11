@@ -34,6 +34,7 @@ import {
 } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
@@ -493,6 +494,43 @@ describe('Canvas workbench screen composition', () => {
 
   afterEach(() => {
     clearBrowserEmulation();
+  });
+
+  it('reveals compact Focus chrome by pointer or keyboard and retains an open View menu', () => {
+    // Auto-hide must not trap users in Focus or replace the route they are working on.
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+      expect($header[0]!.getBoundingClientRect().height).to.be.at.most(32);
+    });
+    cy.get('[data-slot="app-shell-outlet"]').then(($outlet) => {
+      cy.get('[data-slot="shell-menu-trigger"]').click();
+      cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+      hoverWorkbenchCard('[data-slot="app-shell-frame"]');
+      cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+        expect($header[0]!.getBoundingClientRect().bottom).to.be.at.most(0);
+      });
+      hoverWorkbenchCard('[data-slot="app-shell-frame"]', 0.001);
+      cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').click();
+      hoverWorkbenchCard('[data-slot="app-shell-frame"]');
+      cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+        expect($header[0]!.getBoundingClientRect().top).to.equal(0);
+      });
+      cy.get('[role="menu"]').should('be.visible');
+      pressNativeKey('Escape');
+      cy.get('[data-slot="app-shell-skip-link"]').focus();
+      cy.press(Cypress.Keyboard.Keys.TAB);
+      cy.focused().closest('[data-slot="app-shell-header-host"]').should('exist');
+      cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+        expect($header[0]!.getBoundingClientRect().top).to.equal(0);
+      });
+      cy.get('[data-slot="shell-menu-trigger"]').click();
+      cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+      cy.get('[data-slot="app-shell-outlet"]').should(($current) => {
+        expect($current[0]).to.equal($outlet[0]);
+      });
+      cy.get('[data-slot="app-shell-left-navigation"]').should('be.visible');
+    });
   });
 
   it('keeps Canvas startup commands route-local and global navigation directly visible on the left', () => {
