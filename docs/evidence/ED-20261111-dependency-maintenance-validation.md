@@ -14,6 +14,7 @@ code_refs:
   - package.json
   - pnpm-lock.yaml
   - apps/web/package.json
+  - apps/web/cypress/support/relationalWorkbench/navigation.ts
   - packages/@dvt/observability-otel/package.json
   - packages/@dvt/adapter-temporal/package.json
   - apps/temporal-worker/package.json
@@ -184,6 +185,24 @@ Existing load/network and direct concurrent adapter-start limitations remain in
 the [Temporal operational risk](../risk-register/adapters/r-20260308-temporal-operational-hardening-residuals.md).
 
 ## Acceptance boundary
+
+The candidate also includes an isolated browser-proof synchronization correction,
+admitted in the [maintenance issue](https://github.com/dunay2/dvt/issues/3842#issuecomment-6787022992).
+Main run `42957357975` failed the vertical held-card case after the identical Git
+tree passed PR #3843. Independent review found that keyboard focus schedules
+camera reveal on the next animation frame, while `be.visible` can return first.
+The helper now awaits an AUT animation-frame barrier after focus and verifies
+that the revealed center receives the gesture. It retains public panning,
+1 px movement tolerances, identity, native-scroll and no-write/query assertions.
+No product camera or movement implementation changes. The old log cannot
+numerically attribute its extra 19.25 px to the pending callback.
+
+The browser's [ordered animation-frame callbacks](https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks)
+provide the synchronization boundary; no fixed sleep or retry is added.
+Focused Electron and Chrome proofs each pass all nine card-movement cases; Web
+types and focused lint pass. Full-candidate acceptance remains a separate
+requirement recorded in the issue. The prepush on `05ff2d0` was interrupted to
+apply this correction; its passing initial steps are not whole-candidate acceptance.
 
 This record establishes the focused receipts above. The final repository prepush,
 required hosted checks, fresh exact-base/head

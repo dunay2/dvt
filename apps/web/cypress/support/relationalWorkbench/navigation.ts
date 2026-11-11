@@ -24,6 +24,11 @@ export function revealWorkbenchCard(selector: string): void {
       cy.wrap(target).focus();
       cy.press(Cypress.Keyboard.Keys.TAB);
       cy.wrap(target).focus().should('be.visible');
+      // Focus reveals on the next frame; visibility alone can race the caller's drag baseline.
+      cy.window({ log: false }).then(
+        (window) =>
+          new Cypress.Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+      );
     });
   cy.get(selector)
     .first()
@@ -44,6 +49,17 @@ export function revealWorkbenchCard(selector: string): void {
           frame.top + frame.height / 2 - y
         );
       });
+    });
+  cy.get(selector)
+    .first()
+    .should(($target) => {
+      const target = $target[0]!;
+      const { left, top, width, height } = target.getBoundingClientRect();
+      const hit = target.ownerDocument.elementFromPoint(left + width / 2, top + height / 2);
+      expect(
+        hit != null && target.contains(hit),
+        'revealed card center receives the gesture'
+      ).to.equal(true);
     });
 }
 
