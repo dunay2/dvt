@@ -129,6 +129,21 @@ to 5.3.2 and 8.8.0. The installer still reports the preexisting
 excluded the previous 10.13 release. The full lint pass does not erase that
 existing declaration mismatch.
 
+## Contract compatibility receipts
+
+`pnpm validate:contracts` passes 24 checks across three plan fixtures. Both JSON
+schemas under the current workflow roots compile using the workflow's existing
+Ajv draft selection and options. The existing runner reports a missing glossary
+source; Ajv reports the existing ignored `uri` format. Neither is claimed as
+validated coverage.
+
+`pnpm golden:validate` followed by `node scripts/compare-hashes.cjs` succeeds with
+no hash mismatches. Its coverage is specifically three computed plan hashes,
+two preserved deprecated entries and one skipped, unimplemented `retry` entry.
+This is fixture/hash validation, not six executed runtime scenarios. No database
+connection is supplied or claimed for that hash-only command. The native runtime
+receipts below provide the separate Temporal execution evidence.
+
 ## Native Temporal proof
 
 The exact committed implementation snapshot
