@@ -60,6 +60,15 @@ describe('ShellTopBar workspace context', () => {
   }
 
   beforeEach(() => {
+    // jsdom has no layout observer; retain the real tooltip and its focus lifecycle.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+    );
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -397,9 +406,11 @@ describe('ShellTopBar workspace context', () => {
     expect(commandCluster?.className).toBe(topAppBarClasses.commandCluster);
   });
 
-  it('renders Canvas run readiness as compact top-bar status without restoring Plan chrome', async () => {
+  // The reason must remain discoverable without occupying header space or enabling Run.
+  it('shows blocked Run readiness on focus without rendering a persistent header label', async () => {
+    const contribution = buildCanvasRunContribution();
     useOperationalDrawerContributionStore.setState({
-      contribution: buildCanvasRunContribution(),
+      contribution,
     });
 
     await act(async () => {
@@ -412,15 +423,19 @@ describe('ShellTopBar workspace context', () => {
     const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
 
     expect(runStatus).not.toBeNull();
-    expect(runStatus?.textContent).toContain('Preview required');
-    expect(runStatus?.className).toContain('shrink-0');
-    expect(runStatusLabel?.className).not.toContain('hidden');
-    expect(runStatusLabel?.className).toContain('whitespace-nowrap');
-    expect(runStatusLabel?.className).not.toContain('truncate');
+    expect(runStatus?.textContent).not.toContain('Preview required');
+    expect(runStatusLabel).toBeNull();
+    expect(runStatus?.getAttribute('tabindex')).toBe('0');
     expect(runCommand).not.toBeNull();
     expect(runCommand?.textContent).toBe('Run');
     expect(runCommand?.disabled).toBe(true);
     expect(topBar?.textContent).not.toContain('Plan');
+    await act(async () => (runStatus as HTMLElement).focus());
+    await waitFor(() =>
+      expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Preview required')
+    );
+    await act(async () => fireEvent.click(runCommand!));
+    expect(contribution.runs.onStartRun).not.toHaveBeenCalled();
   });
 
   it('localizes Canvas run status, command, and accessible name from the application preference', async () => {
@@ -437,10 +452,16 @@ describe('ShellTopBar workspace context', () => {
     const runCommand = container.querySelector<HTMLButtonElement>(
       '[data-slot="shell-run-command"]'
     );
-    expect(runStatus?.textContent).toContain('Vista previa obligatoria');
+    expect(runStatus?.textContent).not.toContain('Vista previa obligatoria');
     expect(runStatus?.getAttribute('aria-label')).toContain('Estado de ejecución del Canvas');
     expect(runCommand?.textContent).toContain('Ejecutar');
     expect(runCommand?.getAttribute('aria-label')).toBe('Ejecutar');
+    await act(async () => (runStatus as HTMLElement).focus());
+    await waitFor(() =>
+      expect(document.querySelector('[role="tooltip"]')?.textContent).toBe(
+        'Vista previa obligatoria'
+      )
+    );
   });
 
   it('routes the compact top-bar Run command through the Canvas operational contribution', async () => {
@@ -480,10 +501,14 @@ describe('ShellTopBar workspace context', () => {
     const topBar = container.querySelector('[data-slot="shell-top-bar"]');
     const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
 
-    expect(
-      topBar?.querySelector('[data-slot="shell-run-status-indicator"]')?.textContent
-    ).toContain('Ready');
+    const runStatus = topBar?.querySelector('[data-slot="shell-run-status-indicator"]');
+    expect(runStatus?.textContent).not.toContain('Ready');
+    expect(runStatus?.getAttribute('tabindex')).toBeNull();
     expect(runCommand?.disabled).toBe(false);
+    await act(async () => runCommand!.focus());
+    await waitFor(() =>
+      expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Ready')
+    );
 
     await act(async () => {
       fireEvent.click(runCommand!);

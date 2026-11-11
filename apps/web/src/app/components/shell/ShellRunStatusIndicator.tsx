@@ -1,20 +1,16 @@
-/** Owned concern: render a compact route-contributed Run status in the top bar. */
+/**
+ * Owned concern: render the route-contributed Run command with readiness help.
+ * @decision Keep status in the shared tooltip instead of occupying header space.
+ * @consequence A disabled command retains native gating and a focusable help target.
+ */
 import { Play } from 'lucide-react';
 
 import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
-
-const shellRunStatusClasses = {
-  root: 'flex shrink-0 items-center gap-1.5',
-  status: 'inline whitespace-nowrap text-[11px] font-medium text-[var(--text-subtle)]',
-  activeStatus: 'text-[var(--status-running)]',
-  blockedStatus: 'text-amber-100',
-  readyStatus: 'text-[var(--status-success)]',
-  runButton:
-    'h-8 gap-1.5 px-2 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
-  icon: 'size-3.5',
-} as const;
+import styles from './ShellChrome.module.css';
 
 type ShellRunStatusIndicatorProps = Readonly<{
   contribution: OperationalDrawerContribution | null;
@@ -40,18 +36,6 @@ function resolveRunStatusLabel(
   return copy.runBlocked;
 }
 
-function resolveStatusClassName(contribution: OperationalDrawerContribution): string {
-  if (contribution.runs.activeRunId != null || contribution.runs.status === 'active') {
-    return `${shellRunStatusClasses.status} ${shellRunStatusClasses.activeStatus}`;
-  }
-
-  if (contribution.runs.status === 'ready') {
-    return `${shellRunStatusClasses.status} ${shellRunStatusClasses.readyStatus}`;
-  }
-
-  return `${shellRunStatusClasses.status} ${shellRunStatusClasses.blockedStatus}`;
-}
-
 export function ShellRunStatusIndicator({
   contribution,
   copy,
@@ -64,27 +48,33 @@ export function ShellRunStatusIndicator({
   const runDisabled = contribution.runs.activeRunId != null || !contribution.runs.canStartRun;
 
   return (
-    <div
-      data-slot="shell-run-status-indicator"
-      className={shellRunStatusClasses.root}
-      aria-label={copy.canvasRunStatusTemplate.replace('{status}', statusLabel)}
-    >
-      <span data-slot="shell-run-status-label" className={resolveStatusClassName(contribution)}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          data-slot="shell-run-status-indicator"
+          className={styles.runStatusControl}
+          role="group"
+          tabIndex={runDisabled ? 0 : undefined}
+          aria-label={copy.canvasRunStatusTemplate.replace('{status}', statusLabel)}
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            data-slot="shell-run-command"
+            className={topAppBarClasses.menuButton}
+            disabled={runDisabled}
+            onClick={contribution.runs.onStartRun}
+            aria-label={copy.runCommand}
+          >
+            <Play aria-hidden="true" className={topAppBarClasses.menuTriggerIcon} />
+            <span className={styles.runCommandLabel}>{copy.runCommand}</span>
+          </Button>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={6} className={styles.runStatusTooltip}>
         {statusLabel}
-      </span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        data-slot="shell-run-command"
-        className={shellRunStatusClasses.runButton}
-        disabled={runDisabled}
-        onClick={contribution.runs.onStartRun}
-        aria-label={copy.runCommand}
-      >
-        <Play className={shellRunStatusClasses.icon} />
-        <span className="hidden sm:inline">{copy.runCommand}</span>
-      </Button>
-    </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }

@@ -63,6 +63,7 @@ describe('ShellTopBar workspace context architecture', () => {
       'components/shell/ShellAbout.tsx',
       'components/shell/ShellMenu.templates.tsx',
       'components/shell/ShellWorkspaceBreadcrumb.tsx',
+      'components/shell/ShellRunStatusIndicator.tsx',
     ]) {
       expect(readAppSource(sourcePath), sourcePath).not.toMatch(
         /\bclassName\s*=\s*['"]|\bstyle\s*=/u

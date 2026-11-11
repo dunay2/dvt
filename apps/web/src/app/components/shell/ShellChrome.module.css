@@ -165,9 +165,27 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   color: var(--status-degraded);
 }
 
-.smallStatusText:focus-visible {
+.smallStatusText:focus-visible,
+.runStatusControl:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
+}
+
+.runStatusControl {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.runCommandLabel {
+  display: none;
+}
+
+.runStatusTooltip {
+  max-width: min(24rem, calc(100vw - var(--spacing) * 4));
+  overflow-wrap: anywhere;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
 }
 
 .menuButton {
@@ -217,6 +235,10 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 }
 
 @media (min-width: 40rem) {
+  .runCommandLabel {
+    display: inline;
+  }
+
   .brandIdentity {
     margin-right: 0.25rem;
   }

@@ -548,7 +548,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-top-bar-canvas-controls"]').should('not.exist');
     cy.get('@topBar').should('not.contain.text', 'Plan');
-    cy.get('@topBar').should('contain.text', 'Vista previa obligatoria');
+    cy.get('@topBar').should('not.contain.text', 'Vista previa obligatoria');
     cy.get('@topBar')
       .find('[data-slot="shell-run-command"]')
       .should('have.attr', 'aria-label', 'Ejecutar');
@@ -845,13 +845,16 @@ describe('Canvas workbench screen composition', () => {
       .and('have.attr', 'aria-current', 'page');
     cy.get('[data-slot="shell-about-command"]').should('be.visible');
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 390);
-    cy.get('[data-slot="shell-run-status-label"]')
+    // Disabled Run must explain its readiness gate without consuming narrow header space.
+    cy.get('[data-slot="shell-run-status-label"]').should('not.exist');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.get('[data-slot="shell-run-status-indicator"]').should('have.attr', 'tabindex', '0').focus();
+    cy.get('[role="tooltip"]')
       .should('have.text', 'Vista previa obligatoria')
-      .and(($label) => {
-        const label = $label.get(0);
-        expect(label.scrollWidth).to.be.at.most(label.clientWidth);
-        expect(getComputedStyle(label).textOverflow).not.to.equal('ellipsis');
-      });
+      .parent()
+      .should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[role="tooltip"]').should('not.exist');
     cy.get('[data-slot="canvas-playground-template-choice"]')
       .should('have.text', 'Empezar Canvas')
       .and('be.enabled')
