@@ -55,7 +55,7 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
   expect(shellTopBar.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
   expect(shellTopBar.querySelectorAll('[role="combobox"]')).toHaveLength(0);
-  expect(shellConnectionStatus.className).toContain('text-[var(--text-default)]');
+  expect(shellConnectionStatus.getAttribute('data-connection-state')).toBe('ok');
 
   expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
@@ -87,9 +87,11 @@ export async function waitForHealthyShellChrome(mounted: RootShellMountedHarness
   );
   await waitFor(() => {
     expect(
-      requireElement<HTMLElement>(mounted.container, '[data-slot="shell-connection-status"]')
-        .className
-    ).not.toContain('text-[var(--text-subtle)]');
+      requireElement<HTMLElement>(
+        mounted.container,
+        '[data-slot="shell-connection-status"]'
+      ).getAttribute('data-connection-state')
+    ).toBe('ok');
   });
 }
 

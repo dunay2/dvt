@@ -277,6 +277,12 @@ describe('ShellTopBar workspace context', () => {
 
     expect(commandCluster?.lastElementChild).toBe(connectionStatus);
     expect(connectionStatus?.previousElementSibling).toBe(viewMenuTrigger);
+    // The pilot replaces the pictogram without losing a named, keyboard-reachable status.
+    expect(connectionStatus?.querySelector('svg')).toBeNull();
+    expect(connectionStatus?.textContent).toBe('');
+    expect(connectionStatus?.getAttribute('role')).toBe('img');
+    expect(connectionStatus?.getAttribute('aria-label')).toBeTruthy();
+    expect(connectionStatus?.getAttribute('tabindex')).toBe('0');
   });
 
   it('keeps Canvas properties out of the global View menu', async () => {
