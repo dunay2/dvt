@@ -6,12 +6,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import {
-  resolveWebVitestChangedSuitePlan,
-  WEB_VITEST_CHANGED_SUITE_COMMANDS,
-  WEB_VITEST_FOCUS_SUITE_NAMES,
-  WEB_VITEST_SUITES,
-} from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
+import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
+import { WEB_VITEST_FOCUS_SUITE_NAMES, WEB_VITEST_SUITES } from '../../vitest.suites';
 
 describe('workspace services Vitest lane', () => {
   it('declares workspace-services as a governed focus suite', () => {

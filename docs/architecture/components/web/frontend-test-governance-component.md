@@ -20,6 +20,14 @@ web test lane.
 This component does not own product behavior, Cypress browser flows, backend
 contract validation, or engine determinism tests.
 
+Its native component identity is `SYS-CI-WEB-TEST-SUITES`, with
+`WebVitestSuiteCatalog` and `WebVitestChangedSuiteRouter` as the existing owned
+objects. The catalog remains declarative; configuration, classification and
+changed-plan composition have explicit owners under `apps/web/vitest/`.
+Generic repository validation orchestration belongs to
+`SYS-CI-CHANGED-SLICE-VERIFICATION`, which consumes the Web adapter without
+owning the package's suite semantics.
+
 ## Governing Sources
 
 - [web component](./index.md)
@@ -30,19 +38,34 @@ contract validation, or engine determinism tests.
 
 <!-- markdownlint-disable MD060 -->
 
-| Surface                          | Type     | Responsibility                                       |
-| -------------------------------- | -------- | ---------------------------------------------------- |
-| `WEB_VITEST_PRIMARY_SUITE_NAMES` | constant | Names primary non-overlapping web test suites.       |
-| `WEB_VITEST_FOCUS_SUITE_NAMES`   | constant | Names allowed overlapping focus suites.              |
-| `WEB_VITEST_SUITES`              | catalog  | Defines include and exclude rules for each suite.    |
-| `createWebVitestConfig`          | function | Builds Vitest config from the suite catalog.         |
-| `classifyWebVitestFile`          | function | Classifies a test file into primary and focus lanes. |
-| `pnpm --filter @dvt/web test`    | command  | Runs the governed web primary-suite composition.     |
-| `pnpm test:web:ci`               | command  | Runs governed web primary suites.                    |
-| `pnpm test:web:changed`          | command  | Runs the changed-file web suite route.               |
-| `Web Frontend Tests`             | CI job   | Runs changed PR routing or full primary suites.      |
+| Surface                             | Type           | Responsibility                                       |
+| ----------------------------------- | -------------- | ---------------------------------------------------- |
+| `WEB_VITEST_PRIMARY_SUITE_NAMES`    | constant       | Names primary non-overlapping web test suites.       |
+| `WEB_VITEST_FOCUS_SUITE_NAMES`      | constant       | Names allowed overlapping focus suites.              |
+| `WEB_VITEST_SUITES`                 | catalog        | Defines include and exclude rules for each suite.    |
+| `createWebVitestConfig`             | function       | Builds Vitest config from the suite catalog.         |
+| `classifyWebVitestFile`             | function       | Classifies a test file into primary and focus lanes. |
+| `pnpm --filter @dvt/web test`       | command        | Runs the governed web primary-suite composition.     |
+| `pnpm test:web:ci`                  | command        | Runs governed web primary suites.                    |
+| `pnpm test:web:changed`             | command        | Runs the changed-file web suite route.               |
+| `pnpm --filter @dvt/web test:watch` | manual adapter | Watches the complete catalog for local development.  |
+| `Web Frontend Tests`                | CI job         | Runs changed PR routing or full primary suites.      |
 
 <!-- markdownlint-enable MD060 -->
+
+## Local Watch Entry
+
+`test:watch` is the local interactive adapter of the existing
+`WebVitestSuitePartition` command, owned by `SYS-CI-WEB-TEST-SUITES` and its
+runtime responsibility. It invokes Vitest with `vitest.config.ts`, whose `all`
+configuration comes from the same catalog and runtime builder as the run modes.
+In a local development session, Vitest watches changes and reruns affected tests;
+the developer ends the session with Ctrl+C.
+
+This entry provides continuous development feedback. Its output does not replace
+the finite `*:run` delegates, changed-suite verification, or the required CI
+result. The changed/full CI planner never selects watch mode. It does not define
+another suite catalog, runner or command/query rail.
 
 ## Invariants
 

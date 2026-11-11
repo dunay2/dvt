@@ -15,6 +15,7 @@ import {
   type WebCypressCatalogSnapshots,
   type WebCypressCapability,
 } from './cypress.catalog';
+import { isWebVitestImplementationPath } from './vitest/paths';
 
 export {
   WEB_CYPRESS_NIGHTLY_SPECS,
@@ -245,7 +246,7 @@ export function resolveWebCypressChangedPlan(
       vitestFiles.add(path);
       continue;
     }
-    if (EXECUTION_BOUNDARIES.includes(path)) {
+    if (EXECUTION_BOUNDARIES.includes(path) || isWebVitestImplementationPath(path)) {
       requireCapabilities(CAPABILITIES);
       vitestFiles.add(filePath);
       continue;
