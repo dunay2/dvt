@@ -35,6 +35,42 @@ Consumers import the actual owner. The catalog does not re-export the relocated
 functions. Commands and config filenames follow the existing suite naming
 convention, checked against real package scripts and configuration files.
 
+The CLI adapter separates argument admission (`scripts/changed-suite-args.ts`),
+Git acquisition (`scripts/changed-suite-git.ts`) and command execution
+(`scripts/run-vitest-changed-suites.ts`). These are internal adapters of the
+existing rail, not additional commands or a second capability catalog.
+
+### Execution prerequisite order
+
+GH-3853 observed a 1,681,490 ms prepush rejection: 52 distinct controlled
+Cypress specs passed before LIVE execution discovered that dbt was unavailable
+on PATH. The prerequisite belongs before expensive evidence execution.
+
+```mermaid
+flowchart LR
+  Before[Previous order] --> Tests[Dependencies and controlled proofs]
+  Tests --> Late[Resolve LIVE dbt]
+  After[Selected canonical plan] --> Mode{Plan only?}
+  Mode -->|yes| Output[Emit plan without environment probing]
+  Mode -->|no| Required{Selected LIVE command?}
+  Required -->|yes| Resolve[Existing LIVE dbt resolver]
+  Resolve -->|missing or conflicting| Reject[Reject before dependencies or tests]
+  Resolve -->|resolved| Execute[Execute unchanged proof obligations]
+  Required -->|no| Execute
+```
+
+`web-evidence-environment.ts` resolves only requirements of the selected browser
+commands. Both LIVE capabilities already use the same protected runtime and
+therefore the existing `resolveLiveProofDbtExecutable` boundary. It supplies the
+same resolved binary to the analyzer and worker in child environments. It does
+not allocate a database, start a runtime, mutate the caller's environment or
+accept cached proof. Controlled-only and Vitest-only execution do not probe dbt.
+
+Negative evidence must prove rejection precedes **all** child execution,
+planning remains possible without provider tools, and partition selection does
+not acquire requirements of unselected capabilities. Resolution is an early
+diagnostic; the real LIVE runner retains readiness checks and proof acceptance.
+
 ```mermaid
 flowchart LR
   CLI[Existing changed-suite adapter] --> Plan[changedPlan query]

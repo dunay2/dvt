@@ -7,7 +7,8 @@
 
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
-import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
+import { main } from '../../scripts/run-vitest-changed-suites';
+import { parseChangedSuiteArgs } from '../../scripts/changed-suite-args';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { fixture, helper, liveCommand, spec } from './vitestSuites.browserRouting.fixtures';
 

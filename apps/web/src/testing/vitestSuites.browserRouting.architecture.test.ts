@@ -25,6 +25,9 @@ vi.mock('node:child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:child_process')>()),
   spawnSync: vi.fn(),
 }));
+vi.mock('../../scripts/web-evidence-environment', () => ({
+  resolveWebEvidenceEnvironment: vi.fn((_commands, env) => env),
+}));
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return { ...actual, existsSync: vi.fn(actual.existsSync), appendFileSync: vi.fn() };

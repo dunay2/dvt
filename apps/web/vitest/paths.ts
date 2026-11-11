@@ -18,6 +18,7 @@ export const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
   'src/testing/vitestSuites.changedFileDiscovery.architecture.test.ts',
   'src/testing/vitestSuites.changedRouting.architecture.test.ts',
   'src/testing/vitestSuites.changedRoutingGovernance.architecture.test.ts',
+  'src/testing/vitestSuites.evidenceEnvironment.architecture.test.ts',
   'src/testing/vitestSuites.rawIntake.architecture.test.ts',
   'src/testing/vitestSuites.sizePolicy.architecture.test.ts',
 ] as const;
@@ -143,5 +144,7 @@ export function isWebVitestGovernancePath(filePath: string): boolean {
 }
 
 export function isWebVitestImplementationPath(filePath: string): boolean {
-  return /^(?:apps\/web\/)?vitest\/[^/]+\.ts$/.test(normalizeWebVitestPath(filePath));
+  return /^(?:apps\/web\/)?(?:vitest\/[^/]+|scripts\/(?:changed-suite-(?:args|git)|web-evidence-environment))\.ts$/.test(
+    normalizeWebVitestPath(filePath)
+  );
 }

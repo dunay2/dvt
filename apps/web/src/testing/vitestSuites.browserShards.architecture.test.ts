@@ -10,11 +10,15 @@ import {
   selectWebCypressShard,
   type WebCypressCommand,
 } from '../../cypress.changed';
-import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
+import { main } from '../../scripts/run-vitest-changed-suites';
+import { parseChangedSuiteArgs } from '../../scripts/changed-suite-args';
 
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   spawnSync: vi.fn(() => ({ status: 0 })),
+}));
+vi.mock('../../scripts/web-evidence-environment', () => ({
+  resolveWebEvidenceEnvironment: vi.fn((_commands, env) => env),
 }));
 vi.mock('node:fs', async (original) => ({
   ...(await original<typeof import('node:fs')>()),
