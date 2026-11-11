@@ -3,12 +3,12 @@ import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
+import { workbenchOperationSearch } from '../../support/relationalWorkbench/operationMenu';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
 import { panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const trigger = '[data-slot="canvas-operation-menu-trigger"]';
-const search = '[role="combobox"]';
 
 function addFilterFromBackground(viewportSelector: string): void {
   let expectedPosition = { x: 0, y: 0 };
@@ -50,7 +50,7 @@ function addFilterFromBackground(viewportSelector: string): void {
     };
     cy.get(viewportSelector).dblclick(point!.x, point!.y);
   });
-  cy.get('[data-slot="popover-content"] [role="combobox"]').should('be.focused').type('{esc}');
+  workbenchOperationSearch().should('be.focused').type('{esc}');
   cy.get('[role="listbox"]').should('not.exist');
   cy.get(viewportSelector).should('be.focused');
   cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
@@ -63,9 +63,9 @@ function addFilterFromBackground(viewportSelector: string): void {
       ? 'model-background-add--pending'
       : 'model-background-add--applied'
   );
-  cy.get('[data-slot="popover-content"] [role="combobox"]').should('be.focused').type('Filter');
+  workbenchOperationSearch().should('be.focused').type('Filter');
   cy.get('[role="option"][data-selected="true"]').should('have.attr', 'data-operation', 'filter');
-  cy.get('[data-slot="popover-content"] [role="combobox"]').type('{enter}');
+  workbenchOperationSearch().type('{enter}');
   cy.get('[role="listbox"]').should('not.exist');
   cy.get('[data-pending-operation="true"] [data-operator="filter"]').should('have.length', 1);
   cy.get('[data-slot="canvas-relational-tree-zoom"]').should(($zoom) => {
@@ -98,13 +98,13 @@ describe('Compact semantic operation menu', () => {
       .focus()
       .should('be.focused')
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.get(search).should('be.focused');
+    workbenchOperationSearch().should('be.focused');
     cy.get('[data-operation="filter"]')
       .should('have.attr', 'aria-disabled', 'false')
       .and('have.attr', 'draggable', 'true');
-    cy.get(search).type('does-not-exist');
+    workbenchOperationSearch().type('does-not-exist');
     cy.contains('No matching operations.').should('be.visible');
-    cy.get(search).type('{esc}');
+    workbenchOperationSearch().type('{esc}');
     cy.get(trigger).should('be.focused');
     cy.get('[role="listbox"]').should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
@@ -135,12 +135,12 @@ describe('Compact semantic operation menu', () => {
       cy.contains('[cmdk-group-heading]', heading).should('exist');
     }
     cy.screenshot('operation-menu-groups');
-    cy.get(search).type('LEFT JOIN');
+    workbenchOperationSearch().type('LEFT JOIN');
     cy.get('[data-operation="left_join"]')
       .should('have.css', 'font-family')
       .and('contain', 'sans-serif');
     cy.get('[role="option"][data-selected="true"]').should('contain.text', 'LEFT JOIN');
-    cy.get(search).type('{enter}');
+    workbenchOperationSearch().type('{enter}');
     cy.get('[role="listbox"]').should('not.exist');
     cy.get('[data-operator="join"]').should('contain.text', 'LEFT JOIN');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();

@@ -9,7 +9,15 @@ export function workbenchOperation(id: string): Cypress.Chainable<JQuery<HTMLEle
   return cy.get(`[data-operation="${id}"]`);
 }
 
+/** Card identity selectors are also comboboxes; only the open command input owns search. */
+export function workbenchOperationSearch(): Cypress.Chainable<JQuery<HTMLInputElement>> {
+  return cy
+    .get<HTMLInputElement>('[data-slot="popover-content"] [data-slot="command-input"]')
+    .should('have.length', 1)
+    .and('have.attr', 'role', 'combobox');
+}
+
 export function closeWorkbenchOperations(): void {
-  cy.get('[role="combobox"]').type('{esc}');
+  workbenchOperationSearch().type('{esc}');
   cy.get('[role="listbox"]').should('not.exist');
 }

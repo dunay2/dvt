@@ -367,10 +367,12 @@ describe('governed browser evidence routing', () => {
     expect(plan.browserFiles).toEqual([helperPath, ...WEB_CYPRESS_SPECS.controlled]);
   });
 
-  it('rejects unknown support mixed with native keyboard evidence before runtime filtering', () => {
+  it.each([
+    'apps/web/cypress/support/nativeKeyboard.ts',
+    'apps/web/cypress/support/relationalWorkbench/operationMenu.ts',
+  ])('rejects unknown support mixed with admitted evidence before filtering: %s', (helperPath) => {
     // Exact helper admission must never turn an adjacent unsupported input into accepted evidence.
-    const helperPath = 'apps/web/cypress/support/nativeKeyboard.ts';
-    const unknown = 'apps/web/cypress/support/nativeKeyboardUnregistered.ts';
+    const unknown = helperPath.replace(/\.ts$/u, 'Unregistered.ts');
     expect(() => resolveWebVitestChangedSuitePlan([helperPath, unknown])).toThrow(unknown);
     expect(() => resolveWebVitestChangedSuitePlan([helperPath, unknown], { full: true })).toThrow(
       unknown
@@ -452,6 +454,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/support/dbtProjectLive.ts',
     'apps/web/cypress/support/e2eApiStub.ts',
     'apps/web/cypress/support/relationalWorkbench/geometry.ts',
+    'apps/web/cypress/support/relationalWorkbench/operationMenu.ts',
     'apps/web/cypress/support/relationalWorkbench/pointer.ts',
     'apps/web/cypress/support/semanticLive/canonicalAssertions.ts',
     'apps/web/cypress/support/workspaceSession.ts',
@@ -1122,6 +1125,7 @@ describe('governed browser evidence routing', () => {
       main(['--plan', ...flags, '--files', fixture]);
       expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toEqual({
         ...plan,
+        vitestCommands: flags.includes('--phase=vitest') ? plan.commandPlan : [],
         browserCommands: plan.browserCommands.filter(({ capability }) =>
           capabilities.includes(capability)
         ),
@@ -1131,7 +1135,9 @@ describe('governed browser evidence routing', () => {
           .mocked(appendFileSync)
           .mock.calls.map(([, data]) => String(data))
           .join('')
-      ).toBe(`browser_required=${capabilities.length > 0}\nprovider_required=${provider}\n`);
+      ).toBe(
+        `vitest_required=${flags.includes('--phase=vitest') && plan.commandPlan.length > 0}\nbrowser_required=${capabilities.length > 0}\nprovider_required=${provider}\n`
+      );
       expect(spawnSync).not.toHaveBeenCalled();
     }
   );

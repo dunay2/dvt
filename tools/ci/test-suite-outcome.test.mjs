@@ -62,6 +62,7 @@ function webScenarioContext(event = 'workflow_dispatch', root = false, draft = f
       run_attempt: '1',
     },
     needs: { detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } } },
+    steps: { web_plan: { outputs: { vitest_required: 'true', browser_required: 'true' } } },
     fromJSON: JSON.parse,
     format: (template, value) => template.replace('{0}', value),
   };
@@ -311,7 +312,7 @@ test('Web keeps every bounded obligation with disjoint controlled and available 
   assert.notEqual(web['continue-on-error'], true);
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
   for (const [event, root, draft, groups] of [
-    ['pull_request', false, false, ['changed']],
+    ['pull_request', false, false, [...fullVitestGroups, 'changed']],
     ['pull_request', true, false, fullVitestGroups],
     ['push', false, false, fullVitestGroups],
     ['workflow_dispatch', false, false, fullVitestGroups],
@@ -375,7 +376,7 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
       const planned = renderWebCommand(plan.run, context);
       assert.equal(
         planned,
-        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/6` : ''}${full ? ' --full' : ''}`
+        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/6` : ''}${full ? ' --full' : ''}${!full && matrix.vitest_group ? ` --vitest-group=${matrix.vitest_group}` : ''}`
       );
       const selected = executions.filter((step) => !step.if || runInNewContext(step.if, context));
       assert.equal(
@@ -439,16 +440,46 @@ test('Web builds dependencies for Vitest and nonempty browser partitions only', 
   );
   assert.equal(build.run, 'node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...');
   assert.notEqual(build['continue-on-error'], true);
-  for (const matrix of webMatrix) {
-    for (const required of ['true', 'false', '', undefined, true]) {
-      assert.equal(
-        runInNewContext(build.if, {
-          matrix,
-          steps: { web_plan: { outputs: { browser_required: required } } },
-        }),
-        matrix.phase === 'vitest' || required === 'true',
-        `${JSON.stringify(matrix)}: ${String(required)}`
-      );
+  for (const [event, root, full] of [
+    ['pull_request', false, false],
+    ['pull_request', true, true],
+    ['push', false, true],
+    ['workflow_dispatch', false, true],
+  ]) {
+    const scenario = webScenarioContext(event, root);
+    for (const matrix of expandWebMatrix(scenario)) {
+      for (const required of ['true', 'false', '', undefined, true]) {
+        assert.equal(
+          runInNewContext(build.if, {
+            ...scenario,
+            matrix,
+            steps: {
+              web_plan: {
+                outputs: {
+                  browser_required: matrix.phase === 'browser' ? required : 'false',
+                  vitest_required: required,
+                },
+              },
+            },
+          }),
+          (matrix.phase === 'vitest' && full) || required === 'true',
+          `${JSON.stringify(matrix)}: ${String(required)}`
+        );
+        if (!full && matrix.phase === 'vitest') {
+          const execution = web.steps.find(
+            (step) => step.name === 'Run governed Web changed evidence (PR)'
+          );
+          assert.equal(
+            runInNewContext(execution.if, {
+              ...scenario,
+              matrix,
+              steps: { web_plan: { outputs: { vitest_required: required } } },
+            }),
+            required === 'true',
+            'An empty group neither builds nor executes a test command'
+          );
+        }
+      }
     }
   }
 });

@@ -6,6 +6,7 @@
  * @version 1.0.1
  */
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
+import { openCanvasNodeOperations } from '../canvasExecutionSelection';
 import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
@@ -121,14 +122,8 @@ export function editWorkbenchInspector(inspectorSelector: string): void {
 /** Properties is a contextual action; Model double-click belongs to the semantic editor. */
 export function openWorkbenchProperties(nodeId: string): void {
   const node = `.react-flow__node[data-id="${nodeId}"]`;
-  cy.get(node, { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
-    .focus()
-    .should('be.focused')
-    // Body controls can take focus before the menu captures its opener.
-    .find('[data-slot="graph-node-card-icon"]')
-    .rightclick();
+  // The icon owns identity selection; use the shared title gesture for node commands.
+  openCanvasNodeOperations(nodeId);
   cy.document().then((document) => {
     cy.contains(
       '[data-slot="canvas-node-context-menu-item"]',
@@ -137,7 +132,15 @@ export function openWorkbenchProperties(nodeId: string): void {
   });
   cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   cy.get('body').should('not.have.css', 'pointer-events', 'none');
-  cy.get(node).find('[data-slot="canvas-node-shell"]').should('be.focused');
+  // Source identity owns focus; a normal title delegates focus to its card shell.
+  cy.get(node)
+    .find<HTMLElement>(
+      '[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]'
+    )
+    .should('have.length', 1)
+    .closest<HTMLElement>('[tabindex="0"]')
+    .should('have.length', 1)
+    .and('be.focused');
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
 }
 

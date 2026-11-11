@@ -173,6 +173,7 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
 ] as const;
 
 const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
+  'src/testing/vitestSuites.executionPartition.architecture.test.ts',
   'src/testing/vitestSuites.browserNightly.architecture.test.ts',
   'src/testing/vitestSuites.browserCatalog.architecture.test.ts',
   'src/testing/vitestSuites.catalogRetention.architecture.test.ts',
@@ -591,6 +592,8 @@ function isWebVitestGovernancePath(filePath: string): boolean {
     /^vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     normalizedPath === 'apps/web/scripts/run-vitest-changed-suites.ts' ||
     normalizedPath === 'scripts/run-vitest-changed-suites.ts' ||
+    normalizedPath === 'apps/web/scripts/vitest-execution-partitions.ts' ||
+    normalizedPath === 'scripts/vitest-execution-partitions.ts' ||
     normalizedPath === 'apps/web/package.json' ||
     normalizedPath === 'package.json' ||
     normalizedPath === '.github/workflows/test.yml' ||
