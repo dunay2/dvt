@@ -118,7 +118,12 @@ export function useCanvasCodeWorkbench(
                   const closed = await selected.requestClose(canClose);
                   if (!closed || !canClose()) return false;
                   setActiveOwnerKey(null);
-                  if (selected.id === 'project-code') enter(`#${canvasWorkspaceTabs.canvas.tabId}`);
+                  if (selected.id === 'project-code')
+                    enter(
+                      canvasId == null
+                        ? '[data-slot="shell-project-code-command"]'
+                        : `#${canvasWorkspaceTabs.canvas.tabId}`
+                    );
                   else restore();
                   return true;
                 } catch {
@@ -127,7 +132,7 @@ export function useCanvasCodeWorkbench(
               },
             },
           },
-    [layout, selected, enter, restore]
+    [layout, selected, enter, restore, canvasId]
   );
   const openProjectCode = useCallback(
     async (path?: string): Promise<boolean> => {
@@ -162,6 +167,7 @@ export function useCanvasCodeWorkbench(
     [capture, enter, workspaceCommands?.onOpenProjectCode, ownerKey, scopedId, open]
   );
   return {
+    ownerKey,
     available: ownerKey != null,
     layout: shellLayout,
     openProjectCode,

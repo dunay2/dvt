@@ -612,8 +612,12 @@ describe('Canvas workbench screen composition', () => {
     waitForE2eApiCall('/runs', 'GET');
     cy.get('[data-slot="run-operational-table"]').should('contain.text', 'run_primary_project');
     cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
-    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     cy.location('pathname').should('eq', '/canvas');
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-code-tab-close"]').click();
+    cy.get('[data-slot="canvas-code-main-tab"]').should('not.exist');
+    cy.get('[data-slot="shell-project-code-command"]').should('be.focused');
     cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
 
     // A new project must be able to import before a Canvas exists, without creating one.

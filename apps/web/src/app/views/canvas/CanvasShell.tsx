@@ -230,14 +230,7 @@ export default function CanvasShell({
       direction="horizontal"
       className={styles.workspace}
     >
-      <CanvasCodeRouteEntry
-        ownerKey={
-          panels.activeCanvasId == null || layout.surfaceStrategy == null
-            ? null
-            : `${layout.surfaceStrategy.id}:${panels.activeCanvasId}`
-        }
-        onOpen={openProjectCode}
-      />
+      <CanvasCodeRouteEntry ownerKey={code.ownerKey} onOpen={openProjectCode} />
       {layout.surfaceStrategy?.operationalDrawer == null ? null : (
         <CanvasOperationalDrawerContributionRegistrar
           policy={{
