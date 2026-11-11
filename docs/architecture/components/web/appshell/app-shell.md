@@ -514,7 +514,8 @@ Rules for the shared seam:
 The shell workspace context is the bounded replacement for tenant, project, and
 environment dropdowns that previously consumed the main top bar.
 
-Workspace context is read-only content in the left-rail Project menu.
+Workspace identity is a read-only header breadcrumb. Deployment adapter, known Git context
+and available-project selection live in left-rail Project properties.
 Tenant, project, environment, and deployment adapter labels are read-only.
 The on-demand workspace menu delegates selection among server-granted scopes to
 `SelectWorkspaceScope`; it cannot create grants or construct an unvalidated scope.
@@ -528,19 +529,18 @@ It uses a Fowler Presentation Model split:
 
 - `buildProjectIdentityBadge(...)` resolves workspace scope into read-only
   labels;
-- `ShellProjectMenu` owns the on-demand shell context and granted-scope selection
-  surface;
-- `ShellWorkspaceContextDetails` renders tenant, project, environment, and
-  deployment adapter as read-only context fields.
+- `useShellProjectIdentity` binds the same session projection for both consumers;
+- `ShellProjectMenu` owns operational properties and granted-scope selection;
+- `ShellWorkspaceBreadcrumb` displays tenant / project / environment in the header.
 
 ### Public API
 
-| API                            | Kind          | Owner                  | Contract                                                                                          |
-| ------------------------------ | ------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `ProjectIdentityBadge`         | read model    | Web shell presentation | Carries tenant, project, environment, deployment adapter, compact id, slug, and draft-scope label |
-| `buildProjectIdentityBadge`    | query adapter | Web shell presentation | Resolves granted option labels and falls back to raw ids without fabricating                      |
-| `ShellProjectMenu`             | details UI    | Shell context display  | Exposes read-only details and delegates granted-scope selection                                   |
-| `ShellWorkspaceContextDetails` | passive view  | Shell context display  | Displays tenant, project, environment, and deployment adapter without mutation controls           |
+| API                         | Kind          | Owner                  | Contract                                                                                          |
+| --------------------------- | ------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`      | read model    | Web shell presentation | Carries tenant, project, environment, deployment adapter, compact id, slug, and draft-scope label |
+| `buildProjectIdentityBadge` | query adapter | Web shell presentation | Resolves granted option labels and falls back to raw ids without fabricating                      |
+| `ShellProjectMenu`          | details UI    | Shell context display  | Exposes read-only details and delegates granted-scope selection                                   |
+| `ShellWorkspaceBreadcrumb`  | passive view  | Shell context display  | Displays tenant / project / environment without fake links or mutation controls                   |
 
 ### Invariants
 
@@ -558,9 +558,10 @@ It uses a Fowler Presentation Model split:
 ```mermaid
 stateDiagram-v2
   [*] --> ResolvedScope
+  ResolvedScope --> VisibleBreadcrumb: tenant / project / environment
   ResolvedScope --> ScopeMenuClosed: project rail trigger from read model
   ScopeMenuClosed --> ContextMenuOpen: user opens Project
-  ContextMenuOpen --> ReadOnlyDetails: show tenant/project/environment
+  ContextMenuOpen --> ReadOnlyDetails: show deployment and granted-project choices
   ReadOnlyDetails --> ScopeMenuClosed: close Project
 ```
 
@@ -579,9 +580,9 @@ stateDiagram-v2
 flowchart LR
   Store["sessionStore scope"] --> Model["buildProjectIdentityBadge"]
   Config["WorkspaceBootstrapConfig"] --> Model
-  Model --> Menu["ShellProjectMenu"]
-  Menu --> Details["ShellWorkspaceContextDetails"]
-  Details --> Context["tenant / project / environment read-only fields"]
+  Model --> Binding["useShellProjectIdentity"]
+  Binding --> Menu["ShellProjectMenu: operational properties"]
+  Binding --> Breadcrumb["ShellWorkspaceBreadcrumb: visible identity"]
 ```
 
 ## UX Rules

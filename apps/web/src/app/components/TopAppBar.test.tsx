@@ -72,6 +72,7 @@ describe('ShellTopBar workspace context', () => {
       environmentId: 'dev',
       targetAdapter: 'temporal',
       availableTargetAdapters: ['temporal'],
+      availableWorkspaces: [],
     });
     useUiLayoutStore.setState({ focusMode: false });
     useApplicationLanguageStore.setState({ language: 'en' });
@@ -158,6 +159,55 @@ describe('ShellTopBar workspace context', () => {
   }
 
   // Project commands have one rail owner; recreating File in the header duplicates discovery.
+  it('shows read-only context in the header and operational details only in properties', async () => {
+    await act(async () => root.render(renderShellTopBar('/canvas')));
+    const breadcrumb = container.querySelector('[data-slot="shell-workspace-breadcrumb"]');
+    expect(breadcrumb).not.toBeNull();
+    expect(breadcrumb?.closest('[data-slot="shell-top-bar"]')).not.toBeNull();
+    expect(breadcrumb?.getAttribute('aria-label')).toBe('Workspace context');
+    expect(breadcrumb?.textContent).toContain('acme-corp');
+    expect(breadcrumb?.textContent).toContain('dbt-analytics');
+    expect(breadcrumb?.querySelector('[aria-current="location"]')?.textContent).toBe('dev');
+    expect(breadcrumb?.querySelector('a, button, input, [role="combobox"]')).toBeNull();
+    expect(breadcrumb?.textContent).not.toContain('temporal');
+    await act(async () =>
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!)
+    );
+    const properties = document.querySelector('[data-slot="shell-menu-workspace-context"]');
+    expect(properties?.textContent).toContain('temporal');
+    expect(properties?.querySelector('[data-slot="shell-workspace-tenant-context"]')).toBeNull();
+    expect(document.querySelector('[data-slot="shell-workspace-context-details"]')).toBeNull();
+  });
+
+  // A scope change must update identity without leaving stale names in either entry point.
+  it('tracks granted project names and falls back to raw ids after a scope change', async () => {
+    const projectName = 'Analytics with a deliberately long project name';
+    useSessionStore.setState({
+      availableWorkspaces: [
+        { tenantId: 'acme-corp', projectId: 'dbt-analytics', environmentId: 'dev', projectName },
+      ],
+    });
+    await act(async () => root.render(renderShellTopBar('/canvas')));
+    const breadcrumb = container.querySelector('[data-slot="shell-workspace-breadcrumb"]')!;
+    expect(breadcrumb.textContent).toContain(projectName);
+    expect(
+      breadcrumb
+        .querySelector('[data-slot="shell-workspace-project-context"]')
+        ?.getAttribute('title')
+    ).toBe(`Project: ${projectName}`);
+    await act(async () =>
+      useSessionStore.setState({ projectId: 'unlabelled-project', environmentId: 'staging' })
+    );
+    expect(breadcrumb.textContent).toContain('unlabelled-project');
+    expect(breadcrumb.textContent).not.toContain(projectName);
+    expect(breadcrumb.querySelector('[aria-current="location"]')?.textContent).toBe('staging');
+    expect(
+      container
+        .querySelector('[data-slot="shell-workspace-menu-trigger"]')
+        ?.getAttribute('aria-label')
+    ).toContain('unlabelled-project');
+  });
+
   it('keeps project and file menus out of the header on every route', async () => {
     await act(async () => root.render(renderShellTopBar('/canvas')));
     const header = container.querySelector('[data-slot="shell-top-bar"]')!;
@@ -175,7 +225,7 @@ describe('ShellTopBar workspace context', () => {
     );
     await act(async () => fireEvent.pointerDown(trigger));
     expect(
-      document.querySelector('[data-slot="shell-workspace-context-details"]')?.textContent
+      container.querySelector('[data-slot="shell-workspace-breadcrumb"]')?.textContent
     ).toContain('dev');
     expect(container.querySelector('[data-slot="shell-top-bar"] [role="combobox"]')).toBeNull();
   });
@@ -212,7 +262,7 @@ describe('ShellTopBar workspace context', () => {
       expect(topBar?.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
       expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
       expect(workspaceMenuTrigger).not.toBeNull();
-      expect(workspaceMenuTrigger?.getAttribute('aria-label')).toContain('Project settings');
+      expect(workspaceMenuTrigger?.getAttribute('aria-label')).toContain('Project properties');
       expect(workspaceMenuTrigger?.getAttribute('aria-label')).toContain('dbt-analytics');
       expect(topBar?.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeNull();
       expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
@@ -246,7 +296,7 @@ describe('ShellTopBar workspace context', () => {
         expect(
           document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
         ).toHaveLength(0);
-        expect(document.body.textContent).toContain('Workspace context');
+        expect(document.body.textContent).toContain('Project properties');
         expect(document.body.textContent).toContain('dbt-analytics');
         expect(document.body.textContent).toContain('dev');
         expect(document.body.textContent).toContain('Deployment adapter');
@@ -458,7 +508,7 @@ describe('ShellTopBar workspace context', () => {
   it('resolves Spanish shell copy for the menu and workspace context labels', () => {
     expect(resolveShellTopBarCopy('es-ES')).toMatchObject({
       shell: 'Vista',
-      projectSettings: 'Configuración del proyecto',
+      projectSettings: 'Propiedades del proyecto',
       globalNavigation: 'Navegación',
       workspaceContext: 'Contexto del proyecto',
       projectScope: 'Proyecto',
@@ -565,7 +615,7 @@ describe('ShellTopBar workspace context', () => {
       container
         .querySelector('[data-slot="shell-workspace-menu-trigger"]')
         ?.getAttribute('aria-label')
-    ).toContain('Configuración del proyecto');
+    ).toContain('Propiedades del proyecto');
     await waitFor(() => {
       expect(document.body.querySelector('[data-slot="shell-language-menu"]')).toBeNull();
     });

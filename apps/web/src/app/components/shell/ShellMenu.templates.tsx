@@ -36,7 +36,7 @@ import {
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import type { ShellViewControlsReadModel } from './shellViewControlsModel';
-import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
+import styles from './ShellChrome.module.css';
 import { ShellWorkspaceScopeSelector } from './ShellWorkspaceScopeSelector';
 
 type MenuLifecycle = Readonly<{
@@ -96,9 +96,16 @@ export function ShellProjectMenuTemplate({
         onCloseAutoFocus={onCloseAutoFocus}
       >
         <DropdownMenuLabel>{copy.projectSettings}</DropdownMenuLabel>
-        <DropdownMenuLabel>{copy.workspaceContext}</DropdownMenuLabel>
         <div data-slot="shell-menu-workspace-context" className={topAppBarClasses.menuContextBody}>
-          <ShellWorkspaceContextDetails badge={badge} copy={copy} />
+          <div data-slot="shell-workspace-deployment-context" className={styles.workspaceField}>
+            <span className={topAppBarClasses.contextLabel}>{copy.deploymentScope}</span>
+            <div
+              aria-label={copy.deploymentScopeAria}
+              className={topAppBarClasses.readOnlyScopeField}
+            >
+              {badge.targetAdapter}
+            </div>
+          </div>
           <ShellWorkspaceScopeSelector copy={copy} onScopeSelected={onScopeSelected} />
         </div>
         {hasKnownGitContext ? (

@@ -244,9 +244,40 @@ Owned concern: own shell top-bar and application-menu appearance without route o
   }
 }
 
-.workspaceDetails {
-  display: grid;
-  gap: calc(var(--spacing) * 3);
+.workspaceBreadcrumb {
+  min-width: 0;
+  max-width: 40rem;
+  margin-inline-start: auto;
+  padding-inline: calc(var(--spacing) * 2);
+}
+
+.workspacePath {
+  flex-wrap: nowrap;
+  gap: calc(var(--spacing) * 2);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  color: var(--text-subtle);
+}
+
+.workspaceSegment {
+  min-width: 0;
+}
+
+.workspaceSegmentLabel,
+.workspaceProjectLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspaceProjectLabel {
+  color: var(--text-strong);
+  font-weight: var(--font-weight-medium);
+}
+
+.workspaceSeparator {
+  flex-shrink: 0;
+  color: var(--text-subtle);
 }
 
 .workspaceField {

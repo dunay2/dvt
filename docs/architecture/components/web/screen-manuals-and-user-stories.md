@@ -52,7 +52,9 @@ The user always understands:
 
 ### Shell workspace context
 
-Global context lives in the left-rail Project menu. The identity projection is a
+Global identity lives in the header breadcrumb: tenant / project / environment.
+Deployment adapter and granted-project selection live in left-rail Project properties.
+The identity projection is a
 read-only presentation model; scope changes use the separate governed
 project-selection flow rather than mutating those labels.
 
