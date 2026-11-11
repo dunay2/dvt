@@ -8,10 +8,8 @@ import {
   selectWebVitestExecutionPartition,
   WEB_VITEST_EXECUTION_GROUPS,
 } from '../../scripts/vitest-execution-partitions';
-import {
-  resolveWebVitestChangedSuitePlan,
-  WEB_VITEST_CHANGED_SUITE_COMMANDS,
-} from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
+import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
 import { listWebVitestFiles, suiteMatchesFile, webRoot } from './vitestSuites.architecture.support';
 
 vi.mock('node:child_process', async (original) => ({

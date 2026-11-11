@@ -8,7 +8,7 @@ import {
   WEB_CYPRESS_CATALOG_PATH,
 } from '../../cypress.catalog';
 import { main } from '../../scripts/run-vitest-changed-suites';
-import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 
 vi.mock('node:child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:child_process')>()),

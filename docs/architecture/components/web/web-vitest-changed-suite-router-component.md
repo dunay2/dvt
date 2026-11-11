@@ -18,6 +18,41 @@ owned suite commands. It accelerates local development and the `Web Frontend
 Tests` pull-request lane while preserving full primary-suite coverage on
 `main`, manual workflow runs, and root-build-sensitive changes.
 
+## Implementation Responsibilities
+
+The suite catalog remains in `apps/web/vitest.suites.ts` and contains data and
+types only. The executable owners live under `apps/web/vitest/`:
+
+| Owner               | Reason to change                                          |
+| ------------------- | --------------------------------------------------------- |
+| `runtimeConfig.ts`  | Vitest environments, worker limits and isolation          |
+| `paths.ts`          | Path normalization and governed surface recognition       |
+| `classification.ts` | Primary and focus suite assignment                        |
+| `commands.ts`       | Ordered commands, exact batches and coverage absorption   |
+| `changedPlan.ts`    | Composition of independent Vitest and Cypress obligations |
+
+Consumers import the actual owner. The catalog does not re-export the relocated
+functions. Commands and config filenames follow the existing suite naming
+convention, checked against real package scripts and configuration files.
+
+```mermaid
+flowchart LR
+  CLI[Existing changed-suite adapter] --> Plan[changedPlan query]
+  Config[Existing Vitest configs] --> Runtime[runtimeConfig]
+  Runtime --> Catalog[vitest.suites catalog]
+  Plan --> Classification[classification]
+  Classification --> Paths[paths]
+  Classification --> Catalog
+  Plan --> Commands[commands]
+  Commands --> Catalog
+  Plan --> Browser[Existing Cypress admission]
+```
+
+Changes in these modules retain the complete governance guard batch and browser
+execution-boundary obligations of the original combined owner. Worker isolation,
+memory budgets and runtime capability selection remain governed by the existing
+contracts.
+
 ## Public API
 
 <!-- markdownlint-disable MD060 -->
@@ -175,6 +210,25 @@ flowchart LR
 - Do not treat Vitest as evidence for a Cypress change. Browser obligations use
   the admitted runtime below; unsupported browser changes fail closed.
 - Do not make source files under `apps/web/src/testing/**` production services.
+
+## Interactive Local Cypress Entry
+
+`pnpm --filter @dvt/web test:e2e:open` is the local interactive adapter of the
+existing `RunWebCypressNative` command. It selects the runner's existing `open`
+mode and lets the developer inspect and run specs through the Cypress GUI.
+`tools/ci/run-web-cypress-native.mjs` remains the application port and process
+owner; the script does not implement another browser runner.
+
+The runner retains its fresh build, preview readiness, cancellation and owned
+process cleanup rules. The operator ends the interactive session explicitly;
+an already running preview remains outside the runner's ownership. A GUI exit
+is not a receipt for the required browser proof. Changed/full CI plans select
+finite run modes and cannot substitute this manual session for their evidence.
+
+A focused finite check uses the same canonical entry with a spec argument, for
+example `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/shell/startup-route-readiness.cy.ts`. Spec selection remains governed
+by the existing browser catalog and runtime contracts.
 
 ## Browser Evidence Boundary — GH-3540
 

@@ -10,13 +10,15 @@ import { resolve } from 'node:path';
 import { load } from 'js-yaml';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { classifyWebVitestFile } from '../../vitest/classification';
 import {
-  classifyWebVitestFile,
   createWebVitestConfig,
-  resolveWebVitestChangedSuitePlan,
   WEB_VITEST_CI_NODE_OPTIONS,
   WEB_VITEST_CI_WORKER_COUNT,
-  WEB_VITEST_CHANGED_SUITE_COMMANDS,
+} from '../../vitest/runtimeConfig';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
+import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
+import {
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
   WEB_VITEST_SUITES,

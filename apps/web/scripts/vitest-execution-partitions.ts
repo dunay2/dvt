@@ -6,7 +6,7 @@
 import {
   WEB_VITEST_CHANGED_SUITE_COMMANDS,
   type WebVitestChangedCommandPlanEntry,
-} from '../vitest.suites';
+} from '../vitest/commands';
 
 export const WEB_VITEST_EXECUTION_GROUPS = [
   'unit',

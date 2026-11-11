@@ -1346,6 +1346,20 @@ aborts startup; a previous local build is not a runtime prerequisite.
   closure and process lifetime ownership. Chunked, blank and trailing lines keep
   the same formatting; output adaptation does not own process termination.
 
+## Browser Routing Proof Ownership
+
+The browser-routing architecture entry registers bounded contract modules in one
+Vitest runtime. The Cypress source graph is acquired once; process and filesystem
+doubles are installed by the entry and checked before each case. Splitting these
+contracts into independent entries would repeat that acquisition under isolation.
+
+The canonical changed-suite router associates auxiliary TypeScript files under
+`src/testing/vitestSuites.browserRouting.*` with the existing
+`vitestSuites.browserRouting.architecture.test.ts` entry. Direct test changes keep
+their normal exact routing. Adjacent files and mixed product changes retain their
+existing validation obligations; this association does not alter browser admission
+or introduce another test catalog.
+
 ## Controlled Shell Bootstrap Variants
 
 `stubShellBootstrapApis` owns the controlled session and health bootstrap

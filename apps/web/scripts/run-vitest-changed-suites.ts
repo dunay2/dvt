@@ -20,7 +20,7 @@ import {
   type WebCypressCapability,
   type WebCypressShard,
 } from '../cypress.changed';
-import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
 
 import {
   isWebVitestExecutionGroup,
