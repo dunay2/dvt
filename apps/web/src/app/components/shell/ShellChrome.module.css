@@ -138,12 +138,36 @@ Owned concern: own shell top-bar and application-menu appearance without route o
 }
 
 .smallStatusText {
-  display: flex;
-  cursor: default;
+  display: inline-flex;
+  cursor: help;
   align-items: center;
-  gap: 0.375rem;
-  padding-inline: 0.25rem;
-  font-size: var(--text-ui-caption);
+  padding: var(--spacing);
+  color: var(--text-subtle);
+}
+
+.smallStatusText::before {
+  content: '';
+  width: calc(var(--spacing) * 1.5);
+  height: calc(var(--spacing) * 1.5);
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.smallStatusText[data-connection-state='ok'] {
+  color: var(--status-success);
+}
+
+.smallStatusText[data-connection-state='offline'] {
+  color: var(--status-offline);
+}
+
+.smallStatusText[data-connection-state='degraded'] {
+  color: var(--status-degraded);
+}
+
+.smallStatusText:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .menuButton {
