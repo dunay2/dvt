@@ -70,6 +70,30 @@ then `vitest.presentation.config.ts` for `CanvasViewport`,
 `test:deps` preparation ran first. The selected cases preserve click/double-click,
 keyboard context menus, node identity, port semantics and graph presentation.
 
+Native Chrome exercises dragging, connection ports, layout persistence, column
+lineage and inspector ordering. The initial five-spec command passed 26 cases
+but failed because the mixed viewport spec requires a real provider; its missing
+API configuration also skipped one dependent case. That command is not a pass.
+With the declared LIVE runner, both React Flow versions reproduced an identical
+preexisting Fit synchronization failure (7/8 cases passed). The [audited test
+repair](https://github.com/dunay2/dvt/issues/3840#issuecomment-6784787728) observes
+rendered graph centering before measuring pan, preserving all gesture assertions.
+
+On the rebased 12.12.1 candidate, the complete LIVE viewport spec then passes
+**8/8**, with **5/5** real PostgreSQL provider cases and no pending or skipped
+cases. The command is:
+
+```text
+DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native
+DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME=available
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-relational-workbench-viewport.cy.ts
+```
+
+Existing real dbt/analyzer and native Temporal server paths were supplied through
+their declared environment variables. The final whole-candidate gate below
+remains required; individual passing spec results do not turn the failed initial
+command into acceptance.
+
 The observability tests exercise nested asynchronous span parentage, context after
 `await`, export, bounded attributes and exporter-error isolation. Only the context
 manager changes major version. Its [published peer contract](https://github.com/open-telemetry/opentelemetry-js/blob/v3.1.0/packages/opentelemetry-context-async-hooks/package.json)
@@ -131,8 +155,8 @@ the [Temporal operational risk](../risk-register/adapters/r-20260308-temporal-op
 
 ## Acceptance boundary
 
-This record establishes the focused receipts above. Native Canvas browser proof,
-the final repository prepush, required hosted checks, fresh exact-base/head
+This record establishes the focused receipts above. The final repository prepush,
+required hosted checks, fresh exact-base/head
 Planning DB acceptance and merge disposition are recorded on #3842 and its
 replacement PR before integration. None is inferred from a focused pass or a
 routed skip.
