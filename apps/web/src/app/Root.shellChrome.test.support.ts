@@ -57,40 +57,15 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
   expect(shellTopBar.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   expect(shellConnectionStatus.className).toContain('text-[var(--text-default)]');
 
-  if (mode === 'workbench') {
-    expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
-    expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
-    expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
-    expect(shellTopBar.querySelector('[data-slot="shell-workspace-menu-trigger"]')).toBeTruthy();
-    expect(shellTopBar.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeTruthy();
-    expect(shellMenuTrigger.textContent).toContain('View');
-    return;
-  }
-
-  const shellGitRef = requireElement<HTMLElement>(container, '[data-slot="shell-git-ref"]');
-  const shellProjectIdentityBadge = requireElement<HTMLElement>(
-    container,
-    '[data-slot="shell-project-identity-badge"]'
-  );
-  const shellWorkspaceContextTrigger = requireElement<HTMLElement>(
-    container,
-    '[data-slot="shell-workspace-context-trigger"]'
-  );
-
-  expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
-  expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeTruthy();
-  expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeTruthy();
+  expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
+  expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
+  expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-menu-trigger"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeNull();
-  expect(shellGitRef.className).toBe(topBarStyles.gitRef);
-  expect(
-    shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-title"]')
-  ).not.toBeNull();
-  expect(
-    shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-env"]')
-  ).not.toBeNull();
-  expect(shellProjectIdentityBadge.className).toBe(topBarStyles.projectIdentityBadge);
-  expect(shellWorkspaceContextTrigger.textContent).toContain('Workspace context');
+  const project = container.querySelector(
+    '[data-slot="left-navigation-rail"] [data-slot="shell-workspace-menu-trigger"]'
+  );
+  expect(project, `${mode} route retains project configuration in the rail`).not.toBeNull();
   expect(shellMenuTrigger.textContent).toContain('View');
 }
 

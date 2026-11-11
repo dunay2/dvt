@@ -336,13 +336,10 @@ describe('dbt YAML description edit live vertical', () => {
     });
     closeModelWorkbench();
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+    cy.get('[data-slot="shell-project-code-command"]')
       .scrollIntoView()
       .should('be.visible')
-      .should(($command) => {
-        expect($command.attr('data-disabled')).to.be.undefined;
-      })
+      .should('not.have.attr', 'aria-disabled', 'true')
       .click();
     cy.get('[data-slot="canvas-code-main-tab"]')
       .should('be.visible')

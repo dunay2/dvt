@@ -84,11 +84,22 @@ vi.mock('./explorer/CanvasProjectFilesExplorer', () => ({
   CanvasProjectFilesExplorer: ({
     onOpenFile,
     projectRoot,
+    onImportDbtProject,
   }: {
+    onImportDbtProject?: () => void;
     onOpenFile: (path: string) => void;
     projectRoot?: string;
   }) => (
     <div data-testid="project-files-explorer" data-project-root={projectRoot}>
+      {onImportDbtProject == null ? null : (
+        <button
+          type="button"
+          data-slot="canvas-workspace-import-dbt-project-command"
+          onClick={onImportDbtProject}
+        >
+          Import dbt project
+        </button>
+      )}
       <button type="button" onClick={() => onOpenFile('notes/first.md')}>
         Open first project file
       </button>

@@ -1,8 +1,10 @@
 /** Owned concern: adapt the scoped workspace-file query to the existing passive tree. */
 import { useWorkspaceFileTreeQuery } from '../../../queries/workspaceQueries';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { routeWorkbenchMutedTextClassName } from '../../../components/workbench/RouteWorkbenchFrame';
-import { cn } from '../../../components/ui/utils';
+import { FolderInput } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
+import styles from '../CanvasWorkspaceMenuControls.module.css';
 import FileTreePanel from '../../code/FileTreePanel';
 import { resolveCodeViewCopy } from '../../code/codeViewCopy';
 import { resolveCodeWorkbenchErrorPresentation } from '../../code/codeWorkbenchErrorModel';
@@ -14,16 +16,47 @@ import {
 export function CanvasProjectFilesExplorer({
   projectRoot,
   onOpenFile,
+  onImportDbtProject,
+}: Readonly<{
+  projectRoot?: string;
+  onOpenFile: (path: string) => void;
+  onImportDbtProject?: () => void;
+}>): JSX.Element {
+  const language = useApplicationLanguageStore((state) => state.language);
+  return (
+    <div className={styles.filesExplorer}>
+      {onImportDbtProject == null ? null : (
+        <div className={styles.fileActions}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            data-slot="canvas-workspace-import-dbt-project-command"
+            onClick={onImportDbtProject}
+          >
+            <FolderInput aria-hidden="true" />
+            {resolveCanvasViewCopy(language).workspaceImportDbtProjectLabel}
+          </Button>
+        </div>
+      )}
+      <ProjectFileTree projectRoot={projectRoot} onOpenFile={onOpenFile} />
+    </div>
+  );
+}
+
+// Keep the action reachable even when the file query is empty, pending or unavailable.
+function ProjectFileTree({
+  projectRoot,
+  onOpenFile,
 }: Readonly<{
   projectRoot?: string;
   onOpenFile: (path: string) => void;
 }>): JSX.Element {
   const query = useWorkspaceFileTreeQuery();
   const copy = resolveCodeViewCopy(useApplicationLanguageStore((state) => state.language));
-  const stateClassName = cn('px-3 py-2 text-xs', routeWorkbenchMutedTextClassName);
   if (query.isPending)
     return (
-      <p role="status" className={stateClassName}>
+      <p role="status" className={styles.fileState}>
         {copy.routeLoadingMessage}
       </p>
     );
@@ -34,7 +67,7 @@ export function CanvasProjectFilesExplorer({
       copy,
     });
     return (
-      <p role="alert" className={stateClassName}>
+      <p role="alert" className={styles.fileState}>
         {error.title} {error.message}
       </p>
     );
@@ -46,12 +79,12 @@ export function CanvasProjectFilesExplorer({
       : resolveProjectRootScopedCodeWorkspaceFileTree(entries, projectRoot);
   if (!hasCodeWorkspaceFiles(tree))
     return (
-      <p role="status" className={stateClassName}>
+      <p role="status" className={styles.fileState}>
         {copy.routeEmptyMessage}
       </p>
     );
   return (
-    <div className="min-h-0 flex-1 overflow-auto">
+    <div className={styles.fileTree}>
       <FileTreePanel
         title={copy.explorerTitle}
         tree={tree}

@@ -285,14 +285,15 @@ issue #3296, replaces the older mixed `ShellMenu` placement. It does
 not accept the entire Figma migration or introduce another application rail.
 The later explicit [#3765 instruction](https://github.com/dunay2/dvt/issues/3765#issuecomment-6724940225)
 replaces its Raven-dropdown placement with direct icons in the existing left
-activity rail. Project, File, View, execution and authorization retain their
-owners. Raven becomes noninteractive identity.
+activity rail. The subsequent project consolidation removes File, moves dbt import
+to Code, and puts context, creation and snapshots in the left-rail Project menu.
+View, execution and authorization retain their owners. Raven becomes noninteractive identity.
 
 | Surface            | Owned concern                                                            | Existing authority                                                                                 |
 | ------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | Left shell rail    | Single Canvas entry, contextual Git, remaining destinations; About below | `ListShellNavigationItems`, `ConfigureCanvasViewportPreferences`, `GetCompiledApplicationMetadata` |
-| Project menu       | Granted project/environment selection, context and Git                   | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`                                             |
-| File menu          | New Project and active project import/export, files and code             | `CreateProject`, existing Canvas workspace contribution                                            |
+| Project menu       | Granted scope selection, context, Git, creation and snapshots            | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`                                             |
+| Code workspace     | Project file tree, open files and dbt import                             | Existing Code admission, workspace file queries and `ImportDbtProject`                             |
 | View menu          | Explorer/drawer recovery, focus mode and ES/EN preference                | Existing layout commands, `ConfigureApplicationLanguage`                                           |
 | Execution controls | Existing explicit execution intent/readiness                             | Unchanged operational contribution                                                                 |
 
@@ -300,8 +301,10 @@ owners. Raven becomes noninteractive identity.
 flowchart LR
   Rail[Direct left shell links] --> Routes[Existing Router navigation and pending-edit guard]
   Rail --> About[Existing About dialog and focus return]
-  Project[Project] --> Scope[Granted scope port and read-only context]
-  File[File] --> Contribution[Existing project/file commands]
+  Rail --> Project[Project settings]
+  Project --> Scope[Granted scope port and read-only context]
+  Project --> Contribution[Existing creation and snapshot commands]
+  Code[Code workspace] --> Files[Existing file queries and dbt import]
   View[View] --> Layout[Existing layout and language preferences]
 ```
 
@@ -310,8 +313,9 @@ concern-specific templates own passive markup and shared chrome styles. No
 generic menu framework, new store or second command catalog is introduced.
 Menu opening does not execute data queries or change graph authoring state.
 
-Focus ownership follows the selected intent: code/explorer and project creation
-return to File; granted-scope recovery remains Project. A menu closing to open
+Focus follows the selected intent: closing Code returns to Canvas; canceling dbt
+import returns to its Code action, with the durable Code rail as fallback after
+an authority change. Project creation and granted-scope recovery return to Project. A menu closing to open
 an editor/dialog must not steal the receiving surface's focus. Router navigation
 must preserve the existing unapplied-edit guard.
 
@@ -733,10 +737,9 @@ forced-click workaround.
 | `ShellTopBar`                | shell renderer         | Composes concern-owned menus and unchanged execution/connection controls.                                       |
 | `LeftNavigationRail`         | shell presentation     | Presents direct links from the existing navigation model and the active route host.                             |
 | `ShellAbout`                 | shell presentation     | Opens the existing compiled-metadata dialog and restores focus to its direct button.                            |
-| `ShellProjectMenu`           | shell controller       | Coordinates granted scope selection, context and Git.                                                           |
-| `ShellFileMenu`              | shell controller       | Coordinates project creation and the existing Canvas file contribution.                                         |
+| `ShellProjectMenu`           | shell controller       | Coordinates the rail Project menu: scope selection, context, creation and snapshots.                            |
 | `ShellMenu`                  | shell controller       | Coordinates View preferences only.                                                                              |
-| `ShellMenu.templates`        | passive presentation   | Presents Project, File and View through existing Radix primitives.                                              |
+| `ShellMenu.templates`        | passive presentation   | Presents Project and View through existing Radix primitives.                                                    |
 | `CanvasShellMainPanel`       | Canvas route renderer  | Places Canvas tabs, route-local toolbar, banners, viewport, and center-surface states.                          |
 | `CanvasToolbar`              | Canvas route renderer  | Renders graph/document commands only inside the Canvas workbench.                                               |
 | `CanvasTemplatePresentation` | presentation model     | Resolves route-visible first-canvas template title and description from a `CanvasKindRegistration` plus locale. |
@@ -748,8 +751,8 @@ forced-click workaround.
   Elements idempotently when already on that route; Git follows separately,
   remaining global links below, and About at the bottom. No second Elements icon.
 - Canvas graph/document editing commands remain route-local. The existing
-  project/file contribution is rendered only inside File, not as loose top-bar
-  controls.
+  snapshot contribution is rendered in Project. Code owns file import.
+  Neither is duplicated in the top bar.
 - `ShellTopBar` shows concern-owned menu triggers, health and the unchanged
   execution controls; it does not import Canvas controller hooks.
 - `Admin` and `Plugins` remain direct links from the existing navigation model.
@@ -797,7 +800,6 @@ flowchart LR
   Rail["LeftNavigationRail and active contextual host"]
   About["ShellAbout"]
   ProjectMenu["ShellProjectMenu"]
-  FileMenu["ShellFileMenu"]
   ViewMenu["ShellMenu: View"]
   CanvasPanel["CanvasShellMainPanel"]
   Toolbar["CanvasToolbar"]
@@ -808,8 +810,7 @@ flowchart LR
   Disposition --> TopBar
   Navigation["Existing runtime navigation model"] --> Rail
   Rail --> About
-  TopBar --> ProjectMenu
-  TopBar --> FileMenu
+  Rail --> ProjectMenu
   TopBar --> ViewMenu
   Router --> CanvasPanel
   CanvasPanel --> Toolbar
@@ -829,7 +830,7 @@ sequenceDiagram
   participant Draft as Workspace graph draft
 
   Operator->>Shell: Open /canvas
-  Shell->>Menus: Publish context, file contribution and view preferences
+  Shell->>Menus: Publish workspace tabs, View, execution and health
   Operator->>Operator: Global destinations remain directly visible in the left rail
   Shell-->>Operator: Show concern-owned triggers and unchanged execution/health controls
   Canvas->>Host: Render first-canvas state
@@ -842,19 +843,18 @@ sequenceDiagram
 
 ### Consumers
 
-| Consumer                              | Use                                                                    |
-| ------------------------------------- | ---------------------------------------------------------------------- |
-| `RootShell`                           | Passes the existing navigation model to the direct left rail.          |
-| `ShellTopBar`                         | Applies route-family context and command posture; logo is identity.    |
-| `LeftNavigationRail`                  | Presents direct links without bypassing pending-edit guards.           |
-| `ShellAbout`                          | Presents compiled metadata and restores focus to its own trigger.      |
-| `ShellProjectMenu`                    | Composes the existing granted scope selector and context read model.   |
-| `ShellFileMenu`                       | Reuses project creation and Canvas file commands; owns focus transfer. |
-| `ShellMenu`                           | Coordinates View preferences without navigation or project actions.    |
-| `CanvasShellMainPanel`                | Applies Canvas route-local command placement.                          |
-| `CanvasPlaygroundHost`                | Resolves first-canvas template presentation and command title.         |
-| `CanvasToolbar.architecture.test.tsx` | Guards route-local toolbar ownership.                                  |
-| `Root.shellChrome.test.tsx`           | Guards direct navigation, active state and retained shell context.     |
+| Consumer                              | Use                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------- |
+| `RootShell`                           | Passes the existing navigation model to the direct left rail.        |
+| `ShellTopBar`                         | Applies route-family context and command posture; logo is identity.  |
+| `LeftNavigationRail`                  | Presents direct links without bypassing pending-edit guards.         |
+| `ShellAbout`                          | Presents compiled metadata and restores focus to its own trigger.    |
+| `ShellProjectMenu`                    | Composes the existing granted scope selector and context read model. |
+| `ShellMenu`                           | Coordinates View preferences without navigation or project actions.  |
+| `CanvasShellMainPanel`                | Applies Canvas route-local command placement.                        |
+| `CanvasPlaygroundHost`                | Resolves first-canvas template presentation and command title.       |
+| `CanvasToolbar.architecture.test.tsx` | Guards route-local toolbar ownership.                                |
+| `Root.shellChrome.test.tsx`           | Guards direct navigation, active state and retained shell context.   |
 
 ### Command And Query Rails
 
@@ -1033,7 +1033,8 @@ stable origin; no second activity rail is introduced.
 places Code in the existing top workspace tab strip beside Canvas and any open
 Model tab. Canvas, Code and Model are retained sibling surfaces on `/canvas`;
 this does not add a `/code` route or another navigation framework. Git, the Code
-tab and File > Project Code request the same existing opener. Code becomes active
+tab request the same existing opener. File and the duplicate Explore Project entry
+are retired; multiple canvases can be selected in Project using the existing callback. Code becomes active
 only after admission succeeds. The existing DBT node-editor flush may reject
 entry, preserving the prior tab. A later Canvas or Model selection wins over an
 earlier pending Code activation.
@@ -1046,13 +1047,13 @@ the same file tree, editor and buffer at their existing React parent. Import
 remains the priority task layer without replacing the retained Code host. Model
 authoring and file synchronization keep their existing owners.
 
-Code capability and an open Code session are distinct. File and Git remain
+Code capability and an open Code session are distinct. Git remains
 available when Code is closed. The shell projects the Code tab and surface only
 while the existing project-code owner supplies its panel; an unopened or closed
 session has neither a tab nor an empty placeholder panel. Selecting Canvas or
 Model retains an open Code session. The existing guarded close removes both tab
 and panel only after its owner accepts the current close intent. Failed, pending
-or superseded closes preserve the session. Explicit File/Git entry reopens it.
+or superseded closes preserve the session. The explicit Git entry reopens it.
 
 `CanvasShellMainSurface` resolves contextual-workbench placement once and uses
 that result for both the contextual frame and the viewport gate for transient
@@ -1087,7 +1088,6 @@ flowchart LR
   Router --> Entry[Canvas-owned consumption adapter]
   Entry --> Opener
   Git --> Opener[Existing project Code opener with optional path]
-  File[Existing File-menu entry] --> Opener
   CodeTab[Top Code tab] --> Opener
   Opener --> Admission{Existing opener admits entry?}
   Admission -->|yes| Code[Retained Code workspace tab]
@@ -1097,6 +1097,13 @@ flowchart LR
   Code --> Metadata[Accepted open-file metadata]
   Return[Top Canvas tab] --> Graph[Same retained graph and camera]
 ```
+
+Project files are available before the first Canvas. The existing Code owner uses
+an admitted workspace-scope key for that empty-project case; existing Canvas and
+authority ownership remains unchanged. Opening Code or import never creates a
+Canvas implicitly. Missing workspace scope cannot open this empty-project session.
+Code displays its dbt import action outside the file-tree loading/error/empty branches.
+The server import receipt still determines the resulting authority and navigation.
 
 `CanvasProjectFilesExplorer` is a narrow adapter over the existing file-tree
 query. The rail requests a path and keeps no premature selected-file highlight;
@@ -1161,8 +1168,8 @@ Acceptance:
 
 - Plan, Run, draft status and reload actions render in the Canvas route-local
   toolbar after a canvas document or graph-operable state exists.
-- Snapshot Export and Import render in `ShellFileMenu` through
-  `CanvasWorkspaceMenuControls`. File owns their menu placement; Canvas owns
+- Snapshot Export and Import render in `ShellProjectMenu` through
+  `CanvasWorkspaceMenuControls`. Project owns their menu placement; Canvas owns
   their commands and availability.
 - `ShellTopBar` does not own Canvas command semantics.
 - Canvas visual preferences remain in the shell `View` menu contribution.

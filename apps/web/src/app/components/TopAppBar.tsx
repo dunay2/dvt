@@ -1,17 +1,14 @@
 /**
- * Owned concern: compose global shell top-bar context, health, and command menus.
- * @baseline GH-3622: application navigation, project scope, File and View have distinct owners.
- * @decision Apply the existing route posture and delegate each menu to its concern-owned controller.
- * @consequence No route-owned commands or authorization policy are copied into the shell.
- * @version 1.0.0
+ * Owned concern: compose route identity, execution, view controls and connection status.
+ * @baseline GH-3765: project context and configuration have one left-rail entry.
+ * @decision Keep project and file actions out of the route header.
+ * @consequence Navigating routes cannot create a second project menu or scope owner.
+ * @version 1.1.0
  */
 import { useLocation } from 'react-router';
 
-import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
-import { buildProjectIdentityBadge } from '../shell/projectIdentityBadge';
 import { resolveShellNavigationDisposition } from '../shell/shellNavigationDisposition';
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
-import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import { CanvasWorkspaceTopBarIdentity } from '../views/canvas/CanvasWorkspaceMenuControls';
@@ -21,18 +18,11 @@ import { useOperationalDrawerContributionStore } from './shell/operationalDrawer
 import AppBrandMark from './AppBrandMark';
 import styles from './shell/ShellChrome.module.css';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
-import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
-import { ShellProjectMenu } from './shell/ShellProjectMenu';
-import { ShellFileMenu } from './shell/ShellFileMenu';
-import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
 import { ShellRunStatusIndicator } from './shell/ShellRunStatusIndicator';
-import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
 import { resolveShellViewControls } from './shell/shellViewControlsModel';
 import type { ShellTopBarProps } from './shell/types';
 import { TooltipProvider } from './ui/tooltip';
-
-const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
 export function ShellTopBar({
   connectionDetail,
@@ -41,19 +31,6 @@ export function ShellTopBar({
   routeHeading = null,
 }: ShellTopBarProps) {
   const location = useLocation();
-  const selectedTenant = useSessionStore((state) => state.tenantId);
-  const selectedProject = useSessionStore((state) => state.projectId);
-  const selectedProjectName = useSessionStore(
-    (state) =>
-      state.availableWorkspaces.find(
-        (workspace) =>
-          workspace.tenantId === state.tenantId &&
-          workspace.projectId === state.projectId &&
-          workspace.environmentId === state.environmentId
-      )?.projectName
-  );
-  const selectedEnvironment = useSessionStore((state) => state.environmentId);
-  const targetAdapter = useSessionStore((state) => state.targetAdapter);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
@@ -67,16 +44,7 @@ export function ShellTopBar({
   const copy = resolveShellTopBarCopy(applicationLanguage);
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
   const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
-  const exposeWorkbenchMenus = focusMode || isWorkbenchShell;
   const shellViewControls = resolveShellViewControls(navigationDisposition);
-  const projectIdentityBadge = buildProjectIdentityBadge({
-    workspaceBootstrap,
-    selectedTenant,
-    selectedProject,
-    selectedProjectName,
-    selectedEnvironment,
-    targetAdapter,
-  });
 
   return (
     <TooltipProvider>
@@ -99,33 +67,10 @@ export function ShellTopBar({
           ) : isWorkbenchShell ? (
             <CanvasWorkspaceTopBarIdentity />
           ) : null}
-
-          {!isWorkbenchShell && (
-            <>
-              <ShellProjectIdentityBadge badge={projectIdentityBadge} />
-              <ShellWorkspaceContextMenu badge={projectIdentityBadge} copy={copy} />
-              <ShellGitRef
-                gitBranch={workspaceBootstrap.gitBranch}
-                gitSha={workspaceBootstrap.gitSha}
-                copy={copy}
-              />
-            </>
-          )}
         </div>
 
         <div data-slot="shell-top-bar-command-cluster" className={topAppBarClasses.commandCluster}>
           <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
-          {exposeWorkbenchMenus && (
-            <>
-              <ShellFileMenu copy={copy} />
-              <ShellProjectMenu
-                badge={projectIdentityBadge}
-                gitBranch={workspaceBootstrap.gitBranch}
-                gitSha={workspaceBootstrap.gitSha}
-                copy={copy}
-              />
-            </>
-          )}
           <ShellMenu
             viewControls={shellViewControls}
             bottomDrawerVisible={bottomDrawerVisible}

@@ -74,46 +74,95 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
   });
 
-  it('opens the actual Code owner once from a consumed route request under StrictMode', async () => {
-    // Owner cleanup increments its intent on replay; transport must defer admission until replay ends.
-    unmountShell();
-    const harness = createCanvasShellHarness({
-      strictMode: true,
-      initialEntries: [
-        { pathname: '/canvas', state: { canvasWorkbench: 'code', foreign: 'retained' } },
-      ],
-    });
-    container = harness.container;
-    navigation = harness.navigation;
-    unmountShell = harness.unmount;
-    const open = vi.spyOn(useCanvasInteractionStore.getState(), 'openContextualWorkbench');
-    try {
-      await harness.render();
-      const editor = container.querySelector('[data-testid="sql-context-workbench"]');
-      expect(editor).not.toBeNull();
-      expect(editor?.closest('[inert]')).toBeNull();
-      expect(container.querySelectorAll('[data-testid="sql-context-workbench"]')).toHaveLength(1);
-      expect(
-        navigation
-          .querySelector('[data-slot="canvas-code-main-tab"]')
-          ?.getAttribute('aria-selected')
-      ).toBe('true');
-      expect(open).toHaveBeenCalledOnce();
-    } finally {
-      open.mockRestore();
+  it.each([true, false])(
+    'opens the actual Code owner once from a route request (Canvas exists: %s)',
+    async (hasCanvas) => {
+      // Owner cleanup increments its intent on replay; transport must defer admission until replay ends.
+      unmountShell();
+      const harness = createCanvasShellHarness({
+        strictMode: true,
+        initialEntries: [
+          { pathname: '/canvas', state: { canvasWorkbench: 'code', foreign: 'retained' } },
+        ],
+      });
+      container = harness.container;
+      navigation = harness.navigation;
+      unmountShell = harness.unmount;
+      const open = vi.spyOn(useCanvasInteractionStore.getState(), 'openContextualWorkbench');
+      try {
+        await harness.render(
+          hasCanvas
+            ? undefined
+            : {
+                panels: {
+                  activeCanvasId: null,
+                  activeCanvas: null,
+                  canvasDocuments: [],
+                  inspectorAuthoring: {
+                    canEditNode: true,
+                    onApplyNodeDraft: vi.fn(),
+                    workspaceScope: {
+                      tenantId: 'tenant',
+                      projectId: 'project',
+                      environmentId: 'dev',
+                      targetAdapter: 'temporal',
+                    },
+                  },
+                },
+                layout: { surfaceStrategy: undefined },
+              }
+        );
+        const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+        expect(editor).not.toBeNull();
+        expect(editor?.closest('[inert]')).toBeNull();
+        expect(container.querySelectorAll('[data-testid="sql-context-workbench"]')).toHaveLength(1);
+        expect(
+          navigation
+            .querySelector('[data-slot="canvas-code-main-tab"]')
+            ?.getAttribute('aria-selected')
+        ).toBe('true');
+        expect(open).toHaveBeenCalledOnce();
+      } finally {
+        open.mockRestore();
+      }
     }
-  });
+  );
 
-  it.each(['button', 'Delete'] as const)(
-    'closes the Code session and reopens it through File (%s)',
-    async (gesture) => {
+  it.each([
+    ['button', true],
+    ['Delete', true],
+    ['button', false],
+  ] as const)(
+    'closes Code and reopens from the rail (%s, Canvas exists: %s)',
+    async (gesture, hasCanvas) => {
       const frames: FrameRequestCallback[] = [];
       const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
         frames.push(callback);
         return frames.length;
       });
       try {
-        const props = await renderShell();
+        const props = await renderShell(
+          hasCanvas
+            ? undefined
+            : {
+                panels: {
+                  activeCanvasId: null,
+                  activeCanvas: null,
+                  canvasDocuments: [],
+                  inspectorAuthoring: {
+                    canEditNode: true,
+                    onApplyNodeDraft: vi.fn(),
+                    workspaceScope: {
+                      tenantId: 'tenant',
+                      projectId: 'project',
+                      environmentId: 'dev',
+                      targetAdapter: 'temporal',
+                    },
+                  },
+                },
+                layout: { surfaceStrategy: undefined },
+              }
+        );
         const viewport = container.querySelector('[data-testid="canvas-viewport"]');
         await act(async () =>
           fireEvent.click(container.querySelector('[data-slot="shell-project-code-command"]')!)
@@ -136,7 +185,9 @@ describe('CanvasShell graph base surface', () => {
         await act(async () => frames.splice(0).forEach((callback) => callback(0)));
         expect(getCanvasShellState().codeFlush).toHaveBeenCalledOnce();
         expect(document.activeElement).toBe(
-          navigation.querySelector('[data-slot="canvas-workspace-tab"]')
+          hasCanvas
+            ? navigation.querySelector('[data-slot="canvas-workspace-tab"]')
+            : container.querySelector('[data-slot="shell-project-code-command"]')
         );
         expect(
           container.querySelector('[data-testid="canvas-viewport"]')?.closest('[inert]')

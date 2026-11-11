@@ -48,9 +48,9 @@ describe('Active project creation live vertical', () => {
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 })
       .should('be.visible')
-      .invoke('text')
+      .invoke('attr', 'aria-label')
       .then((initialProjectTriggerText) => {
-        cy.get('[data-slot="shell-file-menu-trigger"]').click();
+        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
         cy.get('[data-slot="shell-new-project-command"]')
           .should('be.visible')
           .should(($command) => {
@@ -72,8 +72,9 @@ describe('Active project creation live vertical', () => {
         cy.get('[data-slot="project-creation-dialog"]', { timeout: 30_000 }).should('not.exist');
         cy.window().its('__dvtProjectCreationPostCount').should('eq', 1);
         cy.get('[data-slot="shell-workspace-menu-trigger"]')
-          .should('contain.text', projectName)
-          .and('not.contain.text', initialProjectTriggerText.trim());
+          .should('have.attr', 'aria-label')
+          .and('contain', projectName)
+          .and('not.contain', (initialProjectTriggerText ?? '').trim());
         cy.get('[data-slot="canvas-playground-empty-state"] h2')
           .contains('Canvas', {
             timeout: 30_000,
@@ -83,24 +84,36 @@ describe('Active project creation live vertical', () => {
 
         cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
         cy.get('[data-slot="shell-workspace-scope-selector"]')
-          .contains('button', initialProjectTriggerText.replace(/^.*?:\s*/, '').trim())
+          .contains(
+            '[role="menuitemradio"]',
+            (initialProjectTriggerText ?? '').replace(/^.*?:\s*/, '').trim()
+          )
           .click();
         cy.get('[data-slot="shell-workspace-menu-trigger"]')
-          .should('contain.text', initialProjectTriggerText.replace(/^.*?:\s*/, '').trim())
-          .and('not.contain.text', projectName);
+          .should('have.attr', 'aria-label')
+          .and('contain', (initialProjectTriggerText ?? '').replace(/^.*?:\s*/, '').trim())
+          .and('not.contain', projectName);
 
         cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-        cy.get('[data-slot="shell-workspace-scope-selector"] button').contains(projectName).click();
-        cy.get('[data-slot="shell-workspace-menu-trigger"]').should('contain.text', projectName);
-        cy.reload();
-        cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
-        cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 }).should(
-          'contain.text',
-          projectName
-        );
-        cy.get('[data-slot="canvas-playground-empty-state"] h2')
-          .contains('Canvas')
-          .should('be.visible');
+        cy.get('[data-slot="shell-workspace-scope-selector"] [role="menuitemradio"]')
+          .contains(projectName)
+          .click();
+        cy.get('[data-slot="shell-workspace-menu-trigger"]')
+          .invoke('attr', 'aria-label')
+          .should('contain', projectName)
+          .then((projectLabel) => {
+            // Keep the full localized identity across reload, including Spanish sessions.
+            cy.reload();
+            cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+            cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 }).should(
+              'have.attr',
+              'aria-label',
+              projectLabel
+            );
+            cy.get('[data-slot="canvas-playground-empty-state"] h2')
+              .contains('Canvas')
+              .should('be.visible');
+          });
       });
   });
 });

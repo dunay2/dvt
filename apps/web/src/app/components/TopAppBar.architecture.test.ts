@@ -52,16 +52,7 @@ describe('ShellTopBar workspace context architecture', () => {
       'commandCluster',
       'readOnlyScopeField',
       'contextLabel',
-      'gitRef',
-      'gitRefIcon',
-      'gitRefSeparator',
       'gitRefSha',
-      'projectIdentityBadge',
-      'contextChip',
-      'contextChipIcon',
-      'contextChipLabel',
-      'contextChipMeta',
-      'contextChipSeparator',
       'smallStatusText',
       'menuButton',
     ]) {
@@ -96,8 +87,6 @@ describe('ShellTopBar workspace context architecture', () => {
     for (const className of ['shellBar', 'commandCluster']) {
       expect(readCssRule(mediumSource, className)).toMatch(/flex-wrap:\s*nowrap;/u);
     }
-    expect(readCssRule(cssSource, 'gitRef')).toMatch(/display:\s*none;/u);
-    expect(readCssRule(readCssMedia(cssSource, 64), 'gitRef')).toMatch(/display:\s*flex;/u);
     const smallSource = readCssMedia(cssSource, 40);
     expect(readCssRule(smallSource, 'brandIdentity')).toMatch(/margin-right:\s*0\.25rem;/u);
     expect(smallSource).not.toMatch(/\.(?:shellBar|contextCluster|commandCluster)\b/u);
@@ -117,72 +106,25 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(OWNED_CONCERN_DOCBLOCK.test(source.trimStart())).toBe(accepted);
   });
 
-  it('encapsulates workspace identity as a read-only presentation model', () => {
-    const topAppBarSource = readAppSource('components/TopAppBar.tsx');
-    const identityModelSource = readAppSource('shell/projectIdentityBadge.ts');
-    const identityRendererSource = readAppSource('components/shell/ShellProjectIdentityBadge.tsx');
-    const contextMenuSource = readAppSource('components/shell/ShellWorkspaceContextMenu.tsx');
-    const contextDetailsSource = readAppSource('components/shell/ShellWorkspaceContextDetails.tsx');
-    const scopeSelectorSource = readAppSource('components/shell/ShellWorkspaceScopeSelector.tsx');
-    const chromeSource = readAppSource('components/shell/chrome.ts');
-    const rootShellTestSupportSource = readAppSource('Root.shellChrome.test.support.ts');
-
-    for (const [label, source] of [
-      ['TopAppBar', topAppBarSource],
-      ['ProjectIdentityBadge', identityModelSource],
-      ['ShellProjectIdentityBadge', identityRendererSource],
-      ['ShellWorkspaceContextMenu', contextMenuSource],
-      ['ShellWorkspaceContextDetails', contextDetailsSource],
-      ['ShellWorkspaceScopeSelector', scopeSelectorSource],
-      ['shell chrome class contract', chromeSource],
-      ['Root shell chrome test support', rootShellTestSupportSource],
-    ] as const) {
-      expect(source.trimStart(), label).toMatch(OWNED_CONCERN_DOCBLOCK);
+  it('keeps project presentation and command dispatch behind their existing owners', () => {
+    const header = readAppSource('components/TopAppBar.tsx');
+    const rail = readAppSource('components/LeftNavigation.tsx');
+    const project = readAppSource('components/shell/ShellProjectMenu.tsx');
+    const template = readAppSource('components/shell/ShellMenu.templates.tsx');
+    const selector = readAppSource('components/shell/ShellWorkspaceScopeSelector.tsx');
+    expect(header).not.toMatch(/ShellFileMenu|ShellProjectMenu|useSessionStore/);
+    expect(rail).toContain('ShellProjectMenu');
+    expect(project).toContain('buildProjectIdentityBadge');
+    expect(project).toContain('ProjectCreationDialog');
+    expect(template).toContain('ShellWorkspaceContextDetails');
+    expect(template).toContain('ShellWorkspaceScopeSelector');
+    expect(template).toContain('CanvasWorkspaceMenuControls');
+    expect(selector).toContain('useWorkspaceScopeSelection');
+    expect(selector).toContain('selectWorkspaceScope');
+    for (const source of [header, rail, project, template]) {
+      expect(source).not.toMatch(/setTenantId|setProjectId|setEnvironmentId|fetch\s*\(/);
+      expect(source.trimStart()).toMatch(OWNED_CONCERN_DOCBLOCK);
     }
-
-    expect(topAppBarSource).toContain('buildProjectIdentityBadge');
-    expect(topAppBarSource).toContain('ShellProjectIdentityBadge');
-    expect(topAppBarSource).toContain('ShellWorkspaceContextMenu');
-    expect(topAppBarSource).not.toContain('ShellWorkspaceSelectors');
-    expect(topAppBarSource).not.toContain("from './ui/select'");
-    expect(identityModelSource).toContain('type ProjectIdentityBadge');
-    expect(identityModelSource).toContain('targetAdapter');
-    expect(identityModelSource).toContain('draftPostureLabel');
-    expect(identityRendererSource).toContain('data-slot="shell-project-identity-badge"');
-    expect(contextMenuSource).toContain('data-slot="shell-workspace-context-trigger"');
-    expect(contextMenuSource).toContain('ShellWorkspaceContextDetails');
-    expect(contextMenuSource).toContain('ShellWorkspaceScopeSelector');
-    expect(contextMenuSource).not.toContain('workspace-scope commands');
-    expect(contextMenuSource).not.toContain('ShellWorkspaceScopeCommands');
-    expect(contextMenuSource).not.toContain('ShellWorkspaceSelectors');
-    expect(scopeSelectorSource).toContain('useWorkspaceScopeSelection');
-    expect(scopeSelectorSource).toContain('selectWorkspaceScope');
-    expect(scopeSelectorSource).not.toContain('useSessionStore');
-
-    for (const forbiddenMutationSignal of [
-      'setSelectedTenant',
-      'setSelectedProject',
-      'setSelectedEnvironment',
-      'setTenantId',
-      'setProjectId',
-      'setEnvironmentId',
-      'onValueChange',
-      "from '../ui/select'",
-    ]) {
-      expect(topAppBarSource, forbiddenMutationSignal).not.toContain(forbiddenMutationSignal);
-      expect(contextMenuSource, forbiddenMutationSignal).not.toContain(forbiddenMutationSignal);
-      expect(contextDetailsSource, forbiddenMutationSignal).not.toContain(forbiddenMutationSignal);
-    }
-
-    expect(contextDetailsSource).toContain('data-slot="shell-workspace-context-details"');
-    expect(contextDetailsSource).toContain('data-slot="shell-workspace-tenant-context"');
-    expect(contextDetailsSource).toContain('data-slot="shell-workspace-project-context"');
-    expect(contextDetailsSource).toContain('data-slot="shell-workspace-environment-context"');
-    expect(contextDetailsSource).toContain('data-slot="shell-workspace-deployment-context"');
-    expect(contextDetailsSource).toContain('copy.tenantScopeAria');
-    expect(contextDetailsSource).toContain('copy.projectScopeAria');
-    expect(contextDetailsSource).toContain('copy.environmentScopeAria');
-    expect(contextDetailsSource).toContain('copy.deploymentScopeAria');
   });
 
   it('documents API, invariants, transitions, consumers, and user stories', () => {
@@ -204,9 +146,9 @@ describe('ShellTopBar workspace context architecture', () => {
       '## Transitions',
       '## Consumers',
       'ProjectIdentityBadge',
-      'ShellWorkspaceContextMenu',
+      'ShellProjectMenu',
       'ShellWorkspaceContextDetails',
-      'Workspace context is breadcrumb-style read-only content on the main screen',
+      'Workspace context is read-only content in the left-rail Project menu',
       'Tenant, project, environment, and deployment adapter labels are read-only',
       'SelectWorkspaceScope',
       '```mermaid',
@@ -215,7 +157,7 @@ describe('ShellTopBar workspace context architecture', () => {
     }
 
     for (const requiredManualSignal of [
-      'Global context lives in compact top-bar labels',
+      'Global context lives in the left-rail Project menu',
       'Shell workspace context',
       'read-only presentation model',
       'shell-workspace-context-component.md',
@@ -225,7 +167,7 @@ describe('ShellTopBar workspace context architecture', () => {
     }
 
     for (const requiredCanonicalSignal of [
-      'ShellWorkspaceContextMenu',
+      'ShellProjectMenu',
       'Semantic Fitness Function',
       '## Scenario Matrix',
     ]) {

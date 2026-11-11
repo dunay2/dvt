@@ -6,8 +6,9 @@ import {
   type WorkspaceScopeIdentity,
 } from '../../ports/workspaceScopeSelection';
 import { useWorkspaceScopeSelection } from '../../services/AppServicesContext';
-import { Button } from '../ui/button';
+import { DropdownMenuRadioGroup, DropdownMenuRadioItem } from '../ui/dropdown-menu';
 import { topAppBarClasses } from './chrome';
+import styles from './ShellChrome.module.css';
 import type { ShellTopBarCopy } from './copy';
 
 function formatWorkspaceScope(scope: WorkspaceScopeIdentity): string {
@@ -41,55 +42,47 @@ export function ShellWorkspaceScopeSelector({
   );
 
   return (
-    <div
-      data-slot="shell-workspace-scope-selector"
-      className="mt-3 grid gap-2 border-t border-(--border-default) pt-3"
-    >
+    <div data-slot="shell-workspace-scope-selector" className={styles.scopeSelector}>
       <div className={topAppBarClasses.contextLabel}>{copy.availableProjects}</div>
-      <div className="grid max-h-48 gap-1 overflow-auto">
+      <DropdownMenuRadioGroup
+        className={styles.scopeOptions}
+        value={JSON.stringify([
+          selection.selectedScope.tenantId,
+          selection.selectedScope.projectId,
+          selection.selectedScope.environmentId,
+        ])}
+      >
         {availableScopes.map((scope) => {
+          const key = JSON.stringify([scope.tenantId, scope.projectId, scope.environmentId]);
           const isSelected =
             scope.tenantId === selection.selectedScope.tenantId &&
             scope.projectId === selection.selectedScope.projectId &&
             scope.environmentId === selection.selectedScope.environmentId;
-          const selectScope = () => {
-            const result = workspaceScopeSelection.selectWorkspaceScope(scope);
-            if (result.status === WORKSPACE_SCOPE_SELECTION_STATUS.selected) {
-              onScopeSelected?.();
-            }
-          };
           return (
-            <Button
-              key={`${scope.tenantId}:${scope.projectId}:${scope.environmentId}`}
-              type="button"
-              variant={isSelected ? 'secondary' : 'ghost'}
-              size="sm"
-              className="h-auto justify-start whitespace-normal px-2 py-1.5 text-left text-xs"
-              aria-pressed={isSelected}
+            <DropdownMenuRadioItem
+              key={key}
+              value={key}
+              className={styles.scopeOption}
               aria-label={`${isSelected ? copy.currentProject : copy.availableProjects}: ${formatWorkspaceScope(scope)}`}
-              onClick={selectScope}
-              onKeyDown={(event) => {
-                if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) {
-                  event.preventDefault();
-                  selectScope();
-                }
+              onSelect={(event) => {
+                const result = workspaceScopeSelection.selectWorkspaceScope(scope);
+                if (result.status === WORKSPACE_SCOPE_SELECTION_STATUS.selected)
+                  onScopeSelected?.();
+                else event.preventDefault();
               }}
             >
               {formatWorkspaceScope(scope)}
-            </Button>
+            </DropdownMenuRadioItem>
           );
         })}
-      </div>
+      </DropdownMenuRadioGroup>
       {!hasAlternativeProject && (
-        <p data-slot="shell-workspace-no-alternative" className="text-xs text-(--text-subtle)">
+        <p data-slot="shell-workspace-no-alternative" className={styles.scopeHint}>
           {copy.noAlternativeProjects}
         </p>
       )}
       {selection.status === WORKSPACE_SCOPE_SELECTION_STATUS.rejected && (
-        <output
-          data-slot="shell-workspace-scope-rejection"
-          className="text-xs text-(--text-warning)"
-        >
+        <output data-slot="shell-workspace-scope-rejection" className={styles.scopeWarning}>
           {copy.projectUnavailable}
         </output>
       )}

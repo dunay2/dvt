@@ -136,13 +136,10 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<unknown>
 }
 
 function openReadOnlyDbtProjectCodeFile(path: string): void {
-  cy.get('[data-slot="shell-file-menu-trigger"]', { timeout: 20_000 }).click();
-  cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+  cy.get('[data-slot="shell-project-code-command"]')
     .scrollIntoView()
     .should('be.visible')
-    .and(($item) => {
-      expect($item.attr('data-disabled')).to.be.undefined;
-    })
+    .and('not.have.attr', 'aria-disabled', 'true')
     .click();
   cy.get('[data-slot="canvas-code-main-tab"]')
     .should('be.visible')

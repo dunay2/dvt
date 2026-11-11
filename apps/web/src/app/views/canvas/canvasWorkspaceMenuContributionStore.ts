@@ -5,15 +5,13 @@ import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
 
 export type CanvasWorkspaceMenuContribution = Readonly<{
   activeCanvas?: ProjectCanvasDocument | null;
+  canvasDocuments?: readonly ProjectCanvasDocument[];
+  onSelectCanvas?: (canvasId: string) => void;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
-  canImportDbtProject?: boolean;
-  canOpenProjectExplorer?: boolean;
   canOpenProjectCode?: boolean;
   onExportProjectSnapshot?: () => void;
   onImportProjectSnapshotFile?: (file: File) => void;
-  onImportDbtProject?: () => void;
-  onOpenProjectExplorer?: () => void;
   onOpenProjectCode?: () => void;
   codeTab?: Readonly<{
     active: boolean;

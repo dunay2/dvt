@@ -514,7 +514,7 @@ Rules for the shared seam:
 The shell workspace context is the bounded replacement for tenant, project, and
 environment dropdowns that previously consumed the main top bar.
 
-Workspace context is breadcrumb-style read-only content on the main screen.
+Workspace context is read-only content in the left-rail Project menu.
 Tenant, project, environment, and deployment adapter labels are read-only.
 The on-demand workspace menu delegates selection among server-granted scopes to
 `SelectWorkspaceScope`; it cannot create grants or construct an unvalidated scope.
@@ -528,28 +528,26 @@ It uses a Fowler Presentation Model split:
 
 - `buildProjectIdentityBadge(...)` resolves workspace scope into read-only
   labels;
-- `ShellProjectIdentityBadge` renders those labels without mutation affordance;
-- `ShellWorkspaceContextMenu` owns the on-demand shell context and granted-scope selection
+- `ShellProjectMenu` owns the on-demand shell context and granted-scope selection
   surface;
 - `ShellWorkspaceContextDetails` renders tenant, project, environment, and
   deployment adapter as read-only context fields.
 
 ### Public API
 
-| API                            | Kind          | Owner                   | Contract                                                                                          |
-| ------------------------------ | ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
-| `ProjectIdentityBadge`         | read model    | Web shell presentation  | Carries tenant, project, environment, deployment adapter, compact id, slug, and draft-scope label |
-| `buildProjectIdentityBadge`    | query adapter | Web shell presentation  | Resolves granted option labels and falls back to raw ids without fabricating                      |
-| `ShellProjectIdentityBadge`    | passive view  | Shell top-bar rendering | Displays read-only project identity in the persistent shell bar                                   |
-| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Exposes read-only details and delegates granted-scope selection                                   |
-| `ShellWorkspaceContextDetails` | passive view  | Shell context display   | Displays tenant, project, environment, and deployment adapter without mutation controls           |
+| API                            | Kind          | Owner                  | Contract                                                                                          |
+| ------------------------------ | ------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`         | read model    | Web shell presentation | Carries tenant, project, environment, deployment adapter, compact id, slug, and draft-scope label |
+| `buildProjectIdentityBadge`    | query adapter | Web shell presentation | Resolves granted option labels and falls back to raw ids without fabricating                      |
+| `ShellProjectMenu`             | details UI    | Shell context display  | Exposes read-only details and delegates granted-scope selection                                   |
+| `ShellWorkspaceContextDetails` | passive view  | Shell context display  | Displays tenant, project, environment, and deployment adapter without mutation controls           |
 
 ### Invariants
 
 - the main top bar renders no `role="combobox"` workspace controls;
 - `ProjectIdentityBadge` is read-only and cannot dispatch session commands;
 - scope labels are passive; only `SelectWorkspaceScope` may change the validated selection;
-- the menu offers existing granted scopes as buttons, not free-form tenant or environment inputs;
+- the menu offers existing granted scopes as keyboard-accessible radio menu items, not free-form tenant or environment inputs;
 - the menu must not create a parallel auth, RBAC, tenant-admin,
   project-selection, or environment-selection rail;
 - Git context remains read-only in this slice and does not become a branch
@@ -560,21 +558,20 @@ It uses a Fowler Presentation Model split:
 ```mermaid
 stateDiagram-v2
   [*] --> ResolvedScope
-  ResolvedScope --> TopBarBadge: buildProjectIdentityBadge
-  TopBarBadge --> ScopeMenuClosed: render read-only context
-  ScopeMenuClosed --> ContextMenuOpen: user opens Context
+  ResolvedScope --> ScopeMenuClosed: project rail trigger from read model
+  ScopeMenuClosed --> ContextMenuOpen: user opens Project
   ContextMenuOpen --> ReadOnlyDetails: show tenant/project/environment
-  ReadOnlyDetails --> ScopeMenuClosed: close Context
+  ReadOnlyDetails --> ScopeMenuClosed: close Project
 ```
 
 ### Consumers
 
-| Consumer                   | Use                                                                 |
-| -------------------------- | ------------------------------------------------------------------- |
-| `ShellTopBar`              | Composes badge, context menu, health, Git reference, and View menu  |
-| Canvas workbench route     | Reads the same session scope through its existing query/controller  |
-| Runs and other workbenches | React to session-scope changes through their existing route queries |
-| Cypress posture proof      | Verifies badge presence, no comboboxes, and read-only details       |
+| Consumer                   | Use                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `LeftNavigationRail`       | Composes Project context, scope selection, creation and snapshots              |
+| Canvas workbench route     | Reads the same session scope through its existing query/controller             |
+| Runs and other workbenches | React to session-scope changes through their existing route queries            |
+| Cypress posture proof      | Verifies the single Project entry, no top-bar comboboxes and read-only details |
 
 ### Component Flow
 
@@ -582,8 +579,7 @@ stateDiagram-v2
 flowchart LR
   Store["sessionStore scope"] --> Model["buildProjectIdentityBadge"]
   Config["WorkspaceBootstrapConfig"] --> Model
-  Model --> Badge["ShellProjectIdentityBadge"]
-  Model --> Menu["ShellWorkspaceContextMenu"]
+  Model --> Menu["ShellProjectMenu"]
   Menu --> Details["ShellWorkspaceContextDetails"]
   Details --> Context["tenant / project / environment read-only fields"]
 ```
@@ -827,28 +823,27 @@ multi-language ready, and style-consistent.
 
 ### Component Boundary
 
-`TopAppBar.tsx` is a composition root only. It owns store wiring and delegates
-rendering to small UI components:
-
-- `ShellWorkspaceContextMenu` and `ShellProjectIdentityBadge`
-- `AppBrandMark` as noninteractive identity
-- `ShellGitRef`
-- `ShellConnectionStatus`
-- `ShellMenu`
+`TopAppBar.tsx` composes brand, route/workspace tabs, View, execution and health.
+`LeftNavigation` owns the single Project trigger. `ShellProjectMenu` projects
+existing session context and delegates scope selection, project creation and
+Canvas snapshot actions to their existing owners. Code owns the file tree and
+dbt import entry; the File menu and duplicate Explorer dialog are retired.
 
 ### Runtime Composition
 
 ```mermaid
 flowchart LR
-  A[TopAppBar Composition Root] --> B[Session Store Selectors]
-  A --> C[UI Layout Store Selectors]
-  A --> D[resolveShellTopBarCopy locale]
-  Rail[LeftNavigation] --> E[ShellAbout]
-  E --> I[resolveCompiledApplicationMetadata]
-  A --> F[ShellWorkspaceContextMenu]
-  A --> G[ShellGitRef]
-  A --> H[ShellConnectionStatus]
-  A --> J[ShellMenu]
+  TopBar --> Brand[AppBrandMark]
+  TopBar --> Tabs[Existing workspace tabs]
+  TopBar --> View[ShellMenu]
+  TopBar --> Health[ShellConnectionStatus]
+  Rail[LeftNavigation] --> Project[ShellProjectMenu]
+  Rail --> About[ShellAbout]
+  Project --> Context[ProjectIdentityBadge and passive details]
+  Project --> Scope[SelectWorkspaceScope]
+  Project --> Create[Existing ProjectCreationDialog]
+  Project --> Snapshots[CanvasWorkspaceMenuControls]
+  Code --> Import[Existing DbtProjectImportDialog]
 ```
 
 ### About
@@ -1520,8 +1515,8 @@ flowchart LR
 
 The existing Canvas workspace contribution publishes project/file capabilities
 and handlers without transferring Canvas controller ownership to the shell.
-[GH-3622](https://github.com/dunay2/dvt/issues/3622) places those existing actions
-in File; it does not add Insert or another application rail.
+[GH-3765](https://github.com/dunay2/dvt/issues/3765) consolidates project context,
+creation and snapshots in the existing left rail. Code owns dbt import and files.
 
 This component owns contribution registration, capability-gated presentation
 and identity-guarded cleanup. It does not own graph truth, draft persistence,
@@ -1536,26 +1531,29 @@ planning, execution, project storage or authorization.
 - `CanvasWorkspaceTopBarIdentity`
 
 `CanvasShellMainPanel` registers the active contribution. The shell
-`ShellFileMenuTemplate` composes `CanvasWorkspaceMenuControls`; the owning
-Canvas handlers still execute project import, files/code and snapshots.
+`ShellProjectMenuTemplate` composes `CanvasWorkspaceMenuControls`; the owning
+Canvas handlers still execute snapshots; Code dispatches its existing dbt import command.
 `CanvasWorkspaceTopBarIdentity` presents the active Canvas/model tabs separately.
 
 ### Invariants
 
-- Canvas file actions exist only while their route contribution is active.
-- File menus do not duplicate Canvas controller hooks, stores or command rails.
+- Canvas snapshot actions exist only while their route contribution is active.
+- Project lists canvases only when multiple documents exist, using the existing selection callback.
+- Project presentation does not duplicate Canvas hooks, stores or command rails.
 - Disabled or missing handlers cannot dispatch through menu selection.
 - Pointer and keyboard share Radix selection semantics, not raw click callbacks.
 - Snapshot selection retains its input until the native chooser produces a
-  file; an empty selection does not import or close File. A non-empty selection
+  file; an empty selection does not import or close Project. A non-empty selection
   captures the file and clears the input before requesting menu close and
-  dispatching the existing import handler. Radix restores focus to File; reopening
+  dispatching the existing import handler. Radix restores focus to Project; reopening
   the menu permits the same file to be selected again.
 - Project creation reuses its existing dialog and port; it does not require a
   Canvas contribution.
-- Code/explorer return focus to File. Granted-scope recovery remains Project.
+- Closing Code returns to Canvas. Canceling dbt import returns to its Code action;
+  an authority change uses the durable Code rail fallback. Project creation and
+  granted-scope recovery return to Project.
 - Source import registers a source only; dragging creates the graph instance.
-- Graph-local insertion and execution retain their existing owners. File does
+- Graph-local insertion and execution retain their existing owners. Project does
   not become a second Run or Insert surface.
 - Identity-guarded cleanup cannot clear a newer route contribution.
 
@@ -1577,7 +1575,7 @@ flowchart LR
   Panel[CanvasShellMainPanel] --> Registrar[CanvasWorkspaceMenuContributionRegistrar]
   Registrar --> Store[canvasWorkspaceMenuContributionStore]
   Store --> Controls[CanvasWorkspaceMenuControls]
-  File[ShellFileMenuTemplate] --> Controls
+  Project[ShellProjectMenuTemplate] --> Controls
   Controls --> Handlers[Existing Canvas-owned project and snapshot handlers]
 ```
 
@@ -1585,12 +1583,11 @@ flowchart LR
 
 #### Native Snapshot Selection Lifecycle
 
-The retained receiver previously dispatched import without closing the controlled
-File menu. Review of [PR-3627](https://github.com/dunay2/dvt/pull/3627) identified
-that incomplete presentation transition. Selection now notifies `ShellFileMenu`
+The retained receiver preserves the picker lifecycle fixed in
+[PR-3627](https://github.com/dunay2/dvt/pull/3627). Selection now notifies `ShellProjectMenu`
 through a specific callback passed by its passive template. The controller owns
 menu closure; the Canvas contribution retains import admission and dispatch.
-Unlike Code and New Project, snapshot import does not transfer focus to another
+Unlike New Project, snapshot import does not transfer focus to another
 editor or dialog, so the normal Radix close autofocus remains enabled.
 Focus returns when the menu content unmounts, not as a prerequisite to import.
 
@@ -1599,7 +1596,7 @@ flowchart LR
   Picker[Native picker; menu and receiver retained] --> Choice{File selected?}
   Choice -->|No| Retain[No import; retain receiver]
   Choice -->|Yes| Capture[Capture File and clear input]
-  Capture --> Close[Controller requests File closure]
+  Capture --> Close[Controller requests Project closure]
   Close --> Import[Existing ImportProjectSnapshot handler]
 ```
 
@@ -1612,7 +1609,7 @@ Project scope selection remains `SelectWorkspaceScope` in Project.
 ### Consumers And Evidence
 
 - `CanvasShellMainPanel`
-- `ShellFileMenuTemplate`
+- `ShellProjectMenuTemplate`
 - `ShellTopBar` (identity only)
 - `CanvasWorkspaceMenuControls.test.tsx`
 - `TopAppBar.test.tsx`
@@ -1635,9 +1632,9 @@ See [Workbench UX Canon User Stories](../workbench-ux-canon-component.md#section
 ### Drift To Prevent
 
 - Reintroducing file commands or global navigation into Project or View.
-- Changing granted scope through File or hiding the existing recovery path.
+- Bypassing SelectWorkspaceScope or hiding its Project recovery path.
 - Closing the native snapshot receiver before a selected file reaches it.
-- Leaving File open after a non-empty snapshot selection or suppressing its
+- Leaving Project open after a non-empty snapshot selection or suppressing its
   normal focus return when no other surface receives focus.
 - Bypassing pending-edit guards or contribution capabilities.
 - Claiming implementation of Insert or other absent shell capabilities.

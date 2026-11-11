@@ -107,8 +107,7 @@ describe('Canvas Project Code read-only inspection', () => {
     cy.get(
       '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:canvas-inline_code_demo:model.demo.ventas"]'
     ).should('be.visible');
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     const surface = '[data-slot="canvas-code-workspace-surface"]';
     const editor = `${surface} [data-slot="workspace-file-code-editor"]`;
     const compile = `${editor} [data-slot="code-compile-model"]`;
@@ -161,8 +160,7 @@ describe('Canvas Project Code read-only inspection', () => {
       });
       cy.on('window:before:load', installE2eApiFetchStub);
       cy.reload();
-      cy.get('[data-slot="shell-file-menu-trigger"]').click();
-      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="shell-project-code-command"]').click();
       cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
       cy.get(editor).should('contain.text', copy.compiledMessage);
       cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
@@ -253,8 +251,7 @@ describe('Canvas Project Code read-only inspection', () => {
       '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:yaml-code-inspection:model.inspection_project.clientes"]'
     ).should('be.visible');
     cy.then(() => expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1));
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
     const surface = '[data-slot="canvas-code-workspace-surface"]';
     const editor = `${surface} [data-slot="workspace-file-code-editor"]`;
@@ -312,8 +309,7 @@ describe('Canvas Project Code read-only inspection', () => {
       .invoke('attr', 'style')
       .then((viewportStyle) => cy.wrap(viewportStyle).as('graphViewportStyle'));
 
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-project-code-command"]').click();
     waitForE2eApiCall('/workspace/files', 'GET');
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
 

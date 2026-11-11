@@ -222,7 +222,7 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.routeNeedsCanvasMessage).toBe(
       'Añade fuentes y construye tus transformaciones aquí.'
     );
-    expect(spanishCopy.workspaceProjectActionsMenuLabel).toBe('Acciones del proyecto');
+    expect(spanishCopy.projectCanvasMenuLabel).toBe('Canvas');
     expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Instantáneas del proyecto');
     expect(canvasViewCopy.canvasNodePortTargetLabel).toBe('Connect incoming port');
     expect(canvasViewCopy.canvasNodePortSourceLabel).toBe('Connect outgoing port');

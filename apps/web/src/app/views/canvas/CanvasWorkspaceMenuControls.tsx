@@ -1,17 +1,22 @@
 /**
- * Owned concern: render existing Canvas project commands inside the shell File menu.
- * @baseline GH-3622: disabled entries must not dispatch; selecting a file is asynchronous.
+ * Owned concern: publish Canvas workspace actions and render project snapshot commands.
+ * @baseline GH-3765: project snapshots belong in the rail Project menu; files belong in Code.
  * @decision Retain the native picker receiver; notify its menu owner only after capturing a file.
- * @consequence Cancellation retains the receiver; file selection closes File before existing dispatch.
+ * @consequence Cancellation retains the receiver; file selection closes Project before existing dispatch.
  * @version 1.0.0
  */
-import { Code2, Download, FolderInput, FolderOpen, Upload } from 'lucide-react';
+import { Download, Upload, PanelsTopLeft } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '../../components/ui/dropdown-menu';
 import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
@@ -36,9 +41,8 @@ export function CanvasWorkspaceMenuContributionRegistrar(
   const activeCanvas = props.activeCanvas;
   const hasExportProjectSnapshotCommand = props.onExportProjectSnapshot != null;
   const hasImportProjectSnapshotCommand = props.onImportProjectSnapshotFile != null;
-  const hasImportDbtProjectCommand = props.onImportDbtProject != null;
   const hasOpenProjectCodeCommand = props.onOpenProjectCode != null;
-  const hasOpenProjectExplorerCommand = props.onOpenProjectExplorer != null;
+  const hasSelectCanvasCommand = props.onSelectCanvas != null;
   const hasCodeTab = props.codeTab != null;
   const hasCloseCodeCommand = props.codeTab?.onClose != null;
   const contribution = useMemo<CanvasWorkspaceMenuContribution>(
@@ -49,15 +53,17 @@ export function CanvasWorkspaceMenuContributionRegistrar(
           : {
               id: activeCanvas.id,
               kind: activeCanvas.kind,
-              title: activeCanvas.title,
+              title: activeCanvas?.title ?? canvasViewCopy.canvasContextMenuCanvasGroupLabel,
               environmentId: activeCanvas.environmentId,
               defaultPermission: activeCanvas.defaultPermission,
             },
       canExportProjectSnapshot: props.canExportProjectSnapshot,
+      canvasDocuments: props.canvasDocuments,
+      onSelectCanvas: hasSelectCanvasCommand
+        ? (canvasId) => latestPropsRef.current.onSelectCanvas?.(canvasId)
+        : undefined,
       canImportProjectSnapshot: props.canImportProjectSnapshot,
-      canImportDbtProject: props.canImportDbtProject,
       canOpenProjectCode: props.canOpenProjectCode,
-      canOpenProjectExplorer: props.canOpenProjectExplorer,
       ...(hasCodeTab
         ? {
             codeTab: {
@@ -79,14 +85,8 @@ export function CanvasWorkspaceMenuContributionRegistrar(
               latestPropsRef.current.onImportProjectSnapshotFile?.(file),
           }
         : {}),
-      ...(hasImportDbtProjectCommand
-        ? { onImportDbtProject: () => latestPropsRef.current.onImportDbtProject?.() }
-        : {}),
       ...(hasOpenProjectCodeCommand
         ? { onOpenProjectCode: () => latestPropsRef.current.onOpenProjectCode?.() }
-        : {}),
-      ...(hasOpenProjectExplorerCommand
-        ? { onOpenProjectExplorer: () => latestPropsRef.current.onOpenProjectExplorer?.() }
         : {}),
     }),
     [
@@ -96,15 +96,13 @@ export function CanvasWorkspaceMenuContributionRegistrar(
       activeCanvas?.kind,
       activeCanvas?.title,
       props.canExportProjectSnapshot,
-      props.canImportDbtProject,
+      props.canvasDocuments,
+      hasSelectCanvasCommand,
       props.canImportProjectSnapshot,
       props.canOpenProjectCode,
-      props.canOpenProjectExplorer,
       hasExportProjectSnapshotCommand,
       hasImportProjectSnapshotCommand,
-      hasImportDbtProjectCommand,
       hasOpenProjectCodeCommand,
-      hasOpenProjectExplorerCommand,
       hasCodeTab,
       hasCloseCodeCommand,
       props.codeTab?.active,
@@ -122,12 +120,10 @@ export function CanvasWorkspaceMenuContributionRegistrar(
 }
 
 type CanvasWorkspaceMenuControlsProps = Readonly<{
-  onProjectCodeSelected?: () => void;
   onSnapshotFileSelected?: () => void;
 }>;
 
 export function CanvasWorkspaceMenuControls({
-  onProjectCodeSelected,
   onSnapshotFileSelected,
 }: CanvasWorkspaceMenuControlsProps = {}): JSX.Element | null {
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
@@ -140,38 +136,29 @@ export function CanvasWorkspaceMenuControls({
 
   return (
     <>
-      <DropdownMenuSeparator />
-      <DropdownMenuLabel>{canvasViewCopy.workspaceProjectActionsMenuLabel}</DropdownMenuLabel>
-      <DropdownMenuItem
-        data-slot="canvas-workspace-import-dbt-project-command"
-        disabled={!contribution.canImportDbtProject || contribution.onImportDbtProject == null}
-        onSelect={() => contribution.onImportDbtProject?.()}
-      >
-        <FolderInput className={styles.menuIcon} />
-        {canvasViewCopy.workspaceImportDbtProjectLabel}
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        data-slot="canvas-workspace-explore-project-command"
-        disabled={
-          !contribution.canOpenProjectExplorer || contribution.onOpenProjectExplorer == null
-        }
-        onSelect={() => contribution.onOpenProjectExplorer?.()}
-      >
-        <FolderOpen className={styles.menuIcon} />
-        {canvasViewCopy.workspaceExploreProjectLabel}
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        data-slot="canvas-workspace-open-project-code-command"
-        disabled={!contribution.canOpenProjectCode || contribution.onOpenProjectCode == null}
-        onSelect={(event) => {
-          event.preventDefault();
-          onProjectCodeSelected?.();
-          contribution.onOpenProjectCode?.();
-        }}
-      >
-        <Code2 className={styles.menuIcon} />
-        {canvasViewCopy.workspaceOpenProjectCodeLabel}
-      </DropdownMenuItem>
+      {(contribution.canvasDocuments?.length ?? 0) > 1 ? (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger
+            data-slot="canvas-workspace-canvases-command"
+            disabled={contribution.onSelectCanvas == null}
+          >
+            <PanelsTopLeft aria-hidden="true" className={styles.menuIcon} />
+            {canvasViewCopy.projectCanvasMenuLabel}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup
+              value={contribution.activeCanvas?.id}
+              onValueChange={contribution.onSelectCanvas}
+            >
+              {contribution.canvasDocuments?.map((canvas) => (
+                <DropdownMenuRadioItem key={canvas.id} value={canvas.id}>
+                  {canvas.title}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      ) : null}
       <DropdownMenuSeparator />
       <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
       <DropdownMenuItem
@@ -225,24 +212,24 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
   );
   useApplicationLanguageStore((state) => state.language);
 
-  if (activeCanvas == null) {
+  if (activeCanvas == null && codeTab == null) {
     return null;
   }
 
   return (
     <div
       data-slot="shell-active-canvas-identity"
-      data-canvas-id={activeCanvas.id}
-      data-kind={activeCanvas.kind}
+      data-canvas-id={activeCanvas?.id}
+      data-kind={activeCanvas?.kind}
       className={styles.identity}
       aria-label={canvasViewCopy.workspaceActiveCanvasLabelTemplate.replace(
         '{title}',
-        activeCanvas.title
+        activeCanvas?.title ?? canvasViewCopy.canvasContextMenuCanvasGroupLabel
       )}
     >
       <CanvasWorkspaceModelTabs
-        canvasTitle={activeCanvas.title}
-        tab={modelTab?.canvasId === activeCanvas.id ? modelTab : undefined}
+        canvasTitle={activeCanvas?.title ?? canvasViewCopy.canvasContextMenuCanvasGroupLabel}
+        tab={activeCanvas != null && modelTab?.canvasId === activeCanvas.id ? modelTab : undefined}
         codeTab={codeTab}
       />
     </div>

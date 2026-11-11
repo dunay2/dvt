@@ -2,6 +2,7 @@
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 import type { ShellTopBarCopy } from './copy';
 import { topAppBarClasses } from './chrome';
+import styles from './ShellChrome.module.css';
 
 export type ShellWorkspaceContextDetailsProps = {
   readonly badge: ProjectIdentityBadge;
@@ -20,40 +21,28 @@ export type ShellWorkspaceContextDetailsProps = {
 
 export function ShellWorkspaceContextDetails({ badge, copy }: ShellWorkspaceContextDetailsProps) {
   return (
-    <div data-slot="shell-workspace-context-details" className="grid gap-3">
-      <div data-slot="shell-workspace-tenant-context" className="grid gap-1">
+    <div data-slot="shell-workspace-context-details" className={styles.workspaceDetails}>
+      <div data-slot="shell-workspace-tenant-context" className={styles.workspaceField}>
         <span className={topAppBarClasses.contextLabel}>{copy.tenantScope}</span>
-        <div
-          aria-label={copy.tenantScopeAria}
-          className={`flex items-center truncate ${topAppBarClasses.readOnlyScopeField}`}
-        >
+        <div aria-label={copy.tenantScopeAria} className={topAppBarClasses.readOnlyScopeField}>
           {badge.tenantLabel}
         </div>
       </div>
-      <div data-slot="shell-workspace-project-context" className="grid gap-1">
+      <div data-slot="shell-workspace-project-context" className={styles.workspaceField}>
         <span className={topAppBarClasses.contextLabel}>{copy.projectScope}</span>
-        <div
-          aria-label={copy.projectScopeAria}
-          className={`flex items-center truncate ${topAppBarClasses.readOnlyScopeField}`}
-        >
+        <div aria-label={copy.projectScopeAria} className={topAppBarClasses.readOnlyScopeField}>
           {badge.projectLabel}
         </div>
       </div>
-      <div data-slot="shell-workspace-environment-context" className="grid gap-1">
+      <div data-slot="shell-workspace-environment-context" className={styles.workspaceField}>
         <span className={topAppBarClasses.contextLabel}>{copy.environmentScope}</span>
-        <div
-          aria-label={copy.environmentScopeAria}
-          className={`flex items-center truncate ${topAppBarClasses.readOnlyScopeField}`}
-        >
+        <div aria-label={copy.environmentScopeAria} className={topAppBarClasses.readOnlyScopeField}>
           {badge.environmentLabel}
         </div>
       </div>
-      <div data-slot="shell-workspace-deployment-context" className="grid gap-1">
+      <div data-slot="shell-workspace-deployment-context" className={styles.workspaceField}>
         <span className={topAppBarClasses.contextLabel}>{copy.deploymentScope}</span>
-        <div
-          aria-label={copy.deploymentScopeAria}
-          className={`flex items-center truncate ${topAppBarClasses.readOnlyScopeField}`}
-        >
+        <div aria-label={copy.deploymentScopeAria} className={topAppBarClasses.readOnlyScopeField}>
           {badge.targetAdapter}
         </div>
       </div>

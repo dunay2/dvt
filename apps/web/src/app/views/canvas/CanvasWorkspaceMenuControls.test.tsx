@@ -47,10 +47,6 @@ describe('CanvasWorkspaceMenuControls', () => {
   it('renders contributed project snapshot commands in the Workspace menu', async () => {
     const onExportProjectSnapshot = vi.fn();
     const onImportProjectSnapshotFile = vi.fn();
-    const onOpenProjectExplorer = vi.fn();
-    const onOpenProjectCode = vi.fn();
-    const onProjectCodeSelected = vi.fn();
-    const onImportDbtProject = vi.fn();
     const snapshotFile = new File(['{}'], 'project-snapshot.json', {
       type: 'application/json',
     });
@@ -63,16 +59,11 @@ describe('CanvasWorkspaceMenuControls', () => {
             <CanvasWorkspaceMenuContributionRegistrar
               canExportProjectSnapshot
               canImportProjectSnapshot
-              canOpenProjectExplorer
               canOpenProjectCode
-              canImportDbtProject
               onExportProjectSnapshot={onExportProjectSnapshot}
               onImportProjectSnapshotFile={onImportProjectSnapshotFile}
-              onOpenProjectExplorer={onOpenProjectExplorer}
-              onOpenProjectCode={onOpenProjectCode}
-              onImportDbtProject={onImportDbtProject}
             />
-            <CanvasWorkspaceMenuControls onProjectCodeSelected={onProjectCodeSelected} />
+            <CanvasWorkspaceMenuControls />
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -86,31 +77,12 @@ describe('CanvasWorkspaceMenuControls', () => {
 
     expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
 
-    await act(async () => {
-      document.body
-        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-explore-project-command"]')
-        ?.click();
-    });
-    await act(async () => {
-      document.body
-        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-open-project-code-command"]')
-        ?.click();
-    });
-
-    expect(onOpenProjectExplorer).toHaveBeenCalledTimes(1);
-    expect(onOpenProjectCode).toHaveBeenCalledTimes(1);
-    expect(onProjectCodeSelected).toHaveBeenCalledTimes(1);
-    expect(onProjectCodeSelected.mock.invocationCallOrder[0]).toBeLessThan(
-      onOpenProjectCode.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
-    );
-
-    await act(async () => {
-      document.body
-        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-import-dbt-project-command"]')
-        ?.click();
-    });
-
-    expect(onImportDbtProject).toHaveBeenCalledTimes(1);
+    expect(
+      document.querySelector('[data-slot="canvas-workspace-open-project-code-command"]')
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-slot="canvas-workspace-explore-project-command"]')
+    ).toBeNull();
 
     await act(async () => {
       fireEvent.change(
@@ -124,6 +96,50 @@ describe('CanvasWorkspaceMenuControls', () => {
     });
 
     expect(onImportProjectSnapshotFile).toHaveBeenCalledWith(snapshotFile);
+  });
+
+  // Retiring the explorer dialog must preserve the existing canvas selection command.
+  it('offers multiple canvases in Project and delegates selection without snapshot side effects', async () => {
+    const select = vi.fn();
+    const exportSnapshot = vi.fn();
+    const documents = [
+      { id: 'sales', title: 'Sales', kind: 'transformation' },
+      { id: 'orders', title: 'Orders', kind: 'transformation' },
+    ];
+    await act(async () =>
+      root.render(
+        <DropdownMenu open>
+          <DropdownMenuTrigger>Project</DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <CanvasWorkspaceMenuContributionRegistrar
+              activeCanvas={documents[0]}
+              canvasDocuments={documents}
+              onSelectCanvas={select}
+              canExportProjectSnapshot
+              canImportProjectSnapshot={false}
+              onExportProjectSnapshot={exportSnapshot}
+            />
+            <CanvasWorkspaceMenuControls />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    );
+    const trigger = within(document.body).getByRole('menuitem', { name: 'Canvases' });
+    await act(async () => {
+      trigger.focus();
+      fireEvent.keyDown(trigger, { key: 'ArrowRight' });
+    });
+    const orders = await waitFor(() =>
+      within(document.body).getByRole('menuitemradio', { name: 'Orders' })
+    );
+    expect(
+      within(document.body)
+        .getByRole('menuitemradio', { name: 'Sales' })
+        .getAttribute('aria-checked')
+    ).toBe('true');
+    await act(async () => fireEvent.click(orders));
+    expect(select).toHaveBeenCalledExactlyOnceWith('orders');
+    expect(exportSnapshot).not.toHaveBeenCalled();
   });
 
   it('keeps Model close tabbable outside the tablist and delegates to its existing owner', async () => {
@@ -285,14 +301,10 @@ describe('CanvasWorkspaceMenuControls', () => {
               activeCanvas={{ id: 'transformaciones', kind: 'transformation', title: 'Ventas' }}
               canExportProjectSnapshot
               canImportProjectSnapshot
-              canOpenProjectExplorer
               canOpenProjectCode
-              canImportDbtProject
               onExportProjectSnapshot={vi.fn()}
               onImportProjectSnapshotFile={vi.fn()}
-              onOpenProjectExplorer={vi.fn()}
               onOpenProjectCode={vi.fn()}
-              onImportDbtProject={vi.fn()}
             />
             <CanvasWorkspaceMenuControls />
             <CanvasWorkspaceTopBarIdentity />
@@ -301,11 +313,11 @@ describe('CanvasWorkspaceMenuControls', () => {
       );
     });
 
-    expect(document.body.textContent).toContain('Importar proyecto dbt');
-    expect(document.body.textContent).toContain('Acciones del proyecto');
+    expect(document.body.textContent).not.toContain('Importar proyecto dbt');
+    expect(document.body.textContent).not.toContain('Acciones del proyecto');
     expect(document.body.textContent).toContain('Instantáneas del proyecto');
-    expect(document.body.textContent).toContain('Explorar proyecto');
-    expect(document.body.textContent).toContain('Abrir código del proyecto');
+    expect(document.body.textContent).not.toContain('Explorar proyecto');
+    expect(document.body.textContent).not.toContain('Abrir código del proyecto');
     expect(document.body.textContent).not.toContain('Open project code');
     expect(
       document.body
@@ -321,21 +333,17 @@ describe('CanvasWorkspaceMenuControls', () => {
     const staleContribution = {
       canExportProjectSnapshot: false,
       canImportProjectSnapshot: false,
-      canOpenProjectExplorer: false,
       canOpenProjectCode: false,
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
-      onOpenProjectExplorer: vi.fn(),
       onOpenProjectCode: vi.fn(),
     };
     const activeContribution = {
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
-      canOpenProjectExplorer: true,
       canOpenProjectCode: true,
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
-      onOpenProjectExplorer: vi.fn(),
       onOpenProjectCode: vi.fn(),
     };
 
@@ -361,14 +369,13 @@ describe('CanvasWorkspaceMenuControls', () => {
     const onExportProjectSnapshot = vi.fn();
     const onImportProjectSnapshotFile = vi.fn();
 
-    const renderRegistrar = (onImportDbtProject: () => void): React.ReactElement => (
+    const renderRegistrar = (onOpenProjectCode: () => void): React.ReactElement => (
       <CanvasWorkspaceMenuContributionRegistrar
         canExportProjectSnapshot={false}
         canImportProjectSnapshot={false}
-        canImportDbtProject
         onExportProjectSnapshot={onExportProjectSnapshot}
         onImportProjectSnapshotFile={onImportProjectSnapshotFile}
-        onImportDbtProject={onImportDbtProject}
+        onOpenProjectCode={onOpenProjectCode}
       />
     );
 
@@ -385,7 +392,7 @@ describe('CanvasWorkspaceMenuControls', () => {
 
     const latestContribution = useCanvasWorkspaceMenuContributionStore.getState().contribution;
     expect(latestContribution).toBe(firstContribution);
-    latestContribution?.onImportDbtProject?.();
+    latestContribution?.onOpenProjectCode?.();
     expect(firstCommand).not.toHaveBeenCalled();
     expect(latestCommand).toHaveBeenCalledTimes(1);
   });

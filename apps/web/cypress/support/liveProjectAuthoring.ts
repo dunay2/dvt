@@ -11,7 +11,7 @@ export function createLiveProjectThroughUi(
   projectName: string
 ): Cypress.Chainable<WorkspaceGraphDraftScope> {
   cy.intercept('POST', '**/projects').as('createdLiveProject');
-  cy.get('[data-slot="shell-file-menu-trigger"]').click();
+  cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
   cy.get('[data-slot="shell-new-project-command"]').click();
   cy.get('[data-slot="project-creation-dialog"]').within(() => {
     cy.get('input[name="projectName"]').type(projectName);
@@ -28,7 +28,8 @@ export function createLiveProjectThroughUi(
     cy.get('[data-slot="project-creation-dialog"]').should('not.exist');
     return cy
       .get('[data-slot="shell-workspace-menu-trigger"]')
-      .should('contain.text', projectName)
+      .should('have.attr', 'aria-label')
+      .and('contain', projectName)
       .then(() => scope);
   });
 }

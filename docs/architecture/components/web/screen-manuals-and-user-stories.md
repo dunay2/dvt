@@ -52,7 +52,7 @@ The user always understands:
 
 ### Shell workspace context
 
-Global context lives in compact top-bar labels. The identity badge is a
+Global context lives in the left-rail Project menu. The identity projection is a
 read-only presentation model; scope changes use the separate governed
 project-selection flow rather than mutating those labels.
 
