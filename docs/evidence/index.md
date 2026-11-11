@@ -23,6 +23,7 @@ Evidence documents that justify or validate relevant changes.
 - [Canvas Save And Readiness](ED-20261023-canvas-save-readiness.md)
 - [Confirmed Layer Outcomes Before Run Failure](ED-20261015-layer-result-evidence.md)
 - [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)
+- [Dependency maintenance compatibility evidence](ED-20261111-dependency-maintenance-validation.md)
 - [ED 20260410 Contract Mapper Boundary Option A](ED-20260410-contract-mapper-boundary-option-a.md)
 - [ED 20260410 Temporal Native Cancel Semantics](ED-20260410-temporal-native-cancel-semantics.md)
 - [ED 20260412 Ar A12 C5 Read Boundary Purity Closeout](ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md)

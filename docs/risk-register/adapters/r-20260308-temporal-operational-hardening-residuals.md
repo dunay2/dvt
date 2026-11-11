@@ -3,7 +3,7 @@ id: R-20260308-TEMPORAL-OPERATIONS-01
 title: Temporal lifecycle still has failure propagation and operational evidence gaps
 status: Mitigating
 date: 2026-03-08
-last_reviewed: 2026-10-20
+last_reviewed: 2026-11-11
 owners:
   - adapter-temporal
   - observability
@@ -53,10 +53,19 @@ merge receipts. The separately admitted
 The #3694 implementation exposes the retained SDK outcome, withdraws readiness
 through the existing monitor, preserves startup-abort cleanup errors, and rejects
 startup after runtime stop begins. Focused lifecycle tests pass for those paths,
-including the additional diagnostic-failure regressions. Final candidate gates
-and native graceful/forced-shutdown proof remain under verification in its
-evidence record.
-This is mitigation in review, not an integrated-production acceptance claim.
+including the additional diagnostic-failure regressions. The correction was
+integrated through #3695; its [merge receipt](https://github.com/dunay2/dvt/issues/3694#issuecomment-6280378944)
+records the passing native canaries, exact candidate gates and required CI.
+That bounded lifecycle acceptance does not establish production-load behavior.
+
+Dependency maintenance [#3842](https://github.com/dunay2/dvt/issues/3842) aligns
+all eight direct Temporal SDK uses at 1.25.0. The exact implementation snapshot
+`e143f31e7e0ed33a12d788006e61ff28752bccc1` passes 32 native integration cases,
+two transformation cases and both Linux graceful/forced-shutdown canaries with
+an isolated PostgreSQL 16 database. Package unit and type checks also pass.
+Final complete-candidate acceptance and integration remain explicit obligations
+of #3842; these focused receipts do not certify a deployment or cross-version
+replay of retained 1.24 workflow histories.
 
 Two existing boundaries remain outside that correction:
 
@@ -95,9 +104,10 @@ outside the exercised startup and workload boundaries. This risk remains
 - Route every startup-abort checkpoint through the same cleanup owner and error
   epilogue. Reject startup on a runtime handle once stop begins, while retaining
   the existing coalescing of admitted starts.
-- Require the #3694 native graceful/forced-shutdown receipts and final candidate
-  gates before accepting that termination correction. Its activity fixture does
-  not certify DBT workload completion or direct adapter concurrent startup.
+- Retain the #3694 native graceful/forced-shutdown regressions for SDK updates,
+  including #3842. Their activity fixture does not certify DBT workload
+  completion or direct adapter concurrent startup. Revalidate the final candidate
+  with its required gates before integration.
 - Collect production-like telemetry evidence in a follow-up pass before
   treating Temporal worker defaults as fully validated under load.
 
@@ -106,6 +116,7 @@ outside the exercised startup and workload boundaries. This risk remains
 - `docs/evidence/critical/ED-20260308-temporal-operational-close-out.md`
 - [Temporal worker shutdown drain evidence](../../evidence/ED-20261019-temporal-worker-shutdown-drain.md)
 - [Temporal worker terminal outcome and cleanup evidence](../../evidence/ED-20261020-temporal-worker-termination.md)
+- [Dependency maintenance compatibility evidence](../../evidence/ED-20261111-dependency-maintenance-validation.md)
 - [#3694 lifecycle admission](https://github.com/dunay2/dvt/issues/3694#issuecomment-6279831471)
 - [#3591 ARC-2 admission](https://github.com/dunay2/dvt/issues/3591#issuecomment-6278501955)
 - [Lifecycle review findings](https://github.com/dunay2/dvt/issues/3604#issuecomment-6276147618)
