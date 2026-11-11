@@ -62,6 +62,7 @@ describe('ShellTopBar workspace context architecture', () => {
       'components/TopAppBar.tsx',
       'components/shell/ShellAbout.tsx',
       'components/shell/ShellMenu.templates.tsx',
+      'components/shell/ShellWorkspaceBreadcrumb.tsx',
     ]) {
       expect(readAppSource(sourcePath), sourcePath).not.toMatch(
         /\bclassName\s*=\s*['"]|\bstyle\s*=/u
@@ -114,14 +115,20 @@ describe('ShellTopBar workspace context architecture', () => {
     const selector = readAppSource('components/shell/ShellWorkspaceScopeSelector.tsx');
     expect(header).not.toMatch(/ShellFileMenu|ShellProjectMenu|useSessionStore/);
     expect(rail).toContain('ShellProjectMenu');
-    expect(project).toContain('buildProjectIdentityBadge');
+    const identity = readAppSource('components/shell/useShellProjectIdentity.ts');
+    const breadcrumb = readAppSource('components/shell/ShellWorkspaceBreadcrumb.tsx');
+    expect(header).toContain('ShellWorkspaceBreadcrumb');
+    expect(project).toContain('useShellProjectIdentity');
+    expect(breadcrumb).toContain('useShellProjectIdentity');
+    expect(identity).toContain('buildProjectIdentityBadge');
+    expect(breadcrumb).not.toMatch(/useSessionStore|onClick|onSelect/);
     expect(project).toContain('ProjectCreationDialog');
-    expect(template).toContain('ShellWorkspaceContextDetails');
+    expect(template).not.toContain('ShellWorkspaceBreadcrumb');
     expect(template).toContain('ShellWorkspaceScopeSelector');
     expect(template).toContain('CanvasWorkspaceMenuControls');
     expect(selector).toContain('useWorkspaceScopeSelection');
     expect(selector).toContain('selectWorkspaceScope');
-    for (const source of [header, rail, project, template]) {
+    for (const source of [header, rail, project, template, identity, breadcrumb]) {
       expect(source).not.toMatch(/setTenantId|setProjectId|setEnvironmentId|fetch\s*\(/);
       expect(source.trimStart()).toMatch(OWNED_CONCERN_DOCBLOCK);
     }
@@ -147,8 +154,8 @@ describe('ShellTopBar workspace context architecture', () => {
       '## Consumers',
       'ProjectIdentityBadge',
       'ShellProjectMenu',
-      'ShellWorkspaceContextDetails',
-      'Workspace context is read-only content in the left-rail Project menu',
+      'ShellWorkspaceBreadcrumb',
+      'Workspace identity is a read-only header breadcrumb',
       'Tenant, project, environment, and deployment adapter labels are read-only',
       'SelectWorkspaceScope',
       '```mermaid',
@@ -157,7 +164,7 @@ describe('ShellTopBar workspace context architecture', () => {
     }
 
     for (const requiredManualSignal of [
-      'Global context lives in the left-rail Project menu',
+      'Global identity lives in the header breadcrumb',
       'Shell workspace context',
       'read-only presentation model',
       'shell-workspace-context-component.md',
@@ -177,7 +184,7 @@ describe('ShellTopBar workspace context architecture', () => {
     for (const requiredComponentGuideSection of [
       '# Shell Workspace Context Component',
       '## Public API',
-      'ShellWorkspaceContextDetails',
+      'ShellWorkspaceBreadcrumb',
       '## Invariants',
       '## Transitions',
       '## Consumers',

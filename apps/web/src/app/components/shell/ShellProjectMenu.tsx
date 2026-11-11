@@ -6,52 +6,28 @@
  * @version 1.1.0
  */
 import { useRef, useState } from 'react';
-import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { buildProjectIdentityBadge } from '../../shell/projectIdentityBadge';
-import { useSessionStore } from '../../stores/sessionStore';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { ProjectCreationDialog } from '../../views/projectAdmission/ProjectCreationDialog';
 import { resolveProjectOnboardingCopy } from '../../views/projectOnboardingCopy';
 import type { ShellTopBarCopy } from './copy';
 import { ShellProjectMenuTemplate } from './ShellMenu.templates';
-
-const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
+import { useShellProjectIdentity } from './useShellProjectIdentity';
 
 export function ShellProjectMenu({ copy }: Readonly<{ copy: ShellTopBarCopy }>) {
   const [open, setOpen] = useState(false);
   const [projectCreationOpen, setProjectCreationOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const transferFocusRef = useRef(false);
-  const selectedTenant = useSessionStore((state) => state.tenantId);
-  const selectedProject = useSessionStore((state) => state.projectId);
-  const selectedEnvironment = useSessionStore((state) => state.environmentId);
-  const targetAdapter = useSessionStore((state) => state.targetAdapter);
-  const selectedProjectName = useSessionStore(
-    (state) =>
-      state.availableWorkspaces.find(
-        (workspace) =>
-          workspace.tenantId === state.tenantId &&
-          workspace.projectId === state.projectId &&
-          workspace.environmentId === state.environmentId
-      )?.projectName
-  );
+  const { badge, gitBranch, gitSha } = useShellProjectIdentity();
   const language = useApplicationLanguageStore((state) => state.language);
   const projectCopy = resolveProjectOnboardingCopy(language);
-  const badge = buildProjectIdentityBadge({
-    workspaceBootstrap,
-    selectedTenant,
-    selectedProject,
-    selectedProjectName,
-    selectedEnvironment,
-    targetAdapter,
-  });
   return (
     <>
       <ShellProjectMenuTemplate
         copy={copy}
         badge={badge}
-        gitBranch={workspaceBootstrap.gitBranch}
-        gitSha={workspaceBootstrap.gitSha}
+        gitBranch={gitBranch}
+        gitSha={gitSha}
         open={open}
         onOpenChange={setOpen}
         triggerRef={triggerRef}

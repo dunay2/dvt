@@ -1,6 +1,6 @@
 /**
  * Owned concern: compose route identity, execution, view controls and connection status.
- * @baseline GH-3765: project context and configuration have one left-rail entry.
+ * @baseline GH-3765: project identity is visible; configuration has one left-rail entry.
  * @decision Keep project and file actions out of the route header.
  * @consequence Navigating routes cannot create a second project menu or scope owner.
  * @version 1.1.0
@@ -18,6 +18,7 @@ import { useOperationalDrawerContributionStore } from './shell/operationalDrawer
 import AppBrandMark from './AppBrandMark';
 import styles from './shell/ShellChrome.module.css';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
+import { ShellWorkspaceBreadcrumb } from './shell/ShellWorkspaceBreadcrumb';
 import { ShellMenu } from './shell/ShellMenu';
 import { ShellRunStatusIndicator } from './shell/ShellRunStatusIndicator';
 import { resolveShellViewControls } from './shell/shellViewControlsModel';
@@ -67,6 +68,7 @@ export function ShellTopBar({
           ) : isWorkbenchShell ? (
             <CanvasWorkspaceTopBarIdentity />
           ) : null}
+          <ShellWorkspaceBreadcrumb copy={copy} />
         </div>
 
         <div data-slot="shell-top-bar-command-cluster" className={topAppBarClasses.commandCluster}>

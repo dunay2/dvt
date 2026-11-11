@@ -526,6 +526,18 @@ describe('Canvas workbench screen composition', () => {
         );
         expect($brand[0]!.getAttribute('tabindex')).not.to.equal('0');
       });
+    // Context is visible without opening properties; it cannot mutate scope.
+    cy.get('@topBar')
+      .find('[data-slot="shell-workspace-breadcrumb"]')
+      .should('be.visible')
+      .and('contain.text', 'E2E Project')
+      .find('[aria-current="location"]')
+      .should('have.text', E2E_WORKSPACE_SESSION.environmentId);
+    cy.get('@topBar')
+      .find(
+        '[data-slot="shell-workspace-breadcrumb"] a, [data-slot="shell-workspace-breadcrumb"] button'
+      )
+      .should('not.exist');
     cy.get('@topBar').should('contain.text', 'Vista');
     cy.get('@topBar').find('[data-slot="shell-workspace-menu-trigger"]').should('not.exist');
     cy.get('[data-slot="left-navigation-rail"] [data-slot="shell-workspace-menu-trigger"]')
@@ -559,14 +571,20 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
-    cy.contains('Contexto del proyecto').should('not.exist');
+    cy.get('[data-slot="shell-menu-workspace-context"]').should('not.exist');
     cy.contains('Contexto Git').should('not.exist');
     cy.contains('Panel inspector').should('not.exist');
     cy.contains('Opciones de vista').should('be.visible');
     cy.get('body').type('{esc}');
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
-    cy.contains('Contexto del proyecto').should('be.visible');
+    cy.contains('Propiedades del proyecto').should('be.visible');
+    cy.get('[data-slot="shell-menu-workspace-context"]')
+      .should('be.visible')
+      .find('[data-slot="shell-workspace-deployment-context"]')
+      .should('contain.text', 'temporal');
+    cy.get('[data-slot="shell-workspace-context-details"]').should('not.exist');
+    cy.get('nav[aria-label="Contexto del proyecto"]').should('be.visible');
     cy.contains('Contexto Git').should('be.visible');
     cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
     cy.get('body').type('{esc}');
@@ -605,7 +623,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-about-dialog"]').should('be.visible').find('button').last().click();
     cy.get('[data-slot="shell-about-dialog"]').should('not.exist');
     cy.get('[data-slot="shell-about-command"]').should('be.focused');
-    cy.contains('Contexto del proyecto').should('not.exist');
+    cy.get('[data-slot="shell-menu-workspace-context"]').should('not.exist');
     cy.contains('Contexto Git').should('not.exist');
     cy.get('[data-slot="left-navigation-link"][href="/runs"]').click();
     cy.location('pathname').should('eq', '/runs');
@@ -687,8 +705,12 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
       'have.attr',
       'aria-label',
-      'Configuración del proyecto: Alternate Project'
+      'Propiedades del proyecto: Alternate Project'
     );
+    cy.get('[data-slot="shell-workspace-breadcrumb"]')
+      .should('contain.text', 'Alternate Project')
+      .find('[aria-current="location"]')
+      .should('have.text', 'staging');
     cy.get('[data-slot="shell-active-canvas-identity"]')
       .should('contain.text', 'Alternate staging canvas')
       .and('have.attr', 'data-canvas-id', 'main-canvas');

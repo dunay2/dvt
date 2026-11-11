@@ -62,6 +62,13 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-menu-trigger"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeNull();
+  const breadcrumb = requireElement<HTMLElement>(
+    shellTopBar,
+    '[data-slot="shell-workspace-breadcrumb"]'
+  );
+  expect(breadcrumb.querySelectorAll('[data-slot="breadcrumb-item"]')).toHaveLength(3);
+  expect(breadcrumb.querySelector('[aria-current="location"]')).not.toBeNull();
+  expect(breadcrumb.querySelector('a, button, [role="combobox"]')).toBeNull();
   const project = container.querySelector(
     '[data-slot="left-navigation-rail"] [data-slot="shell-workspace-menu-trigger"]'
   );
