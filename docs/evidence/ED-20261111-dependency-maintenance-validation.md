@@ -10,6 +10,7 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
+  - .github/workflows/codeql.yml
   - package.json
   - pnpm-lock.yaml
   - apps/web/package.json
@@ -18,6 +19,7 @@ code_refs:
   - apps/temporal-worker/package.json
 evidence:
   tests:
+    - node --test tools/ci/workflow-pattern-parity.test.mjs
     - pnpm lint
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/observability-otel test
@@ -35,11 +37,17 @@ evidence:
 ## Scope and authority
 
 [#3842](https://github.com/dunay2/dvt/issues/3842) owns the consolidation of
-dependency updates from #3800, #3832, #3831, #3833 and #3802. CodeQL #3830 is
-separate. The four implementation commits contain their own coherent manifests
-and lockfile. A single final candidate gate avoids repeating the global suite
-for each dependency; package-specific evidence remains required. Squash merge
-makes the combined candidate one rollback unit.
+dependency updates from #3830, #3800, #3832, #3831, #3833 and #3802. Five precise
+implementation commits retain their version pins and coherent manifests/lockfile.
+A single final maintenance gate avoids repeating the global suite for each
+dependency; package-specific evidence remains required. Squash merge makes the
+combined candidate one rollback unit, including the CodeQL action update.
+
+The CI execution change in #3840 remains separate to exercise its new ordinary-PR
+six-group path on GitHub. This dependency/lockfile candidate selects the existing
+five-group full path. Two candidates therefore validate both execution paths;
+combining everything would fail to exercise the new one. No scope flags or
+workflow inputs are altered to manufacture that evidence.
 
 The governing sources are `AGENTS.md`, the governance inventory, the PR
 preflight guide, ADR-0001, command/query rail governance and `.arc-policy.yaml`.
@@ -55,6 +63,13 @@ compatibility matrix are not required. Final classification and acceptance must
 use the eventual complete candidate, including this evidence and the risk update.
 
 ## Installed versions and focused proof
+
+CodeQL's two action references move from 4.39.1 to 4.39.3, pinned to
+`33d7b85da1a04171e211befe2c739303b9a4c066`. The official tag identity was checked;
+all 20 `node --test tools/ci/workflow-pattern-parity.test.mjs` cases pass.
+No permissions, language selection or
+security routing change. Hosted analysis on the complete candidate remains
+required in addition to this focused contract proof.
 
 | Cut                   | Version change                                                                                         | Observed proof                                                                                                                                                                                   |
 | --------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
