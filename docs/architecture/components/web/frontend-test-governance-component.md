@@ -80,11 +80,15 @@ contract validation, or engine determinism tests.
 - The `Web Frontend Tests` matrix keeps separate Vitest and browser obligations.
   Full hosted Vitest coverage uses five independent groups: `unit`, `architecture`
   and `presentation-1` through `presentation-3`. The three Presentation jobs use
-  native thirds of the same suite. Ordinary PRs allocate one `changed` group. Each group has
+  native thirds of the same suite. Ordinary PRs reuse those groups for selected
+  complete primary commands and a `changed` group for focus suites and exact-file
+  batches. Empty groups do not build or execute test dependencies. Each group has
   a distinct job/cache identity; matrix fail-fast remains disabled and the
   existing required aggregate requires every selected result.
 - Ordinary web pull requests route through the same `pnpm test:web:changed`
-  plan with `--phase=vitest` or `--phase=browser`. Local default execution
+  plan with `--phase=vitest` or `--phase=browser`. Hosted Vitest groups use
+  `--vitest-group` only after complete plan validation; its omission preserves
+  the complete local command plan. Local default execution
   remains both phases, and browser admission is never replaced by Vitest.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs distribute
   the existing `test:web:ci` primary-suite composition across the five groups.

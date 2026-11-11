@@ -40,6 +40,7 @@ describe('web Vitest governance-test routing', () => {
     'apps/web/cypress.catalog.ts',
     'apps/web/vitest.suites.ts',
     'apps/web/scripts/run-vitest-changed-suites.ts',
+    'apps/web/scripts/vitest-execution-partitions.ts',
     'apps/web/vitest.canvas-unit.config.ts',
     'apps/web/vitest.canvas-presentation.config.ts',
     'apps/web/vitest.canvas-architecture.config.ts',

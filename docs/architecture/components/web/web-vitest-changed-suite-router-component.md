@@ -454,6 +454,41 @@ flowchart LR
   browser baseline obligations to the router: executing it with the Vitest
   phase is invalid, and cannot replace `test:web:ci`. Required check
   names and the Test Suite aggregate stay unchanged.
+- Ordinary PRs partition their selected Vitest commands after the complete plan
+  has been validated. `--vitest-group` requires `--phase=vitest` and accepts
+  `unit`, `architecture`, `presentation-1` through `presentation-3`, or `changed`.
+  The primary groups own complete primary commands only; native Presentation
+  thirds cover the same suite. The `changed` residual owns each focus-suite or
+  exact-file batch once, preserving its configuration and existing deduplication.
+  `vitest-execution-partitions.ts` owns this pure execution split; the adapter
+  owns Git, path validation and process launch. Neither owns another path router.
+  Planning retains the complete obligation plan and exposes the selected
+  `vitestCommands` plus `vitest_required` for provisioning. Empty groups perform
+  no dependency build or test execution; typed plan evaluation still requires
+  package installation. Omitting the selector preserves complete local execution.
+  Unknown or repeated selectors and browser-phase combinations reject. Missing
+  browser consumers still fail before filtering an otherwise empty Vitest group.
+  The required matrix result rejects any selected failed, cancelled or missing
+  job. Worker isolation, resource limits and browser obligations are unchanged.
+
+  ```mermaid
+  flowchart LR
+    Router[Existing complete obligation plan] --> Validation[Validate all paths]
+    Validation --> Local[Complete local execution]
+    Validation --> Split[Pure hosted execution partition]
+    Split --> Primary[Unit and Architecture]
+    Split --> Thirds[Native Presentation thirds]
+    Split --> Residual[Focus and exact batches once]
+    Primary --> Required[Existing required matrix result]
+    Thirds --> Required
+    Residual --> Required
+  ```
+
+  This removes the sequential primary-suite bottleneck observed in PR #3838
+  without removing test obligations. It does not claim lower runner-minutes or
+  faster local prepush: residual focus suites remain unpartitioned, and hosted
+  setup and queue costs must be measured alongside the critical path.
+
 - The existing live runner owns allocation and cleanup. Missing runtime,
   zero executed tests, pending tests or skipped tests are failures. POSIX
   teardown must stop child process groups and wait before disposing its lease.

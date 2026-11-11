@@ -22,6 +22,12 @@ import {
 } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
+import {
+  isWebVitestExecutionGroup,
+  selectWebVitestExecutionPartition,
+  type WebVitestExecutionGroup,
+} from './vitest-execution-partitions';
+
 type GitOutputRunner = (args: readonly string[], cwd: string) => string[];
 type WebEvidencePhase = 'all' | 'vitest' | 'browser';
 
@@ -31,6 +37,7 @@ type ChangedSuiteArgs = Readonly<{
   phase: WebEvidencePhase;
   browserCapability?: WebCypressCapability;
   browserShard?: WebCypressShard;
+  vitestGroup?: WebVitestExecutionGroup;
   files: readonly string[];
 }>;
 
@@ -53,6 +60,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
   let phase: WebEvidencePhase = 'all';
   let browserCapability: WebCypressCapability | undefined;
   let browserShard: WebCypressShard | undefined;
+  let vitestGroup: WebVitestExecutionGroup | undefined;
   for (const arg of argv) {
     if (arg === '--') continue;
     if (!arg.startsWith('--')) {
@@ -62,11 +70,15 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     const selectedPhase = WEB_EVIDENCE_PHASES.get(arg);
     const selectedCapability = WEB_BROWSER_CAPABILITIES.get(arg);
     const selectedShard = /^--browser-shard=([1-9]\d*)\/([1-9]\d*)$/.exec(arg);
+    const selectedVitestGroup = arg.startsWith('--vitest-group=')
+      ? arg.slice('--vitest-group='.length)
+      : undefined;
     const flag = arg.split('=', 1)[0]!;
     if (
       (selectedPhase === undefined &&
         selectedCapability === undefined &&
         selectedShard === null &&
+        !(selectedVitestGroup !== undefined && isWebVitestExecutionGroup(selectedVitestGroup)) &&
         !['--plan', '--full', '--files'].includes(arg)) ||
       flags.has(flag)
     ) {
@@ -75,6 +87,9 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     flags.add(flag);
     phase = selectedPhase ?? phase;
     browserCapability = selectedCapability ?? browserCapability;
+    if (selectedVitestGroup !== undefined && isWebVitestExecutionGroup(selectedVitestGroup)) {
+      vitestGroup = selectedVitestGroup;
+    }
     if (selectedShard) {
       const index = Number(selectedShard[1]);
       const count = Number(selectedShard[2]);
@@ -86,6 +101,9 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
   }
   const plan = flags.has('--plan');
   const full = flags.has('--full');
+  if (vitestGroup !== undefined && phase !== 'vitest') {
+    throw new Error('--vitest-group requires --phase=vitest.');
+  }
   if (browserCapability !== undefined && phase !== 'browser') {
     throw new Error('--browser-capability requires --phase=browser.');
   }
@@ -110,6 +128,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     files,
     ...(browserCapability === undefined ? {} : { browserCapability }),
     ...(browserShard === undefined ? {} : { browserShard }),
+    ...(vitestGroup === undefined ? {} : { vitestGroup }),
   };
 }
 
@@ -282,6 +301,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       throw new Error(`Retired browser evidence must remain absent: ${path}`);
     }
   }
+  const vitestCommands =
+    args.phase === 'browser'
+      ? []
+      : selectWebVitestExecutionPartition(plan.commandPlan, args.vitestGroup);
   const browserCommands = plan.browserCommands
     .filter(
       (entry) =>
@@ -296,31 +319,28 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     .filter((entry) => entry !== undefined);
 
   if (args.plan) {
-    process.stdout.write(`${JSON.stringify({ ...plan, browserCommands })}\n`);
+    process.stdout.write(`${JSON.stringify({ ...plan, vitestCommands, browserCommands })}\n`);
     if (process.env.GITHUB_OUTPUT) {
       appendFileSync(
         process.env.GITHUB_OUTPUT,
-        `browser_required=${browserCommands.length > 0}\n` +
+        `vitest_required=${vitestCommands.length > 0}\n` +
+          `browser_required=${browserCommands.length > 0}\n` +
           `provider_required=${browserCommands.some((entry) => entry.capability !== 'controlled')}\n`
       );
     }
     return;
   }
 
-  if (plan.commands.length === 0 && plan.browserCommands.length === 0) {
+  if (vitestCommands.length === 0 && browserCommands.length === 0) {
     process.stdout.write('[web:test:changed] no web test obligation selected.\n');
     return;
   }
 
   process.stdout.write(`[web:test:changed] suites=${plan.suites.join(',')}\n`);
-  if (
-    args.phase !== 'browser' &&
-    plan.commands.length > 0 &&
-    shouldRunTestDeps(plan.requiresDependencies)
-  ) {
+  if (vitestCommands.length > 0 && shouldRunTestDeps(plan.requiresDependencies)) {
     runCommand('pnpm run test:deps', webRoot);
   }
-  for (const entry of args.phase === 'browser' ? [] : plan.commandPlan) {
+  for (const entry of vitestCommands) {
     if (entry.kind === 'shell') {
       runCommand(entry.command, webRoot);
     } else {

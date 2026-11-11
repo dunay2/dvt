@@ -137,7 +137,7 @@ jobs:
           ${{ fromJSON((github.event_name != 'pull_request' ||
           needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
           '["unit","architecture","presentation-1","presentation-2","presentation-3"]' ||
-          '["changed"]') }}
+          '["unit","architecture","presentation-1","presentation-2","presentation-3","changed"]') }}
         include:
           - phase: browser
             capability: controlled
@@ -225,7 +225,9 @@ jobs:
           format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&
           format('--browser-shard={0}/6', matrix.shard) || '' }} ${{ (github.event_name !=
           'pull_request' || needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
-          '--full' || '' }}
+          '--full' || '' }} ${{ matrix.vitest_group && github.event_name == 'pull_request' &&
+          needs.detect_test_matrix.outputs.root_build_sensitive != 'true' &&
+          format('--vitest-group={0}', matrix.vitest_group) || '' }}
 
       - name: Setup browser proof Python
         id: browser_python
@@ -277,7 +279,11 @@ jobs:
           echo "DATABASE_URL=postgresql://dvt_proof:$PROOF_OWNER@$proof_address/postgres" >> "$GITHUB_ENV"
 
       - name: Build web dependency graph
-        if: matrix.phase == 'vitest' || steps.web_plan.outputs.browser_required == 'true'
+        if: >-
+          (matrix.phase == 'vitest' && (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true' ||
+          steps.web_plan.outputs.vitest_required == 'true')) ||
+          steps.web_plan.outputs.browser_required == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
         env:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
@@ -286,26 +292,33 @@ jobs:
       - name: Run governed Web changed evidence (PR)
         if:
           github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
-          needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
+          needs.detect_test_matrix.outputs.root_build_sensitive != 'true' && (matrix.phase !=
+          'vitest' || steps.web_plan.outputs.vitest_required == 'true')
         run: >-
           pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability &&
           format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&
-          format('--browser-shard={0}/6', matrix.shard) || '' }}
+          format('--browser-shard={0}/6', matrix.shard) || '' }} ${{ matrix.vitest_group &&
+          format('--vitest-group={0}', matrix.vitest_group) || '' }}
 
       - name: Run governed web unit suite
-        if: matrix.vitest_group == 'unit'
+        if: >-
+          matrix.vitest_group == 'unit' && (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
         run: >-
           pnpm --filter @dvt/web run test:deps && pnpm --filter @dvt/web run test:unit:run
 
       - name: Run governed web architecture suite
-        if: matrix.vitest_group == 'architecture'
+        if: >-
+          matrix.vitest_group == 'architecture' && (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
         run: >-
           pnpm --filter @dvt/web run test:deps && pnpm --filter @dvt/web run test:architecture:run
 
       - name: Run governed web presentation suite
         if: >-
-          matrix.vitest_group == 'presentation-1' || matrix.vitest_group == 'presentation-2' ||
-          matrix.vitest_group == 'presentation-3'
+          (matrix.vitest_group == 'presentation-1' || matrix.vitest_group == 'presentation-2' ||
+          matrix.vitest_group == 'presentation-3') && (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
         run: >-
           pnpm --filter @dvt/web run test:deps && pnpm --filter @dvt/web run test:presentation:run
           --shard=${{ matrix.vitest_group == 'presentation-1' && '1/3' || matrix.vitest_group ==

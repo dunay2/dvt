@@ -1122,6 +1122,7 @@ describe('governed browser evidence routing', () => {
       main(['--plan', ...flags, '--files', fixture]);
       expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toEqual({
         ...plan,
+        vitestCommands: flags.includes('--phase=vitest') ? plan.commandPlan : [],
         browserCommands: plan.browserCommands.filter(({ capability }) =>
           capabilities.includes(capability)
         ),
@@ -1131,7 +1132,9 @@ describe('governed browser evidence routing', () => {
           .mocked(appendFileSync)
           .mock.calls.map(([, data]) => String(data))
           .join('')
-      ).toBe(`browser_required=${capabilities.length > 0}\nprovider_required=${provider}\n`);
+      ).toBe(
+        `vitest_required=${flags.includes('--phase=vitest') && plan.commandPlan.length > 0}\nbrowser_required=${capabilities.length > 0}\nprovider_required=${provider}\n`
+      );
       expect(spawnSync).not.toHaveBeenCalled();
     }
   );

@@ -266,7 +266,7 @@ it.each([
       expect(plan.browserCommands).toEqual(shard ? [shard] : []);
       expect(appendFileSync).toHaveBeenCalledWith(
         'controlled-shard-output',
-        `browser_required=${index <= count}\nprovider_required=false\n`
+        `vitest_required=false\nbrowser_required=${index <= count}\nprovider_required=false\n`
       );
       expect(spawnSync).not.toHaveBeenCalled();
       main(args);
