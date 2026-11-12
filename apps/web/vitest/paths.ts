@@ -128,6 +128,7 @@ export function isWebVitestGovernancePath(filePath: string): boolean {
     isWebVitestImplementationPath(normalizedPath) ||
     normalizedPath === 'apps/web/cypress.changed.ts' ||
     normalizedPath === 'cypress.changed.ts' ||
+    /^(?:apps\/web\/)?cypress\.(?:commands|supportCapabilities)\.ts$/.test(normalizedPath) ||
     /^((apps\/web\/)?)cypress\.catalog\.(json|ts)$/.test(normalizedPath) ||
     /^apps\/web\/vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     /^vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||

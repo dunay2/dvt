@@ -1,421 +1,54 @@
-/** Owned concern: resolve locale-aware copy for the Code workbench route. */
+/**
+ * Owned concern: resolve Code catalogs through the shared locale-aware string resolver.
+ * @decision Locale catalogs provide data; region fallback belongs to resolveString.
+ * @consequence Adding a translation does not add language branches to views or commands.
+ */
 import { detectBrowserLocale } from '../../browserLocale';
-import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
+import { resolveString } from '../../plugins/contracts/PluginManifest';
+import { CODE_VIEW_MESSAGES } from './codeViewMessages';
+import { CODE_INLINE_MESSAGES } from './codeInlineMessages';
+import { CODE_MODEL_COMMAND_MESSAGES } from './codeModelCommandMessages';
 
-export type CodeViewLanguage = 'en' | 'es';
+export type CodeViewLanguage = NonNullable<Parameters<typeof resolveString>[1]>;
 
-export type CodeViewCopy = Readonly<{
-  title: string;
-  subtitle: string;
-  explorerTitle: string;
-  editorLoadingMessage: string;
-  editorAriaLabelPrefix: string;
-  viewerAriaLabelPrefix: string;
-  workingTreeSynchronizedLabel: string;
-  workingTreeSynchronizedMessage: string;
-  workingTreeModifiedLabel: string;
-  workingTreeModifiedMessage: string;
-  workingTreeSyncingLabel: string;
-  workingTreeSyncingMessage: string;
-  workingTreeReconcilingLabel: string;
-  workingTreeReconcilingMessage: string;
-  workingTreeConflictLabel: string;
-  workingTreeConflictMessage: string;
-  workingTreeFailedLabel: string;
-  workingTreeFailedMessage: string;
-  workingTreeReconciliationFailedLabel: string;
-  workingTreeReconciliationFailedMessage: string;
-  workingTreePersistedStaleLabel: string;
-  workingTreePersistedStaleMessage: string;
-  workingTreePersistedInvalidLabel: string;
-  workingTreePersistedInvalidMessage: string;
-  workingTreePersistedUnavailableLabel: string;
-  workingTreePersistedUnavailableMessage: string;
-  workingTreePersistedVerificationUnavailableLabel: string;
-  workingTreePersistedVerificationUnavailableMessage: string;
-  workingTreePersistedSupersededLabel: string;
-  workingTreePersistedSupersededMessage: string;
-  workingTreeReadOnlyLabel: string;
-  workingTreeReadOnlyMessage: string;
-  workingTreeGraphOwnedReadOnlyLabel: string;
-  workingTreeGraphOwnedReadOnlyMessage: string;
-  workingTreeRetryLabel: string;
-  workingTreeReloadLabel: string;
-  routeLoadingMessage: string;
-  routeEmptyTitle: string;
-  routeEmptyMessage: string;
-  routeErrorTitle: string;
-  routeErrorMessage: string;
-  previewLoadingMessage: string;
-  previewEmptyTitle: string;
-  previewEmptyMessage: string;
-  previewErrorTitle: string;
-  previewErrorMessage: string;
-  previewMissingTitle: string;
-  previewMissingMessagePrefix: string;
-  historyTitle: string;
-  filePropertiesTitle: string;
-  name: string;
-  path: string;
-  language: string;
-  loadedVersionModified: string;
-  historyNoFile: string;
-  historyLoadingMessage: string;
-  historyEmptyMessage: string;
-  historyErrorMessage: string;
-  historyOpenDiffLabel: string;
-  bootstrapLoadingFilesDetail: string;
-  bootstrapNoWorkspaceFilesDetail: string;
-  bootstrapLoadingPreviewDetail: string;
-  bootstrapReadyDetail: string;
-}>;
+export type CodeViewCopy = typeof CODE_VIEW_MESSAGES.en;
+export type CodeInlineReferenceCopy = typeof CODE_INLINE_MESSAGES.en;
 
-const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
-  title: { key: 'code.title', fallback: 'Code' },
-  subtitle: {
-    key: 'code.subtitle',
-    fallback: 'Inspect project files, model references and metadata.',
-  },
-  explorerTitle: { key: 'code.explorerTitle', fallback: 'Explorer' },
-  editorLoadingMessage: {
-    key: 'code.editorLoadingMessage',
-    fallback: 'Loading Monaco editor...',
-  },
-  editorAriaLabelPrefix: { key: 'code.editorAriaLabelPrefix', fallback: 'Editing' },
-  viewerAriaLabelPrefix: { key: 'code.viewerAriaLabelPrefix', fallback: 'Viewing' },
-  workingTreeSynchronizedLabel: {
-    key: 'code.workingTreeSynchronizedLabel',
-    fallback: 'Synchronized',
-  },
-  workingTreeSynchronizedMessage: {
-    key: 'code.workingTreeSynchronizedMessage',
-    fallback: 'Working tree matches the editor.',
-  },
-  workingTreeModifiedLabel: { key: 'code.workingTreeModifiedLabel', fallback: 'Modified' },
-  workingTreeModifiedMessage: {
-    key: 'code.workingTreeModifiedMessage',
-    fallback: 'Changes are waiting to synchronize.',
-  },
-  workingTreeSyncingLabel: { key: 'code.workingTreeSyncingLabel', fallback: 'Syncing' },
-  workingTreeSyncingMessage: {
-    key: 'code.workingTreeSyncingMessage',
-    fallback: 'Updating the working tree.',
-  },
-  workingTreeReconcilingLabel: {
-    key: 'code.workingTreeReconcilingLabel',
-    fallback: 'Analyzing',
-  },
-  workingTreeReconcilingMessage: {
-    key: 'code.workingTreeReconcilingMessage',
-    fallback: 'The file is saved; refreshing the authoritative project analysis.',
-  },
-  workingTreeConflictLabel: { key: 'code.workingTreeConflictLabel', fallback: 'Conflict' },
-  workingTreeConflictMessage: {
-    key: 'code.workingTreeConflictMessage',
-    fallback: 'Reload the newer working-tree revision before continuing.',
-  },
-  workingTreeFailedLabel: { key: 'code.workingTreeFailedLabel', fallback: 'Update failed' },
-  workingTreeFailedMessage: {
-    key: 'code.workingTreeFailedMessage',
-    fallback: 'The working tree could not be updated.',
-  },
-  workingTreeReconciliationFailedLabel: {
-    key: 'code.workingTreeReconciliationFailedLabel',
-    fallback: 'Analysis failed',
-  },
-  workingTreeReconciliationFailedMessage: {
-    key: 'code.workingTreeReconciliationFailedMessage',
-    fallback: 'The file is saved, but the authoritative project analysis could not be refreshed.',
-  },
-  workingTreePersistedStaleLabel: {
-    key: 'code.workingTreePersistedStaleLabel',
-    fallback: 'Stale analysis',
-  },
-  workingTreePersistedStaleMessage: {
-    key: 'code.workingTreePersistedStaleMessage',
-    fallback: 'The file is saved; the Canvas still shows the last valid project graph.',
-  },
-  workingTreePersistedInvalidLabel: {
-    key: 'code.workingTreePersistedInvalidLabel',
-    fallback: 'Invalid project',
-  },
-  workingTreePersistedInvalidMessage: {
-    key: 'code.workingTreePersistedInvalidMessage',
-    fallback: 'The file is saved; fix the project diagnostics before preview.',
-  },
-  workingTreePersistedUnavailableLabel: {
-    key: 'code.workingTreePersistedUnavailableLabel',
-    fallback: 'Analysis unavailable',
-  },
-  workingTreePersistedUnavailableMessage: {
-    key: 'code.workingTreePersistedUnavailableMessage',
-    fallback: 'The file is saved; authoritative project analysis is unavailable.',
-  },
-  workingTreePersistedVerificationUnavailableLabel: {
-    key: 'code.workingTreePersistedVerificationUnavailableLabel',
-    fallback: 'Verification unavailable',
-  },
-  workingTreePersistedVerificationUnavailableMessage: {
-    key: 'code.workingTreePersistedVerificationUnavailableMessage',
-    fallback: 'The file is saved, but its final authoritative revision could not be verified.',
-  },
-  workingTreePersistedSupersededLabel: {
-    key: 'code.workingTreePersistedSupersededLabel',
-    fallback: 'Newer revision available',
-  },
-  workingTreePersistedSupersededMessage: {
-    key: 'code.workingTreePersistedSupersededMessage',
-    fallback: 'A newer authoritative revision replaced the saved file. Reload before editing.',
-  },
-  workingTreeReadOnlyLabel: { key: 'code.workingTreeReadOnlyLabel', fallback: 'Read only' },
-  workingTreeReadOnlyMessage: {
-    key: 'code.workingTreeReadOnlyMessage',
-    fallback: 'This file cannot be changed.',
-  },
-  workingTreeGraphOwnedReadOnlyLabel: {
-    key: 'code.workingTreeGraphOwnedReadOnlyLabel',
-    fallback: 'Generated by Canvas',
-  },
-  workingTreeGraphOwnedReadOnlyMessage: {
-    key: 'code.workingTreeGraphOwnedReadOnlyMessage',
-    fallback: 'This file is generated from the Canvas and is read-only in Properties > Code.',
-  },
-  workingTreeRetryLabel: { key: 'code.workingTreeRetryLabel', fallback: 'Retry' },
-  workingTreeReloadLabel: { key: 'code.workingTreeReloadLabel', fallback: 'Reload file' },
-  routeLoadingMessage: { key: 'code.routeLoadingMessage', fallback: 'Loading workspace files...' },
-  routeEmptyTitle: {
-    key: 'code.routeEmptyTitle',
-    fallback: 'No workspace files available',
-  },
-  routeEmptyMessage: {
-    key: 'code.routeEmptyMessage',
-    fallback: 'This workspace does not expose files to browse yet.',
-  },
-  routeErrorTitle: {
-    key: 'code.routeErrorTitle',
-    fallback: 'Workspace files unavailable',
-  },
-  routeErrorMessage: {
-    key: 'code.routeErrorMessage',
-    fallback: 'The file explorer could not be loaded right now.',
-  },
-  previewLoadingMessage: {
-    key: 'code.previewLoadingMessage',
-    fallback: 'Loading file preview...',
-  },
-  previewEmptyTitle: {
-    key: 'code.previewEmptyTitle',
-    fallback: 'Select a file to preview',
-  },
-  previewEmptyMessage: {
-    key: 'code.previewEmptyMessage',
-    fallback: 'Choose a file from the explorer to inspect its contents.',
-  },
-  previewErrorTitle: {
-    key: 'code.previewErrorTitle',
-    fallback: 'File preview unavailable',
-  },
-  previewErrorMessage: {
-    key: 'code.previewErrorMessage',
-    fallback: 'The selected file could not be loaded right now.',
-  },
-  previewMissingTitle: {
-    key: 'code.previewMissingTitle',
-    fallback: 'Selected file unavailable',
-  },
-  previewMissingMessagePrefix: {
-    key: 'code.previewMissingMessagePrefix',
-    fallback: 'The selected file is no longer available in this workspace:',
-  },
-  filePropertiesTitle: { key: 'code.filePropertiesTitle', fallback: 'File properties' },
-  name: { key: 'code.name', fallback: 'Name' },
-  path: { key: 'code.path', fallback: 'Path' },
-  language: { key: 'code.language', fallback: 'Language' },
-  loadedVersionModified: { key: 'code.loadedVersionModified', fallback: 'Loaded version modified' },
-  historyTitle: { key: 'code.historyTitle', fallback: 'File history' },
-  historyNoFile: { key: 'code.historyNoFile', fallback: 'Select a file to inspect history.' },
-  historyLoadingMessage: {
-    key: 'code.historyLoadingMessage',
-    fallback: 'Loading file history...',
-  },
-  historyEmptyMessage: {
-    key: 'code.historyEmptyMessage',
-    fallback: 'No commits found for this file.',
-  },
-  historyErrorMessage: {
-    key: 'code.historyErrorMessage',
-    fallback: 'File history could not be loaded right now.',
-  },
-  historyOpenDiffLabel: { key: 'code.historyOpenDiffLabel', fallback: 'Open in Diff' },
-  bootstrapLoadingFilesDetail: {
-    key: 'code.bootstrapLoadingFilesDetail',
-    fallback: 'Loading workspace files for the code route',
-  },
-  bootstrapNoWorkspaceFilesDetail: {
-    key: 'code.bootstrapNoWorkspaceFilesDetail',
-    fallback: 'Code route is ready with no workspace files',
-  },
-  bootstrapLoadingPreviewDetail: {
-    key: 'code.bootstrapLoadingPreviewDetail',
-    fallback: 'Loading the initial file preview for the code route',
-  },
-  bootstrapReadyDetail: {
-    key: 'code.bootstrapReadyDetail',
-    fallback: 'Code route is ready',
-  },
-};
-
-const SPANISH_COPY: CodeViewCopy = {
-  title: 'Código',
-  subtitle: 'Consulta archivos del proyecto, referencias de modelos y metadatos.',
-  explorerTitle: 'Explorador',
-  editorLoadingMessage: 'Cargando editor Monaco...',
-  editorAriaLabelPrefix: 'Editando',
-  viewerAriaLabelPrefix: 'Consultando',
-  workingTreeSynchronizedLabel: 'Sincronizado',
-  workingTreeSynchronizedMessage: 'El árbol de trabajo coincide con el editor.',
-  workingTreeModifiedLabel: 'Modificado',
-  workingTreeModifiedMessage: 'Los cambios esperan sincronización.',
-  workingTreeSyncingLabel: 'Sincronizando',
-  workingTreeSyncingMessage: 'Actualizando el árbol de trabajo.',
-  workingTreeReconcilingLabel: 'Analizando',
-  workingTreeReconcilingMessage:
-    'El archivo está guardado; actualizando el análisis autoritativo del proyecto.',
-  workingTreeConflictLabel: 'Conflicto',
-  workingTreeConflictMessage: 'Recarga la revisión más reciente antes de continuar.',
-  workingTreeFailedLabel: 'Actualización fallida',
-  workingTreeFailedMessage: 'No se pudo actualizar el árbol de trabajo.',
-  workingTreeReconciliationFailedLabel: 'Análisis fallido',
-  workingTreeReconciliationFailedMessage:
-    'El archivo está guardado, pero no se pudo actualizar el análisis autoritativo del proyecto.',
-  workingTreePersistedStaleLabel: 'Análisis obsoleto',
-  workingTreePersistedStaleMessage:
-    'El archivo está guardado; el Canvas todavía muestra el último grafo válido del proyecto.',
-  workingTreePersistedInvalidLabel: 'Proyecto no válido',
-  workingTreePersistedInvalidMessage:
-    'El archivo está guardado; corrige los diagnósticos del proyecto antes del preview.',
-  workingTreePersistedUnavailableLabel: 'Análisis no disponible',
-  workingTreePersistedUnavailableMessage:
-    'El archivo está guardado; el análisis autoritativo del proyecto no está disponible.',
-  workingTreePersistedVerificationUnavailableLabel: 'Verificación no disponible',
-  workingTreePersistedVerificationUnavailableMessage:
-    'El archivo está guardado, pero no se pudo verificar su revisión autoritativa final.',
-  workingTreePersistedSupersededLabel: 'Hay una revisión más reciente',
-  workingTreePersistedSupersededMessage:
-    'Una revisión autoritativa más reciente sustituyó el archivo guardado. Recárgalo antes de editar.',
-  workingTreeReadOnlyLabel: 'Solo lectura',
-  workingTreeReadOnlyMessage: 'Este archivo no se puede modificar.',
-  workingTreeGraphOwnedReadOnlyLabel: 'Generado por el Canvas',
-  workingTreeGraphOwnedReadOnlyMessage:
-    'Este archivo se genera desde el Canvas y es de solo lectura en Propiedades > Código.',
-  workingTreeRetryLabel: 'Reintentar',
-  workingTreeReloadLabel: 'Recargar archivo',
-  routeLoadingMessage: 'Cargando archivos del workspace...',
-  routeEmptyTitle: 'No hay archivos del workspace disponibles',
-  routeEmptyMessage: 'Este workspace todavía no expone archivos para explorar.',
-  routeErrorTitle: 'Archivos del workspace no disponibles',
-  routeErrorMessage: 'No se pudo cargar el explorador de archivos ahora.',
-  previewLoadingMessage: 'Cargando vista previa del archivo...',
-  previewEmptyTitle: 'Selecciona un archivo para previsualizar',
-  previewEmptyMessage: 'Elige un archivo del explorador para inspeccionar su contenido.',
-  previewErrorTitle: 'Vista previa de archivo no disponible',
-  previewErrorMessage: 'No se pudo cargar el archivo seleccionado ahora.',
-  previewMissingTitle: 'Archivo seleccionado no disponible',
-  previewMissingMessagePrefix: 'El archivo seleccionado ya no está disponible en este workspace:',
-  filePropertiesTitle: 'Propiedades del archivo',
-  name: 'Nombre',
-  path: 'Ruta',
-  language: 'Lenguaje',
-  loadedVersionModified: 'Modificación de la versión cargada',
-  historyTitle: 'Historial de archivo',
-  historyNoFile: 'Selecciona un archivo para inspeccionar su historial.',
-  historyLoadingMessage: 'Cargando historial del archivo...',
-  historyEmptyMessage: 'No se encontraron commits para este archivo.',
-  historyErrorMessage: 'No se pudo cargar el historial del archivo ahora.',
-  historyOpenDiffLabel: 'Abrir en Diff',
-  bootstrapLoadingFilesDetail: 'Cargando archivos del workspace para la ruta de código',
-  bootstrapNoWorkspaceFilesDetail: 'La ruta de código está lista sin archivos del workspace',
-  bootstrapLoadingPreviewDetail: 'Cargando la vista previa inicial del archivo',
-  bootstrapReadyDetail: 'La ruta de código está lista',
-};
-
-const LOCALIZED_COPY_BY_LANGUAGE: Record<CodeViewLanguage, CodeViewCopy | null> = {
-  en: null,
-  es: SPANISH_COPY,
-};
-
-function resolveCodeViewLanguage(locale?: string): CodeViewLanguage {
-  return locale?.trim().toLowerCase().startsWith('es') ? 'es' : 'en';
-}
-
-export function resolveCodeViewCopy(locale: string = detectBrowserLocale()): CodeViewCopy {
-  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCodeViewLanguage(locale)];
-  if (localizedCopy) {
-    return localizedCopy;
-  }
-
+function resolveCodeCatalog<Key extends string>(
+  namespace: string,
+  catalog: Readonly<
+    { en: Readonly<Record<Key, string>> } & Record<string, Readonly<Record<Key, string>>>
+  >,
+  locale: CodeViewLanguage
+): Readonly<Record<Key, string>> {
   return Object.fromEntries(
-    Object.entries(COPY_BY_KEY).map(([key, value]) => [key, resolveString(value, locale)])
-  ) as CodeViewCopy;
+    Object.entries<string>(catalog.en).map(([key, fallback]) => [
+      key,
+      resolveString(
+        {
+          key: namespace + '.' + key,
+          fallback,
+          translations: Object.fromEntries(
+            Object.entries(catalog).map(([language, values]) => [language, values[key as Key]])
+          ),
+        },
+        locale
+      ),
+    ])
+  ) as Readonly<Record<Key, string>>;
 }
 
+export function resolveCodeViewCopy(
+  locale: CodeViewLanguage = detectBrowserLocale()
+): CodeViewCopy {
+  return resolveCodeCatalog('code', CODE_VIEW_MESSAGES, locale);
+}
 export const codeViewCopy = resolveCodeViewCopy();
 
-const INLINE_COPY = {
-  en: {
-    inputsLabel: 'Inputs',
-    outputLabel: 'Output',
-    fieldsLabel: 'columns',
-    inspectLabel: 'View definition and schema',
-    inspectAriaPrefix: 'View definition and schema for',
-    modelLabel: 'Model',
-    sourceLabel: 'Source',
-    closeLabel: 'Close definition',
-    definitionLabel: 'Definition · read only',
-    declaredColumnsLabel: 'Declared columns',
-    unknownTypeLabel: 'Type not declared',
-    emptyColumnsMessage: 'No columns declared.',
-    missingDefinitionMessage: 'A verified definition is not available.',
-    checkingMessage: 'Checking saved model references…',
-    contextCheckingMessage: 'Preparing project context…',
-    pendingCompilationMessage: 'Pending compilation.',
-    compilingMessage: 'Compiling…',
-    recompilingMessage: 'Recompiling…',
-    compiledMessage: 'Compiled.',
-    compileLabel: 'Compile',
-    unavailableMessage: 'The file references could not be verified.',
-    dirtyMessage: 'References will appear when the saved revision is verified.',
-    unsupportedMessage: 'This file has no supported model references.',
-  },
-  es: {
-    inputsLabel: 'Entradas',
-    outputLabel: 'Salida',
-    fieldsLabel: 'campos',
-    inspectLabel: 'Ver definición y esquema',
-    inspectAriaPrefix: 'Ver definición y esquema de',
-    modelLabel: 'Modelo',
-    sourceLabel: 'Fuente',
-    closeLabel: 'Cerrar definición',
-    definitionLabel: 'Definición · solo lectura',
-    declaredColumnsLabel: 'Columnas declaradas',
-    unknownTypeLabel: 'Tipo no declarado',
-    emptyColumnsMessage: 'No hay columnas declaradas.',
-    missingDefinitionMessage: 'No hay una definición verificada disponible.',
-    checkingMessage: 'Verificando referencias del modelo guardado…',
-    contextCheckingMessage: 'Preparando el contexto del proyecto…',
-    pendingCompilationMessage: 'Pendiente de compilar.',
-    compilingMessage: 'Compilando…',
-    recompilingMessage: 'Recompilando…',
-    compiledMessage: 'Compilado.',
-    compileLabel: 'Compilar',
-    unavailableMessage: 'No se pudieron verificar las referencias del archivo.',
-    dirtyMessage: 'Las referencias se mostrarán al verificar la revisión guardada.',
-    unsupportedMessage: 'Este archivo no tiene referencias de modelo compatibles.',
-  },
-};
+export function resolveCodeInlineReferenceCopy(locale: CodeViewLanguage): CodeInlineReferenceCopy {
+  return resolveCodeCatalog('code.references', CODE_INLINE_MESSAGES, locale);
+}
 
-export type CodeInlineReferenceCopy = typeof INLINE_COPY.en;
-
-export function resolveCodeInlineReferenceCopy(locale: string): CodeInlineReferenceCopy {
-  return INLINE_COPY[resolveCodeViewLanguage(locale)];
+export function resolveCodeModelCommandCopy(locale: CodeViewLanguage) {
+  return resolveCodeCatalog('code.modelCommands', CODE_MODEL_COMMAND_MESSAGES, locale);
 }

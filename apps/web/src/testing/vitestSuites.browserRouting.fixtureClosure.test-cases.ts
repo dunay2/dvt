@@ -16,9 +16,28 @@ import {
 
 export function registerBrowserRoutingFixtureClosure(): void {
   describe('browser helper closure admission', () => {
+    it.each(
+      ['apps/web/cypress.commands.ts', 'apps/web/cypress.supportCapabilities.ts'].flatMap(
+        (path) => [path, path.slice('apps/web/'.length), path.replaceAll('/', '\\')]
+      )
+    )('keeps browser-owner modules on complete runtime proof: %s', (path) => {
+      const plan = resolveWebVitestChangedSuitePlan([path]);
+      const originalOwner = resolveWebVitestChangedSuitePlan(['apps/web/cypress.changed.ts']);
+      expect(plan.suites).toEqual(originalOwner.suites);
+      expect(plan.commandPlan).toEqual(originalOwner.commandPlan);
+      expect(plan.browserCommands.map((command) => command.capability)).toEqual([
+        'controlled',
+        'available',
+        'unavailable',
+      ]);
+      for (const command of plan.browserCommands) {
+        expect(command.specPaths).toEqual(WEB_CYPRESS_SPECS[command.capability]);
+      }
+    });
     it.each([
       'apps/web/cypress/support/canvasExecutionSelection.ts',
       'apps/web/cypress/support/canvasFirstAuthoring.ts',
+      'apps/web/cypress/support/codeWorkbench/bootstrap.ts',
       'apps/web/cypress/support/dbtProjectLive.ts',
       'apps/web/cypress/support/e2eApiStub.ts',
       'apps/web/cypress/support/relationalWorkbench/geometry.ts',

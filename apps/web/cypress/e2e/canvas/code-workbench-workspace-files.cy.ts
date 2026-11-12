@@ -1,176 +1,19 @@
-/** Owned concern: prove read-only Canvas Project Code preserves inspection and Canvas position. */
+/** Prove authorized YAML and plain SQL inspection; keep requests, permissions and native gestures observable. */
 import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 
-import { resolveCopyLanguage } from '../../../src/app/copyLanguage';
 import type { FileContent } from '../../../src/app/ports/workspace';
 import { resolveCodeInlineReferenceCopy } from '../../../src/app/views/code/codeViewCopy';
-import { contextFixture } from '../../../src/app/views/code/codeWorkspaceFileContext.test-support';
-import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
+import { stubContextualCodeWorkbenchApis } from '../../support/codeWorkbench/bootstrap';
 import {
   getE2eApiCalls,
-  getLastE2eApiCall,
-  installE2eApiFetchStub,
   stubE2eApi,
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
-import {
-  E2E_PROJECT_WORKSPACE,
-  stubShellBootstrapApis,
-  visitWithE2eWorkspaceSession,
-} from '../../support/workspaceSession';
+import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
-const INITIAL_REVISION = 'a'.repeat(64);
-const INITIAL_SQL = 'select * from orders';
-
-function stubCodeWorkbenchBootstrapApis(): void {
-  stubShellBootstrapApis();
-  stubCanvasDraftRead();
-
-  stubE2eJsonApi('GET', '/capabilities', {
-    apiVersion: '1.0.0',
-    minFrontendVersion: '1.0.0',
-    plugins: {
-      dbt: { available: true },
-      dvt: { available: true },
-    },
-  });
-  stubE2eJsonApi('GET', '/workspace/context', {
-    defaultWorkspace: E2E_PROJECT_WORKSPACE,
-    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-  });
-}
-
-function stubContextualCodeWorkbenchApis(
-  files: ReadonlyArray<FileContent> = [
-    {
-      path: 'models/staging/stg_orders.sql',
-      name: 'stg_orders.sql',
-      language: 'sql',
-      content: INITIAL_SQL,
-      contentSha256: INITIAL_REVISION,
-      lastModified: '2026-07-12T00:00:00.000Z',
-    },
-  ]
-): void {
-  stubCodeWorkbenchBootstrapApis();
-  stubE2eJsonApi(
-    'GET',
-    '/workspace/files',
-    files.map(({ path, name }) => ({ path, name, kind: 'file' }))
-  );
-  stubE2eApi('GET', /\/workspace\/files\/.+/, ({ url }) => {
-    const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
-    const file = files.find((candidate) => candidate.path === path);
-    if (file === undefined) throw new Error(`Unexpected workspace file read: ${path}`);
-    return { body: file };
-  });
-  stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
-  stubE2eApi('POST', /\/workspace\/files\/.+/, () => {
-    throw new Error('Read-only Project Code must not save workspace files.');
-  });
-}
-
-describe('Canvas Project Code read-only inspection', () => {
-  it('compiles once and retains verified references across navigation and full reload', () => {
-    const { file, project, analysis } = contextFixture();
-    const plainFile: FileContent = {
-      ...file,
-      path: 'inline_code_demo/models/clientes.sql',
-      name: 'clientes.sql',
-      content: 'select 1',
-      contentSha256: sha256HexUtf8('select 1'),
-    };
-    const config = "name: demo\nversion: '1.0'\nconfig-version: 2\nprofile: default\n";
-    const projectFile: FileContent = {
-      ...file,
-      path: 'inline_code_demo/dbt_project.yml',
-      name: 'dbt_project.yml',
-      language: 'yaml',
-      content: config,
-      contentSha256: sha256HexUtf8(config),
-    };
-    stubContextualCodeWorkbenchApis([file, plainFile, projectFile]);
-    stubE2eJsonApi('GET', '/workspace/dbt/graph', project);
-    let completeCompilation: (() => void) | undefined;
-    stubE2eApi(
-      'GET',
-      '/workspace/dbt/analysis/selected-model',
-      () =>
-        new Promise((resolve) => {
-          completeCompilation = () => resolve({ body: analysis });
-        })
-    );
-
-    visitWithE2eWorkspaceSession('/canvas');
-    cy.get(
-      '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:canvas-inline_code_demo:model.demo.ventas"]'
-    ).should('be.visible');
-    cy.get('[data-slot="shell-project-code-command"]').click();
-    const surface = '[data-slot="canvas-code-workspace-surface"]';
-    const editor = `${surface} [data-slot="workspace-file-code-editor"]`;
-    const compile = `${editor} [data-slot="code-compile-model"]`;
-    cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
-    cy.document().then((document) => {
-      const copy = resolveCodeInlineReferenceCopy(
-        resolveCopyLanguage(document.documentElement.lang)
-      );
-      cy.get(editor).should('have.attr', 'data-file-path', file.path);
-      cy.get(`${editor} [data-slot="code-working-tree-status"]`).should(
-        'contain.text',
-        copy.pendingCompilationMessage
-      );
-      cy.get(compile).should('be.enabled');
-      cy.then(() =>
-        expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0)
-      );
-      cy.get(compile).click();
-      cy.get(compile).should('be.disabled');
-      cy.get(`${editor} [data-slot="code-working-tree-status"]`).should(
-        'contain.text',
-        copy.compilingMessage
-      );
-      waitForE2eApiCall('/workspace/dbt/analysis/selected-model', 'GET');
-      cy.then(() => {
-        const requests = getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET');
-        expect(requests).to.have.length(1);
-        const params = requests[0]!.url.searchParams;
-        expect(params.get('tenantId')).to.equal('e2e-tenant');
-        expect(params.get('projectId')).to.equal('e2e-project');
-        expect(params.get('environmentId')).to.equal('e2e-env');
-        expect(params.get('canvasId')).to.equal(project.authorityBinding.canvasId);
-        expect(params.get('projectRoot')).to.equal(project.projectRevision.projectRoot);
-        expect(params.get('selectedUniqueId')).to.equal(analysis.selectedUniqueId);
-        expect(completeCompilation).to.be.a('function');
-        completeCompilation!();
-      });
-      cy.get(editor).should('contain.text', copy.compiledMessage);
-      cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
-      cy.get(`${surface} [data-workspace-path="${plainFile.path}"]`).click();
-      cy.get(editor).should('have.attr', 'data-file-path', plainFile.path);
-      cy.get(compile).should('not.exist');
-      cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
-      cy.get(editor).should('have.attr', 'data-file-path', file.path);
-      cy.get(editor).should('contain.text', copy.compiledMessage);
-      cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
-      cy.then(() => {
-        expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(1);
-        expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
-      });
-      cy.on('window:before:load', installE2eApiFetchStub);
-      cy.reload();
-      cy.get('[data-slot="shell-project-code-command"]').click();
-      cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
-      cy.get(editor).should('contain.text', copy.compiledMessage);
-      cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
-      cy.then(() => {
-        expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(1);
-        expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
-      });
-    });
-  });
-
+describe('Canvas Project Code authorized YAML and plain SQL inspection', () => {
   it('reads authorized YAML and plain SQL without reference analysis or editor movement', () => {
     const authoringAuthority: FileContent['authoringAuthority'] = {
       kind: 'resolved',
@@ -268,7 +111,14 @@ describe('Canvas Project Code read-only inspection', () => {
             expect($lines.text().replace(/\u00a0/g, ' ')).to.contain(file.content.split('\n')[0]);
           });
           cy.get(monaco).should(($current) => {
-            expect($current[0]!.getBoundingClientRect().top).to.be.closeTo(initialTop, 1);
+            // SQL owns a command row; only that measured row may move the editor.
+            const commands = $current[0]!
+              .closest('[data-slot="workspace-file-code-editor"]')!
+              .querySelector('[data-slot="code-model-commands"]');
+            expect($current[0]!.getBoundingClientRect().top).to.be.closeTo(
+              initialTop + (commands?.getBoundingClientRect().height ?? 0),
+              1
+            );
           });
           cy.get(`${editor} [data-reference-id]`).should('not.exist');
           for (const language of ['en', 'es']) {
@@ -293,85 +143,10 @@ describe('Canvas Project Code read-only inspection', () => {
         decodeURIComponent(url.pathname.slice('/workspace/files/'.length))
       );
       expect(readPaths).to.include.members(files.map(({ path }) => path));
-      expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1);
+      // Plain SQL resolves its model context without invoking reference analysis.
+      expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(2);
       expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0);
       expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
-    });
-  });
-
-  it('allows selection and copying without changing the file or Canvas position', () => {
-    stubContextualCodeWorkbenchApis();
-
-    visitWithE2eWorkspaceSession('/canvas');
-
-    cy.get('.react-flow__node').first().click().should('have.class', 'selected');
-    cy.get('.react-flow__viewport')
-      .invoke('attr', 'style')
-      .then((viewportStyle) => cy.wrap(viewportStyle).as('graphViewportStyle'));
-
-    cy.get('[data-slot="shell-project-code-command"]').click();
-    waitForE2eApiCall('/workspace/files', 'GET');
-    waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
-
-    cy.get('[data-slot="canvas-code-workspace-surface"]')
-      .should('be.visible')
-      .within(() => {
-        cy.get('[data-slot="code-working-tree-status"]')
-          .should('be.visible')
-          .and('have.attr', 'data-phase', 'read_only');
-        cy.contains('button', 'Save').should('not.exist');
-        cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
-        cy.get('[data-testid="monaco-code-viewer"]')
-          .should('be.visible')
-          .find('.view-line')
-          .first()
-          .click();
-        cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
-          .should('have.prop', 'readOnly', true)
-          .and('be.focused');
-        cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type(
-          'blocked_workspace_edit',
-          { force: true, delay: 0 }
-        );
-        cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
-        cy.window().then((window) => {
-          const clipboardData = new window.DataTransfer();
-          cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
-            .should('be.focused')
-            .then(($input) => {
-              const selectAll = {
-                key: 'a',
-                code: 'KeyA',
-                keyCode: 65,
-                ctrlKey: Cypress.platform !== 'darwin',
-                metaKey: Cypress.platform === 'darwin',
-                bubbles: true,
-                cancelable: true,
-              };
-              $input[0]!.dispatchEvent(new window.KeyboardEvent('keydown', selectAll));
-              $input[0]!.dispatchEvent(new window.KeyboardEvent('keyup', selectAll));
-              $input[0]!.dispatchEvent(
-                new window.ClipboardEvent('copy', {
-                  clipboardData,
-                  bubbles: true,
-                  cancelable: true,
-                })
-              );
-              expect(clipboardData.getData('text/plain')).to.equal(INITIAL_SQL);
-            });
-        });
-        cy.get('[data-testid="monaco-code-viewer"] .selected-text').should('exist');
-      });
-
-    cy.wrap(null).should(() => {
-      expect(getLastE2eApiCall(/\/workspace\/files\/.+/, 'POST')).to.equal(null);
-    });
-
-    cy.get('.react-flow__node').first().should('have.class', 'selected');
-    cy.get('@graphViewportStyle').then((viewportStyle) => {
-      cy.get('.react-flow__viewport').should(($viewport) => {
-        expect($viewport.attr('style')).to.equal(viewportStyle);
-      });
     });
   });
 });

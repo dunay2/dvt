@@ -1,0 +1,44 @@
+/* Owned concern: file-editor geometry and status typography using shared presentation tokens. */
+.editor {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.path {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.message {
+  padding: var(--spacing) calc(var(--spacing) * 3);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  color: var(--text-muted);
+}
+.loading {
+  display: flex;
+  min-height: calc(var(--spacing) * 48);
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  color: var(--text-muted);
+}
+.surface {
+  flex: 1;
+  padding: var(--spacing);
+  min-height: calc(var(--spacing) * 80);
+}
+.fill {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}

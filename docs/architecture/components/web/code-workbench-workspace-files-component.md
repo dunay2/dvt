@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-11-08
+last_reviewed: 2026-11-12
 planning_type: architecture
 ---
 
@@ -104,6 +104,14 @@ project creation, native semantic editing, Git lifecycle or analysis semantics.
 The existing `SaveWorkspaceFileContent` rail remains available to artifact
 publication and recovery of edits accepted before the read-only restriction.
 
+The component's native responsibilities separate accepted-file context,
+revision-aware editor recovery, passive presentation, and file-model command
+consumption. `RESP-WEB-CODE-FILE-MODEL-COMMANDS` owns the last concern: consume
+`PreviewPlan` and `StartRun` for one accepted SQL file and retire readiness when
+its workspace, revision, complete execution target or permissions change. Its
+reason to change is file-command admission and lifetime policy. It does not own
+the backend compiler, plan persistence or run aggregate.
+
 ## Public API
 
 ### Queries
@@ -192,12 +200,12 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 
 ## Inline Model References
 
-### Explicit compilation
+### Explicit reference analysis
 
 Opening an eligible template SQL file does not start selected-model compilation.
 Code and Properties Code share the existing `WorkspaceFileCodeEditor` action:
-**Compile** invokes `AnalyzeSelectedDbtModel`, with visible pending, compiling,
-compiled and failure states. Matching retained query evidence is reused on return
+**Analyze references** invokes `AnalyzeSelectedDbtModel`, with visible pending,
+analysis and failure states. Matching retained query evidence is reused on return
 and after a full browser reload. The selected-model resolver uses native dbt parse
 and semantic-region analysis; this action does not introduce a Jinja compiler.
 A changed accepted project revision withholds old cards and waits for an explicit
@@ -205,19 +213,19 @@ request. Ordinary SQL without template references and YAML remain passive text.
 
 The controlled Code browser spec and presentation unit tests share the pure,
 schema-validated `codeWorkspaceFileContext.test-support.ts` fixture. The public
-browser journey checks pending/progress/compiled states, scope, single-request
-compilation, retained cards across navigation and zero file writes. It uses the
+browser journey checks pending/progress/analyzed states, scope, single-request
+analysis, retained cards across navigation and zero file writes. It uses the
 existing controlled transport; native dbt compilation remains covered by the
 analyzer tests and real-system evidence.
 
 ```mermaid
 flowchart LR
   Open[Accepted Code file] --> Evidence{Matching retained evidence?}
-  Evidence -->|Yes| Compiled[Compiled and verified cards]
-  Evidence -->|No| Pending[Pending compilation]
-  Pending --> Action[Explicit Compile]
+  Evidence -->|Yes| Compiled[Verified reference cards]
+  Evidence -->|No| Pending[Pending reference analysis]
+  Pending --> Action[Analyze references]
   Action --> Query[Existing selected-model query]
-  Query --> Busy[Visible compilation progress]
+  Query --> Busy[Visible analysis progress]
   Busy --> Compiled
   Revision[Changed project revision] --> Pending
 ```
@@ -238,6 +246,53 @@ unavailable storage is a cache miss. The
 defines the negative paths and full reload proof.
 Preview remains its existing explicit protected sampling query, sharing native
 compilation evidence. See the [prospective rationale and negative test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6657808041).
+
+### Current-file compilation and materialization
+
+The model command bar has a different intent from reference inspection.
+**Compile** prepares the selected SQL model through existing `PreviewPlan`
+(`IPlansPort.previewPlan` to `POST /plans/preview`). The protected server requires
+native SQL for the current complete target and rechecks authority before planning.
+**Run** remains unavailable until that file session has its own accepted current
+plan, then delegates materialization to existing `StartRun`. The historical private
+handler name `handlePreviewExecutionPlan` does not introduce or alias the distinct
+canonical `PreviewExecutionPlan` command.
+
+```mermaid
+flowchart LR
+  F[Accepted file and scoped project] --> S[Keyed Code command session]
+  S --> C[Explicit Compile]
+  C --> P[Existing PreviewPlan and native compile admission]
+  P --> V[Recheck current file and complete evidence]
+  V --> A[Current accepted PlanRef]
+  A --> R[Explicit Run through existing admission]
+  R --> M[Existing materialization runtime]
+  X[Changed scope, bytes, authority, target or permissions] --> I[Retire local readiness]
+  I --> C
+```
+
+No Canvas plan or reference-analysis success enables file Run. Queries provide
+evidence; commands retain their existing application owners and ports. There is
+no new compiler, backend schema, persistence path or stored compiled flag.
+The Code component owns the accepted-file UI lifetime and delegates execution
+policy to the existing Canvas actions. Same-session recovery of prior accepted
+edits remains separate from new read-only browsing.
+
+The editor facade composes focused session, inspection and presentation modules.
+Presentation receives resolved states and callbacks, uses existing UI controls,
+shared visual tokens and external CSS modules. Locale catalogs use the existing
+string resolver, including regional fallback, instead of language branches.
+These siblings share the accepted file/session invariant; none owns native SQL,
+project creation, planner semantics or provider execution.
+
+The [finite integration and negative matrix](https://github.com/dunay2/dvt/issues/3881)
+and native design `GH-3881-CODE-FILE-COMMAND-SESSION` govern this cut. Regression
+proof covers no Run before Compile, current-file verification, late responses,
+same-path workspace transitions, buffer/inspection/readiness isolation and retained
+recovery. Controlled Cypress proves interaction with explicit API doubles;
+[API compilation admission](https://github.com/dunay2/dvt/pull/3878) separately
+provides real native dbt/PostgreSQL evidence. The existing Code owner and its three
+responsibilities are reused; this is not a new execution aggregate.
 
 ### Project Models In Elements
 

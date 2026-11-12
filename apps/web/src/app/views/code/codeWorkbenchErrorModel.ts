@@ -1,10 +1,19 @@
+/**
+ * Owned concern: translate typed Code file failures into safe localized presentation.
+ * @decision Classify stable error types once; never interpret provider diagnostic prose.
+ * @consequence Missing and changed files retain actionable messages without leaking details.
+ */
 import { codeViewCopy, type CodeViewCopy } from './codeViewCopy';
-import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
+import {
+  WorkspaceFileLoadError,
+  WorkspaceFileRevisionConflictError,
+} from '../../services/workspace/workspaceErrors';
 
 export type CodeWorkbenchErrorKind =
   | 'workspace-tree-unavailable'
   | 'file-preview-unavailable'
-  | 'file-missing';
+  | 'file-missing'
+  | 'file-revision-conflict';
 
 export type CodeWorkbenchErrorPresentation = {
   kind: CodeWorkbenchErrorKind;
@@ -39,6 +48,15 @@ export function resolveCodeWorkbenchErrorPresentation({
       kind: 'file-missing',
       title: copy.previewMissingTitle,
       message: copy.previewMissingMessagePrefix,
+      selectedPath: error.path,
+    };
+  }
+
+  if (error instanceof WorkspaceFileRevisionConflictError) {
+    return {
+      kind: 'file-revision-conflict',
+      title: copy.workingTreeConflictLabel,
+      message: copy.workingTreeConflictMessage,
       selectedPath: error.path,
     };
   }

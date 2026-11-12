@@ -8,6 +8,34 @@ import {
 import { sha256HexUtf8 } from '@dvt/crypto';
 import type { FileContent } from '../../ports/workspace';
 
+/** The same authorized file-model evidence is used by unit and native browser command tests. */
+export function executableContextFixture(
+  sql = 'select 1 as id'
+): ReturnType<typeof contextFixture> {
+  const fixture = contextFixture(sql);
+  return {
+    ...fixture,
+    project: DbtProjectGraphProjectionSchema.parse({
+      ...fixture.project,
+      adapterType: 'postgres',
+      projectRevision: { ...fixture.project.projectRevision, dbtVersion: '1.10.0' },
+      capabilities: { ...fixture.project.capabilities, canPreview: true, canRun: true },
+      executionTarget: {
+        provider: 'temporal',
+        adapter: 'postgres',
+        targetName: 'dev',
+        resolutionSource: 'environment-default',
+        credentialRef: 'env:DBT_PROFILES_DIR',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse',
+          provider: 'postgres',
+        },
+      },
+    }),
+  };
+}
+
 export function contextFixture(
   sql = "select * from {{ ref('clientes') }} join {{ ref('pedidos') }} on true",
   root = 'inline_code_demo'
