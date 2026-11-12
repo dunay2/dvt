@@ -2,7 +2,7 @@
  * Owned concern: adapt changed files into governed Web evidence execution.
  * @baseline GH-3540: one router owns both independent evidence obligations.
  * @decision GH-3578/GH-3656: select phase, capability and shard after validating the complete plan.
- * @consequence Local execution remains complete; CI partitions cannot hide invalid paths.
+ * @consequence Every local or hosted execution projection retains complete path admission.
  * @version 1.0.1
  */
 import { spawnSync } from 'node:child_process';

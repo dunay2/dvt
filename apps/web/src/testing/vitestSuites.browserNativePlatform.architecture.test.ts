@@ -1,4 +1,4 @@
-/** Owned concern: preserve declared native browser obligations inside the complete admission plan. */
+/** Owned concern: preserve local browser obligations inside the complete admission plan. */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
