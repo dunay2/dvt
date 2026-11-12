@@ -549,6 +549,28 @@ line is not a safe substitute for process reuse because command length is
 bounded. The adapter must report any lint warning or error and fail closed if
 ESLint cannot initialize or lint a file.
 
+API typed lint uses `apps/api/tsconfig.eslint.json`, which inherits the canonical
+lint compiler options and source aliases but owns its API source, test and config
+roots. Imported dependencies remain part of the TypeScript program. Unrelated
+applications and generated outputs are not initial roots; in particular, API
+uses its declared `pg` dependency types rather than another worker's ambient
+module declaration. This changes the type-information boundary, not the strict
+rules, import resolver, warning policy or source-only return-type exemption.
+
+`tools/ci/api-eslint-project.test.mjs` verifies the real project membership,
+effective rules and typed positive/negative examples. It belongs to the existing
+executable CI tooling partition. Performance comparisons use the same API files
+and fresh processes; root counts alone do not establish a speed improvement.
+
+```mermaid
+flowchart LR
+  Gate[ValidateChangedFiles] --> Lint[Canonical strict ESLint rules]
+  Lint --> Project[Owned API typed project]
+  Project --> Roots[API source, tests and configs]
+  Project --> Imports[Imported dependency closure]
+  Imports --> Types[Declared dependency types]
+```
+
 The web source and test scope inherits the canonical TypeScript unused-declaration
 rule. It must not disable that rule locally or maintain a second unused-symbol
 scanner. Its architecture test submits valid and invalid source to the actual

@@ -33,6 +33,7 @@ export function isToolingCryptoContractInput(filePath) {
 
 export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/adapter-postgres-import-alias-regression.test.mjs',
+  'tools/ci/api-eslint-project.test.mjs',
   'tools/ci/arc-policy-state-store.test.mjs',
   TOOLING_CRYPTO_CONTRACT.testPath,
   'tools/ci/contracts-package-governance.test.mjs',

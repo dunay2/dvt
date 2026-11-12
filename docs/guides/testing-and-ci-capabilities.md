@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-12
 ---
 
 # Testing and CI Capabilities
@@ -416,6 +416,16 @@ normal pre-push or establish a general performance guarantee.
 | Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)                             |
 | Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration                 | [`package.json`](../../package.json)                                                                   |
 | Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage                         | [`package.json`](../../package.json)                                                                   |
+
+API lint retains the root strict ESLint rules and warnings-as-errors policy.
+Its type information comes from `apps/api/tsconfig.eslint.json`, covering API
+sources, tests and configurations with the canonical compiler options and source
+aliases. Imported dependency types remain available without making unrelated
+applications or generated outputs project roots. The semantic contract runs in
+`pnpm test:ci-tools` and can be checked directly with
+`node --test tools/ci/api-eslint-project.test.mjs`. See the
+[changed-file lint boundary](../architecture/components/ci-governance/local-changed-files-gate-component.md#changed-file-lint-execution)
+for ownership and failure behavior.
 
 ## Persisted Semantic Editing Live Proof
 
