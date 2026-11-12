@@ -2,7 +2,7 @@
 title: Governance Document And Rule Inventory
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-11-11
+last_reviewed: 2026-11-12
 planning_type: status
 ---
 
@@ -53,6 +53,15 @@ DB-authoritative implementation validation follows the approved
 [single-team local acceptance boundary](../proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary).
 Planning DB remains authoritative; GitHub CI does not independently enforce that
 local check. Its result must be recorded for the exact base/head before merge.
+
+`verify:prepush` establishes local push readiness under the
+[Local Changed Files Gate](../../architecture/components/ci-governance/local-changed-files-gate-component.md#push-readiness-and-merge-acceptance).
+Its receipt does not attest hosted browser acceptance. Merge acceptance requires
+a non-draft PR, successful required results for the current candidate SHA and
+fresh local implementation validation for the exact base/head. Declared native
+host proof remains local when selected; native infrastructure, toolchain and
+unknown companions retain complete execution. Diagnostic summaries and skipped
+required aggregates do not establish acceptance.
 
 ## Governance Layers
 
