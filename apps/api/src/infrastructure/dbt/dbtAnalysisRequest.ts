@@ -1,7 +1,7 @@
 /**
  * Owned concern: own one analysis request snapshot lifecycle; reuse cannot outlive source/context validation.
  * @decision Keep snapshot disposal and eligible reuse coordination under one request owner.
- * @consequence Executed, joined and retained evidence face the same current-context check.
+ * @consequence Eligible executed, joined and retained evidence face the same current-context check.
  */
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';

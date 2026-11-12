@@ -31,9 +31,14 @@ describe('native dbt analysis reuse compile operation, selection and target isol
     expect(fixture.run).toHaveBeenCalledTimes(1);
     await compile('production');
     expect(fixture.run).toHaveBeenCalledTimes(2);
-    expect(fixture.run.mock.calls.map(([input]) => input.args)).toEqual([
-      expect.arrayContaining(['--target', 'analysis']),
-      expect.arrayContaining(['--target', 'production']),
+    expect(
+      fixture.run.mock.calls.map(([input]) => {
+        const targetIndex = input.args.indexOf('--target');
+        return input.args.slice(targetIndex, targetIndex + 2);
+      })
+    ).toEqual([
+      ['--target', 'analysis'],
+      ['--target', 'production'],
     ]);
   });
 
