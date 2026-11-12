@@ -1,0 +1,47 @@
+/* Owned concern: compact Code commands aligned with application typography and controls. */
+.bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.actions {
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+}
+.bar .command {
+  height: var(--shell-control-height);
+  font-size: inherit;
+}
+.status {
+  min-width: 0;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.runLink {
+  margin-inline-start: auto;
+  color: var(--primary);
+  text-decoration: underline;
+}
+.runLink:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

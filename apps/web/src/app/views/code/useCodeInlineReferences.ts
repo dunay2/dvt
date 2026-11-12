@@ -65,7 +65,7 @@ export function useCodeInlineReferences({
     analysis.isError,
     analysis.isFetching,
   ]);
-  const canCompile =
+  const canAnalyze =
     inlineEligible &&
     enabled &&
     project?.freshness === 'fresh' &&
@@ -75,13 +75,13 @@ export function useCodeInlineReferences({
     file.content === value &&
     !analysis.isFetching;
   const refetch = analysis.refetch;
-  const compile = useCallback(() => {
-    if (canCompile) void refetch({ cancelRefetch: false });
-  }, [canCompile, refetch]);
+  const analyze = useCallback(() => {
+    if (canAnalyze) void refetch({ cancelRefetch: false });
+  }, [canAnalyze, refetch]);
   return {
     state,
-    canCompile,
-    compile,
-    isRecompiling: analysis.isFetching && analysis.data !== undefined,
+    canAnalyze,
+    analyze,
+    isReanalyzing: analysis.isFetching && analysis.data !== undefined,
   };
 }

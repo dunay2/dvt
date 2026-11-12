@@ -6,7 +6,6 @@ import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGrap
 import type { FileContent, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import { projectDbtCodeReconciliationOutcome } from '../canvas/dbtProjectCodeReconciliation';
-import { isCodeInlineReferenceFile } from './codeInlineReferences';
 import type { CodeWorkingTreeReconciliationOutcome } from './codeWorkingTreeSyncModel';
 
 export function useCodeWorkspaceFileContext({
@@ -20,7 +19,7 @@ export function useCodeWorkspaceFileContext({
 }>) {
   const resolution = file?.authoringAuthority;
   const explicitBinding = project?.authorityBinding;
-  const inlineEligible = isCodeInlineReferenceFile(file);
+  const modelEligible = file?.language.toLowerCase() === 'sql';
   const binding = useMemo<DbtProjectFilesAuthorityBinding | undefined>(() => {
     if (!allowed || file === undefined) return undefined;
     if (resolution?.kind === 'unresolved') return undefined;
@@ -36,7 +35,7 @@ export function useCodeWorkspaceFileContext({
     return { ...accepted, authority: accepted.authority };
   }, [allowed, file, resolution, explicitBinding]);
   const query = useDbtProjectGraphQuery(project === undefined ? binding : undefined, {
-    enabled: inlineEligible,
+    enabled: modelEligible,
     revisionToken: file?.contentSha256,
   });
   const refetch = query.refetch;
@@ -61,7 +60,7 @@ export function useCodeWorkspaceFileContext({
   );
   const candidate = project ?? (query.isSuccess && !query.isFetching ? query.data : undefined);
   const acceptedProject =
-    inlineEligible &&
+    modelEligible &&
     binding !== undefined &&
     candidate?.authorityBinding.canvasId === binding.canvasId &&
     candidate.authorityBinding.authority.kind === 'dbt-project-files' &&
@@ -75,7 +74,7 @@ export function useCodeWorkspaceFileContext({
     (resolution?.kind === 'unresolved' && resolution.reason === 'mixed_authority');
   return {
     project: acceptedProject,
-    status: !inlineEligible
+    status: !modelEligible
       ? ('inactive' as const)
       : binding === undefined
         ? allowed && rejectedContext

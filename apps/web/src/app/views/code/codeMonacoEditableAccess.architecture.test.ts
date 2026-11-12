@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '../..');
 
-function importsOf(relativePath: string): ReadonlySet<string> {
+function importsOf(relativePath: string, mode: 'all' | 'runtime' = 'all'): ReadonlySet<string> {
   const source = ts.createSourceFile(
     relativePath,
     readFileSync(path.join(APP_ROOT, relativePath), 'utf8'),
@@ -16,7 +16,9 @@ function importsOf(relativePath: string): ReadonlySet<string> {
   );
   return new Set(
     source.statements.flatMap((statement) =>
-      ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      (mode === 'all' || !statement.importClause?.isTypeOnly)
         ? [statement.moduleSpecifier.text]
         : []
     )
@@ -48,10 +50,35 @@ describe('Code workspace ownership boundaries', () => {
 
   it('keeps access policy and pending-write recovery at their existing owners', () => {
     const imports = importsOf('views/code/WorkspaceFileCodeEditor.tsx');
-    expect(imports.has('./codeWorkspaceFileEditPosture')).toBe(true);
-    expect(imports.has('./useCodeWorkingTreeSync')).toBe(true);
+    const session = importsOf('views/code/useWorkspaceFileEditorSession.ts');
+    expect(imports.has('./useWorkspaceFileEditorSession')).toBe(true);
+    expect(session.has('./codeWorkspaceFileEditPosture')).toBe(true);
+    expect(session.has('./useCodeWorkingTreeSync')).toBe(true);
     expect(imports.has('../../services/workspace/workspacePorts.api')).toBe(false);
+    expect(session.has('../../services/workspace/workspacePorts.api')).toBe(false);
+    expect(imports.has('./WorkspaceFileCodeEditorView')).toBe(true);
+  });
+
+  // A layout extraction must not silently become a second session/query controller.
+  it('keeps the editor view passive and delegates its existing shared surface', () => {
+    const imports = importsOf('views/code/WorkspaceFileCodeEditorView.tsx', 'runtime');
     expect(imports.has('./CodeWorkspaceFileSurface')).toBe(true);
+    expect(
+      [...imports].filter((dependency) =>
+        /(?:^|\/)(?:services|queries|stores)(?:\/|$)|\.\/useWorkspaceFileEditorSession|\.\/useCodeInlineReferences/.test(
+          dependency
+        )
+      )
+    ).toEqual([]);
+  });
+
+  it('keeps visible-state projection independent from query, store and React runtimes', () => {
+    const imports = importsOf('views/code/workspaceFileEditorPresentation.ts', 'runtime');
+    expect(
+      [...imports].filter((dependency) =>
+        /(?:^|\/)(?:services|queries|stores)(?:\/|$)|^react(?:\/|$)|^@tanstack\//.test(dependency)
+      )
+    ).toEqual([]);
   });
 
   it('keeps shared Monaco independent of workspace persistence', () => {
