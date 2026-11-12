@@ -167,7 +167,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^scripts\/lib\/risk-document-records\.cjs$/u, 'docs-governance'],
   [
-    /^scripts\/lib\/(changed-test-selection|local-web-validation-policy|local-test-coverage|local-validation-(plan-values|executor)|prepush-validation-stamp)\.cjs$/u,
+    /^scripts\/lib\/(changed-test-selection|hosted-ci-tool-ownership|local-web-validation-policy|local-test-coverage|local-validation-(plan-values|executor)|prepush-validation-stamp)\.cjs$/u,
     'developer-workflow',
   ],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],

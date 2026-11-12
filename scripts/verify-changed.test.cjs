@@ -25,6 +25,17 @@ const MIXED_CHANGED_FILES = [
 
 const { main, parseArgs, executeVerifyChangedPlan } = require('./verify-changed.cjs');
 
+test('hosted CI-tool ownership requires explicit committed-test mode', () => {
+  assert.equal(parseArgs(['--committed-tests', '--hosted-ci-tools=v1']).hostedCiTools, 'v1');
+  for (const argv of [
+    ['--hosted-ci-tools=v1'],
+    ['--push-readiness', '--hosted-ci-tools=v1'],
+    ['--iteration-base=HEAD', '--hosted-ci-tools=v1'],
+    ['--committed-tests', '--hosted-ci-tools=v1', '--hosted-ci-tools=v1'],
+  ])
+    assert.throws(() => parseArgs(argv), /hosted|committed/);
+});
+
 test('push readiness is explicit and cannot be combined with partial validation modes', () => {
   assert.equal(parseArgs(['--push-readiness']).pushReadiness, true);
   for (const tail of [['--push-readiness'], ['--committed-tests'], ['--iteration-base=HEAD']])

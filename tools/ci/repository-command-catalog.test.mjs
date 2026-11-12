@@ -17,6 +17,7 @@ const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 test('local validation owners remain explicit without classifying arbitrary library modules', () => {
   for (const owner of [
     'changed-test-selection',
+    'hosted-ci-tool-ownership',
     'local-test-coverage',
     'local-validation-plan-values',
     'local-validation-executor',

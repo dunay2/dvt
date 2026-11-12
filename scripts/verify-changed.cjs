@@ -16,6 +16,7 @@ const {
   resolveIterationComparison,
 } = require('./git-local-changes.cjs');
 const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
+const { resolveHostedCiToolOwnership } = require('./lib/hosted-ci-tool-ownership.cjs');
 const { executeCommandPlan } = require('./lib/local-validation-executor.cjs');
 const { commandLabel, normalizeChangedFiles } = require('./lib/local-validation-plan-values.cjs');
 
@@ -39,6 +40,10 @@ function parseArgs(argv) {
       args.committedTests = true;
       continue;
     }
+    if (arg.startsWith('--hosted-ci-tools=') && args.hostedCiTools === undefined) {
+      args.hostedCiTools = arg.slice('--hosted-ci-tools='.length);
+      continue;
+    }
     if (arg === '--push-readiness' && !args.pushReadiness) {
       args.pushReadiness = true;
       continue;
@@ -58,6 +63,9 @@ function parseArgs(argv) {
   }
   if (args.pushReadiness && (args.iterationBase !== undefined || args.committedTests)) {
     throw new Error('push-readiness cannot be combined with partial iteration or committed-tests');
+  }
+  if (args.hostedCiTools !== undefined && !args.committedTests) {
+    throw new Error('hosted CI-tool ownership requires committed-tests');
   }
   return args;
 }
@@ -115,12 +123,29 @@ async function main(argv = process.argv.slice(2), options = {}) {
   const plan = args.committedTests
     ? buildFocusedChangedTestPlan(changedFiles)
     : buildVerifyChangedPlan(changedFiles, { iteration, pushReadiness: args.pushReadiness });
+  const env = options.env ?? process.env;
+  const ownership =
+    args.hostedCiTools === undefined
+      ? undefined
+      : await (options.resolveHostedCiToolOwnership ?? resolveHostedCiToolOwnership)(
+          plan,
+          changedFiles,
+          {
+            version: args.hostedCiTools,
+            eventName: env.GITHUB_EVENT_NAME,
+            baseSha: env.GIT_BASE,
+            headSha: env.GIT_HEAD,
+            githubSha: env.GITHUB_SHA,
+          },
+          { repoRootPath: root }
+        );
+  const executionPlan = ownership?.plan ?? plan;
   const print = options.printPlan || printPlan;
   const executePlan = args.committedTests
     ? options.executeFocusedChangedTestPlan || executeVerifyChangedPlan
     : options.executeVerifyChangedPlan || executeVerifyChangedPlan;
 
-  print(changedFiles, plan, {
+  print(changedFiles, executionPlan, {
     mode: iteration
       ? 'iteration-partial'
       : args.committedTests
@@ -131,12 +156,13 @@ async function main(argv = process.argv.slice(2), options = {}) {
     ...comparison,
     ...(iteration ? { acceptance: false, browser: false, globalPlanningDbValidation: false } : {}),
     ciTools: explainCiToolSelection(changedFiles),
+    ...(ownership ? { ciToolOwnership: ownership.delegation } : {}),
   });
-  if (args.dryRun || plan.length === 0) {
+  if (args.dryRun || executionPlan.length === 0) {
     return 0;
   }
 
-  const status = await executePlan(plan, {
+  const status = await executePlan(executionPlan, {
     repoRootPath: root,
     ...(iteration
       ? { env: { ...createGitRepositoryEnvironment(), GIT_BASE: comparison.baseSha, GIT_HEAD: '' } }
