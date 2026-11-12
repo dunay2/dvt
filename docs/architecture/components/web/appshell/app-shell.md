@@ -770,6 +770,25 @@ an API route or a run-admission decision.
 
 These controls update UI layout state only.
 
+The header shares compact height and control tokens with its workspace tabs. In
+Focus mode, pointer-capable surfaces keep the same header mounted as an overlay:
+it consumes no content height and reveals from the top edge. Visible keyboard
+focus or an open header menu keeps it revealed, including portal-based View
+menus. Touch-only surfaces retain the compact header as the exit path. The frame
+does not create another persisted preference, global pointer listener, timer, or
+route lifetime to implement this presentation.
+
+```mermaid
+flowchart LR
+  Preference[Existing focusMode] --> Frame[AppShellFrame]
+  Frame --> Normal[Normal: compact header in flow]
+  Frame --> Focus[Focus: retained header overlay]
+  Edge[Top-edge hover] --> Reveal[Reveal header]
+  Keyboard[Visible keyboard focus] --> Reveal
+  Menu[Open header menu] --> Reveal
+  Reveal --> Focus
+```
+
 ### Language Behavior
 
 - The persisted application-language preference controls English or Spanish copy.

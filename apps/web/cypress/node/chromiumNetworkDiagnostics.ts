@@ -155,7 +155,11 @@ export async function withChromiumNetworkDiagnostics<T>(
 
 export function configureChromiumNetworkDiagnostics(
   on: Cypress.PluginEvents,
-  config: Cypress.PluginConfigOptions
+  config: Cypress.PluginConfigOptions,
+  prepareBrowserLaunch?: (
+    browser: Cypress.Browser,
+    launch: Cypress.BeforeBrowserLaunchOptions
+  ) => Cypress.BeforeBrowserLaunchOptions
 ): Cypress.PluginConfigOptions {
   if (diagnosticsEnabled()) {
     const directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
@@ -168,7 +172,11 @@ export function configureChromiumNetworkDiagnostics(
       throw new Error('Missing owned Chromium capture lease');
     let activeCapture: string | null = null;
     on('before:browser:launch', (browser, launch) => {
-      const attached = attachChromiumCapture(directory, browser, launch);
+      const attached = attachChromiumCapture(
+        directory,
+        browser,
+        prepareBrowserLaunch?.(browser, launch) ?? launch
+      );
       activeCapture = attached.captureDirectory;
       return attached.launch;
     });
@@ -184,6 +192,8 @@ export function configureChromiumNetworkDiagnostics(
         throw new Error('Chromium network snapshot failed');
       }
     });
+  } else if (prepareBrowserLaunch != null) {
+    on('before:browser:launch', prepareBrowserLaunch);
   }
   return config;
 }
