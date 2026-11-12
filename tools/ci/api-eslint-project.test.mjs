@@ -13,7 +13,7 @@ import ts from 'typescript';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const lint = new ESLint({ cwd: root });
 const sourcePath = 'apps/api/src/app.ts';
-const fixtureRoot = path.join(root, 'apps/api/test/fixtures');
+const fixtureRoot = path.join(root, 'apps/api');
 const queryPrefix = "import { Pool } from 'pg';\nconst pool = new Pool();\n";
 const fixtureSources = {
   'floating-query': queryPrefix + "pool.query('select 1');\n",
@@ -29,9 +29,10 @@ let fixtureDirectory;
 
 before(() => {
   // Single-run CI programs must see every immutable fixture before their first parse.
+  // Stay outside src/test: the concurrent API reachability proof scans those roots.
   fixtureDirectory = mkdtempSync(path.join(fixtureRoot, 'api-eslint-contract-'));
   for (const [name, source] of Object.entries(fixtureSources)) {
-    writeFileSync(path.join(fixtureDirectory, `${name}.ts`), source);
+    writeFileSync(path.join(fixtureDirectory, `${name}.test.ts`), source);
   }
 });
 
@@ -53,7 +54,7 @@ function project(configPath) {
 }
 
 async function messages(name) {
-  const [result] = await lint.lintFiles(path.join(fixtureDirectory, `${name}.ts`));
+  const [result] = await lint.lintFiles(path.join(fixtureDirectory, `${name}.test.ts`));
   assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
   return result.messages;
 }
@@ -63,7 +64,7 @@ test('API source, tests and configuration retain their strict effective policies
     [sourcePath, 0, false],
     ['apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts', 1, true],
     ['apps/api/vitest.config.ts', 1, false],
-    [path.relative(root, path.join(fixtureDirectory, 'floating-query.ts')), 1, true],
+    [path.relative(root, path.join(fixtureDirectory, 'floating-query.test.ts')), 1, true],
   ]) {
     const config = await lint.calculateConfigForFile(path.join(root, file));
     assert.deepEqual(config.languageOptions.parserOptions.project, [
