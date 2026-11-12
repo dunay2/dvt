@@ -1,4 +1,8 @@
-/** Owned concern: resolve the project revision and server target authorized by a DBT plan. */
+/**
+ * Owned concern: resolve the project revision and server target authorized by a DBT plan.
+ * @decision Share complete target identity between Preview provenance and Run binding.
+ * @consequence A connection-only target change invalidates Preview and Run admission.
+ */
 import {
   RUN_REJECTIONS,
   type RunExecutionRejection,
@@ -76,7 +80,7 @@ export function resolveDbtPlanExecutionBinding(input: {
   };
 }
 
-function sameExecutionTarget(
+export function sameExecutionTarget(
   left: DbtExecutionTargetIdentity,
   right: DbtExecutionTargetIdentity
 ): boolean {

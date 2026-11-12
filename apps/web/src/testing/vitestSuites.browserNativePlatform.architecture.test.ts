@@ -25,11 +25,13 @@ vi.mock('node:fs', async () => {
 });
 
 const windowsSpec = 'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts';
+const coarsePointerSpec = 'apps/web/cypress/e2e/shell/canvas-workbench-coarse-pointer.cy.ts';
+const windowsSpecs = [coarsePointerSpec, windowsSpec];
 const current = WEB_CYPRESS_CATALOG;
 
 describe('Declared native browser obligations', () => {
   it('retains the real Windows Monaco proof without changing complete or hosted membership', () => {
-    expect(current.nativePlatforms.win32).toEqual([windowsSpec]);
+    expect(current.nativePlatforms.win32).toEqual(windowsSpecs);
     const complete = resolveWebCypressChangedPlan([], true).commands;
     const admittedSpecs = [...current.controlled, ...current.available, ...current.unavailable];
     expect(complete.map((entry) => entry.capability)).toEqual([
@@ -42,8 +44,10 @@ describe('Declared native browser obligations', () => {
       const selected = selectWebCypressLocalReadiness(entry, 'win32', []);
       return selected ? [selected] : [];
     });
-    expect(native).toMatchObject([{ capability: 'controlled', specPaths: [windowsSpec] }]);
-    expect(native[0]!.command).toContain(windowsSpec.slice('apps/web/'.length));
+    expect(native).toMatchObject([{ capability: 'controlled', specPaths: windowsSpecs }]);
+    for (const spec of windowsSpecs) {
+      expect(native[0]!.command).toContain(spec.slice('apps/web/'.length));
+    }
     expect(complete.flatMap((entry) => entry.specPaths)).toEqual(admittedSpecs);
     expect(
       complete.every((entry) => selectWebCypressLocalReadiness(entry, 'linux', []) === undefined)

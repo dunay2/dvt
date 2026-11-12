@@ -18,6 +18,7 @@ import type {
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
 import { compareGraphIds } from './compareGraphIds.js';
+import { sameExecutionTarget } from './dbtPlanExecutionBinding.js';
 import type { ProjectDbtGraphFromFilesUseCase } from './projectDbtGraphFromFilesUseCase.js';
 import type { ResolveAuthorizedDvtPreviewSelectionService } from './resolveAuthorizedDvtPreviewSelection.js';
 import type {
@@ -212,7 +213,10 @@ function findProvenanceMismatch(
   ) {
     return 'The analyzed dbt project revision no longer matches the preview provenance.';
   }
-  if (!sameExecutionTarget(projection.executionTarget, provenance.executionTarget)) {
+  if (
+    projection.executionTarget === undefined ||
+    !sameExecutionTarget(projection.executionTarget, provenance.executionTarget)
+  ) {
     return 'The server-owned dbt execution target no longer matches the preview provenance.';
   }
   return null;
@@ -277,18 +281,6 @@ function buildAuthoritativeGraph(
       nodes: graphNodes.sort((left, right) => compareGraphIds(left.nodeId, right.nodeId)),
     },
   };
-}
-
-function sameExecutionTarget(
-  actual: DbtProjectGraphProjection['executionTarget'],
-  expected: DbtProjectFilesProvenance['executionTarget']
-): boolean {
-  return (
-    actual?.provider === expected.provider &&
-    actual.adapter === expected.adapter &&
-    actual.targetName === expected.targetName &&
-    actual.credentialRef === expected.credentialRef
-  );
 }
 
 function sameGraphSource(actual: GenericGraphSourceV1, expected: GenericGraphSourceV1): boolean {

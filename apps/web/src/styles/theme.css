@@ -56,12 +56,15 @@
   --border-default: #2f4368;
   --border-strong: #4b5f84;
   --control-size-navigation: calc(var(--spacing) * 11);
+  --shell-header-height: calc(var(--spacing) * 8);
+  --shell-control-height: calc(var(--spacing) * 7);
   --icon-size-navigation: calc(var(--spacing) * 5);
   --focus-ring: #60a5fa;
   --focus-ring-width: calc(var(--spacing) / 2);
   --focus-ring-offset: calc(var(--spacing) / 2);
   --elevation-low: var(--shadow-sm);
   --layer-modal: 50;
+  --layer-shell-chrome: 30;
   --layer-modal-content: 1;
   --duration-modal: 200ms;
   --status-success: #22c55e;

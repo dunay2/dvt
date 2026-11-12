@@ -1,10 +1,40 @@
 /* Shell slot geometry and focus presentation; colors and density remain shared tokens. */
 .frame {
   composes: app-shell-background from global;
+  position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
   color: var(--foreground);
+}
+
+.headerHost {
+  flex-shrink: 0;
+}
+
+/* Keep controls mounted and tabbable; coarse pointers retain a visible exit from Focus. */
+@media (hover: hover) and (pointer: fine) {
+  .headerHost[data-focus-mode='true'] {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: var(--layer-shell-chrome);
+    transform: translateY(-100%);
+  }
+
+  .headerHost[data-focus-mode='true']::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline: 0;
+    height: calc(var(--spacing) * 2);
+  }
+
+  .headerHost[data-focus-mode='true']:hover,
+  .headerHost[data-focus-mode='true']:has(:focus-visible),
+  .headerHost[data-focus-mode='true']:has([aria-expanded='true']) {
+    transform: translateY(0);
+  }
 }
 
 .column,
