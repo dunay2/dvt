@@ -8,6 +8,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   ChromiumProjectionError,
+  captureSyntaxReasons,
   projectChromiumNetworkLog,
   projectChromiumNetworkCapture,
   projectChromiumProcessLog,
@@ -62,6 +63,36 @@ function netlog(url = 'http://user:secret@127.0.0.1:3300/workspace/graph/draft?t
       },
     ],
   };
+}
+
+const completeCapture = JSON.stringify(netlog());
+test('capture syntax vocabulary is immutable at the publication boundary', () => {
+  assert.equal(Object.isFrozen(captureSyntaxReasons), true);
+});
+for (const [syntaxReason, capture] of [
+  ['rootMissing', ''],
+  ['eventsNotArray', '{"constants":{},"events":{}}'],
+  ['constantsNotObject', '{"constants":null,"events":[]}'],
+  ['constantsNotClosed', '{"events":[],"constants":{'],
+  ['eventNotObject', '{"constants":{},"events":[1]}'],
+  ['eventNotClosed', '{"constants":{},"events":[{'],
+  ['interiorSyntaxError', completeCapture + ' private-token'],
+  ['unsupportedEofError', completeCapture.slice(0, -1) + ',"unfinished"'],
+  ['lastEventMissing', '{"constants":{},"events":['],
+  ['suffixNotAdmitted', completeCapture.slice(0, -1)],
+]) {
+  test(`capture rejection identifies its first existing condition: ${syntaxReason}`, () => {
+    assert.throws(
+      () => projectChromiumNetworkCapture(capture),
+      (error) => {
+        assert.equal(error.constructor, ChromiumProjectionError);
+        assert.equal(error.reason, 'captureSyntax');
+        assert.equal(error.syntaxReason, syntaxReason);
+        assert.doesNotMatch(JSON.stringify(error), /private|secret|token|https/iu);
+        return true;
+      }
+    );
+  });
 }
 
 for (const [reason, capture] of [

@@ -386,7 +386,14 @@ test('native proof stays rejected with a safe receipt when passing Cypress canno
     const text = fs.readFileSync(path.join(evidence, receipts[0]), 'utf8');
     assert.deepEqual(JSON.parse(text), {
       schemaVersion: 1,
-      failures: [{ phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' }],
+      failures: [
+        {
+          phase: 'capture-projection',
+          code: 'failed',
+          detail: 'captureSyntax',
+          syntaxReason: 'rootMissing',
+        },
+      ],
     });
     assert.doesNotMatch(text, /private|api_key|secret-token|apiBearerToken|output|stack|cause/iu);
   } finally {

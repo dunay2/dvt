@@ -33,6 +33,31 @@ function countWorkflowCommand(workflow, command) {
   return workflow.split(command).length - 1;
 }
 
+test('hosted CI-tool ownership uses the same immutable PR identity as its producer', () => {
+  const code = yaml.load(readFileSync('.github/workflows/ci.yml', 'utf8'));
+  const pr = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
+  const producerScope = code.jobs['detect-affected'].steps.find(
+    (step) => step.run === 'node tools/ci/emit-scope.mjs'
+  );
+  const prScope = pr.jobs['detect-pr-scope'].steps.find(
+    (step) => step.run === 'node tools/ci/emit-scope.mjs'
+  );
+  assert.deepEqual(producerScope.env, prScope.env);
+  assert.equal(producerScope.env.GIT_BASE, '${{ github.event.pull_request.base.sha }}');
+  assert.equal(
+    code.jobs['detect-affected'].steps.some(
+      (step) => step.uses === './.github/actions/fetch-scope-base'
+    ),
+    false,
+    'the canonical scope emitter owns exact base acquisition without a second branch fetch'
+  );
+  const committed = pr.jobs['pr-checks'].steps.find((step) =>
+    step.run?.startsWith('pnpm verify:changed --committed-tests')
+  );
+  assert.equal(committed.run, 'pnpm verify:changed --committed-tests --hosted-ci-tools=v1');
+  assert.deepEqual(committed.env, prScope.env);
+});
+
 test('changed-file CI builds its canonical hash dependency before loading the checker', () => {
   const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
   const steps = workflow.jobs['pr-checks'].steps;

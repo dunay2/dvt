@@ -54,11 +54,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Fetch pull-request base ref
-        uses: ./.github/actions/fetch-scope-base
-        with:
-          base-ref: ${{ github.base_ref }}
-
       - name: Validate workflow scope policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
 
@@ -66,7 +61,7 @@ jobs:
         id: scope
         run: node tools/ci/emit-scope.mjs
         env:
-          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
   ci-tool-executable-contracts:

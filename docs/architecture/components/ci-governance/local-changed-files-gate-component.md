@@ -141,6 +141,50 @@ developer loop. Report local duration, retained native proof, hosted duration,
 queue time and total runner cost separately. A faster missing-prerequisite
 failure or a plan-only comparison is not a successful-path speedup measurement.
 
+## Hosted CI Tool Contract Ownership
+
+PR Quality and Code Quality previously executed the same complete CI tool
+catalog for a tooling change. The existing static and executable partitions
+already cover that finite catalog without overlap. The PR adapter can delegate
+that complete step to Code Quality; it does not reduce the catalog or claim that
+the delegated tests have passed.
+
+```mermaid
+flowchart LR
+  Git[Immutable PR base and head] --> Scope[Canonical scope and complete catalog]
+  Scope --> Admit{Same clean snapshot and both partitions selected?}
+  Admit -->|yes| Delegate[Visible obligations owned by Code Quality]
+  Admit -->|no| Original[Original complete committed-test plan]
+  Delegate --> Required[Current-head All Checks and Code Quality success]
+  Producers[Static and executable producer jobs] --> Required
+  Original --> Required
+```
+
+The explicit `--committed-tests --hosted-ci-tools=v1` adapter retains the existing
+`BuildChangedSliceVerificationPlan` and `RunChangedSliceVerification` rails.
+`scripts/lib/hosted-ci-tool-ownership.cjs` admits delegation; it does not select
+tests, launch processes or write success receipts. The CLI retains every other
+step. Only one exact complete `pnpm test:ci-tools` invocation can be delegated.
+The existing catalog remains the single owner of partition membership.
+
+Admission requires a pull-request event, exact base/head identities matching the
+observed Git checkout, known ancestry, a clean tree, the same complete changed
+frontier, and canonical workflow scope selecting the executable producer. The
+static producer always runs. Both workflow detectors use the event's immutable
+base SHA. The direct scope diff includes deletions; if that frontier differs from
+the committed test query, including because of deletions, the original plan runs.
+Identity is checked again after asynchronous scope reads.
+
+Missing or unsupported context, inherited repository-local Git context, changed
+HEAD, dirty state, query failure,
+unselected producers or incomplete/overlapping catalog coverage retain the
+original plan with a visible reason. Ordinary local, iteration and prepush plans
+remain unchanged. Delegated membership and producer identity are printed as
+pending obligations. Code Quality's strict aggregate still rejects a selected
+producer that is missing, skipped, cancelled or failed. Merge acceptance remains
+the conjunction of the actual required current-head checks and fresh exact
+base/head Planning DB proof; a delegated plan is not acceptance evidence.
+
 ## Public API
 
 | API                                               | Owner                                | Responsibility                                                                |

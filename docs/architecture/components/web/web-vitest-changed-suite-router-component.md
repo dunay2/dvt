@@ -1058,6 +1058,34 @@ and evidence modules, their two script suites, the existing selected-closure
 runner test and this guide. Process observation, production runners, workflow,
 parser conditions and application assertions remain unchanged.
 
+###### Capture syntax condition — GH-3863
+
+The prospective [GH-3863 classification slice](https://github.com/dunay2/dvt/issues/3863#issuecomment-6821197922)
+retains the same single parser call and capture admission predicates. A named
+private admission assertion identifies the first rejected condition. Only a
+`capture-projection` record whose `detail` is `captureSyntax` may add optional
+`syntaxReason`. Records without this additive version-1 field remain valid.
+
+The projection owns one closed vocabulary, reused by the evidence publisher:
+`rootMissing`, `eventsNotArray`, `constantsNotObject`, `constantsNotClosed`,
+`eventNotObject`, `eventNotClosed`, `interiorSyntaxError`, `unsupportedEofError`,
+`lastEventMissing` and `suffixNotAdmitted`. These describe existing predicates,
+not a diagnosis of truncation, browser flush or product failure. Deterministic
+input cases must prove each category corresponds to an actual rejection.
+
+The publisher reconstructs the optional field only from validated own data
+descriptors. It rejects unknown values, getters and phase/detail mismatches.
+Classification reads no private exception message, stack, cause or capture text.
+No offsets, sizes, file stability, raw paths, URLs or snippets are added. The
+existing 16-record bound, exact cleanup and failed proof acceptance remain.
+
+The two existing projection and lifecycle modules retain their owned concerns.
+Their existing semantic/privacy suites and selected-closure runner test prove
+unchanged complete/terminated admission and rejection after passing Cypress.
+The observer, runner production code, workflow, parser options, application
+assertions and retry policy retain their existing behavior. This classification
+supplies evidence for a later semantic repair; it does not close the incident.
+
 ##### Retained process evidence and ownership — GH-3735
 
 The baseline at `v0.20.0` captures transport observations but has no Linux process

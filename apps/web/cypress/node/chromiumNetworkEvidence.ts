@@ -17,8 +17,10 @@ import { randomUuidV4 } from '@dvt/crypto';
 
 import {
   ChromiumProjectionError,
+  captureSyntaxReasons,
   projectChromiumNetworkCapture,
   projectChromiumProcessLog,
+  type CaptureSyntaxReason,
 } from './chromiumNetworkProjection';
 
 type Observation = Readonly<{ spec: string; observedAt: string; capture: string }>;
@@ -54,6 +56,7 @@ export type ChromiumLifecycleFailure = Readonly<{
   phase: FailurePhase;
   code: FailureCode;
   detail?: ProjectionFailureDetail;
+  syntaxReason?: CaptureSyntaxReason;
 }>;
 
 export class ChromiumDiagnosticsError extends Error {
@@ -78,6 +81,15 @@ function projectionFailureDetail(error: unknown): ProjectionFailureDetail {
   return error instanceof Error ? 'Error' : 'unknown';
 }
 
+function projectionSyntaxReason(
+  error: unknown,
+  detail: ProjectionFailureDetail | undefined
+): CaptureSyntaxReason | undefined {
+  if (detail !== 'captureSyntax' || !(error instanceof ChromiumProjectionError)) return undefined;
+  const reason: unknown = Object.getOwnPropertyDescriptor(error, 'syntaxReason')?.value;
+  return captureSyntaxReasons.find((candidate) => candidate === reason);
+}
+
 export function classifyChromiumFailure(
   phase: FailurePhase,
   error: unknown
@@ -93,11 +105,14 @@ export function classifyChromiumFailure(
         : error instanceof SyntaxError
           ? 'invalid'
           : 'failed';
+  const detail = phase === 'capture-projection' ? projectionFailureDetail(error) : undefined;
+  const syntaxReason = projectionSyntaxReason(error, detail);
   return [
     {
       phase,
       code,
-      ...(phase === 'capture-projection' ? { detail: projectionFailureDetail(error) } : {}),
+      ...(detail === undefined ? {} : { detail }),
+      ...(syntaxReason === undefined ? {} : { syntaxReason }),
     },
   ];
 }
@@ -111,14 +126,25 @@ export function publishChromiumLifecycleFailures(
     const code: unknown = Object.getOwnPropertyDescriptor(failure, 'code')?.value;
     const detailDescriptor = Object.getOwnPropertyDescriptor(failure, 'detail');
     const detail: unknown = detailDescriptor?.value;
+    const syntaxDescriptor = Object.getOwnPropertyDescriptor(failure, 'syntaxReason');
+    const syntaxReason: unknown = syntaxDescriptor?.value;
     if (
       !failurePhases.some((value) => value === phase) ||
       !failureCodes.some((value) => value === code) ||
       (detailDescriptor !== undefined &&
-        (phase !== 'capture-projection' || !projectionDetails.some((value) => value === detail)))
+        (phase !== 'capture-projection' || !projectionDetails.some((value) => value === detail))) ||
+      (syntaxDescriptor !== undefined &&
+        (phase !== 'capture-projection' ||
+          detail !== 'captureSyntax' ||
+          !captureSyntaxReasons.some((value) => value === syntaxReason)))
     )
       throw new Error('Invalid Chromium lifecycle failure');
-    return { phase, code, ...(detailDescriptor === undefined ? {} : { detail }) };
+    return {
+      phase,
+      code,
+      ...(detailDescriptor === undefined ? {} : { detail }),
+      ...(syntaxDescriptor === undefined ? {} : { syntaxReason }),
+    };
   });
   const directory = resolve(workspaceRoot, '.dvt/evidence/chromium-network');
   mkdirSync(directory, { recursive: true });
