@@ -608,8 +608,14 @@ for (const scenario of ['denied', 'ready-and-stop', 'operation-and-stop-fail']) 
   });
 }
 
+const missingRootFailure = Object.freeze({
+  phase: 'capture-projection',
+  code: 'failed',
+  detail: 'captureSyntax',
+  syntaxReason: 'rootMissing',
+});
 for (const [scenario, failures] of [
-  ['malformed', [{ phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' }]],
+  ['malformed', [missingRootFailure]],
   ['log-shape', [{ phase: 'capture-projection', code: 'failed', detail: 'logShape' }]],
   ['event-shape', [{ phase: 'capture-projection', code: 'failed', detail: 'eventShape' }]],
   ['missing', [{ phase: 'capture-read', code: 'missing' }]],
@@ -619,7 +625,7 @@ for (const [scenario, failures] of [
     [
       { phase: 'native-operation', code: 'failed' },
       { phase: 'observer-stop', code: 'failed' },
-      { phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' },
+      missingRootFailure,
     ],
   ],
 ]) {
@@ -718,11 +724,7 @@ test('capture projection and cleanup failures both survive while other owned fil
       () => finalizeChromiumCapture(capture, projectRoot),
       (error) => {
         assert.ok(error instanceof ChromiumDiagnosticsError);
-        assert.deepEqual(error.failures[0], {
-          phase: 'capture-projection',
-          code: 'failed',
-          detail: 'captureSyntax',
-        });
+        assert.deepEqual(error.failures[0], missingRootFailure);
         assert.ok(
           error.failures.some(({ phase, code }) => phase === 'capture-cleanup' && code === 'denied')
         );
@@ -820,6 +822,33 @@ test('lifecycle publication bounds records and reconstructs only validated phase
       { phase: 'capture-read', code: 'private unknown reason' },
       { phase: 'capture-projection', code: 'failed', detail: 'https://private.invalid/secret' },
       { phase: 'capture-read', code: 'failed', detail: 'RangeError' },
+      {
+        phase: 'capture-projection',
+        code: 'failed',
+        detail: 'captureSyntax',
+        syntaxReason: 'private-token',
+      },
+      {
+        phase: 'capture-projection',
+        code: 'failed',
+        detail: 'captureSyntax',
+        syntaxReason: undefined,
+      },
+      { phase: 'capture-read', code: 'failed', syntaxReason: 'rootMissing' },
+      {
+        phase: 'capture-projection',
+        code: 'failed',
+        detail: 'RangeError',
+        syntaxReason: 'rootMissing',
+      },
+      { phase: 'capture-projection', code: 'failed', syntaxReason: 'rootMissing' },
+      Object.defineProperty(
+        { phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' },
+        'syntaxReason',
+        {
+          get: () => assert.fail('publication must not invoke a syntax reason getter'),
+        }
+      ),
       Object.defineProperty({ phase: 'capture-projection', code: 'failed' }, 'detail', {
         get: () => assert.fail('publication must not invoke a detail getter'),
       }),
@@ -846,6 +875,39 @@ test('lifecycle publication bounds records and reconstructs only validated phase
   }
 });
 
+test('capture syntax classification publishes only a validated own condition', () => {
+  const { projectRoot } = fixture(false);
+  const base = { phase: 'capture-projection', code: 'failed', detail: 'captureSyntax' };
+  try {
+    const failures = ['rootMissing', 'suffixNotAdmitted'].map((syntaxReason) => {
+      const error = new ChromiumProjectionError('captureSyntax', syntaxReason);
+      const classified = classifyChromiumFailure('capture-projection', error);
+      assert.deepEqual(classified, [{ ...base, syntaxReason }]);
+      assert.deepEqual(classifyChromiumFailure('capture-read', error), [
+        { phase: 'capture-read', code: 'failed' },
+      ]);
+      return classified[0];
+    });
+    for (const descriptor of [
+      { value: 'https://private.invalid/?token=secret' },
+      { get: () => assert.fail('classification must not invoke a syntax reason getter') },
+    ]) {
+      const error = new ChromiumProjectionError('captureSyntax');
+      Object.defineProperty(error, 'syntaxReason', descriptor);
+      assert.deepEqual(classifyChromiumFailure('capture-projection', error), [base]);
+    }
+    publishChromiumLifecycleFailures(projectRoot, failures);
+    const evidence = path.join(projectRoot, '.dvt/evidence/chromium-network');
+    const [receipt] = fs.readdirSync(evidence);
+    const text = fs.readFileSync(path.join(evidence, receipt), 'utf8');
+    assert.deepEqual(JSON.parse(text), { schemaVersion: 1, failures });
+    assert.doesNotMatch(text, /private|secret|token|https|stack|cause/iu);
+  } finally {
+    assert.ok(path.resolve(projectRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(projectRoot, { recursive: true });
+  }
+});
+
 test('projection exception detail observes only finite classes and never private getters', () => {
   const { projectRoot } = fixture(false);
   const privateDetail = 'https://private.invalid/?token=secret raw exception';
@@ -866,7 +928,16 @@ test('projection exception detail observes only finite classes and never private
       ['unknown', null],
     ]) {
       if (error !== null && typeof error === 'object') {
-        for (const key of ['name', 'message', 'stack', 'cause', 'code', 'reason', 'detail']) {
+        for (const key of [
+          'name',
+          'message',
+          'stack',
+          'cause',
+          'code',
+          'reason',
+          'detail',
+          'syntaxReason',
+        ]) {
           Object.defineProperty(error, key, {
             get: () => assert.fail(`classification must not invoke ${key}`),
           });

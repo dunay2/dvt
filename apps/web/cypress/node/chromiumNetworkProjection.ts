@@ -8,11 +8,31 @@ import {
   getNodeValue,
   parseTree,
   printParseErrorCode,
+  type Node as JsonNode,
   type ParseError,
 } from 'jsonc-parser';
 
+export const captureSyntaxReasons = Object.freeze([
+  'rootMissing',
+  'eventsNotArray',
+  'constantsNotObject',
+  'constantsNotClosed',
+  'eventNotObject',
+  'eventNotClosed',
+  'interiorSyntaxError',
+  'unsupportedEofError',
+  'lastEventMissing',
+  'suffixNotAdmitted',
+] as const);
+export type CaptureSyntaxReason = (typeof captureSyntaxReasons)[number];
+
 export class ChromiumProjectionError extends Error {
-  constructor(readonly reason: 'captureSyntax' | 'logShape' | 'eventShape') {
+  constructor(reason: 'captureSyntax' | 'logShape' | 'eventShape');
+  constructor(reason: 'captureSyntax', syntaxReason: CaptureSyntaxReason);
+  constructor(
+    readonly reason: 'captureSyntax' | 'logShape' | 'eventShape',
+    readonly syntaxReason?: CaptureSyntaxReason
+  ) {
     super(
       reason === 'captureSyntax'
         ? 'Invalid Chromium network capture'
@@ -230,37 +250,58 @@ export function projectChromiumNetworkLog(
   };
 }
 
+function assertCaptureSyntax(
+  text: string,
+  root: JsonNode | undefined,
+  errors: readonly ParseError[]
+): asserts root is JsonNode {
+  if (root === undefined) throw new ChromiumProjectionError('captureSyntax', 'rootMissing');
+  const events = findNodeAtLocation(root, ['events']);
+  const constants = findNodeAtLocation(root, ['constants']);
+  if (events?.type !== 'array')
+    throw new ChromiumProjectionError('captureSyntax', 'eventsNotArray');
+  if (constants?.type !== 'object')
+    throw new ChromiumProjectionError('captureSyntax', 'constantsNotObject');
+  const closedObject = (node: JsonNode): boolean => text[node.offset + node.length - 1] === '}';
+  if (!closedObject(constants))
+    throw new ChromiumProjectionError('captureSyntax', 'constantsNotClosed');
+  const invalidEvent = events.children?.find(
+    (event) => event.type !== 'object' || !closedObject(event)
+  );
+  if (invalidEvent !== undefined) {
+    throw new ChromiumProjectionError(
+      'captureSyntax',
+      invalidEvent.type !== 'object' ? 'eventNotObject' : 'eventNotClosed'
+    );
+  }
+  const invalidError = errors.find(
+    (error) =>
+      error.offset !== text.length ||
+      !['CloseBraceExpected', 'CloseBracketExpected', 'ValueExpected'].includes(
+        printParseErrorCode(error.error)
+      )
+  );
+  if (invalidError !== undefined) {
+    throw new ChromiumProjectionError(
+      'captureSyntax',
+      invalidError.offset !== text.length ? 'interiorSyntaxError' : 'unsupportedEofError'
+    );
+  }
+  if (errors.length === 0) return;
+  const tail = events.children?.at(-1);
+  if (tail === undefined) throw new ChromiumProjectionError('captureSyntax', 'lastEventMissing');
+  if (!/^\s*,?\s*$/u.test(text.slice(tail.offset + tail.length))) {
+    throw new ChromiumProjectionError('captureSyntax', 'suffixNotAdmitted');
+  }
+}
+
 export function projectChromiumNetworkCapture(
   text: string
 ): ReturnType<typeof projectChromiumNetworkLog> &
   Readonly<{ captureState: 'complete' | 'terminated' }> {
   const errors: ParseError[] = [];
   const root = parseTree(text, errors, { allowTrailingComma: true, disallowComments: true });
-  const events = root === undefined ? undefined : findNodeAtLocation(root, ['events']);
-  const constants = root === undefined ? undefined : findNodeAtLocation(root, ['constants']);
-  const tail = events?.children?.at(-1);
-  const validClosedObject = (offset: number, length: number): boolean =>
-    text[offset + length - 1] === '}';
-  if (
-    root === undefined ||
-    events?.type !== 'array' ||
-    constants?.type !== 'object' ||
-    !validClosedObject(constants.offset, constants.length) ||
-    events.children?.some(
-      (event) => event.type !== 'object' || !validClosedObject(event.offset, event.length)
-    ) ||
-    errors.some(
-      (error) =>
-        error.offset !== text.length ||
-        !['CloseBraceExpected', 'CloseBracketExpected', 'ValueExpected'].includes(
-          printParseErrorCode(error.error)
-        )
-    ) ||
-    (errors.length > 0 &&
-      (tail === undefined || !/^\s*,?\s*$/u.test(text.slice(tail.offset + tail.length))))
-  ) {
-    throw new ChromiumProjectionError('captureSyntax');
-  }
+  assertCaptureSyntax(text, root, errors);
   return {
     ...projectChromiumNetworkLog(getNodeValue(root)),
     captureState: errors.length === 0 ? ('complete' as const) : ('terminated' as const),
