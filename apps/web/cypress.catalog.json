@@ -93,5 +93,10 @@
   "unavailable": [
     "apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts"
   ],
-  "nightly": ["apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts"]
+  "nightly": ["apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts"],
+  "nativePlatforms": {
+    "win32": [
+      "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+    ]
+  }
 }

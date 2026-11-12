@@ -55,6 +55,7 @@ describe('Declarative browser catalog', () => {
       parseWebCypressCatalog({
         ...current,
         controlled: ['apps/web/cypress/e2e/shell/route.lifecycle.cy.ts'],
+        nativePlatforms: {},
       }).controlled
     ).toEqual(['apps/web/cypress/e2e/shell/route.lifecycle.cy.ts']);
   });

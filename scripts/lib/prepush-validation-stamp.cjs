@@ -10,7 +10,8 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { createSha256Hasher, utf8Bytes } = require('@dvt/crypto');
 const repoRoot = path.resolve(__dirname, '../..');
-const STAMP_VERSION = 1;
+const STAMP_VERSION = 2;
+const STAMP_PURPOSE = 'local-push-readiness';
 
 function runGitText(args, options = {}) {
   return execFileSync('git', args, {
@@ -127,6 +128,8 @@ function buildPrepushStamp(changedFiles, options = {}) {
     options.validationFingerprint || computePrepushValidationFingerprint(changedFiles, options);
   return {
     version: STAMP_VERSION,
+    purpose: STAMP_PURPOSE,
+    platform: options.platform ?? process.platform,
     validationLevel: validationLevel(options),
     changedFiles: [...changedFiles],
     stateFingerprint:
@@ -149,6 +152,8 @@ function isPrepushStampValid(stamp, expected) {
   return (
     stamp &&
     stamp.version === STAMP_VERSION &&
+    stamp.purpose === STAMP_PURPOSE &&
+    stamp.platform === expected.platform &&
     validationLevelSatisfies(stamp.validationLevel, expected.validationLevel) &&
     (stateMatches || validationMatches) &&
     JSON.stringify(stamp.changedFiles || []) === JSON.stringify(expected.changedFiles || [])

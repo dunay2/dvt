@@ -113,6 +113,11 @@ another suite catalog, runner or command/query rail.
   `--vitest-group` only after complete plan validation; its omission preserves
   the complete local command plan. Local default execution
   remains both phases, and browser admission is never replaced by Vitest.
+  The local prepush adapter may select `--phase=push-readiness` for a positively
+  admitted product frontier: the same complete plan is validated first, with
+  its Vitest plan and declared host-native proof executed locally. All selected
+  hosted scenarios remain mandatory. Native/toolchain/unknown inputs keep full
+  local execution; see the Local Changed Files Gate contract.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs distribute
   the existing `test:web:ci` primary-suite composition across the five groups.
   The workflow invokes the existing package delegates; their union must execute

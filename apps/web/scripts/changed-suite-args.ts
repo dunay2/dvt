@@ -11,7 +11,7 @@ import {
   type WebVitestExecutionGroup,
 } from './vitest-execution-partitions';
 
-type WebEvidencePhase = 'all' | 'vitest' | 'browser';
+type WebEvidencePhase = 'all' | 'vitest' | 'browser' | 'push-readiness';
 
 type ChangedSuiteArgs = Readonly<{
   plan: boolean;
@@ -26,6 +26,7 @@ type ChangedSuiteArgs = Readonly<{
 const WEB_EVIDENCE_PHASES: ReadonlyMap<string, WebEvidencePhase> = new Map([
   ['--phase=vitest', 'vitest'],
   ['--phase=browser', 'browser'],
+  ['--phase=push-readiness', 'push-readiness'],
 ]);
 const WEB_BROWSER_CAPABILITIES: ReadonlyMap<string, WebCypressCapability> = new Map(
   WEB_CYPRESS_CAPABILITIES.map((capability) => [`--browser-capability=${capability}`, capability])

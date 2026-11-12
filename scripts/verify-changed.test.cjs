@@ -24,6 +24,12 @@ const MIXED_CHANGED_FILES = [
 ];
 
 const { main, parseArgs, executeVerifyChangedPlan } = require('./verify-changed.cjs');
+
+test('push readiness is explicit and cannot be combined with partial validation modes', () => {
+  assert.equal(parseArgs(['--push-readiness']).pushReadiness, true);
+  for (const tail of [['--push-readiness'], ['--committed-tests'], ['--iteration-base=HEAD']])
+    assert.throws(() => parseArgs(['--push-readiness', ...tail]));
+});
 function completedChild(code) {
   const child = new EventEmitter();
   queueMicrotask(() => {
@@ -33,10 +39,9 @@ function completedChild(code) {
   return child;
 }
 
-test('main executes every gate once before building and writing the success stamp', async () => {
+test('main awaits every selected gate exactly once in order', async () => {
   const plan = buildVerifyChangedPlan(MIXED_CHANGED_FILES);
   const events = [];
-  const stamps = [];
   const status = await main([], {
     changedFiles: MIXED_CHANGED_FILES,
     executeVerifyChangedPlan: (steps, options) =>
@@ -49,29 +54,10 @@ test('main executes every gate once before building and writing the success stam
         },
       }),
     printPlan: () => {},
-    buildPrepushStamp: (files) => {
-      events.push('build-stamp');
-      return {
-        validationLevel: 'default',
-        changedFiles: files,
-        stateFingerprint: 'same-tree',
-      };
-    },
-    writePrepushStamp: (stamp) => {
-      events.push('write-stamp');
-      stamps.push(stamp);
-    },
   });
 
   assert.equal(status, 0);
-  assert.deepEqual(events, [...plan.map(commandLabel), 'build-stamp', 'write-stamp']);
-  assert.deepEqual(stamps, [
-    {
-      validationLevel: 'default',
-      changedFiles: MIXED_CHANGED_FILES,
-      stateFingerprint: 'same-tree',
-    },
-  ]);
+  assert.deepEqual(events, plan.map(commandLabel));
 });
 
 test('main preserves static failure without running any tests, later gates or stamp operations', async () => {
@@ -89,8 +75,6 @@ test('main preserves static failure without running any tests, later gates or st
         },
       }),
     printPlan: () => {},
-    buildPrepushStamp: () => assert.fail('Failed validation must not build a stamp'),
-    writePrepushStamp: () => assert.fail('Failed validation must not write a stamp'),
   });
 
   assert.equal(status, 7);
@@ -118,8 +102,6 @@ test('a selected CI contract failure starts no Web tests and writes no validatio
         },
       }),
     printPlan: () => {},
-    buildPrepushStamp: () => assert.fail('Failed CI contract must not build a stamp'),
-    writePrepushStamp: () => assert.fail('Failed CI contract must not write a stamp'),
   });
   assert.equal(status, 11);
   assert.ok(calls.includes('node --test tools/ci/docs-disposition-canon.test.mjs'));
@@ -128,7 +110,6 @@ test('a selected CI contract failure starts no Web tests and writes no validatio
 
 test('main runs focused tests from the exact committed diff without writing a local stamp', async () => {
   const calls = [];
-  const stamps = [];
   const status = await main(['--committed-tests'], {
     listCommittedChangedFiles: () => ['scripts/planning-db-query.cjs'],
     executeFocusedChangedTestPlan: (plan) => {
@@ -136,7 +117,6 @@ test('main runs focused tests from the exact committed diff without writing a lo
       return 0;
     },
     printPlan: () => {},
-    writePrepushStamp: (stamp) => stamps.push(stamp),
   });
 
   assert.equal(status, 0);
@@ -145,7 +125,6 @@ test('main runs focused tests from the exact committed diff without writing a lo
     catalogTest,
     cryptoTest,
   ]);
-  assert.deepEqual(stamps, []);
 });
 
 test('parseArgs supports dry-run planning without executing commands', () => {

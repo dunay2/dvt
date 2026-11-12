@@ -47,6 +47,7 @@
   }
 
   function printPrepushPlan(changedFiles, scope, plan) {
+    console.log('[verify:prepush] Local push readiness; hosted merge acceptance remains required.');
     console.log('[verify:prepush] changed files:');
     if (changedFiles.length === 0) {
       console.log('- none');
