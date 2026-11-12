@@ -65,14 +65,14 @@ flowchart LR
   Hosted --> Merge[Required merge acceptance]
 ```
 
-The new boundary delegates common browser scenarios while retaining declared
-host-specific evidence and conservative full execution for native infrastructure:
+The boundary delegates unchanged common browser scenarios while retaining changed
+merge-time scenarios, declared host evidence and full execution for infrastructure:
 
 ```mermaid
 flowchart LR
   Diff[Same complete frontier] --> Admit[Static checks, fresh DB proof and complete browser plan]
   Admit --> Policy{Positively admitted product frontier?}
-  Policy -->|yes| Local[Vitest and selected declared host obligations]
+  Policy -->|yes| Local[Vitest and selected changed or native host specs]
   Policy -->|no| Full[Existing complete native execution]
   Local --> Receipt[Local push-readiness receipt]
   Full --> Receipt
@@ -81,8 +81,10 @@ flowchart LR
   Exact --> Merge[Fresh base/head DB proof and expected-SHA merge]
 ```
 
-The focused Web policy admits Web product/source surfaces, documents
-and known governance companions. Native runners, Cypress configuration/node
+The focused Web policy admits Web product/source surfaces, acceptance scenario
+paths under `apps/web/cypress/e2e/`, documents and known governance companions.
+The root policy recognizes the path family; the Web query still owns catalog
+membership. Native runners, Cypress configuration/node
 adapters, the Vitest router/catalog/configuration (`apps/web/vitest/` and root
 `vitest*.ts`), process/database lifetime, toolchain/root-policy changes, unknown
 or unclassified companions retain the existing full command. These test-selection
@@ -92,13 +94,15 @@ not proof that all unannotated browser behavior is portable.
 New host-specific product expectations require explicit review and a catalog
 declaration before their local execution can be reduced.
 
-The single `cypress.catalog.json` inventory additionally declares the selected
-Windows-specific Monaco clipboard obligation under `nativePlatforms.win32`.
-The existing router admits every consumer before filtering the readiness
-execution. A Windows readiness run retains that spec whenever it belongs to the
-complete plan; Linux executes the common scenarios through the required hosted
-workflow. macOS keeps complete local execution; this slice adds no unexecuted
-macOS acceptance claim. Infrastructure changes retain the complete native proof.
+The single `cypress.catalog.json` inventory declares native host obligations.
+After complete admission and physical path validation, readiness retains the
+selected specs that are modified or declared native for the host. A changed spec
+without a native annotation still executes locally on both Windows and Linux;
+being selected through both conditions never duplicates it. Capability and LIVE
+runtime requirements remain intact. Unchanged common scenarios retain their
+complete selected hosted execution. Nightly-only specs retain their existing
+cadence; this boundary does not invent a merge-time obligation for them. macOS
+keeps complete local execution. Infrastructure changes retain full native proof.
 
 The catalog parser validates platform references against admitted merge-time
 consumers. Read-only historical witnesses with the former four-array shape are
@@ -120,7 +124,7 @@ selected from the existing canonical traceability relevance signal.
 
 | Scenario                           | Owner / rail                                                     | Required evidence                                                                     |
 | ---------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Ordinary admitted Web change       | ChangedSliceVerificationPlan / BuildChangedSliceVerificationPlan | Same Vitest plan, complete browser admission, selected host obligation                |
+| Ordinary admitted Web change       | ChangedSliceVerificationPlan / BuildChangedSliceVerificationPlan | Same Vitest plan, complete browser admission, selected changed and native host specs  |
 | Native/toolchain/unknown companion | Same policy and execution rail                                   | Existing full local proof, including native platform behavior                         |
 | Any later local gate failure       | Prepush receipt owner                                            | Failure preserved; no new success receipt                                             |
 | Hosted acceptance                  | TestSuiteEvidenceResult / ValidateTestSuiteEvidenceResult        | Non-draft current-head PR, successful required aggregates and every selected producer |

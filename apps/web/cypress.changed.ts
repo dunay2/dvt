@@ -30,13 +30,15 @@ export type WebCypressCommand = Readonly<{
   specPaths: readonly string[];
 }>;
 
-export function selectWebCypressNativePlatform(
+export function selectWebCypressLocalReadiness(
   command: WebCypressCommand,
-  platform: NodeJS.Platform
+  platform: NodeJS.Platform,
+  changedFiles: readonly string[]
 ): WebCypressCommand | undefined {
   if (platform !== 'win32' && platform !== 'linux') return command;
   const native = new Set(WEB_CYPRESS_NATIVE_PLATFORMS[platform] ?? []);
-  const specs = command.specPaths.filter((spec) => native.has(spec));
+  const changed = new Set(changedFiles.map(repositoryPath));
+  const specs = command.specPaths.filter((spec) => native.has(spec) || changed.has(spec));
   return specs.length > 0 ? buildBrowserCommand(command.capability, specs) : undefined;
 }
 

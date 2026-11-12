@@ -2,7 +2,7 @@
  * Owned concern: adapt changed files into governed Web evidence execution.
  * @baseline GH-3540: one router owns both independent evidence obligations.
  * @decision GH-3578/GH-3656: select phase, capability and shard after validating the complete plan.
- * @consequence Local execution remains complete; CI partitions cannot hide invalid paths.
+ * @consequence Every local or hosted execution projection retains complete path admission.
  * @version 1.0.1
  */
 import { spawnSync } from 'node:child_process';
@@ -11,7 +11,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { WEB_CYPRESS_CATALOG_PATH } from '../cypress.catalog';
-import { selectWebCypressShard, selectWebCypressNativePlatform } from '../cypress.changed';
+import { selectWebCypressShard, selectWebCypressLocalReadiness } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
 
 import { parseChangedSuiteArgs } from './changed-suite-args';
@@ -136,7 +136,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       fullLocal && entry.capability === 'controlled'
         ? [1, 2, 3].map((index) => selectWebCypressShard(entry, { index, count: 3 }))
         : args.phase === 'push-readiness'
-          ? [selectWebCypressNativePlatform(entry, process.platform)]
+          ? [selectWebCypressLocalReadiness(entry, process.platform, changedFiles)]
           : [selectWebCypressShard(entry, args.browserShard)]
     )
     .filter((entry) => entry !== undefined);
@@ -157,7 +157,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
   if (args.phase === 'push-readiness') {
     process.stdout.write(
       `[web:test:changed] admitted ${plan.browserCommands.length} complete browser capabilities; ` +
-        `retained ${browserCommands.flatMap((entry) => entry.specPaths).length} local native specs; hosted acceptance required.\n`
+        `retained ${browserCommands.flatMap((entry) => entry.specPaths).length} local browser specs; hosted acceptance required.\n`
     );
   }
 
