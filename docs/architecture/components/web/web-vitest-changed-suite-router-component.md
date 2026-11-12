@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-12
 planning_type: architecture
 ---
 
@@ -39,6 +39,29 @@ The CLI adapter separates argument admission (`scripts/changed-suite-args.ts`),
 Git acquisition (`scripts/changed-suite-git.ts`) and command execution
 (`scripts/run-vitest-changed-suites.ts`). These are internal adapters of the
 existing rail, not additional commands or a second capability catalog.
+
+Browser admission separates three reasons to change within the same native
+component. `cypress.supportCapabilities.ts` owns exact support capabilities,
+execution boundaries, retained spec identities and fixture contracts.
+`cypress.commands.ts` describes runtime commands and disjoint shards using the
+existing command/shard types. `cypress.changed.ts` composes browser obligations
+and exposes the existing public selection contract. Both extracted modules are
+complete execution boundaries; changes to them select all three runtimes.
+
+The Code bootstrap is declared as controlled support. The existing architecture
+matrix discovers its actual transitive spec consumers and checks each against
+the single catalog and its real runtime. Unknown helpers still fail admission.
+Local readiness and hosted acceptance keep their existing policy and receipts.
+
+```mermaid
+flowchart LR
+  Before[Combined 340-line browser admission owner] --> Failure[Unknown Code bootstrap]
+  Input[Changed paths] --> Router[cypress.changed: query composition]
+  Data[cypress.supportCapabilities: exact ownership data] --> Router
+  Router --> Commands[cypress.commands: descriptions and shards]
+  Commands --> Adapter[Existing execution adapter]
+  Adapter --> Runtime[Existing runtime proof]
+```
 
 ### Execution prerequisite order
 
