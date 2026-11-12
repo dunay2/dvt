@@ -13,6 +13,22 @@ test('API predev delegates its production closure to the canonical runtime build
   assert.equal(api.scripts.predev, 'node ../../scripts/build-workspace-runtime-deps.cjs dvt-api');
 });
 
+for (const [hook, guard, option] of [
+  ['prebuild', 'skip-prebuild-if-orchestrated.cjs', ''],
+  ['pretypecheck', 'skip-pretest-if-ci.cjs', ''],
+  ['pretest', 'skip-pretest-if-ci.cjs', ''],
+  ['pretest:integration', null, ' --build-self'],
+]) {
+  test(`API ${hook} uses the owned preparation graph and preserves its guard`, () => {
+    const api = JSON.parse(readFileSync('apps/api/package.json', 'utf8'));
+    const prefix = guard === null ? '' : `node ../../scripts/${guard} || `;
+    assert.equal(
+      api.scripts[hook],
+      `${prefix}node ../../scripts/build-workspace-runtime-deps.cjs dvt-api${option}`
+    );
+  });
+}
+
 function runPreparation(
   argv,
   {

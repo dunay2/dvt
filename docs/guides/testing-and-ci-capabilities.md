@@ -1222,6 +1222,15 @@ No package wildcard, implicit global build, persistent database, or test-result
 cache is introduced. Independent selected tasks retain the existing concurrency
 bound of four.
 
+API's direct `prebuild`, `pretypecheck` and `pretest` hooks reuse this command
+after their existing CI/Turbo guard. `predev` uses the same adapter. Integration
+preparation requests `--build-self`, so one selected graph prepares dependencies
+and API without a second `pnpm build` lifecycle. The actual build, source/test
+typecheck and unit/integration test commands retain their existing scope.
+The runtime preparation contract owns these caller bindings; the package test
+matrix separately owns which tests run. Timing evidence distinguishes actual
+work from cache restoration and replayed task logs.
+
 `tools/ci/workspace-runtime-preparation.test.mjs` checks the command boundary:
 invalid arguments and package names, absent packages/scripts, malformed discovery,
 out-of-repository paths, empty closures, and failed or signalled child processes

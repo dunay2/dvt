@@ -106,15 +106,11 @@ test('test matrix includes affected package tests and planner contract dependenc
   assert.deepEqual(selectedPackages(matrix), ['@dvt/contracts', '@dvt/planner'].sort());
 });
 
-test('test matrix routes API package tests through the CI lifecycle bypass', () => {
+test('test matrix routes API through its complete unit and integration command', () => {
   const workspacePackages = collectWorkspacePackagesByName();
   const apiPackage = workspacePackages.get('dvt-api');
   const matrix = buildTestMatrixOutputs(['apps/api/src/server.ts']);
 
-  assert.equal(
-    apiPackage?.scripts?.pretest,
-    'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "dvt-api^..." build'
-  );
   const privateRunner =
     'node --require ../../scripts/local-data-private-creation.cjs ../../node_modules/vitest/vitest.mjs';
   assert.equal(apiPackage?.scripts?.test, 'pnpm test:unit');
