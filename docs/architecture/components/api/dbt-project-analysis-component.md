@@ -79,6 +79,19 @@ Hot installation replacement is unsupported; launcher timestamps and TTLs do not
 establish library identity. Retention is neither persistent nor cross-process.
 
 Eligible execution reads a private copy of the profile bytes used in its identity.
+Managed profiles resolve outside the workspace by path segments, after `realpath`.
+A child named `..profiles` is still workspace-controlled: a leading pair of dots
+alone is not a parent-directory segment. The workspace itself and every real child
+are rejected; external managed directories retain their existing support.
+
+```mermaid
+flowchart LR
+  P[Configured profiles] --> R[Resolve real workspace and profile paths]
+  R --> S[Compare relative path segments]
+  S -->|Workspace itself or any child| X[Unavailable profiles]
+  S -->|External directory| V[Existing profile validation]
+```
+
 After shared work or a retained lookup, source and context are checked again.
 Changed or unreadable inputs produce an unavailable analysis, never stale success.
 Only valid eligible native results are retained. Original `analyzedAt` and `analysisSha256`

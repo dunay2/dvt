@@ -72,7 +72,9 @@ export async function resolveDbtProfilesDirectory(
       realpath(profilesDirectory),
     ]);
     const relative = path.relative(realWorkspaceFilesRoot, realProfilesDirectory);
-    if (relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))) return null;
+    const outsideWorkspace =
+      relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
+    if (!outsideWorkspace) return null;
     const hasProfile =
       (await isFile(path.join(realProfilesDirectory, 'profiles.yml'))) ||
       (await isFile(path.join(realProfilesDirectory, 'profiles.yaml')));

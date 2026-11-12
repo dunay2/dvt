@@ -1,9 +1,10 @@
 /** Owned concern: bounded snapshot contents and live drift; all original runner assertions remain in their cases. */
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { resolveDbtProfilesDirectory } from '../../../src/infrastructure/dbt/dbtAnalysisContext.js';
 import { DbtCliProjectAnalyzer } from '../../../src/infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
 
@@ -26,6 +27,20 @@ describe('DbtCliProjectAnalyzer bounded snapshot contents and live drift', () =>
   afterEach(async () => {
     await fixture.dispose();
   });
+
+  it.each(['.', 'managed-profiles', '..profiles'])(
+    'keeps workspace-controlled profiles outside the managed boundary: %s',
+    async (name) => {
+      const candidate = path.join(workspaceFilesRoot, name);
+      await mkdir(candidate, { recursive: true });
+      await writeFile(path.join(candidate, 'profiles.yml'), 'analytics: {}\n');
+
+      await expect(resolveDbtProfilesDirectory(workspaceFilesRoot, candidate)).resolves.toBeNull();
+      await expect(
+        resolveDbtProfilesDirectory(workspaceFilesRoot, profilesDirectory)
+      ).resolves.toBe(await realpath(profilesDirectory));
+    }
+  );
 
   it('excludes generated artifacts while preserving installed dependencies for parsing', async () => {
     await writeFile(
