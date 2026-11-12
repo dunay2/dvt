@@ -1,3 +1,8 @@
+/**
+ * Owned concern: admit Preview selections against their named server authority.
+ * @decision Assert structured rejections using the shared target identity contract.
+ * @consequence Connection drift rejects without falling back to another graph authority.
+ */
 import {
   DbtProjectGraphProjectionSchema,
   asSha256HexString,
@@ -267,6 +272,37 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
     });
     expect(graphDraftResolver.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a connection-only target change before admitting a dbt Preview', async () => {
+    const { service, projectGraph, graphDraftResolver, dvtPreview } = buildService(
+      buildProjection({
+        executionTarget: {
+          ...PROVENANCE.executionTarget,
+          connectionRef: {
+            ...PROVENANCE.executionTarget.connectionRef,
+            connectionId: 'warehouse-replaced',
+          },
+        },
+      })
+    );
+
+    await expect(
+      service.execute(
+        {
+          selection: parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] }),
+          graphSource: GRAPH_SOURCE,
+          provenance: PROVENANCE,
+        },
+        buildContext()
+      )
+    ).resolves.toMatchObject({
+      ok: false,
+      rejection: { cause: 'dbt_project_preview_provenance_stale' },
+    });
+    expect(projectGraph.execute).toHaveBeenCalledOnce();
+    expect(graphDraftResolver.execute).not.toHaveBeenCalled();
+    expect(dvtPreview.execute).not.toHaveBeenCalled();
   });
 
   it('rejects stale dbt revision provenance before planner persistence', async () => {
