@@ -1,3 +1,8 @@
+/**
+ * Owned concern: prove protected DVT plans persist/replay through real PG and artifact-backed services, never file compilation.
+ * @decision Retain real PG persistence and replay assertions independently of file compilation.
+ * @consequence Protected native DVT keeps its existing missing-capability outcome and never calls the file compiler.
+ */
 import { randomUUID } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
@@ -5,39 +10,24 @@ import path from 'node:path';
 
 import { PostgresPlanStore } from '@dvt/adapter-postgres';
 import {
-  FileContentAddressedArtifactStore,
-  locateFileContentAddressedArtifact,
-} from '@dvt/artifacts';
-import {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
   DvtOperationalWorkloadContractV1,
   KNOWN_STEP_KINDS,
-  createDefaultStepTypeRegistry,
   parseExecutionSelection,
 } from '@dvt/contracts';
-import { PlannerFacade } from '@dvt/planner';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import {
-  AUTHORIZATION_ACTION,
-  buildEnvironmentAccessScope,
-} from '../../src/application/ports/accessDecision.js';
-import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../../src/application/ports/workspaceGraphDraft.js';
-import { DvtOperationalWorkloadProjector } from '../../src/application/services/dvtOperationalWorkloadProjector.js';
-import { DvtPostgresTargetProjectionPublisher } from '../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
-import { PreviewPlanUseCase } from '../../src/application/services/PreviewPlanUseCase.js';
-import { ResolveAuthorizedDvtPreviewSelectionService } from '../../src/application/services/resolveAuthorizedDvtPreviewSelection.js';
-import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
-import { ResolveAuthorizedPreviewSelectionService } from '../../src/application/services/resolveAuthorizedPreviewSelection.js';
-import { StoredExecutablePlanResolver } from '../../src/application/services/StoredExecutablePlanResolver.js';
-import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
-import { EnvironmentId, ProjectId, TenantId } from '../../src/domain/auth/types.js';
-import { makeAdapter } from '../application/services/storedPlanExecutabilityValidator/harness.js';
 import { buildDvtJoinPreviewDraft } from '../fixtures/dvtJoinPreviewFixture.js';
 import { buildDvtTerminalTransformPreviewDraft } from '../fixtures/workspaceGraphDraftFixture.js';
 
+import {
+  buildDvtPreviewIntegrationUseCase,
+  buildDvtPreviewIntegrationContext,
+} from './dvtProtectedPreview.integration.fixtures.js';
+
 const databaseUrl = process.env['DVT_PG_URL'] ?? process.env['DATABASE_URL'];
+
 const describeIfPostgres = databaseUrl === undefined ? describe.skip : describe;
 
 describeIfPostgres('protected DVT Preview integration', () => {
@@ -116,62 +106,7 @@ describeIfPostgres('protected DVT Preview integration', () => {
                   : node
               ),
             };
-      const planner = new PlannerFacade();
-      const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
-        planner,
-        workspaceGraphDraftStore: {
-          migrate: async () => undefined,
-          close: async () => undefined,
-          read: async () => ({
-            scope,
-            schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-            revision: 'revision-dvt-preview-1',
-            draftPayload: draft,
-            updatedAt: '2026-09-11T00:00:00.000Z',
-          }),
-          save: async () => {
-            throw new Error('Draft writes are outside this Preview integration');
-          },
-        },
-      });
-      const targetProjectionPublisher = new DvtPostgresTargetProjectionPublisher({
-        artifactStore: new FileContentAddressedArtifactStore({ rootPath: artifactRoot }),
-        locateArtifact: ({ tenantId, sha256 }) =>
-          locateFileContentAddressedArtifact({
-            rootPath: artifactRoot,
-            tenantId,
-            sha256,
-          }),
-      });
-      const dvtPreviewSelectionResolver = new ResolveAuthorizedDvtPreviewSelectionService({
-        graphDraftResolver,
-        targetProjectionPublisher,
-        workloadProjector: new DvtOperationalWorkloadProjector(),
-      });
-      const previewSelectionResolver = new ResolveAuthorizedPreviewSelectionService({
-        graphDraftResolver,
-        dvtPreviewSelectionResolver,
-        projectGraph: {
-          execute: async () => {
-            throw new Error('dbt projection is outside this DVT Preview');
-          },
-        },
-      });
-      const stepTypeRegistry = createDefaultStepTypeRegistry();
-      const planValidator = new StoredPlanExecutabilityValidator({
-        materializer: new StoredExecutablePlanResolver({
-          fetcher: planStore,
-          stepTypeRegistry,
-        }),
-        adapters: new Map([['temporal', makeAdapter([])]]),
-        stepTypeRegistry,
-      });
-      const useCase = new PreviewPlanUseCase({
-        planner,
-        planStore,
-        planValidator,
-        previewSelectionResolver,
-      });
+      const useCase = buildDvtPreviewIntegrationUseCase({ scope, draft, artifactRoot, planStore });
       const command = {
         targetAdapter: 'temporal',
         selection: parseExecutionSelection({
@@ -183,27 +118,7 @@ describeIfPostgres('protected DVT Preview integration', () => {
           canvasId: 'dvt-terminal-preview-canvas',
         },
       };
-      const context = {
-        principal: {
-          principalId: 'principal-dvt-preview-it',
-          subjectId: 'principal-dvt-preview-it',
-          issuer: 'issuer',
-          audience: 'audience',
-          principalType: 'user' as const,
-          expiresAt: new Date('2030-01-01T00:00:00.000Z'),
-          rawScopes: [],
-          assertedTenantIds: [scope.tenantId],
-          assertedProjectIds: [scope.projectId],
-        },
-        scope: buildEnvironmentAccessScope(
-          TenantId.unsafe(scope.tenantId),
-          ProjectId.unsafe(scope.projectId),
-          EnvironmentId.unsafe(scope.environmentId)
-        ),
-        action: AUTHORIZATION_ACTION.runStart,
-        requestId: 'request-dvt-preview-it',
-        authorizedAt: new Date('2026-09-11T00:00:00.000Z'),
-      };
+      const context = buildDvtPreviewIntegrationContext(scope);
 
       expect(command).not.toHaveProperty('graphSource');
       const result = await useCase.execute(command, context);

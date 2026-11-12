@@ -1,6 +1,7 @@
 /**
- * Owned concern: build protected runtime route dependencies from the runtime
- * module without registering HTTP routes.
+ * Owned concern: build protected runtime route dependencies from the runtime module without registering HTTP routes.
+ * @decision Assemble existing module capabilities without HTTP registration or domain decisions.
+ * @consequence Preview receives the same injected dbt compilation and authority collaborators.
  */
 import { IdempotencyKeyBuilder } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
@@ -138,6 +139,7 @@ export function buildProtectedRuntimeRouteDependencies(
     graphDraftResolver: previewGraphDraftResolver,
     ...(dvtPreviewSelectionResolver === undefined ? {} : { dvtPreviewSelectionResolver }),
     projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase,
+    dbtCompilation: protectedModule.dbtProjectImport.previewCompilation,
   });
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: protectedModule.planner,
