@@ -50,12 +50,13 @@ flowchart LR
   P[Preview / current producer binding] --> A
   A --> S[Authorized snapshot and context]
   S --> E{Eligible static inputs?}
-  E -->|No| N[Native process]
+  E -->|No| B[Native process / no reuse]
+  B --> O[Original evidence / separate projections]
   E -->|Yes| R[Bounded shared evidence]
-  R -->|Miss| N
+  R -->|Miss| N[Native process / private managed context]
   N --> V[Recheck revision and context]
-  R --> V
-  V --> O[Original evidence / separate projections]
+  R -->|Joined or retained| V
+  V --> O
 ```
 
 ## Validity and lifecycle
