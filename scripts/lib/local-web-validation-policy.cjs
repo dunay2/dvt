@@ -57,8 +57,6 @@ function webTestPhase(files, options = {}) {
       !scope.runtimeWorkspaceFanout &&
       (!scope.workflowPolicyInput || scope.hostedWebTestAdapter) &&
       (scope.path.startsWith('apps/web/src/') ||
-        scope.path.startsWith('apps/web/vitest/') ||
-        /^apps\/web\/vitest\.[^/]+\.ts$/u.test(scope.path) ||
         scope.path.startsWith('docs/') ||
         scope.path === 'AGENTS.md' ||
         scope.hostedWebTestAdapter ||

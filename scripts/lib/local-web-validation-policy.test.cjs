@@ -51,6 +51,30 @@ test('native, root and unclassified companions retain complete local execution',
   }
 });
 
+test('test-router and toolchain edits retain complete proof alone and with product edits', () => {
+  const tooling = [
+    'apps/web/vitest/changedPlan.ts',
+    'apps/web/vitest/classification.ts',
+    'apps/web/vitest/commands.ts',
+    'apps/web/vitest/paths.ts',
+    'apps/web/vitest/runtimeConfig.ts',
+    'apps/web/vitest.suites.ts',
+    'apps/web/vitest.config.ts',
+    'apps/web/vitest.architecture.config.ts',
+  ];
+  for (const platform of ['win32', 'linux']) {
+    for (const path of tooling) {
+      for (const files of [[path], [source, path], [path, source]]) {
+        assert.deepEqual(
+          webArgs(files, { pushReadiness: true, platform }),
+          ['test:web:changed'],
+          `${platform}: ${files.join(', ')}`
+        );
+      }
+    }
+  }
+});
+
 test('readiness does not acquire unrelated Web proof or change the existing hosted-only route', () => {
   assert.equal(
     webArgs(['docs/guides/pr-preflight-and-ci-triage.md'], { pushReadiness: true }),

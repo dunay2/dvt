@@ -81,11 +81,13 @@ flowchart LR
   Exact --> Merge[Fresh base/head DB proof and expected-SHA merge]
 ```
 
-The focused Web policy admits Web product/source and Vitest surfaces, documents
+The focused Web policy admits Web product/source surfaces, documents
 and known governance companions. Native runners, Cypress configuration/node
-adapters, process/database lifetime, toolchain/root-policy changes, unknown or
-unclassified companions retain the existing full command. Unsupported local
-platforms also retain full execution. This is an operational validation boundary,
+adapters, the Vitest router/catalog/configuration (`apps/web/vitest/` and root
+`vitest*.ts`), process/database lifetime, toolchain/root-policy changes, unknown
+or unclassified companions retain the existing full command. These test-selection
+and execution inputs retain full proof both alone and mixed with product edits.
+Unsupported local platforms also retain full execution. This is an operational validation boundary,
 not proof that all unannotated browser behavior is portable.
 New host-specific product expectations require explicit review and a catalog
 declaration before their local execution can be reduced.
