@@ -37,7 +37,7 @@
     "verify:changed": "pnpm --filter @dvt/crypto build && node scripts/verify-changed.cjs",
     "closeout:changed": "node scripts/closeout-changed.cjs",
     "test:closeout-changed": "node --test scripts/closeout-changed.test.cjs",
-    "test:verify-prepush": "node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs scripts/local-validation-plan.test.cjs scripts/lib/changed-test-selection.test.cjs scripts/lib/local-test-coverage.test.cjs scripts/lib/local-validation-plan-values.test.cjs scripts/lib/local-validation-executor.test.cjs scripts/lib/prepush-validation-stamp.test.cjs",
+    "test:verify-prepush": "node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs scripts/local-validation-plan.test.cjs scripts/lib/changed-test-selection.test.cjs scripts/lib/local-web-validation-policy.test.cjs scripts/lib/local-test-coverage.test.cjs scripts/lib/local-validation-plan-values.test.cjs scripts/lib/local-validation-executor.test.cjs scripts/lib/prepush-validation-stamp.test.cjs",
     "pr:closeout": "node scripts/pr-closeout.cjs",
     "test:pr-closeout": "node --test scripts/pr-closeout.test.cjs",
     "ops:ar-c2:evidence": "node tools/ops/ar-c2-evidence-collector.mjs",

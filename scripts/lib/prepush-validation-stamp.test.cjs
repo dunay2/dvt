@@ -79,6 +79,94 @@ test('prepush validation stamp can survive branch upstream changes for the same 
   assert.equal(isPrepushStampValid(stamp, expectedDifferentContent), false);
 });
 
+test('only the current local-readiness receipt purpose can satisfy a prepush gate', () => {
+  const expected = buildPrepushStamp(['apps/web/src/app/views/CodeView.tsx'], {
+    stateFingerprint: 'tree',
+    validationFingerprint: 'inputs',
+  });
+  assert.equal(expected.version, 2);
+  assert.equal(expected.purpose, 'local-push-readiness');
+  assert.equal(expected.platform, process.platform);
+  for (const candidate of [
+    { ...expected, version: 1 },
+    { ...expected, purpose: undefined },
+    { ...expected, purpose: 'hosted-browser-accepted' },
+  ])
+    assert.equal(isPrepushStampValid(candidate, expected), false);
+});
+
+test('a shared checkout cannot reuse Linux readiness to omit the native Windows obligation', () => {
+  const options = { stateFingerprint: 'same-tree', validationFingerprint: 'same-inputs' };
+  const linux = buildPrepushStamp(['apps/web/src/app/views/CodeView.tsx'], {
+    ...options,
+    platform: 'linux',
+  });
+  const windows = buildPrepushStamp(linux.changedFiles, { ...options, platform: 'win32' });
+  assert.equal(isPrepushStampValid(linux, windows), false);
+  assert.equal(isPrepushStampValid(windows, linux), false);
+  assert.equal(isPrepushStampValid({ ...windows, platform: undefined }, windows), false);
+  assert.equal(isPrepushStampValid(windows, { ...windows }), true);
+});
+
+test('successful inner verification followed by failed traceability cannot publish partial readiness', async (t) => {
+  const root = prepushRepository(t);
+  const changedFiles = [
+    'docs/adr/ADR-0069-component-family-cohesion-and-architectural-boundaries.md',
+  ];
+  const { main: changedMain } = require('../verify-changed.cjs');
+  const events = [];
+  await assert.rejects(
+    main([], {
+      repoRootPath: root,
+      changedFiles,
+      stateFingerprint: 'tree',
+      validationFingerprint: 'inputs',
+      printPrepushPlan: () => {},
+      executePrepushPlan: async (plan) => {
+        for (const step of plan) {
+          events.push(step.id);
+          if (step.id === 'verify-changed') {
+            assert.equal(
+              await changedMain(['--push-readiness'], {
+                repoRootPath: root,
+                changedFiles,
+                printPlan: () => {},
+                executeVerifyChangedPlan: async () => 0,
+              }),
+              0
+            );
+            assert.equal(readPrepushStamp({ repoRootPath: root }), null);
+          } else if (step.id === 'traceability-adr0') {
+            throw Object.assign(new Error('Missing accepted ADR implementation'), { exitCode: 1 });
+          }
+        }
+      },
+    }),
+    /Missing accepted ADR/
+  );
+  assert.deepEqual(events, ['verify-changed', 'traceability-adr0']);
+  assert.equal(readPrepushStamp({ repoRootPath: root }), null);
+});
+
+test('successful inner CLI modes do not write reusable prepush receipts', async (t) => {
+  const root = prepushRepository(t);
+  const changedFiles = ['sample.txt'];
+  const { main: changedMain } = require('../verify-changed.cjs');
+  for (const mode of [[], ['--push-readiness'], ['--committed-tests']]) {
+    assert.equal(
+      await changedMain(mode, {
+        repoRootPath: root,
+        changedFiles,
+        printPlan: () => {},
+        executeVerifyChangedPlan: async () => 0,
+        executeFocusedChangedTestPlan: async () => 0,
+      }),
+      0
+    );
+    assert.equal(readPrepushStamp({ repoRootPath: root }), null);
+  }
+});
+
 function prepushRepository(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-prepush-identity-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

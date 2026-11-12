@@ -12,7 +12,10 @@ export type WebCypressCapability = (typeof WEB_CYPRESS_CAPABILITIES)[number];
 const CATALOG_GROUPS = [...WEB_CYPRESS_CAPABILITIES, 'nightly'] as const;
 export type WebCypressCatalog = Readonly<
   Record<(typeof CATALOG_GROUPS)[number], readonly string[]>
->;
+> &
+  Readonly<{
+    nativePlatforms: Readonly<Partial<Record<'win32' | 'linux' | 'darwin', readonly string[]>>>;
+  }>;
 export type WebCypressCatalogSnapshots = Readonly<{
   base: unknown;
   head: unknown;
@@ -24,8 +27,8 @@ export function parseWebCypressCatalog(value: unknown): WebCypressCatalog {
     value === null ||
     typeof value !== 'object' ||
     Array.isArray(value) ||
-    Object.keys(value).length !== CATALOG_GROUPS.length ||
-    CATALOG_GROUPS.some((key) => !Object.hasOwn(value, key))
+    Object.keys(value).length !== CATALOG_GROUPS.length + 1 ||
+    [...CATALOG_GROUPS, 'nativePlatforms'].some((key) => !Object.hasOwn(value, key))
   )
     throw new Error('Browser catalog requires the three capability arrays and nightly cadence.');
 
@@ -47,14 +50,44 @@ export function parseWebCypressCatalog(value: unknown): WebCypressCatalog {
       seen.add(path);
     }
   }
+  const native = record.nativePlatforms;
+  if (!native || typeof native !== 'object' || Array.isArray(native))
+    throw new Error('Browser catalog requires native platform declarations.');
+  const mergeSpecs = new Set(
+    CATALOG_GROUPS.filter((group) => group !== 'nightly').flatMap(
+      (group) => record[group] as string[]
+    )
+  );
+  for (const [platform, paths] of Object.entries(native)) {
+    if (
+      !['win32', 'linux', 'darwin'].includes(platform) ||
+      !Array.isArray(paths) ||
+      new Set(paths).size !== paths.length ||
+      paths.some((spec) => typeof spec !== 'string' || !mergeSpecs.has(spec))
+    )
+      throw new Error(`Browser catalog has invalid native platform references: ${platform}`);
+  }
   return value as WebCypressCatalog;
 }
 
 export const WEB_CYPRESS_CATALOG = parseWebCypressCatalog(catalog);
-export const { nightly: WEB_CYPRESS_NIGHTLY_SPECS, ...WEB_CYPRESS_SPECS } = WEB_CYPRESS_CATALOG;
+export const WEB_CYPRESS_NIGHTLY_SPECS = WEB_CYPRESS_CATALOG.nightly;
+export const WEB_CYPRESS_NATIVE_PLATFORMS = WEB_CYPRESS_CATALOG.nativePlatforms;
+export const WEB_CYPRESS_SPECS = Object.fromEntries(
+  WEB_CYPRESS_CAPABILITIES.map((capability) => [capability, WEB_CYPRESS_CATALOG[capability]])
+) as Readonly<Record<WebCypressCapability, readonly string[]>>;
 
 function parseCatalogWitness(value: unknown): WebCypressCatalog | null {
   try {
+    // Only historical Git witnesses may lack the newly declared native obligations.
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.keys(value).length === CATALOG_GROUPS.length &&
+      CATALOG_GROUPS.every((key) => Object.hasOwn(value, key))
+    )
+      return parseWebCypressCatalog({ ...value, nativePlatforms: {} });
     return parseWebCypressCatalog(value);
   } catch {
     return null;
@@ -72,6 +105,11 @@ function requireCatalogRetention(
     if (removed)
       throw new Error(`Browser catalog cannot remove or reclassify ${removed} from ${group}.`);
   }
+  for (const platform of ['win32', 'linux', 'darwin'] as const) {
+    const retained = new Set(next.nativePlatforms[platform] ?? []);
+    if (previous.nativePlatforms[platform]?.some((spec) => !retained.has(spec)))
+      throw new Error(`Browser catalog cannot withdraw native platform proof: ${platform}.`);
+  }
 }
 
 export function resolveControlledCatalogAdditions(
@@ -85,6 +123,12 @@ export function resolveControlledCatalogAdditions(
   requireCatalogRetention(base, executed);
   requireCatalogRetention(head, executed);
   if (!base || !head || snapshots.dirty) return null;
+  for (const platform of ['win32', 'linux', 'darwin'] as const) {
+    const metadata = [base, head, executed].map((entry) =>
+      JSON.stringify(entry.nativePlatforms[platform] ?? [])
+    );
+    if (new Set(metadata).size !== 1) return null;
+  }
   const equal = (left: readonly string[], right: readonly string[]): boolean =>
     left.length === right.length && left.every((path, index) => path === right[index]);
   if (CATALOG_GROUPS.some((key) => !equal(executed[key], head[key]))) return null;

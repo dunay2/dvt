@@ -18,6 +18,77 @@ owned suite commands. It accelerates local development and the `Web Frontend
 Tests` pull-request lane while preserving full primary-suite coverage on
 `main`, manual workflow runs, and root-build-sensitive changes.
 
+## Implementation Responsibilities
+
+The suite catalog remains in `apps/web/vitest.suites.ts` and contains data and
+types only. The executable owners live under `apps/web/vitest/`:
+
+| Owner               | Reason to change                                          |
+| ------------------- | --------------------------------------------------------- |
+| `runtimeConfig.ts`  | Vitest environments, worker limits and isolation          |
+| `paths.ts`          | Path normalization and governed surface recognition       |
+| `classification.ts` | Primary and focus suite assignment                        |
+| `commands.ts`       | Ordered commands, exact batches and coverage absorption   |
+| `changedPlan.ts`    | Composition of independent Vitest and Cypress obligations |
+
+Consumers import the actual owner. The catalog does not re-export the relocated
+functions. Commands and config filenames follow the existing suite naming
+convention, checked against real package scripts and configuration files.
+
+The CLI adapter separates argument admission (`scripts/changed-suite-args.ts`),
+Git acquisition (`scripts/changed-suite-git.ts`) and command execution
+(`scripts/run-vitest-changed-suites.ts`). These are internal adapters of the
+existing rail, not additional commands or a second capability catalog.
+
+### Execution prerequisite order
+
+GH-3853 observed a 1,681,490 ms prepush rejection: 52 distinct controlled
+Cypress specs passed before LIVE execution discovered that dbt was unavailable
+on PATH. The prerequisite belongs before expensive evidence execution.
+
+```mermaid
+flowchart LR
+  Before[Previous order] --> Tests[Dependencies and controlled proofs]
+  Tests --> Late[Resolve LIVE dbt]
+  After[Selected canonical plan] --> Mode{Plan only?}
+  Mode -->|yes| Output[Emit plan without environment probing]
+  Mode -->|no| Required{Selected LIVE command?}
+  Required -->|yes| Resolve[Existing LIVE dbt resolver]
+  Resolve -->|missing or conflicting| Reject[Reject before dependencies or tests]
+  Resolve -->|resolved| Execute[Execute unchanged proof obligations]
+  Required -->|no| Execute
+```
+
+`web-evidence-environment.ts` resolves only requirements of the selected browser
+commands. Both LIVE capabilities already use the same protected runtime and
+therefore the existing `resolveLiveProofDbtExecutable` boundary. It supplies the
+same resolved binary to the analyzer and worker in child environments. It does
+not allocate a database, start a runtime, mutate the caller's environment or
+accept cached proof. Controlled-only and Vitest-only execution do not probe dbt.
+
+Negative evidence must prove rejection precedes **all** child execution,
+planning remains possible without provider tools, and partition selection does
+not acquire requirements of unselected capabilities. Resolution is an early
+diagnostic; the real LIVE runner retains readiness checks and proof acceptance.
+
+```mermaid
+flowchart LR
+  CLI[Existing changed-suite adapter] --> Plan[changedPlan query]
+  Config[Existing Vitest configs] --> Runtime[runtimeConfig]
+  Runtime --> Catalog[vitest.suites catalog]
+  Plan --> Classification[classification]
+  Classification --> Paths[paths]
+  Classification --> Catalog
+  Plan --> Commands[commands]
+  Commands --> Catalog
+  Plan --> Browser[Existing Cypress admission]
+```
+
+Changes in these modules retain the complete governance guard batch and browser
+execution-boundary obligations of the original combined owner. Worker isolation,
+memory budgets and runtime capability selection remain governed by the existing
+contracts.
+
 ## Public API
 
 <!-- markdownlint-disable MD060 -->
@@ -175,6 +246,25 @@ flowchart LR
 - Do not treat Vitest as evidence for a Cypress change. Browser obligations use
   the admitted runtime below; unsupported browser changes fail closed.
 - Do not make source files under `apps/web/src/testing/**` production services.
+
+## Interactive Local Cypress Entry
+
+`pnpm --filter @dvt/web test:e2e:open` is the local interactive adapter of the
+existing `RunWebCypressNative` command. It selects the runner's existing `open`
+mode and lets the developer inspect and run specs through the Cypress GUI.
+`tools/ci/run-web-cypress-native.mjs` remains the application port and process
+owner; the script does not implement another browser runner.
+
+The runner retains its fresh build, preview readiness, cancellation and owned
+process cleanup rules. The operator ends the interactive session explicitly;
+an already running preview remains outside the runner's ownership. A GUI exit
+is not a receipt for the required browser proof. Changed/full CI plans select
+finite run modes and cannot substitute this manual session for their evidence.
+
+A focused finite check uses the same canonical entry with a spec argument, for
+example `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/shell/startup-route-readiness.cy.ts`. Spec selection remains governed
+by the existing browser catalog and runtime contracts.
 
 ## Browser Evidence Boundary — GH-3540
 
@@ -1481,6 +1571,25 @@ Acceptance:
   from succeeding. Neither phase cancels its sibling on failure.
 
 > Acceptance scope status: Active. Owner: Frontend / CI.
+
+## Local Push Readiness
+
+The existing router additionally admits `--phase=push-readiness`. It validates
+the complete catalog, consumer paths and retired paths before choosing execution,
+then runs the unchanged Vitest plan and selected declared host-native browser
+obligations. `nativePlatforms` belongs to the same `cypress.catalog.json`
+inventory; Windows retains the real Monaco clipboard/CRLF spec when selected.
+Linux has no added local platform claim; other hosts preserve full native proof.
+This phase cannot combine capability, shard or Vitest-group narrowing.
+
+Explicit execution without a phase remains both phases; hosted Vitest/browser
+groups, capability membership, spec order and partition budgets do not change.
+The local policy keeps native infrastructure, toolchain and unknown frontiers on
+the complete command. This router does not write a readiness or merge receipt.
+The outer prepush owner and strict current-candidate hosted acceptance retain
+those separate responsibilities. Read-only four-array Git witnesses are
+normalized only in the catalog witness parser; withdrawals and native-obligation
+removals still reject, and metadata changes cannot use additive-only narrowing.
 
 ## Local validation of hosted adapters
 

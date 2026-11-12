@@ -17,7 +17,9 @@ const {
 const { buildFocusedChangedTestPlan } = require('./lib/changed-test-selection.cjs');
 const repoRoot = path.resolve(__dirname, '..');
 
-const MECHANICAL_PREPUSH_STEPS = Object.freeze([step('verify-changed', 'pnpm', 'verify:changed')]);
+const MECHANICAL_PREPUSH_STEPS = Object.freeze([
+  step('verify-changed', 'pnpm', 'verify:changed', '--push-readiness'),
+]);
 
 const VERIFY_CHANGED_PRE_TEST_STEPS = Object.freeze([
   step(
@@ -99,7 +101,7 @@ function classifyPrepushScope(changedFiles, options = {}) {
     needsPlanningDbInventory: full,
     needsGovernanceGlobal: full,
     needsFeatureMechanization: full || scope.needsFeatureMechanization,
-    needsTraceabilityAdr0: full,
+    needsTraceabilityAdr0: full || scope.needsTraceabilityAdr0,
     needsCodeValidation: full,
   };
 }
@@ -153,7 +155,11 @@ function buildVerifyChangedPlan(files, options = {}) {
   );
   pushSteps(
     plan,
-    buildFocusedChangedTestPlan(changedFiles, { includeWeb: true, iteration: options.iteration })
+    buildFocusedChangedTestPlan(changedFiles, {
+      includeWeb: true,
+      iteration: options.iteration,
+      pushReadiness: options.pushReadiness,
+    })
   );
   pushSteps(plan, VERIFY_CHANGED_POST_TEST_STEPS);
   return plan;

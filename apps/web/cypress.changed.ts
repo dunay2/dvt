@@ -11,10 +11,12 @@ import {
   WEB_CYPRESS_CATALOG_PATH,
   WEB_CYPRESS_CAPABILITIES as CAPABILITIES,
   WEB_CYPRESS_NIGHTLY_SPECS,
+  WEB_CYPRESS_NATIVE_PLATFORMS,
   WEB_CYPRESS_SPECS,
   type WebCypressCatalogSnapshots,
   type WebCypressCapability,
 } from './cypress.catalog';
+import { isWebVitestImplementationPath } from './vitest/paths';
 
 export {
   WEB_CYPRESS_NIGHTLY_SPECS,
@@ -27,6 +29,16 @@ export type WebCypressCommand = Readonly<{
   env: Readonly<Record<string, string | undefined>>;
   specPaths: readonly string[];
 }>;
+
+export function selectWebCypressNativePlatform(
+  command: WebCypressCommand,
+  platform: NodeJS.Platform
+): WebCypressCommand | undefined {
+  if (platform !== 'win32' && platform !== 'linux') return command;
+  const native = new Set(WEB_CYPRESS_NATIVE_PLATFORMS[platform] ?? []);
+  const specs = command.specPaths.filter((spec) => native.has(spec));
+  return specs.length > 0 ? buildBrowserCommand(command.capability, specs) : undefined;
+}
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
   'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
@@ -245,7 +257,7 @@ export function resolveWebCypressChangedPlan(
       vitestFiles.add(path);
       continue;
     }
-    if (EXECUTION_BOUNDARIES.includes(path)) {
+    if (EXECUTION_BOUNDARIES.includes(path) || isWebVitestImplementationPath(path)) {
       requireCapabilities(CAPABILITIES);
       vitestFiles.add(filePath);
       continue;

@@ -27,6 +27,10 @@ Use this guide for implementation slices and PR-green recovery work.
 2. Run slice validations (package-level tests/build/typecheck for touched scope).
 3. Run repository gate before push:
    - `pnpm verify:prepush`
+   - This is local push readiness: affected checks and complete browser admission,
+     including declared native host proof. Common browser scenarios run in the
+     required hosted Test Suite. Native/toolchain/unknown inputs retain full
+     local proof. Explicit `test:web:changed` still runs both phases.
 4. Push and open/update PR.
    - The pre-push hook re-enters `verify:prepush -- --hook`. When the same
      `HEAD` and local changed-file fingerprint already passed the manual gate,
@@ -41,6 +45,22 @@ Use this guide for implementation slices and PR-green recovery work.
    - extract failed job logs first
    - patch root cause
    - rerun only required checks
+
+For merge acceptance, read the current PR head and draft state from GitHub and
+require successful current-candidate required aggregates. Missing, pending,
+failed, cancelled, skipped or neutral required results do not establish executed
+acceptance. Confirm the expected head again when merging. `pr:checks` is only a
+diagnostic: its current empty/all-skipped behavior is not an acceptance receipt.
+The strict repository ruleset and the existing Test Suite fan-in remain enabled;
+they retain every selected browser partition and scenario.
+
+Only outer `verify:prepush` writes receipt v2 with
+`purpose: local-push-readiness`, after all selected checks. Inner
+`verify:changed` writes no readiness stamp; a later ADR-0000 failure must leave
+no partial-success receipt. Receipts bind the effective host platform; Linux
+readiness cannot replace required Windows proof in a shared checkout.
+Existing fingerprint and validation-level rules
+remain unchanged. Historical v1 or wrong-purpose receipts cannot be reused.
 
 Before merging, run `pnpm docs:feature-mechanization:implementation` against the
 existing local Planning DB with explicit `GIT_BASE` and `GIT_HEAD` commit SHAs
@@ -104,12 +124,12 @@ flowchart LR
 and owns execution budgets, environment isolation, interruption and step results.
 It does not select checks or write receipts. `scripts/lib/prepush-validation-stamp.cjs`
 owns Git input fingerprints, validation-level matching and receipt persistence;
-it does not launch validation or decide when a CLI may write success. Both CLIs
-import these owners directly. Shared command values and labels belong to
+it does not launch validation. Only outer prepush authorizes persistence after
+the entire local plan succeeds. Shared command values and labels belong to
 `scripts/lib/local-validation-plan-values.cjs`, not to an executable CLI.
 The existing plan and CLI modules do not re-export moved implementations.
 
-This separation preserves the existing receipt format and matching rules. Tests
+Receipt v2 preserves exact Git fingerprints and validation-level matching. Tests
 move with their behavior instead of being copied: executor tests exercise process
 lifetimes, receipt tests exercise identity and persistence, and CLI tests retain
 the awaited-success-before-stamp boundary. The existing `test:verify-prepush`

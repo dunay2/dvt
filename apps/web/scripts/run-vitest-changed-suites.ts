@@ -5,205 +5,23 @@
  * @consequence Local execution remains complete; CI partitions cannot hide invalid paths.
  * @version 1.0.1
  */
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { WEB_CYPRESS_CATALOG_PATH } from '../cypress.catalog';
+import { selectWebCypressShard, selectWebCypressNativePlatform } from '../cypress.changed';
+import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
+
+import { parseChangedSuiteArgs } from './changed-suite-args';
 import {
-  WEB_CYPRESS_CATALOG_PATH,
-  WEB_CYPRESS_CAPABILITIES,
-  type WebCypressCatalogSnapshots,
-} from '../cypress.catalog';
-import {
-  selectWebCypressShard,
-  type WebCypressCapability,
-  type WebCypressShard,
-} from '../cypress.changed';
-import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
-
-import {
-  isWebVitestExecutionGroup,
-  selectWebVitestExecutionPartition,
-  type WebVitestExecutionGroup,
-} from './vitest-execution-partitions';
-
-type GitOutputRunner = (args: readonly string[], cwd: string) => string[];
-type WebEvidencePhase = 'all' | 'vitest' | 'browser';
-
-type ChangedSuiteArgs = Readonly<{
-  plan: boolean;
-  full: boolean;
-  phase: WebEvidencePhase;
-  browserCapability?: WebCypressCapability;
-  browserShard?: WebCypressShard;
-  vitestGroup?: WebVitestExecutionGroup;
-  files: readonly string[];
-}>;
-
-const WEB_EVIDENCE_PHASES: ReadonlyMap<string, WebEvidencePhase> = new Map([
-  ['--phase=vitest', 'vitest'],
-  ['--phase=browser', 'browser'],
-]);
-const WEB_BROWSER_CAPABILITIES: ReadonlyMap<string, WebCypressCapability> = new Map(
-  WEB_CYPRESS_CAPABILITIES.map((capability) => [`--browser-capability=${capability}`, capability])
-);
-
-type ReadChangedFilesOptions = Readonly<{
-  env?: Readonly<Record<string, string | undefined>>;
-  gitOutput?: GitOutputRunner;
-}>;
-
-export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs {
-  const flags = new Set<string>();
-  const files: string[] = [];
-  let phase: WebEvidencePhase = 'all';
-  let browserCapability: WebCypressCapability | undefined;
-  let browserShard: WebCypressShard | undefined;
-  let vitestGroup: WebVitestExecutionGroup | undefined;
-  for (const arg of argv) {
-    if (arg === '--') continue;
-    if (!arg.startsWith('--')) {
-      files.push(arg);
-      continue;
-    }
-    const selectedPhase = WEB_EVIDENCE_PHASES.get(arg);
-    const selectedCapability = WEB_BROWSER_CAPABILITIES.get(arg);
-    const selectedShard = /^--browser-shard=([1-9]\d*)\/([1-9]\d*)$/.exec(arg);
-    const selectedVitestGroup = arg.startsWith('--vitest-group=')
-      ? arg.slice('--vitest-group='.length)
-      : undefined;
-    const flag = arg.split('=', 1)[0]!;
-    if (
-      (selectedPhase === undefined &&
-        selectedCapability === undefined &&
-        selectedShard === null &&
-        !(selectedVitestGroup !== undefined && isWebVitestExecutionGroup(selectedVitestGroup)) &&
-        !['--plan', '--full', '--files'].includes(arg)) ||
-      flags.has(flag)
-    ) {
-      throw new Error(`Invalid or repeated changed-suite argument: ${arg}`);
-    }
-    flags.add(flag);
-    phase = selectedPhase ?? phase;
-    browserCapability = selectedCapability ?? browserCapability;
-    if (selectedVitestGroup !== undefined && isWebVitestExecutionGroup(selectedVitestGroup)) {
-      vitestGroup = selectedVitestGroup;
-    }
-    if (selectedShard) {
-      const index = Number(selectedShard[1]);
-      const count = Number(selectedShard[2]);
-      if (!Number.isSafeInteger(index) || !Number.isSafeInteger(count) || index > count) {
-        throw new Error(`Invalid browser shard selector: ${arg}`);
-      }
-      browserShard = { index, count };
-    }
-  }
-  const plan = flags.has('--plan');
-  const full = flags.has('--full');
-  if (vitestGroup !== undefined && phase !== 'vitest') {
-    throw new Error('--vitest-group requires --phase=vitest.');
-  }
-  if (browserCapability !== undefined && phase !== 'browser') {
-    throw new Error('--browser-capability requires --phase=browser.');
-  }
-  if (
-    browserShard !== undefined &&
-    browserCapability !== 'available' &&
-    browserCapability !== 'controlled'
-  ) {
-    throw new Error(
-      '--browser-shard requires --phase=browser and --browser-capability=controlled or available.'
-    );
-  }
-  if ((full && !plan && phase !== 'browser') || (flags.has('--files') && files.length === 0)) {
-    throw new Error(
-      'Use --phase=browser with --full alongside the full Vitest gate; --files requires paths.'
-    );
-  }
-  return {
-    plan,
-    full,
-    phase,
-    files,
-    ...(browserCapability === undefined ? {} : { browserCapability }),
-    ...(browserShard === undefined ? {} : { browserShard }),
-    ...(vitestGroup === undefined ? {} : { vitestGroup }),
-  };
-}
-
-function gitOutput(args: readonly string[], cwd: string): string[] {
-  const output = execFileSync('git', [...args], {
-    cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'ignore'],
-  });
-
-  return output.split('\0').filter((line) => line.length > 0);
-}
-
-export function readChangedFiles(
-  repoRoot: string,
-  options: ReadChangedFilesOptions = {}
-): string[] {
-  const runGitOutput = options.gitOutput ?? gitOutput;
-  const env = options.env ?? process.env;
-  const baseRef = env.GIT_BASE || 'origin/main';
-  const headRef = env.GIT_HEAD || 'HEAD';
-  const diffArgs = ['diff', '--name-only', '--no-renames', '-z'] as const;
-  const files = new Set([
-    ...runGitOutput([...diffArgs, baseRef, headRef], repoRoot),
-    ...runGitOutput([...diffArgs, '--cached'], repoRoot),
-    ...runGitOutput(diffArgs, repoRoot),
-    ...runGitOutput(['ls-files', '-z', '--others', '--exclude-standard'], repoRoot),
-  ]);
-  return [...files].sort((left, right) => left.localeCompare(right));
-}
-
-export function readBrowserCatalogSnapshots(
-  repoRoot: string,
-  options: ReadChangedFilesOptions = {}
-): WebCypressCatalogSnapshots {
-  const runGit = options.gitOutput ?? gitOutput;
-  const { GIT_BASE: base, GIT_HEAD: head } = readGitComparison(repoRoot, options);
-  const dirtyQueries = [
-    ['diff', '--name-only', '-z', '--cached', '--', WEB_CYPRESS_CATALOG_PATH],
-    ['diff', '--name-only', '-z', '--', WEB_CYPRESS_CATALOG_PATH],
-    ['ls-files', '--others', '--exclude-standard', '-z', '--', WEB_CYPRESS_CATALOG_PATH],
-  ];
-  const dirty = dirtyQueries.some((args) => runGit(args, repoRoot).length > 0);
-
-  function readSnapshot(commit: string): unknown {
-    const paths = runGit(
-      ['ls-tree', '--name-only', '-z', commit, '--', WEB_CYPRESS_CATALOG_PATH],
-      repoRoot
-    );
-    if (!paths.includes(WEB_CYPRESS_CATALOG_PATH)) return null;
-    const source = runGit(['show', `${commit}:${WEB_CYPRESS_CATALOG_PATH}`], repoRoot).join('\0');
-    try {
-      return JSON.parse(source) as unknown;
-    } catch {
-      return null;
-    }
-  }
-  return { base: readSnapshot(base), head: readSnapshot(head), ...(dirty ? { dirty: true } : {}) };
-}
-
-function readGitComparison(
-  repoRoot: string,
-  options: ReadChangedFilesOptions = {}
-): Readonly<{ GIT_BASE: string; GIT_HEAD: string }> {
-  const runGit = options.gitOutput ?? gitOutput;
-  const env = options.env ?? process.env;
-  const resolveCommit = (ref: string): string =>
-    runGit(['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`], repoRoot)
-      .join('')
-      .trim();
-  const base = resolveCommit(env.GIT_BASE || 'origin/main');
-  const head = resolveCommit(env.GIT_HEAD || 'HEAD');
-  if (!base || !head) throw new Error('Browser evidence requires verified Git references.');
-  return { GIT_BASE: base, GIT_HEAD: head };
-}
+  readChangedFiles,
+  readBrowserCatalogSnapshots,
+  readGitComparison,
+} from './changed-suite-git';
+import { selectWebVitestExecutionPartition } from './vitest-execution-partitions';
+import { resolveWebEvidenceEnvironment } from './web-evidence-environment';
 
 function runCommand(command: string, cwd: string, env = process.env): void {
   const result = spawnSync(command, {
@@ -305,6 +123,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     args.phase === 'browser'
       ? []
       : selectWebVitestExecutionPartition(plan.commandPlan, args.vitestGroup);
+  const fullLocal =
+    args.phase === 'all' ||
+    (args.phase === 'push-readiness' && !['win32', 'linux'].includes(process.platform));
   const browserCommands = plan.browserCommands
     .filter(
       (entry) =>
@@ -312,9 +133,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
         (args.browserCapability === undefined || entry.capability === args.browserCapability)
     )
     .flatMap((entry) =>
-      args.phase === 'all' && entry.capability === 'controlled'
+      fullLocal && entry.capability === 'controlled'
         ? [1, 2, 3].map((index) => selectWebCypressShard(entry, { index, count: 3 }))
-        : [selectWebCypressShard(entry, args.browserShard)]
+        : args.phase === 'push-readiness'
+          ? [selectWebCypressNativePlatform(entry, process.platform)]
+          : [selectWebCypressShard(entry, args.browserShard)]
     )
     .filter((entry) => entry !== undefined);
 
@@ -331,11 +154,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     return;
   }
 
+  if (args.phase === 'push-readiness') {
+    process.stdout.write(
+      `[web:test:changed] admitted ${plan.browserCommands.length} complete browser capabilities; ` +
+        `retained ${browserCommands.flatMap((entry) => entry.specPaths).length} local native specs; hosted acceptance required.\n`
+    );
+  }
+
   if (vitestCommands.length === 0 && browserCommands.length === 0) {
     process.stdout.write('[web:test:changed] no web test obligation selected.\n');
     return;
   }
 
+  const browserEnv = resolveWebEvidenceEnvironment(browserCommands, process.env);
   process.stdout.write(`[web:test:changed] suites=${plan.suites.join(',')}\n`);
   if (vitestCommands.length > 0 && shouldRunTestDeps(plan.requiresDependencies)) {
     runCommand('pnpm run test:deps', webRoot);
@@ -349,7 +180,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
   }
   for (const entry of browserCommands) {
     runCommand(entry.command, webRoot, {
-      ...process.env,
+      ...browserEnv,
       ...entry.env,
     });
   }

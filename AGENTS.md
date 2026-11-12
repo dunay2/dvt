@@ -153,6 +153,16 @@ At minimum, this means:
 - `pnpm verify:prepush` before claiming the slice is ready, unless the user
   explicitly limits validation and that limit is reported
 
+`verify:prepush` establishes local push readiness. For positively admitted Web
+product changes it admits the complete browser plan, runs affected Vitest and
+retains the selected declared host-specific browser proof. Native infrastructure,
+toolchain or unclassified companions retain complete local execution. Explicit
+`test:web:changed` remains complete. The local receipt never attests hosted
+acceptance: integration requires a non-draft PR, successful required checks for
+the current candidate SHA and fresh Planning DB implementation evidence for the
+exact base/head. A branch push, diagnostic `pr:checks` summary or skipped required
+aggregate cannot satisfy that boundary. See the Local Changed Files Gate contract.
+
 ## Prettier Pre-Commit Behaviour
 
 Prettier runs as part of `lint-staged` inside the **pre-commit** hook, not

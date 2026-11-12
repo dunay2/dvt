@@ -9,11 +9,8 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 
-import {
-  readBrowserCatalogSnapshots,
-  readChangedFiles,
-  resolveRepositoryRoot,
-} from '../../scripts/run-vitest-changed-suites';
+import { readBrowserCatalogSnapshots, readChangedFiles } from '../../scripts/changed-suite-git';
+import { resolveRepositoryRoot } from '../../scripts/run-vitest-changed-suites';
 import { WEB_CYPRESS_CATALOG_PATH, WEB_CYPRESS_CATALOG } from '../../cypress.catalog';
 import { resolveControlledCatalogAdditions } from '../../cypress.catalog';
 

@@ -9,7 +9,7 @@ import {
   WEB_CYPRESS_CATALOG_PATH,
 } from '../../cypress.catalog';
 import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
-import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
+import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 
 const current = WEB_CYPRESS_CATALOG;
 const addition = current.controlled.at(-1)!;
@@ -18,6 +18,28 @@ const snapshots = { base: previous, head: current };
 const allSpecs = Object.values(WEB_CYPRESS_SPECS).flat();
 
 describe('Declarative browser catalog', () => {
+  it.each(['runtimeConfig', 'paths', 'classification', 'commands', 'changedPlan'])(
+    'retains the original execution boundary for Vitest owner %s',
+    (owner) => {
+      const file = `apps/web/vitest/${owner}.ts`;
+      const expected = resolveWebVitestChangedSuitePlan(['apps/web/vitest.suites.ts']);
+      for (const files of [[file], [file, file], [file, current.controlled[0]!]]) {
+        const plan = resolveWebVitestChangedSuitePlan(files);
+        expect(plan.browserCommands).toEqual(expected.browserCommands);
+        expect(plan.commandPlan).toEqual(expected.commandPlan);
+        expect(resolveWebVitestChangedSuitePlan([...files].reverse())).toEqual(plan);
+      }
+    }
+  );
+
+  it('does not grant execution-boundary scope to an adjacent directory', () => {
+    const plan = resolveWebVitestChangedSuitePlan(['apps/web/vitest-adjacent/commands.ts']);
+    expect(plan.browserCommands).toEqual([]);
+    expect(plan.commands).not.toEqual(
+      resolveWebVitestChangedSuitePlan(['apps/web/vitest.suites.ts']).commands
+    );
+  });
+
   it('admits nightly as a disjoint cadence, not a runtime capability', () => {
     expect(parseWebCypressCatalog(current)).toEqual(current);
     expect(WEB_CYPRESS_CAPABILITIES).toEqual(['controlled', 'available', 'unavailable']);
@@ -33,6 +55,7 @@ describe('Declarative browser catalog', () => {
       parseWebCypressCatalog({
         ...current,
         controlled: ['apps/web/cypress/e2e/shell/route.lifecycle.cy.ts'],
+        nativePlatforms: {},
       }).controlled
     ).toEqual(['apps/web/cypress/e2e/shell/route.lifecycle.cy.ts']);
   });

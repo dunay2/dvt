@@ -11,7 +11,6 @@ const { currentSchemaSources } = require('../../tools/planning-db/schema/manifes
 const { classifyRepositoryFileScope } = require('../../tools/ci/repository-change-scope.mjs');
 const {
   classifyScriptFilePath,
-  isGovernanceToolingCommand,
   isRepositoryCommandFile,
 } = require('../../tools/ci/repository-command-catalog.mjs');
 const {
@@ -29,6 +28,7 @@ const {
   readParentSuiteMembers,
 } = require('./local-test-coverage.cjs');
 const repoRoot = path.resolve(__dirname, '../..');
+const { webTestPhase } = require('./local-web-validation-policy.cjs');
 // These are actual cross-file contracts, not repeated adjacent pairs or test self references.
 const EXCEPTIONS = Object.freeze({
   'scripts/planning-db/feature-mechanization-policy.cjs':
@@ -172,52 +172,24 @@ function ciToolSteps(files) {
   return steps;
 }
 
-function webTestPhase(files) {
-  const runtimeChanged = files.some(
-    (file) =>
-      file.startsWith('apps/web/') ||
-      [
-        'apps/api/package.json',
-        'apps/api/vitest.integration.config.ts',
-        'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
-        'scripts/run-selected-closure-live-proof.cjs',
-        'scripts/run-selected-closure-cypress.cjs',
-        'scripts/live-proof-process.cjs',
-        'scripts/live-proof-web-runtime.cjs',
-        'tools/ci/run-web-cypress-native.mjs',
-      ].includes(file)
-  );
-  const scopes = files.map((file) => classifyRepositoryFileScope(file, { repoRootPath: repoRoot }));
-  if (!runtimeChanged && !scopes.some((scope) => scope.hostedWebTestAdapter)) return null;
-  // Only positive ownership evidence may remove the local browser obligation.
-  const hostedOnly =
-    !runtimeChanged &&
-    scopes.every(
-      (scope) =>
-        scope.hostedWebTestAdapter ||
-        (!scope.rootCiPolicyInput &&
-          !scope.workflowPolicyInput &&
-          !scope.runtimeWorkspaceFanout &&
-          (scope.path.startsWith('docs/') ||
-            (scope.commandClass != null && isGovernanceToolingCommand(scope.commandClass))))
-    );
-  return hostedOnly ? 'vitest' : 'all';
-}
-
 function buildFocusedChangedTestPlan(files, options = {}) {
   const changedFiles = normalizeChangedFiles(files);
   const ci = ciToolSteps(changedFiles);
   const plan = [];
   if (options.includeWeb) {
     pushSteps(plan, ci);
-    const webPhase = webTestPhase(changedFiles);
+    const webPhase = webTestPhase(changedFiles, options);
     if (webPhase !== null) {
       pushSteps(plan, [
         testStep(
           'test-web-changed',
           'pnpm',
           'test:web:changed',
-          ...(options.iteration || webPhase === 'vitest' ? ['--phase=vitest'] : [])
+          ...(options.iteration || webPhase === 'vitest'
+            ? ['--phase=vitest']
+            : webPhase === 'push-readiness'
+              ? ['--phase=push-readiness']
+              : [])
         ),
       ]);
     }
