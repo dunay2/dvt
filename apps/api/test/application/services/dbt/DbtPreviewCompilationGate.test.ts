@@ -10,6 +10,7 @@ import type {
   IDbtProjectAnalyzerPort,
 } from '../../../../src/application/ports/dbtProjectAnalysis.js';
 import { DbtPreviewCompilationGate } from '../../../../src/application/services/dbt/DbtPreviewCompilationGate.js';
+import { projectDbtManifest } from '../../../../src/infrastructure/dbt/dbtManifestProjection.js';
 import {
   SELECTED_MODEL_ANALYSIS_SCOPE as scope,
   validSelectedModelProjectAnalysis,
@@ -49,6 +50,40 @@ function setup(): {
 }
 
 describe('DbtPreviewCompilationGate', () => {
+  it.each(['model', 'test', 'snapshot'] as const)(
+    'admits native compiled %s evidence through the real manifest projector',
+    async (resourceType) => {
+      const uniqueId = `${resourceType}.analytics.orders`;
+      const originalFilePath = `${resourceType}s/orders.sql`;
+      const { resources } = projectDbtManifest({
+        metadata: { dbt_version: '1.10.0', project_name: 'analytics', adapter_type: 'postgres' },
+        nodes: {
+          [uniqueId]: {
+            unique_id: uniqueId,
+            resource_type: resourceType,
+            name: 'orders',
+            package_name: 'analytics',
+            original_file_path: originalFilePath,
+            compiled_code: 'select 1 as order_id',
+          },
+        },
+        sources: {},
+      });
+      const { gate, analyze, analysis } = setup();
+      analyze.mockResolvedValue({ ...analysis, resources });
+      expect(await gate.execute({ ...input, resources })).toEqual({ ok: true });
+      expect(analyze).toHaveBeenCalledExactlyOnceWith({
+        scope,
+        projectRoot: 'analytics',
+        operation: {
+          kind: 'compile',
+          selectors: [`path:${originalFilePath}`],
+          targetName: 'production',
+        },
+      });
+    }
+  );
+
   // Parse success is not compilation evidence, even for SQL without Jinja.
   it('requires native compilation against the accepted execution target', async () => {
     const { gate, analyze } = setup();

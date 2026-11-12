@@ -59,6 +59,35 @@ flowchart LR
   V --> O
 ```
 
+## Native manifest projection
+
+The existing `projectDbtManifest` entry assembles graph resources, identities,
+dependencies and diagnostics. Its internal collaborators separately decode native
+values, project identities, project resources and resolve resource metadata.
+This follows `GH-3876-NATIVE-COMPILE-EVIDENCE-PROJECTION` and the
+[review correction rationale](https://github.com/dunay2/dvt/issues/3876#issuecomment-6833241925).
+These files belong to the existing analyzer adapter, not new application ports
+or domain aggregates. Authorization and execution admission remain application
+concerns.
+
+```mermaid
+flowchart TD
+  M[Native manifest] --> G[Graph assembly and diagnostics]
+  G --> I[Identity projection]
+  G --> R[Resource projection]
+  R --> D[Resource metadata and declaration paths]
+  G --> V[Native manifest value readers]
+  I --> V
+  R --> V
+  D --> V
+```
+
+Compilation evidence preserves native `compiled_code` for the existing executable
+resource kinds: model, test and snapshot. A parse without SQL remains without
+compilation evidence; no SQL is synthesized. An integration contract passes the
+real projector output to Preview compilation admission for all three kinds,
+preventing adapter omissions from being hidden by hand-authored port responses.
+
 ## Validity and lifecycle
 
 Identity includes tenant/project/environment, canonical directory, requested root,
