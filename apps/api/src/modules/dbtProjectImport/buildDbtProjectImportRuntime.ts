@@ -1,4 +1,8 @@
-/** Owned concern: compose phase-three dbt project import application services once. */
+/**
+ * Owned concern: compose phase-three dbt project import application services once.
+ * @decision Compose file analysis and Preview compilation with one injected analyzer.
+ * @consequence The new consumer does not create another native runner or cache.
+ */
 import type {
   IDbtExecutionConnectionBindingVerifier,
   IDbtExecutionTargetResolver,
@@ -16,6 +20,7 @@ import { AnalyzeSelectedDbtModelQuery } from '../../application/services/analyze
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { CanvasAuthoringAuthorityPolicy } from '../../application/services/canvasAuthoringAuthorityPolicy.js';
 import { CompileGraphDbtModelsQuery } from '../../application/services/compileGraphDbtModelsQuery.js';
+import { DbtPreviewCompilationGate } from '../../application/services/dbt/DbtPreviewCompilationGate.js';
 import { ImportDbtProjectUseCase } from '../../application/services/importDbtProjectUseCase.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../application/services/projectDbtGraphFromFilesUseCase.js';
 import { ResolveDbtModelProducers } from '../../application/services/resolveDbtModelProducers.js';
@@ -72,6 +77,7 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
   });
 
   return {
+    previewCompilation: new DbtPreviewCompilationGate(deps.analyzer),
     modelProducerResolver: new ResolveDbtModelProducers({
       analyzer: deps.analyzer,
       authorityPolicy: deps.authorityPolicy,
