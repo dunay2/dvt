@@ -1,16 +1,48 @@
 /** Owned concern: preserve API's strict typed-lint boundary and semantic checks. */
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { ESLint } from 'eslint';
+import tsParser from '@typescript-eslint/parser';
 import ts from 'typescript';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const lint = new ESLint({ cwd: root });
 const sourcePath = 'apps/api/src/app.ts';
+const fixtureRoot = path.join(root, 'apps/api');
+const queryPrefix = "import { Pool } from 'pg';\nconst pool = new Pool();\n";
+const fixtureSources = {
+  'floating-query': queryPrefix + "pool.query('select 1');\n",
+  'awaited-query': queryPrefix + "await pool.query('select 1');\n",
+  'misused-promise':
+    'export {};\nconst accept = (task: () => void): void => task();\naccept(async () => {});',
+  'awaited-string': "import { sha256HexUtf8 } from '@dvt/crypto';\nawait sha256HexUtf8('value');",
+  'missing-import': "import absent from 'dvt-missing-lint-contract';\nexport { absent };",
+  'valid-alias':
+    "import { sha256HexUtf8 } from '@dvt/crypto';\nexport const digest: string = sha256HexUtf8('value');",
+};
+let fixtureDirectory;
+
+before(() => {
+  // Single-run CI programs must see every immutable fixture before their first parse.
+  // Stay outside src/test: the concurrent API reachability proof scans those roots.
+  fixtureDirectory = mkdtempSync(path.join(fixtureRoot, 'api-eslint-contract-'));
+  for (const [name, source] of Object.entries(fixtureSources)) {
+    writeFileSync(path.join(fixtureDirectory, `${name}.test.ts`), source);
+  }
+});
+
+after(() => {
+  tsParser.clearCaches();
+  if (fixtureDirectory === undefined) return;
+  assert.equal(path.dirname(path.resolve(fixtureDirectory)), fixtureRoot);
+  assert.ok(path.basename(fixtureDirectory).startsWith('api-eslint-contract-'));
+  rmSync(fixtureDirectory, { recursive: true, maxRetries: 3, retryDelay: 50 });
+});
 
 function project(configPath) {
   const absolute = path.join(root, configPath);
@@ -21,8 +53,8 @@ function project(configPath) {
   return parsed;
 }
 
-async function messages(source) {
-  const [result] = await lint.lintText(source, { filePath: path.join(root, sourcePath) });
+async function messages(name) {
+  const [result] = await lint.lintFiles(path.join(fixtureDirectory, `${name}.test.ts`));
   assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
   return result.messages;
 }
@@ -32,6 +64,7 @@ test('API source, tests and configuration retain their strict effective policies
     [sourcePath, 0, false],
     ['apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts', 1, true],
     ['apps/api/vitest.config.ts', 1, false],
+    [path.relative(root, path.join(fixtureDirectory, 'floating-query.test.ts')), 1, true],
   ]) {
     const config = await lint.calculateConfigForFile(path.join(root, file));
     assert.deepEqual(config.languageOptions.parserOptions.project, [
@@ -86,25 +119,18 @@ test('API owns all tracked TypeScript roots and preserves canonical compiler opt
 });
 
 test('real pg promise types reject an unconsumed query and admit its awaited form', async () => {
-  const prefix = "import { Pool } from 'pg';\nconst pool = new Pool();\n";
-  const rejected = await messages(prefix + "pool.query('select 1');\n");
+  const rejected = await messages('floating-query');
   assert.ok(
     rejected.some((message) => message.ruleId === '@typescript-eslint/no-floating-promises')
   );
-  assert.deepEqual(await messages(prefix + "await pool.query('select 1');\n"), []);
+  assert.deepEqual(await messages('awaited-query'), []);
 });
 
 test('typed Promise and import checks remain meaningful for API source aliases', async () => {
   const invalid = [
-    [
-      'const accept = (task: () => void): void => task();\naccept(async () => {});',
-      '@typescript-eslint/no-misused-promises',
-    ],
-    [
-      "import { sha256HexUtf8 } from '@dvt/crypto';\nawait sha256HexUtf8('value');",
-      '@typescript-eslint/await-thenable',
-    ],
-    ["import absent from 'dvt-missing-lint-contract';\nexport { absent };", 'import/no-unresolved'],
+    ['misused-promise', '@typescript-eslint/no-misused-promises'],
+    ['awaited-string', '@typescript-eslint/await-thenable'],
+    ['missing-import', 'import/no-unresolved'],
   ];
   for (const [source, rule] of invalid) {
     assert.ok(
@@ -112,10 +138,5 @@ test('typed Promise and import checks remain meaningful for API source aliases',
       rule
     );
   }
-  assert.deepEqual(
-    await messages(
-      "import { sha256HexUtf8 } from '@dvt/crypto';\nexport const digest: string = sha256HexUtf8('value');"
-    ),
-    []
-  );
+  assert.deepEqual(await messages('valid-alias'), []);
 });
