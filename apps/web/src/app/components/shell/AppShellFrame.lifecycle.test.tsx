@@ -21,6 +21,35 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it('retains header controls and route content across Focus presentation changes', () => {
+  // Revealing chrome must never restart a route or discard its in-progress input.
+  const props = {
+    bottomDrawer: null,
+    bottomDrawerHeight: 0,
+    onBottomDrawerHeightChange: vi.fn(),
+    leftNavigation: null,
+    showBottomDrawer: false,
+    skipToMainContentLabel: 'Skip',
+    topBar: <button>View</button>,
+    children: <input aria-label="Editor" defaultValue="draft" />,
+  };
+  act(() => root.render(<AppShellFrame {...props} focusMode={false} />));
+  const header = container.querySelector('[data-slot="app-shell-header-host"]');
+  const control = container.querySelector('button');
+  const editor = container.querySelector('input')!;
+  editor.value = 'unsaved SQL';
+  for (const focusMode of [true, false, true]) {
+    act(() => root.render(<AppShellFrame {...props} focusMode={focusMode} />));
+    expect(header).not.toBeNull();
+    expect(container.querySelector('[data-slot="app-shell-header-host"]')).toBe(header);
+    expect(header?.getAttribute('data-focus-mode')).toBe(String(focusMode));
+    expect(container.querySelector('button')).toBe(control);
+    expect(container.querySelector('input')).toBe(editor);
+    expect(editor.value).toBe('unsaved SQL');
+    expect(control?.disabled).toBe(false);
+  }
+});
+
 it('retains drawer DOM, local input and focus when resize is followed by a shell render', () => {
   const props = {
     bottomDrawer: <input aria-label="Data search" defaultValue="" />,

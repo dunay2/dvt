@@ -82,7 +82,13 @@ export function AppShellFrame({
             {skipToMainContentLabel}
           </a>
           <div className={styles.column}>
-            {topBar}
+            <div
+              data-slot="app-shell-header-host"
+              data-focus-mode={focusMode}
+              className={styles.headerHost}
+            >
+              {topBar}
+            </div>
             {healthBanner}
 
             <div data-slot="app-shell-body" className={styles.body}>

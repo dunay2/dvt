@@ -34,6 +34,7 @@ import {
 } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
@@ -151,6 +152,7 @@ function assertNoSeriousAccessibilityViolations(context: string): void {
 }
 
 function clearBrowserEmulation(): void {
+  // Touch emulation owns a separate spec target; resetting it here changes desktop input.
   cy.then(() =>
     Cypress.automation('remote:debugger:protocol', {
       command: 'Emulation.clearDeviceMetricsOverride',
@@ -495,6 +497,61 @@ describe('Canvas workbench screen composition', () => {
     clearBrowserEmulation();
   });
 
+  it('reveals compact Focus chrome by pointer or keyboard and retains an open View menu', () => {
+    // Auto-hide must not trap users in Focus or replace the route they are working on.
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.window().should((window) => {
+      expect(
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches,
+        'desktop input profile'
+      ).to.equal(true);
+    });
+    cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+      expect($header[0]!.getBoundingClientRect().height).to.be.at.most(32);
+    });
+    cy.get('[data-slot="app-shell-outlet"]').then(($outlet) => {
+      cy.get('[data-slot="shell-menu-trigger"]').click();
+      cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+      // Radix restores trigger focus; leave it before checking the pointer-only hide path.
+      cy.get('[data-slot="app-shell-outlet"]').click('bottomRight');
+      hoverWorkbenchCard('[data-slot="app-shell-frame"]');
+      cy.get('[role="menu"]').should('not.exist');
+      cy.get('[data-slot="app-shell-header-host"]')
+        .should('have.attr', 'data-focus-mode', 'true')
+        .and(($host) => {
+          expect($host[0]!.matches(':hover'), 'pointer is outside header').to.equal(false);
+          expect(
+            $host[0]!.querySelector(':focus-visible'),
+            'keyboard focus is outside header'
+          ).to.equal(null);
+        });
+      cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+        expect($header[0]!.getBoundingClientRect().bottom).to.be.at.most(0);
+      });
+      hoverWorkbenchCard('[data-slot="app-shell-frame"]', 0.001);
+      cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').click();
+      hoverWorkbenchCard('[data-slot="app-shell-frame"]');
+      cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+        expect($header[0]!.getBoundingClientRect().top).to.equal(0);
+      });
+      cy.get('[role="menu"]').should('be.visible');
+      pressNativeKey('Escape');
+      cy.get('[data-slot="app-shell-skip-link"]').focus();
+      cy.press(Cypress.Keyboard.Keys.TAB);
+      cy.focused().closest('[data-slot="app-shell-header-host"]').should('exist');
+      cy.get('[data-slot="shell-top-bar"]').should(($header) => {
+        expect($header[0]!.getBoundingClientRect().top).to.equal(0);
+      });
+      cy.get('[data-slot="shell-menu-trigger"]').click();
+      cy.contains('[role="menuitemcheckbox"]', /Focus Mode|Modo foco/).click();
+      cy.get('[data-slot="app-shell-outlet"]').should(($current) => {
+        expect($current[0]).to.equal($outlet[0]);
+      });
+      cy.get('[data-slot="app-shell-left-navigation"]').should('be.visible');
+    });
+  });
+
   it('keeps Canvas startup commands route-local and global navigation directly visible on the left', () => {
     // Moving global navigation must preserve route-local commands and the existing workspace scope.
     visitWithE2eWorkspaceSession('/canvas', {
@@ -548,7 +605,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-top-bar-canvas-controls"]').should('not.exist');
     cy.get('@topBar').should('not.contain.text', 'Plan');
-    cy.get('@topBar').should('contain.text', 'Vista previa obligatoria');
+    cy.get('@topBar').should('not.contain.text', 'Vista previa obligatoria');
     cy.get('@topBar')
       .find('[data-slot="shell-run-command"]')
       .should('have.attr', 'aria-label', 'Ejecutar');
@@ -845,13 +902,23 @@ describe('Canvas workbench screen composition', () => {
       .and('have.attr', 'aria-current', 'page');
     cy.get('[data-slot="shell-about-command"]').should('be.visible');
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 390);
-    cy.get('[data-slot="shell-run-status-label"]')
+    // Disabled Run must explain its readiness gate without consuming narrow header space.
+    cy.get('[data-slot="shell-run-status-label"]').should('not.exist');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.get('[data-slot="shell-run-status-indicator"]').should('have.attr', 'tabindex', '0').focus();
+    cy.get('[role="tooltip"]')
       .should('have.text', 'Vista previa obligatoria')
-      .and(($label) => {
-        const label = $label.get(0);
-        expect(label.scrollWidth).to.be.at.most(label.clientWidth);
-        expect(getComputedStyle(label).textOverflow).not.to.equal('ellipsis');
-      });
+      .parent()
+      .should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[role="tooltip"]').should('not.exist');
+    // Activating the help target also works without hover and never submits disabled Run.
+    cy.get('[data-slot="shell-run-status-indicator"]').blur().click();
+    cy.get('[role="tooltip"]').should('have.text', 'Vista previa obligatoria');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.then(() => expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0));
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[role="tooltip"]').should('not.exist');
     cy.get('[data-slot="canvas-playground-template-choice"]')
       .should('have.text', 'Empezar Canvas')
       .and('be.enabled')
