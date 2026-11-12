@@ -719,8 +719,9 @@ Command semantics:
   are routed by the same semantic signals instead of running as a fixed tax on
   unrelated changes. Pushes to `main` and explicit manual full gates keep the
   historical full posture.
-- `pnpm verify:prepush -- --full` forces all conditional groups and is the
-  diagnostic/closeout equivalent of the historical full local pre-push posture.
+- `pnpm verify:prepush -- --full` forces all conditional validation groups while
+  retaining the local push-readiness boundary. It does not attest hosted browser
+  acceptance. Use explicit `pnpm test:web:changed` for complete local Web execution.
 - `pnpm pr:closeout` is the governed final PR rail for committed slices. It can
   run docs/status/governance preparation, caller-supplied targeted checks,
   `pnpm commit`, one final `pnpm verify:prepush -- --full`, and optional `git push` in the
