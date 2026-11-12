@@ -516,6 +516,25 @@ flowchart LR
 - Ordinary changed routing executes both independent obligations. A browser
   change does not require unrelated Vitest unit tests; a mixed diff retains
   the Vitest plan for its genuine Web sources.
+- Local push readiness projects the admitted browser plan through
+  `selectWebCypressLocalReadiness`: each command retains its selected modified
+  merge-time specs and its selected native host specs, in canonical order and
+  without duplicates. The CLI passes the original changed-file frontier only
+  after validating complete admission, required paths and retired-path absence.
+  Unknown, missing or reappeared retired consumers reject before projection,
+  even if the projected command would be empty. A changed LIVE scenario retains
+  its existing capability, prerequisites and execution boundary. Nightly cadence,
+  explicit complete execution and mandatory hosted selection remain unchanged.
+
+  ```mermaid
+  flowchart LR
+    Frontier[Complete changed frontier] --> Plan[Existing full admission]
+    Plan --> Paths[Validate required and retired paths]
+    Paths --> Local[Selected modified specs union selected native host specs]
+    Paths --> Hosted[Unchanged complete hosted plan]
+    Local --> Runtime[Existing controlled or LIVE runner]
+  ```
+
 - CI resolves and validates the complete plan before selecting a capability or
   provisioning its runtime. Cypress preparation requires selected browser work;
   PostgreSQL and dbt require an available or unavailable provider obligation.

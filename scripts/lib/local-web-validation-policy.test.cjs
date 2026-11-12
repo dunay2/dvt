@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const { buildFocusedChangedTestPlan } = require('./changed-test-selection.cjs');
 
 const source = 'apps/web/src/app/views/CodeView.tsx';
+const scenario = 'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts';
 function webArgs(files, options = {}) {
   return buildFocusedChangedTestPlan(files, { includeWeb: true, ...options }).find(
     (step) => step.id === 'test-web-changed'
@@ -27,11 +28,28 @@ test('ordinary product readiness retains the same Web query and native-host admi
   assert.deepEqual(webArgs([source], { iteration: true }), ['test:web:changed', '--phase=vitest']);
 });
 
+test('scenario companions retain the admitted readiness boundary in either order', () => {
+  for (const platform of ['win32', 'linux']) {
+    for (const files of [[scenario], [source, scenario], [scenario, source]]) {
+      assert.deepEqual(webArgs(files, { pushReadiness: true, platform }), [
+        'test:web:changed',
+        '--phase=push-readiness',
+      ]);
+      assert.deepEqual(webArgs(files, { platform }), ['test:web:changed']);
+    }
+  }
+});
+
 test('native, root and unclassified companions retain complete local execution', () => {
   for (const companion of [
     'tools/ci/run-web-cypress-native.mjs',
     'scripts/live-proof-process.cjs',
     'apps/web/cypress.config.ts',
+    'apps/web/cypress.catalog.json',
+    'apps/web/cypress/e2e/canvas/scenario-helper.ts',
+    'apps/web/cypress/e2e/canvas/example.cy.ts.bak',
+    'apps/web/cypress/support/example.cy.ts',
+    'apps/web/cypress/support/workspaceSession.ts',
     'apps/web/cypress/node/chromiumProcessObserver.ts',
     'apps/web/scripts/run-vitest-changed-suites.ts',
     'apps/web/package.json',
@@ -40,14 +58,22 @@ test('native, root and unclassified companions retain complete local execution',
     'scripts/new-python.py',
     '.github/workflows/unclassified.yml',
   ]) {
-    assert.deepEqual(
-      webArgs([source, companion], { pushReadiness: true, platform: 'win32' }),
-      ['test:web:changed'],
-      companion
-    );
+    for (const files of [
+      [source, companion],
+      [source, scenario, companion],
+    ]) {
+      for (const ordered of [files, [...files].reverse()]) {
+        assert.deepEqual(
+          webArgs(ordered, { pushReadiness: true, platform: 'win32' }),
+          ['test:web:changed'],
+          companion
+        );
+      }
+    }
   }
   for (const platform of ['darwin', 'freebsd']) {
     assert.deepEqual(webArgs([source], { pushReadiness: true, platform }), ['test:web:changed']);
+    assert.deepEqual(webArgs([scenario], { pushReadiness: true, platform }), ['test:web:changed']);
   }
 });
 

@@ -1,7 +1,7 @@
 /**
  * Owned concern: assign local Web proof without changing the complete changed-file frontier.
  * @baseline ADR-0069: one policy owns the reason to defer common hosted scenarios.
- * @decision Keep native/toolchain/unknown inputs complete; retain declared host obligations in readiness.
+ * @decision Keep infrastructure inputs complete; retain changed and native host scenarios in readiness.
  * @consequence Local readiness never attests hosted merge acceptance.
  * @version 1.0.0
  */
@@ -57,6 +57,7 @@ function webTestPhase(files, options = {}) {
       !scope.runtimeWorkspaceFanout &&
       (!scope.workflowPolicyInput || scope.hostedWebTestAdapter) &&
       (scope.path.startsWith('apps/web/src/') ||
+        /^apps\/web\/cypress\/e2e\/(?:[^/]+\/)*[^/]+\.cy\.ts$/u.test(scope.path) ||
         scope.path.startsWith('docs/') ||
         scope.path === 'AGENTS.md' ||
         scope.hostedWebTestAdapter ||
