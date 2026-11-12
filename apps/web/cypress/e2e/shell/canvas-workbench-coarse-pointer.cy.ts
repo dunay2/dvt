@@ -3,22 +3,30 @@
  * @decision Own touch emulation in a separate spec target because its reset changes desktop input.
  * @consequence Cleanup runs after failures; the next spec receives a fresh desktop target.
  */
-import { buildDraftReadNotFoundResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
-  E2E_WORKSPACE_SESSION,
+  E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
 describe('Canvas Focus with coarse pointer input', () => {
   beforeEach(() => {
-    stubShellBootstrapApis();
-    stubE2eJsonApi(
-      'GET',
-      '/workspace/graph/draft',
-      buildDraftReadNotFoundResponse(E2E_WORKSPACE_SESSION)
-    );
+    stubShellBootstrapApis({
+      capabilities: {
+        body: {
+          apiVersion: '1.0.0',
+          minFrontendVersion: '0.0.1',
+          plugins: { dvt: { available: true } },
+        },
+      },
+    });
+    stubE2eJsonApi('GET', '/workspace/context', {
+      defaultWorkspace: E2E_PROJECT_WORKSPACE,
+      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+    });
+    stubCanvasDraftRead({ readOnly: true });
   });
 
   afterEach(() => {
