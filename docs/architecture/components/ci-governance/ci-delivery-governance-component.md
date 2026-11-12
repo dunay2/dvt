@@ -2,7 +2,7 @@
 title: CI Delivery Governance Component
 status: Active
 owner: Engineering / CI Governance
-last_reviewed: 2026-07-19
+last_reviewed: 2026-11-12
 ---
 
 # CI Delivery Governance Component
@@ -15,6 +15,41 @@ current architecture contract instead of leaving each wave as an open planning
 assertion.
 
 ## Public API
+
+### Selected Planning DB consumers
+
+PR Quality consumes the existing `ClassifyChangedCiScope` outputs. The former
+preparation condition also selected documentation-structure and global-governance
+changes, even when inventory and integrity were both omitted. On PR #3878 this
+spent 44 seconds preparing a database without a selected DB consumer.
+
+```mermaid
+flowchart LR
+  O[Former docs or governance selection] --> U[Unused DB preparation]
+  S[Canonical inventory selection] --> P[DB preparation]
+  P --> I[Inventory and integrity consumers]
+  N[PR without DB consumers] --> F[Selected filesystem and Git checks]
+```
+
+For PRs, preparation follows `planning_db_inventory_relevant`, the same existing
+output consumed by inventory and integrity. Push and enabled manual validation
+retain preparation. No check, scope classification, trusted credential boundary
+or required outcome is removed. Unknown scope is not successful evidence.
+
+`SYS-CI-WORKFLOW-CONTRACTS` is a finite proof family physically contained by
+`SYS-CI-GOVERNANCE-ROOT`, not a product aggregate or the changed-slice executor.
+Its reasons to change are workflow scheduling, required outcomes, trusted
+authority/action pins and shared assertion diagnostics. The two existing
+`node:test` entrypoints remain the sole catalog entries. Their internal case
+modules each have one importing entrypoint; shared assertion and action-pin helpers
+register no tests. All 31 original cases and their matrices remain required.
+
+The regression evaluates parsed workflow conditions with canonical scope outputs:
+selected DB consumers imply prior preparation, while unrelated PRs do not prepare.
+Missing/malformed evidence, push/manual selection, result matrices, checkout,
+release and security posture retain their independent contracts. This follows
+the [finite consumer-preparation design](https://github.com/dunay2/dvt/issues/3879)
+and native design `GH-3879-WORKFLOW-CONSUMER-PREPARATION`.
 
 | Surface                                             | Owner               | Contract                                                                                                                                                                                  |
 | --------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
