@@ -1,3 +1,8 @@
+/**
+ * Owned concern: declare scoped dbt analysis/source-revision contracts; evidence grants no execution authority.
+ * @decision Keep scoped request/evidence contracts independent of native execution.
+ * @consequence Analysis evidence cannot grant execution authority.
+ */
 import type { DbtProjectGraphProjection, DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 
 import type { WorkspaceStorageScope } from './workspaceFiles.js';
@@ -16,7 +21,8 @@ export type AnalyzeDbtProjectInput = Readonly<{
   scope: WorkspaceStorageScope;
   projectRoot: string;
   operation?:
-    Readonly<{ kind: 'parse' }> | Readonly<{ kind: 'compile'; selectors: readonly string[] }>;
+    | Readonly<{ kind: 'parse' }>
+    | Readonly<{ kind: 'compile'; selectors: readonly string[]; targetName?: string }>;
 }>;
 
 export type DbtProjectAnalysisResource = Omit<
