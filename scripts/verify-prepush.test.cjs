@@ -62,25 +62,25 @@
     assertExcludes(ids, 'traceability-adr0');
   });
 
-  test('accepted ADR change stays on changed-file docs gates by default', () => {
+  test('accepted ADR change selects its owning traceability gate by default', () => {
     const plan = buildPrepushPlan(['docs/adr/ADR-0056-web-ui-authority-is-server-projected.md']);
     const ids = stepIds(plan);
 
-    assert.deepEqual(ids, ['verify-changed']);
+    assert.deepEqual(ids, ['verify-changed', 'traceability-adr0']);
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-file-component-index');
     assertExcludes(ids, 'docs-governance-changed-files');
-    assertExcludes(ids, 'traceability-adr0');
+    assertIncludes(ids, 'traceability-adr0');
     assertExcludes(ids, 'arch-deps');
     assertExcludes(ids, 'type-check-prepush');
   });
 
-  test('governed runtime source change does not run traceability or code checks by default', () => {
+  test('governed runtime source selects traceability without acquiring full-mode groups', () => {
     const plan = buildPrepushPlan(['packages/@dvt/engine/src/WorkflowEngine.ts']);
     const ids = stepIds(plan);
 
-    assert.deepEqual(ids, ['verify-changed']);
-    assertExcludes(ids, 'traceability-adr0');
+    assert.deepEqual(ids, ['verify-changed', 'traceability-adr0']);
+    assertIncludes(ids, 'traceability-adr0');
     assertExcludes(ids, 'arch-deps');
     assertExcludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'docs-governance-document-unit-map');
@@ -90,7 +90,7 @@
     const plan = buildPrepushPlan(['scripts/planning-db-query.cjs']);
     const ids = stepIds(plan);
 
-    assert.deepEqual(ids, ['verify-changed']);
+    assert.deepEqual(ids, ['verify-changed', 'traceability-adr0']);
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-remediation-queue');
     assertExcludes(ids, 'arch-deps');
@@ -150,7 +150,7 @@
   test('default prepush delegates changed-file routing to verify changed once', () => {
     const labels = buildPrepushPlan(['apps/web/src/app/AppProviders.tsx']).map(commandLabel);
 
-    assert.deepEqual(labels, ['pnpm verify:changed']);
+    assert.deepEqual(labels, ['pnpm verify:changed --push-readiness']);
   });
 
   test('prepush hook arguments are parsed without changing normal preflight flags', () => {
@@ -260,6 +260,7 @@
         'scripts/verify-changed.test.cjs',
         'scripts/local-validation-plan.test.cjs',
         'scripts/lib/changed-test-selection.test.cjs',
+        'scripts/lib/local-web-validation-policy.test.cjs',
         'scripts/lib/local-test-coverage.test.cjs',
         'scripts/lib/local-validation-plan-values.test.cjs',
         'scripts/lib/local-validation-executor.test.cjs',

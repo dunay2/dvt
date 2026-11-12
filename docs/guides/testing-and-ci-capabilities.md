@@ -672,14 +672,23 @@ Command semantics:
   consumers, and user stories are documented in
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
 - `pnpm verify:prepush` routes validation through the current changed-file gates; GitHub Issues owns task status.
-- `pnpm verify:prepush` is mechanical by default. It runs changed-file docs, markdown, formatting, ARC evidence, QA artifact, feature mechanization implementation, and forbidden-file checks without root type-check, architecture dependency checks, global governance maps, or verifier self-tests.
+- `pnpm verify:prepush` proves local push readiness. It runs changed-file docs,
+  markdown, formatting, ARC/QA evidence, fresh feature implementation validation,
+  affected tests and applicable ADR-0000 traceability. It admits the complete Web
+  browser plan; positively admitted product changes run Vitest plus declared
+  host-specific proof locally, with common scenarios retained in required hosted
+  acceptance. Native/toolchain/unknown inputs keep full local proof. Explicit
+  `test:web:changed` still runs both phases. Root type-check, dependency checks,
+  global governance maps and verifier self-tests remain full-mode groups.
 - `.husky/pre-push` routes through `pnpm verify:prepush -- --hook` by default
   and `pnpm verify:prepush -- --full --hook` when `DVT_PREPUSH_STRICT=1`.
-  A successful manual `pnpm verify:prepush` writes a local `.git` validation
-  stamp for the current `HEAD`, changed-file set, and local diff fingerprint;
+  Only successful outer `pnpm verify:prepush` writes a v2 local `.git` validation
+  stamp with `purpose: local-push-readiness` for the current `HEAD`, changed-file
+  set, and local diff fingerprint; inner `verify:changed` never writes it.
   the hook skips only when that exact state already passed an equivalent or
   stronger gate. If any file content, staged state, untracked file, base ref,
   or `HEAD` changes, the hook runs normally.
+  V1 or wrong-purpose receipts reject. A stamp does not attest hosted acceptance.
   The single receipt is replaced only after success: failure on different inputs
   does not erase evidence for the previously validated state. Restoring those
   exact inputs can reuse that receipt; changed inputs cannot.
@@ -701,8 +710,6 @@ Command semantics:
   - planning DB inventory checks only for planning/query-store surfaces;
   - global governance maps, fingerprints, coverage, and remediation checks only
     for docs/governance/planning/generated surfaces;
-  - `pnpm traceability:adr0` for accepted ADRs, traceability config/baseline
-    files, or source paths governed by `traceability.config.json`;
   - architecture dependency and affected type-check checks for code, CI policy,
     command tooling, or root TypeScript graph inputs.
 - `PR Quality Gate` consumes the same repository validation scope outputs from
@@ -720,9 +727,17 @@ Command semantics:
   repository order. Use `--stage-all` when the full local changed set is the
   intended PR scope; without it, the rail requires files to be staged already
   and fails before commit if preparation or checks leave unstaged outputs.
-- `pnpm pr:checks` is the immediate PR check gate. It queries the current
+- `pnpm traceability:adr0` is selected in default prepush for ADRs, traceability
+  configuration/baseline or governed source inputs through the canonical scope
+  signal. A late traceability failure must not publish an inner success receipt.
+- `pnpm pr:checks` is a diagnostic summary. It queries the current
   branch PR once, prints a compact failed/pending summary, returns non-zero for
   failed or still-pending GitHub Actions checks, and does not watch or poll.
+  Its current empty/all-skipped behavior does not prove acceptance. Before merge,
+  read non-draft posture, exact candidate SHA and successful required aggregates
+  from GitHub; missing, skipped, cancelled, pending, neutral or old-SHA results do
+  not satisfy executed acceptance. Merge only the expected head, after fresh
+  base/head DB implementation validation.
   Use `pnpm pr:checks:json` when machine-readable output is needed. Use
   `pnpm pr:checks:first-failure` for an actionable first-failure payload; when
   GitHub Actions never exposes logs for the failed job, the payload reports

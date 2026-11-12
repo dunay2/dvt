@@ -11,7 +11,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { WEB_CYPRESS_CATALOG_PATH } from '../cypress.catalog';
-import { selectWebCypressShard } from '../cypress.changed';
+import { selectWebCypressShard, selectWebCypressNativePlatform } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
 
 import { parseChangedSuiteArgs } from './changed-suite-args';
@@ -123,6 +123,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     args.phase === 'browser'
       ? []
       : selectWebVitestExecutionPartition(plan.commandPlan, args.vitestGroup);
+  const fullLocal =
+    args.phase === 'all' ||
+    (args.phase === 'push-readiness' && !['win32', 'linux'].includes(process.platform));
   const browserCommands = plan.browserCommands
     .filter(
       (entry) =>
@@ -130,9 +133,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
         (args.browserCapability === undefined || entry.capability === args.browserCapability)
     )
     .flatMap((entry) =>
-      args.phase === 'all' && entry.capability === 'controlled'
+      fullLocal && entry.capability === 'controlled'
         ? [1, 2, 3].map((index) => selectWebCypressShard(entry, { index, count: 3 }))
-        : [selectWebCypressShard(entry, args.browserShard)]
+        : args.phase === 'push-readiness'
+          ? [selectWebCypressNativePlatform(entry, process.platform)]
+          : [selectWebCypressShard(entry, args.browserShard)]
     )
     .filter((entry) => entry !== undefined);
 
@@ -147,6 +152,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       );
     }
     return;
+  }
+
+  if (args.phase === 'push-readiness') {
+    process.stdout.write(
+      `[web:test:changed] admitted ${plan.browserCommands.length} complete browser capabilities; ` +
+        `retained ${browserCommands.flatMap((entry) => entry.specPaths).length} local native specs; hosted acceptance required.\n`
+    );
   }
 
   if (vitestCommands.length === 0 && browserCommands.length === 0) {

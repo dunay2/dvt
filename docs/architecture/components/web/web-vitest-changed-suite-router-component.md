@@ -1572,6 +1572,25 @@ Acceptance:
 
 > Acceptance scope status: Active. Owner: Frontend / CI.
 
+## Local Push Readiness
+
+The existing router additionally admits `--phase=push-readiness`. It validates
+the complete catalog, consumer paths and retired paths before choosing execution,
+then runs the unchanged Vitest plan and selected declared host-native browser
+obligations. `nativePlatforms` belongs to the same `cypress.catalog.json`
+inventory; Windows retains the real Monaco clipboard/CRLF spec when selected.
+Linux has no added local platform claim; other hosts preserve full native proof.
+This phase cannot combine capability, shard or Vitest-group narrowing.
+
+Explicit execution without a phase remains both phases; hosted Vitest/browser
+groups, capability membership, spec order and partition budgets do not change.
+The local policy keeps native infrastructure, toolchain and unknown frontiers on
+the complete command. This router does not write a readiness or merge receipt.
+The outer prepush owner and strict current-candidate hosted acceptance retain
+those separate responsibilities. Read-only four-array Git witnesses are
+normalized only in the catalog witness parser; withdrawals and native-obligation
+removals still reject, and metadata changes cannot use additive-only narrowing.
+
 ## Local validation of hosted adapters
 
 The [local gate owner](../ci-governance/local-changed-files-gate-component.md#hosted-adapter-validation)

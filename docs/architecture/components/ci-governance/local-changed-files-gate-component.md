@@ -45,6 +45,96 @@ The component does not own:
 - generated governance file contents beyond changed-file admission;
 - contract, engine, planner, or adapter ARC policy decisions.
 
+## Push Readiness And Merge Acceptance
+
+`verify:prepush` proves local push readiness. It invokes the existing
+`RunChangedSliceVerification` rail with `--push-readiness`; the plan still owns
+the complete changed-file frontier, static checks, affected tests, applicable
+fresh Planning DB validation and complete browser-plan admission. It does not
+attest hosted browser acceptance. Explicit `test:web:changed` and ordinary
+`verify:changed` retain complete local execution.
+
+Previously an ordinary Web change executed its browser scenarios locally and
+then repeated those scenarios in the required hosted Test Suite:
+
+```mermaid
+flowchart LR
+  Diff[Complete changed frontier] --> Local[Static checks, Vitest and all native browser scenarios]
+  Local --> Push[Local stamp and branch push]
+  Push --> Hosted[Same scenarios in hosted Test Suite]
+  Hosted --> Merge[Required merge acceptance]
+```
+
+The new boundary delegates common browser scenarios while retaining declared
+host-specific evidence and conservative full execution for native infrastructure:
+
+```mermaid
+flowchart LR
+  Diff[Same complete frontier] --> Admit[Static checks, fresh DB proof and complete browser plan]
+  Admit --> Policy{Positively admitted product frontier?}
+  Policy -->|yes| Local[Vitest and selected declared host obligations]
+  Policy -->|no| Full[Existing complete native execution]
+  Local --> Receipt[Local push-readiness receipt]
+  Full --> Receipt
+  Receipt --> Hosted[Non-draft PR: every selected hosted producer]
+  Hosted --> Exact[Successful required results for current candidate SHA]
+  Exact --> Merge[Fresh base/head DB proof and expected-SHA merge]
+```
+
+The focused Web policy admits Web product/source and Vitest surfaces, documents
+and known governance companions. Native runners, Cypress configuration/node
+adapters, process/database lifetime, toolchain/root-policy changes, unknown or
+unclassified companions retain the existing full command. Unsupported local
+platforms also retain full execution. This is an operational validation boundary,
+not proof that all unannotated browser behavior is portable.
+New host-specific product expectations require explicit review and a catalog
+declaration before their local execution can be reduced.
+
+The single `cypress.catalog.json` inventory additionally declares the selected
+Windows-specific Monaco clipboard obligation under `nativePlatforms.win32`.
+The existing router admits every consumer before filtering the readiness
+execution. A Windows readiness run retains that spec whenever it belongs to the
+complete plan; Linux executes the common scenarios through the required hosted
+workflow. macOS keeps complete local execution; this slice adds no unexecuted
+macOS acceptance claim. Infrastructure changes retain the complete native proof.
+
+The catalog parser validates platform references against admitted merge-time
+consumers. Read-only historical witnesses with the former four-array shape are
+projected only inside the witness parser; membership retention still applies.
+Removal of an existing native obligation rejects, and changed platform metadata
+cannot qualify as a harmless controlled-spec addition. No second inventory is
+introduced.
+
+Only the outer prepush command writes receipt version 2, with
+`purpose: local-push-readiness`, after every selected outer step succeeds.
+`verify:changed` never writes that receipt. This prevents a later traceability
+failure from leaving an inner partial-success stamp. Old receipts and receipts
+with another purpose do not match. Existing exact Git input identities,
+validation levels and deadline/cleanup rules remain in force. The receipt also
+binds the effective host platform: a shared checkout cannot reuse Linux evidence
+to omit Windows obligations. Native vetoes precede hosted-only reduction too.
+ADR-0000 is
+selected from the existing canonical traceability relevance signal.
+
+| Scenario                           | Owner / rail                                                     | Required evidence                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Ordinary admitted Web change       | ChangedSliceVerificationPlan / BuildChangedSliceVerificationPlan | Same Vitest plan, complete browser admission, selected host obligation                |
+| Native/toolchain/unknown companion | Same policy and execution rail                                   | Existing full local proof, including native platform behavior                         |
+| Any later local gate failure       | Prepush receipt owner                                            | Failure preserved; no new success receipt                                             |
+| Hosted acceptance                  | TestSuiteEvidenceResult / ValidateTestSuiteEvidenceResult        | Non-draft current-head PR, successful required aggregates and every selected producer |
+| Source or base/head moves          | Existing Git and DB authorities                                  | Invalidate/repeat evidence; fresh implementation validation before merge              |
+
+`pr:checks` remains a diagnostic summary, not an acceptance receipt: its current
+empty/skipped/draft behavior cannot prove browser success. Closeout reads the
+current PR head and required checks from GitHub, rejects missing, failed,
+cancelled, pending or skipped required aggregates, and merges only the expected
+head. GitHub ruleset 17240734 remains active and strict; no rule is relaxed.
+
+The performance target is a measured 50% reduction of the complete ordinary
+developer loop. Report local duration, retained native proof, hosted duration,
+queue time and total runner cost separately. A faster missing-prerequisite
+failure or a plan-only comparison is not a successful-path speedup measurement.
+
 ## Public API
 
 | API                                               | Owner                                | Responsibility                                                                |
@@ -201,6 +291,7 @@ new responsibilities difficult to review.
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/local-validation-plan.cjs`            | Compose mechanical admission, selected tests and final checks in order; classify complete prepush obligations.                                          |
 | `scripts/lib/changed-test-selection.cjs`       | Select affected tests once using canonical file/command scope, existing adjacent tests and explicit cross-owner relations; explain CI-tools selection.  |
+| `scripts/lib/local-web-validation-policy.cjs`  | Assign complete, hosted-only or push-readiness Web execution from the same frontier and retain native-host obligations.                                 |
 | `scripts/lib/local-test-coverage.cjs`          | Read the existing bounded literal package aggregates and the three canonical parent-suite memberships; remove only test executions they actually cover. |
 | `scripts/lib/local-validation-plan-values.cjs` | Construct and describe immutable steps, normalize paths and enforce consistent step identities.                                                         |
 | `scripts/lib/local-validation-executor.cjs`    | Await bounded child execution and cleanup, propagate deadlines/failures and report observed results.                                                    |
@@ -209,8 +300,8 @@ new responsibilities difficult to review.
 The CLI adapters import these concrete owners directly. Relocated functions are
 removed from the old module and CLI exports; compatibility facades, duplicate
 implementations and import barrels are not retained. Describing a plan never
-loads its process executor. `verify:changed` requests receipt operations from
-their owner rather than importing the prepush CLI.
+loads its process executor. `verify:changed` owns no receipt operation; outer
+prepush alone authorizes writing local readiness after the whole plan succeeds.
 
 ```mermaid
 flowchart LR

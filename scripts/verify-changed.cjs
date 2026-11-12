@@ -16,7 +16,6 @@ const {
   resolveIterationComparison,
 } = require('./git-local-changes.cjs');
 const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
-const { buildPrepushStamp, writePrepushStamp } = require('./lib/prepush-validation-stamp.cjs');
 const { executeCommandPlan } = require('./lib/local-validation-executor.cjs');
 const { commandLabel, normalizeChangedFiles } = require('./lib/local-validation-plan-values.cjs');
 
@@ -40,6 +39,10 @@ function parseArgs(argv) {
       args.committedTests = true;
       continue;
     }
+    if (arg === '--push-readiness' && !args.pushReadiness) {
+      args.pushReadiness = true;
+      continue;
+    }
     if (arg.startsWith('--iteration-base=')) {
       const baseRef = arg.slice('--iteration-base='.length);
       if (!baseRef.trim() || args.iterationBase !== undefined) {
@@ -52,6 +55,9 @@ function parseArgs(argv) {
   }
   if (args.iterationBase !== undefined && args.committedTests) {
     throw new Error('iteration and committed-tests cannot be combined');
+  }
+  if (args.pushReadiness && (args.iterationBase !== undefined || args.committedTests)) {
+    throw new Error('push-readiness cannot be combined with partial iteration or committed-tests');
   }
   return args;
 }
@@ -77,16 +83,6 @@ function printPlan(changedFiles, plan, context = {}) {
   for (const step of plan) {
     console.log(commandLabel(step));
   }
-}
-
-function recordSuccessfulChangedValidation(changedFiles, options = {}) {
-  const buildStamp = options.buildPrepushStamp || buildPrepushStamp;
-  const writeStamp = options.writePrepushStamp || writePrepushStamp;
-  const stamp = buildStamp(changedFiles, {
-    repoRootPath: options.repoRootPath || repoRoot,
-  });
-
-  writeStamp(stamp, { repoRootPath: options.repoRootPath || repoRoot });
 }
 
 async function main(argv = process.argv.slice(2), options = {}) {
@@ -118,7 +114,7 @@ async function main(argv = process.argv.slice(2), options = {}) {
       );
   const plan = args.committedTests
     ? buildFocusedChangedTestPlan(changedFiles)
-    : buildVerifyChangedPlan(changedFiles, { iteration });
+    : buildVerifyChangedPlan(changedFiles, { iteration, pushReadiness: args.pushReadiness });
   const print = options.printPlan || printPlan;
   const executePlan = args.committedTests
     ? options.executeFocusedChangedTestPlan || executeVerifyChangedPlan
@@ -129,7 +125,9 @@ async function main(argv = process.argv.slice(2), options = {}) {
       ? 'iteration-partial'
       : args.committedTests
         ? 'committed-tests'
-        : 'changed-slice',
+        : args.pushReadiness
+          ? 'push-readiness'
+          : 'changed-slice',
     ...comparison,
     ...(iteration ? { acceptance: false, browser: false, globalPlanningDbValidation: false } : {}),
     ciTools: explainCiToolSelection(changedFiles),
@@ -144,12 +142,6 @@ async function main(argv = process.argv.slice(2), options = {}) {
       ? { env: { ...createGitRepositoryEnvironment(), GIT_BASE: comparison.baseSha, GIT_HEAD: '' } }
       : {}),
   });
-  if (status === 0 && !args.committedTests && !iteration) {
-    recordSuccessfulChangedValidation(changedFiles, {
-      ...options,
-      repoRootPath: root,
-    });
-  }
   return status;
 }
 
@@ -171,5 +163,4 @@ module.exports = {
   executeVerifyChangedPlan,
   main,
   parseArgs,
-  recordSuccessfulChangedValidation,
 };
