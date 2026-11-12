@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-12
 ---
 
 # Testing and CI Capabilities
@@ -416,6 +416,16 @@ normal pre-push or establish a general performance guarantee.
 | Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)                             |
 | Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration                 | [`package.json`](../../package.json)                                                                   |
 | Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage                         | [`package.json`](../../package.json)                                                                   |
+
+API lint retains the root strict ESLint rules and warnings-as-errors policy.
+Its type information comes from `apps/api/tsconfig.eslint.json`, covering API
+sources, tests and configurations with the canonical compiler options and source
+aliases. Imported dependency types remain available without making unrelated
+applications or generated outputs project roots. The semantic contract runs in
+`pnpm test:ci-tools` and can be checked directly with
+`node --test tools/ci/api-eslint-project.test.mjs`. See the
+[changed-file lint boundary](../architecture/components/ci-governance/local-changed-files-gate-component.md#changed-file-lint-execution)
+for ownership and failure behavior.
 
 ## Persisted Semantic Editing Live Proof
 
@@ -1211,6 +1221,15 @@ by an explicitly included package. Self-build requires an actual build script.
 No package wildcard, implicit global build, persistent database, or test-result
 cache is introduced. Independent selected tasks retain the existing concurrency
 bound of four.
+
+API's direct `prebuild`, `pretypecheck` and `pretest` hooks reuse this command
+after their existing CI/Turbo guard. `predev` uses the same adapter. Integration
+preparation requests `--build-self`, so one selected graph prepares dependencies
+and API without a second `pnpm build` lifecycle. The actual build, source/test
+typecheck and unit/integration test commands retain their existing scope.
+The runtime preparation contract owns these caller bindings; the package test
+matrix separately owns which tests run. Timing evidence distinguishes actual
+work from cache restoration and replayed task logs.
 
 `tools/ci/workspace-runtime-preparation.test.mjs` checks the command boundary:
 invalid arguments and package names, absent packages/scripts, malformed discovery,

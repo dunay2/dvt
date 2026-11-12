@@ -155,6 +155,18 @@ module.exports = [
     },
   },
 
+  // API owns its lint roots and dependency types; keep the source-only rule
+  // exceptions below separate from this workspace-wide type-information boundary.
+  {
+    files: ['apps/api/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./apps/api/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+
   // Contracts package: escalate no-explicit-any to error (enforcement replaces bash grep in CI).
   {
     files: ['packages/@dvt/contracts/src/**/*.ts'],

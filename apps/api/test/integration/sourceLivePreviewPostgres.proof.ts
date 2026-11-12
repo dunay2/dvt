@@ -411,7 +411,7 @@ it('keeps marker and rows in one snapshot while a real publisher replaces A with
       });
     }
     return result;
-  } as typeof originalQuery);
+  });
 
   try {
     await publisher.publish({
