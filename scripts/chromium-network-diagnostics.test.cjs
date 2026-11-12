@@ -40,7 +40,7 @@ test('desktop launch profile preserves unrelated flags and leaves other browser 
   assert.equal(typeof prepare, 'function');
   assert.equal(prepare({ family: 'firefox' }, launch), launch);
   assert.equal(launch.args.length, 3);
-  assert.equal(prepare({ family: 'chromium' }, launch), launch);
+  assert.equal(prepare({ family: 'chromium', name: 'chrome', isHeadless: true }, launch), launch);
   assert.ok(launch.args.includes('--existing'));
   const settings = launch.args.filter((argument) => argument.startsWith('--blink-settings='));
   assert.equal(settings.length, 1);
@@ -60,8 +60,23 @@ test('desktop launch profile preserves unrelated flags and leaves other browser 
       availablePointerTypes: '4',
     }
   );
-  prepare({ family: 'chromium' }, launch);
+  prepare({ family: 'chromium', name: 'chrome', isHeadless: true }, launch);
   assert.equal(launch.args.length, 2, 'launch composition is idempotent');
+});
+
+test('headed Chromium and Electron retain their actual input capabilities', () => {
+  const hooks = new Map();
+  cypressConfig.e2e.setupNodeEvents((event, handler) => hooks.set(event, handler), {});
+  const prepare = hooks.get('before:browser:launch');
+  for (const browser of [
+    { family: 'chromium', name: 'chrome', isHeadless: false },
+    { family: 'chromium', name: 'electron', isHeadless: true },
+    { family: 'firefox', name: 'firefox', isHeadless: true },
+  ]) {
+    const launch = { args: ['--existing', '--blink-settings=primaryPointerType=2'] };
+    assert.equal(prepare(browser, launch), launch);
+    assert.deepEqual(launch.args, ['--existing', '--blink-settings=primaryPointerType=2']);
+  }
 });
 
 function fixture(enabled = true) {
@@ -252,7 +267,10 @@ test('failed-spec snapshot survives raw overwrite without snapshotting successfu
           },
           { projectRoot: path.join(workspaceRoot, 'apps/web') }
         );
-        const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+        const launch = hooks.get('before:browser:launch')(
+          { family: 'chromium', name: 'chrome', isHeadless: true },
+          { args: [] }
+        );
         assert.ok(launch.args.some((argument) => argument.includes('primaryPointerType=4')));
         const raw = launch.args
           .find((argument) => argument.startsWith('--log-net-log='))

@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the controlled browser's input profile and opt-in diagnostics.
  * @baseline GH-3765: Linux headless device defaults can differ from desktop Windows.
- * @decision Declare mouse capabilities at launch; touch cases opt into native emulation.
+ * @decision Declare headless Chromium mouse capabilities; retain headed and Electron input.
  * @consequence Focus tests exercise actual CSS media branches without changing product styles.
  */
 import { configureChromiumNetworkDiagnostics } from './cypress/node/chromiumNetworkDiagnostics';
@@ -10,7 +10,9 @@ function prepareDesktopBrowser(
   browser: Cypress.Browser,
   launch: Cypress.BeforeBrowserLaunchOptions
 ): Cypress.BeforeBrowserLaunchOptions {
-  if (browser.family !== 'chromium') return launch;
+  if (browser.family !== 'chromium' || browser.isHeadless !== true || browser.name === 'electron') {
+    return launch;
+  }
   const prefix = '--blink-settings=';
   const settings = new Map(
     launch.args
