@@ -44,6 +44,7 @@
     "apps/web/cypress/e2e/canvas/canvas-withdrawn-input-publication.cy.ts",
     "apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts",
     "apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts",
+    "apps/web/cypress/e2e/shell/canvas-workbench-coarse-pointer.cy.ts",
     "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
     "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
     "apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts",
@@ -96,6 +97,7 @@
   "nightly": ["apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts"],
   "nativePlatforms": {
     "win32": [
+      "apps/web/cypress/e2e/shell/canvas-workbench-coarse-pointer.cy.ts",
       "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
     ]
   }
