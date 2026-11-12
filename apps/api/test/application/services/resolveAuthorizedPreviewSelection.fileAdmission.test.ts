@@ -1,6 +1,6 @@
 /** Owned concern: prove current file authority and compilation precede planner and persistence admission. */
 import { asSha256HexString, parseExecutionSelection } from '@dvt/contracts';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
 import type { ResolveAuthorizedPreviewSelectionService } from '../../../src/application/services/resolveAuthorizedPreviewSelection.js';
@@ -20,7 +20,11 @@ const FILE_INPUT = {
   provenance: PROVENANCE,
 };
 
-function forbidPlanningAndPersistence(service: ResolveAuthorizedPreviewSelectionService) {
+function forbidPlanningAndPersistence(service: ResolveAuthorizedPreviewSelectionService): {
+  readonly plan: Mock<() => never>;
+  readonly persist: Mock<() => never>;
+  readonly useCase: PreviewPlanUseCase;
+} {
   const plan = vi.fn((): never => {
     throw new Error('Rejected selection reached planner.');
   });
@@ -42,7 +46,10 @@ function forbidPlanningAndPersistence(service: ResolveAuthorizedPreviewSelection
   return { plan, persist, useCase };
 }
 
-async function expectNoAdmission(service: ResolveAuthorizedPreviewSelectionService, cause: string) {
+async function expectNoAdmission(
+  service: ResolveAuthorizedPreviewSelectionService,
+  cause: string
+): Promise<void> {
   const { plan, persist, useCase } = forbidPlanningAndPersistence(service);
   await expect(
     useCase.execute({ ...FILE_INPUT, targetAdapter: 'temporal' }, buildContext())

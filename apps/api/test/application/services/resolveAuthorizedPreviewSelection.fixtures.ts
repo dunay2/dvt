@@ -10,7 +10,7 @@ import {
   type DbtProjectFilesProvenance,
   type GenericGraphSourceV1,
 } from '@dvt/contracts';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 import {
   AUTHORIZATION_ACTION,
@@ -150,7 +150,23 @@ type SelectionDependencies = ConstructorParameters<
   typeof ResolveAuthorizedPreviewSelectionService
 >[0];
 
-export function buildService(projection = buildProjection()) {
+export function buildService(projection = buildProjection()): {
+  readonly graphDraftResolver: {
+    readonly execute: Mock<SelectionDependencies['graphDraftResolver']['execute']>;
+  };
+  readonly dvtPreview: {
+    readonly execute: Mock<
+      NonNullable<SelectionDependencies['dvtPreviewSelectionResolver']>['execute']
+    >;
+  };
+  readonly projectGraph: {
+    readonly execute: Mock<SelectionDependencies['projectGraph']['execute']>;
+  };
+  readonly dbtCompilation: {
+    readonly execute: Mock<SelectionDependencies['dbtCompilation']['execute']>;
+  };
+  readonly service: ResolveAuthorizedPreviewSelectionService;
+} {
   const graphDraftResolver = {
     execute: vi.fn<SelectionDependencies['graphDraftResolver']['execute']>(),
   };
