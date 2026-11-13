@@ -1,5 +1,5 @@
 /** Passive workspace tab strip: markup, accessibility and semantic class names. */
-import './canvasSemanticEditor.css';
+import './canvasWorkspaceTabs.css';
 import { Code2, Table2, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
