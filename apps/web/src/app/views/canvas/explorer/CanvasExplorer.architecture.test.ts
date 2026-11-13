@@ -25,10 +25,13 @@ describe('Canvas explorer ownership', () => {
   it('shares the shell control typography instead of enlarging catalogue text', () => {
     // GH-3765: the content body token made Explorer names larger than the surrounding application controls.
     const fonts = readFileSync(new URL('../../../../styles/fonts.css', import.meta.url), 'utf8');
-    const shell = readFileSync(
-      new URL('../../../components/shell/ShellChrome.module.css', import.meta.url),
-      'utf8'
-    );
+    const shell = [
+      '../../../components/shell/ShellChrome.module.css',
+      '../../../components/shell/ShellAbout.module.css',
+      '../../../components/shell/ShellWorkspaceContext.module.css',
+    ]
+      .map((stylesheet) => readFileSync(new URL(stylesheet, import.meta.url), 'utf8'))
+      .join('\n');
     for (const role of ['ui', 'ui-caption', 'ui-micro']) {
       expect(fonts).toContain(`--text-${role}:`);
       expect(explorerStyles).toContain(`var(--text-${role})`);
