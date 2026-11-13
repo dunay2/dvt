@@ -2,7 +2,7 @@
 title: Local Changed Files Gate Component
 status: Accepted
 owner: Engineering / CI Governance
-last_reviewed: 2026-10-05
+last_reviewed: 2026-11-13
 planning_type: architecture
 ---
 
@@ -110,6 +110,39 @@ projected only inside the witness parser; membership retention still applies.
 Removal of an existing native obligation rejects, and changed platform metadata
 cannot qualify as a harmless controlled-spec addition. No second inventory is
 introduced.
+
+### Declarative Catalog Companions
+
+The root policy may request readiness for the exact
+`apps/web/cypress.catalog.json` companion. That path admission does not attest
+the contents. The existing Web query computes `resolveControlledCatalogAdditions`
+from the verified base/head witnesses and the executed catalog, then carries
+that result to its execution adapter as `catalogAdditions`.
+
+An absent field preserves the no-catalog route. An array, including `[]`, proves
+the existing additive-only predicate; `null` requires complete local execution.
+The adapter resolves that effective phase before projecting **any** capability
+or acquiring provider requirements. A failed Git read still rejects, and catalog
+withdrawals still reject before execution. Dirty or unproved historical witnesses
+cannot authorize a reduced local plan.
+
+```mermaid
+flowchart LR
+  Frontier[Complete frontier and existing infrastructure vetoes] --> Request[Exact declarative companion requests readiness]
+  Request --> Web[Existing Web admission and verified catalog witnesses]
+  Web -->|Valid array| Local[Selected changed, native or catalog-added specs]
+  Web -->|Null witness| Full[Complete selected capabilities and provider requirements]
+  Local --> Hosted[Unchanged required hosted acceptance]
+  Full --> Hosted
+```
+
+Readiness retains admitted catalog additions even when their existing files are
+absent from the changed frontier. It never adds those paths to `changedFiles` or
+duplicates a spec selected by multiple conditions. Only specs selected by the
+complete plan are eligible for that projection. Shared helpers, executable
+catalogs, router/runtime/toolchain inputs and unknown companions retain the
+existing root vetoes. This boundary adds no fixture dependency resolver, second
+catalog, command alias or receipt policy.
 
 Only the outer prepush command writes receipt version 2, with
 `purpose: local-push-readiness`, after every selected outer step succeeds.

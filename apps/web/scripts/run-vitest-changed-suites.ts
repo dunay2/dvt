@@ -119,24 +119,33 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       throw new Error(`Retired browser evidence must remain absent: ${path}`);
     }
   }
+  const phase =
+    args.phase === 'push-readiness' &&
+    (args.full || plan.catalogAdditions === null || !['win32', 'linux'].includes(process.platform))
+      ? 'all'
+      : args.phase;
   const vitestCommands =
-    args.phase === 'browser'
+    phase === 'browser'
       ? []
       : selectWebVitestExecutionPartition(plan.commandPlan, args.vitestGroup);
-  const fullLocal =
-    args.phase === 'all' ||
-    (args.phase === 'push-readiness' && !['win32', 'linux'].includes(process.platform));
   const browserCommands = plan.browserCommands
     .filter(
       (entry) =>
-        args.phase !== 'vitest' &&
+        phase !== 'vitest' &&
         (args.browserCapability === undefined || entry.capability === args.browserCapability)
     )
     .flatMap((entry) =>
-      fullLocal && entry.capability === 'controlled'
+      phase === 'all' && entry.capability === 'controlled'
         ? [1, 2, 3].map((index) => selectWebCypressShard(entry, { index, count: 3 }))
-        : args.phase === 'push-readiness'
-          ? [selectWebCypressLocalReadiness(entry, process.platform, changedFiles)]
+        : phase === 'push-readiness'
+          ? [
+              selectWebCypressLocalReadiness(
+                entry,
+                process.platform,
+                changedFiles,
+                plan.catalogAdditions ?? []
+              ),
+            ]
           : [selectWebCypressShard(entry, args.browserShard)]
     )
     .filter((entry) => entry !== undefined);

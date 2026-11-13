@@ -21,6 +21,7 @@ export type WebVitestChangedSuitePlan = WebVitestCommandPlan & {
   browserCommands: WebCypressCommand[];
   browserFiles: string[];
   retiredBrowserFiles: string[];
+  catalogAdditions?: ReturnType<typeof resolveWebCypressChangedPlan>['catalogAdditions'];
 };
 
 export function resolveWebVitestChangedSuitePlan(
@@ -115,6 +116,9 @@ export function resolveWebVitestChangedSuitePlan(
     browserCommands: browser.commands,
     browserFiles: browser.requiredFiles,
     retiredBrowserFiles: browser.retiredFiles,
+    ...(browser.catalogAdditions === undefined
+      ? {}
+      : { catalogAdditions: browser.catalogAdditions }),
     commands: plan.commands,
     commandPlan: plan.commandPlan,
     requiresDependencies: plan.requiresDependencies,

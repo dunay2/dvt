@@ -10,6 +10,7 @@ export const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
   'src/testing/vitestSuites.executionPartition.architecture.test.ts',
   'src/testing/vitestSuites.browserNightly.architecture.test.ts',
   'src/testing/vitestSuites.browserCatalog.architecture.test.ts',
+  'src/testing/vitestSuites.browserCatalogReadiness.architecture.test.ts',
   'src/testing/vitestSuites.browserNativePlatform.architecture.test.ts',
   'src/testing/vitestSuites.catalogRetention.architecture.test.ts',
   'src/testing/vitestSuites.browserRouting.architecture.test.ts',
