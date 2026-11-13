@@ -262,6 +262,7 @@
         'scripts/lib/changed-test-selection.test.cjs',
         'scripts/lib/local-web-validation-policy.test.cjs',
         'scripts/lib/local-test-coverage.test.cjs',
+        'scripts/lib/local-test-membership.test.cjs',
         'scripts/lib/local-validation-plan-values.test.cjs',
         'scripts/lib/local-validation-executor.test.cjs',
         'scripts/lib/prepush-validation-stamp.test.cjs',

@@ -146,6 +146,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/planning-db-operate-tests\/[\w-]+\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db-query-tests\/[\w-]+\.cjs$/u, 'planning-db'],
   [/^scripts\/generate-code-status-tests\/helpers\.cjs$/u, 'test-tooling'],
+  [/^scripts\/chromium-network-diagnostics-tests\/helpers\.cjs$/u, 'test-tooling'],
   [/^scripts\/governance-db-(check|import|export)(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-generated-paths(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-refresh(\.test)?\.cjs$/u, 'planning-db'],
@@ -167,7 +168,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^scripts\/lib\/risk-document-records\.cjs$/u, 'docs-governance'],
   [
-    /^scripts\/lib\/(changed-test-selection|hosted-ci-tool-ownership|local-web-validation-policy|local-test-coverage|local-validation-(plan-values|executor)|prepush-validation-stamp)\.cjs$/u,
+    /^scripts\/lib\/(changed-test-selection|hosted-ci-tool-ownership|local-web-validation-policy|local-test-coverage|local-test-membership|local-validation-(plan-values|executor)|prepush-validation-stamp)\.cjs$/u,
     'developer-workflow',
   ],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],

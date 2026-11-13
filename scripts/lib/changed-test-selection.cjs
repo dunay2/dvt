@@ -22,11 +22,8 @@ const {
   normalizeChangedFiles,
   pushSteps,
 } = require('./local-validation-plan-values.cjs');
-const {
-  composeLocalTestCoverage,
-  parentTestSuiteFor,
-  readParentSuiteMembers,
-} = require('./local-test-coverage.cjs');
+const { composeLocalTestCoverage } = require('./local-test-coverage.cjs');
+const { parentTestSuiteFor, readParentSuiteMembers } = require('./local-test-membership.cjs');
 const repoRoot = path.resolve(__dirname, '../..');
 const { webTestPhase } = require('./local-web-validation-policy.cjs');
 // These are actual cross-file contracts, not repeated adjacent pairs or test self references.

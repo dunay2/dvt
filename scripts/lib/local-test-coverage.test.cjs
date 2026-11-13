@@ -13,6 +13,9 @@ const { currentSchemaSources } = require('../../tools/planning-db/schema/manifes
 const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-suite.mjs');
 
 const { buildFocusedChangedTestPlan } = require('./changed-test-selection.cjs');
+const { composeLocalTestCoverage, effectiveNodeTestFiles } = require('./local-test-coverage.cjs');
+const { readParentSuiteMembers } = require('./local-test-membership.cjs');
+const { testStep } = require('./local-validation-plan-values.cjs');
 
 const packagePath = path.resolve(__dirname, '../../package.json');
 const packageScripts = JSON.parse(fs.readFileSync(packagePath, 'utf8')).scripts;
@@ -150,11 +153,7 @@ test('Planning DB aggregate coverage rejects unsupported package declarations be
   }
 });
 
-const { readParentSuiteMembers, parentTestSuiteFor } = require('./local-test-coverage.cjs');
-
 test('aggregate coverage follows the exact invocation and cannot be invented by an ID or filter', () => {
-  const { composeLocalTestCoverage } = require('./local-test-coverage.cjs');
-  const { testStep } = require('./local-validation-plan-values.cjs');
   for (const first of [
     testStep('test-verify-prepush', 'node', '--test', 'scripts/verify-prepush.test.cjs'),
     testStep('test-verify-prepush', 'pnpm', 'test:verify-prepush', '--test-name-pattern=partial'),
@@ -165,18 +164,33 @@ test('aggregate coverage follows the exact invocation and cannot be invented by 
 });
 
 test('effective coverage counts actual parent execution and removes only its covered direct child', () => {
-  const { composeLocalTestCoverage, effectiveNodeTestFiles } = require('./local-test-coverage.cjs');
-  const { testStep } = require('./local-validation-plan-values.cjs');
-  const parent = 'scripts/planning-db-query.test.cjs';
-  const child = 'scripts/planning-db-query-tests/current-component-files.test.cjs';
-  const plan = [
-    testStep('parent', 'node', '--test', parent),
-    testStep('child', 'node', '--test', child),
-  ];
-  assert.equal(effectiveNodeTestFiles(plan).filter((file) => file === child).length, 2);
-  const composed = composeLocalTestCoverage(plan);
-  assert.equal(effectiveNodeTestFiles(composed).filter((file) => file === child).length, 1);
-  assert.ok(composed.some((entry) => entry.args.includes(parent)));
+  const uncovered = 'scripts/lib/local-validation-plan-values.test.cjs';
+  for (const [parent, child] of [
+    [
+      'scripts/planning-db-query.test.cjs',
+      'scripts/planning-db-query-tests/current-component-files.test.cjs',
+    ],
+    [
+      'scripts/chromium-network-diagnostics.test.cjs',
+      'scripts/chromium-network-diagnostics-tests/capture-admission.test.cjs',
+    ],
+  ]) {
+    const obligations = [parent, child, uncovered].map((file, index) =>
+      testStep(String(index), 'node', '--test', file)
+    );
+    for (const plan of [
+      obligations,
+      [...obligations].reverse(),
+      [...obligations, obligations[1]],
+    ]) {
+      assert.ok(effectiveNodeTestFiles(plan).filter((file) => file === child).length > 1);
+      const composed = composeLocalTestCoverage(plan);
+      const effective = effectiveNodeTestFiles(composed);
+      assert.equal(effective.filter((file) => file === child).length, 1);
+      assert.equal(effective.filter((file) => file === uncovered).length, 1);
+      assert.ok(composed.some((entry) => entry.args.includes(parent)));
+    }
+  }
   const core = [
     testStep('test-verify-prepush', 'pnpm', 'test:verify-prepush'),
     testStep(
@@ -192,42 +206,4 @@ test('effective coverage counts actual parent execution and removes only its cov
     ).length,
     1
   );
-});
-test('parent membership proves unconditional requires and rejects unprovable test loading', (t) => {
-  const parent = 'scripts/planning-db-query.test.cjs';
-  const target = path.resolve(__dirname, '../..', parent);
-  const read = fs.readFileSync;
-  for (const declaration of [
-    "if (enabled) require('./planning-db-query-tests/current-component-files.test.cjs');",
-    'require(testPath);',
-    "const loaded = require('./planning-db-query-tests/current-component-files.test.cjs');",
-    "import './planning-db-query-tests/current-component-files.test.cjs';",
-  ]) {
-    const mock = t.mock.method(fs, 'readFileSync', (file, ...args) =>
-      path.resolve(file) === target
-        ? "require('./planning-db-query-tests/catalogs.test.cjs');\n" + declaration
-        : read(file, ...args)
-    );
-    try {
-      assert.throws(() => readParentSuiteMembers(parent), /test parent/u);
-    } finally {
-      mock.mock.restore();
-    }
-  }
-});
-
-test('canonical helper membership follows real imports independent of quote or spacing style', (t) => {
-  const helper = 'scripts/planning-db-operate-tests/helpers.cjs';
-  const member = path.resolve(__dirname, '../planning-db-operate-tests/cli.test.cjs');
-  const read = fs.readFileSync;
-  t.mock.method(fs, 'readFileSync', (file, ...args) =>
-    path.resolve(file) === member
-      ? 'const fixture = require ( "./helpers.cjs" );\n'
-      : path
-            .resolve(file)
-            .startsWith(path.resolve(__dirname, '../planning-db-operate-tests') + path.sep)
-        ? ''
-        : read(file, ...args)
-  );
-  assert.equal(parentTestSuiteFor(helper), 'scripts/planning-db-operate.test.cjs');
 });

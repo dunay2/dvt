@@ -115,6 +115,8 @@ flowchart LR
   CLI[Validation CLI] --> Plan[local-validation-plan: ordered obligations]
   Plan --> Selection[changed-test-selection: affected tests]
   Plan --> Coverage[local-test-coverage: complete deduplicated coverage]
+  Selection --> Membership[local-test-membership: literal parent membership]
+  Coverage --> Membership
   CLI --> Executor[local-validation-executor: await execution and cleanup]
   Executor --> Process[live-proof-process: owned OS process lifetime]
   CLI -->|only after successful validation| Stamp[prepush-validation-stamp: exact input identity and persistence]
@@ -128,6 +130,21 @@ it does not launch validation. Only outer prepush authorizes persistence after
 the entire local plan succeeds. Shared command values and labels belong to
 `scripts/lib/local-validation-plan-values.cjs`, not to an executable CLI.
 The existing plan and CLI modules do not re-export moved implementations.
+
+`scripts/lib/local-test-membership.cjs` owns the private, finite parent-suite
+catalog and bounded AST acquisition. Selection imports its parent queries
+directly; coverage uses `isParentSuite` without exporting or copying the catalog.
+Only unconditional literal test requires prove parent membership. Missing,
+duplicate, conditional or nonliteral declarations fail closed. Helper membership
+requires a real import by that parent or one of its members.
+
+`local-test-coverage.cjs` retains complete package-invocation validation, effective
+coverage and execution deduplication. A parent covers its actual children even
+when selected later in the plan; uncovered tests remain selected. The Chromium
+diagnostics entry remains the single public test port and loads its cohesive
+families in their original order. The existing `test:verify-prepush` includes the
+membership contract once. This separation changes neither runtime diagnostics
+nor validation flags, receipts or acceptance requirements.
 
 Receipt v2 preserves exact Git fingerprints and validation-level matching. Tests
 move with their behavior instead of being copied: executor tests exercise process
