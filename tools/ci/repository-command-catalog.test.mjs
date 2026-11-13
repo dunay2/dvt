@@ -19,6 +19,7 @@ test('local validation owners remain explicit without classifying arbitrary libr
     'changed-test-selection',
     'hosted-ci-tool-ownership',
     'local-test-coverage',
+    'local-test-membership',
     'local-validation-plan-values',
     'local-validation-executor',
     'prepush-validation-stamp',
@@ -33,11 +34,16 @@ test('responsibility helpers have explicit purposes without admitting arbitrary 
     ['scripts/lib/component-source-responsibilities.cjs', 'docs-governance'],
     ['scripts/lib/feature-mechanization-surface-matcher.cjs', 'docs-governance'],
     ['scripts/lib/source-code-facts.cjs', 'ci-tooling'],
+    ['scripts/chromium-network-diagnostics-tests/helpers.cjs', 'test-tooling'],
   ]) {
     assert.equal(classifyScriptFilePath(file).domain, domain);
     assert.equal(classifyScriptFilePath(file).runtimeFanout, false);
   }
   assert.equal(classifyScriptFilePath('scripts/lib/source-code-unknown.cjs').domain, 'unknown');
+  assert.equal(
+    classifyScriptFilePath('scripts/chromium-network-diagnostics-tests/other-helper.cjs').domain,
+    'unknown'
+  );
 });
 
 test('classifies only the admitted Python source-facts gateway as CI tooling', () => {

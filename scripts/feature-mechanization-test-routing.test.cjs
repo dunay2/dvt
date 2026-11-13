@@ -2,7 +2,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { buildVerifyChangedPlan } = require('./local-validation-plan.cjs');
-const { effectiveNodeTestFiles, readParentSuiteMembers } = require('./lib/local-test-coverage.cjs');
+const { effectiveNodeTestFiles } = require('./lib/local-test-coverage.cjs');
+const { readParentSuiteMembers } = require('./lib/local-test-membership.cjs');
 
 test('shared syntax facts select each semantic consumer regression once', () => {
   const suites = [

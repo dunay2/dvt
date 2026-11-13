@@ -1,21 +1,16 @@
 /**
- * Owned concern: effective test membership and removal of covered executions.
+ * Owned concern: compose effective coverage and remove covered test executions.
  * @baseline Local Changed Files Gate: package and parent suites own their real members.
- * @decision Read bounded literal declarations and retain every uncovered test.
+ * @decision Validate complete invocations and query actual parent membership.
  * @consequence Coverage composition cannot invent ownership or silently lose an obligation.
  * @version 1.0.0
  */
 const fs = require('node:fs');
 const path = require('node:path');
-const ts = require('typescript');
 const { testStep } = require('./local-validation-plan-values.cjs');
+const { isParentSuite, readParentSuiteMembers } = require('./local-test-membership.cjs');
 const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-suite.mjs');
 const repoRoot = path.resolve(__dirname, '../..');
-const PARENT_SUITES = Object.freeze([
-  ['scripts/planning-db-query.test.cjs', 'scripts/planning-db-query-tests/'],
-  ['scripts/planning-db-operate.test.cjs', 'scripts/planning-db-operate-tests/'],
-  ['scripts/generate-code-status.test.cjs', 'scripts/generate-code-status-tests/'],
-]);
 const AGGREGATES = Object.freeze([
   'test:planning:db',
   'test:planning:db:current-schema',
@@ -29,92 +24,6 @@ function isCompleteAggregate(entry) {
     entry.args.length === 1 &&
     AGGREGATES.includes(entry.args[0])
   );
-}
-
-function readModuleRequires(file, options, strict = true) {
-  const root = options.repoRootPath || repoRoot;
-  const ast = ts.createSourceFile(
-    file,
-    fs.readFileSync(path.join(root, file), 'utf8'),
-    ts.ScriptTarget.Latest,
-    true
-  );
-  if (ast.parseDiagnostics.length) throw new Error(`Invalid test parent source: ${file}`);
-  const dependencies = [];
-  const visit = (node) => {
-    if (
-      ts.isImportDeclaration(node) &&
-      ts.isStringLiteral(node.moduleSpecifier) &&
-      node.moduleSpecifier.text.endsWith('.test.cjs')
-    ) {
-      throw new Error(`Unsupported test parent import: ${file}`);
-    }
-    if (
-      ts.isCallExpression(node) &&
-      (node.expression.getText(ast) === 'require' ||
-        node.expression.kind === ts.SyntaxKind.ImportKeyword)
-    ) {
-      const [argument] = node.arguments;
-      if (!argument || !ts.isStringLiteral(argument)) {
-        if (strict) throw new Error(`Nonliteral test parent dependency: ${file}`);
-        return;
-      }
-      dependencies.push({
-        target: path.posix.normalize(path.posix.join(path.posix.dirname(file), argument.text)),
-        relative: argument.text.startsWith('./'),
-        test: argument.text.endsWith('.test.cjs'),
-        standalone:
-          node.expression.getText(ast) === 'require' &&
-          ts.isExpressionStatement(node.parent) &&
-          ts.isSourceFile(node.parent.parent),
-      });
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(ast);
-  return dependencies;
-}
-
-function readParentSuiteMembers(parent, options = {}) {
-  if (!PARENT_SUITES.some(([entry]) => entry === parent))
-    throw new Error(`Unknown test parent: ${parent}`);
-  const root = options.repoRootPath || repoRoot;
-  const members = [];
-  for (const dependency of readModuleRequires(parent, options)) {
-    if (!dependency.test) continue;
-    const member = dependency.target;
-    if (!dependency.standalone)
-      throw new Error(`Conditional or unsupported test parent member: ${parent}: ${member}`);
-    if (
-      !dependency.relative ||
-      member.startsWith('../') ||
-      !fs.existsSync(path.join(root, member))
-    ) {
-      throw new Error(`Unavailable test parent member: ${parent}: ${member}`);
-    }
-    if (members.includes(member))
-      throw new Error(`Repeated test parent member: ${parent}: ${member}`);
-    members.push(member);
-  }
-  if (members.length === 0) throw new Error(`Empty test parent: ${parent}`);
-  return members;
-}
-
-function parentTestSuiteFor(file, options = {}) {
-  const family = PARENT_SUITES.find(([, directory]) => file.startsWith(directory));
-  if (!family) return null;
-  const [parent, directory] = family;
-  const members = readParentSuiteMembers(parent, options);
-  if (members.includes(file)) return parent;
-  if (file === directory + 'helpers.cjs') {
-    if (
-      [parent, ...members].some((member) =>
-        readModuleRequires(member, options, false).some((dependency) => dependency.target === file)
-      )
-    )
-      return parent;
-  }
-  return null;
 }
 
 function readTestAggregate(scripts, name, root = repoRoot) {
@@ -152,7 +61,7 @@ function composeLocalTestCoverage(plan, options = {}) {
   const replacements = new Map();
   const cover = (file) => {
     covered.add(file);
-    if (PARENT_SUITES.some(([parent]) => parent === file))
+    if (isParentSuite(file))
       readParentSuiteMembers(file, options).forEach((member) => covered.add(member));
   };
   for (const aggregate of aggregates) {
@@ -187,7 +96,7 @@ function composeLocalTestCoverage(plan, options = {}) {
   // A selected real parent covers children even when it occurs later in the plan.
   for (const members of direct.values())
     for (const file of members) {
-      if (PARENT_SUITES.some(([parent]) => parent === file))
+      if (isParentSuite(file))
         readParentSuiteMembers(file, options).forEach((member) => covered.add(member));
     }
   return plan.flatMap((entry) => {
@@ -218,16 +127,12 @@ function effectiveNodeTestFiles(plan, options = {}) {
           ? entry.args.slice(1).filter((argument) => !argument.startsWith('--'))
           : [];
     return files.flatMap((file) =>
-      PARENT_SUITES.some(([parent]) => parent === file)
-        ? [file, ...readParentSuiteMembers(file, options)]
-        : [file]
+      isParentSuite(file) ? [file, ...readParentSuiteMembers(file, options)] : [file]
     );
   });
 }
 
 module.exports = {
-  readParentSuiteMembers,
-  parentTestSuiteFor,
   composeLocalTestCoverage,
   effectiveNodeTestFiles,
 };
