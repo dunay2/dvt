@@ -3,29 +3,23 @@
  * @baseline SaveWorkspaceGraphDraft: viewport gestures do not persist draft changes.
  * @decision Measure all writes after the hydrated model has been durably synchronized.
  * @decision Observe rendered Fit centering before capturing the camera for a pan gesture.
+ * @decision Keep retained Code browsing journeys separate while preserving spec hooks and order.
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
  * @version 1.0.2
  */
-import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
 
 import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
   seedLiveWorkspaceFiles,
 } from '../../support/dbtProjectLive';
-import {
-  getE2eApiCalls,
-  installE2eApiFetchStub,
-  resetE2eApiStubs,
-  stubE2eApi,
-  stubE2eJsonApi,
-} from '../../support/e2eApiStub';
+import { getE2eApiCalls, installE2eApiFetchStub, resetE2eApiStubs } from '../../support/e2eApiStub';
 import {
   hasLiveProtectedRuntimeEnv,
-  readLiveGraphDraft,
   readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { verifyRepeatedDbtProjectCodeBrowsing } from '../../support/relationalWorkbench/dbtProjectCodeBrowsing';
 import {
   verifyWheelZoom,
   revealCardDetails,
@@ -37,6 +31,7 @@ import {
   revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
+import { verifyRetainedProjectCodeBrowsing } from '../../support/relationalWorkbench/projectCodeBrowsing';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 function assertExplorerWidth(scope: string, widthPercent: number): void {
@@ -266,146 +261,10 @@ describe('Workbench viewport', () => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
     });
   });
-  it('retains the Canvas while browsing Git and opening a project file', () => {
-    // Code may cover the Canvas, but must not discard its camera, search, or graph identity.
-    stubE2eJsonApi('GET', '/workspace/files', [
-      {
-        path: 'notes',
-        name: 'notes',
-        kind: 'directory',
-        children: [
-          { path: 'notes/first.md', name: 'first.md', kind: 'file' },
-          { path: 'notes/second.md', name: 'second.md', kind: 'file' },
-        ],
-      },
-    ]);
-    stubE2eApi('GET', /^\/workspace\/files\/.+/, ({ url }) => {
-      const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
-      return {
-        body: {
-          path,
-          name: path.split('/').at(-1),
-          language: 'markdown',
-          content: `# ${path}`,
-          contentSha256: 'a'.repeat(64),
-          lastModified: '2026-10-28T00:00:00Z',
-        },
-      };
-    });
-    stubE2eJsonApi('GET', /^\/workspace\/file-history\/.+/, []);
-    stubE2eApi('POST', /^\/workspace\/files\/.+/, () => {
-      throw new Error('Clean project-file browsing must not save content.');
-    });
-    cy.viewport(1280, 720);
-    visitWorkbenchCanvas();
-    const main = '[data-slot="canvas-workspace-surface"]';
-    const git = `[data-slot="shell-project-code-command"]`;
-    const code = '[data-slot="canvas-code-workspace-surface"]';
-    const tree = `${code} [data-slot="route-workbench-left-panel"]`;
-    const properties = `${code} [data-slot="route-workbench-right-panel"] [role="region"]`;
-    cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
-      expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
-    });
-    cy.get(`${main} [data-slot="canvas-explorer-panel"] input[type="search"]`).type('customers');
-    cy.get(`${main} .react-flow__viewport`).then(($viewport) => {
-      const viewport = $viewport[0]!;
-      const transform = viewport.getAttribute('style');
-      const card = viewport.querySelector<HTMLElement>('[data-id="join-transform"]')!;
-      const before = card.getBoundingClientRect();
-      const assertStationary = (): void => {
-        cy.get(`${main} .react-flow__viewport`)
-          .should('be.visible')
-          .should(($current) => {
-            expect($current[0]).to.equal(viewport);
-            expect($current.attr('style')).to.equal(transform);
-            const bounds = card.getBoundingClientRect();
-            expect(bounds.left).to.be.closeTo(before.left, 1);
-            expect(bounds.top).to.be.closeTo(before.top, 1);
-          });
-      };
-      cy.get(git).focus();
-      cy.press(Cypress.Keyboard.Keys.ENTER);
-      cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
-      cy.get(tree).find('[data-slot="code-workspace-file-entry"]').should('have.length', 3);
-      cy.get(`${code} [data-slot="code-workspace-file-entry"]:visible`).should('have.length', 3);
-      cy.get(code)
-        .should('be.visible')
-        .should(($code) => {
-          const bounds = $code[0]!.getBoundingClientRect();
-          const workspace = $code[0]!
-            .closest('[data-slot="canvas-workspace-surfaces"]')!
-            .getBoundingClientRect();
-          expect(bounds.top).to.be.closeTo(workspace.top, 1);
-          expect(bounds.right).to.be.closeTo(workspace.right, 1);
-          expect(bounds.bottom).to.be.closeTo(workspace.bottom, 1);
-        });
-      cy.get(main).should('have.attr', 'inert');
-      cy.get(`${main} .react-flow__viewport`).should('not.be.visible');
-      cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-        'have.attr',
-        'data-file-path',
-        'notes/first.md'
-      );
-      cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'notes/first.md');
-      cy.get(properties).should('contain.text', 'notes/first.md');
-      cy.get(`${properties} time`).should('have.attr', 'datetime', '2026-10-28T00:00:00Z');
-      cy.screenshot('canvas-git-project-files');
-      cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
-      cy.get(code).should('not.be.visible');
-      assertStationary();
-      cy.get(`${main} [data-slot="canvas-explorer-panel"] input`).should('have.value', 'customers');
-      cy.get(git).click();
-      cy.get(code).should('be.visible');
-      cy.get(tree).find('[data-workspace-path="notes/second.md"]').click();
-      cy.get(code)
-        .should('be.visible')
-        .find('.monaco-editor .view-lines')
-        .should('contain.text', 'notes/second.md');
-      cy.get(tree).find('[data-workspace-path="notes/first.md"]').click();
-      cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'notes/first.md');
-      cy.get(tree).find('[data-workspace-path="notes/second.md"]').click();
-      cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'notes/second.md');
-      cy.get(properties)
-        .should('contain.text', 'notes/second.md')
-        .and('not.contain.text', 'notes/first.md');
-      cy.get(`${code} [data-slot="workspace-file-code-editor"]`).then(($editor) => {
-        const editor = $editor[0]!;
-        const width = editor.getBoundingClientRect().width;
-        cy.get(`${code} button[aria-controls]`)
-          .click()
-          .should('have.attr', 'aria-expanded', 'false');
-        cy.get(properties).should('not.exist');
-        cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(($current) => {
-          expect($current[0]).to.equal(editor);
-          expect($current[0]!.getBoundingClientRect().width).to.be.greaterThan(width);
-        });
-        cy.get(`${code} button[aria-controls]`)
-          .click()
-          .should('have.attr', 'aria-expanded', 'true');
-        cy.get(properties).should('contain.text', 'notes/second.md');
-        cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(($current) =>
-          expect($current[0]).to.equal(editor)
-        );
-      });
-      cy.get('[data-slot="shell-project-code-command"]').click();
-      cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'notes/second.md');
-      cy.get('[data-slot="canvas-workspace-tab"]').click();
-      cy.get(code).should('not.be.visible');
-      cy.get(main).should('not.have.attr', 'inert');
-      assertStationary();
-      cy.get('[data-slot="shell-project-code-command"]').click();
-      cy.get(code)
-        .should('be.visible')
-        .find('.monaco-editor .view-lines')
-        .should('contain.text', 'notes/second.md');
-      cy.get('[data-slot="canvas-workspace-tab"]').click();
-      assertStationary();
-      cy.then(() => {
-        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
-        expect(getE2eApiCalls(/^\/workspace\/files\/.+/, 'POST')).to.have.length(0);
-      });
-    });
-  });
+  it(
+    'retains the Canvas while browsing Git and opening a project file',
+    verifyRetainedProjectCodeBrowsing
+  );
   describe('Explorer layout', () => {
     const main = '[data-slot="canvas-workspace-surface"]';
     const model = '[data-slot="canvas-relational-tree-workbench"]';
@@ -733,214 +592,15 @@ describe('DBT project Git browsing with real file authority', () => {
   });
 
   it('retains repeated DBT file selection without file saves or persisted graph changes', () => {
-    // Real file and graph baselines distinguish clean browsing from accidental persistence.
-    const hashes: Record<string, string> = {};
-    const modified: Record<string, string> = {};
-    let viewport: HTMLElement | undefined;
-    let transform: string | null = null;
-    let graphBefore:
-      | {
-          status: number;
-          body: ReturnType<typeof WorkspaceGraphDraftReadResponseSchema.parse>;
-        }
-      | undefined;
-    const main = '[data-slot="canvas-workspace-surface"]';
-    const code = '[data-slot="canvas-code-workspace-surface"]';
-    const git = `${code} [data-slot="route-workbench-left-panel"]`;
-    const properties = `${code} [data-slot="route-workbench-right-panel"] [role="region"]`;
-    for (const path of Object.keys(files)) {
-      readLiveWorkspaceFile(path).then(({ status, body }) => {
-        expect(status).to.equal(200);
-        const file = body as { contentSha256: string; lastModified: string };
-        expect(file.contentSha256).to.match(/^[a-f0-9]{64}$/);
-        expect(file.lastModified).to.be.a('string');
-        hashes[path] = file.contentSha256;
-        modified[path] = file.lastModified;
-      });
-    }
-    readLiveGraphDraft(undefined, { failOnStatusCode: false }).then(({ status, body }) => {
-      expect(status).to.be.oneOf([200, 404]);
-      const draft = WorkspaceGraphDraftReadResponseSchema.parse(body);
-      expect(draft.kind).to.equal(status === 200 ? 'ok' : 'not_found');
-      graphBefore = { status, body: draft };
+    verifyRepeatedDbtProjectCodeBrowsing({
+      projectRoot,
+      canvasId,
+      projectPath,
+      firstPath,
+      secondPath,
+      outsidePath,
+      files,
     });
-    cy.intercept({ method: 'GET', pathname: '/workspace/files' }).as('actualFileTree');
-    cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('fileWrites');
-    cy.viewport(1500, 900);
-    visitWithLiveWorkspaceSession(
-      `/canvas?authority=dbt-project-files&canvasId=${canvasId}&projectRoot=${projectRoot}`
-    );
-    cy.get(`[data-slot="shell-project-code-command"]`, {
-      timeout: 60_000,
-    }).should('be.visible');
-    cy.get(`${main} .react-flow__node`).its('length').should('be.at.least', 2);
-    cy.get(`${main} .react-flow__controls-fitview`).click();
-    cy.get(`${main} .react-flow__viewport`)
-      .should('be.visible')
-      .should(($viewport) => {
-        const current = $viewport[0]!;
-        expect(
-          new DOMMatrix(current.style.transform).a,
-          'public Fit has applied its zoom'
-        ).to.be.lessThan(1);
-        const frame = current.closest('.react-flow')!.getBoundingClientRect();
-        const cards = current.querySelectorAll('.react-flow__node');
-        expect(cards.length).to.be.at.least(2);
-        cards.forEach((card) => {
-          const bounds = card.getBoundingClientRect();
-          expect(bounds.width).to.be.greaterThan(0);
-          expect(bounds.height).to.be.greaterThan(0);
-          expect(bounds.left).to.be.at.least(frame.left);
-          expect(bounds.right).to.be.at.most(frame.right);
-          expect(bounds.top).to.be.at.least(frame.top);
-          expect(bounds.bottom).to.be.at.most(frame.bottom);
-        });
-      })
-      .then(($viewport) => {
-        viewport = $viewport[0]!;
-        transform = viewport.getAttribute('style');
-      });
-    cy.get(`[data-slot="shell-project-code-command"]`).click();
-    cy.wait('@actualFileTree')
-      .its('response')
-      .should((response) => {
-        expect(response?.statusCode).to.equal(200);
-        expect(JSON.stringify(response?.body)).to.contain(outsidePath);
-      });
-    cy.get(`${git} [data-workspace-path]`).each(($entry) => {
-      const path = $entry.attr('data-workspace-path')!;
-      expect(path === projectRoot || path.startsWith(`${projectRoot}/`)).to.equal(true);
-    });
-    cy.get(`${git} [data-workspace-path="${outsidePath}"]`).should('not.exist');
-    cy.get(`${git} [data-slot="code-workspace-file-entry"]:visible`)
-      .its('length')
-      .then((count) => {
-        expect(count).to.be.greaterThan(0);
-        cy.get(`${code} [data-slot="code-workspace-file-entry"]:visible`).should(
-          'have.length',
-          count
-        );
-      });
-    cy.get(code).should('be.visible');
-    cy.get(`${main} .react-flow__viewport`).should('not.be.visible');
-    cy.get(main).should('have.attr', 'inert');
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      projectPath
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_browser_dbt');
-    cy.get(properties).should('contain.text', projectPath);
-    cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
-    cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).then(($directory) => {
-      const directory = $directory[0]!;
-      cy.then(() => {
-        cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
-        cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
-        cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
-        cy.get('[data-slot="canvas-workspace-tab"]').click();
-        cy.get(code).should('not.be.visible');
-        cy.get(main).should('be.visible');
-        cy.get('[data-slot="canvas-code-main-tab"]').click();
-        cy.get(code).should('be.visible');
-        cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).should(($current) => {
-          expect($current[0], 'the real directory survives the workspace roundtrip').to.equal(
-            directory
-          );
-        });
-        cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
-        cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
-        // Elements may refresh the scoped catalogue; disclosure itself retains
-        // the existing Code tree and performs no file or semantic writes.
-        cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
-        cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
-      });
-    });
-    cy.get(`${git} [data-workspace-path="${secondPath}"]`).click();
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      secondPath
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
-    cy.get(properties).should('contain.text', secondPath).and('not.contain.text', outsidePath);
-    cy.then(() => {
-      cy.get(`${properties} time`).should('have.attr', 'datetime', modified[secondPath]);
-      cy.get(properties).should('not.contain.text', hashes[secondPath]);
-    });
-    cy.get(`${git} [data-workspace-path="${firstPath}"]`).click();
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      firstPath
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_a');
-    cy.get(`${git} [data-workspace-path="${secondPath}"]`).click();
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      secondPath
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
-    cy.get('[data-slot="shell-project-code-command"]').click();
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      secondPath
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
-    cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(code).should('not.be.visible');
-    cy.get(`${main} .react-flow__viewport`)
-      .should('be.visible')
-      .should(($viewport) => {
-        expect($viewport[0]).to.equal(viewport);
-        expect($viewport.attr('style')).to.equal(transform);
-      });
-    cy.get(`[data-slot="shell-project-code-command"]`).click();
-    cy.get(code).should('be.visible');
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      secondPath
-    );
-    cy.get(properties).should('contain.text', secondPath);
-    cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
-    cy.get(code).should('not.be.visible');
-    cy.get('[data-slot="shell-project-code-command"]').click();
-    cy.get(code).should('be.visible');
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
-      'have.attr',
-      'data-file-path',
-      secondPath
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
-    cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(`${main} .react-flow__viewport`)
-      .should('be.visible')
-      .should(($viewport) => {
-        expect($viewport[0]).to.equal(viewport);
-        expect($viewport.attr('style')).to.equal(transform);
-      });
-    cy.get('@fileWrites.all').should('have.length', 0);
-    readLiveGraphDraft(undefined, { failOnStatusCode: false }).then(({ status, body }) => {
-      if (graphBefore === undefined) throw new Error('Persisted graph baseline was not captured.');
-      const draft = WorkspaceGraphDraftReadResponseSchema.parse(body);
-      expect(status, 'persisted graph presence is unchanged').to.equal(graphBefore.status);
-      expect(draft.kind).to.equal(graphBefore.body.kind);
-      if (draft.kind === 'ok' && graphBefore.body.kind === 'ok') {
-        expect(draft.record, 'persisted graph record is unchanged').to.deep.equal(
-          graphBefore.body.record
-        );
-      }
-    });
-    for (const path of Object.keys(files)) {
-      readLiveWorkspaceFile(path).then(({ status, body }) => {
-        expect(status).to.equal(200);
-        expect((body as { contentSha256: string }).contentSha256).to.equal(hashes[path]);
-      });
-    }
   });
 
   it('hands read-only project Code to node inspection without writes or viewport movement', () => {
