@@ -629,9 +629,13 @@ flowchart LR
 - Ordinary PRs partition their selected Vitest commands after the complete plan
   has been validated. `--vitest-group` requires `--phase=vitest` and accepts
   `unit`, `architecture`, `presentation-1` through `presentation-3`, or `changed`.
-  The primary groups own complete primary commands only; native Presentation
-  thirds cover the same suite. The `changed` residual owns each focus-suite or
-  exact-file batch once, preserving its configuration and existing deduplication.
+  The `unit` group owns complete Unit and Canvas unit commands; `architecture`
+  owns complete Architecture commands. The three Presentation groups execute
+  complete primary or Canvas Presentation commands with native thirds, retaining
+  each command's original configuration. The `changed` residual owns each other
+  focus-suite or exact-file batch once, preserving its configuration and existing
+  deduplication. Only the two exact canonical Canvas commands gain placement;
+  unknown commands retain the residual fallback.
   `vitest-execution-partitions.ts` owns this pure execution split; the adapter
   owns Git, path validation and process launch. Neither owns another path router.
   Planning retains the complete obligation plan and exposes the selected
@@ -650,7 +654,7 @@ flowchart LR
     Validation --> Split[Pure hosted execution partition]
     Split --> Primary[Unit and Architecture]
     Split --> Thirds[Native Presentation thirds]
-    Split --> Residual[Focus and exact batches once]
+    Split --> Residual[Other focus and exact batches once]
     Primary --> Required[Existing required matrix result]
     Thirds --> Required
     Residual --> Required
@@ -658,8 +662,9 @@ flowchart LR
 
   This removes the sequential primary-suite bottleneck observed in PR #3838
   without removing test obligations. It does not claim lower runner-minutes or
-  faster local prepush: residual focus suites remain unpartitioned, and hosted
-  setup and queue costs must be measured alongside the critical path.
+  faster local prepush: other focus suites and exact-file batches remain in the
+  residual group, and hosted setup and queue costs must be measured alongside
+  the critical path.
 
 - The existing live runner owns allocation and cleanup. Missing runtime,
   zero executed tests, pending tests or skipped tests are failures. POSIX

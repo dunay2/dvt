@@ -174,8 +174,13 @@ five concurrent jobs: `unit` and `architecture` each run their existing delegate
 delegate with Vitest's native `--shard=1/3`, `--shard=2/3` and `--shard=3/3`.
 Every partition retains its existing config, per-file isolation, one CI fork and
 4 GB old-space limit. No test selection catalog, scheduler or result cache is added.
-Local `pnpm test:web:ci` still runs the complete composition. Ordinary web PRs
-allocate one Vitest `changed` group using the existing affected-suite router.
+Local `pnpm test:web:ci` still runs the complete composition. Ordinary Web PRs
+place admitted primary commands in their matching groups, Canvas unit commands
+in `unit`, and Canvas Presentation commands in the three Presentation groups
+using their original focus config and native shards. The residual `changed`
+group executes other focus commands and exact-file batches once. The existing
+affected-suite router still selects the complete obligation plan; omitting the
+execution-group selector preserves complete local execution.
 
 The measured full run at `0f97c2b2` spent 615 seconds executing Presentation
 (682 seconds for its hosted job), making that job the Test Suite critical path.
@@ -188,7 +193,8 @@ The complete Test Suite target is at most 355 seconds against that run's
 710 seconds. This partition change does not establish that target: browser
 evidence still took about 572 seconds, and the new matrix has not been timed.
 Measure complete wall time and total runner time, because each extra job repeats
-setup. Local execution and ordinary changed PRs retain their current behavior.
+setup. Local execution remains unchanged; other focus commands and exact-file
+batches remain once in the residual `changed` group.
 
 ```mermaid
 flowchart LR

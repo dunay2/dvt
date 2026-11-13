@@ -1,6 +1,6 @@
 /**
  * Owned concern: partition an already validated Web test plan for hosted execution.
- * @decision Reuse complete primary commands and native Presentation shards; retain other batches once.
+ * @decision Place primary and admitted Canvas commands in existing groups with native Presentation shards.
  * @consequence Partitioning cannot change path admission, suite ownership or local coverage.
  */
 import {
@@ -33,13 +33,18 @@ export function selectWebVitestExecutionPartition(
         if (entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS[primary])
           return group === primary ? [entry] : [];
       }
-      if (entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation) {
+      if (entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-unit'])
+        return group === 'unit' ? [entry] : [];
+      if (
+        entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation ||
+        entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']
+      ) {
         return group.startsWith('presentation-')
           ? [{ ...entry, command: `${entry.command} --shard=${group.slice(-1)}/3` }]
           : [];
       }
     }
-    // Focus suites and exact-file batches retain their own execution context and run once.
+    // Other focus suites and exact-file batches retain their context and run once.
     return group === 'changed' ? [entry] : [];
   });
 }
