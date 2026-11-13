@@ -1,3 +1,8 @@
+/**
+ * Owned concern: verify the existing Graph and Inspector visual responsibility boundaries.
+ * @decision Keep all ten architecture cases here and acquire their source inventory in one sibling.
+ * @consequence Inventory churn does not split test discovery or duplicate isolated acquisitions.
+ */
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../../views/architecture.test.support';
@@ -13,145 +18,24 @@ import {
   graphNodeOperationalRailClasses,
 } from './graphMetricVisualTokens';
 
-const TOKEN_SOURCE = [
-  'graphVisualTokens.ts',
-  'graphCardVisualTokens.ts',
-  'graphColumnVisualTokens.ts',
-  'graphMetricVisualTokens.ts',
-]
-  .map((file) => readArchitectureSiblingSource(import.meta.dirname, file))
-  .join('\n');
-const GRAPH_RENDERER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeRenderer.tsx'
-);
-const GRAPH_CARD_VIEW_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeCardView.tsx'
-);
-const GRAPH_NESTED_COLUMNS_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeColumnChildren.tsx'
-);
-const GRAPH_NESTED_COLUMN_STYLES = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeColumnChildren.module.css'
-);
-const GRAPH_METRIC_ROW_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeMetricRow.tsx'
-);
-const GRAPH_TAG_LIST_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeTagList.tsx'
-);
-const GRAPH_OPERATIONAL_RAIL_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeOperationalRail.tsx'
-);
-const GRAPH_HEALTH_POPOVER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeHealthPopoverView.tsx'
-);
-const FALLBACK_RENDERER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../FallbackNodeRenderer.tsx'
-);
-const CANVAS_NODE_MAPPER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../views/canvas/canvasNodeMapper.ts'
-);
-const DBT_NODE_CATALOG_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../nodeTypeCatalog.dbt.ts'
-);
-const DVT_NODE_CATALOG_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../dvt/dvtNodeTypeCatalog.ts'
-);
-const DBT_NODE_RENDERER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../dbt/DbtNodeRenderer.tsx'
-);
-const INSPECTOR_TOKEN_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../components/inspector/inspectorVisualTokens.ts'
-);
-const INSPECTOR_CONSUMER_SOURCES = [
-  readArchitectureSiblingSource(
-    import.meta.dirname,
-    '../../components/inspector/NodePropertiesTabs.tsx'
-  ),
-  readArchitectureSiblingSource(
-    import.meta.dirname,
-    '../../components/inspector/NodePropertySectionView.tsx'
-  ),
-  readArchitectureSiblingSource(
-    import.meta.dirname,
-    '../../views/canvas/CanvasNodeWorkbenchPanel.tsx'
-  ),
-  readArchitectureSiblingSource(
-    import.meta.dirname,
-    '../../views/canvas/CanvasInspectorAuthoringSection.tsx'
-  ),
-];
-const COMPONENT_GUIDE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/style-guide.md'
-);
-const USER_STORIES = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/style-guide.md'
-);
-
-const GRAPH_CONSUMER_SOURCES = [
-  FALLBACK_RENDERER_SOURCE,
+import {
+  TOKEN_SOURCE,
+  GRAPH_RENDERER_SOURCE,
+  GRAPH_CARD_VIEW_SOURCE,
+  GRAPH_NESTED_COLUMNS_SOURCE,
+  GRAPH_NESTED_COLUMN_STYLES,
   CANVAS_NODE_MAPPER_SOURCE,
-  DBT_NODE_CATALOG_SOURCE,
-  DVT_NODE_CATALOG_SOURCE,
-  DBT_NODE_RENDERER_SOURCE,
-];
-const GRAPH_CARD_PRESENTATION_SOURCES = [
-  [GRAPH_CARD_VIEW_SOURCE, 'graphCardVisualTokens'],
-  [GRAPH_METRIC_ROW_SOURCE, 'graphMetricVisualTokens'],
-  [GRAPH_TAG_LIST_SOURCE, 'graphCardVisualTokens'],
-  [GRAPH_OPERATIONAL_RAIL_SOURCE, 'graphMetricVisualTokens'],
-  [GRAPH_HEALTH_POPOVER_SOURCE, 'graphMetricVisualTokens'],
-  [FALLBACK_RENDERER_SOURCE, 'graphVisualTokens'],
-] as const;
-
-const FONT_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../../../styles/fonts.css');
-const THEME_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../../styles/theme.css'
-);
-const MODEL_FAMILY_SOURCES = [
-  'CanvasRelationalTreeCard.module.css',
-  'CanvasRelationalTreeSourceCard.tsx',
-  'CanvasRelationalTreeOutput.module.css',
-  'CanvasRelationalFieldToken.module.css',
-  'canvasSemanticEditor.css',
-  'semanticWorkbenchRelationMetadata.ts',
-  'semanticExpressionGraphLayout.ts',
-  'join-condition/operandStyles.ts',
-  'derivedOutputFormula.css',
-].map((file) => readArchitectureSiblingSource(import.meta.dirname, `../../views/canvas/${file}`));
-const TEXT_ROLE_CONSUMERS = [
-  '../../components/inspector/SourceColumns.module.css',
-  '../../components/inspector/inspectorVisualTokens.ts',
-  '../../views/canvas/CanvasCardRemovalBar.module.css',
-  '../../views/code/CodeFileHistoryPanel.tsx',
-  '../../labs/SemanticWorkbenchLab.tsx',
-  '../../views/canvas/CanvasContextualWorkbenchPanel.tsx',
-  '../../views/canvas/CanvasModelOutputInspector.tsx',
-  '../../views/canvas/CanvasRelationalTreeOutput.module.css',
-  '../../views/canvas/canvasSemanticEditor.css',
-  '../../views/canvas/canvasWorkspaceTabs.css',
-  '../../views/canvas/CanvasSourceOccurrenceOutputs.tsx',
-  '../../views/canvas/relational-inspection/RelationalInspectionPanel.tsx',
-  '../../views/canvas/relational-source-occurrence/SourceOccurrenceProperties.templates.tsx',
-  '../../views/canvas/SourceOverviewPanel.tsx',
-];
+  INSPECTOR_TOKEN_SOURCE,
+  INSPECTOR_CONSUMER_SOURCES,
+  COMPONENT_GUIDE,
+  USER_STORIES,
+  GRAPH_CONSUMER_SOURCES,
+  GRAPH_CARD_PRESENTATION_SOURCES,
+  FONT_SOURCE,
+  THEME_SOURCE,
+  MODEL_FAMILY_SOURCES,
+  TEXT_ROLE_CONSUMERS,
+} from './graphVisualTokenConvergence.test-sources';
 
 describe('React Flow visual token convergence architecture', () => {
   it('keeps typography and shared focus/elevation definitions in their canonical owners', () => {
