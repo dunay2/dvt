@@ -1,7 +1,7 @@
 /**
- * Owned concern: arbitrate shell selected-text intent without replacing local target menus.
+ * Owned concern: arbitrate scoped Shell context gestures without replacing local target menus.
  * @baseline Canvas and editor menus retain their own admission and actions.
- * @decision Own the selected snapshot and action lifetime; delegate passive menu presentation.
+ * @decision Own selection lifetime and bubble fallback; call the original child handler before cancellation.
  * @consequence A stale selection cannot acquire clipboard or dictionary authority.
  * @version 1.1.0
  */
@@ -84,6 +84,10 @@ export function ShellTextSelectionBoundary({
             event.preventDefault();
             event.stopPropagation();
           } else children.props.onContextMenuCapture?.(event);
+        },
+        onContextMenu: (event) => {
+          children.props.onContextMenu?.(event);
+          event.preventDefault();
         },
         onKeyDownCapture: (event) => {
           const context =

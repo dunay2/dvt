@@ -1212,8 +1212,14 @@ flowchart LR
 `AppShellFrame` owns slot composition and drawer geometry. Its visual rules move
 to a CSS module using existing semantic tokens and the global
 `app-shell-background` class. Skip-link focus, main focus, retained route slots
-and resize behavior remain unchanged. Browser-owned selection chrome remains
-outside this application's authority.
+and resize behavior remain unchanged. The frame delegates context-menu policy to
+`ShellTextSelectionBoundary`: its ordinary fallback runs in bubble phase, calls
+the child's original context-menu callback first, and then cancels the native
+default. Descendant handlers, local Radix/Canvas menus and React-owned portals
+retain their existing event ownership; stopped propagation is not intercepted
+by a global listener. Selected-text capture, Monaco/password exclusions, keyboard
+admission and action lifetime remain unchanged. Browser-owned selection chrome
+remains outside this application's authority.
 
 Regression evidence must exercise pointer and keyboard activation, denied and
 stale copy, stale dictionary selection, focus return and target-menu delegation.
