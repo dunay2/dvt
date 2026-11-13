@@ -4,10 +4,21 @@
  * @consequence Missing and changed files retain actionable messages without leaking details.
  */
 import { codeViewCopy, type CodeViewCopy } from './codeViewCopy';
+import { classifyHttpError } from '../../services/api/classifyHttpError';
+import type { FileCreationError } from './workspaceFileCreationModel';
 import {
   WorkspaceFileLoadError,
   WorkspaceFileRevisionConflictError,
 } from '../../services/workspace/workspaceErrors';
+
+/** Map command failures to safe presentation reasons through the shared transport classifier. */
+export function resolveCodeFileCreationFailure(
+  error: unknown
+): Extract<FileCreationError, 'conflict' | 'forbidden' | 'unavailable'> {
+  if (error instanceof WorkspaceFileRevisionConflictError) return 'conflict';
+  const kind = classifyHttpError(error);
+  return kind === 'auth-required' || kind === 'access-denied' ? 'forbidden' : 'unavailable';
+}
 
 export type CodeWorkbenchErrorKind =
   | 'workspace-tree-unavailable'

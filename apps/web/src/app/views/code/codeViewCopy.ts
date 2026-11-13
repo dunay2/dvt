@@ -8,6 +8,7 @@ import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { CODE_VIEW_MESSAGES } from './codeViewMessages';
 import { CODE_INLINE_MESSAGES } from './codeInlineMessages';
 import { CODE_MODEL_COMMAND_MESSAGES } from './codeModelCommandMessages';
+import { CODE_FILE_CREATION_MESSAGES } from './codeFileCreationMessages';
 
 export type CodeViewLanguage = NonNullable<Parameters<typeof resolveString>[1]>;
 
@@ -51,4 +52,8 @@ export function resolveCodeInlineReferenceCopy(locale: CodeViewLanguage): CodeIn
 
 export function resolveCodeModelCommandCopy(locale: CodeViewLanguage) {
   return resolveCodeCatalog('code.modelCommands', CODE_MODEL_COMMAND_MESSAGES, locale);
+}
+
+export function resolveCodeFileCreationCopy(locale: CodeViewLanguage) {
+  return resolveCodeCatalog('code.fileCreation', CODE_FILE_CREATION_MESSAGES, locale);
 }

@@ -2,9 +2,16 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
+import {
+  WorkspaceFileLoadError,
+  WorkspaceFileRevisionConflictError,
+} from '../../services/workspace/workspaceErrors';
+import { ApiError } from '../../services/api/createApiClient';
 import { resolveCodeViewCopy } from './codeViewCopy';
-import { resolveCodeWorkbenchErrorPresentation } from './codeWorkbenchErrorModel';
+import {
+  resolveCodeFileCreationFailure,
+  resolveCodeWorkbenchErrorPresentation,
+} from './codeWorkbenchErrorModel';
 
 describe('resolveCodeWorkbenchErrorPresentation', () => {
   const copy = resolveCodeViewCopy('en-US');
@@ -65,5 +72,24 @@ describe('resolveCodeWorkbenchErrorPresentation', () => {
       title: spanishCopy.routeErrorTitle,
       message: spanishCopy.routeErrorMessage,
     });
+  });
+});
+
+describe('create-only failure presentation', () => {
+  it.each([401, 403])('uses the shared permission classifier for HTTP %s', (statusCode) => {
+    const error = new ApiError({
+      message: 'PRIVATE_TOKEN',
+      endpoint: '/workspace/files',
+      statusCode,
+      category: 'forbidden',
+    });
+    expect(resolveCodeFileCreationFailure(error)).toBe('forbidden');
+  });
+
+  it('keeps revision conflicts distinct from unknown transport failures', () => {
+    expect(
+      resolveCodeFileCreationFailure(new WorkspaceFileRevisionConflictError('private.sql'))
+    ).toBe('conflict');
+    expect(resolveCodeFileCreationFailure(new Error('PRIVATE_DETAILS'))).toBe('unavailable');
   });
 });

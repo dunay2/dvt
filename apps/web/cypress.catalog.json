@@ -42,6 +42,7 @@
     "apps/web/cypress/e2e/canvas/canvas-unary-lifecycle.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-unsupported-substrait-inspection.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-withdrawn-input-publication.cy.ts",
+    "apps/web/cypress/e2e/canvas/code-workbench-file-creation.cy.ts",
     "apps/web/cypress/e2e/canvas/code-workbench-model-commands.cy.ts",
     "apps/web/cypress/e2e/canvas/code-workbench-readonly-selection.cy.ts",
     "apps/web/cypress/e2e/canvas/code-workbench-references.cy.ts",

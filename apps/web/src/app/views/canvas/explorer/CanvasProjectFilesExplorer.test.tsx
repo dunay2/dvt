@@ -10,7 +10,8 @@ import { AppServicesProvider } from '../../../services/AppServicesContext';
 import type { AppServicesOverrides } from '../../../services/composition/appServices';
 import type { IWorkspaceFilesQueryPort, WorkspaceFileEntry } from '../../../ports/workspace';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { resolveCodeViewCopy } from '../../code/codeViewCopy';
+import { resolveCodeFileCreationCopy, resolveCodeViewCopy } from '../../code/codeViewCopy';
+import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
 import { CanvasProjectFilesExplorer } from './CanvasProjectFilesExplorer';
 
 const listFiles = vi.fn<() => Promise<WorkspaceFileEntry[]>>();
@@ -20,17 +21,20 @@ const onOpenFile = vi.fn<(path: string) => void>();
 let services: AppServicesOverrides;
 let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
 
+function fileEntry(path: string): WorkspaceFileEntry {
+  return { path, name: path.slice(path.lastIndexOf('/') + 1), kind: 'file' };
+}
+
+function directoryEntry(path: string, children: WorkspaceFileEntry[]): WorkspaceFileEntry {
+  return { path, name: path.slice(path.lastIndexOf('/') + 1), kind: 'directory', children };
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   useApplicationLanguageStore.setState({ language: 'en' });
   listFiles.mockResolvedValue([
-    {
-      path: 'models',
-      name: 'models',
-      kind: 'directory',
-      children: [{ path: 'models/orders.sql', name: 'orders.sql', kind: 'file' }],
-    },
-    { path: 'dbt_project.yml', name: 'dbt_project.yml', kind: 'file' },
+    directoryEntry('models', [fileEntry('models/orders.sql')]),
+    fileEntry('dbt_project.yml'),
   ]);
   services = {
     ...createAppServicesTestOverrides(),
@@ -64,21 +68,23 @@ async function renderExplorer(
 it('preserves query order and directory disclosure and requests only an explicit file path', async () => {
   await renderExplorer();
   await waitForReactQuery(() => screen.queryByRole('button', { name: 'orders.sql' }) != null);
-  expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
-    'models',
-    'orders.sql',
-    'dbt_project.yml',
-  ]);
+  expect(
+    screen
+      .getAllByRole('button')
+      .filter((button) => button.hasAttribute('data-workspace-path'))
+      .map((button) => button.textContent)
+  ).toEqual(['models', 'orders.sql', 'dbt_project.yml']);
   expect(listFiles).toHaveBeenCalledOnce();
-  act(() => {
+  expect(screen.queryByRole('button', { name: 'Import dbt project' })).toBeNull();
+  await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'models' }));
   });
   expect(screen.queryByRole('button', { name: 'orders.sql' })).toBeNull();
   expect(onOpenFile).not.toHaveBeenCalled();
-  act(() => {
+  await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'models' }));
   });
-  act(() => {
+  await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'orders.sql' }));
   });
   expect(onOpenFile).toHaveBeenCalledExactlyOnceWith('models/orders.sql');
@@ -88,28 +94,13 @@ it('preserves query order and directory disclosure and requests only an explicit
 
 it('projects the actual DBT root without changing the shared query or admitting a similarly named root', async () => {
   listFiles.mockResolvedValue([
-    {
-      path: 'projects',
-      name: 'projects',
-      kind: 'directory',
-      children: [
-        {
-          path: 'projects/warehouse',
-          name: 'warehouse',
-          kind: 'directory',
-          children: [{ path: 'projects/warehouse/orders.sql', name: 'orders.sql', kind: 'file' }],
-        },
-        {
-          path: 'projects/warehouse-other',
-          name: 'warehouse-other',
-          kind: 'directory',
-          children: [
-            { path: 'projects/warehouse-other/private.sql', name: 'private.sql', kind: 'file' },
-          ],
-        },
-      ],
-    },
-    { path: 'outside.yml', name: 'outside.yml', kind: 'file' },
+    directoryEntry('projects', [
+      directoryEntry('projects/warehouse', [fileEntry('projects/warehouse/orders.sql')]),
+      directoryEntry('projects/warehouse-other', [
+        fileEntry('projects/warehouse-other/private.sql'),
+      ]),
+    ]),
+    fileEntry('outside.yml'),
   ]);
   await renderExplorer();
   await waitForReactQuery(() => screen.queryByRole('button', { name: 'outside.yml' }) != null);
@@ -124,14 +115,15 @@ it('projects the actual DBT root without changing the shared query or admitting 
 });
 
 it.each(['loading', 'empty', 'error'] as const)(
-  'presents localized %s without fallback files or commands',
+  'presents localized %s, safe file actions and an independent project import',
   async (state) => {
     useApplicationLanguageStore.setState({ language: 'es' });
     const copy = resolveCodeViewCopy('es');
+    const onImport = vi.fn();
     if (state === 'loading') listFiles.mockImplementation(() => new Promise(() => {}));
     else if (state === 'empty') listFiles.mockResolvedValue([]);
     else listFiles.mockRejectedValue(new Error('PRIVATE_SERVER_PATH'));
-    await renderExplorer();
+    await renderExplorer(undefined, onImport);
     await waitForReactQuery(() =>
       state === 'loading'
         ? screen.queryByText(copy.routeLoadingMessage) != null
@@ -143,9 +135,20 @@ it.each(['loading', 'empty', 'error'] as const)(
       expect(screen.getByRole('alert').textContent).toContain(copy.routeErrorMessage);
     expect(mounted!.container.textContent).not.toContain('PRIVATE_SERVER_PATH');
     expect(screen.queryByRole('button', { name: 'orders.sql' })).toBeNull();
+    await act(async () =>
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: resolveCanvasViewCopy('es').workspaceImportDbtProjectLabel,
+        })
+      )
+    );
+    expect(onImport).toHaveBeenCalledOnce();
     expect(onOpenFile).not.toHaveBeenCalled();
     expect(getFileContent).not.toHaveBeenCalled();
     expect(saveFileContent).not.toHaveBeenCalled();
+    const fileActions = resolveCodeFileCreationCopy('es');
+    for (const name of [fileActions.newFile, fileActions.importFile])
+      expect(screen.getByRole('button', { name })).toHaveProperty('disabled', state !== 'empty');
   }
 );
 
@@ -153,27 +156,9 @@ it('treats an empty bound root as empty instead of exposing outside files', asyn
   await renderExplorer('missing/project');
   const copy = resolveCodeViewCopy('en');
   await waitForReactQuery(() => screen.queryByText(copy.routeEmptyMessage) != null);
-  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'orders.sql' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'New file' })).toHaveProperty('disabled', false);
 });
-
-// Moving import into Code must not make an empty or failed file query a dead end.
-it.each(['loading', 'empty', 'error'] as const)(
-  'keeps the admitted import action reachable during %s',
-  async (state) => {
-    const onImport = vi.fn();
-    if (state === 'loading') listFiles.mockImplementation(() => new Promise(() => {}));
-    else if (state === 'empty') listFiles.mockResolvedValue([]);
-    else listFiles.mockRejectedValue(new Error('unavailable'));
-    await renderExplorer(undefined, onImport);
-    if (state === 'error') await waitForReactQuery(() => screen.queryByRole('alert') != null);
-    await act(async () =>
-      fireEvent.click(screen.getByRole('button', { name: 'Import dbt project' }))
-    );
-    expect(onImport).toHaveBeenCalledOnce();
-    expect(onOpenFile).not.toHaveBeenCalled();
-    expect(saveFileContent).not.toHaveBeenCalled();
-  }
-);
 
 it.each(['tenantId', 'projectId', 'environmentId'] as const)(
   'isolates cached trees when %s changes',

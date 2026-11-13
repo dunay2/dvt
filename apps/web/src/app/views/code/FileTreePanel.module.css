@@ -1,0 +1,76 @@
+/* Owned concern: shared file-tree density, hierarchy, focus and selected-row presentation. */
+.panel {
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-default);
+  background: var(--surface-panel);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing);
+  padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+}
+.heading {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+.entry {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: var(--spacing) calc(var(--spacing) * 2);
+  color: var(--text-default);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.entry:hover,
+.selected {
+  background: var(--surface-selected);
+  color: var(--text-strong);
+}
+.entry:focus-visible {
+  outline: var(--focus-ring-width) solid var(--ring);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+.entry[data-depth='1'] {
+  padding-inline-start: calc(var(--spacing) * 5);
+}
+.entry[data-depth='2'] {
+  padding-inline-start: calc(var(--spacing) * 8);
+}
+.entry[data-depth='3'] {
+  padding-inline-start: calc(var(--spacing) * 11);
+}
+.icon {
+  width: calc(var(--spacing) * 3.5);
+  height: calc(var(--spacing) * 3.5);
+  flex-shrink: 0;
+  color: var(--text-subtle);
+}
+.fileIcon {
+  color: var(--text-disabled);
+}
+.folderIcon {
+  color: var(--status-info);
+}
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
