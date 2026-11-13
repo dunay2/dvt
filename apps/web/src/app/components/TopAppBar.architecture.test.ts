@@ -38,7 +38,16 @@ describe('ShellTopBar workspace context architecture', () => {
       'topAppBarClasses',
     ]);
     expect(topBarClassesSource).toContain("from './ShellChrome.module.css'");
+    expect(topBarClassesSource).toContain("from './ShellWorkspaceContext.module.css'");
     expect(topBarClassesSource).not.toMatch(/:\s*['"`]/u);
+    const contextKeys = [
+      'menuContextBody',
+      'menuGitContext',
+      'menuGitSeparator',
+      'readOnlyScopeField',
+      'contextLabel',
+      'gitRefSha',
+    ];
     for (const key of [
       'menuItemIcon',
       'menuTriggerIcon',
@@ -56,12 +65,14 @@ describe('ShellTopBar workspace context architecture', () => {
       'smallStatusText',
       'menuButton',
     ]) {
-      expect(topBarClassesSource).toContain(`${key}: styles.${key}`);
+      const stylesheet = contextKeys.includes(key) ? 'contextStyles' : 'styles';
+      expect(topBarClassesSource).toContain(`${key}: ${stylesheet}.${key}`);
     }
     for (const sourcePath of [
       'components/TopAppBar.tsx',
       'components/shell/ShellAbout.tsx',
-      'components/shell/ShellMenu.templates.tsx',
+      'components/shell/ShellProjectMenu.template.tsx',
+      'components/shell/ShellViewMenu.template.tsx',
       'components/shell/ShellWorkspaceBreadcrumb.tsx',
       'components/shell/ShellRunStatusIndicator.tsx',
     ]) {
@@ -116,7 +127,8 @@ describe('ShellTopBar workspace context architecture', () => {
     const header = readAppSource('components/TopAppBar.tsx');
     const rail = readAppSource('components/LeftNavigation.tsx');
     const project = readAppSource('components/shell/ShellProjectMenu.tsx');
-    const template = readAppSource('components/shell/ShellMenu.templates.tsx');
+    const template = readAppSource('components/shell/ShellProjectMenu.template.tsx');
+    const viewTemplate = readAppSource('components/shell/ShellViewMenu.template.tsx');
     const selector = readAppSource('components/shell/ShellWorkspaceScopeSelector.tsx');
     expect(header).not.toMatch(/ShellFileMenu|ShellProjectMenu|useSessionStore/);
     expect(rail).toContain('ShellProjectMenu');
@@ -129,11 +141,15 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(breadcrumb).not.toMatch(/useSessionStore|onClick|onSelect/);
     expect(project).toContain('ProjectCreationDialog');
     expect(template).not.toContain('ShellWorkspaceBreadcrumb');
+    expect(viewTemplate).not.toContain('ShellWorkspaceBreadcrumb');
+    expect(viewTemplate).not.toMatch(
+      /ShellWorkspaceScopeSelector|CanvasWorkspaceMenuControls|ProjectCreationDialog/u
+    );
     expect(template).toContain('ShellWorkspaceScopeSelector');
     expect(template).toContain('CanvasWorkspaceMenuControls');
     expect(selector).toContain('useWorkspaceScopeSelection');
     expect(selector).toContain('selectWorkspaceScope');
-    for (const source of [header, rail, project, template, identity, breadcrumb]) {
+    for (const source of [header, rail, project, template, viewTemplate, identity, breadcrumb]) {
       expect(source).not.toMatch(/setTenantId|setProjectId|setEnvironmentId|fetch\s*\(/);
       expect(source.trimStart()).toMatch(OWNED_CONCERN_DOCBLOCK);
     }

@@ -10,7 +10,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { ProjectCreationDialog } from '../../views/projectAdmission/ProjectCreationDialog';
 import { resolveProjectOnboardingCopy } from '../../views/projectOnboardingCopy';
 import type { ShellTopBarCopy } from './copy';
-import { ShellProjectMenuTemplate } from './ShellMenu.templates';
+import { ShellProjectMenuTemplate } from './ShellProjectMenu.template';
 import { useShellProjectIdentity } from './useShellProjectIdentity';
 
 export function ShellProjectMenu({ copy }: Readonly<{ copy: ShellTopBarCopy }>) {

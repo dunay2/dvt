@@ -7,7 +7,7 @@
  */
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from '../ui/breadcrumb';
 import type { ShellTopBarCopy } from './copy';
-import styles from './ShellChrome.module.css';
+import styles from './ShellWorkspaceContext.module.css';
 import { useShellProjectIdentity } from './useShellProjectIdentity';
 
 export function ShellWorkspaceBreadcrumb({ copy }: Readonly<{ copy: ShellTopBarCopy }>) {

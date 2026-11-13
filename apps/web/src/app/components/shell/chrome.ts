@@ -6,21 +6,22 @@
  * @version 1.2.0
  */
 import styles from './ShellChrome.module.css';
+import contextStyles from './ShellWorkspaceContext.module.css';
 
 export const topAppBarClasses = {
   menuItemIcon: styles.menuItemIcon,
   menuTriggerIcon: styles.menuTriggerIcon,
   contextMenuContent: styles.contextMenuContent,
-  menuContextBody: styles.menuContextBody,
-  menuGitContext: styles.menuGitContext,
-  menuGitSeparator: styles.menuGitSeparator,
+  menuContextBody: contextStyles.menuContextBody,
+  menuGitContext: contextStyles.menuGitContext,
+  menuGitSeparator: contextStyles.menuGitSeparator,
   menuLanguageLabel: styles.menuLanguageLabel,
   shellBar: styles.shellBar,
   contextCluster: styles.contextCluster,
   commandCluster: styles.commandCluster,
-  readOnlyScopeField: styles.readOnlyScopeField,
-  contextLabel: styles.contextLabel,
-  gitRefSha: styles.gitRefSha,
+  readOnlyScopeField: contextStyles.readOnlyScopeField,
+  contextLabel: contextStyles.contextLabel,
+  gitRefSha: contextStyles.gitRefSha,
   smallStatusText: styles.smallStatusText,
   menuButton: styles.menuButton,
 };

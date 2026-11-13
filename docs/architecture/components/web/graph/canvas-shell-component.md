@@ -716,6 +716,11 @@ its natural height; the workbench's existing flex allocation retains the footer
 and inspector inside the viewport. No new layout store, JavaScript resize
 handler, command/query rail or permanent shell-height assumption is introduced.
 
+The existing About view consumes `shell/ShellAbout.module.css`; workspace identity
+and Project context consume `shell/ShellWorkspaceContext.module.css`. These focused
+AppShell presentation modules preserve the existing declarations and their relative
+rule order, while the named class contract delegates to the actual stylesheet owner.
+
 | CSS viewport width | Header posture                                   | Required evidence                                      |
 | ------------------ | ------------------------------------------------ | ------------------------------------------------------ |
 | 390, 640, 767 px   | Full-width context and wrapping command rows     | Visible tabs/close controls; no command overflow       |
@@ -739,7 +744,8 @@ forced-click workaround.
 | `ShellAbout`                 | shell presentation     | Opens the existing compiled-metadata dialog and restores focus to its direct button.                            |
 | `ShellProjectMenu`           | shell controller       | Coordinates the rail Project menu: scope selection, context, creation and snapshots.                            |
 | `ShellMenu`                  | shell controller       | Coordinates View preferences only.                                                                              |
-| `ShellMenu.templates`        | passive presentation   | Presents Project and View through existing Radix primitives.                                                    |
+| `ShellProjectMenuTemplate`   | passive presentation   | Presents existing Project context and command delegates through Radix primitives.                               |
+| `ShellViewMenuTemplate`      | passive presentation   | Presents existing View preference callbacks through Radix primitives.                                           |
 | `CanvasShellMainPanel`       | Canvas route renderer  | Places Canvas tabs, route-local toolbar, banners, viewport, and center-surface states.                          |
 | `CanvasToolbar`              | Canvas route renderer  | Renders graph/document commands only inside the Canvas workbench.                                               |
 | `CanvasTemplatePresentation` | presentation model     | Resolves route-visible first-canvas template title and description from a `CanvasKindRegistration` plus locale. |
