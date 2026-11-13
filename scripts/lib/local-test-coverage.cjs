@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { testStep } = require('./local-validation-plan-values.cjs');
 const { isParentSuite, readParentSuiteMembers } = require('./local-test-membership.cjs');
-const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-suite.mjs');
+const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-catalog.mjs');
 const repoRoot = path.resolve(__dirname, '../..');
 const AGGREGATES = Object.freeze([
   'test:planning:db',

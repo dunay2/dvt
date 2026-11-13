@@ -554,7 +554,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: CI_TOOL_TEST_MODES
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-catalog.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -565,7 +565,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: EXECUTABLE_CI_TOOL_TESTS
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-catalog.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -576,7 +576,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: NODE_BUILTIN_SPECIFIERS
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -587,7 +587,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: MODULE_SPECIFIER_PATTERNS
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -598,7 +598,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: normalizePath
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -609,7 +609,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: isRelativeOrAbsoluteSpecifier
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -620,7 +620,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: isPackageSpecifier
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -631,7 +631,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: extractModuleSpecifiers
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -642,7 +642,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: resolveRelativeModulePath
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -653,7 +653,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: collectPackageSpecifiers
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-dependencies.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -664,7 +664,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: discoverCiToolTests
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-catalog.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -675,7 +675,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: findPackageBackedCiToolTests
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-catalog.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -686,7 +686,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: assertCiToolTestPartition
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-catalog.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
@@ -697,7 +697,7 @@ symbols:
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: buildCiToolTestList
-    path: tools/ci/ci-tool-test-suite.mjs
+    path: tools/ci/ci-tool-test-catalog.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import yaml from 'js-yaml';
-import { EXECUTABLE_CI_TOOL_TESTS } from '../ci-tool-test-suite.mjs';
+import { EXECUTABLE_CI_TOOL_TESTS } from '../ci-tool-test-catalog.mjs';
 import { WORKFLOW_SCOPE_PATTERNS } from '../scope-config.mjs';
 import { assertWorkflowContains, assertWorkflowExcludes } from './assertions.mjs';
 

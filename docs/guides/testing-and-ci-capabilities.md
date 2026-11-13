@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-11-12
+last_reviewed: 2026-11-13
 ---
 
 # Testing and CI Capabilities
@@ -88,6 +88,36 @@ Warm-build note:
   workspace that exposes `build`, so the Turbo-backed
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
   skips for the current TypeScript package inventory.
+
+## CI Tool Timing Evidence
+
+`pnpm test:ci-tools` retains one native Node test process, the same selected
+files, isolation and concurrency. Its usual TAP/spec output remains available.
+Alongside it, `# ci-tool-timing` JSON comments report observed file-container
+durations and a descending ranking when every selected file and the native
+global summary have been observed. Paths are relative to the repository;
+arbitrary test output, errors and environment values are not copied into metrics.
+
+These measurements answer different questions:
+
+- `durationMs` measures one native file container, including its startup.
+- `harnessDurationMs` and `counts` describe that file's test harness when Node
+  supplies them. They are `null` when absent, including early syntax failures.
+- `nativeDurationMs` is Node's global test duration. Concurrent file durations
+  must not be added together to represent elapsed suite time.
+- The outer `[ci-tool-tests] result` records `wallDurationMs` around the existing
+  spawn, its actual exit code and signal. It includes process and reporter costs.
+
+Missing, duplicate or malformed observations produce an explicit `partial`
+record without a complete ranking. Timing evidence never grants acceptance:
+the native child exit remains authoritative, and missing completion or a signal
+cannot become a successful exit. Compare runs with the same mode, selection,
+platform and execution conditions before proposing a performance change.
+
+The catalog owns selection, the dependency reader owns import traversal, the
+CLI owns invocation, and the reporter projects native events into the timing
+read model. These remain parts of `ValidateCiScopeOptimizationContract` under
+the existing CI scope optimization capability; no new product rail is added.
 
 ## Architecture Source And Lint Evidence
 
@@ -594,7 +624,7 @@ Command semantics:
   focused routes; real adjacent tests are inferred only for known command
   owners, with genuine cross-file dependencies kept explicit.
 - Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
-  `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
+  `tools/ci/ci-tool-test-catalog.mjs`. The scope API consumes that catalog directly;
   `workflow-scope.json` names additional invalidating inputs, not another copy
   of the executable test list.
 - Governance coverage/remediation report generator edits are routed to their

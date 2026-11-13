@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-suite.mjs');
+const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-catalog.mjs');
 const { buildVerifyChangedPlan } = require('../local-validation-plan.cjs');
 const {
   buildFocusedChangedTestPlan,

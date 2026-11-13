@@ -9,7 +9,7 @@ import {
   isGovernanceToolingCommand,
 } from './repository-command-catalog.mjs';
 import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
-import { EXECUTABLE_CI_TOOL_TESTS, isToolingCryptoContractInput } from './ci-tool-test-suite.mjs';
+import { EXECUTABLE_CI_TOOL_TESTS, isToolingCryptoContractInput } from './ci-tool-test-catalog.mjs';
 
 const execFileAsync = promisify(execFile);
 
