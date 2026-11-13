@@ -63,6 +63,10 @@ export const WEB_VITEST_TEST_SOURCE_OWNERS = [
       'src/testing/vitestSuites.testSourceOwnership.moduleReferences.test-support.ts',
     ],
   },
+  {
+    entries: ['src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts'],
+    helpers: ['src/app/plugins/graph/graphVisualTokenConvergence.test-sources.ts'],
+  },
 ] as const;
 
 /** Conservative observation, not direct runtime ownership; proven against current source facts. */
