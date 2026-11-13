@@ -137,7 +137,8 @@ export function verifyRepeatedDbtProjectCodeBrowsing({
       cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`)
         .click()
         .should('have.attr', 'aria-expanded', 'false');
-      cy.get(children).should('have.attr', 'hidden').and('not.be.visible');
+      cy.get(children).should('have.attr', 'hidden');
+      cy.get(children).should('not.be.visible');
       cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.be.visible');
       cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.be.visible');
       cy.get('[data-slot="canvas-workspace-tab"]').click();
@@ -155,7 +156,8 @@ export function verifyRepeatedDbtProjectCodeBrowsing({
         'aria-expanded',
         'false'
       );
-      cy.get(children).should('have.attr', 'hidden').and('not.be.visible');
+      cy.get(children).should('have.attr', 'hidden');
+      cy.get(children).should('not.be.visible');
       cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.be.visible');
       cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.be.visible');
       // Elements may refresh the scoped catalogue; disclosure itself retains
@@ -163,7 +165,8 @@ export function verifyRepeatedDbtProjectCodeBrowsing({
       cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`)
         .click()
         .should('have.attr', 'aria-expanded', 'true');
-      cy.get(children).should('not.have.attr', 'hidden').and('be.visible');
+      cy.get(children).should('not.have.attr', 'hidden');
+      cy.get(children).should('be.visible');
       cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
       cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('be.visible');
     });
