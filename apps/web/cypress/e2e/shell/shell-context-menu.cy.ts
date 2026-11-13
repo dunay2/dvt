@@ -3,7 +3,6 @@
  * @decision Reuse the production header and Canvas menus with existing scoped transport helpers.
  * @consequence Clipboard spying proves delegation, not operating-system clipboard acceptance.
  */
-import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { openCanvasContextMenuAt } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -33,12 +32,8 @@ describe('scoped Shell context menus', () => {
     stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
     visitWorkbenchCanvas('en');
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
-    cy.get('[data-slot="canvas-draft-save-status"]')
-      .should('be.visible')
-      .and(($status) => {
-        const copy = resolveCanvasViewCopy('en');
-        expect([copy.draftSavedLabel, copy.draftSyncedLabel]).to.include($status.text());
-      });
+    // The real graph overlay retires its Saving badge after acknowledgement.
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.then(() => {
       graphWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
