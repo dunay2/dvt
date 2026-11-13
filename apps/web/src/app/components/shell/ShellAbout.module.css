@@ -1,0 +1,30 @@
+/**
+ * Owned concern: present compiled application metadata in About.
+ * Why: application metadata stays separate from shell command geometry.
+ * Corner: long version values retain the shared typography.
+ */
+.aboutDialog {
+  border-color: var(--border-default);
+}
+
+.aboutMetadata {
+  display: grid;
+  gap: 0.75rem;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
+}
+
+.aboutMetadataRow {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0.75rem;
+}
+
+.aboutLabel {
+  color: var(--text-subtle);
+}
+
+.aboutValue {
+  font-family: var(--font-mono);
+  color: var(--text-strong);
+}

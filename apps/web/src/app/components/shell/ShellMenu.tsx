@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { ShellTopBarCopy } from './copy';
-import { ShellViewMenuTemplate } from './ShellMenu.templates';
+import { ShellViewMenuTemplate } from './ShellViewMenu.template';
 import type { ShellViewControlsReadModel } from './shellViewControlsModel';
 
 type ShellMenuProps = Readonly<{

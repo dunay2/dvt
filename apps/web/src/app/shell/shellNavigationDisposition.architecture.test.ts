@@ -37,7 +37,10 @@ describe('shell navigation disposition architecture', () => {
     const topBarSource = readAppSource('components/TopAppBar.tsx');
     const railSource = readAppSource('components/LeftNavigation.tsx');
     const explorerSource = readAppSource('views/canvas/explorer/CanvasExplorer.tsx');
-    const entriesSource = readAppSource('components/shell/ShellMenu.templates.tsx');
+    const entriesSource = [
+      readAppSource('components/shell/ShellProjectMenu.template.tsx'),
+      readAppSource('components/shell/ShellViewMenu.template.tsx'),
+    ].join('\n');
     const componentDoc = readRepoSource(
       'docs/architecture/components/web/shell-navigation-disposition-component.md'
     );

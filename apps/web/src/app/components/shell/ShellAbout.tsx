@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../ui/utils';
 import { resolveCompiledApplicationMetadata } from './appBuildMetadata';
 import type { ShellTopBarCopy } from './copy';
-import styles from './ShellChrome.module.css';
+import styles from './ShellAbout.module.css';
 import railStyles from '../LeftNavigation.module.css';
 
 export function ShellAbout({ copy }: Readonly<{ copy: ShellTopBarCopy }>) {

@@ -8,7 +8,7 @@ import {
 import { useWorkspaceScopeSelection } from '../../services/AppServicesContext';
 import { DropdownMenuRadioGroup, DropdownMenuRadioItem } from '../ui/dropdown-menu';
 import { topAppBarClasses } from './chrome';
-import styles from './ShellChrome.module.css';
+import styles from './ShellWorkspaceContext.module.css';
 import type { ShellTopBarCopy } from './copy';
 
 function formatWorkspaceScope(scope: WorkspaceScopeIdentity): string {
