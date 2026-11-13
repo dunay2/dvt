@@ -1,7 +1,11 @@
 /** Protect established Code copy plus regional translations and English fallback. */
 import { describe, expect, it } from 'vitest';
 
-import { resolveCodeModelCommandCopy, resolveCodeViewCopy } from './codeViewCopy';
+import {
+  resolveCodeFileCreationCopy,
+  resolveCodeModelCommandCopy,
+  resolveCodeViewCopy,
+} from './codeViewCopy';
 
 describe('resolveCodeViewCopy', () => {
   it('uses English fallback copy for unsupported locales', () => {
@@ -39,12 +43,20 @@ describe('resolveCodeViewCopy', () => {
 
 describe('Code message catalogs', () => {
   it.each([
-    ['es-ES', 'Código', 'Solo lectura', 'Compilar', 'Ejecutar'],
-    ['en-GB', 'Code', 'Read only', 'Compile', 'Execute'],
-    ['fr-FR', 'Code', 'Read only', 'Compile', 'Execute'],
+    [
+      'es-ES',
+      'Código',
+      'Solo lectura',
+      'Compilar',
+      'Ejecutar',
+      'Nuevo archivo',
+      'Importar archivo',
+    ],
+    ['en-GB', 'Code', 'Read only', 'Compile', 'Execute', 'New file', 'Import file'],
+    ['fr-FR', 'Code', 'Read only', 'Compile', 'Execute', 'New file', 'Import file'],
   ])(
     'resolves regional locale %s through the shared fallback policy',
-    (locale, title, readOnly, compile, execute) => {
+    (locale, title, readOnly, compile, execute, newFile, importFile) => {
       const view = resolveCodeViewCopy(locale);
       const commands = resolveCodeModelCommandCopy(locale);
 
@@ -52,6 +64,9 @@ describe('Code message catalogs', () => {
       expect(view.workingTreeReadOnlyLabel).toBe(readOnly);
       expect(commands.compile).toBe(compile);
       expect(commands.execute).toBe(execute);
+      const files = resolveCodeFileCreationCopy(locale);
+      expect(files.newFile).toBe(newFile);
+      expect(files.importFile).toBe(importFile);
     }
   );
 });

@@ -5,7 +5,7 @@ import { FolderInput } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
 import styles from '../CanvasWorkspaceMenuControls.module.css';
-import FileTreePanel from '../../code/FileTreePanel';
+import { WorkspaceFileExplorer } from '../../code/WorkspaceFileExplorer';
 import { resolveCodeViewCopy } from '../../code/codeViewCopy';
 import { resolveCodeWorkbenchErrorPresentation } from '../../code/codeWorkbenchErrorModel';
 import {
@@ -54,8 +54,9 @@ function ProjectFileTree({
 }>): JSX.Element {
   const query = useWorkspaceFileTreeQuery();
   const copy = resolveCodeViewCopy(useApplicationLanguageStore((state) => state.language));
+  let stateMessage: JSX.Element | undefined;
   if (query.isPending)
-    return (
+    stateMessage = (
       <p role="status" className={styles.fileState}>
         {copy.routeLoadingMessage}
       </p>
@@ -66,7 +67,7 @@ function ProjectFileTree({
       error: query.error,
       copy,
     });
-    return (
+    stateMessage = (
       <p role="alert" className={styles.fileState}>
         {error.title} {error.message}
       </p>
@@ -77,18 +78,21 @@ function ProjectFileTree({
     projectRoot == null
       ? entries
       : resolveProjectRootScopedCodeWorkspaceFileTree(entries, projectRoot);
-  if (!hasCodeWorkspaceFiles(tree))
-    return (
+  if (query.isSuccess && !hasCodeWorkspaceFiles(tree))
+    stateMessage = (
       <p role="status" className={styles.fileState}>
         {copy.routeEmptyMessage}
       </p>
     );
   return (
     <div className={styles.fileTree}>
-      <FileTreePanel
+      <WorkspaceFileExplorer
         title={copy.explorerTitle}
         tree={tree}
-        onSelect={(entry) => onOpenFile(entry.path)}
+        rootPath={projectRoot ?? ''}
+        stateMessage={stateMessage}
+        disabled={!query.isSuccess}
+        onOpenFile={onOpenFile}
       />
     </div>
   );

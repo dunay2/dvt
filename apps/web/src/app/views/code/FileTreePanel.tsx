@@ -1,14 +1,19 @@
+/** Owned concern: render the passive file tree and injected explorer commands with common visual tokens. */
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 import type { WorkspaceFileEntry } from '../../ports/workspace';
 import { cn } from '../../components/ui/utils';
+import styles from './FileTreePanel.module.css';
 
 type FileTreePanelProps = {
   readonly title: string;
   readonly tree: WorkspaceFileEntry[];
   readonly selectedPath?: string;
   readonly onSelect: (entry: WorkspaceFileEntry) => void;
+  readonly onSelectDirectory?: (path: string) => void;
+  readonly headerActions?: ReactNode;
+  readonly stateMessage?: ReactNode;
 };
 
 function FileTreeNode({
@@ -16,13 +21,16 @@ function FileTreeNode({
   depth,
   selectedPath,
   onSelect,
+  onSelectDirectory,
 }: {
   entry: WorkspaceFileEntry;
   depth: number;
   selectedPath?: string;
   onSelect: (entry: WorkspaceFileEntry) => void;
+  onSelectDirectory?: (path: string) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const childrenId = useId();
   const isDirectory = entry.kind === 'directory';
   const isSelected = entry.path === selectedPath;
 
@@ -32,17 +40,15 @@ function FileTreeNode({
         type="button"
         data-slot="code-workspace-file-entry"
         data-workspace-path={entry.path}
-        className={cn(
-          'flex w-full items-center gap-1.5 rounded px-2 py-1 text-xs text-[var(--text-default)] transition-colors hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
-          isSelected && 'bg-[var(--surface-selected)] text-[var(--text-strong)]',
-          depth === 0 && 'pl-2',
-          depth === 1 && 'pl-5',
-          depth === 2 && 'pl-8',
-          depth >= 3 && 'pl-11'
-        )}
+        data-depth={Math.min(depth, 3)}
+        aria-expanded={isDirectory ? expanded : undefined}
+        aria-controls={isDirectory ? childrenId : undefined}
+        title={entry.path}
+        className={cn(styles.entry, isSelected && styles.selected)}
         onClick={() => {
           if (isDirectory) {
             setExpanded((prev) => !prev);
+            onSelectDirectory?.(entry.path);
           } else {
             onSelect(entry);
           }
@@ -50,46 +56,62 @@ function FileTreeNode({
       >
         {isDirectory ? (
           expanded ? (
-            <ChevronDown className="size-3.5 shrink-0 text-[var(--text-subtle)]" />
+            <ChevronDown aria-hidden="true" className={styles.icon} />
           ) : (
-            <ChevronRight className="size-3.5 shrink-0 text-[var(--text-subtle)]" />
+            <ChevronRight aria-hidden="true" className={styles.icon} />
           )
         ) : (
-          <File className="size-3.5 shrink-0 text-[var(--text-disabled)]" />
+          <File aria-hidden="true" className={cn(styles.icon, styles.fileIcon)} />
         )}
-        {isDirectory && <Folder className="size-3.5 shrink-0 text-[var(--status-info)]" />}
-        <span className="truncate">{entry.name}</span>
+        {isDirectory && (
+          <Folder aria-hidden="true" className={cn(styles.icon, styles.folderIcon)} />
+        )}
+        <span className={styles.name}>{entry.name}</span>
       </button>
-      {isDirectory &&
-        expanded &&
-        entry.children?.map((child) => (
-          <FileTreeNode
-            key={child.path}
-            entry={child}
-            depth={depth + 1}
-            selectedPath={selectedPath}
-            onSelect={onSelect}
-          />
-        ))}
+      {isDirectory && (
+        <div id={childrenId} hidden={!expanded}>
+          {entry.children?.map((child) => (
+            <FileTreeNode
+              key={child.path}
+              entry={child}
+              depth={depth + 1}
+              selectedPath={selectedPath}
+              onSelect={onSelect}
+              onSelectDirectory={onSelectDirectory}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-export default function FileTreePanel({ title, tree, selectedPath, onSelect }: FileTreePanelProps) {
+export default function FileTreePanel({
+  title,
+  tree,
+  selectedPath,
+  onSelect,
+  onSelectDirectory,
+  headerActions,
+  stateMessage,
+}: FileTreePanelProps) {
   return (
-    <div className="h-full overflow-y-auto border-r border-[color:var(--border-default)] bg-[var(--surface-panel)] py-2">
-      <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-subtle)]">
-        {title}
+    <div className={styles.panel}>
+      <div className={styles.header}>
+        <span className={styles.heading}>{title}</span>
+        {headerActions}
       </div>
-      {tree.map((entry) => (
-        <FileTreeNode
-          key={entry.path}
-          entry={entry}
-          depth={0}
-          selectedPath={selectedPath}
-          onSelect={onSelect}
-        />
-      ))}
+      {stateMessage ??
+        tree.map((entry) => (
+          <FileTreeNode
+            key={entry.path}
+            entry={entry}
+            depth={0}
+            selectedPath={selectedPath}
+            onSelect={onSelect}
+            onSelectDirectory={onSelectDirectory}
+          />
+        ))}
     </div>
   );
 }

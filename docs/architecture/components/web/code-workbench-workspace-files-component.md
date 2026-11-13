@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-11-12
+last_reviewed: 2026-11-13
 planning_type: architecture
 ---
 
@@ -57,6 +57,7 @@ Governing sources:
 - [Fowler Opportunity Planning Governance](../../fowler-opportunity-planning-governance.md).
 - [ADR-0060](../../../adr/ADR-0060-dbt-project-authoring-authority.md).
 - [ADR-0064](../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md).
+- [ADR-0069](../../../adr/ADR-0069-component-family-cohesion-and-architectural-boundaries.md).
 - [Read-only scope, current/proposed diagrams and finite implementation matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6528396133).
 
 ## Owned Concern
@@ -112,6 +113,63 @@ its workspace, revision, complete execution target or permissions change. Its
 reason to change is file-command admission and lifetime policy. It does not own
 the backend compiler, plan persistence or run aggregate.
 
+### Explicit file creation in the Explorer
+
+The shared project Explorer offers **New file** and **Import file** header
+actions. `RESP-WEB-CODE-CREATE-ONLY-FILE-SESSION` owns their transient scoped
+publication and observation session. Its reason to change is create-only
+admission, receipt recovery or that session's lifetime. This is an application
+session within the existing UI module, not a persisted aggregate. The passive
+tree, localized presentation and accepted-file opening retain their existing
+owners. The Canvas adapter composes these capabilities without owning a write
+transport, editor buffer or backend persistence.
+
+The [prospective design and ownership review](https://github.com/dunay2/dvt/issues/3884#issuecomment-6841846377)
+defines the finite source boundary and its negative cases. The previous shared
+tree exposes only disclosure and opening; the explicit header actions add one
+create-only publication path through the existing command port.
+
+```mermaid
+flowchart LR
+  Before[Authorized file query] --> Tree[Passive disclosure and read-only opening]
+  Header[Explicit New or Import file] --> Draft[Scoped draft or strict UTF-8 read]
+  Draft --> Save[SaveWorkspaceFileContent with absent revision]
+  Save --> Receipt{Submitted path matches receipt?}
+  Receipt -->|Yes| Observe[ListWorkspaceFiles observation]
+  Receipt -->|Unconfirmed| Close[Safe close without opening or repeating the write]
+  Observe -->|Present| Open[Existing accepted-file opening]
+  Observe -->|Unavailable or absent| Retry[Retry observation only]
+  Retry --> Observe
+  Context[Actual scope snapshot or root changes] --> Retire[Retire prior session and late replies]
+```
+
+The selected directory supplies the relative draft path. A resolved dbt root is
+prepended once; without one, the destination is the displayed authorized workspace
+root. Successful empty queries permit an explicit creation attempt. Pending or
+failed queries disable the two file actions; the independent **Import dbt
+project** action keeps its existing availability. Query success grants no write
+permission: the server still authorizes `workspaceFilesSave` and enforces its
+configured path, extension and content limits.
+
+Import preserves strict UTF-8 content, including an initial BOM, in the reviewable
+draft and waits for confirmation.
+Its local one-megabyte acquisition budget bounds browser allocation before the
+read; it is independent of server configuration. The client does not maintain
+another server extension catalog. Publication always supplies
+`expectedRevision: { kind: 'absent' }`, so it cannot overwrite an existing file.
+A mismatching receipt is terminal for that attempt: it cannot open another path
+or repeat an accepted write. After a matching receipt, a failed or incomplete
+tree refresh retries only observation. The resulting file does not fabricate a
+model, graph revision or compiled readiness.
+
+The child lifetime follows the actual workspace snapshot reference and Explorer
+root. Equal serialized values cannot preserve it after a batched A-to-B-to-A
+transition. Pending reads and writes discard retired replies, while the current
+session remains usable. Command errors are classified through the existing
+shared HTTP classifier and Code presentation model; views use the existing
+locale catalog resolver and expose no raw transport diagnostics. The dialog and
+tree reuse common visual tokens, named controls and visible keyboard focus.
+
 ## Public API
 
 ### Queries
@@ -135,10 +193,10 @@ path's base or authorization.
 
 `SaveWorkspaceFileContent` accepts scoped path, content and mandatory
 `expectedRevision`; its receipt reports saved/unchanged content and its SHA.
-Stale revisions are rejected. The read-only Code entry points do not accept new
-edits or invoke this command from browsing. Existing artifact publishers and
-previously accepted pending edits retain their command boundary. There is no Save
-button or second persistence lifecycle.
+Stale revisions are rejected. The Explorer's explicit creation actions use the
+absent revision. Browsing and read-only Code surfaces never invoke this command.
+Existing artifact publishers and previously accepted pending edits retain their
+command boundary and conditional synchronization lifecycle.
 
 `useDbtProjectFileWorkbenchSession` owns the refs and guarded handoff between
 project Code and node inspection. Unknown identities are refused before either

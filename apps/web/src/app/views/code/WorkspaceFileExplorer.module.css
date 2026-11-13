@@ -1,0 +1,58 @@
+/* Owned concern: compact explorer commands and file creation form using shared UI tokens. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+}
+.actions .iconButton {
+  width: var(--shell-control-height);
+  height: var(--shell-control-height);
+  color: var(--text-subtle);
+}
+.actions .iconButton:hover {
+  color: var(--text-strong);
+}
+.fileInput {
+  display: none;
+}
+.dialog {
+  background: var(--surface-panel);
+  color: var(--text-default);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.dialog .title {
+  font-size: var(--text-ui);
+  font-weight: 600;
+}
+.dialog .description {
+  font-size: var(--text-ui);
+  line-height: inherit;
+  color: var(--text-subtle);
+}
+.form {
+  display: grid;
+  gap: calc(var(--spacing) * 2);
+  min-width: 0;
+}
+.form input,
+.form textarea,
+.form button {
+  font-size: inherit;
+}
+.form .content {
+  min-height: calc(var(--spacing) * 30);
+  max-height: 40vh;
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+.error {
+  color: var(--status-danger);
+  overflow-wrap: anywhere;
+}
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) * 2);
+  margin-top: calc(var(--spacing) * 2);
+}
