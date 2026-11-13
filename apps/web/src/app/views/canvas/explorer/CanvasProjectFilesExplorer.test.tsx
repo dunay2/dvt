@@ -76,11 +76,17 @@ it('preserves query order and directory disclosure and requests only an explicit
   ).toEqual(['models', 'orders.sql', 'dbt_project.yml']);
   expect(listFiles).toHaveBeenCalledOnce();
   expect(screen.queryByRole('button', { name: 'Import dbt project' })).toBeNull();
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'models' })));
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'models' }));
+  });
   expect(screen.queryByRole('button', { name: 'orders.sql' })).toBeNull();
   expect(onOpenFile).not.toHaveBeenCalled();
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'models' })));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'orders.sql' })));
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'models' }));
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'orders.sql' }));
+  });
   expect(onOpenFile).toHaveBeenCalledExactlyOnceWith('models/orders.sql');
   expect(getFileContent).not.toHaveBeenCalled();
   expect(saveFileContent).not.toHaveBeenCalled();
