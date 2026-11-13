@@ -42,7 +42,7 @@ describe('scoped Shell context menus', () => {
   it('copies actual header selection and exposes valid dictionary links without navigating', () => {
     let term = '';
     cy.window().then((window) => {
-      cy.stub(window.navigator.clipboard, 'writeText').resolves().as('copySelectedText');
+      cy.stub(window.navigator.clipboard, 'writeText').as('copySelectedText').resolves();
     });
     cy.get(TRIGGER)
       .should('be.visible')
