@@ -121,6 +121,33 @@ the existing CI scope optimization capability; no new product rail is added.
 
 ## Architecture Source And Lint Evidence
 
+Architecture dependency fixtures reuse the existing
+`CheckArchitectureDependencyBoundaries` report query through
+`tools/ci/architecture-dependency-acquisition.mjs`. Its optional explicit
+`{configFile, targets}` request loads the complete configuration and a
+fixture-absolute TypeScript configuration using dependency-cruiser's public
+loaders. Calls without that request retain the production targets and report
+options. Each fixture has an owned temporary root and an independent analysis;
+the query does not change global working directory, run concurrent analyses or
+cache reports.
+
+The existing native test entry composes focused `.cases.mjs` families with
+sequential awaited imports so asynchronous module loading retains original case
+registration order, its worker and discovered-producer identity. Two real
+CLI controls compare valid/forbidden graphs, rules, type-only edges and alias
+resolution with the query. Independent roots and repeated source edits prove
+fresh analysis; malformed configuration and invalid scope reject. Cleanup
+accepts only registered temporary roots. The two independent real API reports
+used for deterministic reachability evidence remain intact.
+
+The root cross-package private-import rule captures the source package identity
+and excludes that same package using dependency-cruiser's group matching. It
+does not enumerate directories relative to the process working directory. CLI
+and query therefore use the same rule set, including for new kebab-named fixture
+packages. Existing public-entry exceptions, error severity and other rules are
+retained; prefix-similar names and value/type-only private imports have semantic
+negative controls.
+
 Canvas architecture checks inspect the complete sorted TypeScript inventory,
 including nested directories and symbolic-link targets. Directory entries supply
 ordinary file metadata; only symbolic links require a separate stat. The draft

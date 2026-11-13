@@ -78,19 +78,15 @@ module.exports = {
         path: '^packages/@dvt/[^/]+/src/(?!index\\.ts$|runtime\\.ts$|testing\\.ts$|contracts/planner/)',
       },
     },
-    ...(require('node:fs').existsSync('packages/@dvt')
-      ? require('node:fs')
-          .readdirSync('packages/@dvt', { withFileTypes: true })
-          .filter((entry) => entry.isDirectory())
-          .map((entry) => ({
-            name: 'no-cross-package-deep-imports',
-            severity: 'error',
-            from: { path: `^packages/@dvt/${entry.name}/src/` },
-            to: {
-              path: `^packages/@dvt/(?!${entry.name}(?:/|$))[^/]+/src/(?!index\\.ts$|runtime\\.ts$|testing\\.ts$|contracts/planner/)`,
-            },
-          }))
-      : []),
+    {
+      name: 'no-cross-package-deep-imports',
+      severity: 'error',
+      from: { path: '^packages/@dvt/([^/]+)/src/' },
+      to: {
+        path: '^packages/@dvt/[^/]+/src/(?!index\\.ts$|runtime\\.ts$|testing\\.ts$|contracts/planner/)',
+        pathNot: '^packages/@dvt/$1/',
+      },
+    },
     {
       name: 'no-runtime-packages-to-scripts-or-tools',
       severity: 'error',

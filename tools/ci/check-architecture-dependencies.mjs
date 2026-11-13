@@ -7,11 +7,13 @@ import { createRequire } from 'node:module';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { cruise } from 'dependency-cruiser';
+import {
+  runDependencyCruiseReport,
+  runApiReachabilityCruiseReport,
+} from './architecture-dependency-acquisition.mjs';
 
 import { listChangedFilesBetween } from './git-diff-files.mjs';
 
-export const ARCHITECTURE_DEPENDENCY_TARGETS = ['apps', 'packages'];
 export const ADAPTER_CANONICAL_CONTRACT_RULE_NAME = 'no-adapters-own-canonical-contracts';
 export const ADAPTER_SOURCE_FILE_PATTERN = /\.(?:cjs|js|mjs|ts|tsx)$/;
 export const SKIPPED_DIRECTORY_NAMES = new Set([
@@ -53,10 +55,6 @@ const API_TEST_FILE_PATTERN = /^apps\/api\/test\/.*\.(?:cjs|cts|js|jsx|mjs|mts|t
 
 export function normalizePath(filePath) {
   return filePath.replace(/\\/g, '/');
-}
-
-export function readArchitectureDependencyConfig(baseDir = process.cwd()) {
-  return localRequire(resolve(baseDir, '.dependency-cruiser.cjs'));
 }
 
 export function listFilesRecursive(rootDir) {
@@ -121,10 +119,6 @@ export function collectAdapterCanonicalContractFindings(baseDir = process.cwd())
             },
           ];
     });
-}
-
-function parseCruiseOutput(output) {
-  return typeof output === 'string' ? JSON.parse(output) : output;
 }
 
 function normalizeCruiseModules(modules) {
@@ -1807,34 +1801,6 @@ export function formatApiReachabilityReport(result) {
     )
   );
   return lines.join('\n');
-}
-
-export async function runDependencyCruiseReport(baseDir = process.cwd()) {
-  const config = readArchitectureDependencyConfig(baseDir);
-  const report = await cruise(ARCHITECTURE_DEPENDENCY_TARGETS, {
-    validate: true,
-    ruleSet: { forbidden: config.forbidden ?? [] },
-    baseDir,
-    doNotFollow: config.options?.doNotFollow,
-    exclude: config.options?.exclude,
-    tsConfig: config.options?.tsConfig,
-    tsPreCompilationDeps: true,
-    outputType: 'json',
-  });
-  return parseCruiseOutput(report.output);
-}
-
-export async function runApiReachabilityCruiseReport(baseDir = process.cwd()) {
-  const config = readArchitectureDependencyConfig(baseDir);
-  const report = await cruise(['apps/api/src', 'apps/api/test'], {
-    baseDir,
-    doNotFollow: config.options?.doNotFollow,
-    exclude: config.options?.exclude,
-    tsConfig: config.options?.tsConfig,
-    tsPreCompilationDeps: true,
-    outputType: 'json',
-  });
-  return parseCruiseOutput(report.output);
 }
 
 export async function runDependencyCruise(baseDir = process.cwd()) {
