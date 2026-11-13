@@ -1,7 +1,7 @@
 /**
  * Owned concern: lay out shell chrome slots from already-resolved presentation posture.
  * @baseline Route content and resize admission retain their existing owners.
- * @decision Keep slot composition here and semantic visual rules in the CSS module.
+ * @decision Keep slot composition here and delegate scoped context gestures to their boundary.
  * @consequence Focus mode and drawer resizing cannot introduce a second route lifetime.
  * @version 1.1.0
  */
@@ -58,12 +58,7 @@ export function AppShellFrame({
   return (
     <ShellActivityRailProvider>
       <ShellTextSelectionBoundary>
-        <div
-          data-slot="app-shell-frame"
-          className={styles.frame}
-          // Bubble after component-owned menus; capture would prevent Radix from opening.
-          onContextMenu={(event) => event.preventDefault()}
-        >
+        <div data-slot="app-shell-frame" className={styles.frame}>
           <a
             data-slot="app-shell-skip-link"
             href={`#${APP_SHELL_MAIN_CONTENT_ID}`}
