@@ -39,12 +39,13 @@ export {
 export function selectWebCypressLocalReadiness(
   command: WebCypressCommand,
   platform: NodeJS.Platform,
-  changedFiles: readonly string[]
+  changedFiles: readonly string[],
+  catalogAdditions: readonly string[] = []
 ): WebCypressCommand | undefined {
   if (platform !== 'win32' && platform !== 'linux') return command;
   const native = new Set(WEB_CYPRESS_NATIVE_PLATFORMS[platform] ?? []);
-  const changed = new Set(changedFiles.map(repositoryPath));
-  const specs = command.specPaths.filter((spec) => native.has(spec) || changed.has(spec));
+  const retained = new Set([...changedFiles, ...catalogAdditions].map(repositoryPath));
+  const specs = command.specPaths.filter((spec) => native.has(spec) || retained.has(spec));
   return specs.length > 0 ? buildBrowserCommand(command.capability, specs) : undefined;
 }
 
@@ -76,6 +77,7 @@ export function resolveWebCypressChangedPlan(
   commands: WebCypressCommand[];
   requiredFiles: string[];
   retiredFiles: string[];
+  catalogAdditions?: readonly string[] | null;
 } {
   const selected = new Set<WebCypressCapability>();
   const controlledSpecs = new Set<string>();
@@ -92,12 +94,14 @@ export function resolveWebCypressChangedPlan(
   const vitestFiles = new Set<string>();
   const requiredFiles = new Set<string>();
   const retiredFiles = new Set<string>();
+  let catalogAdditions: readonly string[] | null | undefined;
   for (const filePath of filePaths) {
     const path = repositoryPath(filePath);
     if (path === WEB_CYPRESS_CATALOG_PATH) {
-      const additions = resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, catalogSnapshots);
-      if (additions === null) requireCapabilities(CAPABILITIES);
-      else additions.forEach((spec) => requireCapabilities(['controlled'], spec));
+      if (catalogAdditions === undefined)
+        catalogAdditions = resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, catalogSnapshots);
+      if (catalogAdditions === null) requireCapabilities(CAPABILITIES);
+      else catalogAdditions.forEach((spec) => requireCapabilities(['controlled'], spec));
       requiredFiles.add(path);
       WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
       vitestFiles.add(path);
@@ -167,6 +171,7 @@ export function resolveWebCypressChangedPlan(
     ),
     requiredFiles: [...requiredFiles],
     retiredFiles: [...retiredFiles],
+    ...(catalogAdditions === undefined ? {} : { catalogAdditions }),
   };
 }
 

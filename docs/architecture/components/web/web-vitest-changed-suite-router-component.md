@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-11-12
+last_reviewed: 2026-11-13
 planning_type: architecture
 ---
 
@@ -62,6 +62,46 @@ flowchart LR
   Commands --> Adapter[Existing execution adapter]
   Adapter --> Runtime[Existing runtime proof]
 ```
+
+### Catalog Admission And Local Projection
+
+The declarative JSON companion previously made the root select complete local
+execution even when the existing catalog query proved only controlled additions.
+The root now permits that exact path to request readiness. Catalog semantics
+remain inside `resolveWebCypressChangedPlan`; its existing predicate is computed
+once and forwarded by `resolveWebVitestChangedSuitePlan` as `catalogAdditions`.
+
+| Read-model value         | Meaning and local obligation                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------ |
+| Absent                   | No catalog companion; retain the existing route.                                                 |
+| `[]` or added spec paths | Proven unchanged/additive controlled catalog; retain selected changed, native and added specs.   |
+| `null`                   | Additive-only evidence unavailable; retain all selected capabilities and provider prerequisites. |
+
+The CLI resolves the effective phase before capability projection. A full
+fallback applies to controlled, available **and** unavailable commands, so the
+prerequisite resolver sees every retained LIVE requirement. Explicit full plans
+and unsupported local platforms remain complete. Hosted capability/shard
+selection remains unchanged.
+
+```mermaid
+flowchart LR
+  Git[Verified base/head and executed JSON catalog] --> Witness[Existing additive-only predicate]
+  Witness --> Plan[Complete browser plan plus optional array/null evidence]
+  Plan --> Phase[CLI resolves effective phase]
+  Phase -->|Readiness admitted| Local[Selected changed, native and catalog additions]
+  Phase -->|Unproved or full| Full[All selected capabilities]
+  Local --> Environment[Requirements of retained commands]
+  Full --> Environment
+```
+
+Catalog-added specs are execution obligations independent of the changed-file
+frontier: an existing file newly listed in the catalog must still run locally.
+Projection preserves catalog order and deduplicates conditions. Malformed,
+missing, dirty, reordered, native-metadata-changing or execution-mismatched
+witnesses cannot prove additive-only scope; destructive membership still rejects.
+The schema parser and Git acquisition owner retain their existing contracts.
+Infrastructure and unknown companion vetoes remain in the root policy. This
+query change creates no new command, catalog, runner or fixture closure policy.
 
 ### Execution prerequisite order
 

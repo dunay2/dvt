@@ -57,6 +57,7 @@ function webTestPhase(files, options = {}) {
       !scope.runtimeWorkspaceFanout &&
       (!scope.workflowPolicyInput || scope.hostedWebTestAdapter) &&
       (scope.path.startsWith('apps/web/src/') ||
+        scope.path === 'apps/web/cypress.catalog.json' ||
         /^apps\/web\/cypress\/e2e\/(?:[^/]+\/)*[^/]+\.cy\.ts$/u.test(scope.path) ||
         scope.path.startsWith('docs/') ||
         scope.path === 'AGENTS.md' ||
