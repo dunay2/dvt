@@ -58,6 +58,8 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
   'apps/web/cypress/support/canvasDraftAuthoring.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/startupReadiness.ts': ['controlled'],
   'apps/web/cypress/support/canvasReadyAuthoring.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/projectCodeBrowsing.ts': ['available'],
+  'apps/web/cypress/support/relationalWorkbench/dbtProjectCodeBrowsing.ts': ['available'],
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
