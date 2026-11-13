@@ -46,6 +46,13 @@ describe('complete execution partition coverage', () => {
         'apps/web/src/app/views/canvas/CanvasModelIdentityField.tsx',
         'apps/web/src/app/views/canvas/CanvasModelIdentityField.test.tsx',
       ],
+      [
+        'apps/web/src/app/views/canvas/CanvasWorkspaceModelTabs.templates.tsx',
+        'apps/web/src/app/views/canvas/CanvasRelationalTreeCardMenu.tsx',
+        'apps/web/src/app/views/canvas/canvasSemanticEditor.css',
+        'apps/web/src/app/views/canvas/canvasWorkspaceTabs.css',
+        'apps/web/src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts',
+      ],
       ['README.md'],
     ].map((files) => [files])
   )('preserves every obligation exactly once for %j', (files) => {
@@ -55,7 +62,11 @@ describe('complete execution partition coverage', () => {
       selectWebVitestExecutionPartition(commandPlan, group)
     );
     const expected = commandPlan.flatMap((entry) =>
-      entry.kind === 'shell' && entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation
+      entry.kind === 'shell' &&
+      [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
+      ].includes(entry.command)
         ? [1, 2, 3].map((index) => ({ ...entry, command: `${entry.command} --shard=${index}/3` }))
         : [entry]
     );
@@ -67,37 +78,69 @@ describe('complete execution partition coverage', () => {
     expect(selectWebVitestExecutionPartition(commandPlan)).toBe(commandPlan);
   });
 
-  // Exercise the installed sequencer and real discovery, so native thirds cannot lose a test file.
-  it('retains the complete real Presentation inventory across the three native shards', async () => {
-    const context = await createVitest('test', {
-      root: webRoot,
-      config: 'vitest.presentation.config.ts',
-      watch: false,
-    });
-    try {
-      const specifications = await context.globTestSpecifications();
-      const groups: string[][] = [];
-      for (const index of [1, 2, 3]) {
-        context.config.shard = { index, count: 3 };
-        const shard = await new BaseSequencer(context).shard(specifications);
-        groups.push(
-          shard.map((spec) =>
-            spec.moduleId.replaceAll('\\', '/').slice(webRoot.replaceAll('\\', '/').length + 1)
-          )
-        );
-      }
-      const union = groups.flat();
-      expect(groups.every((group) => group.length > 0)).toBe(true);
-      expect(new Set(union).size).toBe(union.length);
-      expect(union.sort()).toEqual(
-        listWebVitestFiles()
-          .filter((file) => suiteMatchesFile('presentation', file))
-          .sort()
-      );
-    } finally {
-      await context.close();
-    }
+  it.each([
+    { kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco },
+    {
+      kind: 'shell',
+      command: `${WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']} --unknown`,
+    },
+    {
+      kind: 'vitest-files',
+      config: 'vitest.canvas-presentation.config.ts',
+      filePaths: ['src/app/views/canvas/CanvasModelIdentityField.test.tsx'],
+    },
+  ] as const)('retains a mixed unknown or exact-file entry once in changed: %j', (entry) => {
+    const unit = {
+      kind: 'shell',
+      command: WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-unit'],
+    } as const;
+    const commands = [unit, entry];
+    const before = structuredClone(commands);
+    expect(selectWebVitestExecutionPartition(commands, 'changed')).toEqual([entry]);
+    expect(
+      WEB_VITEST_EXECUTION_GROUPS.flatMap((group) =>
+        selectWebVitestExecutionPartition(commands, group)
+      )
+    ).toEqual([unit, entry]);
+    expect(commands).toEqual(before);
+    expect(selectWebVitestExecutionPartition(commands)).toBe(commands);
   });
+
+  // Exercise the installed sequencer and real discovery, so native thirds cannot lose a test file.
+  it.each(['presentation', 'canvas-presentation'] as const)(
+    'retains the complete real %s inventory across the three native shards',
+    async (suite) => {
+      const context = await createVitest('test', {
+        root: webRoot,
+        config: `vitest.${suite}.config.ts`,
+        watch: false,
+      });
+      try {
+        const specifications = await context.globTestSpecifications();
+        const groups: string[][] = [];
+        for (const index of [1, 2, 3]) {
+          context.config.shard = { index, count: 3 };
+          const shard = await new BaseSequencer(context).shard(specifications);
+          groups.push(
+            shard.map((spec) =>
+              spec.moduleId.replaceAll('\\', '/').slice(webRoot.replaceAll('\\', '/').length + 1)
+            )
+          );
+        }
+        const union = groups.flat();
+        // Native shards may be empty; the complete, disjoint union is the contract.
+        expect(specifications.length).toBeGreaterThan(0);
+        expect(new Set(union).size).toBe(union.length);
+        expect(union.sort()).toEqual(
+          listWebVitestFiles()
+            .filter((file) => suiteMatchesFile(suite, file))
+            .sort()
+        );
+      } finally {
+        await context.close();
+      }
+    }
+  );
 });
 
 describe('hosted Vitest execution partition admission', () => {
@@ -160,9 +203,14 @@ describe('hosted Vitest execution partition admission', () => {
       command: 'pnpm run test:presentation:run --shard=2/3',
     },
     {
-      group: 'changed',
+      group: 'presentation-2',
       files: ['apps/web/src/app/views/canvas/CanvasModelIdentityField.tsx'],
-      command: 'pnpm run test:canvas-presentation:run',
+      command: 'pnpm run test:canvas-presentation:run --shard=2/3',
+    },
+    {
+      group: 'unit',
+      files: ['apps/web/src/app/views/canvas/canvasSemanticEditor.css'],
+      command: 'pnpm run test:canvas-unit:run',
     },
   ])('executes only the nonempty $group command', ({ group, files, command }) => {
     vi.stubEnv('CI', 'true');
