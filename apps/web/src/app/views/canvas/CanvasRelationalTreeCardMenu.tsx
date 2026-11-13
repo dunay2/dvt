@@ -1,4 +1,5 @@
 /** Owned concern: accessible contextual actions for one semantic card. */
+import './canvasSemanticEditor.css';
 import type { ReactElement } from 'react';
 import { Pencil, Play, Trash2 } from 'lucide-react';
 import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';

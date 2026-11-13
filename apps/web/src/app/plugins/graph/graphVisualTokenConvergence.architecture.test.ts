@@ -146,6 +146,7 @@ const TEXT_ROLE_CONSUMERS = [
   '../../views/canvas/CanvasModelOutputInspector.tsx',
   '../../views/canvas/CanvasRelationalTreeOutput.module.css',
   '../../views/canvas/canvasSemanticEditor.css',
+  '../../views/canvas/canvasWorkspaceTabs.css',
   '../../views/canvas/CanvasSourceOccurrenceOutputs.tsx',
   '../../views/canvas/relational-inspection/RelationalInspectionPanel.tsx',
   '../../views/canvas/relational-source-occurrence/SourceOccurrenceProperties.templates.tsx',
