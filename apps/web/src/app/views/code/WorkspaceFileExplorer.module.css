@@ -35,6 +35,7 @@
   gap: calc(var(--spacing) * 2);
   min-width: 0;
 }
+.form label,
 .form input,
 .form textarea,
 .form button {
