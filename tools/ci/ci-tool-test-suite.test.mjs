@@ -7,9 +7,9 @@ import {
   buildCiToolTestList,
   discoverCiToolTests,
   findPackageBackedCiToolTests,
-  parseCiToolTestMode,
   isToolingCryptoContractInput,
-} from './ci-tool-test-suite.mjs';
+} from './ci-tool-test-catalog.mjs';
+import { parseCiToolTestMode, runCiToolTests } from './ci-tool-test-suite.mjs';
 
 test('tooling crypto inputs preserve the governed roots and normalize Git paths', () => {
   for (const source of [
@@ -107,4 +107,47 @@ test('CI tool test mode parser accepts known modes and rejects unknown modes', (
   assert.equal(parseCiToolTestMode(['static']), 'static');
   assert.equal(parseCiToolTestMode(['executable']), 'executable');
   assert.throws(() => parseCiToolTestMode(['unknown']), /Unsupported CI tool test mode/);
+});
+
+test('CI tool execution rejects signal-only completion', () => {
+  let calls = 0;
+  const code = runCiToolTests('all', {
+    spawnSync: () => {
+      calls++;
+      return { status: null, signal: 'SIGTERM' };
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(code, 1);
+});
+
+test('CI tool observation retains one invocation, selected files and native process settings', () => {
+  const expected = buildCiToolTestList('all');
+  const calls = [];
+  const code = runCiToolTests('all', {
+    repoRootPath: process.cwd(),
+    spawnSync: (command, args, options) => {
+      calls.push({ command, args, options });
+      return { status: 23, signal: null };
+    },
+  });
+  assert.equal(code, 23);
+  assert.equal(calls.length, 1);
+  const { command, args, options } = calls[0];
+  assert.equal(command, process.execPath);
+  assert.deepEqual(
+    args.filter((arg) => arg.endsWith('.test.mjs')),
+    expected
+  );
+  assert.deepEqual(options, { cwd: process.cwd(), stdio: 'inherit' });
+  assert.ok(args.includes('--test'));
+  assert.ok(args.includes(`--test-reporter=${process.stdout.isTTY ? 'spec' : 'tap'}`));
+  assert.ok(
+    args.some(
+      (arg) =>
+        arg.startsWith('--test-reporter=file:') && arg.endsWith('/ci-tool-test-timing-reporter.mjs')
+    )
+  );
+  assert.equal(args.filter((arg) => arg === '--test-reporter-destination=stdout').length, 2);
+  assert.ok(!args.some((arg) => /test-(?:concurrency|isolation)/u.test(arg)));
 });

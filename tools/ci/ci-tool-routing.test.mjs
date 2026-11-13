@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
+import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-catalog.mjs';
 import { computeWorkflowModeScopeOutputs } from './scope-config.mjs';
 
 for (const file of EXECUTABLE_CI_TOOL_TESTS) {

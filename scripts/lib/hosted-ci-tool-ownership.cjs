@@ -8,7 +8,7 @@ const path = require('node:path');
 const { defaultRunGitLines, resolveIterationComparison } = require('../git-local-changes.cjs');
 const { createGitRepositoryEnvironment } = require('./git-repository-environment.cjs');
 const { normalizeChangedFiles } = require('./local-validation-plan-values.cjs');
-const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-suite.mjs');
+const { buildCiToolTestList } = require('../../tools/ci/ci-tool-test-catalog.mjs');
 const {
   buildChangedScopeContext,
   computeWorkflowModeScopeOutputs,

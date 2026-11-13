@@ -6,7 +6,7 @@ import { dirname, join, posix, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import ts from 'typescript';
-import { TOOLING_CRYPTO_CONTRACT, isToolingCryptoContractInput } from './ci-tool-test-suite.mjs';
+import { TOOLING_CRYPTO_CONTRACT, isToolingCryptoContractInput } from './ci-tool-test-catalog.mjs';
 
 import {
   API_REACHABILITY_CLASSIFICATIONS,

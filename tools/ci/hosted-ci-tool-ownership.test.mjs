@@ -4,7 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 import { resolveHostedCiToolOwnership } from '../../scripts/lib/hosted-ci-tool-ownership.cjs';
-import { buildCiToolTestList } from './ci-tool-test-suite.mjs';
+import { buildCiToolTestList } from './ci-tool-test-catalog.mjs';
 import { main } from '../../scripts/verify-changed.cjs';
 import { createGitRepositoryEnvironment } from '../../scripts/lib/git-repository-environment.cjs';
 

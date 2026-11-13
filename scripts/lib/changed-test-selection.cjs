@@ -16,7 +16,7 @@ const {
 const {
   TOOLING_CRYPTO_CONTRACT,
   isToolingCryptoContractInput,
-} = require('../../tools/ci/ci-tool-test-suite.mjs');
+} = require('../../tools/ci/ci-tool-test-catalog.mjs');
 const {
   testStep,
   normalizeChangedFiles,
