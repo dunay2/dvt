@@ -3,6 +3,7 @@
  * @baseline SaveWorkspaceGraphDraft: viewport gestures do not persist draft changes.
  * @decision Measure all writes after the hydrated model has been durably synchronized.
  * @decision Observe rendered Fit centering before capturing the camera for a pan gesture.
+ * @decision Await all three node measurements before issuing the public Fit gesture.
  * @decision Keep retained Code browsing journeys separate while preserving spec hooks and order.
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
  * @version 1.0.2
@@ -181,6 +182,21 @@ describe('Workbench viewport', () => {
     });
     cy.get(pane).should('have.css', 'cursor', 'default');
     cy.get(`${main} .react-flow__controls-interactive`).should('not.exist');
+    cy.get(`${main} .react-flow__node`).should(($nodes) => {
+      const nodes = $nodes.toArray();
+      expect(
+        nodes.map((node) => node.getAttribute('data-id')),
+        'complete fixture before Fit'
+      ).to.have.members(['source-customers', 'source-orders', 'join-transform']);
+      for (const node of nodes) {
+        expect(
+          node.ownerDocument.defaultView!.getComputedStyle(node).visibility,
+          `measured node ${node.getAttribute('data-id')}`
+        ).to.equal('visible');
+        expect(node.offsetWidth, 'measured width before Fit').to.be.greaterThan(0);
+        expect(node.offsetHeight, 'measured height before Fit').to.be.greaterThan(0);
+      }
+    });
     cy.get(`${main} .react-flow__controls-fitview`).click();
     cy.get(viewport).should(($viewport) => {
       // Fit is queued; the initial zoom already satisfies < 1 and is not its completion signal.
