@@ -21,6 +21,7 @@ export const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
   'src/testing/vitestSuites.catalog.architecture.test.ts',
   'src/testing/vitestSuites.changedFileDiscovery.architecture.test.ts',
   'src/testing/vitestSuites.changedRouting.architecture.test.ts',
+  'src/testing/vitestSuites.globalStyles.architecture.test.ts',
   'src/testing/vitestSuites.changedRoutingGovernance.architecture.test.ts',
   'src/testing/vitestSuites.evidenceEnvironment.architecture.test.ts',
   'src/testing/vitestSuites.rawIntake.architecture.test.ts',
@@ -57,6 +58,12 @@ export function normalizeWebVitestChangedPath(filePath: string): string | null {
 
 export function isWebVitestTestPath(filePath: string): boolean {
   return /\.(?:test|spec)\.(?:ts|tsx)$/.test(filePath);
+}
+
+/** Global assets affect every view; deleted paths still carry their proof obligation. */
+export function isWebGlobalStylePath(filePath: string): boolean {
+  const normalized = normalizeWebVitestChangedPath(filePath);
+  return normalized?.startsWith('src/styles/') === true && normalized.endsWith('.css');
 }
 
 export function isArchitectureTestPath(filePath: string): boolean {

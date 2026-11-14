@@ -6,8 +6,11 @@
  */
 import type { WebCypressCatalogSnapshots } from '../cypress.catalog';
 import { resolveWebCypressChangedPlan, type WebCypressCommand } from '../cypress.changed';
-import type { WebVitestChangedSuiteName } from '../vitest.suites';
-import { WEB_VITEST_TEST_SOURCE_OBSERVERS } from '../vitest.suites';
+import {
+  WEB_VITEST_PRIMARY_SUITE_NAMES,
+  WEB_VITEST_TEST_SOURCE_OBSERVERS,
+  type WebVitestChangedSuiteName,
+} from '../vitest.suites';
 
 import {
   classifyWebVitestFile,
@@ -20,6 +23,7 @@ import {
   normalizeWebVitestChangedPath,
   isWebVitestTestPath,
   isWebVitestGovernancePath,
+  isWebGlobalStylePath,
   WEB_VITEST_GOVERNANCE_TEST_PATHS,
   WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH,
 } from './paths';
@@ -98,6 +102,11 @@ export function resolveWebVitestChangedSuitePlan(
     }
 
     if (!webPath) continue;
+
+    if (isWebGlobalStylePath(webPath)) {
+      WEB_VITEST_PRIMARY_SUITE_NAMES.forEach((suite) => selectedSuites.add(suite));
+      continue;
+    }
 
     if (isWebVitestTestPath(webPath)) {
       const suiteName = resolveChangedSuiteForWebPath(webPath);
