@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.2 (2026-11-14)
+
+## What's Changed
+* refactor(web): Separate global theme tokens from HTML base styles by @dunay2 in https://github.com/dunay2/dvt/pull/3914
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.1...v0.22.2
+
 ## 0.22.1 (2026-11-14)
 
 ## What's Changed
