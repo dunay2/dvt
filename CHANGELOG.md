@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.22.0 (2026-11-14)
+
+## What's Changed
+* refactor(web): Consolidate project settings in the rail and file actions in Code by @dunay2 in https://github.com/dunay2/dvt/pull/3845
+* refactor(web): Simplify connection health to a colored pilot by @dunay2 in https://github.com/dunay2/dvt/pull/3847
+* refactor(web): Show workspace breadcrumb and consolidate project properties by @dunay2 in https://github.com/dunay2/dvt/pull/3848
+* refactor(web): Separate Vitest routing and resolve LIVE prerequisites early by @dunay2 in https://github.com/dunay2/dvt/pull/3855
+* test(web): Assert pending bootstrap through the accessible health pilot by @dunay2 in https://github.com/dunay2/dvt/pull/3856
+* docs(docs): Record accepted component family cohesion decision by @dunay2 in https://github.com/dunay2/dvt/pull/3858
+* ci(ci): Separate local readiness from hosted browser acceptance by @dunay2 in https://github.com/dunay2/dvt/pull/3859
+* fix(ci): Preserve coverage failures during bounded fixture cleanup by @dunay2 in https://github.com/dunay2/dvt/pull/3861
+* feat(web): Compact header and reveal Focus controls by @dunay2 in https://github.com/dunay2/dvt/pull/3849
+* fix(api): Reject preview selection from a different connection by @dunay2 in https://github.com/dunay2/dvt/pull/3865
+* ci(ci): Preserve changed browser scenarios in local readiness by @dunay2 in https://github.com/dunay2/dvt/pull/3868
+* perf(ci): Scope API lint and deduplicate dependency preparation by @dunay2 in https://github.com/dunay2/dvt/pull/3870
+* ci(ci): Give hosted CI tool contracts one producer by @dunay2 in https://github.com/dunay2/dvt/pull/3873
+* feat(api): Bind native dbt compilation to target context by @dunay2 in https://github.com/dunay2/dvt/pull/3875
+* feat(api): Require native compilation before file Preview admission by @dunay2 in https://github.com/dunay2/dvt/pull/3878
+* ci(ci): Prepare Planning DB only for selected workflow consumers by @dunay2 in https://github.com/dunay2/dvt/pull/3880
+* feat(web): Compile and materialize the current Code model by @dunay2 in https://github.com/dunay2/dvt/pull/3883
+* perf(ci): Retain local proof for additive browser catalogs by @dunay2 in https://github.com/dunay2/dvt/pull/3885
+* feat(web): Add scoped file creation actions to Code Explorer by @dunay2 in https://github.com/dunay2/dvt/pull/3886
+* refactor(ci): Split Chromium diagnostic contracts into focused families by @dunay2 in https://github.com/dunay2/dvt/pull/3888
+* refactor(web): Separate AppShell presenters and styles by responsibility by @dunay2 in https://github.com/dunay2/dvt/pull/3890
+* ci(ci): Observe CI tool test costs without another execution by @dunay2 in https://github.com/dunay2/dvt/pull/3892
+* perf(ci): Reuse isolated architecture analysis without repeated CLI startup by @dunay2 in https://github.com/dunay2/dvt/pull/3894
+* refactor(web): Isolate Canvas workspace navigation styles by @dunay2 in https://github.com/dunay2/dvt/pull/3896
+* perf(ci): Distribute focused Canvas suites across hosted groups by @dunay2 in https://github.com/dunay2/dvt/pull/3898
+* refactor(web): Centralize scoped Shell context menu arbitration by @dunay2 in https://github.com/dunay2/dvt/pull/3901
+* fix(ci): Preserve owned Web and retained Code browser evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3906
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.21.0...v0.22.0
+
 ## 0.21.0 (2026-11-11)
 
 ## What's Changed
