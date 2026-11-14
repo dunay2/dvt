@@ -1,6 +1,7 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+@import './themeBase.css';
 
 /* One passive Monaco reference-card treatment for Code and its laboratory. */
 .reference-card {
