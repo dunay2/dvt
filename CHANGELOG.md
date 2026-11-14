@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.1 (2026-11-14)
+
+## What's Changed
+* refactor(web): Partition Shell behavior proofs by presentation responsibility by @dunay2 in https://github.com/dunay2/dvt/pull/3910
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.0...v0.22.1
+
 ## 0.22.0 (2026-11-14)
 
 ## What's Changed
