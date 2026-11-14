@@ -1468,6 +1468,51 @@ cross focus boundaries, so a paired test cannot replace that evidence.
 Test-only changes remain exact; a complete architecture run absorbs exact and
 Canvas architecture batches through the existing suite normalization.
 
+### Registered test-support ownership
+
+The existing suite catalog declares finite test-support cohorts by literal helper
+and owner-entry paths. Classification queries that data without filesystem I/O;
+it does not infer ownership from a filename prefix. A registered helper retains
+the full architecture suite and every declared conservative non-architecture
+filesystem/glob/raw-source/uncertainty observer under its primary config. A
+registered owner entry alone selects itself and the mandatory source-ownership
+guard. Observers are evidence obligations, not fictitious direct owners.
+Unknown sources retain the existing complete fallback, and every other
+changed or retired test/source keeps its independent obligation.
+
+The guard must prove the closed cohort against all relevant Web executable
+sources: `src`, `vitest`, `scripts`, `cypress` and root code/config files. It reuses
+SourceFacts' AST and import references without reparsing. Only resolved runtime
+reachability establishes ownership. Conservative edges, including type-only
+references and re-exports, propagate filesystem observations and unresolved,
+contextual or nonliteral module uncertainty to all non-architecture test roots.
+The observer declaration must cover that complete set. Uncertainty never proves
+positive ownership or absence; a root not retained fails closed. One fresh
+read-only snapshot belongs to the isolated guard module's collection, without a
+persistent cache or timeout waiver. Full architecture and unchanged browser
+admission retain their obligations; no universal Web runtime-consumer-absence
+or filesystem-expression inference is claimed.
+
+Resource-query edges follow the pinned Vite asset protocol. Plain imports retain
+normal module semantics; `raw` observes source text. Documented `worker` or
+`sharedworker` flags, optionally `inline` only, provide constructors: their real
+resolved dependency remains conservative, but they neither create arbitrary
+filesystem-observation seeds nor establish Node test ownership. Internal worker
+dependencies still propagate every observation and uncertainty. Unsupported
+query combinations and unresolved targets remain uncertainty/source observation.
+No filename, framework or package exception is used.
+
+Before spawning an exact Vitest command, the existing CLI verifies every filter
+is a current regular file under its Web cwd. A valid owner cannot mask an absent
+mandatory guard. The initial cohort covers only the thirteen current browser
+routing helpers, including both real owners of the shared fixture helper, and
+eight observed non-architecture test roots. The physical evidence and pure
+module-reference support modules share the real ownership-proof entry. CLI
+execution cases have their own governance entry without whole-source acquisition;
+future helpers require
+their own real admission and evidence. No product rail, runner, parser, cache,
+worker profile, timeout or browser-admission exception is introduced.
+
 ### US-1 Local Canvas Change
 
 As a frontend developer changing Canvas code, I want a local command to run the

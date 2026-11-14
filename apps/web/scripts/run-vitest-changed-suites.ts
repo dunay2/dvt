@@ -6,13 +6,14 @@
  * @version 1.0.1
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { WEB_CYPRESS_CATALOG_PATH } from '../cypress.catalog';
 import { selectWebCypressShard, selectWebCypressLocalReadiness } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
+import { WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH } from '../vitest/paths';
 
 import { parseChangedSuiteArgs } from './changed-suite-args';
 import {
@@ -53,11 +54,26 @@ function pnpmInvocation(): { command: string; argsPrefix: string[] } {
   return { command: 'pnpm.cmd', argsPrefix: [] };
 }
 
-function runVitestFilesCommand(config: string, filePaths: readonly string[], cwd: string): void {
+function validateVitestFileFilters(filePaths: readonly string[], cwd: string): void {
   if (filePaths.length === 0) {
-    throw new Error(`Cannot run Vitest config ${config} without file filters.`);
+    throw new Error('Cannot run exact Vitest without file filters.');
   }
 
+  for (const filePath of filePaths) {
+    let regular: boolean;
+    try {
+      regular = statSync(resolve(cwd, filePath)).isFile();
+      if (regular) readFileSync(resolve(cwd, filePath));
+    } catch {
+      // A missing or unreadable exact filter cannot be silently ignored by Vitest.
+      regular = false;
+    }
+    if (!regular)
+      throw new Error(`Exact Vitest filter must be a current regular file: ${filePath}`);
+  }
+}
+
+function runVitestFilesCommand(config: string, filePaths: readonly string[], cwd: string): void {
   const pnpm = pnpmInvocation();
   const result = spawnSync(
     pnpm.command,
@@ -161,6 +177,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       );
     }
     return;
+  }
+
+  if (vitestCommands.length > 0) {
+    const filters = new Set<string>([WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH]);
+    for (const entry of vitestCommands) {
+      if (entry.kind === 'vitest-files') entry.filePaths.forEach((file) => filters.add(file));
+    }
+    validateVitestFileFilters([...filters], webRoot);
   }
 
   if (args.phase === 'push-readiness') {

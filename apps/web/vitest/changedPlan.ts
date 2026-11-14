@@ -7,14 +7,21 @@
 import type { WebCypressCatalogSnapshots } from '../cypress.catalog';
 import { resolveWebCypressChangedPlan, type WebCypressCommand } from '../cypress.changed';
 import type { WebVitestChangedSuiteName } from '../vitest.suites';
+import { WEB_VITEST_TEST_SOURCE_OBSERVERS } from '../vitest.suites';
 
-import { resolveSuiteForWebPath, resolveChangedSuiteForWebPath } from './classification';
+import {
+  classifyWebVitestFile,
+  resolveWebVitestTestSourceOwners,
+  resolveSuiteForWebPath,
+  resolveChangedSuiteForWebPath,
+} from './classification';
 import { composeWebVitestCommandPlan, type WebVitestCommandPlan } from './commands';
 import {
   normalizeWebVitestChangedPath,
   isWebVitestTestPath,
   isWebVitestGovernancePath,
   WEB_VITEST_GOVERNANCE_TEST_PATHS,
+  WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH,
 } from './paths';
 
 export type WebVitestChangedSuitePlan = WebVitestCommandPlan & {
@@ -67,15 +74,20 @@ export function resolveWebVitestChangedSuitePlan(
 
   for (const filePath of browser.vitestFiles) {
     const webPath = normalizeWebVitestChangedPath(filePath);
-    if (
-      webPath &&
-      /^src\/testing\/vitestSuites\.browserRouting\.[^/]+\.ts$/.test(webPath) &&
-      !isWebVitestTestPath(webPath)
-    ) {
-      addExactTestPath(
-        'architecture',
-        'src/testing/vitestSuites.browserRouting.architecture.test.ts'
-      );
+    const owners = webPath ? resolveWebVitestTestSourceOwners(webPath) : null;
+    if (owners && webPath) {
+      if (isWebVitestTestPath(webPath)) {
+        owners.forEach((entry) => addExactTestPath('architecture', entry));
+        addExactTestPath('architecture', WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH);
+      } else {
+        selectedSuites.add('architecture');
+        for (const observer of WEB_VITEST_TEST_SOURCE_OBSERVERS) {
+          const primary = classifyWebVitestFile(observer)?.primarySuites[0];
+          if (!primary || primary === 'architecture')
+            throw new Error('Invalid test-source observer');
+          addExactTestPath(primary, observer);
+        }
+      }
       continue;
     }
     if (isWebVitestGovernancePath(filePath) || (webPath && isWebVitestGovernancePath(webPath))) {

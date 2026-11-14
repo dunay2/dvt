@@ -7,12 +7,34 @@ import { describe, expect, it } from 'vitest';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
 import { composeWebVitestCommandPlan } from '../../vitest/commands';
+import { resolveWebVitestTestSourceOwners } from '../../vitest/classification';
 import type { WebVitestChangedSuiteName } from '../../vitest.suites';
 import { listWebVitestFiles } from './vitestSuites.architecture.support';
 
 const governanceTestPaths = listWebVitestFiles().filter((filePath) =>
   /^src\/testing\/vitestSuites(?:\.[^.]+)*\.architecture\.test\.ts$/.test(filePath)
 );
+
+const observedTests = new Map<WebVitestChangedSuiteName, ReadonlySet<string>>([
+  [
+    'unit',
+    new Set([
+      'src/app/bootstrap/appBootstrapScreen.test.ts',
+      'src/app/services/workspace/workspacePorts.api.test.ts',
+      'src/app/views/canvas/canvasDraftScenarioFixtures.test.ts',
+      'src/app/views/canvas/canvasGraphSearchPresentation.test.ts',
+      'src/app/views/canvas/canvasNodeDropAggregate.test.ts',
+    ]),
+  ],
+  [
+    'presentation',
+    new Set([
+      'src/app/plugins/createDeferredView.test.tsx',
+      'src/app/components/canvas/CanvasNodeShell.test.tsx',
+      'src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
+    ]),
+  ],
+]);
 
 describe('web Vitest governance-test routing', () => {
   it('composes complete coverage without changing its caller-owned obligations', () => {
@@ -41,14 +63,17 @@ describe('web Vitest governance-test routing', () => {
     'runtime.test-cases',
     'runtime.test-support',
     'surfaces.test-cases',
-  ])('routes browser routing helper %s to its complete owner entry', (name) => {
+  ])('routes browser routing helper %s with its owners and conservative observers', (name) => {
     const helper = `src/testing/vitestSuites.browserRouting.${name}.ts`;
-    const expected = resolveWebVitestChangedSuitePlan([
+    const expected = composeWebVitestCommandPlan(new Set(['architecture']), observedTests);
+    expect(resolveWebVitestTestSourceOwners(helper)).toEqual([
       'src/testing/vitestSuites.browserRouting.architecture.test.ts',
+      ...(name === 'fixtures'
+        ? ['src/testing/vitestSuites.browserNativePlatform.architecture.test.ts']
+        : []),
     ]);
-    expect(expected).toMatchObject({ suites: ['architecture'], requiresDependencies: false });
     for (const path of [helper, `apps/web/${helper}`, helper.replaceAll('/', '\\')]) {
-      expect(resolveWebVitestChangedSuitePlan([path, path])).toEqual(expected);
+      expect(resolveWebVitestChangedSuitePlan([path, path])).toMatchObject(expected);
     }
   });
 
@@ -66,9 +91,14 @@ describe('web Vitest governance-test routing', () => {
   it('retains product obligations alongside browser routing proof helpers', () => {
     const helper = 'src/testing/vitestSuites.browserRouting.moduleGraph.ts';
     const product = 'src/app/views/canvas/CanvasShell.tsx';
-    const expected = resolveWebVitestChangedSuitePlan([product]);
-    expect(resolveWebVitestChangedSuitePlan([helper, product])).toEqual(expected);
-    expect(resolveWebVitestChangedSuitePlan([product, helper])).toEqual(expected);
+    const expected = composeWebVitestCommandPlan(
+      new Set(['canvas-presentation', 'architecture']),
+      observedTests
+    );
+    expect(resolveWebVitestChangedSuitePlan([helper, product])).toMatchObject(expected);
+    expect(resolveWebVitestChangedSuitePlan([product, helper])).toEqual(
+      resolveWebVitestChangedSuitePlan([helper, product])
+    );
   });
 
   it.each([

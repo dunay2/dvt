@@ -7,6 +7,8 @@
 import type { WebVitestFocusSuiteName } from '../vitest.suites';
 
 export const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
+  'src/testing/vitestSuites.exactFilterExecution.architecture.test.ts',
+  'src/testing/vitestSuites.testSourceOwnership.architecture.test.ts',
   'src/testing/vitestSuites.executionPartition.architecture.test.ts',
   'src/testing/vitestSuites.browserNightly.architecture.test.ts',
   'src/testing/vitestSuites.browserCatalog.architecture.test.ts',
@@ -24,6 +26,9 @@ export const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
   'src/testing/vitestSuites.rawIntake.architecture.test.ts',
   'src/testing/vitestSuites.sizePolicy.architecture.test.ts',
 ] as const;
+
+export const WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH =
+  'src/testing/vitestSuites.testSourceOwnership.architecture.test.ts';
 
 export function normalizeWebVitestPath(filePath: string): string {
   return filePath.replaceAll('\\', '/').replace(/^\.?\//, '');

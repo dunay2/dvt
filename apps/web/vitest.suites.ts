@@ -30,6 +30,57 @@ type WebVitestSuiteDefinition = Readonly<{
 
 const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
 
+/** Literal test-support ownership; executable evidence validates the complete closure. */
+export const WEB_VITEST_TEST_SOURCE_OWNERS = [
+  {
+    entries: ['src/testing/vitestSuites.browserRouting.architecture.test.ts'],
+    helpers: [
+      'src/testing/vitestSuites.browserRouting.cli.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.comparison.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.fixtureClosure.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.gestures.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.helperClosure.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.moduleGraph.ts',
+      'src/testing/vitestSuites.browserRouting.ownership.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.partitions.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.retirement.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.runtime.test-cases.ts',
+      'src/testing/vitestSuites.browserRouting.runtime.test-support.ts',
+      'src/testing/vitestSuites.browserRouting.surfaces.test-cases.ts',
+    ],
+  },
+  {
+    entries: [
+      'src/testing/vitestSuites.browserRouting.architecture.test.ts',
+      'src/testing/vitestSuites.browserNativePlatform.architecture.test.ts',
+    ],
+    helpers: ['src/testing/vitestSuites.browserRouting.fixtures.ts'],
+  },
+  {
+    entries: ['src/testing/vitestSuites.testSourceOwnership.architecture.test.ts'],
+    helpers: [
+      'src/testing/vitestSuites.testSourceOwnership.test-support.ts',
+      'src/testing/vitestSuites.testSourceOwnership.moduleReferences.test-support.ts',
+    ],
+  },
+  {
+    entries: ['src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts'],
+    helpers: ['src/app/plugins/graph/graphVisualTokenConvergence.test-sources.ts'],
+  },
+] as const;
+
+/** Conservative observation, not direct runtime ownership; proven against current source facts. */
+export const WEB_VITEST_TEST_SOURCE_OBSERVERS = [
+  'src/app/bootstrap/appBootstrapScreen.test.ts',
+  'src/app/plugins/createDeferredView.test.tsx',
+  'src/app/components/canvas/CanvasNodeShell.test.tsx',
+  'src/app/services/workspace/workspacePorts.api.test.ts',
+  'src/app/views/canvas/canvasDraftScenarioFixtures.test.ts',
+  'src/app/views/canvas/canvasGraphSearchPresentation.test.ts',
+  'src/app/views/canvas/canvasNodeDropAggregate.test.ts',
+  'src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
+] as const;
+
 export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinition> = {
   all: {
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
