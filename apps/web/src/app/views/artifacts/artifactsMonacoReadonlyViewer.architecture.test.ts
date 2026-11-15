@@ -10,6 +10,7 @@ const REPO_ROOT = path.resolve(APP_ROOT, '../../../..');
 const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
   'views/canvas/DbtModelCodeAuthoringSection.tsx',
   'views/canvas/DvtTransformOutputView.tsx',
+  'views/canvas/CanvasModelSqlOutput.tsx',
 ]);
 
 function readAppSource(relativePathFromApp: string): string {

@@ -21,6 +21,7 @@ const CANVAS_MONACO_EDITOR_OWNERS = new Set(['views/canvas/DerivedOutputFormulaE
 const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
   'views/canvas/DbtModelCodeAuthoringSection.tsx',
   'views/canvas/DvtTransformOutputView.tsx',
+  'views/canvas/CanvasModelSqlOutput.tsx',
 ]);
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
@@ -163,6 +164,25 @@ function collectMonacoAuthorityViolations({
 }
 
 describe('Templates Monaco preview architecture', () => {
+  it.each([
+    [
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'MonacoCodeEditor outside a governed Canvas authoring leaf',
+    ],
+    [
+      "import { MonacoDiffViewer } from '../../components/monaco/MonacoDiffViewer';",
+      'MonacoDiffViewer',
+    ],
+    ["import Editor from '@monaco-editor/react';", '@monaco-editor/react'],
+  ])('keeps the Model SQL leaf passive for %s', (source, violation) => {
+    expect(
+      collectMonacoAuthorityViolations({
+        surface: 'canvas-production',
+        modulePath: 'views/canvas/CanvasModelSqlOutput.tsx',
+        source,
+      })
+    ).toContain(violation);
+  });
   it('distinguishes accepted and rejected Templates and Canvas Monaco authority fixtures', () => {
     for (const fixture of ACCEPTED_MONACO_AUTHORITY_FIXTURES) {
       expect(collectMonacoAuthorityViolations(fixture), fixture.label).toEqual([]);
