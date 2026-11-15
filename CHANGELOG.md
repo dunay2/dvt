@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.4 (2026-11-15)
+
+## What's Changed
+* refactor(web): Reuse canonical language admission in Shell by @dunay2 in https://github.com/dunay2/dvt/pull/3922
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.3...v0.22.4
+
 ## 0.22.3 (2026-11-15)
 
 ## What's Changed
