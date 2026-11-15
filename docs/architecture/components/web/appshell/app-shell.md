@@ -235,7 +235,7 @@ does not collapse, close Code, change Model, or create a semantic write. The she
 depends on the existing workspace contribution contract, never a Canvas controller
 or another command registry. Standalone Explorer retains its local Elements control.
 
-Use the existing Lucide family at 20px/stroke 2 in 44px targets, with a 52px rail,
+Use the existing Lucide family at 24px/stroke 2 in 44px targets, with a 52px rail,
 4px inline padding and an inset divider. Only consumed navigation control/icon
 roles extend the existing spacing scale. Selection, focus and execution health
 remain different visual meanings. Preserve forced colors, reduced motion and

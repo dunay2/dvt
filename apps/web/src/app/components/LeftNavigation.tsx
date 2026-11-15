@@ -1,6 +1,6 @@
 /** Owned concern: present direct shell destinations and compose the active contextual rail. */
 import { NavLink, useMatch } from 'react-router';
-import { GitBranch } from 'lucide-react';
+import { GitFork } from 'lucide-react';
 import type { ShellNavigationItem, ShellNavigationModel } from '../shell/shellNavigationModel';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
@@ -128,7 +128,7 @@ export function LeftNavigationRail({
                       if (contribution?.canOpenProjectCode) contribution.onOpenProjectCode?.();
                     }}
                   >
-                    <GitBranch aria-hidden="true" className={styles.icon} />
+                    <GitFork aria-hidden="true" className={styles.icon} />
                     <span className={styles.caption}>{copy.projectCode}</span>
                   </NavLink>
                 </TooltipTrigger>
