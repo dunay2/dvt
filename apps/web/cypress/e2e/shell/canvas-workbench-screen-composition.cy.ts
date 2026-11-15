@@ -35,13 +35,24 @@ import {
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { assertNoSeriousAccessibilityViolations } from '../../support/shellWorkbench/accessibilityAssertions';
+import {
+  clearBrowserEmulation,
+  emulateBrowserZoom,
+  emulateAccessibilityMedia,
+} from '../../support/shellWorkbench/browserEmulation';
+import { assertDependencyDirectionCues } from '../../support/shellWorkbench/dependencyDirection';
+import { readProjectCode } from '../../support/shellWorkbench/projectCodeReadback';
+import {
+  assertViewportHasNoGlobalHorizontalOverflow,
+  assertCanvasPropertiesFitsViewport,
+} from '../../support/shellWorkbench/viewportGeometry';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
-
 const ALTERNATE_WORKSPACE_SESSION = {
   tenantId: E2E_WORKSPACE_SESSION.tenantId,
   projectId: 'e2e-project-alt',
@@ -69,198 +80,6 @@ const ALTERNATE_MODEL_PATH = 'models/staging/alternate_orders.sql';
 const ALTERNATE_MODEL_SQL = `select order_id, status
 from staging.alternate_orders`;
 const CLIPBOARD_EOL = Cypress.platform === 'win32' ? '\r\n' : '\n';
-
-/** Copy through the focused editor; rendered lines contain visual wrapping indentation. */
-function readProjectCode(): Cypress.Chainable<string> {
-  const editor =
-    '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"] .monaco-editor';
-  const selectAll = {
-    key: 'a',
-    code: 'KeyA',
-    keyCode: 65,
-    ctrlKey: Cypress.platform !== 'darwin',
-    metaKey: Cypress.platform === 'darwin',
-    bubbles: true,
-    cancelable: true,
-  };
-  cy.get(editor).find('.view-line').first().click();
-  return cy.window().then((window) => {
-    const clipboardData = new window.DataTransfer();
-    return cy
-      .get(editor)
-      .find('textarea.inputarea')
-      .should('have.prop', 'readOnly', true)
-      .should('be.focused')
-      .then(($input) => {
-        $input[0]!.dispatchEvent(new window.KeyboardEvent('keydown', selectAll));
-        $input[0]!.dispatchEvent(new window.KeyboardEvent('keyup', selectAll));
-        expect(window.document.activeElement).to.equal($input[0]);
-        $input[0]!.dispatchEvent(
-          new window.ClipboardEvent('copy', { clipboardData, bubbles: true, cancelable: true })
-        );
-        const collapseSelection = {
-          key: 'ArrowLeft',
-          code: 'ArrowLeft',
-          keyCode: 37,
-          bubbles: true,
-          cancelable: true,
-        };
-        $input[0]!.dispatchEvent(new window.KeyboardEvent('keydown', collapseSelection));
-        $input[0]!.dispatchEvent(new window.KeyboardEvent('keyup', collapseSelection));
-        return cy
-          .get(editor)
-          .find('.selected-text')
-          .should('not.exist')
-          .get(`${editor} .wordHighlightText`)
-          .should('be.visible')
-          .and('have.css', 'background-color', 'rgba(0, 0, 0, 0.25)')
-          .and('have.css', 'border-color', 'rgb(112, 112, 112)')
-          .and('have.css', 'border-top-width', '1px')
-          .then(() => clipboardData.getData('text/plain'));
-      });
-  });
-}
-
-function assertNoSeriousAccessibilityViolations(context: string): void {
-  cy.get(context).should('be.visible');
-  cy.injectAxe();
-  cy.checkA11y(
-    context,
-    {
-      runOnly: {
-        type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
-      },
-      includedImpacts: ['serious', 'critical'],
-    },
-    (violations) => {
-      if (violations.length === 0) {
-        return;
-      }
-      throw new Error(
-        violations
-          .map(
-            (violation) =>
-              `${violation.id}: ${violation.help} -> ${violation.nodes
-                .map((node) => `${node.target.join(' ')}: ${node.failureSummary}`)
-                .join(', ')}`
-          )
-          .join('\n')
-      );
-    }
-  );
-}
-
-function clearBrowserEmulation(): void {
-  // Touch emulation owns a separate spec target; resetting it here changes desktop input.
-  cy.then(() =>
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Emulation.clearDeviceMetricsOverride',
-    })
-  );
-  cy.then(() =>
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Emulation.setEmulatedMedia',
-      params: { media: '', features: [] },
-    })
-  );
-}
-
-function emulateBrowserZoom(
-  zoom: 2 | 4,
-  physicalViewport: Readonly<{ width: number; height: number }>
-): void {
-  const cssViewport = {
-    width: Math.floor(physicalViewport.width / zoom),
-    height: Math.floor(physicalViewport.height / zoom),
-  };
-  cy.viewport(cssViewport.width, cssViewport.height);
-  cy.then(() =>
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Emulation.setDeviceMetricsOverride',
-      params: {
-        width: cssViewport.width,
-        height: cssViewport.height,
-        deviceScaleFactor: zoom,
-        mobile: false,
-        screenWidth: physicalViewport.width,
-        screenHeight: physicalViewport.height,
-      },
-    })
-  );
-  cy.window().should((window) => {
-    expect(window.innerWidth).to.equal(cssViewport.width);
-    expect(window.innerHeight).to.equal(cssViewport.height);
-    expect(window.devicePixelRatio).to.equal(zoom);
-  });
-}
-
-function emulateAccessibilityMedia(): void {
-  cy.then(() =>
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Emulation.setEmulatedMedia',
-      params: {
-        media: '',
-        features: [
-          { name: 'prefers-reduced-motion', value: 'reduce' },
-          { name: 'forced-colors', value: 'active' },
-        ],
-      },
-    })
-  );
-  cy.window().should((window) => {
-    expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).to.equal(true);
-    expect(window.matchMedia('(forced-colors: active)').matches).to.equal(true);
-  });
-}
-
-function assertViewportHasNoGlobalHorizontalOverflow(expectedWidth: number): void {
-  cy.document().should((document) => {
-    expect(document.documentElement.scrollWidth).to.be.at.most(expectedWidth);
-  });
-}
-
-function assertCanvasPropertiesFitsViewport(width: number, height: number): void {
-  cy.get('[data-slot="canvas-settings-dialog"]').should(($dialog) => {
-    const rect = $dialog.get(0).getBoundingClientRect();
-    expect(rect.left).to.be.at.least(0);
-    expect(rect.right).to.be.at.most(width);
-    expect(rect.top).to.be.at.least(0);
-    expect(rect.bottom).to.be.at.most(height);
-  });
-  cy.get('[data-slot="workbench-properties-footer"]').should(($footer) => {
-    const rect = $footer.get(0).getBoundingClientRect();
-    expect(rect.top).to.be.at.least(0);
-    expect(rect.bottom).to.be.at.most(height);
-  });
-  assertViewportHasNoGlobalHorizontalOverflow(width);
-}
-
-function assertDependencyDirectionCues(): void {
-  cy.get<SVGMarkerElement>('[data-slot="canvas-dependency-direction-cue"]')
-    .should('have.length.at.least', 2)
-    .should(($cues) => {
-      for (const cue of $cues.toArray()) {
-        const glyph = cue.querySelector<SVGPathElement>('path')!;
-        const bounds = glyph.getBBox();
-        const edgePath = cue
-          .closest('.react-flow__edge')
-          ?.querySelector<SVGPathElement>('.react-flow__edge-path');
-
-        expect(cue.tagName.toLowerCase()).to.equal('marker');
-        expect(cue.getAttribute('markerWidth')).to.equal('8');
-        expect(cue.getAttribute('markerHeight')).to.equal('8');
-        expect(cue.getAttribute('orient')).to.equal('auto');
-        expect(cue.getAttribute('markerUnits')).to.equal('userSpaceOnUse');
-        expect(bounds.width).to.equal(8);
-        expect(bounds.height).to.equal(8);
-        expect(cue.getAttribute('aria-hidden')).to.equal('true');
-        expect(getComputedStyle(glyph).fill).to.equal(getComputedStyle(edgePath!).stroke);
-        expect(getComputedStyle(cue).pointerEvents).to.equal('none');
-        expect(edgePath?.getAttribute('marker-end')).to.equal(`url(#${cue.id})`);
-      }
-    });
-}
 
 describe('Canvas workbench screen composition', () => {
   let persistedDraft: {

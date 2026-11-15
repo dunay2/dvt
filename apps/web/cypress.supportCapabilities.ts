@@ -31,6 +31,11 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
   'apps/web/cypress/support/codeWorkbench/bootstrap.ts': ['controlled'],
   'apps/web/cypress/support/e2eApiStub.ts': CAPABILITIES,
   'apps/web/cypress/support/nativeKeyboard.ts': ['controlled'],
+  'apps/web/cypress/support/shellWorkbench/browserEmulation.ts': ['controlled'],
+  'apps/web/cypress/support/shellWorkbench/projectCodeReadback.ts': ['controlled'],
+  'apps/web/cypress/support/shellWorkbench/accessibilityAssertions.ts': ['controlled'],
+  'apps/web/cypress/support/shellWorkbench/viewportGeometry.ts': ['controlled'],
+  'apps/web/cypress/support/shellWorkbench/dependencyDirection.ts': ['controlled'],
   'apps/web/cypress/support/workspaceSession.ts': CAPABILITIES,
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',

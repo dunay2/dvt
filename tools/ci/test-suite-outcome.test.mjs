@@ -100,14 +100,20 @@ function expandWebMatrix(context) {
   return [...rows, ...added];
 }
 
-test('only available native browser shards use the admitted hosted platform and Node', () => {
+test('both native browser providers use the admitted platform with the existing Node selection', () => {
   const web = workflow.jobs['web-frontend-tests'];
   const setup = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
   const resolve = (value, matrix) =>
     value.startsWith('${{') ? runInNewContext(value.slice(3, -2), { matrix }) : value;
-  for (const matrix of [...webMatrix, { phase: 'vitest', capability: 'available' }]) {
+  for (const matrix of [
+    ...webMatrix,
+    { phase: 'vitest', capability: 'available' },
+    { phase: 'vitest', capability: 'unavailable' },
+  ]) {
     const available = matrix.phase === 'browser' && matrix.capability === 'available';
-    assert.equal(resolve(web['runs-on'], matrix), available ? 'ubuntu-24.04' : 'ubuntu-latest');
+    const provider =
+      matrix.phase === 'browser' && ['available', 'unavailable'].includes(matrix.capability);
+    assert.equal(resolve(web['runs-on'], matrix), provider ? 'ubuntu-24.04' : 'ubuntu-latest');
     assert.equal(resolve(setup.with['node-version'], matrix), available ? '22.23.3' : '22.x');
   }
 });

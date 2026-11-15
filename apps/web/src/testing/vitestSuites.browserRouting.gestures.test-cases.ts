@@ -13,7 +13,7 @@ export function registerBrowserRoutingGestures(): void {
   describe('public Canvas gesture and notification preconditions', () => {
     it('requeries direction cues until all original marker and edge invariants hold', () => {
       const body = browserModules
-        .get(resolve('cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'))!
+        .get(resolve('cypress/support/shellWorkbench/dependencyDirection.ts'))!
         .statements.find(
           (statement) =>
             ts.isFunctionDeclaration(statement) &&
