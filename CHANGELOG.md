@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.22.6 (2026-11-15)
+
+## What's Changed
+* fix(web): Improve navigation glyph legibility by @dunay2 in https://github.com/dunay2/dvt/pull/3930
+* fix(web): Keep rail selection exclusive and color shared icons by @dunay2 in https://github.com/dunay2/dvt/pull/3933
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.5...v0.22.6
+
 ## 0.22.5 (2026-11-15)
 
 ## What's Changed
