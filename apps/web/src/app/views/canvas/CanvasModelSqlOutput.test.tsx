@@ -68,11 +68,11 @@ describe('Model Output SQL inspection', () => {
   }
 
   function outputTab(): void {
-    act(() =>
+    act(() => {
       fireEvent.mouseDown(container.querySelector('[data-slot="canvas-operation-output-tab"]')!, {
         button: 0,
-      })
-    );
+      });
+    });
   }
 
   it('queries only the visible Model Output with its protected target and digest', async () => {
