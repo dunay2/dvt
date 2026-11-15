@@ -23,7 +23,7 @@ import {
   RETIRED_SPEC_CAPABILITIES,
   FIXTURE_CONTRACTS,
 } from './cypress.supportCapabilities';
-import { isWebVitestImplementationPath } from './vitest/paths';
+import { isWebGlobalStylePath, isWebVitestImplementationPath } from './vitest/paths';
 
 export {
   selectWebCypressShard,
@@ -107,7 +107,11 @@ export function resolveWebCypressChangedPlan(
       vitestFiles.add(path);
       continue;
     }
-    if (EXECUTION_BOUNDARIES.includes(path) || isWebVitestImplementationPath(path)) {
+    if (
+      EXECUTION_BOUNDARIES.includes(path) ||
+      isWebVitestImplementationPath(path) ||
+      isWebGlobalStylePath(path)
+    ) {
       requireCapabilities(CAPABILITIES);
       vitestFiles.add(filePath);
       continue;

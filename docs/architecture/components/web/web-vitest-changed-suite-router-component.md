@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-11-13
+last_reviewed: 2026-11-14
 planning_type: architecture
 ---
 
@@ -102,6 +102,27 @@ witnesses cannot prove additive-only scope; destructive membership still rejects
 The schema parser and Git acquisition owner retain their existing contracts.
 Infrastructure and unknown companion vetoes remain in the root policy. This
 query change creates no new command, catalog, runner or fixture closure policy.
+
+### Global stylesheet admission
+
+CSS under normalized `src/styles/` affects every view. The shared path owner
+recognizes repository-relative, Web-relative and Windows paths without reading
+the filesystem. New, deleted and renamed stylesheet paths retain the obligation;
+the existing Git adapter disables rename collapsing to retain both names.
+
+The Vitest planner adds the three canonical primary suites. The browser planner
+retains the path for Vitest and selects all existing catalog capabilities, without
+treating CSS as a browser spec. Both planners still validate every companion.
+Unknown browser ownership cannot be hidden by a global stylesheet.
+
+The existing composer absorbs only equivalent Canvas coverage and exact batches
+inside a complete suite. Monaco, Shell and workspace focus contexts remain when
+selected by companions: their jsdom defaults differ from Node primary suites.
+The readiness projection keeps declared native proof and conservative fallback;
+explicit complete execution and hosted membership remain unchanged.
+
+This boundary does not change component CSS routing, the catalog, environments,
+provider preparation, execution phases, receipts or mandatory checks.
 
 ### Execution prerequisite order
 
