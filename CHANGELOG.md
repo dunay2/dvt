@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.3 (2026-11-15)
+
+## What's Changed
+* fix(ci): Admit global Web styles through existing evidence routing by @dunay2 in https://github.com/dunay2/dvt/pull/3916
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.2...v0.22.3
+
 ## 0.22.2 (2026-11-14)
 
 ## What's Changed
