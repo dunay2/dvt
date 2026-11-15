@@ -134,6 +134,13 @@ width. Derive the consumed `--control-size-navigation` and
 `--icon-size-navigation` roles from existing `--spacing`; reuse A's typography,
 focus and elevation. Do not create another spacing scale or status palette.
 
+Only one destination is visually selected. Canvas keeps its current-route ARIA
+when Code is open, but its visual `data-active` override is false; Git is selected
+from the existing active Code contribution on the Canvas route. Other destinations
+retain route currentness. Menu disclosure does not select another destination.
+Icons use the shared primary color, strong foreground when selected and disabled
+foreground when unavailable; no route-specific palette is introduced.
+
 Selection uses primary/selected roles and focus uses the canonical focus ring,
 width and offset. The 2px outline plus 2px offset fits the 4px padding. Tooltip
 names work on hover and keyboard focus. About remains reachable at 400px height

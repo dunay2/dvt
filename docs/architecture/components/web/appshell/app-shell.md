@@ -238,7 +238,10 @@ or another command registry. Standalone Explorer retains its local Elements cont
 Use the existing Lucide family at 24px/stroke 2 in 44px targets, with a 52px rail,
 4px inline padding and an inset divider. Only consumed navigation control/icon
 roles extend the existing spacing scale. Selection, focus and execution health
-remain different visual meanings. Preserve forced colors, reduced motion and
+remain different visual meanings. Only the current surface is visually selected:
+Canvas route identity remains announced while an active Code contribution selects
+Git instead. Opening a menu does not select another destination. Rail icons reuse
+primary, strong selected foreground and disabled foreground tokens. Preserve forced colors, reduced motion and
 hover/focus tooltip equivalence. See the
 [disposition contract](../shell-navigation-disposition-component.md) for the
 state diagram, active-surface rules and required browser evidence.
