@@ -44,6 +44,11 @@ export function registerBrowserRoutingFixtureClosure(): void {
       'apps/web/cypress/support/relationalWorkbench/operationMenu.ts',
       'apps/web/cypress/support/relationalWorkbench/pointer.ts',
       'apps/web/cypress/support/semanticLive/canonicalAssertions.ts',
+      'apps/web/cypress/support/shellWorkbench/browserEmulation.ts',
+      'apps/web/cypress/support/shellWorkbench/projectCodeReadback.ts',
+      'apps/web/cypress/support/shellWorkbench/accessibilityAssertions.ts',
+      'apps/web/cypress/support/shellWorkbench/viewportGeometry.ts',
+      'apps/web/cypress/support/shellWorkbench/dependencyDirection.ts',
       'apps/web/cypress/support/workspaceSession.ts',
     ])('admits every exact shared-helper consumer in its real runtime: %s', (helperPath) => {
       const graph = new Map(
