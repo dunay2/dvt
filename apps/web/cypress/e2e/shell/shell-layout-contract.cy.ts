@@ -144,8 +144,8 @@ function assertNavigationTargetGeometry(): void {
       expect(rect.width, 'navigation hit width').to.be.closeTo(44, 1);
       expect(rect.height, 'navigation hit height').to.be.closeTo(44, 1);
       expect(rect.left - rail.left, 'outline clearance').to.be.closeTo(4, 1);
-      expect(glyph.width).to.be.closeTo(20, 0.5);
-      expect(glyph.height).to.be.closeTo(20, 0.5);
+      expect(glyph.width).to.be.closeTo(24, 0.5);
+      expect(glyph.height).to.be.closeTo(24, 0.5);
       expect(glyph.left + glyph.width / 2).to.be.closeTo(rect.left + rect.width / 2, 0.5);
       expect(glyph.top + glyph.height / 2).to.be.closeTo(rect.top + rect.height / 2, 0.5);
       expect(icon.getAttribute('aria-hidden')).to.equal('true');

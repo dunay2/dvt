@@ -127,7 +127,7 @@ is introduced.
 
 ## Visual Contract
 
-Use the registered Lucide route icons, Workflow, GitBranch and Info with 20px
+Use the registered Lucide route icons, Workflow, GitFork and Info with 24px
 icons and the family default stroke of 2. Targets are 44px square. The rail is
 52px wide with 4px inline padding and an inset divider that consumes no content
 width. Derive the consumed `--control-size-navigation` and
