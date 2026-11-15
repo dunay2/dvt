@@ -5,11 +5,15 @@
  */
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import {
+  APPLICATION_LANGUAGE_STORAGE_KEY,
+  useApplicationLanguageStore,
+} from '../../stores/applicationLanguageStore';
 import { resolveShellTopBarCopy } from './copy';
 import { createShellTopBarHarness } from './ShellTopBar.test-support';
+import * as viewMenu from './ShellViewMenu.template';
 
 describe('View language and focus recovery', () => {
   const shell = createShellTopBarHarness();
@@ -137,6 +141,52 @@ describe('View language and focus recovery', () => {
       expect(useApplicationLanguageStore.getState().language).toBe('es');
       expect(document.body.querySelector('[data-slot="shell-language-menu"]')).toBeNull();
       expect(document.activeElement).toBe(transferFocus ? nextControl : trigger);
+    }
+  );
+
+  it.each([
+    [' ES-mx ', 'en', 'es', true],
+    ['en-GB', 'es', 'en', true],
+    ['fr-FR', 'es', 'es', false],
+    ['', 'es', 'es', false],
+  ] as const)(
+    'admits callback language %j through the preference owner',
+    async (raw, initial, expected, accepted) => {
+      const template = vi.spyOn(viewMenu, 'ShellViewMenuTemplate');
+      const previousDocumentLanguage = document.documentElement.lang;
+      const previousPreference = localStorage.getItem(APPLICATION_LANGUAGE_STORAGE_KEY);
+      try {
+        useApplicationLanguageStore.getState().configureApplicationLanguage(initial);
+        await act(async () => shell.root.render(shell.render('/canvas')));
+        await act(async () => {
+          fireEvent.pointerDown(shell.container.querySelector('[data-slot="shell-menu-trigger"]')!);
+        });
+        await waitFor(() => {
+          expect(document.body.querySelector('[data-slot="shell-language-menu"]')).not.toBeNull();
+        });
+        const before = useApplicationLanguageStore.getState();
+        const beforePreference = localStorage.getItem(APPLICATION_LANGUAGE_STORAGE_KEY);
+        const beforeDocumentLanguage = document.documentElement.lang;
+        const props = template.mock.lastCall![0];
+        await act(async () => props.onLanguageSelected(raw));
+        expect(useApplicationLanguageStore.getState().language).toBe(expected);
+        expect(document.documentElement.lang).toBe(expected);
+        expect(useApplicationLanguageStore.getState() === before).toBe(!accepted);
+        if (!accepted) {
+          expect(localStorage.getItem(APPLICATION_LANGUAGE_STORAGE_KEY)).toBe(beforePreference);
+          expect(document.documentElement.lang).toBe(beforeDocumentLanguage);
+        }
+        await waitFor(() => {
+          expect(document.body.querySelector('[data-slot="shell-language-menu"]') === null).toBe(
+            accepted
+          );
+        });
+      } finally {
+        template.mockRestore();
+        document.documentElement.lang = previousDocumentLanguage;
+        if (previousPreference === null) localStorage.removeItem(APPLICATION_LANGUAGE_STORAGE_KEY);
+        else localStorage.setItem(APPLICATION_LANGUAGE_STORAGE_KEY, previousPreference);
+      }
     }
   );
 });

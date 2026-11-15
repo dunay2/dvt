@@ -6,7 +6,10 @@
  * @version 1.0.0
  */
 import { useState } from 'react';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import {
+  normalizeApplicationLanguage,
+  useApplicationLanguageStore,
+} from '../../stores/applicationLanguageStore';
 import type { ShellTopBarCopy } from './copy';
 import { ShellViewMenuTemplate } from './ShellViewMenu.template';
 import type { ShellViewControlsReadModel } from './shellViewControlsModel';
@@ -27,8 +30,9 @@ export function ShellMenu(props: ShellMenuProps) {
     (state) => state.configureApplicationLanguage
   );
   function selectLanguage(language: string) {
-    if (language !== 'en' && language !== 'es') return;
-    configureApplicationLanguage(language);
+    const normalizedLanguage = normalizeApplicationLanguage(language);
+    if (normalizedLanguage === null) return;
+    configureApplicationLanguage(normalizedLanguage);
     setOpen(false);
   }
   function preserveTransferredFocus(event: Event) {
