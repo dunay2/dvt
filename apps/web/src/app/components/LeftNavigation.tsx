@@ -47,6 +47,7 @@ export function LeftNavigationRail({
             to={item.to}
             id={isCanvas ? 'shell-canvas-navigation' : undefined}
             aria-label={item.label}
+            data-active={isCanvas ? onCanvasRoute && codeTab?.active !== true : undefined}
             aria-expanded={
               isCanvas && onCanvasRoute ? expanded && codeTab?.active !== true : undefined
             }
@@ -98,6 +99,7 @@ export function LeftNavigationRail({
                     state={canvasCodeRouteEntryState}
                     id="shell-project-code-command"
                     data-slot="shell-project-code-command"
+                    data-active={onCanvasRoute && codeTab?.active === true}
                     aria-label={copy.projectCode}
                     aria-current={false}
                     aria-expanded={onCanvasRoute && codeTab?.active === true}

@@ -138,6 +138,9 @@ describe('Direct shell navigation', () => {
     expect(observedLocation!.state).toEqual({ canvasWorkbench: 'code' });
     expect(container.querySelector('[data-slot="left-navigation-rail"]')).toBe(rail);
     expect(within(container).getByRole('link', { name: 'Git' })).toBe(git);
+    const canvas = within(container).getByRole('link', { name: 'Canvas' });
+    expect(canvas.getAttribute('data-active')).toBe('true');
+    expect(git.getAttribute('data-active')).toBe('false');
     const onOpenProjectCode = vi.fn();
     await act(async () => {
       useCanvasWorkspaceMenuContributionStore.setState({
@@ -146,9 +149,13 @@ describe('Direct shell navigation', () => {
           canImportProjectSnapshot: false,
           canOpenProjectCode: true,
           onOpenProjectCode,
+          codeTab: { active: true, onSelect: onOpenProjectCode, onCanvas: vi.fn() },
         },
       });
     });
+    expect(canvas.getAttribute('aria-current')).toBe('page');
+    expect(canvas.getAttribute('data-active')).toBe('false');
+    expect(git.getAttribute('data-active')).toBe('true');
     const location = observedLocation!;
     await act(async () => {
       fireEvent.click(git);
@@ -160,6 +167,19 @@ describe('Direct shell navigation', () => {
     });
     expect(observedLocation!.pathname).toBe('/runs');
     expect(within(container).getByRole('link', { name: 'Git' })).toBe(git);
+    expect(canvas.getAttribute('data-active')).toBe('false');
+    expect(git.getAttribute('data-active')).toBe('false');
+    expect(within(container).getByRole('link', { name: 'Runs' }).getAttribute('aria-current')).toBe(
+      'page'
+    );
+    await act(async () => {
+      useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
+      useUiLayoutStore.setState({ canvasExplorer: { mode: 'closed', widthPercent: 31 } });
+      fireEvent.click(canvas);
+    });
+    expect(canvas.getAttribute('aria-expanded')).toBe('false');
+    expect(canvas.getAttribute('data-active')).toBe('true');
+    expect(git.getAttribute('data-active')).toBe('false');
   });
 
   it('preserves modified link activation and navigates from another route before opening Elements', async () => {

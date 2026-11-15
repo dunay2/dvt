@@ -53,14 +53,24 @@ describe('LeftNavigation stylesheet ownership', () => {
 
   it('keeps focus, active and hover appearance tied to semantic tokens', () => {
     const focus = readNavigationRule('.linkInteractive:focus-visible');
-    const active = readNavigationRule(".link[aria-current='page']");
+    const active = readNavigationRule(".link[aria-current='page']:not([data-active='false'])");
     const hover = readNavigationRule('.linkInteractive:hover');
-    expect(active).toBe(readNavigationRule(".link[aria-expanded='true']"));
+    expect(active).toBe(readNavigationRule(".link[data-active='true']"));
+    expect(readNavigationRule(".link[aria-expanded='true']")).toBeUndefined();
     expect(focus).toContain('var(--focus-ring)');
     expect(active).toContain('var(--primary)');
     expect(active).not.toMatch(/--status-/u);
     expect(active).toContain('var(--surface-selected)');
     expect(hover).toContain('var(--surface-selected)');
     expect(hover).toContain('var(--text-strong)');
+    expect(readNavigationRule('.icon')).toContain('var(--primary)');
+    const activeIcon = readNavigationRule(".link[data-active='true'] .icon");
+    expect(activeIcon).toContain('var(--text-strong)');
+    expect(activeIcon).toBe(
+      readNavigationRule(".link[aria-current='page']:not([data-active='false']) .icon")
+    );
+    expect(readNavigationRule(".link[aria-disabled='true'] .icon")).toContain(
+      'var(--text-disabled)'
+    );
   });
 });

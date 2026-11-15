@@ -58,16 +58,22 @@
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
-.link[aria-current='page'],
-.link[aria-expanded='true'] {
+.link[aria-current='page']:not([data-active='false']),
+.link[data-active='true'] {
   border-color: var(--primary);
   background: var(--surface-selected);
   color: var(--text-strong);
 }
-.link[aria-disabled='true'] {
+.link[aria-current='page']:not([data-active='false']) .icon,
+.link[data-active='true'] .icon {
+  color: var(--text-strong);
+}
+.link[aria-disabled='true'],
+.link[aria-disabled='true'] .icon {
   color: var(--text-disabled);
 }
 .icon {
+  color: var(--primary);
   width: var(--icon-size-navigation);
   height: var(--icon-size-navigation);
   flex-shrink: 0;

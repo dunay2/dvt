@@ -92,7 +92,7 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
   cy.get('[data-slot="app-shell-outlet"]').should('exist');
 }
 
-function assertShellCanvasEntries(): void {
+function assertShellCanvasEntries(activeSurface: 'canvas' | 'code' = 'canvas'): void {
   cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
     .should('have.length', 1)
     .and('be.visible')
@@ -128,6 +128,28 @@ function assertShellCanvasEntries(): void {
   cy.get('[data-slot="canvas-explorer"]')
     .find('[data-slot="canvas-explorer-elements-toggle"], [data-slot="canvas-explorer-git-toggle"]')
     .should('not.exist');
+  assertSelectedNavigation(activeSurface);
+}
+
+function assertSelectedNavigation(activeSurface: 'canvas' | 'code'): void {
+  cy.get<HTMLElement>('[data-slot="left-navigation-rail"]').should(($rail) => {
+    const rail = $rail[0]!;
+    const selected = Array.from(rail.querySelectorAll('a, button')).filter((control) => {
+      const appearance = getComputedStyle(control);
+      return (
+        parseFloat(appearance.borderTopWidth) > 0 &&
+        appearance.borderTopColor !== 'rgba(0, 0, 0, 0)'
+      );
+    });
+    expect(selected, 'one visually selected destination').to.have.length(1);
+    expect(selected[0]).to.equal(
+      rail.querySelector(
+        activeSurface === 'code'
+          ? '[data-slot="shell-project-code-command"]'
+          : '[data-slot="left-navigation-link"][href="/canvas"]'
+      )
+    );
+  });
 }
 function assertNavigationTargetGeometry(): void {
   // Measure the actual hit target and glyph, not class strings or mocked rectangles.
@@ -150,6 +172,15 @@ function assertNavigationTargetGeometry(): void {
       expect(glyph.top + glyph.height / 2).to.be.closeTo(rect.top + rect.height / 2, 0.5);
       expect(icon.getAttribute('aria-hidden')).to.equal('true');
       expect(parseFloat(getComputedStyle(icon).strokeWidth)).to.equal(2);
+      const appearance = getComputedStyle(control);
+      if (
+        control.getAttribute('aria-disabled') !== 'true' &&
+        appearance.borderTopColor === 'rgba(0, 0, 0, 0)'
+      ) {
+        expect(getComputedStyle(icon).color, 'inactive glyph has the shared accent').not.to.equal(
+          appearance.color
+        );
+      }
       expect(control.getAttribute('aria-label')).to.be.a('string').and.not.equal('');
     }
   );
@@ -371,7 +402,6 @@ describe('Shell layout contract', () => {
     const modelViewport = `${model} [data-slot="canvas-relational-tree-viewport"], ${model} [data-slot="canvas-relational-tree-draft-viewport"]`;
     cy.get(`${canvas} [data-testid="canvas-viewport"]`).as('retainedCanvas', { type: 'static' });
     assertShellCanvasEntries();
-    assertNavigationTargetGeometry();
     cy.get('[data-slot="shell-project-code-command"]').then(($host) => {
       const hostTop = $host[0]!.getBoundingClientRect().top;
       const hostBottom = $host[0]!.getBoundingClientRect().bottom;
@@ -394,8 +424,15 @@ describe('Shell layout contract', () => {
     cy.get(`${code} [data-workspace-path="notes.md"]`).click();
     cy.get(`${code} .monaco-editor`).should('be.visible').as('retainedCode', { type: 'static' });
     cy.get(canvas).should('have.attr', 'inert');
-    assertShellCanvasEntries();
+    assertShellCanvasEntries('code');
+    assertNavigationTargetGeometry();
     cy.get('[data-slot="shell-project-code-command"]').should('have.attr', 'aria-expanded', 'true');
+    cy.get('[data-slot="left-navigation-section-trigger"][data-route="/admin"]').click();
+    cy.get('[role="menu"]').should('be.visible');
+    assertSelectedNavigation('code');
+    cy.get('[role="menu"]').should('be.visible');
+    pressNativeKey('Escape');
+    cy.get('[role="menu"]').should('not.exist');
     cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(canvas).should('be.visible');
     // Repeated Canvas activation opens Elements; it must not collapse or recreate the graph.
@@ -414,7 +451,7 @@ describe('Shell layout contract', () => {
     cy.get('[data-slot="canvas-workspace-tab"]').click();
     assertShellCanvasEntries();
     cy.get('[data-slot="canvas-code-main-tab"]').click();
-    assertShellCanvasEntries();
+    assertShellCanvasEntries('code');
     cy.get<JQuery<HTMLElement>>('@retainedCode').then(($original) => {
       cy.get(`${code} .monaco-editor`).should(($current) =>
         expect($current[0]).to.equal($original[0])
