@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.5 (2026-11-15)
+
+## What's Changed
+* refactor(web): Extract Shell helpers with compatible provider proof runners by @dunay2 in https://github.com/dunay2/dvt/pull/3926
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.4...v0.22.5
+
 ## 0.22.4 (2026-11-15)
 
 ## What's Changed
