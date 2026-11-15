@@ -40,10 +40,18 @@ type InspectorPresentation = Readonly<{
   selectedOnly?: boolean;
 }>;
 const InspectorTabs = createContext<
-  | readonly [InspectorPresentation | null, Dispatch<SetStateAction<InspectorPresentation | null>>]
+  | readonly [
+      InspectorPresentation | null,
+      Dispatch<SetStateAction<InspectorPresentation | null>>,
+      boolean,
+    ]
   | null
 >(null);
-const CanvasOutputPresentation = createContext({ editing: true, showExcluded: true });
+const CanvasOutputPresentation = createContext({
+  editing: true,
+  showExcluded: true,
+  active: false,
+});
 
 export function useCanvasOutputPresentation() {
   return useContext(CanvasOutputPresentation);
@@ -52,7 +60,8 @@ export function useCanvasOutputPresentation() {
 export function CanvasOperationInspectorTabs({
   children,
   resetRevision = 0,
-}: Readonly<{ children: ReactNode; resetRevision?: number }>): JSX.Element {
+  active = true,
+}: Readonly<{ children: ReactNode; resetRevision?: number; active?: boolean }>): JSX.Element {
   const [selection, setSelection] = useState<InspectorPresentation | null>(null);
   useEffect(() => {
     setSelection((current) =>
@@ -65,7 +74,7 @@ export function CanvasOperationInspectorTabs({
           }
     );
   }, [resetRevision]);
-  const value = useMemo(() => [selection, setSelection] as const, [selection]);
+  const value = useMemo(() => [selection, setSelection, active] as const, [selection, active]);
   return <InspectorTabs.Provider value={value}>{children}</InspectorTabs.Provider>;
 }
 
@@ -91,7 +100,7 @@ function useInspectorPresentation(relationId: string | null | undefined) {
     },
     [select, relationId]
   );
-  return [current, update] as const;
+  return [current, update, shared?.[2] ?? true] as const;
 }
 
 export function useCanvasInspectorEditing(relationId: string | null | undefined) {
@@ -137,16 +146,20 @@ export function CanvasRelationalTreeEditorFrame({
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
-  const [inspector, updateInspector] = useInspectorPresentation(relationId);
+  const [inspector, updateInspector, active] = useInspectorPresentation(relationId);
   const tab = inspector.tab ?? initialTab;
   const selectedOnly = inspector.selectedOnly ?? false;
   const setTab = useCallback((next: string) => updateInspector({ tab: next }), [updateInspector]);
-  const outputPresentation = useMemo(
-    () => ({ editing, showExcluded: editing && !selectedOnly }),
-    [editing, selectedOnly]
-  );
   const activeTab =
     (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
+  const outputPresentation = useMemo(
+    () => ({
+      editing,
+      showExcluded: editing && !selectedOnly,
+      active: active && activeTab === 'output',
+    }),
+    [editing, selectedOnly, active, activeTab]
+  );
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
   const expressionContext = useMemo(
     () => ({

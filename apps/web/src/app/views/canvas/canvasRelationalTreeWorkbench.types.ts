@@ -11,8 +11,11 @@ import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import type { CanvasTransformSqlQueryBinding } from '../../ports/canvasTransformSql';
 
 export type CanvasRelationalTreeWorkbenchProps = Readonly<{
+  active?: boolean;
+  codeProjection?: CanvasTransformSqlQueryBinding;
   layoutKey?: string;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];

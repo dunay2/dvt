@@ -253,6 +253,22 @@ describe('Workbench navigation', () => {
       .should('match', /^\d+%$/);
     cy.screenshot('semantic-editor-wide');
 
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
+    cy.get('[data-slot="canvas-model-output-inspector"]').within(() => {
+      cy.get('[data-slot="canvas-operation-output-tab"]').click();
+      cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor')
+        .should('be.visible')
+        .and('contain.text', 'customers');
+    });
+    cy.then(() => {
+      expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(1);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-collapse"]'
+    ).click();
+
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-workbench"] button[aria-label="Zoom out"]').click();
@@ -407,7 +423,10 @@ describe('Workbench navigation', () => {
         expect($lines.text(), 'derived SQL uses the shared viewer').to.match(/\bselect\b/i);
       });
     cy.then(() => {
-      expect(getE2eApiCalls(SQL_ENDPOINT, 'GET'), 'one authorized SQL read').to.have.length(1);
+      expect(
+        getE2eApiCalls(SQL_ENDPOINT, 'GET'),
+        'one authorized SQL read per explicit surface'
+      ).to.have.length(2);
     });
     cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
       expect(

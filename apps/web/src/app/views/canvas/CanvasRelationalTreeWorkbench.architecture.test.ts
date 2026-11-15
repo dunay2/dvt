@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 
@@ -152,6 +153,36 @@ const ModelDataPanelStyles = readArchitectureSiblingSource(
 );
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps Model and Code SQL acquisition behind one protected query lifecycle', () => {
+    for (const name of ['CanvasModelSqlOutput.tsx', 'DvtTransformOutputView.tsx']) {
+      const source = readArchitectureSiblingSource(import.meta.dirname, name);
+      const file = ts.createSourceFile(
+        name,
+        source,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX
+      );
+      const imports = file.statements.flatMap((statement) =>
+        ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)
+          ? [statement.moduleSpecifier.text]
+          : []
+      );
+      expect(imports).toContain('./useCanvasTransformSqlOutput');
+      expect(
+        imports.some((path) => /postgres-projection|services\/canvas|adapters/.test(path))
+      ).toBe(false);
+      expect(
+        file.statements.some(
+          (statement) =>
+            ts.isImportDeclaration(statement) &&
+            statement.importClause?.isTypeOnly !== true &&
+            ts.isStringLiteral(statement.moduleSpecifier) &&
+            statement.moduleSpecifier.text === './canvasDvtSubstraitOutputProjection'
+        )
+      ).toBe(false);
+    }
+  });
   it('keeps Model sample layout and compact variants in its own stylesheet', () => {
     expect(ModelDataPanelSource).toContain("from './CanvasModelDataPanel.module.css'");
     expect(ModelDataPanelSource).not.toMatch(
@@ -307,7 +338,27 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(InspectionSource.split('\n').length).toBeLessThan(80);
     expect(InspectionModelSource.split('\n').length).toBeLessThan(120);
     expect(InspectionPanelSource.split('\n').length).toBeLessThan(100);
-    expect(WorkbenchSource.split('\n').length).toBeLessThan(140);
+    const workbench = ts.createSourceFile(
+      'workbench.tsx',
+      WorkbenchSource,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX
+    );
+    const runtimeImports = workbench.statements.flatMap((statement) =>
+      ts.isImportDeclaration(statement) &&
+      statement.importClause?.isTypeOnly !== true &&
+      ts.isStringLiteral(statement.moduleSpecifier)
+        ? [statement.moduleSpecifier.text]
+        : []
+    );
+    expect(
+      runtimeImports.some((path) =>
+        /@dvt\/(?:contracts|substrait-analysis|postgres-projection)|services|adapters|stores/.test(
+          path
+        )
+      )
+    ).toBe(false);
     expect(CatalogueSource.split('\n').length).toBeLessThan(120);
     expect(TreeSource.split('\n').length).toBeLessThan(150);
     expect(LayoutSource.split('\n').length).toBeLessThan(190);

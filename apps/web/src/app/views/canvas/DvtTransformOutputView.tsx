@@ -1,21 +1,15 @@
 /** Owned concern: present canonical Substrait first and derive outputs only on explicit selection. */
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { monacoVisualClasses } from '../../components/monaco/monacoVisualTokens';
 import { cn } from '../../components/ui/utils';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import {
-  projectDvtSubstraitTransformOutputToPostgresSql,
-  type DvtSubstraitTransformOutputProjectionArgs,
-} from './canvasDvtSubstraitOutputProjection';
+import type { DvtSubstraitTransformOutputProjectionArgs } from './canvasDvtSubstraitOutputProjection';
+import { useCanvasTransformSqlOutput } from './useCanvasTransformSqlOutput';
 
 type TransformOutputViewId = 'substrait' | 'postgres-sql';
-type DerivedSqlState =
-  | Readonly<{ status: 'idle' }>
-  | Readonly<{ status: 'loading' | 'error'; input: DvtSubstraitTransformOutputProjectionArgs }>
-  | Readonly<{ status: 'ready'; sql: string; input: DvtSubstraitTransformOutputProjectionArgs }>;
 
 export type DvtTransformOutputViewProps = DvtSubstraitTransformOutputProjectionArgs &
   Readonly<{
@@ -39,14 +33,11 @@ export function DvtTransformOutputView({
   codeProjection,
 }: DvtTransformOutputViewProps): JSX.Element {
   const [activeView, setActiveView] = useState<TransformOutputViewId>('substrait');
-  const [derivedSql, setDerivedSql] = useState<DerivedSqlState>({ status: 'idle' });
-  const requestId = useRef(0);
-  const isCurrentProjection =
-    derivedSql.status !== 'idle' &&
-    derivedSql.input.transformNode === transformNode &&
-    derivedSql.input.nodes === nodes &&
-    derivedSql.input.edges === edges &&
-    derivedSql.input.codeProjection === codeProjection;
+  const {
+    state: derivedSql,
+    isCurrent: isCurrentProjection,
+    request,
+  } = useCanvasTransformSqlOutput({ transformNode, nodes, edges, codeProjection });
   const selectedView = isCurrentProjection ? activeView : 'substrait';
   const displayedCode =
     selectedView === 'substrait'
@@ -63,30 +54,13 @@ export function DvtTransformOutputView({
           }
         : null;
 
-  useEffect(
-    () => () => {
-      requestId.current += 1;
-    },
-    [transformNode, nodes, edges, codeProjection]
-  );
-
   const selectOutputView = (event: ChangeEvent<HTMLSelectElement>): void => {
     const nextView = event.currentTarget.value as TransformOutputViewId;
     setActiveView(nextView);
     if (nextView === 'substrait' || (isCurrentProjection && derivedSql.status === 'loading'))
       return;
 
-    const currentRequestId = ++requestId.current;
-    const input = { transformNode, nodes, edges, codeProjection };
-    setDerivedSql({ status: 'loading', input });
-    void projectDvtSubstraitTransformOutputToPostgresSql(input).then(
-      (sql) => {
-        if (requestId.current === currentRequestId) setDerivedSql({ status: 'ready', sql, input });
-      },
-      () => {
-        if (requestId.current === currentRequestId) setDerivedSql({ status: 'error', input });
-      }
-    );
+    request();
   };
 
   return (

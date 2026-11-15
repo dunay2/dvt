@@ -9,8 +9,10 @@ import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection
 import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 import { CanvasRelationalFieldSelectionProvider } from './CanvasRelationalFieldSelectionProvider';
 import { CanvasRelationalOperationMenuProvider } from './operation-menu/CanvasRelationalOperationMenuContext';
+import type { CanvasTransformSqlQueryBinding } from '../../ports/canvasTransformSql';
 
 type CanvasRelationalTreeContentProps = Readonly<{
+  codeProjection?: CanvasTransformSqlQueryBinding;
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
   authoring?: CanvasRelationalTreeAuthoringContract;
   transformNode: CanonicalNode;
@@ -75,6 +77,9 @@ function CanvasRelationalTreeContentView(props: CanvasRelationalTreeContentProps
       model={model}
       authoring={props.authoring}
       transformNode={props.transformNode}
+      nodes={props.nodes}
+      edges={props.edges}
+      codeProjection={props.codeProjection}
       copy={props.copy}
       expanded={props.expanded}
       onExpandedChange={props.onExpandedChange}

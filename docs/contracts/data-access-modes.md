@@ -129,7 +129,7 @@ in the application use case; view components only render facts and emit actions.
 
 The SQL inspection continuation is governed by
 [#3765](https://github.com/dunay2/dvt/issues/3765#issuecomment-6726292993).
-It declares a distinct read model for the existing Code surface; it does not
+It declares a distinct read model for Code and the final Model Output surface; it does not
 execute a LIVE row read. A native Model consuming a file-owned dbt producer
 requires the server's authorized compiled publication as well as its schema
 signature. The browser cannot manufacture that SQL from the signature or use
@@ -172,6 +172,7 @@ whole selection, including all selected Source connections.
 ```mermaid
 flowchart LR
   Code[Explicit Code SQL selection] --> SQL[ProjectCanvasTransformSql]
+  Output[Visible passive Model Output] --> SQL
   SQL --> Shared[Authorized transform projection preparation]
   Rows[PreviewCanvasTransformRows] --> Shared
   Shared --> Producers[Current physical and native dbt producer closure]
@@ -192,6 +193,16 @@ An accepted file update alone does not refresh a retained snapshot; returning
 to canonical output and selecting SQL again revalidates the current publication
 and permission. An unavailable query context
 rejects SQL inspection rather than lowering external publications locally.
+
+The semantic editor's final Model Output uses the same query and request
+lifecycle, bound to the original protected Transform and its canonical digest.
+It requests SQL only while both that Model workspace and its passive Output
+tab are visible. Output fields remain available through their existing owner;
+local field editing hides the saved SQL snapshot until passive inspection
+resumes. Hiding the tab or workspace discards its pending result. Reopening
+requests the current authorized snapshot. Loading and failure stay explicit;
+neither viewing SQL nor opening Output applies changes, previews rows or starts
+a Run. Source and intermediate-operation Output continue to inspect fields.
 
 ## Transform LIVE preview
 
