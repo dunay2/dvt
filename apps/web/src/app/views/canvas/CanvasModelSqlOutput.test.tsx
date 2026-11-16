@@ -36,10 +36,16 @@ describe('Model Output SQL inspection', () => {
     draftRevision: 'saved-revision',
     semanticPlanSha256: digest,
     sql: 'SELECT id FROM public.places',
+    presentation: { status: 'unchanged', sql: 'SELECT id FROM public.places', steps: [] },
     provenance: { sourceRefs: [occurrenceInput.source.sourceRef!] },
   });
 
-  function render(binding?: CanvasTransformSqlQueryBinding, active = true, editing = false): void {
+  function render(
+    binding?: CanvasTransformSqlQueryBinding,
+    active = true,
+    editing = false,
+    relationId?: string
+  ): void {
     act(() =>
       root.render(
         <CanvasOperationInspectorTabs active={active}>
@@ -58,6 +64,7 @@ describe('Model Output SQL inspection', () => {
                 nodes={graph.nodes}
                 edges={graph.edges}
                 codeProjection={binding}
+                relationId={relationId}
               />
             }
           >
@@ -100,6 +107,7 @@ describe('Model Output SQL inspection', () => {
       canvasId: response.canvasId,
       transformNodeId: graph.targetNode.id,
       semanticPlanSha256: digest,
+      presentation: 'readable',
     });
     expect(container.querySelector('pre')?.textContent).toBe(response.sql);
     render(binding, true, true);
@@ -135,6 +143,35 @@ describe('Model Output SQL inspection', () => {
       expect(query.projectTransformSql).toHaveBeenCalledTimes(2);
     }
   );
+
+  it('discards a pending SQL response when selecting another saved relation', async () => {
+    const relations = readDvtTransformAuthoringAuthority(graph.targetNode)!.semanticDocument.sidecar
+      .relations;
+    const first = relations[0]!.relationId,
+      second = relations[1]!.relationId;
+    let resolve!: (value: TransformSqlProjectionResponse) => void;
+    const projectTransformSql = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<TransformSqlProjectionResponse>((accept) => {
+            resolve = accept;
+          })
+      )
+      .mockResolvedValue({ ...response, relationId: second });
+    const binding = { canvasId: response.canvasId, query: { projectTransformSql } };
+    render(binding, true, false, first);
+    selectSqlTab();
+    await generate();
+    render(binding, true, false, second);
+    await act(async () => resolve({ ...response, relationId: first }));
+    expect(container.querySelector('pre')).toBeNull();
+    await generate();
+    expect(projectTransformSql).toHaveBeenLastCalledWith(
+      expect.objectContaining({ relationId: second, presentation: 'readable' })
+    );
+    expect(container.querySelector('pre')?.textContent).toBe(response.sql);
+  });
 
   it.each(['workspace', 'properties', 'output'] as const)(
     'drops a pending result when leaving SQL for %s',

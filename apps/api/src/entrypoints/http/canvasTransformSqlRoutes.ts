@@ -30,7 +30,11 @@ export function registerCanvasTransformSqlRoutes(
 ): void {
   app.get<{
     Params: { canvasId: string; transformNodeId: string };
-    Querystring: EnvironmentScopeQuery & { semanticPlanSha256?: string };
+    Querystring: EnvironmentScopeQuery & {
+      semanticPlanSha256?: string;
+      relationId?: string;
+      presentation?: string;
+    };
   }>(
     RUNTIME_ROUTE_PATH.canvasTransformSql,
     { config: { rateLimit: deps.rateLimit } },

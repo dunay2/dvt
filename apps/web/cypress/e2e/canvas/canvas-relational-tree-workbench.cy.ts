@@ -36,6 +36,7 @@ describe('Workbench navigation', () => {
       expect(Object.fromEntries(url.searchParams)).to.deep.equal({
         ...E2E_WORKSPACE_SESSION,
         semanticPlanSha256,
+        presentation: 'readable',
       });
       return {
         body: TransformSqlProjectionResponseSchema.parse({
@@ -44,7 +45,12 @@ describe('Workbench navigation', () => {
           transformNodeId: 'join-transform',
           draftRevision: 'rev-e2e-graph-ready',
           semanticPlanSha256,
-          sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
+          sql: 'SELECT result.customer_id FROM (SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id) result',
+          presentation: {
+            status: 'rewritten',
+            sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
+            steps: [{ rule: 'SQLREAD1.PROJECTION_FUSION', path: '$' }],
+          },
           provenance: {
             sourceRefs: draft.nodes
               .filter((node) => node.metadata?.connectedSourceRef != null)
@@ -270,6 +276,16 @@ describe('Workbench navigation', () => {
       cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor')
         .should('be.visible')
         .and('contain.text', 'customers');
+      cy.get('[data-slot="canvas-sql-presentation-selector"]').should('have.value', 'readable');
+      cy.get('[data-slot="canvas-sql-presentation-result"]').should(
+        'contain.text',
+        'Simplification steps: 1.'
+      );
+      cy.get('[data-slot="canvas-sql-presentation-selector"]').select('original');
+      cy.get('.monaco-editor').should('contain.text', 'result');
+      cy.get('[data-slot="canvas-sql-presentation-selector"]').select('readable');
+      cy.get('.monaco-editor').should('not.contain.text', 'result');
+      cy.then(() => expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(1));
       cy.screenshot('model-output-sql-explicit');
       cy.get('[data-slot="canvas-operation-properties-tab"]').click();
     });

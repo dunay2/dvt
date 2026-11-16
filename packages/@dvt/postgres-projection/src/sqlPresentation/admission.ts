@@ -11,15 +11,19 @@ export type SqlObject = Readonly<Record<string, unknown>>;
 export type SqlPath = readonly (string | number)[];
 export type SqlDiagnostic = Readonly<{ code: string; path: string; message: string }>;
 export type SqlResolutionInput = Readonly<{
+  currentDatabase?: string;
   resolvedColumns: readonly Readonly<{
     schema: string;
     table: string;
     columns: readonly string[];
+    scalarColumns?: readonly string[];
   }>[];
   scalarSemantics?: 'pg_catalog';
 }>;
 export type SqlResolution = Readonly<{
+  currentDatabase?: string;
   sources: ReadonlyMap<string, ReadonlySet<string>>;
+  scalarSources: ReadonlyMap<string, ReadonlySet<string>>;
   scalarSemantics: boolean;
 }>;
 export type SqlReference = Readonly<{ input: SqlInput; column: string }>;
@@ -32,6 +36,7 @@ export type SqlTarget = Readonly<{
 export type SqlInput = Readonly<{
   alias: string;
   columns: ReadonlySet<string>;
+  scalarColumns?: ReadonlySet<string>;
   node: PostgresAstNode;
   range: SqlObject;
   path: SqlPath;
@@ -112,6 +117,7 @@ export function compileSqlResolution(context?: SqlResolutionInput): SqlResolutio
     reject('missing_resolution', [], 'Resolved scalar columns are required before simplification.');
   }
   const sources = new Map<string, ReadonlySet<string>>();
+  const scalarSources = new Map<string, ReadonlySet<string>>();
   let count = 0;
   for (const source of context.resolvedColumns) {
     if (
@@ -146,11 +152,37 @@ export function compileSqlResolution(context?: SqlResolutionInput): SqlResolutio
     if (sources.has(key))
       reject('invalid_resolution', [], 'A relation has duplicate resolution evidence.');
     sources.set(key, columns);
+    if (source.scalarColumns !== undefined) {
+      if (!Array.isArray(source.scalarColumns))
+        reject(
+          'invalid_resolution',
+          [],
+          'Scalar column evidence must be a subset of known columns.'
+        );
+      const scalarColumns = new Set<string>();
+      for (const column of source.scalarColumns) {
+        if (typeof column !== 'string' || !columns.has(column) || scalarColumns.has(column))
+          reject(
+            'invalid_resolution',
+            [],
+            'Scalar column evidence must be an unambiguous subset of known columns.'
+          );
+        scalarColumns.add(column);
+      }
+      scalarSources.set(key, scalarColumns);
+    }
   }
   if (context.scalarSemantics !== undefined && context.scalarSemantics !== 'pg_catalog') {
     reject('invalid_resolution', [], 'Unknown scalar resolution profile.');
   }
-  return { sources, scalarSemantics: context.scalarSemantics === 'pg_catalog' };
+  return {
+    sources,
+    scalarSources,
+    scalarSemantics: context.scalarSemantics === 'pg_catalog',
+    ...(context.currentDatabase === undefined
+      ? {}
+      : { currentDatabase: nameAt(context.currentDatabase, []) }),
+  };
 }
 
 function inputScope(inputs: readonly SqlInput[], path: SqlPath): ReadonlyMap<string, SqlInput> {
@@ -209,7 +241,20 @@ class SqlAdmission {
       if (node['RangeVar'] !== undefined) {
         keys(node, ['RangeVar'], full);
         const range = objectAt(node['RangeVar'], full);
-        keys(range, ['schemaname', 'relname', 'alias', 'inh', 'relpersistence', 'location'], full);
+        keys(
+          range,
+          ['catalogname', 'schemaname', 'relname', 'alias', 'inh', 'relpersistence', 'location'],
+          full
+        );
+        if (
+          range['catalogname'] !== undefined &&
+          nameAt(range['catalogname'], full) !== this.resolution.currentDatabase
+        )
+          reject(
+            'missing_resolution',
+            full,
+            'A qualified catalog requires exact native database evidence.'
+          );
         const schema = nameAt(range['schemaname'], full);
         const table = nameAt(range['relname'], full);
         const columns = this.resolution.sources.get(relationKey(schema, table));
@@ -226,7 +271,18 @@ class SqlAdmission {
           reject('unsupported_shape', full, 'Unsupported physical range metadata.');
         }
         return {
-          inputs: [{ alias: this.alias(range['alias'], table, full), columns, node, range, path }],
+          inputs: [
+            {
+              alias: this.alias(range['alias'], table, full),
+              columns,
+              node,
+              range,
+              path,
+              ...(this.resolution.scalarSources.has(relationKey(schema, table))
+                ? { scalarColumns: this.resolution.scalarSources.get(relationKey(schema, table))! }
+                : {}),
+            },
+          ],
           joins: [],
         };
       }
@@ -332,6 +388,12 @@ class SqlAdmission {
       const input = candidates[0];
       if (input === undefined)
         reject('unknown_reference', path, 'Unknown, external or whole-row reference.');
+      if (input.scalarColumns !== undefined && !input.scalarColumns.has(name))
+        reject(
+          'unsupported_shape',
+          path,
+          'The referenced physical column is outside the admitted scalar profile.'
+        );
       const reference = { input, column: name };
       refs.set(node, reference);
       return reference;

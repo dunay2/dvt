@@ -5,7 +5,7 @@
  * @consequence Formula authoring has one entry point and shares the existing pending-edit guard.
  * @version 1.1.0
  */
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState, type ReactNode } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -33,6 +33,7 @@ export function CanvasTransformInspector({
   onChange,
   onClose,
   onPendingChange,
+  sqlOutput,
 }: Readonly<{
   relationId: string;
   transformNode: CanonicalNode;
@@ -40,6 +41,7 @@ export function CanvasTransformInspector({
   onChange?: (document: SubstraitDocument) => void | boolean;
   onClose: () => void;
   onPendingChange?: (pending: boolean) => void;
+  sqlOutput?: ReactNode;
 }>): JSX.Element {
   const [editingWindow, setEditingWindow] = useState(false);
   const [outputEditing, setOutputEditing] = useCanvasInspectorEditing(relationId);
@@ -84,6 +86,7 @@ export function CanvasTransformInspector({
           />
         )
       }
+      sqlOutput={sqlOutput}
     >
       {hasExpression ? (
         <CanvasRelationalExpressionTree

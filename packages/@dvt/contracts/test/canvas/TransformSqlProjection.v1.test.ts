@@ -29,6 +29,52 @@ const response = {
 };
 
 describe('Transform SQL inspection contract', () => {
+  it('admits explicit readable inspection and a selected relation without client evidence', () => {
+    const selected = { ...request, relationId: 'join-1', presentation: 'readable' };
+    expect(TransformSqlProjectionRequestSchema.parse(selected)).toEqual(selected);
+    expect(
+      TransformSqlProjectionRequestSchema.safeParse({ ...selected, resolvedColumns: [] }).success
+    ).toBe(false);
+    expect(
+      TransformSqlProjectionRequestSchema.safeParse({ ...selected, presentation: 'optimized' })
+        .success
+    ).toBe(false);
+    expect(
+      TransformSqlProjectionRequestSchema.safeParse({ ...selected, relationId: '' }).success
+    ).toBe(false);
+  });
+
+  it('keeps original SQL and exposes only an actual ordered presentation result', () => {
+    const presentation = {
+      status: 'rewritten',
+      sql: 'select o.amount from raw.orders o',
+      steps: [{ rule: 'SQLREAD1.PROJECTION_FUSION', path: '$' }],
+    };
+    expect(
+      TransformSqlProjectionResponseSchema.parse({
+        ...response,
+        relationId: 'join-1',
+        presentation,
+      })
+    ).toMatchObject({ sql: response.sql, presentation });
+    for (const invalid of [
+      { ...presentation, steps: [] },
+      { ...presentation, status: 'unchanged' },
+      { ...presentation, steps: [{ rule: 'invented-rule', path: '$' }] },
+      { status: 'retained', diagnostic: { code: 'missing_resolution', path: '$' }, sql: 'partial' },
+    ])
+      expect(
+        TransformSqlProjectionResponseSchema.safeParse({ ...response, presentation: invalid })
+          .success
+      ).toBe(false);
+    expect(
+      TransformSqlProjectionResponseSchema.parse({
+        ...response,
+        presentation: { status: 'retained', diagnostic: { code: 'missing_resolution', path: '$' } },
+      }).sql
+    ).toBe(response.sql);
+  });
+
   it('carries authorized projection identity without accepting executable client input', () => {
     expect(TransformSqlProjectionRequestSchema.parse(request)).toEqual(request);
     expect(TransformSqlProjectionResponseSchema.parse(response)).toEqual(response);

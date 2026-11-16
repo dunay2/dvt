@@ -40,6 +40,6 @@ describe('Canonical output projection', () => {
       transformNodeId: transform.id,
       semanticPlanSha256,
     });
-    expect(sql).toBe('select authorized_output');
+    expect(sql.sql).toBe('select authorized_output');
   });
 });

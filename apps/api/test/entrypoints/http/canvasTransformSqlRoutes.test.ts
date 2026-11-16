@@ -80,6 +80,29 @@ function buildApp(
 }
 
 describe('protected Transform SQL HTTP query', () => {
+  it('admits only the explicit readable mode and forwards selected relation identity', async () => {
+    const { app, execute } = buildApp();
+    expect(
+      (await app.inject({ method: 'GET', url: url + '&relationId=join-1&presentation=readable' }))
+        .statusCode
+    ).toBe(200);
+    expect(execute).toHaveBeenCalledWith(
+      {
+        canvasId: 'canvas',
+        transformNodeId: 'model',
+        semanticPlanSha256: digest,
+        relationId: 'join-1',
+        presentation: 'readable',
+      },
+      expect.anything()
+    );
+    execute.mockClear();
+    expect(
+      (await app.inject({ method: 'GET', url: url + '&presentation=optimized' })).statusCode
+    ).toBe(400);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
   it('passes only scoped identities and the expected revision to the query', async () => {
     const { app, execute, authorize } = buildApp();
     const response = await app.inject({ method: 'GET', url });

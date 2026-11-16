@@ -49,6 +49,7 @@ export function RelationalInspectionPanel({
   onClose,
   onEdit,
   sourceOutput,
+  sqlOutput,
   ...content
 }: Readonly<{
   inspection: RelationalInspection | null;
@@ -57,6 +58,7 @@ export function RelationalInspectionPanel({
   onClose: () => void;
   onEdit?: () => void;
   sourceOutput?: ReactNode;
+  sqlOutput?: ReactNode;
 }>): JSX.Element | null {
   if (inspection == null) return null;
   const output =
@@ -76,6 +78,7 @@ export function RelationalInspectionPanel({
       onEdit={inspection.kind === 'unsupported' ? undefined : onEdit}
       onClose={onClose}
       output={output}
+      sqlOutput={sqlOutput}
       initialTab={inspection.kind === 'source' ? 'output' : 'properties'}
     >
       <InspectionContent inspection={inspection} {...content} />

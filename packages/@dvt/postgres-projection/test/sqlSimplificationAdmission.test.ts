@@ -33,6 +33,80 @@ function retained(ast: PostgresAstNode, options = sqlResolution): void {
 }
 
 describe('SQLREAD complete admission and lexical resolution', () => {
+  it('keeps complete names while checking the observed scalar subset only on actual physical references', () => {
+    const options = {
+      ...sqlResolution,
+      resolvedColumns: [
+        {
+          schema: 'raw',
+          table: 'client',
+          columns: ['client_id', 'country', 'created_at'],
+          scalarColumns: ['client_id', 'country'],
+        },
+      ],
+    };
+    expect(simplifyPostgresSqlAst(nestedSql(), options).retained).toBeUndefined();
+    const unsafe = sqlSelect(
+      [{ name: 'id', from: 'q', column: 'id' }],
+      [
+        pgRangeSubselect(
+          sqlSelect(
+            [
+              { name: 'id', from: 'c', column: 'client_id' },
+              { name: 'unused', from: 'c', column: 'created_at' },
+            ],
+            [pgRangeVar({ schema: 'raw', table: 'client', alias: 'c' })]
+          ),
+          'q'
+        ),
+      ]
+    );
+    const result = simplifyPostgresSqlAst(unsafe, options);
+    expect(result.ast).toBe(unsafe);
+    expect(result.steps).toEqual([]);
+    expect(result.retained?.code).toBe('unsupported_shape');
+    for (const scalarColumns of [['client_id', 'client_id'], ['invented']]) {
+      expect(
+        simplifyPostgresSqlAst(nestedSql(), {
+          ...options,
+          resolvedColumns: [{ ...options.resolvedColumns[0]!, scalarColumns }],
+        }).retained?.code
+      ).toBe('invalid_resolution');
+    }
+  });
+
+  it('requires exact native database evidence for a catalog-qualified physical relation', () => {
+    const ast = sqlSelect(
+      [{ name: 'id', from: 'q', column: 'id' }],
+      [
+        pgRangeSubselect(
+          sqlSelect(
+            [{ name: 'id', from: 'c', column: 'client_id' }],
+            [
+              {
+                RangeVar: {
+                  schemaname: 'raw',
+                  relname: 'client',
+                  catalogname: 'warehouse',
+                  alias: { aliasname: 'c' },
+                },
+              },
+            ]
+          ),
+          'q'
+        ),
+      ]
+    );
+    expect(simplifyPostgresSqlAst(ast, sqlResolution).retained).toBeDefined();
+    expect(
+      simplifyPostgresSqlAst(ast, { ...sqlResolution, currentDatabase: 'other' }).retained
+    ).toBeDefined();
+    const result = simplifyPostgresSqlAst(ast, { ...sqlResolution, currentDatabase: 'warehouse' });
+    expect(result.retained).toBeUndefined();
+    expect(result.steps.length).toBeGreaterThan(0);
+    expect(JSON.stringify(result.ast)).toContain('"catalogname":"warehouse"');
+  });
+
   it('requires source evidence instead of guessing scalar columns from syntax', () => {
     const ast = nestedSql();
     expect(simplifyPostgresSqlAst(ast).ast).toBe(ast);

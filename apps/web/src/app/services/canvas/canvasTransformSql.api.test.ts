@@ -39,6 +39,35 @@ const result = {
 };
 
 describe('Canvas Transform authorized SQL adapter', () => {
+  it('transports the exact selected relation and readable mode and rejects a different relation result', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
+    const selected = { ...request, relationId: 'join/one', presentation: 'readable' as const };
+    const response = {
+      ...result,
+      relationId: selected.relationId,
+      presentation: { status: 'retained', diagnostic: { code: 'unsupported_shape', path: '$' } },
+    };
+    const { apiClient, getJson } = createApiClientHarness({
+      getJson: async <T>() => response as T,
+    });
+    const port = createApiCanvasTransformSqlQueryPort(apiClient, { record: vi.fn() });
+    await expect(port.projectTransformSql(selected)).resolves.toEqual(response);
+    expect(getJson.mock.calls[0]?.[0]).toContain('&relationId=join%2Fone&presentation=readable');
+    response.relationId = 'join/two';
+    await expect(port.projectTransformSql(selected)).rejects.toBeInstanceOf(
+      CanvasTransformSqlQueryError
+    );
+  });
+
+  it('requires the readable result only for the explicit readable request', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
+    const { apiClient } = createApiClientHarness({ getJson: async <T>() => result as T });
+    const port = createApiCanvasTransformSqlQueryPort(apiClient, { record: vi.fn() });
+    await expect(
+      port.projectTransformSql({ ...request, presentation: 'readable' })
+    ).rejects.toBeInstanceOf(CanvasTransformSqlQueryError);
+  });
+
   it('reads one encoded identity and current granted scope without sending SQL or executing rows', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
@@ -60,6 +89,7 @@ describe('Canvas Transform authorized SQL adapter', () => {
     { ...result, semanticPlanSha256: 'd'.repeat(64) },
     { ...result, sql: '' },
     { ...result, provenance: { sourceRefs: [] } },
+    { ...result, presentation: { status: 'unchanged', sql: result.sql, steps: [] } },
   ])('rejects malformed or mismatched output without publishing SQL', async (response) => {
     setWorkspaceScope(buildWorkspaceScope());
     const { apiClient } = createApiClientHarness({ getJson: async <T>() => response as T });

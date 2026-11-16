@@ -13,6 +13,7 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { DvtSubstraitTransformOutputProjectionArgs } from './canvasDvtSubstraitOutputProjection';
 import { useCanvasOutputPresentation } from './CanvasRelationalTreeEditorFrame';
 import { useCanvasTransformSqlOutput } from './useCanvasTransformSqlOutput';
+import { CanvasSqlPresentationResult } from './CanvasSqlPresentationResult';
 
 export function CanvasModelSqlOutput(
   props: DvtSubstraitTransformOutputProjectionArgs
@@ -55,13 +56,17 @@ function CanvasModelSqlOutputQuery(props: DvtSubstraitTransformOutputProjectionA
         </Button>
       </div>
       {isCurrent && state.status === 'ready' ? (
-        <MonacoCodeViewer
-          ariaLabel={copy.inspectorTransformOutputPostgresSqlLabel}
-          language="sql"
-          loadingLabel={copy.inspectorTransformOutputLoadingMessage}
-          containerClassName={monacoVisualClasses.surface}
-          value={state.sql}
-        />
+        <CanvasSqlPresentationResult result={state.result}>
+          {(sql) => (
+            <MonacoCodeViewer
+              ariaLabel={copy.inspectorTransformOutputPostgresSqlLabel}
+              language="sql"
+              loadingLabel={copy.inspectorTransformOutputLoadingMessage}
+              containerClassName={monacoVisualClasses.surface}
+              value={sql}
+            />
+          )}
+        </CanvasSqlPresentationResult>
       ) : (
         <p
           role={failed ? 'alert' : 'status'}
