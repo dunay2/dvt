@@ -73,7 +73,6 @@ export function CanvasSqlPresentationResult({
       <p role="status" className={inspectorVisualClasses.contextPanelSectionDescription}>
         {message}
       </p>
-      {children(rewritten && !original ? presentation.sql : result.sql)}
       {rewritten || diagnostic !== undefined ? (
         <details className={inspectorPropertyClasses.records.disclosure}>
           <summary className={inspectorPropertyClasses.records.trigger}>
@@ -81,7 +80,12 @@ export function CanvasSqlPresentationResult({
             {copy.inspectorSqlTraceLabel}
           </summary>
           {rewritten ? (
-            <ol className={inspectorVisualClasses.contextPanelSectionDescription}>
+            <ol
+              className={cn(
+                inspectorVisualClasses.contextPanelSectionDescription,
+                inspectorPropertyClasses.records.region
+              )}
+            >
               {presentation.steps.map((step, index) => (
                 <li key={index}>
                   {index + 1}. {ruleLabels[step.rule]} <code>{step.path}</code>
@@ -98,6 +102,7 @@ export function CanvasSqlPresentationResult({
           )}
         </details>
       ) : null}
+      {children(rewritten && !original ? presentation.sql : result.sql)}
     </div>
   );
 }

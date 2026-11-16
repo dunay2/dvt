@@ -496,6 +496,11 @@ describe('Workbench navigation', () => {
         2
       );
     });
+    cy.get('[data-slot="canvas-node-workbench-code-content"] details summary')
+      .focus()
+      .should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="canvas-node-workbench-code-content"] details').should('have.attr', 'open');
     cy.viewport(1024, 600);
     cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
       expect($editor[0]!.getBoundingClientRect().bottom, 'SQL adapts after resize').to.be.closeTo(
