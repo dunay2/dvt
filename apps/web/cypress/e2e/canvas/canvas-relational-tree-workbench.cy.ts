@@ -12,6 +12,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { createCanvasRelationalAuthoringDraft } from '../../../src/app/views/canvas/canvasRelationalAuthoringDraft';
 import { getE2eApiCalls, stubE2eApi } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchProperties,
   visitWorkbenchCanvas,
@@ -507,10 +508,12 @@ describe('Workbench navigation', () => {
     });
     cy.get(
       '[data-slot="canvas-node-workbench-code-content"] [data-slot="canvas-sql-trace-trigger"]'
-    )
-      .focus()
-      .should('be.focused');
-    cy.press(Cypress.Keyboard.Keys.ENTER);
+    ).click();
+    cy.get('[data-slot="canvas-sql-trace-content"]').should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[data-slot="canvas-sql-trace-content"]').should('not.exist');
+    cy.get('[data-slot="canvas-sql-trace-trigger"]').should('be.focused');
+    pressNativeKey('Enter');
     cy.get('[data-slot="canvas-sql-trace-content"]')
       .should('be.visible')
       .find('ol li')

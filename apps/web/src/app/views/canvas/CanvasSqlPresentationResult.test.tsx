@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { CanvasSqlPresentationResult } from './CanvasSqlPresentationResult';
+import { ShellTextSelectionBoundary } from '../../components/shell/ShellTextSelectionBoundary';
 import { container, root, setupWorkbenchTest } from './CanvasRelationalTreeWorkbench.test-support';
 
 function openTrace(): Element {
@@ -20,21 +21,25 @@ describe('SQL presentation result', () => {
   it('defaults to the derived SQL, retains original bytes and displays the actual ordered trace', () => {
     act(() =>
       root.render(
-        <CanvasSqlPresentationResult
-          result={{
-            sql: 'select q.id from (select id from raw.client) q',
-            presentation: {
-              status: 'rewritten',
-              sql: 'select c.id from raw.client c',
-              steps: [
-                { rule: 'SQLREAD1.PROJECTION_FUSION', path: '$' },
-                { rule: 'SQLREAD1.TRANSPARENT_SUBQUERY', path: '$.SelectStmt.fromClause[0]' },
-              ],
-            },
-          }}
-        >
-          {(sql) => <pre>{sql}</pre>}
-        </CanvasSqlPresentationResult>
+        <ShellTextSelectionBoundary>
+          <div>
+            <CanvasSqlPresentationResult
+              result={{
+                sql: 'select q.id from (select id from raw.client) q',
+                presentation: {
+                  status: 'rewritten',
+                  sql: 'select c.id from raw.client c',
+                  steps: [
+                    { rule: 'SQLREAD1.PROJECTION_FUSION', path: '$' },
+                    { rule: 'SQLREAD1.TRANSPARENT_SUBQUERY', path: '$.SelectStmt.fromClause[0]' },
+                  ],
+                },
+              }}
+            >
+              {(sql) => <pre>{sql}</pre>}
+            </CanvasSqlPresentationResult>
+          </div>
+        </ShellTextSelectionBoundary>
       )
     );
     expect(container.querySelector('pre')?.textContent).toBe('select c.id from raw.client c');
