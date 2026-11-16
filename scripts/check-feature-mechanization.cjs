@@ -27,7 +27,7 @@ const {
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
-const allowedMechanizationStatuses = new Set(['closed', 'implemented']);
+const allowedMechanizationStatuses = new Set(['closed', 'implemented', 'declared']);
 const allowedRailTypes = new Set(['command', 'query']);
 
 function toPosix(filePath) {
@@ -37,7 +37,10 @@ function toPosix(filePath) {
 class FeatureImplementationGuard {
   constructor(manifestEntries, options = {}) {
     this.manifestEntries = manifestEntries.filter(
-      (entry) => entry?.manifest && typeof entry.manifest === 'object'
+      (entry) =>
+        entry?.manifest &&
+        typeof entry.manifest === 'object' &&
+        entry.manifest.mechanizationStatus !== 'declared'
     );
     this.changedFiles = Array.from(new Set((options.changedFiles || []).map(toPosix))).sort();
     this.deletedFiles = new Set((options.deletedFiles || []).map(toPosix));
@@ -346,6 +349,12 @@ function validateCommandQueryRails(manifest, sourcePath, errors) {
     const owner = `${sourcePath} feature ${manifest.featureId} commandQueryRails[${index}]`;
     pushMissingObjectField(errors, owner, 'name', rail?.name);
     pushMissingObjectField(errors, owner, 'dddOwner', rail?.dddOwner);
+    if (manifest.mechanizationStatus === 'declared') {
+      for (const field of ['designId', 'applicationPort', 'adapterSurface', 'authorizationScope'])
+        pushMissingObjectField(errors, owner, field, rail?.[field]);
+      for (const field of ['unitTests', 'negativeTests'])
+        pushMissingArrayField(errors, owner, field, rail?.[field]);
+    }
 
     if (rail?.referenceOnly !== undefined && rail.referenceOnly !== true) {
       errors.push(`${owner} referenceOnly must be true when declared.`);
@@ -364,6 +373,11 @@ function validateCommandQueryRails(manifest, sourcePath, errors) {
 }
 
 function validateRedGreenCycles(manifest, sourcePath, errors) {
+  if (manifest.mechanizationStatus === 'declared') {
+    if (!Array.isArray(manifest.redGreenCycles) || manifest.redGreenCycles.length)
+      errors.push(`${sourcePath}: declared mechanization must have empty redGreenCycles.`);
+    return;
+  }
   pushMissingArrayField(
     errors,
     `${sourcePath} feature ${manifest.featureId}`,
@@ -382,6 +396,11 @@ function validateRedGreenCycles(manifest, sourcePath, errors) {
 }
 
 function validateSymbols(manifest, sourcePath, errors) {
+  if (manifest.mechanizationStatus === 'declared') {
+    if (!Array.isArray(manifest.symbols) || manifest.symbols.length)
+      errors.push(`${sourcePath}: declared mechanization must have empty symbols.`);
+    return;
+  }
   const commandQueryRails = Array.isArray(manifest.commandQueryRails)
     ? manifest.commandQueryRails
     : [];
@@ -427,11 +446,21 @@ function validateFeatureMechanizationManifest(manifest, sourcePath) {
 
   if (!allowedMechanizationStatuses.has(manifest.mechanizationStatus)) {
     errors.push(
-      `${sourcePath} feature ${manifest.featureId || '<missing>'} must set mechanizationStatus to closed or implemented.`
+      `${sourcePath} feature ${manifest.featureId || '<missing>'} must set mechanizationStatus to closed, implemented or declared.`
     );
   }
 
-  if (manifest.noHumanDecisionsRemaining !== true) {
+  if (manifest.mechanizationStatus === 'declared') {
+    if (
+      manifest.noHumanDecisionsRemaining !== false ||
+      manifest.commandQueryRails?.some(
+        (rail) => rail.status !== 'declared' || rail.referenceOnly || rail.authorityRef
+      )
+    )
+      errors.push(
+        `${sourcePath}: declared mechanization cannot claim closure or reference authority.`
+      );
+  } else if (manifest.noHumanDecisionsRemaining !== true) {
     errors.push(
       `${sourcePath} feature ${manifest.featureId || '<missing>'} must set noHumanDecisionsRemaining to true.`
     );
@@ -754,6 +783,14 @@ async function readImplementationEvidence(options = {}) {
     const manifestValidation = validateFeatureMechanizationManifestEntries(manifestEntries, {
       requiredFeatureIds: options.requiredFeatureIds,
     });
+    const requiredFeatureIds = new Set(options.requiredFeatureIds || []);
+    for (const entry of manifestEntries) {
+      if (
+        entry.manifest.mechanizationStatus === 'declared' &&
+        requiredFeatureIds.has(entry.manifest.featureId)
+      )
+        manifestValidation.errors.push(`${entry.manifest.featureId} is declared, not implemented.`);
+    }
     if (manifestValidation.errors.length)
       return { diff, manifestEntries, manifestValidation, sourceErrors: [] };
     const model = await createCurrentComponentFilesReadModelComponent({

@@ -55,7 +55,7 @@ CREATE TABLE planning_query_store.feature_mechanization_local_rails (
     created_by text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT feature_mechanization_local_rails_mechanization_status_check CHECK ((mechanization_status = ANY (ARRAY['closed'::text, 'implemented'::text]))),
+    CONSTRAINT feature_mechanization_local_rails_mechanization_status_check CHECK ((mechanization_status = ANY (ARRAY['closed'::text, 'implemented'::text, 'declared'::text]))),
     CONSTRAINT feature_mechanization_local_rails_type_check CHECK ((rail_type = ANY (ARRAY['command'::text, 'query'::text])))
 );
 

@@ -105,6 +105,94 @@ function planCurrentFeatureRecord(command, existingRail = null) {
   });
 }
 
+function declaredRecordArgs() {
+  const pairs = featureMechanizationRecordArgs({ implementationRefs: [] });
+  const omitted = new Set([
+    '--mechanization-status',
+    '--rail-status',
+    '--red-test',
+    '--expected-failure',
+    '--green-test',
+  ]);
+  return pairs
+    .filter((_, index) => index < 2 || !omitted.has(pairs[index % 2 === 0 ? index : index - 1]))
+    .concat([
+      '--mechanization-status',
+      'declared',
+      '--rail-status',
+      'declared',
+      '--design',
+      'SQL-DESIGN',
+    ]);
+}
+
+test('prospective declaration has no invented implementation or completed test evidence', () => {
+  const command = parseArgs(declaredRecordArgs());
+  assert.equal(command.designId, 'SQL-DESIGN');
+  const planned = planCurrentFeatureRecord(command);
+  assert.equal(planned.rail.mechanizationStatus, 'declared');
+  assert.deepEqual(planned.rail.implementationRefs, []);
+  assert.deepEqual(planned.rail.symbolRefs, []);
+  assert.deepEqual(planned.rail.rawManifest.symbols, []);
+  assert.deepEqual(planned.rail.rawManifest.redGreenCycles, []);
+  assert.equal(planned.rail.rawManifest.noHumanDecisionsRemaining, false);
+  assert.deepEqual(
+    validateFeatureMechanizationManifest(planned.rail.rawManifest, 'prospective').errors,
+    []
+  );
+  assertFeatureMechanizationRailIdempotentReplayMatches(
+    {
+      operation_type: planned.audit.operationType,
+      actor: planned.audit.actor,
+      rail_id: planned.audit.railId,
+      expected_revision: null,
+      source_content_sha256: planned.audit.sourceContentSha256,
+      payload: JSON.parse(JSON.stringify(planned.audit.payload)),
+    },
+    command
+  );
+  const promoted = planCurrentFeatureRecord(
+    { ...parseArgs(featureMechanizationRecordArgs()), expectedRevision: 0 },
+    planned.rail
+  );
+  assert.throws(
+    () => planCurrentFeatureRecord(parseArgs(featureMechanizationRecordArgs()), planned.rail),
+    /expected-revision/
+  );
+  assert.equal(promoted.rail.mechanizationStatus, 'implemented');
+  assert.equal(promoted.rail.rawManifest.noHumanDecisionsRemaining, true);
+  assert.equal(promoted.rail.implementationRefs.length, 1);
+  assert.equal(promoted.rail.rawManifest.redGreenCycles.length, 1);
+  assert.throws(
+    () => planCurrentFeatureRecord({ ...command, expectedRevision: 1 }, promoted.rail),
+    /downgrade/i
+  );
+  assert.throws(
+    () => planCurrentFeatureRecord({ ...command, expectedRevision: 2 }, planned.rail),
+    /expected revision/
+  );
+});
+
+test('prospective declarations reject evidence, references, incoherent status and absent design', () => {
+  for (const extra of [
+    ['--implementation-ref', 'future.ts#fake'],
+    ['--red-test', 'future test'],
+    ['--green-test', 'future test'],
+    ['--expected-failure', 'future failure'],
+    ['--reference-only', 'true', '--authority-ref', 'existing.md'],
+    ['--patch-surface', 'future.ts'],
+    ['--red-green-cycle', 'future'],
+  ])
+    assert.throws(
+      () => parseArgs([...declaredRecordArgs(), ...extra]),
+      /declared|declaration|prospective/i
+    );
+  const args = declaredRecordArgs();
+  assert.throws(() => parseArgs(args.slice(0, -2)), /design/);
+  args[args.indexOf('--rail-status') + 1] = 'implemented';
+  assert.throws(() => parseArgs(args), /declared|declaration/i);
+});
+
 test('explicit current replacement removes obsolete collections and requires the current revision', () => {
   const base = parseArgs(featureMechanizationRecordArgs());
   const existing = planCurrentFeatureRecord(base).rail;

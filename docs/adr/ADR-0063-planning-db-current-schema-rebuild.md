@@ -170,6 +170,32 @@ introduces no migration chain, applied-version ledger or older-schema
 compatibility path. Isolated PostgreSQL tests must prove rollback, exact
 column preservation and preservation of unrelated definitions and data.
 
+### Explicit prospective-rail status constraint revision — GH-3945
+
+The separate [GH-3945 decision](https://github.com/dunay2/dvt/issues/3945#issuecomment-6932275388)
+admits one further bounded variant of `ApplyCurrentPlanningDbSchema`. A genuinely
+unimplemented command/query must be declared before implementation; requiring
+implementation evidence for that declaration makes the governance order
+impossible. The existing mechanization command gains `declared`, which remains
+an unresolved gap and cannot satisfy implementation or reference authority.
+
+`--revise-mechanization-status-constraint` may replace only
+`planning_query_store.feature_mechanization_local_rails`'s
+`feature_mechanization_local_rails_mechanization_status_check`, expanding its
+exact domain from `closed, implemented` to `closed, implemented, declared`.
+It requires the reviewed assembled-schema SHA and live constraint-definition
+SHA. The canonical bundle must contain the unique, active, exact intended
+declaration. Only constant DDL is executed; extracted or caller-supplied SQL,
+paths, object names and other domains are inadmissible.
+
+The command uses the existing transaction/advisory lock, locks the table before
+live CAS, checks the validated CHECK and its text column, and verifies both the
+new definition and preservation of rows and unrelated table structure. Stale
+hashes, absent or unexpected definitions, extra options and poststate drift
+reject atomically. Isolated PostgreSQL proof precedes any explicit operation
+on the authoritative database. Queries, imports, refreshes and validation never
+invoke it. There is no rebuild, applied-version ledger or reconciliation chain.
+
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
 DB-authored architecture and mechanization are read through governed queries;

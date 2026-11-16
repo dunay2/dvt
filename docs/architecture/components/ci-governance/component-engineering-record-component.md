@@ -2,7 +2,7 @@
 title: Component Engineering Record Component
 status: Review
 owner: Engineering / CI Governance / Architecture
-last_reviewed: 2026-10-29
+last_reviewed: 2026-11-16
 planning_type: architecture
 ---
 
@@ -121,6 +121,31 @@ fixtures, without claiming global speedup or native DB acceptance. The final
 candidate still requires its governed fresh DB evidence and integration gates.
 
 ## Atomic source responsibilities
+
+### Prospective command/query declarations — GH-3945
+
+`RecordFeatureMechanizationRail` distinguishes prospective declarations from
+implemented evidence. A `declared` mechanization record requires an admitted
+design scoped to its command/query, proposed application port, adapter, domain
+object/read model, authorization, allowed surfaces and negative acceptance.
+It contains no implementation references, symbols, RED/GREEN cycles or closure
+claim. The native catalog retains `isGap=true`; a declaration cannot be an
+`authorityRef` or satisfy implementation acceptance. Promotion through the same
+command requires real evidence and the current revision. Implemented/closed
+records cannot be downgraded to erase their evidence.
+
+```mermaid
+flowchart LR
+  Design[Admitted prospective design] --> Declaration[Declared rail and unresolved gap]
+  Declaration --> Work[Implementation and tests]
+  Work --> Promotion[Existing record command with CAS]
+  Promotion --> Gate[Existing implementation acceptance]
+```
+
+The schema prerequisite uses the fixed CHECK revision explicitly admitted by
+ADR-0063. It belongs to the existing current-schema owner, not the rail writer.
+The declaration writer retains its existing audit, idempotency and transaction;
+prospective test names describe acceptance and never assert tests already ran.
 
 DB bindings connect concrete code to canonical responsibilities. The
 current model has component responsibilities and rail symbols, but neither

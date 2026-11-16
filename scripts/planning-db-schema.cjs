@@ -13,6 +13,9 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const schemaName = 'planning_query_store';
 const schemaNames = ['architecture', 'component_engineering', schemaName];
 const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
+const {
+  reviseMechanizationStatusConstraint,
+} = require('./planning-db/current-mechanization-constraint.cjs');
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -114,6 +117,29 @@ async function assertPlanningDbCurrentSchemaReady(client) {
 async function main() {
   if (process.argv.length > 2) {
     const args = process.argv.slice(2);
+    if (args[0] === '--revise-mechanization-status-constraint') {
+      const flags = new Map();
+      for (let index = 1; index < args.length; index += 2) {
+        if (
+          !['--expected-schema-sha256', '--expected-constraint-sha256'].includes(args[index]) ||
+          flags.has(args[index]) ||
+          !args[index + 1]
+        )
+          throw new Error('Fixed CHECK mode requires exactly two reviewed digests.');
+        flags.set(args[index], args[index + 1]);
+      }
+      if (flags.size !== 2)
+        throw new Error('Fixed CHECK mode requires exactly two reviewed digests.');
+      console.log(
+        JSON.stringify(
+          await reviseMechanizationStatusConstraint({
+            expectedSchemaSha256: flags.get('--expected-schema-sha256'),
+            expectedConstraintSha256: flags.get('--expected-constraint-sha256'),
+          })
+        )
+      );
+      return;
+    }
     if (args[0] === '--replace-read-views') {
       const flags = new Map();
       for (let index = 1; index < args.length; index += 2) {
@@ -325,6 +351,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  reviseMechanizationStatusConstraint,
   replaceCurrentPlanningDbViews,
   addCurrentPlanningDbTable,
   applyCurrentPlanningDbSchema,
