@@ -36,20 +36,16 @@ async function harness(): Promise<
   const parsed = await parsePostgresTransformSqlStructure(sql);
   if (parsed.status !== 'valid') throw new Error('Expected valid SELECT fixture.');
   const authorize = vi.fn().mockResolvedValue({ ok: true, context });
-  const getConnection = vi
-    .fn()
-    .mockResolvedValue({
-      id: 'connection',
-      type: 'postgres',
-      database: 'warehouse',
-      credentialRef: 'warehouse-credential',
-    });
-  const read = vi
-    .fn()
-    .mockResolvedValue({
-      resolvedColumns: [{ schema: 'raw', table: 'client', columns: ['client_id', 'country'] }],
-      scalarSemantics: 'pg_catalog',
-    });
+  const getConnection = vi.fn().mockResolvedValue({
+    id: 'connection',
+    type: 'postgres',
+    database: 'warehouse',
+    credentialRef: 'warehouse-credential',
+  });
+  const read = vi.fn().mockResolvedValue({
+    resolvedColumns: [{ schema: 'raw', table: 'client', columns: ['client_id', 'country'] }],
+    scalarSemantics: 'pg_catalog',
+  });
   const execute = vi.fn().mockResolvedValue({ status: 'valid' });
   const policy = new ProjectCanvasSqlPresentation({
     authorizer: { authorize },
