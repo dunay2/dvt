@@ -7,6 +7,8 @@ import {
   inspectorPropertyClasses,
 } from '../../components/inspector/inspectorVisualTokens';
 import { cn } from '../../components/ui/utils';
+import { Button } from '../../components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
@@ -74,33 +76,43 @@ export function CanvasSqlPresentationResult({
         {message}
       </p>
       {rewritten || diagnostic !== undefined ? (
-        <details className={inspectorPropertyClasses.records.disclosure}>
-          <summary className={inspectorPropertyClasses.records.trigger}>
-            <ChevronRight aria-hidden="true" className={inspectorPropertyClasses.records.arrow} />
-            {copy.inspectorSqlTraceLabel}
-          </summary>
-          {rewritten ? (
-            <ol
-              className={cn(
-                inspectorVisualClasses.contextPanelSectionDescription,
-                inspectorPropertyClasses.records.region
-              )}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              data-slot="canvas-sql-trace-trigger"
+              className={inspectorPropertyClasses.records.trigger}
             >
-              {presentation.steps.map((step, index) => (
-                <li key={index}>
-                  {index + 1}. {ruleLabels[step.rule]} <code>{step.path}</code>
-                </li>
-              ))}
-            </ol>
-          ) : diagnostic === undefined ? null : (
-            <p className={inspectorVisualClasses.contextPanelSectionDescription}>
-              {diagnosticLabels[diagnostic.code] ?? copy.inspectorSqlRetainedMessage}{' '}
-              <code>
-                {diagnostic.code} · {diagnostic.path}
-              </code>
-            </p>
-          )}
-        </details>
+              <ChevronRight aria-hidden="true" className={inspectorPropertyClasses.records.arrow} />
+              {copy.inspectorSqlTraceLabel}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            data-slot="canvas-sql-trace-content"
+            aria-label={copy.inspectorSqlTraceLabel}
+            align="start"
+            className={inspectorPropertyClasses.records.region}
+          >
+            {rewritten ? (
+              <ol className={inspectorVisualClasses.contextPanelSectionDescription}>
+                {presentation.steps.map((step, index) => (
+                  <li key={index}>
+                    {index + 1}. {ruleLabels[step.rule]} <code>{step.path}</code>
+                  </li>
+                ))}
+              </ol>
+            ) : diagnostic === undefined ? null : (
+              <p className={inspectorVisualClasses.contextPanelSectionDescription}>
+                {diagnosticLabels[diagnostic.code] ?? copy.inspectorSqlRetainedMessage}{' '}
+                <code>
+                  {diagnostic.code} · {diagnostic.path}
+                </code>
+              </p>
+            )}
+          </PopoverContent>
+        </Popover>
       ) : null}
       {children(rewritten && !original ? presentation.sql : result.sql)}
     </div>

@@ -5,6 +5,16 @@ import { describe, expect, it } from 'vitest';
 import { CanvasSqlPresentationResult } from './CanvasSqlPresentationResult';
 import { container, root, setupWorkbenchTest } from './CanvasRelationalTreeWorkbench.test-support';
 
+function openTrace(): Element {
+  const trigger = container.querySelector<HTMLButtonElement>(
+    '[data-slot="canvas-sql-trace-trigger"]'
+  )!;
+  act(() => trigger.click());
+  const trace = document.querySelector('[data-slot="canvas-sql-trace-content"]');
+  expect(trace).not.toBeNull();
+  return trace!;
+}
+
 describe('SQL presentation result', () => {
   setupWorkbenchTest();
   it('defaults to the derived SQL, retains original bytes and displays the actual ordered trace', () => {
@@ -29,7 +39,8 @@ describe('SQL presentation result', () => {
     );
     expect(container.querySelector('pre')?.textContent).toBe('select c.id from raw.client c');
     expect(container.querySelectorAll('[role="tablist"]')).toHaveLength(0);
-    expect(container.querySelectorAll('ol li')).toHaveLength(2);
+    expect(document.querySelector('[data-slot="canvas-sql-trace-content"]')).toBeNull();
+    expect(openTrace().querySelectorAll('ol li')).toHaveLength(2);
     const select = container.querySelector('select')!;
     act(() => {
       select.value = 'original';
@@ -58,7 +69,7 @@ describe('SQL presentation result', () => {
       expect(container.querySelector('pre')?.textContent).toBe('original bytes');
       expect(container.querySelector('select')).toBeNull();
       expect(container.querySelector('ol')).toBeNull();
-      expect(container.querySelector('code')?.textContent).toContain(code);
+      expect(openTrace().querySelector('code')?.textContent).toContain(code);
     }
   );
   it('distinguishes a true fixed point from a retained candidate', () => {
@@ -75,6 +86,6 @@ describe('SQL presentation result', () => {
       )
     );
     expect(container.querySelector('p')?.textContent).toContain('fixed point');
-    expect(container.querySelector('details')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-sql-trace-trigger"]')).toBeNull();
   });
 });

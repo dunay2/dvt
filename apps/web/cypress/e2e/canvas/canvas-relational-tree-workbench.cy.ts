@@ -24,7 +24,9 @@ const SQL_ENDPOINT = '/workspace/graph/canvases/main-canvas/transforms/join-tran
 
 describe('Workbench navigation', () => {
   let initialDraft: ReturnType<typeof stubWorkbenchScenario>;
+  let traceStepCount: number;
   beforeEach(() => {
+    traceStepCount = 1;
     const draft = stubWorkbenchScenario('saved-join');
     initialDraft = draft;
     const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
@@ -49,7 +51,10 @@ describe('Workbench navigation', () => {
           presentation: {
             status: 'rewritten',
             sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
-            steps: [{ rule: 'SQLREAD1.PROJECTION_FUSION', path: '$' }],
+            steps: Array.from({ length: traceStepCount }, (_, index) => ({
+              rule: 'SQLREAD1.PROJECTION_FUSION',
+              path: `$.SelectStmt.fromClause[${index}]`,
+            })),
           },
           provenance: {
             sourceRefs: draft.nodes
@@ -468,6 +473,10 @@ describe('Workbench navigation', () => {
       .and(($editor) => {
         expect($editor[0]!.getBoundingClientRect().height).to.be.at.least(160);
       });
+    // Exercise the maximum declared trace without allowing details to collapse the editor.
+    cy.then(() => {
+      traceStepCount = 256;
+    });
     cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
     cy.get('[data-slot="canvas-node-workbench-code-content"] [data-testid="monaco-code-viewer"]')
       .should('have.length', 1)
@@ -496,13 +505,22 @@ describe('Workbench navigation', () => {
         2
       );
     });
-    cy.get('[data-slot="canvas-node-workbench-code-content"] details summary')
+    cy.get(
+      '[data-slot="canvas-node-workbench-code-content"] [data-slot="canvas-sql-trace-trigger"]'
+    )
       .focus()
       .should('be.focused');
     cy.press(Cypress.Keyboard.Keys.ENTER);
-    cy.get('[data-slot="canvas-node-workbench-code-content"] details').should('have.attr', 'open');
+    cy.get('[data-slot="canvas-sql-trace-content"]')
+      .should('be.visible')
+      .find('ol li')
+      .should('have.length', 256);
     cy.viewport(1024, 600);
     cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
+      expect(
+        $editor[0]!.getBoundingClientRect().height,
+        'SQL retains useful height with maximum trace open'
+      ).to.be.at.least(160);
       expect($editor[0]!.getBoundingClientRect().bottom, 'SQL adapts after resize').to.be.closeTo(
         $editor[0]!
           .closest('[data-slot="canvas-node-workbench-code-content"]')!
