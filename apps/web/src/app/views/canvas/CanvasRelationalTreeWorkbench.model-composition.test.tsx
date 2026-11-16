@@ -21,6 +21,10 @@ import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import {
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformSqlProjectionResponseSchema,
+} from '@dvt/contracts';
 
 describe('Model composition Workbench', () => {
   setupWorkbenchTest();
@@ -149,6 +153,11 @@ describe('Model composition Workbench', () => {
 
     const panel = container.querySelector('[data-slot="canvas-model-output-inspector"]');
     expect(panel).not.toBeNull();
+    expect(
+      panel
+        ?.querySelector('[data-slot="canvas-operation-output-tab"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
     expect(container.querySelectorAll('[data-canvas-inspector="true"]')).toHaveLength(1);
     expect(panel?.parentElement?.parentElement?.dataset.slot).toBe(
       'canvas-relational-tree-inspection'
@@ -167,9 +176,15 @@ describe('Model composition Workbench', () => {
 
     await act(async () => {
       panel
-        ?.querySelector<HTMLButtonElement>('[data-slot="canvas-operation-output-tab"]')
+        ?.querySelector<HTMLButtonElement>('[data-slot="canvas-operation-properties-tab"]')
         ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
+    await act(async () => output?.click());
+    expect(
+      panel
+        ?.querySelector('[data-slot="canvas-operation-output-tab"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
 
     await act(async () =>
       panel?.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')?.click()
@@ -238,11 +253,26 @@ describe('Model composition Workbench', () => {
   it('includes a pending output alias in the navigation transaction', async () => {
     const graph = occurrenceGraph();
     const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      graph.targetNode.metadata?.transformAuthoring
+    );
+    const projectTransformSql = vi.fn().mockResolvedValue(
+      TransformSqlProjectionResponseSchema.parse({
+        schemaVersion: 'canvas-transform-sql-projection.v1',
+        canvasId: 'canvas-test',
+        transformNodeId: graph.targetNode.id,
+        draftRevision: 'saved-revision',
+        semanticPlanSha256: authority.semanticDocument.semanticPlan.sha256,
+        sql: 'SELECT id FROM public.places',
+        provenance: { sourceRefs: [occurrenceInput.source.sourceRef!] },
+      })
+    );
     const handle = React.createRef<CanvasRelationalTreeWorkbenchHandle>();
     await act(async () =>
       root.render(
         <CanvasRelationalTreeWorkbench
           ref={handle}
+          codeProjection={{ canvasId: 'canvas-test', query: { projectTransformSql } }}
           transformNode={graph.targetNode}
           nodes={graph.nodes}
           edges={graph.edges}
@@ -284,6 +314,35 @@ describe('Model composition Workbench', () => {
     expect(applied).not.toHaveBeenCalled();
     expect(handle.current?.hasUnappliedChanges).toBe(true);
     expect(handle.current?.canApply).toBe(false);
+    expect(projectTransformSql).toHaveBeenCalledOnce();
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-properties-tab"]'
+        )!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
+        .click()
+    );
+    expect(
+      container.querySelector<HTMLInputElement>(
+        '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
+      )?.value
+    ).toBe('pending_alias');
+    expect(
+      container
+        .querySelector(
+          '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'
+        )
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    expect(container.querySelector('[data-slot="canvas-model-sql-output"]')).toBeNull();
+    expect(projectTransformSql).toHaveBeenCalledOnce();
+    expect(applied).not.toHaveBeenCalled();
+    expect(handle.current?.hasUnappliedChanges).toBe(true);
 
     await act(async () => handle.current?.cancel());
 

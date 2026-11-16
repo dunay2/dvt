@@ -112,6 +112,14 @@ export function useCanvasInspectorEditing(relationId: string | null | undefined)
   return [presentation.editing ?? false, setEditing] as const;
 }
 
+/** Select the final Output tab without settling or replacing its edit transaction. */
+export function useCanvasInspectorOutputSelection(
+  relationId: string | null | undefined
+): () => void {
+  const [, update] = useInspectorPresentation(relationId);
+  return useCallback(() => update({ tab: 'output' }), [update]);
+}
+
 export function CanvasRelationalTreeEditorFrame({
   operation,
   children,

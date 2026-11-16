@@ -255,7 +255,11 @@ describe('Workbench navigation', () => {
 
     cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
     cy.get('[data-slot="canvas-model-output-inspector"]').within(() => {
-      cy.get('[data-slot="canvas-operation-output-tab"]').click();
+      cy.get('[data-slot="canvas-operation-output-tab"]').should(
+        'have.attr',
+        'aria-selected',
+        'true'
+      );
       cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor')
         .should('be.visible')
         .and('contain.text', 'customers');

@@ -55,6 +55,7 @@ export function CanvasModelOutputInspector({
       hasExpression={false}
       onClose={onClose}
       dataSlot="canvas-model-output-inspector"
+      initialTab="output"
       editing={editing && editable}
       onEdit={editable ? () => setEditing(true) : undefined}
       output={
