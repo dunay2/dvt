@@ -28,7 +28,7 @@ describe('Completed relational layout persistence', () => {
     const selectors = [
       '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
       '[data-slot="canvas-relational-tree-node"][data-operator="join"]',
-      '[data-slot="canvas-relational-tree-output"]',
+      '[data-slot="canvas-relational-tree-output-open"]',
     ];
     const placed = new Map<string, { x: number; y: number }>();
     for (const selector of selectors) {
