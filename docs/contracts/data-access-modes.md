@@ -196,11 +196,13 @@ rejects SQL inspection rather than lowering external publications locally.
 
 The semantic editor's final Model Output uses the same query and request
 lifecycle, bound to the original protected Transform and its canonical digest.
-It requests SQL only while both that Model workspace and its passive Output
-tab are visible. Output fields remain available through their existing owner;
+Its Output presents Fields and SQL as separate views. Opening Output or selecting
+SQL does not request a projection: Generate SQL explicitly invokes the existing
+query while both the Model workspace and its passive SQL view are visible.
+Output fields remain mounted through their existing owner when changing views;
 local field editing hides the saved SQL snapshot until passive inspection
-resumes. Hiding the tab or workspace discards its pending result. Reopening
-requests the current authorized snapshot. Loading and failure stay explicit;
+resumes. Hiding the SQL view, tab or workspace discards its pending result.
+Generating again requests the current authorized snapshot. Loading and failure stay explicit;
 neither viewing SQL nor opening Output applies changes, previews rows or starts
 a Run. Source and intermediate-operation Output continue to inspect fields.
 

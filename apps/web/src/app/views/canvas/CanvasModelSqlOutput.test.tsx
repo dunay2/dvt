@@ -51,7 +51,8 @@ describe('Model Output SQL inspection', () => {
             readOnly
             editing={editing}
             onClose={() => undefined}
-            output={
+            output={<p>Fields</p>}
+            sqlOutput={
               <CanvasModelSqlOutput
                 transformNode={graph.targetNode}
                 nodes={graph.nodes}
@@ -67,24 +68,34 @@ describe('Model Output SQL inspection', () => {
     );
   }
 
-  function outputTab(): void {
+  function selectSqlTab(): void {
     act(() => {
-      fireEvent.mouseDown(container.querySelector('[data-slot="canvas-operation-output-tab"]')!, {
+      fireEvent.mouseDown(container.querySelector('[data-slot="canvas-operation-sql-tab"]')!, {
         button: 0,
       });
     });
   }
 
-  it('queries only the visible Model Output with its protected target and digest', async () => {
+  async function generate(): Promise<void> {
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-model-sql-generate"]')!
+        .click();
+    });
+  }
+
+  it('queries only on explicit generation with the protected target and digest', async () => {
     const query = { projectTransformSql: vi.fn().mockResolvedValue(response) };
     const binding = { canvasId: response.canvasId, scopeKey: 'tenant::project::dev', query };
     render(binding, false);
-    outputTab();
+    selectSqlTab();
     expect(query.projectTransformSql).not.toHaveBeenCalled();
     render(binding);
     await act(async () => {
       await Promise.resolve();
     });
+    expect(query.projectTransformSql).not.toHaveBeenCalled();
+    await generate();
     expect(query.projectTransformSql).toHaveBeenCalledExactlyOnceWith({
       canvasId: response.canvasId,
       transformNodeId: graph.targetNode.id,
@@ -94,6 +105,11 @@ describe('Model Output SQL inspection', () => {
     render(binding, true, true);
     expect(container.querySelector('pre')).toBeNull();
     expect(container.querySelector('[data-slot="canvas-model-sql-output"]')).toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="canvas-operation-output-tab"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
   });
 
   it.each(['missing', 'denied'] as const)(
@@ -101,33 +117,56 @@ describe('Model Output SQL inspection', () => {
     async (mode) => {
       const query = { projectTransformSql: vi.fn().mockRejectedValue(new Error('Denied')) };
       render(mode === 'missing' ? undefined : { canvasId: response.canvasId, query });
-      outputTab();
-      await act(async () => {
-        await Promise.resolve();
-      });
+      selectSqlTab();
+      expect(query.projectTransformSql).not.toHaveBeenCalled();
+      if (mode === 'missing') {
+        expect(
+          container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-sql-generate"]')
+            ?.disabled
+        ).toBe(true);
+        expect(container.querySelector('[role="status"]')).not.toBeNull();
+        return;
+      }
+      await generate();
       expect(container.querySelector('[role="alert"]')).not.toBeNull();
       expect(container.querySelector('pre')).toBeNull();
-      expect(query.projectTransformSql).toHaveBeenCalledTimes(mode === 'missing' ? 0 : 1);
+      expect(query.projectTransformSql).toHaveBeenCalledOnce();
+      await generate();
+      expect(query.projectTransformSql).toHaveBeenCalledTimes(2);
     }
   );
 
-  it('drops a pending result when the retained Model becomes hidden', async () => {
-    let resolve!: (value: TransformSqlProjectionResponse) => void;
-    const query = {
-      projectTransformSql: vi.fn(
-        () =>
-          new Promise<TransformSqlProjectionResponse>((accept) => {
-            resolve = accept;
-          })
-      ),
-    };
-    const binding = { canvasId: response.canvasId, query };
-    render(binding);
-    outputTab();
-    expect(query.projectTransformSql).toHaveBeenCalledOnce();
-    render(binding, false);
-    await act(async () => resolve(response));
-    expect(container.querySelector('pre')).toBeNull();
-    expect(container.querySelector('[data-slot="canvas-model-sql-output"]')).toBeNull();
-  });
+  it.each(['workspace', 'properties', 'output'] as const)(
+    'drops a pending result when leaving SQL for %s',
+    async (destination) => {
+      let resolve!: (value: TransformSqlProjectionResponse) => void;
+      const query = {
+        projectTransformSql: vi.fn(
+          () =>
+            new Promise<TransformSqlProjectionResponse>((accept) => {
+              resolve = accept;
+            })
+        ),
+      };
+      const binding = { canvasId: response.canvasId, query };
+      render(binding);
+      selectSqlTab();
+      expect(query.projectTransformSql).not.toHaveBeenCalled();
+      await generate();
+      expect(query.projectTransformSql).toHaveBeenCalledOnce();
+      await generate();
+      expect(query.projectTransformSql).toHaveBeenCalledOnce();
+      if (destination === 'workspace') render(binding, false);
+      else
+        act(() => {
+          fireEvent.mouseDown(
+            container.querySelector(`[data-slot="canvas-operation-${destination}-tab"]`)!,
+            { button: 0 }
+          );
+        });
+      await act(async () => resolve(response));
+      expect(container.querySelector('pre')).toBeNull();
+      expect(container.querySelector('[data-slot="canvas-model-sql-output"]')).toBeNull();
+    }
+  );
 });

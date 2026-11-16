@@ -124,6 +124,7 @@ export function CanvasRelationalTreeEditorFrame({
   operation,
   children,
   output,
+  sqlOutput,
   hidden = false,
   onClose,
   relationId,
@@ -138,6 +139,7 @@ export function CanvasRelationalTreeEditorFrame({
   operation: CanvasPresentationOperation;
   children: ReactNode;
   output?: ReactNode;
+  sqlOutput?: ReactNode;
   hidden?: boolean;
   onClose: () => void;
   relationId?: string | null;
@@ -151,20 +153,26 @@ export function CanvasRelationalTreeEditorFrame({
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
+  const viewCopy = resolveCanvasViewCopy(language);
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
-  const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
+  const title = label ?? viewCopy[presentation.labelKey];
   const Icon = presentation.icon;
   const [inspector, updateInspector, active] = useInspectorPresentation(relationId);
   const tab = inspector.tab ?? initialTab;
   const selectedOnly = inspector.selectedOnly ?? false;
   const setTab = useCallback((next: string) => updateInspector({ tab: next }), [updateInspector]);
+  const requestedTab = editing && tab === 'sql' ? 'output' : tab;
   const activeTab =
-    (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
+    (!hasExpression && requestedTab === 'tree') ||
+    (output == null && requestedTab === 'output') ||
+    (sqlOutput == null && requestedTab === 'sql')
+      ? 'properties'
+      : requestedTab;
   const outputPresentation = useMemo(
     () => ({
       editing,
       showExcluded: editing && !selectedOnly,
-      active: active && activeTab === 'output',
+      active: active && (activeTab === 'output' || activeTab === 'sql'),
     }),
     [editing, selectedOnly, active, activeTab]
   );
@@ -194,7 +202,10 @@ export function CanvasRelationalTreeEditorFrame({
             data-slot="canvas-relational-edit"
             aria-pressed={editing}
             onClick={() => {
-              updateInspector({ selectedOnly: false });
+              updateInspector({
+                selectedOnly: false,
+                tab: activeTab === 'sql' ? 'output' : activeTab,
+              });
               onEdit();
             }}
             className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-(--surface-selected)"
@@ -246,6 +257,17 @@ export function CanvasRelationalTreeEditorFrame({
                   {copy.output}
                 </TabsTrigger>
               )}
+              {sqlOutput == null ? null : (
+                <TabsTrigger
+                  value="sql"
+                  data-slot="canvas-operation-sql-tab"
+                  className="workspace-navigation-tab"
+                  disabled={editing}
+                  title={editing ? viewCopy.inspectorModelSqlApplyHint : undefined}
+                >
+                  {copy.sql}
+                </TabsTrigger>
+              )}
             </TabsList>
             <TabsContent
               value="tree"
@@ -286,6 +308,11 @@ export function CanvasRelationalTreeEditorFrame({
                   </label>
                 ) : null}
                 {output}
+              </TabsContent>
+            )}
+            {sqlOutput == null ? null : (
+              <TabsContent value="sql" className="min-h-0 overflow-auto p-3">
+                {sqlOutput}
               </TabsContent>
             )}
           </Tabs>

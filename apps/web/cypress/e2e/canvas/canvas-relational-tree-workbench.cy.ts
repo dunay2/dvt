@@ -262,9 +262,15 @@ describe('Workbench navigation', () => {
         'aria-selected',
         'true'
       );
+      cy.then(() => expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(0));
+      cy.get('[role="tablist"]').should('have.length', 1);
+      cy.get('[data-slot="canvas-operation-sql-tab"]').click();
+      cy.then(() => expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(0));
+      cy.get('[data-slot="canvas-model-sql-generate"]').click();
       cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor')
         .should('be.visible')
         .and('contain.text', 'customers');
+      cy.screenshot('model-output-sql-explicit');
       cy.get('[data-slot="canvas-operation-properties-tab"]').click();
     });
     cy.then(() => expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(1));
@@ -287,6 +293,9 @@ describe('Workbench navigation', () => {
       'aria-selected',
       'true'
     );
+    cy.get('[data-slot="canvas-operation-sql-tab"]').click();
+    cy.get('[data-slot="canvas-model-sql-generate"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor').should('be.visible');
     moveWorkbenchCard('[data-slot="canvas-relational-tree-output-open"]', 0, 0);
     cy.then(() => {
       expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(2);

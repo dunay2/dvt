@@ -124,6 +124,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorTransformOutputLoadingMessage: 'Generating PostgreSQL SQL...',
   inspectorTransformOutputErrorMessage:
     'PostgreSQL SQL could not be generated from this canonical revision.',
+  inspectorModelSqlGenerateAction: 'Generate SQL',
+  inspectorModelSqlIdleMessage: 'Generate SQL for the applied model when you need it.',
+  inspectorModelSqlUnavailableMessage: 'SQL generation is unavailable in this workspace.',
+  inspectorModelSqlApplyHint: 'Apply the model changes before generating SQL.',
   inspectorDbtCardTitle: 'dbt export',
   inspectorDbtPackageLabel: 'Package',
   inspectorDbtSourceLabel: 'Source',

@@ -58,16 +58,14 @@ export function CanvasModelOutputInspector({
       initialTab="output"
       editing={editing && editable}
       onEdit={editable ? () => setEditing(true) : undefined}
+      sqlOutput={sqlOutput}
       output={
-        <>
-          <CanvasRelationOutputs
-            relationId={relationId}
-            disabled={!editable}
-            onChange={onOutputChange}
-            onPendingChange={onPendingOutputChange}
-          />
-          {sqlOutput}
-        </>
+        <CanvasRelationOutputs
+          relationId={relationId}
+          disabled={!editable}
+          onChange={onOutputChange}
+          onPendingChange={onPendingOutputChange}
+        />
       }
     >
       <h4 className="mb-2 text-xs font-semibold text-(--text-strong)">{labels.operations}</h4>

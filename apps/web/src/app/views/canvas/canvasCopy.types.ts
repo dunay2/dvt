@@ -454,6 +454,10 @@ export type CanvasViewCopy = {
   readonly inspectorTransformOutputPostgresSqlLabel: string;
   readonly inspectorTransformOutputLoadingMessage: string;
   readonly inspectorTransformOutputErrorMessage: string;
+  readonly inspectorModelSqlGenerateAction: string;
+  readonly inspectorModelSqlIdleMessage: string;
+  readonly inspectorModelSqlUnavailableMessage: string;
+  readonly inspectorModelSqlApplyHint: string;
   readonly inspectorDbtCardTitle: string;
   readonly inspectorDbtPackageLabel: string;
   readonly inspectorDbtSourceLabel: string;

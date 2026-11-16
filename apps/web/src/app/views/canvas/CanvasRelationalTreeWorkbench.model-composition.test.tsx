@@ -21,10 +21,6 @@ import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import {
-  DvtTransformAuthoringAuthorityV1Schema,
-  TransformSqlProjectionResponseSchema,
-} from '@dvt/contracts';
 
 describe('Model composition Workbench', () => {
   setupWorkbenchTest();
@@ -253,20 +249,9 @@ describe('Model composition Workbench', () => {
   it('includes a pending output alias in the navigation transaction', async () => {
     const graph = occurrenceGraph();
     const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
-    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
-      graph.targetNode.metadata?.transformAuthoring
-    );
-    const projectTransformSql = vi.fn().mockResolvedValue(
-      TransformSqlProjectionResponseSchema.parse({
-        schemaVersion: 'canvas-transform-sql-projection.v1',
-        canvasId: 'canvas-test',
-        transformNodeId: graph.targetNode.id,
-        draftRevision: 'saved-revision',
-        semanticPlanSha256: authority.semanticDocument.semanticPlan.sha256,
-        sql: 'SELECT id FROM public.places',
-        provenance: { sourceRefs: [occurrenceInput.source.sourceRef!] },
-      })
-    );
+    const projectTransformSql = vi
+      .fn()
+      .mockRejectedValue(new Error('Unexpected SQL query while editing'));
     const handle = React.createRef<CanvasRelationalTreeWorkbenchHandle>();
     await act(async () =>
       root.render(
@@ -293,6 +278,17 @@ describe('Model composition Workbench', () => {
         )!
         .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-sql-tab"]')!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+    expect(
+      container
+        .querySelector('[data-slot="canvas-operation-sql-tab"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    expect(projectTransformSql).not.toHaveBeenCalled();
     await act(async () =>
       container
         .querySelector<HTMLButtonElement>(
@@ -300,6 +296,11 @@ describe('Model composition Workbench', () => {
         )
         ?.click()
     );
+    expect(
+      container
+        .querySelector('[data-slot="canvas-operation-output-tab"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
     const alias = container.querySelector<HTMLInputElement>(
       '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
     )!;
@@ -314,7 +315,10 @@ describe('Model composition Workbench', () => {
     expect(applied).not.toHaveBeenCalled();
     expect(handle.current?.hasUnappliedChanges).toBe(true);
     expect(handle.current?.canApply).toBe(false);
-    expect(projectTransformSql).toHaveBeenCalledOnce();
+    expect(projectTransformSql).not.toHaveBeenCalled();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-operation-sql-tab"]')?.disabled
+    ).toBe(true);
     await act(async () => {
       container
         .querySelector<HTMLButtonElement>(
@@ -340,7 +344,7 @@ describe('Model composition Workbench', () => {
         ?.getAttribute('aria-selected')
     ).toBe('true');
     expect(container.querySelector('[data-slot="canvas-model-sql-output"]')).toBeNull();
-    expect(projectTransformSql).toHaveBeenCalledOnce();
+    expect(projectTransformSql).not.toHaveBeenCalled();
     expect(applied).not.toHaveBeenCalled();
     expect(handle.current?.hasUnappliedChanges).toBe(true);
 

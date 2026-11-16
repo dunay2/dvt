@@ -49,7 +49,6 @@
 .open {
   align-items: center;
   display: flex;
-  flex: 1 1 0%;
   gap: 0.5rem;
   min-width: 0;
   position: absolute;
