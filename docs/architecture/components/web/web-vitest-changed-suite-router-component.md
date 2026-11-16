@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-11-14
+last_reviewed: 2026-11-16
 planning_type: architecture
 ---
 
@@ -354,28 +354,34 @@ by the existing browser catalog and runtime contracts.
 
 ### Native keyboard support admission — GH-3765
 
-The shared `cypress/support/nativeKeyboard.ts` adapter belongs to the controlled
-runtime. Its five current import consumers are the Model output toggle, shell
-layout, route workbench slots, Canvas screen composition and Runs runtime specs; all five have
-exact controlled ownership in the existing browser catalog. They exercise real
-Chromium keyboard default actions with controlled application API responses.
-Native input alone does not make a consumer an available-provider proof.
+The shared `cypress/support/nativeKeyboard.ts` adapter has consumers in the
+existing controlled and available runtimes. Native input does not determine a
+spec's runtime: the canonical browser catalog owns that classification. The
+router's existing architecture guard discovers the real transitive import
+closure, compares it with its independent expected consumers, and verifies each
+consumer's unique catalog ownership. This guide does not maintain another
+consumer inventory.
 
 ```mermaid
 flowchart LR
   Path[Exact nativeKeyboard support change] --> Policy[Existing support capability map]
-  Closure[Real five-consumer import closure] --> Guard[Existing browser routing guard]
+  Closure[Real transitive import closure] --> Guard[Exact consumer and runtime guard]
   Policy --> Plan[Complete controlled browser baseline]
+  Policy --> Live[Complete available browser baseline]
   Guard --> Plan
+  Guard --> Live
   Plan --> Runner[Existing native command and strict result validation]
+  Live --> Runner
   Unknown[Unknown browser path, alone or mixed] --> Reject[Reject before execution]
 ```
 
-`SUPPORT_CAPABILITIES` registers this exact helper as `['controlled']`. A shared
-helper change selects the complete current controlled inventory, preserving the
-existing baseline rather than narrowing execution to the five consumers.
-The existing architecture guard checks their real transitive import closure and
-runtime ownership, the resulting plan and rejection of an unregistered adjacent
+`SUPPORT_CAPABILITIES` registers this exact helper as `['controlled', 'available']`.
+A helper-only change selects both complete current baselines, with disjoint
+spec ownership. It does not select the unavailable runtime, which has no
+consumer of this helper. The registry itself remains an `EXECUTION_BOUNDARIES`
+surface: changing that registry retains the complete all-runtime obligation,
+including unavailable. The architecture guard preserves exact closure and
+runtime ownership, both baselines, and rejection of an unregistered adjacent
 helper even when mixed with this admitted path. Reuse
 `RouteChangedWebVitestSuites` and `RunWebCypressNative`; no wildcard admission,
 catalog parser change, new runtime, nightly reclassification or unknown-path

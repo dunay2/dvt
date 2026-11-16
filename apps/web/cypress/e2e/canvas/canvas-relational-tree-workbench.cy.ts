@@ -12,6 +12,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { createCanvasRelationalAuthoringDraft } from '../../../src/app/views/canvas/canvasRelationalAuthoringDraft';
 import { getE2eApiCalls, stubE2eApi } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchProperties,
   visitWorkbenchCanvas,
@@ -24,7 +25,9 @@ const SQL_ENDPOINT = '/workspace/graph/canvases/main-canvas/transforms/join-tran
 
 describe('Workbench navigation', () => {
   let initialDraft: ReturnType<typeof stubWorkbenchScenario>;
+  let traceStepCount: number;
   beforeEach(() => {
+    traceStepCount = 1;
     const draft = stubWorkbenchScenario('saved-join');
     initialDraft = draft;
     const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
@@ -36,6 +39,7 @@ describe('Workbench navigation', () => {
       expect(Object.fromEntries(url.searchParams)).to.deep.equal({
         ...E2E_WORKSPACE_SESSION,
         semanticPlanSha256,
+        presentation: 'readable',
       });
       return {
         body: TransformSqlProjectionResponseSchema.parse({
@@ -44,7 +48,15 @@ describe('Workbench navigation', () => {
           transformNodeId: 'join-transform',
           draftRevision: 'rev-e2e-graph-ready',
           semanticPlanSha256,
-          sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
+          sql: 'SELECT result.customer_id FROM (SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id) result',
+          presentation: {
+            status: 'rewritten',
+            sql: 'SELECT customers.customer_id FROM public.customers INNER JOIN public.orders ON customers.customer_id = orders.customer_id',
+            steps: Array.from({ length: traceStepCount }, (_, index) => ({
+              rule: 'SQLREAD1.PROJECTION_FUSION',
+              path: `$.SelectStmt.fromClause[${index}]`,
+            })),
+          },
           provenance: {
             sourceRefs: draft.nodes
               .filter((node) => node.metadata?.connectedSourceRef != null)
@@ -270,6 +282,16 @@ describe('Workbench navigation', () => {
       cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor')
         .should('be.visible')
         .and('contain.text', 'customers');
+      cy.get('[data-slot="canvas-sql-presentation-selector"]').should('have.value', 'readable');
+      cy.get('[data-slot="canvas-sql-presentation-result"]').should(
+        'contain.text',
+        'Simplification steps: 1.'
+      );
+      cy.get('[data-slot="canvas-sql-presentation-selector"]').select('original');
+      cy.get('.monaco-editor').should('contain.text', 'result');
+      cy.get('[data-slot="canvas-sql-presentation-selector"]').select('readable');
+      cy.get('.monaco-editor').should('not.contain.text', 'result');
+      cy.then(() => expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(1));
       cy.screenshot('model-output-sql-explicit');
       cy.get('[data-slot="canvas-operation-properties-tab"]').click();
     });
@@ -452,6 +474,10 @@ describe('Workbench navigation', () => {
       .and(($editor) => {
         expect($editor[0]!.getBoundingClientRect().height).to.be.at.least(160);
       });
+    // Exercise the maximum declared trace without allowing details to collapse the editor.
+    cy.then(() => {
+      traceStepCount = 256;
+    });
     cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
     cy.get('[data-slot="canvas-node-workbench-code-content"] [data-testid="monaco-code-viewer"]')
       .should('have.length', 1)
@@ -480,8 +506,24 @@ describe('Workbench navigation', () => {
         2
       );
     });
+    cy.get(
+      '[data-slot="canvas-node-workbench-code-content"] [data-slot="canvas-sql-trace-trigger"]'
+    ).click();
+    cy.get('[data-slot="canvas-sql-trace-content"]').should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get('[data-slot="canvas-sql-trace-content"]').should('not.exist');
+    cy.get('[data-slot="canvas-sql-trace-trigger"]').should('be.focused');
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-sql-trace-content"]')
+      .should('be.visible')
+      .find('ol li')
+      .should('have.length', 256);
     cy.viewport(1024, 600);
     cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
+      expect(
+        $editor[0]!.getBoundingClientRect().height,
+        'SQL retains useful height with maximum trace open'
+      ).to.be.at.least(160);
       expect($editor[0]!.getBoundingClientRect().bottom, 'SQL adapts after resize').to.be.closeTo(
         $editor[0]!
           .closest('[data-slot="canvas-node-workbench-code-content"]')!
@@ -490,6 +532,9 @@ describe('Workbench navigation', () => {
       );
     });
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('inspector-derived-sql');
+    pressNativeKey('Escape');
+    cy.get('[data-slot="canvas-sql-trace-content"]').should('not.exist');
+    cy.get('[data-slot="canvas-sql-trace-trigger"]').should('be.focused');
     cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
     cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines').should(
       'contain.text',

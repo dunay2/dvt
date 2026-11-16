@@ -135,6 +135,30 @@ export const canvasViewAuthoringCopyEs = {
   inspectorTransformOutputErrorMessage:
     'No se pudo generar SQL PostgreSQL desde esta revisión canónica.',
   inspectorModelSqlGenerateAction: 'Generar SQL',
+  inspectorSqlOriginalLabel: 'SQL original',
+  inspectorSqlReadableLabel: 'SQL simplificada',
+  inspectorSqlUnchangedMessage: 'La SQL ya está en el punto fijo del perfil admitido.',
+  inspectorSqlRewrittenMessage: 'Pasos de simplificación: {count}.',
+  inspectorSqlRetainedMessage:
+    'Se conserva la SQL original. Este candidato no se ha podido simplificar con seguridad.',
+  inspectorSqlTraceLabel: 'Detalles de simplificación',
+  inspectorSqlProjectionFusionLabel: 'Fusionar proyecciones',
+  inspectorSqlPredicatePushdownLabel: 'Acercar el predicado a su entrada',
+  inspectorSqlColumnPruningLabel: 'Eliminar salidas sin uso',
+  inspectorSqlTransparentSubqueryLabel: 'Eliminar envoltorio transparente',
+  inspectorSqlMetadataDeniedMessage: 'La inspección de metadatos no está autorizada.',
+  inspectorSqlMetadataUnavailableMessage:
+    'No se dispone de metadatos completos de fuentes compatibles.',
+  inspectorSqlRelationUnavailableMessage:
+    'No se han podido resolver las direcciones de las relaciones físicas.',
+  inspectorSqlNativeValidationMessage: 'PostgreSQL no ha podido validar la SQL original.',
+  inspectorSqlMissingResolutionMessage: 'La resolución escalar nativa está incompleta.',
+  inspectorSqlUnsupportedShapeMessage:
+    'La consulta contiene sintaxis fuera del perfil de simplificación admitido.',
+  inspectorSqlUnknownReferenceMessage: 'No se ha podido resolver una referencia escalar.',
+  inspectorSqlAmbiguousReferenceMessage: 'Una referencia escalar es ambigua.',
+  inspectorSqlInvalidResolutionMessage: 'La evidencia de resolución de fuentes es incoherente.',
+  inspectorSqlResolutionLimitMessage: 'La consulta supera el perfil de resolución acotado.',
   inspectorModelSqlIdleMessage: 'Genera la SQL del modelo aplicado cuando la necesites.',
   inspectorModelSqlUnavailableMessage:
     'La generación de SQL no está disponible en este espacio de trabajo.',

@@ -870,6 +870,11 @@ describe('CanvasNodeWorkbenchPanel', () => {
       schemaVersion: 'canvas-transform-sql-projection.v1' as const,
       draftRevision: 'revision-one',
       sql: 'select order_id from raw.orders',
+      presentation: {
+        status: 'unchanged' as const,
+        sql: 'select order_id from raw.orders',
+        steps: [],
+      },
       provenance: {
         sourceRefs: [ConnectedSourceRefSchema.parse(SOURCE_NODE.metadata!.connectedSourceRef)],
       },
@@ -911,7 +916,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(projectTransformSql).toHaveBeenCalledOnce();
     expect(project.mock.calls[0]![0].transformNode.id).toBe(DVT_SUBSTRAIT_TRANSFORM_NODE.id);
     expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
-      await project.mock.results[0]!.value
+      (await project.mock.results[0]!.value).sql
     );
     project.mockRestore();
     expect(outputSelector?.value).toBe('postgres-sql');

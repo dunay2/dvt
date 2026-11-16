@@ -206,6 +206,7 @@ describe('scoped dbt model producer binding', () => {
       } as never,
     });
     const query = new ProjectCanvasTransformSqlQuery({
+      presentation: { execute: vi.fn() },
       projection: new ResolveCanvasTransformProjection({
         graphDraftResolver,
         modelProducers: f.resolver,

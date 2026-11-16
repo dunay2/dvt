@@ -18,6 +18,7 @@ import { ListRunsUseCase } from '../../application/services/listRunsUseCase.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../application/services/previewCanvasTransformRowsUseCase.js';
 import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
+import { ProjectCanvasSqlPresentation } from '../../application/services/projectCanvasSqlPresentation.js';
 import { ProjectCanvasTransformSqlQuery } from '../../application/services/projectCanvasTransformSqlQuery.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedDvtPreviewSelectionService } from '../../application/services/resolveAuthorizedDvtPreviewSelection.js';
@@ -33,6 +34,7 @@ import { RunEventCancellationReceiptStore } from '../../infrastructure/runContro
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { ObservabilityWorkspaceGraphDraftTelemetry } from '../../infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from '../../infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
+import { PostgresSqlPresentationEvidenceReader } from '../../infrastructure/warehouseSourceImport/PostgresSqlPresentationEvidenceReader.js';
 import { WorkspacePostgresTransformSqlValidator } from '../../infrastructure/warehouseSourceImport/WorkspacePostgresTransformSqlValidator.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
@@ -113,6 +115,14 @@ export function buildProtectedRuntimeRouteDependencies(
   });
   const projectCanvasTransformSqlQuery = new ProjectCanvasTransformSqlQuery({
     projection: canvasTransformProjection,
+    presentation: new ProjectCanvasSqlPresentation({
+      authorizer: protectedModule.authorizer,
+      catalog: protectedModule.warehouseConnectionCatalog,
+      reader: new PostgresSqlPresentationEvidenceReader({
+        credentialResolver: protectedModule.postgresCredentialResolver,
+      }),
+      validator: validatePostgresTransformSqlUseCase,
+    }),
   });
   const previewCanvasTransformRowsUseCase = new PreviewCanvasTransformRowsUseCase({
     projection: canvasTransformProjection,

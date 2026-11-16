@@ -746,7 +746,9 @@ describe('dbt project file projection live vertical', () => {
       expect(Object.fromEntries(new URL(request.url).searchParams)).to.deep.equal({
         ...resolveLiveWorkspaceSession(),
         semanticPlanSha256,
+        presentation: 'readable',
       });
+      expect(sql.presentation, 'explicit readable presentation envelope').not.to.equal(undefined);
       expect(sql).to.include({
         canvasId: 'main-canvas',
         transformNodeId: MIXED_MODEL_ID,
@@ -794,6 +796,7 @@ describe('dbt project file projection live vertical', () => {
       expect(Object.fromEntries(new URL(request.url).searchParams)).to.deep.equal({
         ...resolveLiveWorkspaceSession(),
         semanticPlanSha256,
+        presentation: 'readable',
       });
       expect(TransformSqlProjectionResponseSchema.parse(response?.body)).to.deep.equal(
         compiledProjection

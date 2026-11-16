@@ -88,7 +88,10 @@ function harness(
     graphDraftResolver,
     ...(modelProducers == null ? {} : { modelProducers }),
   });
-  const query = new ProjectCanvasTransformSqlQuery({ projection });
+  const query = new ProjectCanvasTransformSqlQuery({
+    projection,
+    presentation: { execute: vi.fn() },
+  });
   const transform = draft.nodes.find((node) => node.id === targetId)!;
   const semanticPlanSha256 = DvtTransformAuthoringAuthorityV1Schema.parse(
     transform.metadata?.transformAuthoring

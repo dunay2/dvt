@@ -1,5 +1,9 @@
 // @vitest-environment jsdom
 import React, { act, useState } from 'react';
+import {
+  TransformSqlProjectionResponseSchema,
+  type TransformSqlProjectionRequest,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -116,6 +120,56 @@ describe('Model composition Workbench', () => {
     expect(onRemoveInput).not.toHaveBeenCalled();
     expect(inspector?.querySelector('input[type="checkbox"]')).toBeNull();
   });
+
+  it.each(['read', 'join'] as const)(
+    'queries the selected %s relation only through its SQL action',
+    async (operator) => {
+      const graph = occurrenceGraph();
+      const projectTransformSql = vi.fn(async (input: TransformSqlProjectionRequest) =>
+        TransformSqlProjectionResponseSchema.parse({
+          ...input,
+          schemaVersion: 'canvas-transform-sql-projection.v1',
+          draftRevision: 'saved',
+          sql: 'select selected_relation',
+          presentation: { status: 'unchanged', sql: 'select selected_relation', steps: [] },
+          provenance: { sourceRefs: [occurrenceInput.source.sourceRef!] },
+        })
+      );
+      await act(async () =>
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={graph.targetNode}
+            nodes={graph.nodes}
+            edges={graph.edges}
+            copy={COPY}
+            codeProjection={{ canvasId: 'canvas-test', query: { projectTransformSql } }}
+          />
+        )
+      );
+      await act(async () =>
+        container.querySelector<HTMLElement>(`[data-operator="${operator}"]`)?.click()
+      );
+      const panel = container.querySelector('[data-canvas-inspector="true"]')!;
+      expect(projectTransformSql).not.toHaveBeenCalled();
+      await act(async () =>
+        panel
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-sql-tab"]')
+          ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+      );
+      expect(projectTransformSql).not.toHaveBeenCalled();
+      await act(async () =>
+        panel.querySelector<HTMLButtonElement>('[data-slot="canvas-model-sql-generate"]')?.click()
+      );
+      expect(projectTransformSql).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          transformNodeId: graph.targetNode.id,
+          relationId: expect.any(String),
+          presentation: 'readable',
+        })
+      );
+      expect(panel.querySelector('[data-slot="canvas-sql-presentation-result"]')).not.toBeNull();
+    }
+  );
 
   it('opens the Model output in the fixed inspector and commits a final-field alias', async () => {
     const graph = occurrenceGraph();

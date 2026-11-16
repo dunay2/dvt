@@ -2,7 +2,7 @@
 title: PostgreSQL SQL Presentation
 status: Active
 owner: Adapters / PostgreSQL semantic projection
-last_reviewed: 2026-11-07
+last_reviewed: 2026-11-16
 planning_type: architecture
 ---
 
@@ -53,6 +53,11 @@ existing governed provider preflight. Missing, duplicate, unknown, ambiguous,
 external and whole-row bindings retain the entire original AST, including
 otherwise simplifiable siblings. Repeated alias spelling in distinct scopes is
 valid; a global name replacement is not scope resolution.
+
+A catalog-qualified physical input additionally requires an exact
+`currentDatabase` witness. The derived AST retains its catalog qualifier;
+absence or mismatch retains the whole candidate. This is an R1 source-resolution
+extension, not another rewrite or a cross-database capability.
 
 The admitted profile contains direct-column projections, resolved base inputs,
 transparent subqueries, INNER/CROSS joins, pure Boolean/null predicates and
@@ -122,7 +127,54 @@ This proves bounded semantic equivalence, not lower execution latency or a
 physical PostgreSQL optimization. The earlier [first-rule evidence](https://github.com/dunay2/dvt/issues/3783#issuecomment-6699540690)
 remains provenance for the merged first cut.
 
-Application wiring of readable SQL and its original/derived display remains
-the separate product journey in #3784/#3786. This cut changes no Preview/Run,
-dbt compilation or UI behavior and does not certify general SQL, arbitrary
-types, operators or dialects.
+## Protected inspection consumer
+
+[#3786](https://github.com/dunay2/dvt/issues/3786#issuecomment-6919817679)
+wires this same query into `ProjectCanvasTransformSql`. Explicit readable
+inspection retains the original SQL and revision provenance, then returns a
+typed `rewritten`, `unchanged` or `retained` result. The trace records actual
+ordered steps; it does not assert lower physical execution cost.
+
+The application checks the existing source-import permission before connection
+or credential lookup. A bounded internal port observes complete native columns
+on that exact scoped connection. The reader captures the effective search path
+before using a trusted catalog path in a read-only transaction. It rejects
+custom comparison overloads and implicit conversions, and checks primitive I/O,
+reachable comparison procedures and relevant conversion procedures for native
+immutable meaning. Cast relevance follows PostgreSQL's direct coercion lookup;
+unrelated stable catalog conversions cannot certify or block a comparison by
+name alone. The [prospective witness rationale](https://github.com/dunay2/dvt/issues/3786#issuecomment-6920384081)
+records the native evidence and primary PostgreSQL sources.
+
+The original candidate still passes the existing native validator after complete
+syntax admission. Missing permission, incomplete metadata, unknown bindings and
+unsupported syntax preserve the whole original with a typed diagnostic. Neither
+this reader nor the simplifier executes candidate rows. The existing shared
+projector, Preview, publication hashes and Run SQL remain unchanged.
+
+Resolution keeps every observed column name for lexical binding. A native
+`scalarColumns` subset can additionally mark the fields admitted by the bounded
+primitive profile. R1 resolves against the complete names, then rejects an actual
+physical reference outside that subset before any rewrite, including an unused
+nested output. An unrelated column therefore cannot cause a false rejection or
+be silently hidden from ambiguity checks. Missing subsets preserve the existing
+caller contract that all supplied columns are known scalar inputs. The
+[prospective subset rationale](https://github.com/dunay2/dvt/issues/3786#issuecomment-6921418325)
+records this separation; it adds no SQL type IR or rewrite rule.
+
+The [same-database/opaque-view continuation](https://github.com/dunay2/dvt/issues/3786#issuecomment-6920704890)
+handles compiled dbt references to views. The reader collects only the selected
+view dependency closure in the same native catalog snapshot, bounded to 128
+relations, 10,000 columns and 262,144 definition characters. Each definition is
+parsed by the existing parser and checked as a complete candidate through the
+same R1 admission before original-SQL preflight. A view needs no rewrite steps
+to pass admission. Views remain opaque references in the returned SQL; their
+definitions are never inlined or persisted. Cycles, functions, per-row casts and
+other R1 barriers retain the complete original. FDW, RLS, view options and
+uncertified inheritance trees also retain it; a parent-only observation cannot
+certify its children. No user warehouse objects are created or changed.
+
+The manual client/orders input and the canonical producer composition are paired
+in the existing disposable PostgreSQL proof. Both use this same simplifier and
+the existing native multiset/type/name oracle; #3784 owns that convergence proof.
+No second rule set, renderer or semantic representation is introduced.

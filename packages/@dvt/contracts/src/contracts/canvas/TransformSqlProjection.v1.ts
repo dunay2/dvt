@@ -12,12 +12,49 @@ import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1
 
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256Schema = z.string().refine(isSha256HexString);
+const SqlTextSchema = z.string().refine((value) => value.trim().length > 0);
+const PresentationStepSchema = z
+  .object({
+    rule: z.enum([
+      'SQLREAD1.PROJECTION_FUSION',
+      'SQLREAD1.PREDICATE_PUSHDOWN',
+      'SQLREAD1.COLUMN_PRUNING',
+      'SQLREAD1.TRANSPARENT_SUBQUERY',
+    ]),
+    path: NonBlankStringSchema,
+  })
+  .strict();
+
+export const TransformSqlPresentationSchema = z.discriminatedUnion('status', [
+  z
+    .object({
+      status: z.literal('rewritten'),
+      sql: SqlTextSchema,
+      steps: z.array(PresentationStepSchema).min(1).max(256),
+    })
+    .strict(),
+  z
+    .object({
+      status: z.literal('unchanged'),
+      sql: SqlTextSchema,
+      steps: z.array(PresentationStepSchema).max(0),
+    })
+    .strict(),
+  z
+    .object({
+      status: z.literal('retained'),
+      diagnostic: z.object({ code: NonBlankStringSchema, path: NonBlankStringSchema }).strict(),
+    })
+    .strict(),
+]);
 
 export const TransformSqlProjectionRequestSchema = z
   .object({
     canvasId: NonBlankStringSchema,
     transformNodeId: NonBlankStringSchema,
     semanticPlanSha256: Sha256Schema,
+    relationId: NonBlankStringSchema.optional(),
+    presentation: z.literal('readable').optional(),
   })
   .strict();
 
@@ -28,7 +65,9 @@ export const TransformSqlProjectionResponseSchema = z
     transformNodeId: NonBlankStringSchema,
     draftRevision: NonBlankStringSchema,
     semanticPlanSha256: Sha256Schema,
-    sql: z.string().refine((value) => value.trim().length > 0),
+    relationId: NonBlankStringSchema.optional(),
+    sql: SqlTextSchema,
+    presentation: TransformSqlPresentationSchema.optional(),
     provenance: z
       .object({
         sourceRefs: z.array(ConnectedSourceRefSchema),
@@ -55,3 +94,4 @@ export const TransformSqlProjectionResponseSchema = z
 
 export type TransformSqlProjectionRequest = z.infer<typeof TransformSqlProjectionRequestSchema>;
 export type TransformSqlProjectionResponse = z.infer<typeof TransformSqlProjectionResponseSchema>;
+export type TransformSqlPresentation = z.infer<typeof TransformSqlPresentationSchema>;

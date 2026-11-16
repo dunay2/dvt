@@ -64,18 +64,17 @@ export function CanvasRelationalTreeSideInspector({
     analysis?.document != null &&
     analysis.error == null &&
     analysis.session.canEditRetainedJoinOutput(model.projection.root.relationId ?? '');
+  const sqlProjection = {
+    transformNode,
+    nodes,
+    edges,
+    codeProjection: model.session.active ? undefined : codeProjection,
+  };
   if (modelOutput.open)
     return (
       <CanvasModelOutputInspector
         modelName={transformNode.name}
-        sqlOutput={
-          <CanvasModelSqlOutput
-            transformNode={transformNode}
-            nodes={nodes}
-            edges={edges}
-            codeProjection={codeProjection}
-          />
-        }
+        sqlOutput={<CanvasModelSqlOutput {...sqlProjection} />}
         root={model.projection.root}
         copy={copy}
         editable={(model.authoringAvailable || retainedOutputEditable) && !model.session.active}
@@ -91,6 +90,9 @@ export function CanvasRelationalTreeSideInspector({
         key={model.selectedNode.relationId}
         relationId={model.selectedNode.relationId}
         transformNode={transformNode}
+        sqlOutput={
+          <CanvasModelSqlOutput {...sqlProjection} relationId={model.selectedNode.relationId} />
+        }
         onChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
         onClose={() => onExpandedChange(false)}
         onPendingChange={modelOutput.setPending}
@@ -109,6 +111,11 @@ export function CanvasRelationalTreeSideInspector({
     <RelationalInspectionPanel
       key={inspection?.relationId ?? inspection?.operation}
       inspection={inspection}
+      sqlOutput={
+        inspection?.relationId == null || inspection.kind === 'unsupported' ? undefined : (
+          <CanvasModelSqlOutput {...sqlProjection} relationId={inspection.relationId} />
+        )
+      }
       sourceOutput={
         inspection?.kind === 'source' && sourceInput != null ? (
           <CanvasSourceOccurrenceOutputSelection

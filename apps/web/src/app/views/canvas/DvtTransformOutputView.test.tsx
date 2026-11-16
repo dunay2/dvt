@@ -41,12 +41,12 @@ const PROPS: DvtTransformOutputViewProps = {
 };
 
 function pendingProjection(): Readonly<{
-  promise: Promise<string>;
+  promise: Promise<{ sql: string }>;
   resolve: (value: string) => void;
 }> {
   let resolve!: (value: string) => void;
-  const promise = new Promise<string>((accept) => {
-    resolve = accept;
+  const promise = new Promise<{ sql: string }>((accept) => {
+    resolve = (sql) => accept({ sql });
   });
   return { promise, resolve };
 }
@@ -95,7 +95,7 @@ describe('Canonical code inspection query lifecycle', () => {
   });
 
   it('does not query canonical JSON and revalidates SQL after returning from another view', async () => {
-    project.mockResolvedValue('select current_model');
+    project.mockResolvedValue({ sql: 'select current_model' });
     render();
     expect(project).not.toHaveBeenCalled();
     expect(container.querySelector('pre')?.dataset.language).toBe('json');
@@ -178,7 +178,7 @@ describe('Canonical code inspection query lifecycle', () => {
   it.each(['transformNode', 'nodes', 'edges'] as const)(
     'does not reuse SQL after %s changes',
     async (field) => {
-      project.mockResolvedValue('select previous_graph');
+      project.mockResolvedValue({ sql: 'select previous_graph' });
       render();
       select('postgres-sql');
       await act(async () => {
@@ -194,7 +194,7 @@ describe('Canonical code inspection query lifecycle', () => {
       expect(container.querySelector('select')?.value).toBe('substrait');
       expect(container.querySelector('pre')?.textContent).toBe(PROPS.canonicalContent);
       expect(project).toHaveBeenCalledOnce();
-      project.mockResolvedValue('select current_graph');
+      project.mockResolvedValue({ sql: 'select current_graph' });
       select('postgres-sql');
       await act(async () => {
         await Promise.resolve();
@@ -204,6 +204,7 @@ describe('Canonical code inspection query lifecycle', () => {
         transformNode: changed.transformNode,
         nodes: changed.nodes,
         edges: changed.edges,
+        presentation: 'readable',
       });
       expect(container.querySelector('pre')?.textContent).toBe('select current_graph');
     }
@@ -230,7 +231,7 @@ describe('Canonical code inspection query lifecycle', () => {
   it('keeps a failed query explicit and retries only after another SQL selection', async () => {
     project
       .mockRejectedValueOnce(new Error('Invalid graph'))
-      .mockResolvedValueOnce('select recovered');
+      .mockResolvedValueOnce({ sql: 'select recovered' });
     render();
     select('postgres-sql');
     await act(async () => {

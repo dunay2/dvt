@@ -27,6 +27,8 @@ export function createApiCanvasTransformSqlQueryPort(
         const params = new URLSearchParams({
           ...scope,
           semanticPlanSha256: input.semanticPlanSha256,
+          ...(input.relationId === undefined ? {} : { relationId: input.relationId }),
+          ...(input.presentation === undefined ? {} : { presentation: input.presentation }),
         });
         const endpoint = `/workspace/graph/canvases/${encodeURIComponent(input.canvasId)}/transforms/${encodeURIComponent(input.transformNodeId)}/sql?${params}`;
         const response = await apiClient.getJson(endpoint);
@@ -35,7 +37,10 @@ export function createApiCanvasTransformSqlQueryPort(
           !parsed.success ||
           parsed.data.canvasId !== input.canvasId ||
           parsed.data.transformNodeId !== input.transformNodeId ||
-          parsed.data.semanticPlanSha256 !== input.semanticPlanSha256
+          parsed.data.semanticPlanSha256 !== input.semanticPlanSha256 ||
+          parsed.data.relationId !== input.relationId ||
+          (input.presentation === 'readable' && parsed.data.presentation === undefined) ||
+          (input.presentation === undefined && parsed.data.presentation !== undefined)
         ) {
           recordFrontendOperabilityEvent(
             frontendOperabilitySink,

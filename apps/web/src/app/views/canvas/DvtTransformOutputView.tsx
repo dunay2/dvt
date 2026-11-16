@@ -8,6 +8,7 @@ import { cn } from '../../components/ui/utils';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { DvtSubstraitTransformOutputProjectionArgs } from './canvasDvtSubstraitOutputProjection';
 import { useCanvasTransformSqlOutput } from './useCanvasTransformSqlOutput';
+import { CanvasSqlPresentationResult } from './CanvasSqlPresentationResult';
 
 type TransformOutputViewId = 'substrait' | 'postgres-sql';
 
@@ -50,7 +51,7 @@ export function DvtTransformOutputView({
         ? {
             language: 'sql',
             label: copy.inspectorTransformOutputPostgresSqlLabel,
-            value: derivedSql.sql,
+            value: derivedSql.result.sql,
           }
         : null;
 
@@ -82,13 +83,27 @@ export function DvtTransformOutputView({
       </label>
 
       {displayedCode != null ? (
-        <MonacoCodeViewer
-          ariaLabel={displayedCode.label}
-          language={displayedCode.language}
-          loadingLabel={displayedCode.label}
-          containerClassName={cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill)}
-          value={displayedCode.value}
-        />
+        selectedView === 'postgres-sql' && derivedSql.status === 'ready' ? (
+          <CanvasSqlPresentationResult result={derivedSql.result}>
+            {(sql) => (
+              <MonacoCodeViewer
+                ariaLabel={displayedCode.label}
+                language="sql"
+                loadingLabel={displayedCode.label}
+                containerClassName={cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill)}
+                value={sql}
+              />
+            )}
+          </CanvasSqlPresentationResult>
+        ) : (
+          <MonacoCodeViewer
+            ariaLabel={displayedCode.label}
+            language={displayedCode.language}
+            loadingLabel={displayedCode.label}
+            containerClassName={cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill)}
+            value={displayedCode.value}
+          />
+        )
       ) : (
         <p
           role={derivedSql.status === 'error' ? 'alert' : 'status'}

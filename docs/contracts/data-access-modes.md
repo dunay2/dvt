@@ -139,13 +139,33 @@ an upstream file as the selected Model's own source.
 | --------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ProjectCanvasTransformSql` | `TransformSqlProjectionResponse`; `ProjectCanvasTransformSqlQuery.execute` | GET `/workspace/graph/canvases/:canvasId/transforms/:transformNodeId/sql`; Web `ICanvasTransformSqlQueryPort.projectTransformSql` | Existing tenant/project/environment and `workspaceGraphDraftView`; file-model producers additionally use `workspaceFilesView`, current file authority and native compilation policy | Missing/malformed scope or semantic digest, 401/403, stale Canvas/digest, unsupported closure, changed producer fields/connection, malformed response and stale completion |
 
-The request contains only the selected Canvas and Transform identities and the
-expected canonical semantic-plan digest. The response names the protected draft
+The request contains the selected Canvas and Transform identities, the expected
+canonical semantic-plan digest, an optional saved-plan `relationId` and optional
+`presentation: readable`. The response names the protected draft
 revision, semantic digest, projected SQL and exact physical/model provenance.
 It contains no credentials, rows or publication command. The shared preparation
 owner resolves the protected draft and the existing producer/AST pipeline for
-both this query and `PreviewCanvasTransformRows`. Only row Preview continues to
-the connection catalog, credential resolver and bounded provider probe.
+both this query and `PreviewCanvasTransformRows`. Original SQL inspection adds
+no warehouse I/O. Readable inspection additionally requires the existing
+`workspaceSourceImportView` permission before scoped catalog/credential access;
+it reads bounded metadata and preflights the original without executing rows.
+Row Preview alone continues to its bounded row probe.
+
+Top-level `sql` always retains the original projection bytes. The optional
+`presentation` result distinguishes `rewritten` (derived SQL and actual ordered
+rule/path steps), `unchanged` (a completed fixed point with no steps), and
+`retained` (a diagnostic code/path, without partial SQL). Incomplete or denied
+metadata cannot become resolution authority or block access to the already
+authorized original SQL. These derived inspection facts do not change Substrait,
+Preview, publication hashes, compiled dbt results or Run SQL.
+
+Catalog-qualified dbt inputs require the exact database observed on that scoped
+connection. Native view definitions and their dependency metadata form a bounded
+read-only snapshot; complete R1 admission certifies their supported shape before
+preflight. The derived SQL keeps view references opaque. Missing evidence,
+foreign catalogs, cycles, unsupported definitions, security options, RLS, FDW and
+uncertified inheritance retain the original. The browser cannot supply any of
+this resolution evidence.
 
 Protected graph admission and semantic producer consumption are distinct. The
 complete upstream graph retains its scope authorization, topology and direct-edge
@@ -178,6 +198,10 @@ flowchart LR
   Shared --> Producers[Current physical and native dbt producer closure]
   Producers --> Projection[Existing PostgreSQL AST projection]
   Projection --> CodeResult[SQL and revision provenance]
+  Projection --> Readable[Explicit readable inspection]
+  Readable --> Evidence[Authorized native metadata and original preflight]
+  Evidence --> Rules[Existing whole-candidate simplifier]
+  Rules --> CodeResult
   Projection --> Rows
   Rows --> Probe[Bounded row probe]
 ```
@@ -204,7 +228,13 @@ local field editing hides the saved SQL snapshot until passive inspection
 resumes. Hiding the SQL view, tab or workspace discards its pending result.
 Generating again requests the current authorized snapshot. Loading and failure stay explicit;
 neither viewing SQL nor opening Output applies changes, previews rows or starts
-a Run. Source and intermediate-operation Output continue to inspect fields.
+a Run. Source and intermediate-operation inspectors retain fields and expose
+the same explicit SQL query for their saved-plan `relationId`; the original
+Transform/digest remain response authority. Their row Preview stays separate.
+Original/simplified switching is local after the response, with no additional
+query or second tab rail. The UI displays actual rewrite steps or the retained
+diagnostic through the existing typed locale catalogs. Changing relation, scope,
+graph or query binding discards obsolete results.
 
 ## Transform LIVE preview
 
