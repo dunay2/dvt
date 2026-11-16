@@ -532,6 +532,9 @@ describe('Workbench navigation', () => {
       );
     });
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('inspector-derived-sql');
+    pressNativeKey('Escape');
+    cy.get('[data-slot="canvas-sql-trace-content"]').should('not.exist');
+    cy.get('[data-slot="canvas-sql-trace-trigger"]').should('be.focused');
     cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
     cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines').should(
       'contain.text',
