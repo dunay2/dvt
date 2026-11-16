@@ -17,7 +17,7 @@ import {
 
 export function registerBrowserRoutingOwnership(): void {
   describe('browser consumer ownership', () => {
-    it('routes the real native keyboard support closure through the complete controlled baseline', () => {
+    it('routes the real native keyboard support closure through both complete consumer baselines', () => {
       // A shared input adapter omitted from routing made otherwise admitted shell changes fail closed.
       const helperPath = 'apps/web/cypress/support/nativeKeyboard.ts';
       const graph = new Map(
@@ -28,29 +28,39 @@ export function registerBrowserRoutingOwnership(): void {
         .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
         .map((path) => `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`)
         .sort();
-      expect(consumers).toEqual([
-        'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
-        'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts',
-        'apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts',
-        'apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts',
-        'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
-        'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
-        'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
-      ]);
-      for (const consumer of consumers) {
+      const expectedConsumers = [
+        ['controlled', 'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+        ['controlled', 'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'],
+        ['available', 'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts'],
+        [
+          'controlled',
+          'apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts',
+        ],
+        ['controlled', 'apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts'],
+        ['controlled', 'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'],
+        ['controlled', 'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts'],
+        ['controlled', 'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts'],
+      ] as const;
+      expect(consumers).toEqual(expectedConsumers.map(([, consumer]) => consumer).sort());
+      for (const [capability, consumer] of expectedConsumers) {
         expect(
           Object.entries(WEB_CYPRESS_SPECS)
             .filter(([, paths]) => paths.includes(consumer))
             .map(([capability]) => capability),
           consumer
-        ).toEqual(['controlled']);
+        ).toEqual([capability]);
       }
       const plan = resolveWebVitestChangedSuitePlan([helperPath]);
       expect(plan.commandPlan).toEqual([]);
       expect(plan.browserCommands).toMatchObject([
         { capability: 'controlled', specPaths: WEB_CYPRESS_SPECS.controlled },
+        liveCommand,
       ]);
-      expect(plan.browserFiles).toEqual([helperPath, ...WEB_CYPRESS_SPECS.controlled]);
+      expect(plan.browserFiles).toEqual([
+        helperPath,
+        ...WEB_CYPRESS_SPECS.controlled,
+        ...WEB_CYPRESS_SPECS.available,
+      ]);
     });
 
     it('admits retained shell menu consumers in their actual independent runtimes', () => {

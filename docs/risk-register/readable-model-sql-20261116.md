@@ -40,6 +40,10 @@ Controls:
 - Preserve the native differential matrix and prove the actual composed consumer.
   Isolate negative-test DDL and dispose every proof database. Browser evidence
   must cover explicit generation and local original/derived selection.
+- Preserve the actual native-keyboard consumer closure and its unique runtime
+  ownership. Retain complete controlled and available baselines for helper
+  changes, and all runtimes for support-registry changes. Do not reclassify a
+  consumer or narrow execution to avoid its provider obligation.
 
 The native snapshot is inspection evidence at request time. It does not promise
 future warehouse DDL stability, authorization subscription or faster physical

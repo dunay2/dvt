@@ -9,6 +9,8 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
+  - apps/web/cypress.supportCapabilities.ts
+  - apps/web/src/testing/vitestSuites.browserRouting.ownership.test-cases.ts
   - packages/@dvt/contracts/src/contracts/canvas/TransformSqlProjection.v1.ts
   - packages/@dvt/postgres-projection/src/sqlPresentation/admission.ts
   - apps/api/src/application/services/projectCanvasSqlPresentation.ts
@@ -54,6 +56,13 @@ Model and operation inspectors share one SQL presentation with local
 original/derived selection and progressive trace details. Generate is explicit;
 hidden or obsolete completions cannot become current. No browser optimizer,
 second tab rail, SQL type IR or persistent derived authority was added.
+
+The Workbench reuses the existing native keyboard adapter for complete trusted
+Enter and Escape. Its actual available-runtime consumer extends that adapter's
+existing controlled ownership. The same support registry and exact import-closure
+guard now retain both complete baselines. Changing the registry itself retains
+the existing all-runtime pre-push obligation, including unavailable. No selector
+algorithm, catalog assignment, runtime, workflow or keyboard helper was added.
 
 ## Observed evidence
 
