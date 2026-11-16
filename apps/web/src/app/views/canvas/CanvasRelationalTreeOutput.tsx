@@ -1,4 +1,8 @@
-/** Presentation-only terminal for the model output in a relational layout. */
+/**
+ * Owned concern: present and activate the final Model Output card.
+ * Reason: its activating button must also own native drag capture.
+ * Corner invariant: the connection port remains an independent sibling control.
+ */
 import { Table2 } from 'lucide-react';
 import {
   CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
@@ -76,7 +80,7 @@ export function CanvasRelationalTreeOutput({
   return (
     <div
       data-slot="canvas-relational-tree-output"
-      data-relational-card-id={CANVAS_RELATIONAL_OUTPUT_POSITION_ID}
+      data-relational-card-id={onOpen == null ? CANVAS_RELATIONAL_OUTPUT_POSITION_ID : undefined}
       data-movable={movable}
       className={styles.root}
       style={{ left: output.x, top: output.y, width: output.width, height: output.height }}
@@ -87,6 +91,8 @@ export function CanvasRelationalTreeOutput({
         <button
           type="button"
           data-slot="canvas-relational-tree-output-open"
+          data-relational-card-id={CANVAS_RELATIONAL_OUTPUT_POSITION_ID}
+          data-movable={movable}
           aria-label={`${outputName} · ${copy.relationalTreeOutputLabel}`}
           onClick={onOpen}
           className={styles.open}

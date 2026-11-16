@@ -1,6 +1,7 @@
 /** Owned concern: compose the semantic Model workspace and its draft lifecycle. */
 import './canvasSemanticEditor.css';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useOptionalCanvasTransformSqlQueryPort } from '../../services/AppServicesContext';
 import { CanvasModelToolbar } from './CanvasModelToolbar';
 import { useCanvasModelNavigation } from './useCanvasModelNavigation';
 import { CanvasModelEditorTemplate } from './CanvasModelEditor.templates';
@@ -61,6 +62,15 @@ export function CanvasModelEditor({
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const treeCopy = resolveCanvasViewCopy(language);
+  const sqlQuery = useOptionalCanvasTransformSqlQueryPort();
+  const scopeKey =
+    workspaceScope == null
+      ? undefined
+      : `${workspaceScope.tenantId}::${workspaceScope.projectId}::${workspaceScope.environmentId}`;
+  const codeProjection = useMemo(
+    () => (sqlQuery == null ? undefined : { canvasId, query: sqlQuery, scopeKey }),
+    [canvasId, sqlQuery, scopeKey]
+  );
   const workbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
   const navigation = useCanvasModelNavigation({
@@ -98,6 +108,8 @@ export function CanvasModelEditor({
       editor={
         <CanvasRelationalTreeWorkbench
           ref={workbench}
+          active={active}
+          codeProjection={codeProjection}
           layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
           transformNode={transformNode}
           nodes={nodes}

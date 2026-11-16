@@ -40,10 +40,18 @@ type InspectorPresentation = Readonly<{
   selectedOnly?: boolean;
 }>;
 const InspectorTabs = createContext<
-  | readonly [InspectorPresentation | null, Dispatch<SetStateAction<InspectorPresentation | null>>]
+  | readonly [
+      InspectorPresentation | null,
+      Dispatch<SetStateAction<InspectorPresentation | null>>,
+      boolean,
+    ]
   | null
 >(null);
-const CanvasOutputPresentation = createContext({ editing: true, showExcluded: true });
+const CanvasOutputPresentation = createContext({
+  editing: true,
+  showExcluded: true,
+  active: false,
+});
 
 export function useCanvasOutputPresentation() {
   return useContext(CanvasOutputPresentation);
@@ -52,7 +60,8 @@ export function useCanvasOutputPresentation() {
 export function CanvasOperationInspectorTabs({
   children,
   resetRevision = 0,
-}: Readonly<{ children: ReactNode; resetRevision?: number }>): JSX.Element {
+  active = true,
+}: Readonly<{ children: ReactNode; resetRevision?: number; active?: boolean }>): JSX.Element {
   const [selection, setSelection] = useState<InspectorPresentation | null>(null);
   useEffect(() => {
     setSelection((current) =>
@@ -65,7 +74,7 @@ export function CanvasOperationInspectorTabs({
           }
     );
   }, [resetRevision]);
-  const value = useMemo(() => [selection, setSelection] as const, [selection]);
+  const value = useMemo(() => [selection, setSelection, active] as const, [selection, active]);
   return <InspectorTabs.Provider value={value}>{children}</InspectorTabs.Provider>;
 }
 
@@ -91,7 +100,7 @@ function useInspectorPresentation(relationId: string | null | undefined) {
     },
     [select, relationId]
   );
-  return [current, update] as const;
+  return [current, update, shared?.[2] ?? true] as const;
 }
 
 export function useCanvasInspectorEditing(relationId: string | null | undefined) {
@@ -103,10 +112,19 @@ export function useCanvasInspectorEditing(relationId: string | null | undefined)
   return [presentation.editing ?? false, setEditing] as const;
 }
 
+/** Select the final Output tab without settling or replacing its edit transaction. */
+export function useCanvasInspectorOutputSelection(
+  relationId: string | null | undefined
+): () => void {
+  const [, update] = useInspectorPresentation(relationId);
+  return useCallback(() => update({ tab: 'output' }), [update]);
+}
+
 export function CanvasRelationalTreeEditorFrame({
   operation,
   children,
   output,
+  sqlOutput,
   hidden = false,
   onClose,
   relationId,
@@ -121,6 +139,7 @@ export function CanvasRelationalTreeEditorFrame({
   operation: CanvasPresentationOperation;
   children: ReactNode;
   output?: ReactNode;
+  sqlOutput?: ReactNode;
   hidden?: boolean;
   onClose: () => void;
   relationId?: string | null;
@@ -134,19 +153,29 @@ export function CanvasRelationalTreeEditorFrame({
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
+  const viewCopy = resolveCanvasViewCopy(language);
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
-  const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
+  const title = label ?? viewCopy[presentation.labelKey];
   const Icon = presentation.icon;
-  const [inspector, updateInspector] = useInspectorPresentation(relationId);
+  const [inspector, updateInspector, active] = useInspectorPresentation(relationId);
   const tab = inspector.tab ?? initialTab;
   const selectedOnly = inspector.selectedOnly ?? false;
   const setTab = useCallback((next: string) => updateInspector({ tab: next }), [updateInspector]);
-  const outputPresentation = useMemo(
-    () => ({ editing, showExcluded: editing && !selectedOnly }),
-    [editing, selectedOnly]
-  );
+  const requestedTab = editing && tab === 'sql' ? 'output' : tab;
   const activeTab =
-    (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
+    (!hasExpression && requestedTab === 'tree') ||
+    (output == null && requestedTab === 'output') ||
+    (sqlOutput == null && requestedTab === 'sql')
+      ? 'properties'
+      : requestedTab;
+  const outputPresentation = useMemo(
+    () => ({
+      editing,
+      showExcluded: editing && !selectedOnly,
+      active: active && (activeTab === 'output' || activeTab === 'sql'),
+    }),
+    [editing, selectedOnly, active, activeTab]
+  );
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
   const expressionContext = useMemo(
     () => ({
@@ -173,7 +202,10 @@ export function CanvasRelationalTreeEditorFrame({
             data-slot="canvas-relational-edit"
             aria-pressed={editing}
             onClick={() => {
-              updateInspector({ selectedOnly: false });
+              updateInspector({
+                selectedOnly: false,
+                tab: activeTab === 'sql' ? 'output' : activeTab,
+              });
               onEdit();
             }}
             className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-(--surface-selected)"
@@ -225,6 +257,17 @@ export function CanvasRelationalTreeEditorFrame({
                   {copy.output}
                 </TabsTrigger>
               )}
+              {sqlOutput == null ? null : (
+                <TabsTrigger
+                  value="sql"
+                  data-slot="canvas-operation-sql-tab"
+                  className="workspace-navigation-tab"
+                  disabled={editing}
+                  title={editing ? viewCopy.inspectorModelSqlApplyHint : undefined}
+                >
+                  {copy.sql}
+                </TabsTrigger>
+              )}
             </TabsList>
             <TabsContent
               value="tree"
@@ -265,6 +308,11 @@ export function CanvasRelationalTreeEditorFrame({
                   </label>
                 ) : null}
                 {output}
+              </TabsContent>
+            )}
+            {sqlOutput == null ? null : (
+              <TabsContent value="sql" className="min-h-0 overflow-auto p-3">
+                {sqlOutput}
               </TabsContent>
             )}
           </Tabs>

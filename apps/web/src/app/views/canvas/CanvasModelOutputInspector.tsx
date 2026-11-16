@@ -7,6 +7,7 @@
  */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Database } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
@@ -22,6 +23,7 @@ import {
 
 export function CanvasModelOutputInspector({
   modelName,
+  sqlOutput,
   root,
   copy,
   editable,
@@ -30,6 +32,7 @@ export function CanvasModelOutputInspector({
   onClose,
 }: Readonly<{
   modelName: string;
+  sqlOutput?: ReactNode;
   root: CanvasRelationalTreeNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   editable: boolean;
@@ -52,8 +55,10 @@ export function CanvasModelOutputInspector({
       hasExpression={false}
       onClose={onClose}
       dataSlot="canvas-model-output-inspector"
+      initialTab="output"
       editing={editing && editable}
       onEdit={editable ? () => setEditing(true) : undefined}
+      sqlOutput={sqlOutput}
       output={
         <CanvasRelationOutputs
           relationId={relationId}

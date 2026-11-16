@@ -10,11 +10,13 @@ import styles from './CanvasRelationalTreeInspection.module.css';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import { CanvasRelationalTreeSideInspector } from './CanvasRelationalTreeSideInspector';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
+import { useCanvasInspectorOutputSelection } from './CanvasRelationalTreeEditorFrame';
 
 export function CanvasRelationalTreeInspection(
   props: ComponentProps<typeof CanvasRelationalTreeSideInspector>
 ): JSX.Element | null {
   const { model, transformNode, copy, onExpandedChange, modelOutput } = props;
+  const selectOutput = useCanvasInspectorOutputSelection(model.projection?.root.relationId);
   if (model.projection == null) return null;
   return (
     <div data-slot="canvas-relational-tree-inspection" className={styles.inspection}>
@@ -53,6 +55,7 @@ export function CanvasRelationalTreeInspection(
             onExpandedChange(true);
           }}
           onOpenOutput={() => {
+            selectOutput();
             onExpandedChange(false);
             modelOutput.setOpen(true);
           }}

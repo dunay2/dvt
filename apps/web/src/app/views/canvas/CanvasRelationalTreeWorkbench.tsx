@@ -112,7 +112,10 @@ const CanvasRelationalTreeWorkbenchSession = forwardRef<
           <CanvasRelationalExplorer model={model} copy={copy} pending={pending}>
             <CanvasCardRemovalContext.Provider value={model.session.removal}>
               <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-                <CanvasOperationInspectorTabs resetRevision={presentationRevision}>
+                <CanvasOperationInspectorTabs
+                  resetRevision={presentationRevision}
+                  active={props.active}
+                >
                   <CanvasRelationalTreeContent
                     model={model}
                     authoring={authoring}
@@ -126,6 +129,7 @@ const CanvasRelationalTreeWorkbenchSession = forwardRef<
                     pendingCondition={pending}
                     onSelectRelation={navigation.select}
                     modelOutput={modelOutput}
+                    codeProjection={props.codeProjection}
                   />
                 </CanvasOperationInspectorTabs>
               </CanvasRelationAnalysisContext.Provider>

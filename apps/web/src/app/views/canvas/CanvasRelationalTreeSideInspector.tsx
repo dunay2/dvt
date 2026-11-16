@@ -5,7 +5,9 @@
  * @consequence General editor and Source controls keep their existing authoring guards.
  * @version 1.1.0
  */
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasTransformSqlQueryBinding } from '../../ports/canvasTransformSql';
+import { CanvasModelSqlOutput } from './CanvasModelSqlOutput';
 import { useState } from 'react';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
@@ -34,6 +36,9 @@ export function CanvasRelationalTreeSideInspector({
   model,
   authoring,
   transformNode,
+  nodes,
+  edges,
+  codeProjection,
   copy,
   expanded,
   onExpandedChange,
@@ -42,6 +47,9 @@ export function CanvasRelationalTreeSideInspector({
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
   authoring?: CanvasRelationalTreeAuthoringContract;
   transformNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  codeProjection?: CanvasTransformSqlQueryBinding;
   copy: CanvasRelationalTreeWorkbenchCopy;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
@@ -60,6 +68,14 @@ export function CanvasRelationalTreeSideInspector({
     return (
       <CanvasModelOutputInspector
         modelName={transformNode.name}
+        sqlOutput={
+          <CanvasModelSqlOutput
+            transformNode={transformNode}
+            nodes={nodes}
+            edges={edges}
+            codeProjection={codeProjection}
+          />
+        }
         root={model.projection.root}
         copy={copy}
         editable={(model.authoringAvailable || retainedOutputEditable) && !model.session.active}

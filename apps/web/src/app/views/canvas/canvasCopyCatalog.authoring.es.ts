@@ -134,6 +134,11 @@ export const canvasViewAuthoringCopyEs = {
   inspectorTransformOutputLoadingMessage: 'Generando SQL PostgreSQL...',
   inspectorTransformOutputErrorMessage:
     'No se pudo generar SQL PostgreSQL desde esta revisión canónica.',
+  inspectorModelSqlGenerateAction: 'Generar SQL',
+  inspectorModelSqlIdleMessage: 'Genera la SQL del modelo aplicado cuando la necesites.',
+  inspectorModelSqlUnavailableMessage:
+    'La generación de SQL no está disponible en este espacio de trabajo.',
+  inspectorModelSqlApplyHint: 'Aplica los cambios del modelo antes de generar SQL.',
   inspectorDbtCardTitle: 'Exportación dbt',
   inspectorDbtPackageLabel: 'Paquete',
   inspectorDbtSourceLabel: 'Origen',
