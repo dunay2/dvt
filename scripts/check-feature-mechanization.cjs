@@ -713,7 +713,8 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
       (field) =>
         Array.isArray(manifest[field]) ? [...new Set(manifest[field])].sort() : manifest[field]
     );
-    const key = `${sourcePath}#${featureId}`;
+    // A prospective rail must never inherit a sibling's implementation authority.
+    const key = JSON.stringify([sourcePath, featureId, manifest.mechanizationStatus]);
     const scopeKey = `${key}#${stableJsonStringify(scope)}`;
     if (!byScope.has(scopeKey))
       byScope.set(scopeKey, {
@@ -740,8 +741,8 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
     sourcePath,
     manifest: { ...bySourceAndFeature.get(featureKey).manifest, ...scope },
   })).sort((left, right) =>
-    `${left.sourcePath}#${left.manifest.featureId}`.localeCompare(
-      `${right.sourcePath}#${right.manifest.featureId}`
+    `${left.sourcePath}#${left.manifest.featureId}#${left.manifest.mechanizationStatus}`.localeCompare(
+      `${right.sourcePath}#${right.manifest.featureId}#${right.manifest.mechanizationStatus}`
     )
   );
 }
