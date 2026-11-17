@@ -53,15 +53,17 @@ export function modelSqlDraftReducer(
     case 'text':
       return { ...state, sql: action.sql, failure: null };
     case 'context': {
-      const clean =
-        !hasModelSqlChanges(state) &&
-        (state.acceptedSemanticSha256 == null ||
-          state.acceptedSemanticSha256 !== action.context.semanticPlanSha256);
+      const accepted =
+        state.acceptedSemanticSha256 != null &&
+        state.acceptedSemanticSha256 === action.context.semanticPlanSha256;
+      const baseline = accepted ? state.baseline : (action.context.sql ?? '');
       return {
         ...state,
         context: action.context,
         failure: null,
-        ...(clean ? { sql: action.context.sql ?? '', baseline: action.context.sql ?? '' } : {}),
+        baseline,
+        acceptedSemanticSha256: accepted ? state.acceptedSemanticSha256 : null,
+        ...(!hasModelSqlChanges(state) ? { sql: baseline } : {}),
       };
     }
     case 'analysis':
