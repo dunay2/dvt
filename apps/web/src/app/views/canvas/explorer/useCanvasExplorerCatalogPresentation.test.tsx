@@ -74,19 +74,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('retains filtering and details when opening Models and returning to the Canvas', () => {
+it('retains filtering and details when opening Models and returning to the Canvas', async () => {
   render();
-  act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Orders' } }));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Details: Orders' })));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
+  await act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Orders' } }));
+  await act(() => fireEvent.click(screen.getByRole('button', { name: 'Details: Orders' })));
+  await act(() => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
   expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('Orders');
   expect(screen.queryByRole('button', { name: 'Customers' })).toBeNull();
   expect(screen.getByText('raw.orders')).toBeTruthy();
-  act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Customers' } }));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Customers' })));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Canvas' })));
+  await act(() =>
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Customers' } })
+  );
+  await act(() => fireEvent.click(screen.getByRole('button', { name: 'Customers' })));
+  await act(() => fireEvent.click(screen.getByRole('button', { name: 'Canvas' })));
   expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('Customers');
-  act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Orders' } }));
+  await act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Orders' } }));
   expect(
     screen.getByRole('button', { name: 'Details: Orders' }).getAttribute('aria-expanded')
   ).toBe('true');
@@ -95,10 +97,10 @@ it('retains filtering and details when opening Models and returning to the Canva
 it.each([
   ['another-project', 'canvas'],
   ['project', 'another-canvas'],
-])('resets filter and detail state for scope %s / %s', (projectId, canvasId) => {
+])('resets filter and detail state for scope %s / %s', async (projectId, canvasId) => {
   render();
-  act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Orders' } }));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Details: Orders' })));
+  await act(() => fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Orders' } }));
+  await act(() => fireEvent.click(screen.getByRole('button', { name: 'Details: Orders' })));
   const obsolete = activePresentation!;
   render(projectId, canvasId);
   act(() => {

@@ -133,12 +133,12 @@ it('discloses real metadata without activating an unavailable model', () => {
   expect(container.querySelector('button button')).toBeNull();
 });
 
-it('inspects immediately once for native clicks and retains keyboard activation', () => {
+it('inspects immediately once for native clicks and retains keyboard activation', async () => {
   vi.useFakeTimers();
   const onSelect = vi.fn();
   act(() => root.render(<CanvasExplorerList items={[items[0]!]} onSelect={onSelect} />));
   const row = screen.getByRole('button', { name: 'Orders' });
-  act(() => fireEvent.click(row, { detail: 1 }));
+  await act(() => fireEvent.click(row, { detail: 1 }));
   expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
   act(() => {
     fireEvent.click(row, { detail: 2 });
@@ -147,7 +147,7 @@ it('inspects immediately once for native clicks and retains keyboard activation'
   });
   expect(onSelect).toHaveBeenCalledOnce();
   expect(row.getAttribute('aria-pressed')).toBe('false');
-  act(() => fireEvent.click(row, { detail: 0 }));
+  await act(() => fireEvent.click(row, { detail: 0 }));
   expect(onSelect).toHaveBeenCalledTimes(2);
 });
 
@@ -169,7 +169,7 @@ it('reflects admitted inspection selection without optimistic local selection', 
   expect(row.getAttribute('aria-pressed')).toBe('true');
 });
 
-it('keeps real drag separate and never dispatches delayed inspection after owner replacement', () => {
+it('keeps real drag separate and never dispatches delayed inspection after owner replacement', async () => {
   vi.useFakeTimers();
   const onSelect = vi.fn();
   const onDragStart = vi.fn();
@@ -189,13 +189,13 @@ it('keeps real drag separate and never dispatches delayed inspection after owner
   });
   expect(onDragStart).toHaveBeenCalledExactlyOnceWith('source', expect.anything());
   expect(onSelect).not.toHaveBeenCalled();
-  act(() => fireEvent.click(row, { detail: 1 }));
+  await act(() => fireEvent.click(row, { detail: 1 }));
   expect(onSelect).toHaveBeenCalledOnce();
   act(() => root.render(<CanvasExplorerList items={[items[1]!]} onSelect={onSelect} />));
-  act(() => vi.runAllTimers());
+  await act(() => vi.runAllTimers());
   expect(onSelect).toHaveBeenCalledOnce();
   act(() => root.render(null));
-  act(() => vi.runAllTimers());
+  await act(() => vi.runAllTimers());
   expect(onSelect).toHaveBeenCalledOnce();
 });
 

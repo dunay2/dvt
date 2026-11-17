@@ -137,7 +137,7 @@ it.each([
   'new-inspector-intent',
   'embedded-control',
   'source',
-] as const)('never redirects an excluded %s owner', (reason) => {
+] as const)('never redirects an excluded %s owner', async (reason) => {
   const open = vi.fn(),
     fieldClick = vi.fn();
   render(open, fieldClick, {
@@ -155,11 +155,11 @@ it.each([
   if (reason === 'canvas-change') render(open, fieldClick, { canvasId: 'other' });
   if (reason === 'removed') render(open, fieldClick, { present: false });
   if (reason === 'hidden') render(open, fieldClick, { hidden: true });
-  if (reason === 'keyboard') act(() => fireEvent.keyDown(boundary, { key: 'Escape' }));
-  if (reason === 'context-menu') act(() => fireEvent.contextMenu(boundary));
-  if (reason === 'drag') act(() => fireEvent.dragStart(boundary));
+  if (reason === 'keyboard') await act(() => fireEvent.keyDown(boundary, { key: 'Escape' }));
+  if (reason === 'context-menu') await act(() => fireEvent.contextMenu(boundary));
+  if (reason === 'drag') await act(() => fireEvent.dragStart(boundary));
   if (reason === 'new-inspector-intent')
-    act(() => fireEvent.mouseDown(container.querySelector('label')!, { detail: 1 }));
+    await act(() => fireEvent.mouseDown(container.querySelector('label')!, { detail: 1 }));
   finish(container.querySelector('label')!);
   expect(open).not.toHaveBeenCalled();
 });

@@ -62,18 +62,18 @@ function render(language = 'en'): void {
   );
 }
 
-it('exposes localized unavailable Model actions without inventing a Model or navigation', () => {
+it('exposes localized unavailable Model actions without inventing a Model or navigation', async () => {
   render('es');
   for (const name of ['Vista semántica', 'SQL']) {
     const action = within(container).getByRole('button', { name });
     expect(action.getAttribute('aria-disabled')).toBe('true');
     expect(action.getAttribute('data-active')).toBe('false');
-    act(() => fireEvent.click(action));
+    await act(() => fireEvent.click(action));
   }
   expect(useCanvasWorkspaceMenuContributionStore.getState().modelTab).toBeNull();
 });
 
-it('reveals the scoped Explorer without choosing a Model and keeps one destination active', () => {
+it('reveals the scoped Explorer without choosing a Model and keeps one destination active', async () => {
   const select = vi.fn();
   const semantic = vi.fn();
   const sql = vi.fn();
@@ -112,9 +112,9 @@ it('reveals the scoped Explorer without choosing a Model and keeps one destinati
   const sqlAction = within(container).getByRole('button', { name: 'SQL' });
   expect(container.querySelectorAll('[data-active="true"]')).toHaveLength(1);
   expect(semanticAction.getAttribute('data-active')).toBe('true');
-  act(() => fireEvent.click(within(container).getByRole('link', { name: 'Canvas' })));
+  await act(() => fireEvent.click(within(container).getByRole('link', { name: 'Canvas' })));
   expect(canvas).toHaveBeenCalledOnce();
-  act(() => fireEvent.click(sqlAction));
+  await act(() => fireEvent.click(sqlAction));
   expect(browse).toHaveBeenCalledExactlyOnceWith('sql');
   expect(select).not.toHaveBeenCalled();
   expect(sql).not.toHaveBeenCalled();
@@ -128,7 +128,7 @@ it('reveals the scoped Explorer without choosing a Model and keeps one destinati
   );
   expect(container.querySelectorAll('[data-active="true"]')).toHaveLength(1);
   expect(sqlAction.getAttribute('data-active')).toBe('true');
-  act(() => fireEvent.click(semanticAction));
+  await act(() => fireEvent.click(semanticAction));
   expect(browse).toHaveBeenLastCalledWith('semantic');
   expect(currentSemantic).not.toHaveBeenCalled();
   expect(semantic).not.toHaveBeenCalled();
@@ -138,7 +138,7 @@ it('reveals the scoped Explorer without choosing a Model and keeps one destinati
       views: { ...tab.views, disabled: true },
     })
   );
-  act(() => fireEvent.click(sqlAction));
+  await act(() => fireEvent.click(sqlAction));
   expect(sql).not.toHaveBeenCalled();
   act(() =>
     useCanvasWorkspaceMenuContributionStore.getState().registerModelBrowser({
@@ -149,13 +149,13 @@ it('reveals the scoped Explorer without choosing a Model and keeps one destinati
     })
   );
   expect(sqlAction.getAttribute('aria-disabled')).toBe('true');
-  act(() => fireEvent.click(sqlAction));
+  await act(() => fireEvent.click(sqlAction));
   expect(sql).not.toHaveBeenCalled();
   act(() =>
     useCanvasWorkspaceMenuContributionStore
       .getState()
       .clearModelTab(useCanvasWorkspaceMenuContributionStore.getState().modelTab!)
   );
-  act(() => fireEvent.click(sqlAction));
+  await act(() => fireEvent.click(sqlAction));
   expect(sql).not.toHaveBeenCalled();
 });

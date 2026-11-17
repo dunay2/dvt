@@ -39,15 +39,15 @@ function body(): Element {
   return surface.container.querySelector('[data-testid="node-body"]')!;
 }
 
-it('inspects on the first pointer click before any clock advances', () => {
+it('inspects on the first pointer click before any clock advances', async () => {
   vi.useFakeTimers();
   const select = vi.fn();
   const open = vi.fn();
   render({ onSelectNode: select, onOpenNode: open });
-  act(() => fireEvent.click(body(), { detail: 1 }));
+  await act(() => fireEvent.click(body(), { detail: 1 }));
   expect(select).toHaveBeenCalledOnce();
   expect(open).not.toHaveBeenCalled();
-  act(() => vi.runAllTimers());
+  await act(() => vi.runAllTimers());
   expect(select).toHaveBeenCalledOnce();
 });
 
@@ -105,12 +105,12 @@ it.each([
 
 it.each(['open', 'inspect'] as const)(
   'keeps Enter immediate for the current %s capability',
-  (capability) => {
+  async (capability) => {
     const select = vi.fn();
     const open = vi.fn();
     render({ onSelectNode: select, ...(capability === 'open' ? { onOpenNode: open } : {}) });
     const shell = surface.container.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]')!;
-    act(() => fireEvent.keyDown(shell, { key: 'Enter' }));
+    await act(() => fireEvent.keyDown(shell, { key: 'Enter' }));
     expect(select).toHaveBeenCalledTimes(capability === 'inspect' ? 1 : 0);
     expect(open).toHaveBeenCalledTimes(capability === 'open' ? 1 : 0);
   }
@@ -129,7 +129,7 @@ it('ignores repeated or modified Enter and keyboard input from embedded controls
   expect(open).not.toHaveBeenCalled();
 });
 
-it('does not turn a consumed drag click into inspection or Model entry', () => {
+it('does not turn a consumed drag click into inspection or Model entry', async () => {
   const select = vi.fn();
   const open = vi.fn();
   const dragged = { current: true };
@@ -149,7 +149,7 @@ it('does not turn a consumed drag click into inspection or Model entry', () => {
       </div>
     )
   );
-  act(() =>
+  await act(() =>
     fireEvent.click(surface.container.querySelector('[data-slot="canvas-node-shell"]')!, {
       detail: 1,
     })

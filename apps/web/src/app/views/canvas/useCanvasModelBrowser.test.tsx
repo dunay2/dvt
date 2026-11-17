@@ -50,7 +50,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('reveals the Canvas and Explorer without selecting or inspecting a Model', () => {
+it('reveals the Canvas and Explorer without selecting or inspecting a Model', async () => {
   render();
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
   expect(model.selected).toBeNull();
@@ -59,14 +59,14 @@ it('reveals the Canvas and Explorer without selecting or inspecting a Model', ()
   expect(useUiLayoutStore.getState().canvasExplorer.mode).toBe('expanded');
   expect(showCanvas).toHaveBeenCalledOnce();
   expect(inspect).not.toHaveBeenCalled();
-  act(() => browser.onSelect({ kind: 'canonical-node', nodeId: first.id }));
+  await act(() => browser.onSelect({ kind: 'canonical-node', nodeId: first.id }));
   expect(model.selected?.id).toBe(first.id);
   expect(model.initialView).toBe('sql');
   expect(model.active).toBe(true);
   expect(inspect).not.toHaveBeenCalled();
 });
 
-it('delegates an existing Model view without replacing its session or buffer', () => {
+it('delegates an existing Model view without replacing its session or buffer', async () => {
   render();
   act(() => model.open(first.id));
   const sql = vi.fn(),
@@ -84,13 +84,13 @@ it('delegates an existing Model view without replacing its session or buffer', (
     })
   );
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  act(() => browser.onSelect(first.id));
+  await act(() => browser.onSelect(first.id));
   expect(sql).toHaveBeenCalledOnce();
   expect(select).toHaveBeenCalledOnce();
   expect(model.initialView).toBe('semantic');
 });
 
-it('retains the current Model until its owner accepts replacement', () => {
+it('retains the current Model until its owner accepts replacement', async () => {
   render();
   act(() => model.open(first.id));
   let resume: (() => void) | undefined;
@@ -109,7 +109,7 @@ it('retains the current Model until its owner accepts replacement', () => {
     })
   );
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  act(() => browser.onSelect(second.id));
+  await act(() => browser.onSelect(second.id));
   expect(close).toHaveBeenCalledOnce();
   expect(model.selected?.id).toBe(first.id);
   expect(model.initialView).toBe('semantic');
@@ -118,10 +118,10 @@ it('retains the current Model until its owner accepts replacement', () => {
   expect(model.initialView).toBe('sql');
 });
 
-it('opens the next Model in the actual active view after its toolbar changes SQL visibility', () => {
+it('opens the next Model in the actual active view after its toolbar changes SQL visibility', async () => {
   render();
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  act(() => browser.onSelect(first.id));
+  await act(() => browser.onSelect(first.id));
   act(() =>
     store.getState().registerModelTab({
       canvasId: 'canvas',
@@ -140,7 +140,7 @@ it('opens the next Model in the actual active view after its toolbar changes SQL
       },
     })
   );
-  act(() => browser.onSelect(second.id));
+  await act(() => browser.onSelect(second.id));
   expect(model.selected?.id).toBe(second.id);
   expect(model.initialView).toBe('semantic');
 });
@@ -177,10 +177,10 @@ it('rejects obsolete browsing and delayed replacement after a Canvas change', ()
   expect(model.selected).toBeNull();
 });
 
-it('keeps resource inspection and SQL capability admission with their existing owner', () => {
+it('keeps resource inspection and SQL capability admission with their existing owner', async () => {
   render();
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  act(() => browser.onSelect({ kind: 'canonical-node', nodeId: source.id }));
+  await act(() => browser.onSelect({ kind: 'canonical-node', nodeId: source.id }));
   expect(model.selected).toBeNull();
   expect(inspect).toHaveBeenCalledExactlyOnceWith(
     { kind: 'canonical-node', nodeId: source.id },
@@ -188,22 +188,22 @@ it('keeps resource inspection and SQL capability admission with their existing o
   );
 });
 
-it('opens the existing occurrence or waits for an explicit context choice without allocating one', () => {
+it('opens the existing occurrence or waits for an explicit context choice without allocating one', async () => {
   const instance = { ...first, id: 'placed', definitionId: first.id };
   render('canvas', [first, instance]);
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  act(() => browser.onSelect(first.id));
+  await act(() => browser.onSelect(first.id));
   expect(model.selected?.id).toBe(instance.id);
   expect(model.initialView).toBe('sql');
   const other = { ...instance, id: 'other-placement', name: 'Other Model block' };
   act(() => model.close());
   render('canvas', [first, instance, other]);
-  act(() => browser.onSelect(first.id));
+  await act(() => browser.onSelect(first.id));
   expect(model.selected).toBeNull();
   expect(browser.contexts.map((item) => item.nodeId)).toEqual([instance.id, other.id]);
   act(() => browser.cancelContext());
   expect(model.selected).toBeNull();
-  act(() => browser.onSelect(first.id));
+  await act(() => browser.onSelect(first.id));
   act(() => browser.selectContext(other.id));
   expect(model.selected?.id).toBe(other.id);
   expect(model.initialView).toBe('sql');
