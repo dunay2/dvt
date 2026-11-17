@@ -77,6 +77,14 @@ central content, using the requested semantic or SQL view when its existing
 capability admits that editor. Other resources retain their real inspection or
 Code capability; the view mode grants no new authoring permission.
 
+The catalog identity is the shared definition. Resolve a real existing instance
+for its input context before entering the editor: reuse a matching current
+session, use the sole instance, or ask the user to choose when several exist.
+An unplaced Model remains its definition and retains its real incomplete-input
+state. Never create an instance or silently choose the first of several contexts.
+This distinction is required by the existing SQL query port and shared-definition
+contract; display names do not determine identity.
+
 The registered Model projection, shared search, result counts, Source facet and
 file-publication adapter remain unchanged. Selection never creates an occurrence;
 placement remains a drag operation. The project list remains accessible while a

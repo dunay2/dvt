@@ -30,7 +30,7 @@ let root: Root;
 let host: HTMLDivElement;
 function Harness({ canvasId, nodes }: { canvasId: string; nodes: readonly CanonicalNode[] }): null {
   model = useCanvasModelSelection(canvasId, nodes, focus);
-  browser = useCanvasModelBrowser({ canvasId, model, showCanvas, onInspect: inspect });
+  browser = useCanvasModelBrowser({ canvasId, nodes, model, showCanvas, onInspect: inspect });
   return null;
 }
 function render(canvasId = 'canvas', nodes = [first, second, source]): void {
@@ -72,18 +72,16 @@ it('delegates an existing Model view without replacing its session or buffer', (
   const sql = vi.fn(),
     select = vi.fn();
   act(() =>
-    store
-      .getState()
-      .registerModelTab({
-        canvasId: 'canvas',
-        nodeId: first.id,
-        label: first.name,
-        active: false,
-        onSelect: select,
-        onCanvas: vi.fn(),
-        onClose: vi.fn(),
-        views: { active: 'semantic', sqlPanelId: 'sql', disabled: false, semantic: vi.fn(), sql },
-      })
+    store.getState().registerModelTab({
+      canvasId: 'canvas',
+      nodeId: first.id,
+      label: first.name,
+      active: false,
+      onSelect: select,
+      onCanvas: vi.fn(),
+      onClose: vi.fn(),
+      views: { active: 'semantic', sqlPanelId: 'sql', disabled: false, semantic: vi.fn(), sql },
+    })
   );
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
   act(() => browser.onSelect(first.id));
@@ -100,17 +98,15 @@ it('retains the current Model until its owner accepts replacement', () => {
     resume = continuation;
   });
   act(() =>
-    store
-      .getState()
-      .registerModelTab({
-        canvasId: 'canvas',
-        nodeId: first.id,
-        label: first.name,
-        active: true,
-        onSelect: vi.fn(),
-        onCanvas: vi.fn(),
-        onClose: close,
-      })
+    store.getState().registerModelTab({
+      canvasId: 'canvas',
+      nodeId: first.id,
+      label: first.name,
+      active: true,
+      onSelect: vi.fn(),
+      onCanvas: vi.fn(),
+      onClose: close,
+    })
   );
   act(() => store.getState().modelBrowser!.onBrowse('sql'));
   act(() => browser.onSelect(second.id));
@@ -163,4 +159,25 @@ it('keeps resource inspection and SQL capability admission with their existing o
     { kind: 'canonical-node', nodeId: source.id },
     'code'
   );
+});
+
+it('opens the existing occurrence or waits for an explicit context choice without allocating one', () => {
+  const instance = { ...first, id: 'placed', definitionId: first.id };
+  render('canvas', [first, instance]);
+  act(() => store.getState().modelBrowser!.onBrowse('sql'));
+  act(() => browser.onSelect(first.id));
+  expect(model.selected?.id).toBe(instance.id);
+  expect(model.initialView).toBe('sql');
+  const other = { ...instance, id: 'other-placement', name: 'Other Model block' };
+  act(() => model.close());
+  render('canvas', [first, instance, other]);
+  act(() => browser.onSelect(first.id));
+  expect(model.selected).toBeNull();
+  expect(browser.contexts.map((item) => item.nodeId)).toEqual([instance.id, other.id]);
+  act(() => browser.cancelContext());
+  expect(model.selected).toBeNull();
+  act(() => browser.onSelect(first.id));
+  act(() => browser.selectContext(other.id));
+  expect(model.selected?.id).toBe(other.id);
+  expect(model.initialView).toBe('sql');
 });

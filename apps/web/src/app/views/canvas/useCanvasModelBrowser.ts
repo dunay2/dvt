@@ -13,14 +13,21 @@ import {
   type CanvasModelView,
 } from './canvasWorkspaceMenuContributionStore';
 import type { useCanvasModelSelection } from './useCanvasModelSelection';
+import type { CanonicalNode } from '../../types/canonical';
+import {
+  resolveCanvasModelNavigationTarget,
+  type CanvasModelNavigationContext,
+} from './canvasModelNavigationTarget';
 
 export function useCanvasModelBrowser({
   canvasId,
+  nodes,
   model,
   showCanvas,
   onInspect,
 }: Readonly<{
   canvasId: string | null;
+  nodes: readonly CanonicalNode[];
   model: ReturnType<typeof useCanvasModelSelection>;
   showCanvas: () => void;
   onInspect: CanvasInspectorCommand;
@@ -29,12 +36,18 @@ export function useCanvasModelBrowser({
     null
   );
   const owner = useMemo(() => ({}), [canvasId]);
+  const [pendingContext, setPendingContext] = useState<Readonly<{
+    owner: object;
+    view: CanvasModelView;
+    contexts: readonly CanvasModelNavigationContext[];
+  }> | null>(null);
   const currentOwner = useRef(owner);
   currentOwner.current = owner;
   const mode = choice?.owner === owner ? choice.mode : null;
   const onCanvas = useCallback(() => {
     if (currentOwner.current !== owner) return;
     setChoice(null);
+    setPendingContext(null);
     showCanvas();
     model.setActive(false);
   }, [owner, showCanvas, model.setActive]);
@@ -42,6 +55,7 @@ export function useCanvasModelBrowser({
     (view: CanvasModelView) => {
       if (canvasId == null || currentOwner.current !== owner) return;
       setChoice({ owner, mode: view });
+      setPendingContext(null);
       showCanvas();
       model.setActive(false);
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' });
@@ -66,14 +80,49 @@ export function useCanvasModelBrowser({
             : null;
       if (mode != null && nodeId != null && model.modelIds.has(nodeId)) {
         showCanvas();
-        model.open(nodeId, mode);
+        const target = resolveCanvasModelNavigationTarget(nodeId, nodes, model.selected?.id);
+        if (target.kind === 'contexts')
+          setPendingContext({ owner, view: mode, contexts: target.contexts });
+        else model.open(target.nodeId, mode);
         return true;
       }
       showCanvas();
       model.setActive(false);
       return onInspect(request, preferredTab ?? (mode === 'sql' ? 'code' : null));
     },
-    [owner, mode, model.modelIds, model.open, model.setActive, showCanvas, onInspect]
+    [
+      owner,
+      mode,
+      nodes,
+      model.modelIds,
+      model.selected?.id,
+      model.open,
+      model.setActive,
+      showCanvas,
+      onInspect,
+    ]
   );
-  return { mode, onSelect };
+  const contexts =
+    pendingContext?.owner === owner
+      ? pendingContext.contexts.filter((item) => model.modelIds.has(item.nodeId))
+      : [];
+  const selectContext = (nodeId: string): void => {
+    if (
+      currentOwner.current !== owner ||
+      pendingContext?.owner !== owner ||
+      !contexts.some((item) => item.nodeId === nodeId)
+    )
+      return;
+    setPendingContext(null);
+    model.open(nodeId, pendingContext.view);
+  };
+  return {
+    mode,
+    onSelect,
+    contexts,
+    selectContext,
+    cancelContext: () => {
+      if (currentOwner.current === owner) setPendingContext(null);
+    },
+  };
 }

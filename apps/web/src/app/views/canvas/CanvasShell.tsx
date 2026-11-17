@@ -71,6 +71,7 @@ export default function CanvasShell({
   const operationData = useCanvasOperationDataTab(semanticCopy);
   const modelBrowser = useCanvasModelBrowser({
     canvasId: panels.activeCanvasId,
+    nodes: panels.inspectorGraphNodes,
     model,
     showCanvas: code.showCanvas,
     onInspect: graphCommands.onInspectNode,

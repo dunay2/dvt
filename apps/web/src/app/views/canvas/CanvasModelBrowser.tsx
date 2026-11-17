@@ -13,6 +13,8 @@ import type { useCanvasModelBrowser } from './useCanvasModelBrowser';
 import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
 import { CanvasProjectElementsExplorer } from './explorer/CanvasProjectElementsExplorer';
 import { CanvasWarehouseConnections } from './explorer/CanvasWarehouseConnections';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
+import { CanvasModelContextPicker } from './CanvasModelContextPicker';
 
 export type CanvasModelBrowserPresentation = Readonly<{
   mode: CanvasModelView | null;
@@ -43,15 +45,15 @@ export function CanvasModelBrowserProvider({
   onManageConnections?: () => void;
   children: ReactNode;
 }>): JSX.Element {
-  const items = useMemo(
-    () =>
-      projectCanvasExplorerModels(nodes, canvasId ?? undefined).map((item) => ({
-        ...item,
-        selected: item.id === selectedId,
-        draggable: false,
-      })),
-    [nodes, canvasId, selectedId]
-  );
+  const items = useMemo(() => {
+    const selected = nodes.find((node) => node.id === selectedId);
+    const definitionId = workspaceNodeDefinitionId(selected) ?? selectedId;
+    return projectCanvasExplorerModels(nodes, canvasId ?? undefined).map((item) => ({
+      ...item,
+      selected: item.id === definitionId,
+      draggable: false,
+    }));
+  }, [nodes, canvasId, selectedId]);
   return (
     <CanvasModelBrowser.Provider
       value={{
@@ -69,6 +71,11 @@ export function CanvasModelBrowserProvider({
       }}
     >
       {children}
+      <CanvasModelContextPicker
+        contexts={navigation.contexts}
+        onSelect={navigation.selectContext}
+        onClose={navigation.cancelContext}
+      />
     </CanvasModelBrowser.Provider>
   );
 }
