@@ -201,6 +201,21 @@ protected saved-SQL projection and its explicit generation behavior.
   forbidden product paths were unchanged. A missing operation-type invocation
   rolled back before retry; neither failed attempt is acceptance evidence.
 
+## Extracted browser fixture admission
+
+The full prepush for `3bcb7ba9e` passed native mechanization, documentation,
+format and changed-file lint, then rejected the extracted SQL fixture before
+browser execution because it was absent from `cypress.supportCapabilities.ts`.
+The existing fixture-closure table now includes that helper and reproduces the
+failure (one failed, 139 passed). One exact controlled-runtime registry entry
+fixes admission; the scenario catalog, runtime selection, unknown-path rejection
+and execution budgets remain unchanged. The shared test discovers actual
+transitive consumers and checks their complete, disjoint runtime coverage.
+
+`pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.browserRouting.architecture.test.ts src/testing/vitestSuites.browserCatalog.architecture.test.ts src/testing/vitestSuites.browserCatalogReadiness.architecture.test.ts`
+passed all 210 contracts after that correction. This failed prepush remains
+diagnostic evidence, not an acceptance receipt.
+
 ## Completion boundary
 
 Native component, port, contract, test and query records describe actual

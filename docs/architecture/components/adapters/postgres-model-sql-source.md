@@ -134,6 +134,11 @@ includes names, plugin/kind/role, placement references, path and metadata, so
 renaming or rebinding an input invalidates visible receipts without rewriting
 the user's SQL.
 
+The extracted SQL browser fixture remains a controlled-runtime support module in
+the existing browser ownership registry. Its admission is checked against the
+actual transitive scenario imports by the shared fixture-closure contract. This
+adds no scenario, runtime, wildcard or alternate routing catalog.
+
 ## Required proof
 
 Contracts must reject forged context/provenance, unbounded SQL/rows and SQL in

@@ -29,6 +29,7 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
   'apps/web/cypress/support/canvasFirstAuthoring.ts': ['available'],
   'apps/web/cypress/support/dbtProjectLive.ts': ['available'],
   'apps/web/cypress/support/codeWorkbench/bootstrap.ts': ['controlled'],
+  'apps/web/cypress/support/modelSqlAuthoring.ts': ['controlled'],
   'apps/web/cypress/support/e2eApiStub.ts': CAPABILITIES,
   'apps/web/cypress/support/nativeKeyboard.ts': ['controlled', 'available'],
   'apps/web/cypress/support/shellWorkbench/browserEmulation.ts': ['controlled'],
