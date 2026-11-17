@@ -88,6 +88,10 @@ session. A fresh session receives its initial view atomically; selecting the sam
 session reuses its published view callback. Semantic view collapses SQL and SQL
 expands its retained logical editor. Shell receives presentation mode and callbacks
 only, without owning SQL text, semantic drafts or authorization.
+Focused local alias text remains pending when focus moves to a declared
+workbench navigation control. Navigation and hiding a retained surface cannot
+accept that alias through blur. Ordinary field blur retains its existing
+acceptance behavior; explicit Close still discards the local input.
 Presentation switching retains the SQL buffer, current Model and lower data
 results. It never implicitly compiles, executes, applies, saves or discards.
 Expanding SQL may prepare the existing protected logical-input context. SQL
@@ -107,6 +111,26 @@ generation, validation, row execution and Model Apply remain explicit actions.
 
 These responsibilities extend existing families and ports. They create no new
 domain aggregate, backend endpoint or persistence schema.
+
+## Native ownership reconciliation
+
+The follow-up source is this committed component guide, admitted locally as
+`GH-3944-PERSISTENT-MODEL-BROWSER`. Keep metadata updates bounded to the existing
+Shell presentation, Canvas shell chrome, viewport and relational workbench
+families. Source bindings must enumerate the actual implemented symbols and
+their behavioral proof. Retired timer declarations must be removed rather than
+kept as nonexistent evidence. Existing command/query identities and authorities
+remain unchanged.
+
+The global command/query catalog also changes the content digest of its existing
+11 local and 16 imported declarations. Reconcile only those provenance leaves
+through `CatalogReconciliation`, retaining all manifests and rail identities.
+Its native storage scope is `planning_query_store.feature_mechanization_local_rails`,
+`planning_query_store.command_query_rails` and
+`planning_query_store.feature_mechanization_local_operations`. Component and rail
+writes use their existing revision and binding-hash
+compare-and-swap operators. No Planning DB import, rebuild or product schema
+change is part of this slice.
 
 ## Corners and validation
 

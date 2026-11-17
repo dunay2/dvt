@@ -29,6 +29,9 @@ export function LeftNavigationRail({
   const registeredModelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
   const modelTab =
     contribution?.activeCanvas?.id === registeredModelTab?.canvasId ? registeredModelTab : null;
+  const registeredBrowser = useCanvasWorkspaceMenuContributionStore((state) => state.modelBrowser);
+  const modelBrowser =
+    contribution?.activeCanvas?.id === registeredBrowser?.canvasId ? registeredBrowser : null;
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
@@ -53,7 +56,10 @@ export function LeftNavigationRail({
             aria-label={item.label}
             data-active={
               isCanvas
-                ? onCanvasRoute && codeTab?.active !== true && modelTab?.active !== true
+                ? onCanvasRoute &&
+                  codeTab?.active !== true &&
+                  modelTab?.active !== true &&
+                  modelBrowser?.mode == null
                 : undefined
             }
             aria-expanded={
@@ -75,7 +81,8 @@ export function LeftNavigationRail({
                 return;
               event.preventDefault();
               // Reuse the published owner callback; opening Elements does not close its session.
-              if (codeTab?.active === true) codeTab.onCanvas();
+              if (modelBrowser?.mode != null) modelBrowser.onCanvas();
+              else if (codeTab?.active === true) codeTab.onCanvas();
               else if (modelTab?.active === true) modelTab.onCanvas();
               dispatch({ type: 'expand' });
             }}
@@ -96,6 +103,7 @@ export function LeftNavigationRail({
         <div className={styles.scroll}>
           <nav
             data-slot="left-navigation-nav"
+            data-workbench-navigation=""
             className={styles.nav}
             aria-label={copy.globalNavigation}
           >
@@ -149,6 +157,7 @@ export function LeftNavigationRail({
             {canvasItem == null ? null : (
               <ShellModelViewNavigation
                 tab={modelTab}
+                browser={modelBrowser}
                 available={onCanvasRoute}
                 foreground={codeTab?.active !== true}
                 copy={copy}

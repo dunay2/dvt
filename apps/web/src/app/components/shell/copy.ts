@@ -103,7 +103,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   modelSqlView: { key: 'shell.modelSqlView', fallback: 'SQL' },
   modelViewUnavailable: {
     key: 'shell.modelViewUnavailable',
-    fallback: 'Open an available Model first',
+    fallback: 'Open a Canvas workspace first',
   },
   modelViewBusy: { key: 'shell.modelViewBusy', fallback: 'The SQL proposal is being applied' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
@@ -192,7 +192,7 @@ const COPY_ES: ShellTopBarCopy = {
   projectCode: 'Git',
   semanticView: 'Vista semántica',
   modelSqlView: 'SQL',
-  modelViewUnavailable: 'Abre primero un modelo disponible',
+  modelViewUnavailable: 'Abre primero un espacio Canvas',
   modelViewBusy: 'Se está aplicando la propuesta SQL',
   viewOptions: 'Opciones de vista',
   language: 'Idioma',

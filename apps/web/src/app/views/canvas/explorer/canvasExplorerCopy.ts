@@ -38,6 +38,7 @@ const en = {
   collapse: 'Collapse explorer',
   close: 'Close explorer',
   models: 'Models',
+  modelInputs: 'Model inputs',
   projectModelsLoading: 'Loading project models…',
   modelSchemaUnavailable: 'The model output schema or execution connection is unavailable.',
   projectModelsUnavailable: 'Project models are unavailable. Canvas elements remain accessible.',
@@ -75,6 +76,7 @@ const es: typeof en = {
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',
   models: 'Modelos',
+  modelInputs: 'Entradas del modelo',
   projectModelsLoading: 'Cargando modelos del proyecto…',
   modelSchemaUnavailable:
     'El esquema de salida o la conexión de ejecución del modelo no están disponibles.',

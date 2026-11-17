@@ -23,7 +23,11 @@ export function CanvasWorkspaceModelTabsTemplate({
 }>) {
   return (
     <Tabs value={activeKey} onValueChange={onSelect} className="canvas-workspace-model-tabs">
-      <TabsList aria-label={copy.workspaceTabs} className="workspace-navigation-tabs">
+      <TabsList
+        aria-label={copy.workspaceTabs}
+        className="workspace-navigation-tabs"
+        data-workbench-navigation=""
+      >
         {tabs.map((item) => (
           <TabsTrigger
             key={item.key}

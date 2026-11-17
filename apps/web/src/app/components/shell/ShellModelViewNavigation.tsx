@@ -6,8 +6,10 @@
  * @version 1.0.0
  */
 import { Workflow, SquareCode } from 'lucide-react';
-import type { CanvasModelWorkspaceTabContribution } from '../../views/canvas/canvasWorkspaceMenuContributionStore';
-import { canvasWorkspaceTabs } from '../../views/canvas/canvasWorkspaceTabs';
+import type {
+  CanvasModelWorkspaceTabContribution,
+  CanvasModelBrowserContribution,
+} from '../../views/canvas/canvasWorkspaceMenuContributionStore';
 import type { ShellTopBarCopy } from './copy';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../ui/utils';
@@ -15,46 +17,41 @@ import styles from '../LeftNavigation.module.css';
 
 export function ShellModelViewNavigation({
   tab,
+  browser,
   available,
   foreground,
   copy,
 }: Readonly<{
   tab: CanvasModelWorkspaceTabContribution | null;
+  browser: CanvasModelBrowserContribution | null;
   available: boolean;
   foreground: boolean;
   copy: ShellTopBarCopy;
 }>) {
   const views = tab?.views;
-  const disabled = !available || views == null || views.disabled;
+  const disabled = !available || browser == null || views?.disabled === true;
+  const active = tab?.active ? views?.active : browser?.mode;
   return (
     <>
       {(
         [
-          { id: 'semantic', label: copy.semanticView, Icon: Workflow, select: views?.semantic },
-          { id: 'sql', label: copy.modelSqlView, Icon: SquareCode, select: views?.sql },
+          { id: 'semantic', label: copy.semanticView, Icon: Workflow },
+          { id: 'sql', label: copy.modelSqlView, Icon: SquareCode },
         ] as const
-      ).map(({ id, label, Icon, select }) => (
+      ).map(({ id, label, Icon }) => (
         <Tooltip key={id}>
           <TooltipTrigger asChild>
             <button
               type="button"
               data-slot={`shell-model-${id}-command`}
-              data-active={available && foreground && tab?.active === true && views?.active === id}
+              data-active={available && foreground && browser != null && active === id}
               aria-label={label}
               aria-disabled={disabled}
-              aria-pressed={available && foreground && tab?.active === true && views?.active === id}
-              aria-controls={
-                views == null
-                  ? undefined
-                  : id === 'sql'
-                    ? views.sqlPanelId
-                    : canvasWorkspaceTabs.model.panelId
-              }
+              aria-pressed={available && foreground && browser != null && active === id}
               className={cn(styles.link, styles.linkInteractive)}
               onClick={() => {
                 if (disabled) return;
-                tab?.onSelect();
-                select?.();
+                browser?.onBrowse(id);
               }}
             >
               <Icon aria-hidden="true" className={styles.icon} />

@@ -3,6 +3,14 @@ import { create } from 'zustand';
 
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
 
+export type CanvasModelView = 'semantic' | 'sql';
+export type CanvasModelBrowserContribution = Readonly<{
+  canvasId: string;
+  mode: CanvasModelView | null;
+  onBrowse: (view: CanvasModelView) => void;
+  onCanvas: () => void;
+}>;
+
 export type CanvasWorkspaceMenuContribution = Readonly<{
   activeCanvas?: ProjectCanvasDocument | null;
   canvasDocuments?: readonly ProjectCanvasDocument[];
@@ -30,7 +38,7 @@ export type CanvasModelWorkspaceTabContribution = Readonly<{
   onCanvas: () => void;
   onClose: (afterClose?: () => void) => void;
   views?: Readonly<{
-    active: 'semantic' | 'sql';
+    active: CanvasModelView;
     sqlPanelId: string;
     disabled: boolean;
     semantic: () => void;
@@ -39,6 +47,9 @@ export type CanvasModelWorkspaceTabContribution = Readonly<{
 }>;
 
 type CanvasWorkspaceMenuContributionState = {
+  modelBrowser: CanvasModelBrowserContribution | null;
+  registerModelBrowser: (browser: CanvasModelBrowserContribution) => void;
+  clearModelBrowser: (browser: CanvasModelBrowserContribution) => void;
   modelTab: CanvasModelWorkspaceTabContribution | null;
   registerModelTab: (tab: CanvasModelWorkspaceTabContribution) => void;
   clearModelTab: (tab: CanvasModelWorkspaceTabContribution) => void;
@@ -50,6 +61,10 @@ type CanvasWorkspaceMenuContributionState = {
 export const useCanvasWorkspaceMenuContributionStore = create<CanvasWorkspaceMenuContributionState>(
   (set) => ({
     contribution: null,
+    modelBrowser: null,
+    registerModelBrowser: (modelBrowser) => set({ modelBrowser }),
+    clearModelBrowser: (browser) =>
+      set((state) => (state.modelBrowser === browser ? { modelBrowser: null } : state)),
     modelTab: null,
     registerModelTab: (modelTab) => set({ modelTab }),
     clearModelTab: (tab) => set((state) => (state.modelTab === tab ? { modelTab: null } : state)),

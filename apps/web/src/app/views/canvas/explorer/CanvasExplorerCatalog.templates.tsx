@@ -101,7 +101,7 @@ function CanvasExplorerModelRow({
   const selected = item.selected === true;
   const description = item.description?.trim();
   return (
-    <li data-slot="canvas-explorer-model-row" data-model-id={item.id}>
+    <li data-slot="canvas-explorer-model-row" data-model-id={item.id} data-workbench-navigation="">
       <div className={styles.itemRow} data-selected={selected}>
         <button
           type="button"

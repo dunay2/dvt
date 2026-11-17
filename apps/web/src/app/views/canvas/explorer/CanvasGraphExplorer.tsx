@@ -20,6 +20,7 @@ import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerModels } from './canvasExplorerItems';
 import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import { useCanvasModelBrowserPresentation } from '../CanvasModelBrowser';
 import type {
   CanvasInspectorCommand,
   CanvasInspectorResource,
@@ -61,6 +62,8 @@ export function CanvasGraphExplorer({
   onImportFocusComplete?: () => void;
 }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
+  const browser = useCanvasModelBrowserPresentation();
+  const inspect = browser?.mode == null ? onInspectNode : browser.onSelect;
   const rootRef = useRef<HTMLDivElement>(null);
   const definitions = useMemo(
     () => projectCanvasExplorerModels(catalogue ?? [], sourceCatalogueCanvasId),
@@ -143,7 +146,7 @@ export function CanvasGraphExplorer({
             onAddModel={onAddModel}
             onImport={onImport}
             connections={connections}
-            onSelect={(id) => onInspectNode({ kind: 'canonical-node', nodeId: id })}
+            onSelect={(id) => inspect({ kind: 'canonical-node', nodeId: id })}
             onDragStart={dragResource}
           />
         ) : (
@@ -152,7 +155,7 @@ export function CanvasGraphExplorer({
               enabled,
               items,
               canCreateInstances: canPlaceSource && referencePlacementScope == null,
-              onInspectNode,
+              onInspectNode: inspect,
               inspectorTarget,
               catalogueScopeKey,
               onDragStart: dragResource,

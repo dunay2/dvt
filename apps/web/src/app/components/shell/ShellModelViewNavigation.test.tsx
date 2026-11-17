@@ -30,7 +30,11 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
-  useCanvasWorkspaceMenuContributionStore.setState({ modelTab: null, contribution: null });
+  useCanvasWorkspaceMenuContributionStore.setState({
+    modelTab: null,
+    modelBrowser: null,
+    contribution: null,
+  });
   vi.unstubAllGlobals();
 });
 function render(language = 'en'): void {
@@ -69,11 +73,12 @@ it('exposes localized unavailable Model actions without inventing a Model or nav
   expect(useCanvasWorkspaceMenuContributionStore.getState().modelTab).toBeNull();
 });
 
-it('uses the latest Model callbacks and keeps Canvas, semantic and SQL active states exclusive', () => {
+it('reveals the scoped Explorer without choosing a Model and keeps one destination active', () => {
   const select = vi.fn();
   const semantic = vi.fn();
   const sql = vi.fn();
   const canvas = vi.fn();
+  const browse = vi.fn();
   const tab = {
     canvasId: 'canvas',
     nodeId: 'model',
@@ -91,6 +96,12 @@ it('uses the latest Model callbacks and keeps Canvas, semantic and SQL active st
     },
   };
   useCanvasWorkspaceMenuContributionStore.getState().registerModelTab(tab);
+  useCanvasWorkspaceMenuContributionStore.getState().registerModelBrowser({
+    canvasId: 'canvas',
+    mode: 'semantic',
+    onBrowse: browse,
+    onCanvas: canvas,
+  });
   useCanvasWorkspaceMenuContributionStore.getState().registerCanvasWorkspaceMenuContribution({
     activeCanvas: { id: 'canvas', kind: 'dvt', title: 'Canvas' },
     canExportProjectSnapshot: false,
@@ -101,12 +112,12 @@ it('uses the latest Model callbacks and keeps Canvas, semantic and SQL active st
   const sqlAction = within(container).getByRole('button', { name: 'SQL' });
   expect(container.querySelectorAll('[data-active="true"]')).toHaveLength(1);
   expect(semanticAction.getAttribute('data-active')).toBe('true');
-  expect(sqlAction.getAttribute('aria-controls')).toBe('model-sql');
   act(() => fireEvent.click(within(container).getByRole('link', { name: 'Canvas' })));
   expect(canvas).toHaveBeenCalledOnce();
   act(() => fireEvent.click(sqlAction));
-  expect(select).toHaveBeenCalledOnce();
-  expect(sql).toHaveBeenCalledOnce();
+  expect(browse).toHaveBeenCalledExactlyOnceWith('sql');
+  expect(select).not.toHaveBeenCalled();
+  expect(sql).not.toHaveBeenCalled();
   expect(semantic).not.toHaveBeenCalled();
   const currentSemantic = vi.fn();
   act(() =>
@@ -118,7 +129,8 @@ it('uses the latest Model callbacks and keeps Canvas, semantic and SQL active st
   expect(container.querySelectorAll('[data-active="true"]')).toHaveLength(1);
   expect(sqlAction.getAttribute('data-active')).toBe('true');
   act(() => fireEvent.click(semanticAction));
-  expect(currentSemantic).toHaveBeenCalledOnce();
+  expect(browse).toHaveBeenLastCalledWith('semantic');
+  expect(currentSemantic).not.toHaveBeenCalled();
   expect(semantic).not.toHaveBeenCalled();
   act(() =>
     useCanvasWorkspaceMenuContributionStore.getState().registerModelTab({
@@ -127,21 +139,23 @@ it('uses the latest Model callbacks and keeps Canvas, semantic and SQL active st
     })
   );
   act(() => fireEvent.click(sqlAction));
-  expect(sql).toHaveBeenCalledOnce();
+  expect(sql).not.toHaveBeenCalled();
   act(() =>
-    useCanvasWorkspaceMenuContributionStore.getState().registerModelTab({
-      ...tab,
+    useCanvasWorkspaceMenuContributionStore.getState().registerModelBrowser({
       canvasId: 'obsolete-canvas',
+      mode: 'sql',
+      onBrowse: vi.fn(),
+      onCanvas: vi.fn(),
     })
   );
   expect(sqlAction.getAttribute('aria-disabled')).toBe('true');
   act(() => fireEvent.click(sqlAction));
-  expect(sql).toHaveBeenCalledOnce();
+  expect(sql).not.toHaveBeenCalled();
   act(() =>
     useCanvasWorkspaceMenuContributionStore
       .getState()
       .clearModelTab(useCanvasWorkspaceMenuContributionStore.getState().modelTab!)
   );
   act(() => fireEvent.click(sqlAction));
-  expect(sql).toHaveBeenCalledOnce();
+  expect(sql).not.toHaveBeenCalled();
 });

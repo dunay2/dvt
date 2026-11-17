@@ -388,8 +388,17 @@ describe('Canvas Model inspection', () => {
             useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'collapse' });
             fireEvent.click(canvasEntry);
           });
-          expect(model.getAttribute('aria-selected')).toBe('true');
+          expect(model.getAttribute('aria-selected')).toBe('false');
+          expect(canvas.getAttribute('aria-selected')).toBe('true');
+          expect(modelPanel.getAttribute('aria-hidden')).toBe('true');
           expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
+          expect(panelFor(model)).toBe(modelPanel);
+          await act(async () => {
+            fireEvent.mouseDown(model, { button: 0 });
+            model.focus();
+          });
+          expect(model.getAttribute('aria-selected')).toBe('true');
+          expect(modelPanel.getAttribute('aria-hidden')).toBe('false');
           expect(panelFor(model)).toBe(modelPanel);
         }
         if (target === code) {

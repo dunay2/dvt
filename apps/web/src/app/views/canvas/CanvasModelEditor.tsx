@@ -28,6 +28,7 @@ import { CanvasModelSqlEditorAction } from './model-sql/CanvasModelSqlEditorActi
 import { resolveModelSqlCopy } from './model-sql/modelSqlCopy';
 import { useCanvasModelDraftHandle } from './model-sql/useCanvasModelDraftHandle';
 import { useCanvasModelSqlPanelLayout } from './model-sql/useCanvasModelSqlPanelLayout';
+import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 
 export function CanvasModelEditor({
   canvasId,
@@ -46,6 +47,7 @@ export function CanvasModelEditor({
   active = true,
   onSelect,
   onShowCanvas,
+  initialView = 'semantic',
 }: Readonly<{
   canvasId: string;
   workspaceScope?: WorkspaceScope;
@@ -63,6 +65,7 @@ export function CanvasModelEditor({
   active?: boolean;
   onSelect: () => void;
   onShowCanvas: () => void;
+  initialView?: CanvasModelView;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
@@ -79,7 +82,7 @@ export function CanvasModelEditor({
   const workbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const sqlWorkbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const combinedWorkbench = useCanvasModelDraftHandle(workbench, sqlWorkbench);
-  const [sqlOpen, setSqlOpen] = useState(false);
+  const [sqlOpen, setSqlOpen] = useState(initialView === 'sql');
   const sqlPanelRef = useCanvasModelSqlPanelLayout(sqlOpen);
   const [sqlApplying, setSqlApplying] = useState(false);
   const sqlPanelId = useId();
