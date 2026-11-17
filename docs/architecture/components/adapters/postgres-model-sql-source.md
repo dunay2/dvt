@@ -109,6 +109,12 @@ ordinals while the logical SQL seed omits unpublished fields. Row dependencies
 on an unpublished field reject the seed; no NULL filler or renamed identity is
 introduced. Preview provenance is intersected with the actual canonical producer
 closure, including transitive external producers.
+The owning Model workspace synchronously blocks visual authoring while SQL Apply
+is pending. The canvas remains mounted and becomes read-only/inert; cancellation
+does not release that exclusion until the command settles. Namespace currentness
+includes names, plugin/kind/role, placement references, path and metadata, so
+renaming or rebinding an input invalidates visible receipts without rewriting
+the user's SQL.
 
 ## Required proof
 

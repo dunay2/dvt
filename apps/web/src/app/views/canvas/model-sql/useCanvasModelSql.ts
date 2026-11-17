@@ -30,13 +30,14 @@ export function useCanvasModelSql(
     visual: React.RefObject<CanvasRelationalTreeWorkbenchHandle>;
     preparePreview?: CanvasModelPreviewPreparation;
     onOpenData: () => void;
+    onApplyingChange?: (applying: boolean) => void;
   }>
 ) {
   const [state, dispatch] = useReducer(modelSqlDraftReducer, initialModelSqlDraft);
   const latest = useRef(state);
   latest.current = state;
   const request = useModelSqlAnalysis(args.revision);
-  const command = useModelSqlApplyCommand();
+  const command = useModelSqlApplyCommand(args.onApplyingChange);
   request.observeBuffer(state.sql);
   const target = { canvasId: args.canvasId, transformNodeId: args.node.id };
   const lastRevision = useRef(args.revision);

@@ -16,6 +16,7 @@ export function CanvasModelEditorTemplate({
   guards,
   sql,
   sqlOpen = false,
+  semanticBlocked = false,
 }: Readonly<{
   label: string;
   footer: ReactNode;
@@ -23,6 +24,7 @@ export function CanvasModelEditorTemplate({
   guards: ReactNode;
   sql?: ReactNode;
   sqlOpen?: boolean;
+  semanticBlocked?: boolean;
 }>) {
   const sqlPanel = useRef<ImperativePanelHandle>(null);
   useEffect(() => {
@@ -39,6 +41,9 @@ export function CanvasModelEditorTemplate({
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel
           id="semantic"
+          data-slot="canvas-model-semantic-pane"
+          aria-busy={semanticBlocked}
+          {...(semanticBlocked ? { inert: '' } : {})}
           className={styles.semantic}
           order={0}
           defaultSize={100}

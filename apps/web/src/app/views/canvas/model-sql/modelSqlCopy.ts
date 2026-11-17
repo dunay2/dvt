@@ -23,15 +23,14 @@ const en = {
   hint: 'Use the logical input names shown here. Validate and query explicitly; Generate Model applies the semantic proposal.',
   unsupported:
     'Initial profile: SELECT fields, aliases, joins, filters, ordering and limits. Functions, aggregation and CTEs are not yet representable.',
-  stale: 'Inputs or Model changed. Refresh inputs to validate this SQL again. Your text is kept.',
+  tooLong:
+    'SQL exceeds the supported source length. Your text is kept; shorten it before continuing.',
   conflict: 'Apply or discard the pending semantic edits before generating a Model from SQL.',
   applyFailed:
     'The Model rejected this proposal. Review dependent outputs and the diagnostics; your SQL is kept.',
   discard: 'Discard SQL changes',
   cancel: 'Cancel request',
-  rows: 'Rows',
   unknown: 'Unknown',
-  insert: 'Insert logical input query',
   diagnostics: 'SQL diagnostics',
   contextRequired: 'Refresh inputs before continuing.',
   data: 'SQL results',
@@ -68,17 +67,14 @@ const es: ModelSqlCopy = {
   hint: 'Utiliza los nombres lógicos de estas entradas. Valida y consulta explícitamente; Generar modelo aplica la propuesta semántica.',
   unsupported:
     'Perfil inicial: SELECT de campos, alias, joins, filtros, ordenación y límites. Todavía no se representan funciones, agregaciones ni CTE.',
-  stale:
-    'Han cambiado las entradas o el modelo. Actualiza las entradas para validar otra vez. Se conserva tu texto.',
+  tooLong: 'El SQL supera la longitud admitida. Se conserva tu texto; redúcelo antes de continuar.',
   conflict:
     'Aplica o descarta los cambios semánticos pendientes antes de generar el modelo desde SQL.',
   applyFailed:
     'El modelo ha rechazado la propuesta. Revisa sus salidas dependientes y los diagnósticos; se conserva tu SQL.',
   discard: 'Descartar cambios SQL',
   cancel: 'Cancelar solicitud',
-  rows: 'Filas',
   unknown: 'Desconocido',
-  insert: 'Insertar consulta de la entrada lógica',
   diagnostics: 'Diagnósticos SQL',
   contextRequired: 'Actualiza las entradas antes de continuar.',
   data: 'Resultados SQL',

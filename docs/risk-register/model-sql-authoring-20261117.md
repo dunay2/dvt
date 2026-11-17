@@ -40,6 +40,10 @@ this record does not accept new debt.
   buffer during Apply, preserve the existing command's cancellation/session CAS,
   and retain its result when its own revision changes. Visual dirty-state
   conflicts and the common navigation decision protect both editors.
+  The workspace synchronously makes the visual surface read-only/inert during
+  pending SQL Apply; cancellation releases it only after actual settlement.
+  Namespace invalidation includes name and instance-reference changes as well
+  as plugin, kind, role, path and metadata.
 - Use one data owner and mark retained results stale after context/text changes.
   API identity checks reject mismatched receipts. Late results cannot replace
   newer text, scope or revision.

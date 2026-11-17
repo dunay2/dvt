@@ -3,7 +3,9 @@
 import React, { act } from 'react';
 import { getByRole, queryByRole, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
-import { container, dataHost, mount, proposal } from './CanvasModelSqlPanel.test-support';
+import { MODEL_SQL_MAX_LENGTH } from '@dvt/contracts';
+import { container, dataHost, mount } from './CanvasModelSqlPanel.test-support';
+import { proposal } from './modelSqlProtocol.test-fixtures';
 
 vi.mock('../../../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
@@ -27,6 +29,16 @@ vi.mock('../../../components/monaco/MonacoCodeEditor', () => ({
 }));
 
 describe('Model SQL panel', () => {
+  it('explains the shared source bound without truncating SQL or sending an oversized request', async () => {
+    const h = await mount();
+    const sql = 'x'.repeat(MODEL_SQL_MAX_LENGTH + 1);
+    await h.type(sql);
+    expect(getByRole(container, 'alert').textContent).toContain('supported source length');
+    expect(getByRole(container, 'textbox')).toHaveProperty('value', sql);
+    expect(getByRole(container, 'button', { name: 'Validate' })).toHaveProperty('disabled', true);
+    expect(h.query.compile).not.toHaveBeenCalled();
+    expect(h.query.preview).not.toHaveBeenCalled();
+  });
   it('does not compile or execute while typing, then explicitly validates and queries', async () => {
     const h = await mount();
     await h.type('SELECT orders_id FROM orders');

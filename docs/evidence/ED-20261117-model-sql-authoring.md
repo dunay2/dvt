@@ -79,6 +79,12 @@ omitting unavailable outputs, and reject unavailable row dependencies.
 - Web focused tests: 33 passed, including query transport identity, navigation,
   stale results, visual conflicts, typography and an Apply acknowledgement that
   survives its own graph revision. Affected ESLint passed without warnings.
+- A subsequent workspace review reproduced six additional failures: visual
+  authoring remained enabled during SQL Apply, and input identity changes did not
+  refresh the namespace. All six now pass, including cancellation that retains
+  the lock until actual settlement. Two file-input regressions and the existing
+  30 Input binding tests also pass. Shared validated protocol fixtures keep the
+  panel and workspace proofs separate from their DOM lifetime setup.
 - Chrome on the existing `http://localhost:5173/canvas`: one controlled journey
   passed, with no pending or skipped tests. Real Monaco input and native
   Ctrl+Enter lead to rows in the existing data drawer. Keep-editing navigation

@@ -34,7 +34,14 @@ const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
 export const WEB_VITEST_TEST_SOURCE_OWNERS = [
   {
     entries: ['src/app/views/canvas/model-sql/CanvasModelSqlPanel.test.tsx'],
-    helpers: ['src/app/views/canvas/model-sql/CanvasModelSqlPanel.test-support.tsx'],
+    helpers: [
+      'src/app/views/canvas/model-sql/CanvasModelSqlPanel.test-support.tsx',
+      'src/app/views/canvas/model-sql/modelSqlProtocol.test-fixtures.ts',
+    ],
+  },
+  {
+    entries: ['src/app/views/canvas/model-sql/CanvasModelSqlTransaction.test.tsx'],
+    helpers: ['src/app/views/canvas/model-sql/modelSqlProtocol.test-fixtures.ts'],
   },
   {
     entries: ['src/testing/vitestSuites.browserRouting.architecture.test.ts'],

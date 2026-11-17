@@ -78,6 +78,7 @@ export function CanvasModelEditor({
   const sqlWorkbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const combinedWorkbench = useCanvasModelDraftHandle(workbench, sqlWorkbench);
   const [sqlOpen, setSqlOpen] = useState(false);
+  const [sqlApplying, setSqlApplying] = useState(false);
   const sqlPanelId = useId();
   const [dataOwner, setDataOwner] = useState<'operation' | 'sql'>('operation');
   const sqlCopy = resolveModelSqlCopy(language);
@@ -87,7 +88,17 @@ export function CanvasModelEditor({
         scopeKey,
         canvasId,
         transformNode.id,
-        nodes.map((node) => [node.id, node.metadata]),
+        nodes.map((node) => [
+          node.id,
+          node.name,
+          node.kind,
+          node.pluginId,
+          node.role,
+          node.definitionId,
+          node.sourceDefinitionId,
+          node.path,
+          node.metadata,
+        ]),
         edges,
       ]),
     [scopeKey, canvasId, transformNode.id, nodes, edges]
@@ -116,6 +127,7 @@ export function CanvasModelEditor({
   return (
     <CanvasModelEditorTemplate
       label={`${transformNode.name} · ${copy.editor}`}
+      semanticBlocked={sqlApplying}
       footer={
         <CanvasModelToolbar
           data={{
@@ -134,14 +146,16 @@ export function CanvasModelEditor({
       editor={
         <CanvasRelationalTreeWorkbench
           ref={workbench}
-          active={active}
+          active={active && !sqlApplying}
           codeProjection={codeProjection}
           layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
           transformNode={transformNode}
           nodes={nodes}
           edges={edges}
           copy={treeCopy}
-          authoring={authoring}
+          authoring={
+            sqlApplying && authoring != null ? { ...authoring, canEditNode: false } : authoring
+          }
           actionsHost={actionsHost}
           preview={{
             canvasId,
@@ -177,6 +191,7 @@ export function CanvasModelEditor({
           authoring={authoring}
           preparePreview={preparePreview}
           onClose={() => setSqlOpen(false)}
+          onApplyingChange={setSqlApplying}
           dataHost={operationDataHost}
           ownsData={dataOwner === 'sql'}
           onOpenData={() => {

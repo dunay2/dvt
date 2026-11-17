@@ -1,6 +1,7 @@
 /** Compose SQL source, diagnostics and the existing data drawer without another save controller. */
 import { forwardRef, useEffect, useImperativeHandle, useRef, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
+import { MODEL_SQL_MAX_LENGTH } from '@dvt/contracts';
 import {
   MonacoCodeEditor,
   type MonacoCodeEditorMount,
@@ -36,6 +37,7 @@ export const CanvasModelSqlPanel = forwardRef<
     dataHost?: HTMLDivElement | null;
     ownsData: boolean;
     onOpenData: () => void;
+    onApplyingChange?: (applying: boolean) => void;
   }>
 >(function CanvasModelSqlPanel(props, ref) {
   const language = useApplicationLanguageStore((value) => value.language);
@@ -73,7 +75,9 @@ export const CanvasModelSqlPanel = forwardRef<
     cancel: model.discard,
   }));
   const diagnostics = model.analysis?.diagnostics ?? model.state.context?.diagnostics ?? [];
-  const ready = query != null && model.state.context != null && model.state.sql.trim().length > 0;
+  const tooLong = model.state.sql.length > MODEL_SQL_MAX_LENGTH;
+  const ready =
+    query != null && model.state.context != null && model.state.sql.trim().length > 0 && !tooLong;
   return (
     <section
       id={props.panelId}
@@ -81,6 +85,11 @@ export const CanvasModelSqlPanel = forwardRef<
       aria-label={copy.editor}
       className={styles.panel}
     >
+      {tooLong ? (
+        <p role="alert" className={`${styles.message} ${styles.error}`}>
+          {copy.tooLong}
+        </p>
+      ) : null}
       <CanvasModelSqlToolbar
         copy={copy}
         pending={model.pending}

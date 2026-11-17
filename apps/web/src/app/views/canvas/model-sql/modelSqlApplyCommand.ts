@@ -29,7 +29,7 @@ export async function applyModelSqlProposal(
 }
 
 /** Keep command acknowledgement independent of the query revision it changes itself. */
-export function useModelSqlApplyCommand() {
+export function useModelSqlApplyCommand(onApplyingChange?: (applying: boolean) => void) {
   const active = useRef<AbortController | null>(null);
   const [applying, setApplying] = useState(false);
   const cancel = () => {
@@ -51,11 +51,13 @@ export function useModelSqlApplyCommand() {
       active.current = controller;
       setApplying(true);
       try {
+        onApplyingChange?.(true);
         return await command(controller.signal);
       } finally {
         if (active.current === controller) {
           active.current = null;
           setApplying(false);
+          onApplyingChange?.(false);
         }
       }
     },
