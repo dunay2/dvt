@@ -85,6 +85,14 @@ omitting unavailable outputs, and reject unavailable row dependencies.
   the lock until actual settlement. Two file-input regressions and the existing
   30 Input binding tests also pass. Shared validated protocol fixtures keep the
   panel and workspace proofs separate from their DOM lifetime setup.
+- Complete-scope validation found two obsolete Shell expectations and a real
+  passive-layout violation. The footer proof now checks the accessible SQL
+  disclosure and its controlled panel; the data proof requires exactly one
+  existing host. Resize effects belong to the workspace's focused layout hook.
+  Both Monaco isolation proofs share one finite leaf catalog, with the SQL
+  authoring leaf explicitly admitted and all other isolation rules retained.
+  All 1,105 architecture cases and 35 composed presentation cases passed after
+  these corrections. Failed gate attempts are not acceptance evidence.
 - Chrome on the existing `http://localhost:5173/canvas`: one controlled journey
   passed, with no pending or skipped tests. Real Monaco input and native
   Ctrl+Enter lead to rows in the existing data drawer. Keep-editing navigation

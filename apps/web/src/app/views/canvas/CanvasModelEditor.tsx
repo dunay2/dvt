@@ -26,6 +26,7 @@ import { canvasModelLayoutKey } from './CanvasModelLayoutSession';
 import { CanvasModelSqlPanel } from './model-sql/CanvasModelSqlPanel';
 import { resolveModelSqlCopy } from './model-sql/modelSqlCopy';
 import { useCanvasModelDraftHandle } from './model-sql/useCanvasModelDraftHandle';
+import { useCanvasModelSqlPanelLayout } from './model-sql/useCanvasModelSqlPanelLayout';
 
 export function CanvasModelEditor({
   canvasId,
@@ -78,6 +79,7 @@ export function CanvasModelEditor({
   const sqlWorkbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const combinedWorkbench = useCanvasModelDraftHandle(workbench, sqlWorkbench);
   const [sqlOpen, setSqlOpen] = useState(false);
+  const sqlPanelRef = useCanvasModelSqlPanelLayout(sqlOpen);
   const [sqlApplying, setSqlApplying] = useState(false);
   const sqlPanelId = useId();
   const [dataOwner, setDataOwner] = useState<'operation' | 'sql'>('operation');
@@ -126,6 +128,7 @@ export function CanvasModelEditor({
   });
   return (
     <CanvasModelEditorTemplate
+      sqlPanelRef={sqlPanelRef}
       label={`${transformNode.name} · ${copy.editor}`}
       semanticBlocked={sqlApplying}
       footer={

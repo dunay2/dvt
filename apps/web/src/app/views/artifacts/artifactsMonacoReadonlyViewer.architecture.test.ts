@@ -4,14 +4,13 @@ import path from 'node:path';
 import ts from 'typescript';
 
 import { describe, expect, it } from 'vitest';
+import {
+  CANVAS_MONACO_EDITOR_OWNERS,
+  CANVAS_MONACO_READ_ONLY_OWNERS,
+} from '../../components/monaco/canvasMonacoAuthority.test-support';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '../..');
 const REPO_ROOT = path.resolve(APP_ROOT, '../../../..');
-const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
-  'views/canvas/DbtModelCodeAuthoringSection.tsx',
-  'views/canvas/DvtTransformOutputView.tsx',
-  'views/canvas/CanvasModelSqlOutput.tsx',
-]);
 
 function readAppSource(relativePathFromApp: string): string {
   return readFileSync(path.join(APP_ROOT, relativePathFromApp), 'utf8');
@@ -150,7 +149,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
         expect(source, modulePath).not.toContain('MonacoCodeViewer');
       }
       expect(source, modulePath).not.toContain('MonacoDiffViewer');
-      if (modulePath === 'views/canvas/DerivedOutputFormulaEditor.tsx') {
+      if (CANVAS_MONACO_EDITOR_OWNERS.has(modulePath)) {
         expect(source, modulePath).toContain('MonacoCodeEditor');
       } else {
         expect(source, modulePath).not.toContain('MonacoCodeEditor');

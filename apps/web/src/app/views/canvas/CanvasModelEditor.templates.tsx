@@ -1,6 +1,5 @@
 /** Passive layout: semantic canvas above the compact session footer. */
-import type { ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -15,6 +14,7 @@ export function CanvasModelEditorTemplate({
   editor,
   guards,
   sql,
+  sqlPanelRef,
   sqlOpen = false,
   semanticBlocked = false,
 }: Readonly<{
@@ -23,14 +23,10 @@ export function CanvasModelEditorTemplate({
   editor: ReactNode;
   guards: ReactNode;
   sql?: ReactNode;
+  sqlPanelRef?: RefObject<ImperativePanelHandle>;
   sqlOpen?: boolean;
   semanticBlocked?: boolean;
 }>) {
-  const sqlPanel = useRef<ImperativePanelHandle>(null);
-  useEffect(() => {
-    if (sqlOpen) sqlPanel.current?.resize(35);
-    else sqlPanel.current?.collapse();
-  }, [sqlOpen]);
   return (
     <section
       data-slot="canvas-model-editor"
@@ -55,7 +51,7 @@ export function CanvasModelEditorTemplate({
         <ResizablePanel
           id="model-sql"
           order={1}
-          ref={sqlPanel}
+          ref={sqlPanelRef}
           collapsible
           collapsedSize={0}
           defaultSize={0}
