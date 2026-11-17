@@ -2,6 +2,7 @@
  * Owned concern: describe the revision-bound logical SQL namespace of one Model.
  * @baseline ADR-0064 / GH-3944: names expose inputs, never physical lookup authority.
  * @decision Preserve unknown publication facts and honest empty editor state.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

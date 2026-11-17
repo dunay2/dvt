@@ -1,7 +1,8 @@
 /**
  * Owned concern: carry an explicit SQL-source Preview through the existing bounded row contract.
- * @baseline GH-3944: saved-Model Preview remains strict and never accepts SQL.
+ * @baseline ADR-0064 / GH-3944: saved-Model Preview remains strict and never accepts SQL.
  * @decision Bind row results to the source buffer and protected context without graph mutation.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

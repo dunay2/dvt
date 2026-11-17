@@ -2,6 +2,7 @@
  * Owned concern: exchange a source proposal and complete canonical compilation or diagnostics.
  * @baseline ADR-0064 / GH-3944: compilation confers no graph write or execution authority.
  * @decision Invalid results carry no partial semantic candidate.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

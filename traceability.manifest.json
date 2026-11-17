@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-11",
+  "generated": "2026-11-17",
   "repo": {
     "sha": "local"
   },
@@ -1298,18 +1298,21 @@
         "Bind catalog entries to exact core or official extension identities.",
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
         "Bind producer fields to stable consumer input slots as provenance, not copied semantics.",
+        "Bind row results to the source buffer and protected context without graph mutation.",
         "Compose one catalog from standard candidates, admissions, and product gaps.",
         "Exchange target identity, expected semantic digest, authorized SQL and exact producer provenance.",
         "Explore a protected Transform through semantic identity and server-owned bounds, never client SQL.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
         "Identify producer dependencies by stable node and field identities in the sidecar.",
+        "Invalid results carry no partial semantic candidate.",
         "Keep protected graph, semantic, projection, and connection identity checks shared across execution intents.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
         "Mode, provisional state and preview provenance are explicit values, not UI inference.",
         "One V1 contract distinguishes Preview and Run by explicit execution intent.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
+        "Preserve unknown publication facts and honest empty editor state.",
         "Re-export only governed Canvas contracts from this narrow barrel.",
         "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
         "Refer to the selected model and scoped connection without copying executable SQL.",
@@ -1326,7 +1329,10 @@
         "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/canvas/ModelSqlCompilation.v1.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/ModelSqlContext.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/TransformDataSample.v1.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/TransformSqlDraftDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/TransformSqlProjection.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/index.ts",
         "packages/@dvt/contracts/src/contracts/data-access/DataAccess.v1.ts",
