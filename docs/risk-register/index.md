@@ -22,6 +22,7 @@ Open technical and delivery risks that still need mitigation or explicit accepta
 - [LOCAL generation persistence admission risks](local-generation-persistence-20261017.md)
 - [LOCAL metadata is not authorization or runtime proof](local-metadata-not-runtime-proof-20261016.md)
 - [LOCAL storage pathname and native-creation verification limits](local-storage-native-proof-20261017.md)
+- [Model SQL source and Apply admission](model-sql-authoring-20261117.md)
 - [Native Source Comment Risks](native-source-comments-20261023.md)
 - [Pending Source Output Risks](pending-source-output-selection-20261026.md)
 - [Per-Plan Admission Changes Temporal Command Ordering](temporal-plan-concurrency-20261015.md)

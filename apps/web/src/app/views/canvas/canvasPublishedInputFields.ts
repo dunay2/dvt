@@ -1,5 +1,6 @@
 /** Read published producer fields from the existing canonical presentation authority. */
 import type { CanonicalNode } from '../../types/canonical';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import type { CanvasInputBindingEdge, CanvasPublishedInputField } from './canvasInputBindings';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
@@ -17,7 +18,7 @@ export async function readCanvasPublishedInputFields(
   const isSource =
     ['dvt', 'dvt.warehouse-source'].includes(args.node.pluginId) && args.node.kind === 'dvt:source';
   if (!isModel && !isSource) return [];
-  if (isModel) {
+  if (isModel && readWorkspaceDbtModelReference(args.node) != null) {
     const publication = readCanvasModelCompositionPublication(args.node, args.nodes, args.edges);
     if (signal?.aborted || publication == null || publication.rootPublication.rowUnavailable)
       return [];
