@@ -143,6 +143,7 @@ export function CanvasGraphExplorer({
           <CanvasExplorerList
             key={catalogueScopeKey}
             items={items}
+            presentation={browser?.cataloguePresentation}
             onAddModel={onAddModel}
             onImport={onImport}
             connections={connections}
@@ -158,6 +159,7 @@ export function CanvasGraphExplorer({
               onInspectNode: inspect,
               inspectorTarget,
               catalogueScopeKey,
+              presentation: browser?.cataloguePresentation,
               onDragStart: dragResource,
               onAddModel,
               onImport,

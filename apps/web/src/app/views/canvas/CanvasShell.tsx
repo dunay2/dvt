@@ -237,6 +237,7 @@ export default function CanvasShell({
       navigation={modelBrowser}
       nodes={panels.inspectorGraphNodes}
       canvasId={panels.activeCanvasId}
+      workspaceScope={panels.inspectorAuthoring.workspaceScope}
       selectedId={model.selected?.id}
       active={model.active && !code.active}
       projectRoot={workspaceCommands?.projectRoot}

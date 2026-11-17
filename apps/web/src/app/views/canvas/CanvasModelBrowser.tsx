@@ -15,11 +15,15 @@ import { CanvasProjectElementsExplorer } from './explorer/CanvasProjectElementsE
 import { CanvasWarehouseConnections } from './explorer/CanvasWarehouseConnections';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CanvasModelContextPicker } from './CanvasModelContextPicker';
+import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { CanvasExplorerCatalogPresentation } from './explorer/CanvasExplorer.types';
+import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
 
 export type CanvasModelBrowserPresentation = Readonly<{
   mode: CanvasModelView | null;
   onSelect: CanvasInspectorCommand;
   catalog: ReactNode;
+  cataloguePresentation: CanvasExplorerCatalogPresentation;
 }>;
 export const CanvasModelBrowser = createContext<CanvasModelBrowserPresentation | null>(null);
 export function useCanvasModelBrowserPresentation(): CanvasModelBrowserPresentation | null {
@@ -33,6 +37,7 @@ export function CanvasModelBrowserProvider({
   selectedId,
   active,
   projectRoot,
+  workspaceScope,
   onManageConnections,
   children,
 }: Readonly<{
@@ -42,9 +47,20 @@ export function CanvasModelBrowserProvider({
   selectedId?: string;
   active: boolean;
   projectRoot?: string;
+  workspaceScope?: WorkspaceScope;
   onManageConnections?: () => void;
   children: ReactNode;
 }>): JSX.Element {
+  const cataloguePresentation = useCanvasExplorerCatalogPresentation(
+    JSON.stringify([
+      workspaceScope?.tenantId,
+      workspaceScope?.projectId,
+      workspaceScope?.environmentId,
+      workspaceScope?.targetAdapter,
+      canvasId,
+      projectRoot,
+    ])
+  );
   const items = useMemo(() => {
     const selected = nodes.find((node) => node.id === selectedId);
     const definitionId = workspaceNodeDefinitionId(selected) ?? selectedId;
@@ -58,11 +74,13 @@ export function CanvasModelBrowserProvider({
     <CanvasModelBrowser.Provider
       value={{
         ...navigation,
+        cataloguePresentation,
         catalog: (
           <CanvasProjectElementsExplorer
             enabled={active && navigation.mode != null}
             projectRoot={projectRoot}
             items={items}
+            presentation={cataloguePresentation}
             catalogueScopeKey={canvasId ?? undefined}
             onInspectNode={navigation.onSelect}
             connections={<CanvasWarehouseConnections onManage={onManageConnections} />}

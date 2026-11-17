@@ -36,10 +36,15 @@ describe('Model SQL authoring', () => {
       .should('have.attr', 'aria-pressed', 'true');
     cy.get('[data-slot="left-navigation-nav"] [data-active="true"]').should('have.length', 1);
     cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').type(model.name);
     cy.get(
       '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
     ).click();
     cy.get(panel).should('be.visible');
+    cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').should(
+      'have.value',
+      model.name
+    );
     cy.get(
       '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
     ).should('have.attr', 'aria-pressed', 'true');
