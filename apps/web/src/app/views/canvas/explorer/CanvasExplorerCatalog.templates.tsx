@@ -89,10 +89,7 @@ function CanvasExplorerModelRow({
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
 }>): JSX.Element {
   const unavailable = disabled || item.disabled;
-  const activation = useCanvasNodeActivation(
-    item.id,
-    unavailable ? undefined : () => onSelect(item.id)
-  );
+  const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
   const draggable = !unavailable && item.draggable !== false && onDragStart != null;
   const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
   const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
@@ -117,19 +114,11 @@ function CanvasExplorerModelRow({
           disabled={unavailable}
           onClick={activation.onClick}
           onDoubleClick={(event) => {
-            event.preventDefault();
             event.stopPropagation();
             activation.onDoubleClick(event);
           }}
           draggable={draggable}
-          onDragStart={
-            draggable
-              ? (event) => {
-                  activation.cancelPendingClick();
-                  onDragStart?.(item.id, event);
-                }
-              : undefined
-          }
+          onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
         >
           <span className={styles.catalogModelIcon}>
             <Box aria-hidden="true" data-model-icon="model" />

@@ -26,9 +26,15 @@ describe('Model SQL authoring', () => {
       18
     );
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
-    cy.get('button[aria-label="Open Model SQL"]')
-      .should('have.attr', 'aria-expanded', 'false')
-      .click();
+    cy.get('[data-slot="shell-model-semantic-command"]').should(
+      'have.attr',
+      'aria-pressed',
+      'true'
+    );
+    cy.get('[data-slot="shell-model-sql-command"]')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get('[data-slot="left-navigation-nav"] [data-active="true"]').should('have.length', 1);
     cy.get(panel).should('be.visible');
     waitForE2eApiCall(`${prefix}/sql-context`, 'GET');
     cy.get(`${panel} .monaco-editor .view-lines`).click(80, 9);
@@ -43,6 +49,15 @@ describe('Model SQL authoring', () => {
       expect(getE2eApiCalls(`${prefix}/sql-compilation`, 'POST')).to.have.length(0);
       expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(0);
     });
+    cy.get('#shell-canvas-navigation').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get('[data-slot="shell-model-sql-command"]').click();
+    cy.get(panel)
+      .should('be.visible')
+      .find('.view-lines')
+      .should(($lines) => {
+        expect($lines.text().replaceAll('\u00a0', ' ').trim()).to.equal(sql);
+      });
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('[role="alertdialog"]').should('be.visible');
     cy.contains('[role="alertdialog"] button', 'Keep editing').click();
@@ -77,10 +92,12 @@ describe('Model SQL authoring', () => {
     waitForE2eApiCall(`${prefix}/data-sample`, 'POST');
     cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
     cy.get(panel).should('be.visible');
-    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    cy.get('[data-slot="shell-model-semantic-command"]')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true');
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
     cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
-    cy.get('button[aria-label="Open Model SQL"]').click();
+    cy.get('[data-slot="shell-model-sql-command"]').click();
     cy.get(panel)
       .should('be.visible')
       .find('.view-lines')

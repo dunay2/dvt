@@ -29,6 +29,13 @@ export type CanvasModelWorkspaceTabContribution = Readonly<{
   onSelect: () => void;
   onCanvas: () => void;
   onClose: (afterClose?: () => void) => void;
+  views?: Readonly<{
+    active: 'semantic' | 'sql';
+    sqlPanelId: string;
+    disabled: boolean;
+    semantic: () => void;
+    sql: () => void;
+  }>;
 }>;
 
 type CanvasWorkspaceMenuContributionState = {

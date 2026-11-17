@@ -26,6 +26,10 @@ export type ShellTopBarCopy = {
   readonly projectUnavailable: string;
   readonly gitContext: string;
   readonly projectCode: string;
+  readonly semanticView: string;
+  readonly modelSqlView: string;
+  readonly modelViewUnavailable: string;
+  readonly modelViewBusy: string;
   readonly viewOptions: string;
   readonly language: string;
   readonly languageEnglish: string;
@@ -95,6 +99,13 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   },
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
   projectCode: { key: 'shell.projectCode', fallback: 'Git' },
+  semanticView: { key: 'shell.semanticView', fallback: 'Semantic view' },
+  modelSqlView: { key: 'shell.modelSqlView', fallback: 'SQL' },
+  modelViewUnavailable: {
+    key: 'shell.modelViewUnavailable',
+    fallback: 'Open an available Model first',
+  },
+  modelViewBusy: { key: 'shell.modelViewBusy', fallback: 'The SQL proposal is being applied' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
   language: { key: 'shell.language', fallback: 'Language' },
   languageEnglish: { key: 'shell.languageEnglish', fallback: 'English' },
@@ -179,6 +190,10 @@ const COPY_ES: ShellTopBarCopy = {
   projectUnavailable: 'Ese proyecto no está disponible en esta sesión.',
   gitContext: 'Contexto Git',
   projectCode: 'Git',
+  semanticView: 'Vista semántica',
+  modelSqlView: 'SQL',
+  modelViewUnavailable: 'Abre primero un modelo disponible',
+  modelViewBusy: 'Se está aplicando la propuesta SQL',
   viewOptions: 'Opciones de vista',
   language: 'Idioma',
   languageEnglish: 'Inglés',
@@ -245,6 +260,10 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     projectUnavailable: resolveString(COPY_BY_KEY.projectUnavailable, locale),
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
     projectCode: resolveString(COPY_BY_KEY.projectCode, locale),
+    semanticView: resolveString(COPY_BY_KEY.semanticView, locale),
+    modelSqlView: resolveString(COPY_BY_KEY.modelSqlView, locale),
+    modelViewUnavailable: resolveString(COPY_BY_KEY.modelViewUnavailable, locale),
+    modelViewBusy: resolveString(COPY_BY_KEY.modelViewBusy, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
     language: resolveString(COPY_BY_KEY.language, locale),
     languageEnglish: resolveString(COPY_BY_KEY.languageEnglish, locale),

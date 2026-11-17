@@ -127,6 +127,13 @@ export function CanvasModelEditor({
     active,
     onSelect,
     onCanvas: onShowCanvas,
+    views: {
+      active: sqlOpen ? 'sql' : 'semantic',
+      sqlPanelId,
+      disabled: sqlApplying,
+      semantic: () => setSqlOpen(false),
+      sql: openSql,
+    },
     onClose: (continuation) => {
       onSelect();
       navigation.requestClose(continuation);
