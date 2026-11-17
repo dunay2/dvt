@@ -79,7 +79,11 @@ describe('Model SQL lexical draft', () => {
       const edited = modelSqlDraftReducer(accepted, { type: 'text', sql: 'SELECT * FROM client' });
       const refreshed = modelSqlDraftReducer(edited, {
         type: 'context',
-        context: { ...context, semanticPlanSha256: 'c'.repeat(64), sql },
+        context: ModelSqlContextResponseSchema.parse({
+          ...context,
+          semanticPlanSha256: 'c'.repeat(64),
+          sql,
+        }),
       });
       expect(refreshed.sql).toBe(edited.sql);
       expect(hasModelSqlChanges(refreshed)).toBe(true);
@@ -100,7 +104,10 @@ describe('Model SQL lexical draft', () => {
     const edited = modelSqlDraftReducer(accepted, { type: 'text', sql: 'SELECT * FROM client' });
     const refreshed = modelSqlDraftReducer(edited, {
       type: 'context',
-      context: { ...context, semanticPlanSha256: 'b'.repeat(64) },
+      context: ModelSqlContextResponseSchema.parse({
+        ...context,
+        semanticPlanSha256: 'b'.repeat(64),
+      }),
     });
     const discarded = modelSqlDraftReducer(refreshed, { type: 'discard' });
     expect(discarded.sql).toBe(lexical);
