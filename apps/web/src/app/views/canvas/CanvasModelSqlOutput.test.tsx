@@ -22,8 +22,8 @@ vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
 
 describe('Model Output SQL inspection', () => {
   setupWorkbenchTest();
-  it('opens the scoped SQL editor explicitly without requesting generated SQL', () => {
-    const query = { projectTransformSql: vi.fn() };
+  it('uses one explicit action to project saved SQL and open scoped logical authoring', async () => {
+    const query = { projectTransformSql: vi.fn().mockResolvedValue(response) };
     const edit = vi.fn();
     render({ canvasId: response.canvasId, query }, true, false, undefined, edit);
     selectSqlTab();
@@ -35,11 +35,31 @@ describe('Model Output SQL inspection', () => {
     expect(output?.querySelectorAll('button')).toHaveLength(1);
     expect(output?.querySelector('[data-slot="canvas-model-sql-generate"]')).toBeNull();
     expect(output?.querySelector('pre')).toBeNull();
-    act(() => button!.click());
-    expect(edit).toHaveBeenCalledOnce();
     expect(query.projectTransformSql).not.toHaveBeenCalled();
+    await act(async () => button!.click());
+    expect(edit).toHaveBeenCalledOnce();
+    expect(query.projectTransformSql).toHaveBeenCalledExactlyOnceWith({
+      canvasId: response.canvasId,
+      transformNodeId: graph.targetNode.id,
+      semanticPlanSha256: digest,
+      presentation: 'readable',
+    });
+    expect(output?.querySelector('pre')?.textContent).toBe(response.sql);
   });
 
+  it('opens logical authoring even when the protected SQL projection fails', async () => {
+    const query = { projectTransformSql: vi.fn().mockRejectedValue(new Error('Denied')) };
+    const edit = vi.fn();
+    render({ canvasId: response.canvasId, query }, true, false, undefined, edit);
+    selectSqlTab();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-sql-edit"]')!.click()
+    );
+    expect(edit).toHaveBeenCalledOnce();
+    expect(query.projectTransformSql).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(container.querySelector('pre')).toBeNull();
+  });
   it('omits the editing action outside a Model SQL authoring owner', () => {
     render({ canvasId: response.canvasId, query: { projectTransformSql: vi.fn() } });
     selectSqlTab();

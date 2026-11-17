@@ -103,13 +103,15 @@ section is hidden while collapsed. Its draft remains mounted and its data portal
 belongs to the external drawer. The workspace's focused layout hook controls
 resizing; the template remains passive.
 
-Model SQL inspection exposes one Edit SQL entry in an authoring workspace. Its
-Model-scoped presentation action opens the existing editor and publishes its
-expanded state and controlled section identifier. The protected context prepares
-the editable source with logical input names. This owner does not mount another
-SQL projection or read-only viewer alongside the editor. The shared Button,
-icon and language catalog provide the entry. Read-only inspection hosts retain
-the existing explicit saved-SQL projection query.
+Model SQL inspection exposes one Edit SQL action in an authoring workspace.
+That explicit gesture requests the existing protected readable SQL projection
+and opens the logical editor with its expanded state and controlled section.
+The scoped inspector retains generated SQL, original/readable presentation and
+simplification evidence. The editable source uses the protected context's
+logical input names; generated physical SQL is never copied into that buffer.
+Projection failure does not prevent opening authoring. A read-only host retains
+its existing explicit generation action. Both paths reuse the shared Button,
+icons, language catalog and existing query rails.
 SQL results use the existing compact sample grid: search and actions precede
 rows, with identity, counts and LIVE provenance in the footer. Revision and
 execution semantics remain available in its disclosure. No additional heading,

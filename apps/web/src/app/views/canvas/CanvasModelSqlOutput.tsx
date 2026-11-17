@@ -1,6 +1,6 @@
 /**
- * Owned concern: expose the scoped SQL editor or the existing saved-SQL inspection query.
- * Reason: an authoring workspace has one editable SQL surface; inspection hosts retain protected projection.
+ * Owned concern: expose one explicit SQL action while preserving protected projection and logical authoring.
+ * Reason: one gesture prepares the readable inspection and opens the separate logical authoring buffer.
  * Corner invariant: local field editing and hidden retained workspaces cannot publish saved SQL.
  */
 import { useContext } from 'react';
@@ -22,37 +22,14 @@ export function CanvasModelSqlOutput(
   props: DvtSubstraitTransformOutputProjectionArgs
 ): JSX.Element | null {
   const { active, editing } = useCanvasOutputPresentation();
-  const editSql = useContext(CanvasModelSqlEditorAction);
-  const language = useApplicationLanguageStore((state) => state.language);
-  const copy = resolveModelSqlCopy(language);
-  if (!active || editing) return null;
-  if (editSql == null) return <CanvasModelSqlOutputQuery {...props} />;
-  return (
-    <section data-slot="canvas-model-sql-output" className={inspectorVisualClasses.inspectorField}>
-      <div className={inspectorVisualClasses.inspectorActions}>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          data-slot="canvas-model-sql-edit"
-          aria-controls={editSql.panelId}
-          aria-expanded={editSql.expanded}
-          onClick={editSql.open}
-        >
-          <Pencil
-            aria-hidden="true"
-            className={inspectorVisualClasses.inspectorFieldInclusionIcon}
-          />
-          {copy.edit}
-        </Button>
-      </div>
-    </section>
-  );
+  return active && !editing ? <CanvasModelSqlOutputQuery {...props} /> : null;
 }
 
 function CanvasModelSqlOutputQuery(props: DvtSubstraitTransformOutputProjectionArgs): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(language);
+  const sqlCopy = resolveModelSqlCopy(language);
+  const editSql = useContext(CanvasModelSqlEditorAction);
   const { state, isCurrent, request } = useCanvasTransformSqlOutput(props);
   const failed = isCurrent && state.status === 'error';
   const pending = isCurrent && state.status === 'loading';
@@ -68,19 +45,29 @@ function CanvasModelSqlOutputQuery(props: DvtSubstraitTransformOutputProjectionA
           type="button"
           variant="secondary"
           size="sm"
-          data-slot="canvas-model-sql-generate"
-          disabled={pending || !available}
-          onClick={request}
+          data-slot={editSql == null ? 'canvas-model-sql-generate' : 'canvas-model-sql-edit'}
+          aria-controls={editSql?.panelId}
+          aria-expanded={editSql?.expanded}
+          disabled={pending || (editSql == null && !available)}
+          onClick={() => {
+            if (available) request();
+            editSql?.open();
+          }}
         >
           {pending ? (
             <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" />
-          ) : (
+          ) : editSql == null ? (
             <Code2
               aria-hidden="true"
               className={inspectorVisualClasses.inspectorFieldInclusionIcon}
             />
+          ) : (
+            <Pencil
+              aria-hidden="true"
+              className={inspectorVisualClasses.inspectorFieldInclusionIcon}
+            />
           )}
-          {copy.inspectorModelSqlGenerateAction}
+          {editSql == null ? copy.inspectorModelSqlGenerateAction : sqlCopy.edit}
         </Button>
       </div>
       {isCurrent && state.status === 'ready' ? (
