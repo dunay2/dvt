@@ -15,9 +15,10 @@ buffer. Shell receives only presentation posture and callbacks through the
 existing Model tab contribution. It receives no semantic document, SQL text,
 connection configuration or query client.
 
-The native design is `GH-3944-MODEL-VIEW-NAVIGATION`, recorded under
+The initial gesture design is `GH-3944-MODEL-VIEW-NAVIGATION`, recorded under
 [the governing issue](https://github.com/dunay2/dvt/issues/3944#issuecomment-6957606183).
-It reuses `InspectCanvasNode` and `SelectCanvasWorkbenchTab`; SQL context,
+The combined design is `GH-3944-MODEL-CATALOG-PRESENTATION`, admitted from this
+component guide. It reuses `InspectCanvasNode` and `SelectCanvasWorkbenchTab`; SQL context,
 compilation, row execution and Apply keep their existing ports and guards.
 
 ## Current state and decision
@@ -134,7 +135,7 @@ domain aggregate, backend endpoint or persistence schema.
 ## Native ownership reconciliation
 
 The follow-up source is this committed component guide, admitted locally as
-`GH-3944-PERSISTENT-MODEL-BROWSER`. Keep metadata updates bounded to the existing
+`GH-3944-MODEL-CATALOG-PRESENTATION`. Keep metadata updates bounded to the existing
 Shell presentation, Canvas shell chrome, viewport and relational workbench
 families. Source bindings must enumerate the actual implemented symbols and
 their behavioral proof. Retired timer declarations must be removed rather than
