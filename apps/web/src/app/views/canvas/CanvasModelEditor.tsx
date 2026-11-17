@@ -1,6 +1,6 @@
 /** Owned concern: compose the semantic Model workspace and its draft lifecycle. */
 import './canvasSemanticEditor.css';
-import { useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useOptionalCanvasTransformSqlQueryPort } from '../../services/AppServicesContext';
 import { CanvasModelToolbar } from './CanvasModelToolbar';
 import { useCanvasModelNavigation } from './useCanvasModelNavigation';
@@ -24,6 +24,7 @@ import { CanvasModelNavigationGuard } from './CanvasModelNavigationGuard';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import { canvasModelLayoutKey } from './CanvasModelLayoutSession';
 import { CanvasModelSqlPanel } from './model-sql/CanvasModelSqlPanel';
+import { CanvasModelSqlEditorAction } from './model-sql/CanvasModelSqlEditorAction';
 import { resolveModelSqlCopy } from './model-sql/modelSqlCopy';
 import { useCanvasModelDraftHandle } from './model-sql/useCanvasModelDraftHandle';
 import { useCanvasModelSqlPanelLayout } from './model-sql/useCanvasModelSqlPanelLayout';
@@ -82,6 +83,11 @@ export function CanvasModelEditor({
   const sqlPanelRef = useCanvasModelSqlPanelLayout(sqlOpen);
   const [sqlApplying, setSqlApplying] = useState(false);
   const sqlPanelId = useId();
+  const openSql = useCallback(() => setSqlOpen(true), []);
+  const sqlEditorAction = useMemo(
+    () => ({ open: openSql, panelId: sqlPanelId, expanded: sqlOpen }),
+    [openSql, sqlPanelId, sqlOpen]
+  );
   const [dataOwner, setDataOwner] = useState<'operation' | 'sql'>('operation');
   const sqlCopy = resolveModelSqlCopy(language);
   const sqlRevision = useMemo(
@@ -147,37 +153,39 @@ export function CanvasModelEditor({
         />
       }
       editor={
-        <CanvasRelationalTreeWorkbench
-          ref={workbench}
-          active={active && !sqlApplying}
-          codeProjection={codeProjection}
-          layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
-          transformNode={transformNode}
-          nodes={nodes}
-          edges={edges}
-          copy={treeCopy}
-          authoring={
-            sqlApplying && authoring != null ? { ...authoring, canEditNode: false } : authoring
-          }
-          actionsHost={actionsHost}
-          preview={{
-            canvasId,
-            query,
-            onExecuteSource:
-              onExecuteSource == null
-                ? undefined
-                : (...args) => {
-                    setDataOwner('operation');
-                    onExecuteSource(...args);
-                  },
-            preparePreview,
-            dataHost: dataOwner === 'operation' ? operationDataHost : null,
-            onOpenData: () => {
-              setDataOwner('operation');
-              onOpenOperationData?.();
-            },
-          }}
-        />
+        <CanvasModelSqlEditorAction.Provider value={sqlEditorAction}>
+          <CanvasRelationalTreeWorkbench
+            ref={workbench}
+            active={active && !sqlApplying}
+            codeProjection={codeProjection}
+            layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
+            transformNode={transformNode}
+            nodes={nodes}
+            edges={edges}
+            copy={treeCopy}
+            authoring={
+              sqlApplying && authoring != null ? { ...authoring, canEditNode: false } : authoring
+            }
+            actionsHost={actionsHost}
+            preview={{
+              canvasId,
+              query,
+              onExecuteSource:
+                onExecuteSource == null
+                  ? undefined
+                  : (...args) => {
+                      setDataOwner('operation');
+                      onExecuteSource(...args);
+                    },
+              preparePreview,
+              dataHost: dataOwner === 'operation' ? operationDataHost : null,
+              onOpenData: () => {
+                setDataOwner('operation');
+                onOpenOperationData?.();
+              },
+            }}
+          />
+        </CanvasModelSqlEditorAction.Provider>
       }
       sqlOpen={sqlOpen}
       sql={

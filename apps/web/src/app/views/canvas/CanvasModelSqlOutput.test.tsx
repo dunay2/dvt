@@ -3,22 +3,18 @@
 import React, { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  TransformSqlProjectionResponseSchema,
-  type TransformSqlProjectionResponse,
-} from '@dvt/contracts';
-import type { CanvasTransformSqlQueryBinding } from '../../ports/canvasTransformSql';
-import { CanvasModelSqlOutput } from './CanvasModelSqlOutput';
-import {
-  CanvasOperationInspectorTabs,
-  CanvasRelationalTreeEditorFrame,
-} from './CanvasRelationalTreeEditorFrame';
-import { container, root, setupWorkbenchTest } from './CanvasRelationalTreeWorkbench.test-support';
-import {
-  occurrenceGraph,
-  occurrenceInput,
-} from './relational-source-occurrence/occurrence.test.fixtures';
+import type { TransformSqlProjectionResponse } from '@dvt/contracts';
+import { container, setupWorkbenchTest } from './CanvasRelationalTreeWorkbench.test-support';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+
+import {
+  graph,
+  digest,
+  response,
+  render,
+  selectSqlTab,
+  generate,
+} from './CanvasModelSqlOutput.test-support';
 
 vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({ value }: { value: string }) => <pre>{value}</pre>,
@@ -26,70 +22,25 @@ vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
 
 describe('Model Output SQL inspection', () => {
   setupWorkbenchTest();
-  const graph = occurrenceGraph();
-  const digest = readDvtTransformAuthoringAuthority(graph.targetNode)!.semanticDocument.semanticPlan
-    .sha256;
-  const response = TransformSqlProjectionResponseSchema.parse({
-    schemaVersion: 'canvas-transform-sql-projection.v1',
-    canvasId: 'canvas-model',
-    transformNodeId: graph.targetNode.id,
-    draftRevision: 'saved-revision',
-    semanticPlanSha256: digest,
-    sql: 'SELECT id FROM public.places',
-    presentation: { status: 'unchanged', sql: 'SELECT id FROM public.places', steps: [] },
-    provenance: { sourceRefs: [occurrenceInput.source.sourceRef!] },
+  it('opens the scoped SQL editor explicitly without requesting generated SQL', () => {
+    const query = { projectTransformSql: vi.fn() };
+    const edit = vi.fn();
+    render({ canvasId: response.canvasId, query }, true, false, undefined, edit);
+    selectSqlTab();
+    const button = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-model-sql-edit"]'
+    );
+    expect(button).not.toBeNull();
+    act(() => button!.click());
+    expect(edit).toHaveBeenCalledOnce();
+    expect(query.projectTransformSql).not.toHaveBeenCalled();
   });
 
-  function render(
-    binding?: CanvasTransformSqlQueryBinding,
-    active = true,
-    editing = false,
-    relationId?: string
-  ): void {
-    act(() =>
-      root.render(
-        <CanvasOperationInspectorTabs active={active}>
-          <CanvasRelationalTreeEditorFrame
-            operation="projection"
-            relationId="final-model-output"
-            label="Model"
-            hasExpression={false}
-            readOnly
-            editing={editing}
-            onClose={() => undefined}
-            output={<p>Fields</p>}
-            sqlOutput={
-              <CanvasModelSqlOutput
-                transformNode={graph.targetNode}
-                nodes={graph.nodes}
-                edges={graph.edges}
-                codeProjection={binding}
-                relationId={relationId}
-              />
-            }
-          >
-            <p>Properties</p>
-          </CanvasRelationalTreeEditorFrame>
-        </CanvasOperationInspectorTabs>
-      )
-    );
-  }
-
-  function selectSqlTab(): void {
-    act(() => {
-      fireEvent.mouseDown(container.querySelector('[data-slot="canvas-operation-sql-tab"]')!, {
-        button: 0,
-      });
-    });
-  }
-
-  async function generate(): Promise<void> {
-    await act(async () => {
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-model-sql-generate"]')!
-        .click();
-    });
-  }
+  it('omits the editing action outside a Model SQL authoring owner', () => {
+    render({ canvasId: response.canvasId, query: { projectTransformSql: vi.fn() } });
+    selectSqlTab();
+    expect(container.querySelector('[data-slot="canvas-model-sql-edit"]')).toBeNull();
+  });
 
   it('queries only on explicit generation with the protected target and digest', async () => {
     const query = { projectTransformSql: vi.fn().mockResolvedValue(response) };

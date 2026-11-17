@@ -103,6 +103,11 @@ section is hidden while collapsed. Its draft remains mounted and its data portal
 belongs to the external drawer. The workspace's focused layout hook controls
 resizing; the template remains passive.
 
+Generated Model SQL inspection also exposes Edit SQL. A Model-scoped presentation
+action opens the existing panel and publishes its expanded state and controlled
+section identifier. The protected context prepares the editable source with
+logical input names. The shared Button, icon and language catalog provide this
+entry alongside explicit SQL generation.
 Only one owner publishes into the data host at a time. Buffer, scope, Model or
 input changes invalidate compilation receipts and mark retained rows stale.
 Late responses cannot replace a newer buffer or context. Concurrent unapplied

@@ -4,6 +4,7 @@ import type { ApplicationLanguage } from '../../../stores/applicationLanguageSto
 const en = {
   title: 'SQL',
   open: 'Open Model SQL',
+  edit: 'Edit SQL',
   close: 'Collapse SQL panel',
   editor: 'Model SQL source',
   validate: 'Validate',
@@ -48,6 +49,7 @@ export type ModelSqlCopy = typeof en;
 const es: ModelSqlCopy = {
   title: 'SQL',
   open: 'Abrir SQL del modelo',
+  edit: 'Editar SQL',
   close: 'Plegar panel SQL',
   editor: 'SQL del modelo',
   validate: 'Validar',

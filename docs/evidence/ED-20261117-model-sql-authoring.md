@@ -116,6 +116,37 @@ file provenance. A brittle Monaco whitespace assertion was corrected; a reload
 proof run concurrent with formatter changes failed and was rerun successfully
 against the stable normalized commit. Neither failed run is acceptance evidence.
 
+## Inspection entry and retained runtime proof
+
+- Edit SQL opens the existing Model authoring panel through a scoped presentation
+  action. The entry shares its controlled section identifier and expanded state.
+  Copy belongs to the English/Spanish catalog and rendering uses shared tokens.
+- The new behavioral case failed with an absent action before wiring. The focused
+  inspection and Shell run passed 27 cases after wiring. The official Web
+  typecheck passed after projecting both initial and persisted fixture nodes
+  through the existing canonical-node mapper.
+- The controlled Chrome journey passed its complete SQL, Apply, data, navigation
+  and reload flow with the direct inspection entry. It asserts retained SQL text,
+  coherent expansion and explicit action counts. The inspection unit harness and
+  browser protocol fixture have separate physical owners from their assertions.
+- Automatic review rejected replacing an SQL-content assertion with visibility.
+  The assertion is retained. The fixture now reads the actual saved draft and
+  derives the next context identity, semantic digest and SQL seed from that Model.
+- A complete gate passed all 6,857 selected Vitest cases and 59 controlled Chrome
+  specs with 177 passing cases. Its real-stack plan passed 83 of 85 cases and
+  exposed two retained proof failures. This failed gate is diagnostic evidence.
+- The Run controls fixture declared static materialization through Jinja, forcing
+  repeated native analysis beyond its existing Preview deadline. Project YAML now
+  declares table materialization and SQL retains pg_sleep(20). An isolated RED
+  run reproduced the failure. The real-stack GREEN run passed cancellation,
+  recovery and project creation with zero pending or skipped cases. Run controls
+  decreased from 77 seconds to 39 seconds in those recorded executions.
+- The project proof synchronizes with observable menu expansion, visibility and
+  closure during scope selection. Its single-POST, empty-project, identity and
+  reload assertions remain exercised. Independent read-only review found the
+  retained proof corrections equivalent and identified the subsequently corrected
+  fixture type mismatch.
+
 ## Completion boundary
 
 Native component, port, contract, test and query records describe actual

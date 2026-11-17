@@ -1,140 +1,16 @@
 /** Prove SQL authoring through real Monaco, semantic Apply, data drawer and durable reload. */
-import {
-  allocateDvtFieldId,
-  ConnectedSourceRefSchema,
-  ModelSqlCompilationRequestSchema,
-  ModelSqlCompilationResponseSchema,
-  ModelSqlContextResponseSchema,
-  TransformSqlDraftDataSampleRequestSchema,
-  TransformSqlDraftDataSampleResponseSchema,
-  TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION,
-  WorkspaceGraphDraftSaveRequestSchema,
-} from '@dvt/contracts';
-import { sha256HexUtf8 } from '@dvt/crypto';
-import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { WorkspaceGraphDraftSaveRequestSchema } from '@dvt/contracts';
 
-import { createDvtSubstraitProjectionDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
-import { encodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import {
-  getE2eApiCalls,
-  stubE2eApi,
-  stubE2eJsonApi,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
-import {
-  E2E_PROJECT_WORKSPACE,
-  stubShellBootstrapApis,
-  visitWithE2eWorkspaceSession,
-} from '../../support/workspaceSession';
+import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { modelSqlSource, stubModelSqlAuthoring } from '../../support/modelSqlAuthoring';
+import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 const panel = '[data-slot="canvas-model-sql"]';
-const sql = 'SELECT country FROM customers';
+const sql = modelSqlSource;
 
 describe('Model SQL authoring', () => {
   it('explicitly validates, queries, generates and reloads a semantic Model', () => {
-    stubShellBootstrapApis({
-      scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
-    });
-    stubE2eJsonApi('GET', '/workspace/context', {
-      defaultWorkspace: E2E_PROJECT_WORKSPACE,
-      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-    });
-    stubE2eJsonApi('GET', '/capabilities', {
-      apiVersion: '1.0.0',
-      minFrontendVersion: '0.0.1',
-      plugins: { dvt: { available: true } },
-    });
-    const draft = stubStatefulCanvasDraftAuthoring({ projectionModel: true });
-    const source = draft.nodes.find((node) => node.id === 'source-customers')!;
-    const model = draft.nodes.find((node) => node.id === 'transform-customers')!;
-    model.metadata = {};
-    const sourceRef = ConnectedSourceRefSchema.parse(source.metadata!.connectedSourceRef);
-    const semantic = createDvtSubstraitProjectionDraft({
-      source: {
-        nodeId: source.id,
-        schema: 'public',
-        table: 'customers',
-        sourceRef,
-        fields: ['name', 'email', 'country'].map((name) => ({ name, dataType: 'string' })),
-      },
-      targetNodeId: model.id,
-      outputs: [{ fieldId: allocateDvtFieldId(), name: 'country', sourceFieldName: 'country' }],
-    });
-    const root = deriveSubstraitSchemas(semantic);
-    const fieldId = root.index.relations.get(root.index.rootId)!.fields[0]!.fieldId;
-    const target = { canvasId: draft.canvas.id, transformNodeId: model.id };
-    const prefix = `/workspace/graph/canvases/${target.canvasId}/transforms/${target.transformNodeId}`;
-    stubE2eApi('GET', `${prefix}/sql-context`, () => ({
-      body: ModelSqlContextResponseSchema.parse({
-        schemaVersion: 'canvas-model-sql-context.v1',
-        ...target,
-        draftRevision: 'sql-context-r1',
-        contextSha256: 'a'.repeat(64),
-        semanticPlanSha256: null,
-        connectionRef: sourceRef.connectionRef,
-        sql: null,
-        inputs: [
-          {
-            nodeId: source.id,
-            name: source.name,
-            sqlName: 'customers',
-            columns: ['name', 'email', 'country'].map((name) => ({
-              id: name,
-              name,
-              dataType: 'string',
-              nullable: true,
-            })),
-          },
-        ],
-        diagnostics: [],
-      }),
-    }));
-    stubE2eApi('POST', `${prefix}/sql-compilation`, ({ body }) => {
-      const input = ModelSqlCompilationRequestSchema.parse(body);
-      return {
-        body: ModelSqlCompilationResponseSchema.parse({
-          schemaVersion: 'canvas-model-sql-compilation.v1',
-          ...target,
-          draftRevision: input.draftRevision,
-          contextSha256: input.contextSha256,
-          sqlSha256: sha256HexUtf8(input.sql),
-          status: 'valid',
-          normalizedSql: input.sql,
-          semanticDocument: encodeDvtSubstraitSemanticDocument(semantic),
-          columns: [{ id: fieldId, name: 'country', dataType: 'string', nullable: true }],
-          inputAdditions: [{ nodeId: source.id, columnId: 'country' }],
-          diagnostics: [],
-        }),
-      };
-    });
-    stubE2eApi('POST', `${prefix}/data-sample`, ({ body }) => {
-      const input = TransformSqlDraftDataSampleRequestSchema.parse(body);
-      return {
-        body: TransformSqlDraftDataSampleResponseSchema.parse({
-          schemaVersion: 'canvas-transform-sql-draft-data-sample.v1',
-          contextSha256: input.contextSha256,
-          sqlSha256: sha256HexUtf8(input.sql),
-          sample: {
-            contractVersion: TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION,
-            ...target,
-            draftRevision: input.draftRevision,
-            semanticPlanSha256: encodeDvtSubstraitSemanticDocument(semantic).semanticPlan.sha256,
-            limit: input.limit,
-            columns: [{ name: 'country', type: 'text', nullable: true }],
-            rows: [{ values: ['SQL_ROW_3944'] }],
-            truncated: false,
-            provenance: {
-              mode: 'live',
-              sourceRefs: [sourceRef],
-              queriedAt: '2026-11-17T00:00:00.000Z',
-              navigation: 'bounded-first-page',
-              limit: input.limit,
-            },
-          },
-        }),
-      };
-    });
+    const { model, prefix } = stubModelSqlAuthoring();
     cy.viewport(1200, 700);
     visitWithE2eWorkspaceSession('/canvas', {
       onBeforeLoad(window) {
@@ -236,6 +112,35 @@ describe('Model SQL authoring', () => {
     );
     cy.get('button[aria-label="Collapse SQL panel"]').last().click();
     cy.get('button[aria-label="Open Model SQL"]').should('have.attr', 'aria-expanded', 'false');
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').should('be.visible').click();
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
+    ).click();
+    cy.get('[data-slot="canvas-model-sql-edit"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-expanded', 'false');
+    let compilationCount = 0,
+      executionCount = 0,
+      saveCount = 0;
+    cy.then(() => {
+      compilationCount = getE2eApiCalls(`${prefix}/sql-compilation`, 'POST').length;
+      executionCount = getE2eApiCalls(`${prefix}/data-sample`, 'POST').length;
+      saveCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-model-sql-edit"]').click();
+    cy.get(panel)
+      .should('be.visible')
+      .find('.view-lines')
+      .should(($lines) => {
+        expect($lines.text().replaceAll('\u00a0', ' ').trim()).to.equal(sql);
+      });
+    cy.get('[data-slot="canvas-model-sql-edit"]').should('have.attr', 'aria-expanded', 'true');
+    cy.then(() => {
+      expect(getE2eApiCalls(`${prefix}/sql-compilation`, 'POST')).to.have.length(compilationCount);
+      expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(executionCount);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saveCount);
+    });
+    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
     let readsBefore = 0;
     cy.then(() => {
       readsBefore = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
