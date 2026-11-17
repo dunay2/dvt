@@ -11,6 +11,8 @@ export const HTTP_ERROR_REASON = Object.freeze({
   internalError: 'internal_error',
   invalidAfterSeq: 'invalid_after_seq',
   invalidBody: 'invalid_body',
+  invalidModelSqlRequest: 'invalid_model_sql_request',
+  modelSqlAccessDenied: 'model_sql_access_denied',
   invalidTransformDataSampleRequest: 'invalid_transform_data_sample_request',
   invalidTransformSqlProjectionRequest: 'invalid_transform_sql_projection_request',
   invalidCredentialReference: 'invalid_credential_reference',

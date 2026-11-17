@@ -403,7 +403,7 @@ describe('CanvasModelEditor navigation', () => {
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
   });
 
-  it('keeps only draft actions in the session toolbar during an unapplied composition', async () => {
+  it('keeps draft actions available beside workspace controls during an unapplied composition', async () => {
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
     await act(async () =>
       root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />)
@@ -411,9 +411,9 @@ describe('CanvasModelEditor navigation', () => {
     await beginProjection(container);
     const card = container.querySelector('[data-operator="project"]');
     const toolbar = container.querySelector('[data-slot="canvas-model-toolbar"]')!;
-    expect(toolbar.querySelectorAll('button')).toHaveLength(2);
-    expect(toolbar.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
-    expect(toolbar.querySelector('[data-slot="canvas-relational-tree-cancel"]')).not.toBeNull();
+    const actions = toolbar.querySelector('[data-slot="canvas-model-actions"]')!;
+    expect(actions.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
+    expect(actions.querySelector('[data-slot="canvas-relational-tree-cancel"]')).not.toBeNull();
     expect(container.querySelector('[data-operator="project"]')).toBe(card);
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();

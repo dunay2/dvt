@@ -31,7 +31,7 @@
   overflow: hidden;
 }
 
-[data-slot='canvas-operation-data-host']:has([data-slot='canvas-operation-data-preview']) > p {
+[data-slot='canvas-operation-data-host']:has([data-slot='canvas-model-data']) > p {
   display: none;
 }
 

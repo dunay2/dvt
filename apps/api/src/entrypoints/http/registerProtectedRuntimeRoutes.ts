@@ -9,6 +9,7 @@ import { LocalWorkspaceFileHistoryRepository } from '../../infrastructure/worksp
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
+import { registerCanvasModelSqlRoutes } from './canvasModelSqlRoutes.js';
 import { registerCanvasTransformDataSampleRoutes } from './canvasTransformDataSampleRoutes.js';
 import { registerCanvasTransformSqlRoutes } from './canvasTransformSqlRoutes.js';
 import { registerProtectedDbtDependencyEditRouteGroup } from './dbtDependencyEditRouteGroup.js';
@@ -86,6 +87,13 @@ export async function registerProtectedRuntimeRoutes(
   registerCanvasTransformSqlRoutes(app, {
     ...dependencies.runtimeAuth,
     query: dependencies.projectCanvasTransformSqlQuery,
+    rateLimit: protectedRateLimit,
+  });
+  registerCanvasModelSqlRoutes(app, {
+    ...dependencies.runtimeAuth,
+    context: dependencies.modelSqlContext,
+    compilation: dependencies.modelSqlCompilation,
+    rows: dependencies.previewCanvasTransformRowsUseCase,
     rateLimit: protectedRateLimit,
   });
   registerProtectedDbtProjectGraphRouteGroup(app, {

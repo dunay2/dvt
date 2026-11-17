@@ -127,7 +127,8 @@ export function relationSql(
   plan: Plan,
   entry: IndexedRelation,
   inputs: readonly SqlInput[],
-  fields: readonly SchemaField[]
+  fields: readonly SchemaField[],
+  unavailableOutputOrdinals: ReadonlySet<number> = new Set()
 ): SqlInput {
   const variant = entry.relation.relType;
   if (variant.case === undefined || !Object.hasOwn(handlers, variant.case))
@@ -166,9 +167,11 @@ export function relationSql(
       : body.columns;
   if (selected.length !== fields.length || selected.length === 0)
     return unsupported('SQL output schema differs from Substrait or has no fields.');
-  const targets = selected.map((val, ordinal) => ({
-    ResTarget: { name: columnName(ordinal), val },
-  }));
+  const targets = selected.flatMap((val, ordinal) =>
+    unavailableOutputOrdinals.has(ordinal)
+      ? []
+      : [{ ResTarget: { name: columnName(ordinal), val } }]
+  );
   const orderBy = (body.order ?? []).map(({ expression, direction, nulls }, ordinal) => {
     const visible = selected.indexOf(expression);
     const name = visible >= 0 ? columnName(visible) : `o${ordinal}`;

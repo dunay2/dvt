@@ -24,7 +24,9 @@ export type FrontendOperabilityEvent =
         | 'ListWarehouseConnectionSourceObjects'
         | 'PreviewWarehouseSourceObjectRows'
         | 'PreviewCanvasTransformRows'
-        | 'ProjectCanvasTransformSql';
+        | 'ProjectCanvasTransformSql'
+        | 'ProjectCanvasModelSqlContext'
+        | 'CompileCanvasModelSql';
       reasonCode: 'response-contract-rejected';
     }>
   | Readonly<{

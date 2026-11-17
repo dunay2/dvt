@@ -33,6 +33,10 @@ const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
 /** Literal test-support ownership; executable evidence validates the complete closure. */
 export const WEB_VITEST_TEST_SOURCE_OWNERS = [
   {
+    entries: ['src/app/views/canvas/model-sql/CanvasModelSqlPanel.test.tsx'],
+    helpers: ['src/app/views/canvas/model-sql/CanvasModelSqlPanel.test-support.tsx'],
+  },
+  {
     entries: ['src/testing/vitestSuites.browserRouting.architecture.test.ts'],
     helpers: [
       'src/testing/vitestSuites.browserRouting.cli.test-cases.ts',

@@ -1,5 +1,4 @@
 /** One compositional PostgreSQL target, driven by canonical Substrait analysis. */
-import { PostgresIdentifierV1Schema } from '@dvt/contracts';
 import {
   deriveSubstraitSchemas,
   isSchemaTypeNullable,
@@ -13,10 +12,10 @@ import { renderPostgresAst } from '../renderPostgresAst.js';
 import type { DvtPostgresOrderKey } from '../sortFetchPostgresProjection.js';
 
 import { admitSqlSources, type SqlSource } from './admission.js';
-import { sortAst } from './ordering.js';
 import { producerReadSql, type ProducerSqlBinding } from './producerRead.js';
 import { relationSql } from './relations.js';
-import { columnName, inputRange, selectAst, unsupported, type SqlInput } from './scope.js';
+import { projectSqlResult } from './resultProjection.js';
+import { selectAst, unsupported, type SqlInput } from './scope.js';
 
 export type SubstraitPostgresAstProjection = Readonly<{
   ast: PostgresAstNode;
@@ -107,48 +106,10 @@ export function projectSubstraitToPostgresAst(
           )
     );
   }
-  const root = document.plan.relations[0]!.relType;
-  if (root.case !== 'root') return unsupported('Root relation is absent.');
-  const result = rendered.get(analysis.index.rootId)!;
-  const names = root.value.names;
-  if (
-    names.some((name) => !PostgresIdentifierV1Schema.safeParse(name).success) ||
-    new Set(names).size !== names.length
-  )
-    return unsupported(
-      'Root outputs require unique names representable as PostgreSQL identifiers.'
-    );
-  const ast = selectAst([], [inputRange(result, 'result')], {
-    targetList: names.map((name, ordinal) => ({
-      ResTarget: { name, val: pgQualifiedColumnRef('result', columnName(ordinal)) },
-    })),
-    ...(result.orderBy.length === 0
-      ? {}
-      : {
-          sortClause: result.orderBy.map((key) =>
-            sortAst(pgQualifiedColumnRef('result', key.name), key)
-          ),
-        }),
-  });
-  const publicOrder = result.orderBy.map((key) => ({
-    ...key,
-    name: /^c\d+$/.test(key.name) ? names[Number(key.name.slice(1))] : undefined,
-  }));
-  return {
-    ast,
-    orderBy:
-      publicOrder.length > 0 && publicOrder.every((key) => key.name != null)
-        ? publicOrder.map((key) => ({ ...key, name: key.name! }))
-        : null,
-    projection: {
-      inputs: sources,
-      resultRelationId: analysis.index.rootId,
-      outputs: result.fields.map((field, outputOrdinal) => ({
-        name: names[outputOrdinal]!,
-        outputOrdinal,
-        dataType: field.type.kind.case === 'unbound' ? 'unknown' : field.type.kind.case!,
-        nullable: isSchemaTypeNullable(field.type),
-      })),
-    },
-  };
+  return projectSqlResult(
+    document,
+    analysis.index.rootId,
+    rendered.get(analysis.index.rootId)!,
+    sources
+  );
 }

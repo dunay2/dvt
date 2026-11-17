@@ -25,6 +25,28 @@ export const monacoVisualClasses = {
 
 export const monacoTheme = 'dvt-dark' as const;
 
+/** Monaco accepts numeric pixels; the scale itself stays owned by common CSS tokens. */
+function commonMonacoTypography() {
+  if (typeof document === 'undefined' || typeof getComputedStyle !== 'function') return {};
+  const style = getComputedStyle(document.documentElement);
+  const rootSize = Number.parseFloat(style.fontSize);
+  const pixels = (name: string) => {
+    const value = style.getPropertyValue(name).trim();
+    const match = /^(\d+(?:\.\d+)?)(px|rem)$/.exec(value);
+    if (match == null) return undefined;
+    const size = Number(match[1]) * (match[2] === 'rem' ? rootSize : 1);
+    return Number.isFinite(size) && size > 0 ? size : undefined;
+  };
+  const fontFamily = style.getPropertyValue('--font-mono').trim();
+  const fontSize = pixels('--text-mono');
+  const lineHeight = pixels('--text-mono-line-height');
+  return {
+    ...(fontFamily ? { fontFamily } : {}),
+    ...(fontSize == null ? {} : { fontSize }),
+    ...(lineHeight == null ? {} : { lineHeight }),
+  };
+}
+
 export function configureMonacoVisualTheme(
   monaco: Readonly<{ editor: Pick<typeof editor, 'defineTheme'> }>
 ): void {
@@ -41,6 +63,7 @@ export function configureMonacoVisualTheme(
 
 export function createMonacoCodeOptions({ ariaLabel, readOnly }: CreateMonacoCodeOptionsInput) {
   return {
+    ...commonMonacoTypography(),
     ariaLabel,
     automaticLayout: true,
     codeLens: false,
@@ -61,6 +84,7 @@ export function createMonacoCodeOptions({ ariaLabel, readOnly }: CreateMonacoCod
 
 export function createMonacoDiffOptions({ ariaLabel }: CreateMonacoDiffOptionsInput) {
   return {
+    ...commonMonacoTypography(),
     ariaLabel,
     automaticLayout: true,
     codeLens: false,
