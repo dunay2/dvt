@@ -196,6 +196,15 @@ reject atomically. Isolated PostgreSQL proof precedes any explicit operation
 on the authoritative database. Queries, imports, refreshes and validation never
 invoke it. There is no rebuild, applied-version ledger or reconciliation chain.
 
+`scripts/planning-db-current-schema-policy.cjs` owns shared schema identities and
+`assertCurrentPlanningDbSchema` source admission; the reader owns fixed bundle
+acquisition. The executable and bounded operation depend on the same policy.
+Defensive forbidden-token patterns do not widen scanning exemptions for the
+reader. The operation must not load its executable
+caller, including through a lazy require: CLI startup can expose partial exports
+before `main()` yields. Existing public imports remain direct references to the
+single implementation. A real-process CLI test retains this boundary.
+
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
 DB-authored architecture and mechanization are read through governed queries;

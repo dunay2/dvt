@@ -7,6 +7,8 @@ const path = require('node:path');
 const { Client } = require('pg');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const { readCurrentPlanningDbSchema } = require('./current-schema.cjs');
+const { assertCurrentPlanningDbSchema } = require('../planning-db-current-schema-policy.cjs');
+const { defaultPgUrl } = require('../planning-db-run.cjs');
 const table = 'planning_query_store.feature_mechanization_local_rails';
 const constraint = 'feature_mechanization_local_rails_mechanization_status_check';
 const previousCheck =
@@ -102,7 +104,6 @@ async function reviseMechanizationStatusConstraint(options = {}) {
     )
   )
     throw new Error('Unsupported fixed CHECK option; caller SQL and identities are forbidden.');
-  const { assertCurrentPlanningDbSchema, databaseUrl } = require('../planning-db-schema.cjs');
   const schemaSql = assertCurrentPlanningDbSchema(readCurrentPlanningDbSchema());
   const schemaSha256 = sha256HexUtf8(schemaSql);
   if (schemaSha256 !== options.expectedSchemaSha256)
@@ -111,7 +112,14 @@ async function reviseMechanizationStatusConstraint(options = {}) {
   if (!/^[a-f0-9]{64}$/u.test(options.expectedConstraintSha256 || ''))
     throw new Error('Exact live constraint-definition digest required.');
   const client =
-    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+    options.client ||
+    new Client({
+      connectionString:
+        options.databaseUrl ||
+        process.env.DVT_PLANNING_DB_URL ||
+        process.env.DATABASE_URL ||
+        defaultPgUrl,
+    });
   let started = false;
   try {
     if (!options.client) await client.connect();

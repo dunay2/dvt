@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * @file scripts/planning-db-schema.cjs
- * @ownedConcern Replace Planning DB with its one declarative current schema.
+ * @ownedConcern Coordinate explicit current-schema operations and readiness.
  * @baseline ADR-0063: Planning DB current-schema rebuild
  * @decision Planning DB is rebuilt from current truth and has no migration compatibility.
  */
@@ -10,36 +10,18 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
-const schemaName = 'planning_query_store';
-const schemaNames = ['architecture', 'component_engineering', schemaName];
 const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
+const {
+  assertCurrentPlanningDbSchema,
+  schemaName,
+  schemaNames,
+} = require('./planning-db-current-schema-policy.cjs');
 const {
   reviseMechanizationStatusConstraint,
 } = require('./planning-db/current-mechanization-constraint.cjs');
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
-}
-
-function assertCurrentPlanningDbSchema(schemaSql) {
-  const sql = String(schemaSql || '');
-  const missingSchemas = schemaNames.filter(
-    (name) => !new RegExp(`create\\s+schema\\s+${name}\\s*;`, 'iu').test(sql)
-  );
-  if (missingSchemas.length > 0) {
-    throw new Error(`Current Planning DB schema must declare ${missingSchemas.join(', ')}.`);
-  }
-  if (
-    /schema_migrations|migration_state|migration_checksum|migration_ordinal|applied_migrations?(?:_identity)?|planning:db:migrate/iu.test(
-      sql
-    )
-  ) {
-    throw new Error('Current Planning DB schema must not contain migration state.');
-  }
-  if (/^\\(?:restrict|unrestrict)\b/imu.test(sql)) {
-    throw new Error('Current Planning DB schema must not contain psql session tokens.');
-  }
-  return sql;
 }
 
 async function applyCurrentPlanningDbSchema(options = {}) {

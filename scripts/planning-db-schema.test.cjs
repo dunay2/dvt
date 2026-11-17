@@ -11,6 +11,7 @@ const {
   assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
   replaceCurrentPlanningDbViews,
+  reviseMechanizationStatusConstraint,
   schemaName,
   schemaNames,
 } = require('./planning-db-schema.cjs');
@@ -31,6 +32,23 @@ function readCurrentSchemaView(name) {
   assert.equal(matches.length, 1, 'Expected exactly one current view: ' + name);
   return matches[0][0];
 }
+
+test('fixed CHECK CLI rejects unreviewed input before connecting or rebuilding', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(__dirname, 'planning-db-schema.cjs'),
+      '--revise-mechanization-status-constraint',
+      '--expected-schema-sha256',
+      'a'.repeat(64),
+      '--expected-constraint-sha256',
+      'b'.repeat(64),
+    ],
+    { encoding: 'utf8' }
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Reviewed schema digest does not match/);
+});
 
 test('explicit two-view CLI rejects an unreviewed schema before connecting or rebuilding', () => {
   const result = spawnSync(
@@ -638,7 +656,7 @@ test('bundle rejects distinct source names resolving to the same physical file',
   assert.throws(() => readCurrentPlanningDbSchema());
 });
 
-test('all three schema modes fail before any query when a declared module is unavailable', async (t) => {
+test('all schema modes fail before any query when a declared module is unavailable', async (t) => {
   const target = path.resolve(__dirname, '..', currentSchemaSources[0]);
   const originalRead = fs.readFileSync;
   t.mock.method(fs, 'readFileSync', (name, ...args) => {
@@ -646,24 +664,31 @@ test('all three schema modes fail before any query when a declared module is una
       throw Object.assign(new Error('missing schema module'), { code: 'ENOENT' });
     return originalRead(name, ...args);
   });
-  for (const mode of ['bootstrap', 'table', 'views']) {
+  const operations = [
+    (client) => applyCurrentPlanningDbSchema({ client, silent: true }),
+    (client) =>
+      addCurrentPlanningDbTable({
+        client,
+        table: 'architecture.component_source_responsibility',
+        expectedSchemaSha256: 'a'.repeat(64),
+      }),
+    (client) =>
+      replaceCurrentPlanningDbViews({
+        client,
+        expectedSchemaSha256: 'a'.repeat(64),
+        expectedManifestViewSha256: 'b'.repeat(64),
+        expectedLifecycleViewSha256: 'c'.repeat(64),
+      }),
+    (client) =>
+      reviseMechanizationStatusConstraint({
+        client,
+        expectedSchemaSha256: 'a'.repeat(64),
+        expectedConstraintSha256: 'b'.repeat(64),
+      }),
+  ];
+  for (const execute of operations) {
     const client = new RecordingClient();
-    await assert.rejects(
-      mode === 'bootstrap'
-        ? applyCurrentPlanningDbSchema({ client, silent: true })
-        : mode === 'table'
-          ? addCurrentPlanningDbTable({
-              client,
-              table: 'architecture.component_source_responsibility',
-              expectedSchemaSha256: 'a'.repeat(64),
-            })
-          : replaceCurrentPlanningDbViews({
-              client,
-              expectedSchemaSha256: 'a'.repeat(64),
-              expectedManifestViewSha256: 'b'.repeat(64),
-              expectedLifecycleViewSha256: 'c'.repeat(64),
-            })
-    );
+    await assert.rejects(execute(client), /missing schema module/);
     assert.deepEqual(client.queries, []);
   }
 });
