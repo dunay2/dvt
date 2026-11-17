@@ -108,6 +108,11 @@ action opens the existing panel and publishes its expanded state and controlled
 section identifier. The protected context prepares the editable source with
 logical input names. The shared Button, icon and language catalog provide this
 entry alongside explicit SQL generation.
+SQL results use the existing compact sample grid: search and actions precede
+rows, with identity, counts and LIVE provenance in the footer. Revision and
+execution semantics remain available in its disclosure. No additional heading,
+summary block or query controller consumes the data drawer's working area.
+
 Only one owner publishes into the data host at a time. Buffer, scope, Model or
 input changes invalidate compilation receipts and mark retained rows stale.
 Late responses cannot replace a newer buffer or context. Concurrent unapplied

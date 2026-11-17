@@ -147,6 +147,32 @@ against the stable normalized commit. Neither failed run is acceptance evidence.
   retained proof corrections equivalent and identified the subsequently corrected
   fixture type mismatch.
 
+## Compact SQL results
+
+The existing `PreviewCanvasTransformRows` result projection now reuses the
+shared compact sample-grid variant. Search and refresh remain directly above
+the rows; identity, authoritative counts and LIVE provenance use its footer.
+Revision, semantic digest and the execution explanation remain in the existing
+information disclosure. Truncated samples retain their `+` indicator.
+
+- `pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/model-sql/CanvasModelSqlPanel.test.tsx`
+  reproduced the oversized header before the change (one failed, five passed).
+- The same command with `src/app/views/canvas/CanvasOperationDataPreview.test.tsx`
+  passed all 19 cases after the change, including refresh, retained disclosure
+  metadata, counts and the existing operation result lifecycle.
+- `pnpm --filter @dvt/web lint` and `pnpm --filter @dvt/web typecheck` passed.
+- `pnpm --filter @dvt/web test:e2e:native --browser chrome --spec cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts`
+  passed the complete authoring journey with zero skipped or pending cases. Its
+  relative geometry assertion bounds the space before the table by twice the
+  toolbar height; its real Chrome screenshot shows the compact result grid.
+  This uses the controlled browser transport, independently of the earlier
+  native PostgreSQL execution evidence.
+
+The running application remains at `http://localhost:5173/canvas`. The shared
+VS Code browser reports hidden visibility and suspended animation frames even
+after browser activation, so its click stability wait is not live UI evidence.
+No forced click or operating-system permission change was used.
+
 ## Completion boundary
 
 Native component, port, contract, test and query records describe actual

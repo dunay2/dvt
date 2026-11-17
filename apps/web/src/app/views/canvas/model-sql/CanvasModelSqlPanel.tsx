@@ -166,6 +166,7 @@ export const CanvasModelSqlPanel = forwardRef<
       {props.active && props.ownsData && props.dataHost != null
         ? createPortal(
             <CanvasModelDataPanel
+              compact
               nodeName={`${props.node.name} · ${copy.data}`}
               copy={{ ...dataCopy, previewHint: copy.dataHint, staleHint: copy.staleData }}
               data={{

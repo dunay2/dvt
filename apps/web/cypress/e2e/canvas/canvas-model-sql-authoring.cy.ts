@@ -90,6 +90,13 @@ describe('Model SQL authoring', () => {
     cy.then(() =>
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBefore)
     );
+    cy.get('[data-slot="canvas-model-data"]').should(($panel) => {
+      const toolbar = $panel.find('[data-slot="data-grid-toolbar"]')[0]!.getBoundingClientRect();
+      const frame = $panel
+        .find('[data-slot="bottom-operational-data-table-frame"]')[0]!
+        .getBoundingClientRect();
+      expect(frame.top - $panel[0]!.getBoundingClientRect().top).to.be.at.most(toolbar.height * 2);
+    });
     cy.screenshot('gh3944-model-sql-data', { capture: 'fullPage' });
     cy.contains(`${panel} button`, 'Generate Model').should('be.enabled').click();
     cy.wrap(null).should(() => {

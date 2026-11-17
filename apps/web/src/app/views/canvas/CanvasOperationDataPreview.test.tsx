@@ -214,7 +214,12 @@ describe('selected operation data preview', () => {
       );
       expect(container.querySelector('time')?.dateTime).toBe('2026-09-19T00:00:00.000Z');
       expect(container.querySelector('thead')?.textContent).toContain('id');
-      expect(container.textContent).not.toContain('r7');
+      expect(recordCount?.textContent).toContain(`${count}${truncated ? '+' : ''}`);
+      const details = Array.from(facts!.querySelectorAll('details')).find((item) =>
+        item.textContent?.includes('r7')
+      );
+      expect(details).toBeTruthy();
+      expect(details?.open).toBe(false);
       expect(refresh).not.toBeNull();
       render('join-2');
       expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toBe(

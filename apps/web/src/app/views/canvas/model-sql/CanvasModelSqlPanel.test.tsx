@@ -52,6 +52,26 @@ describe('Model SQL panel', () => {
     expect(h.onOpenData).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(dataHost.textContent).toContain('SQL_ROW_3944'));
     expect(queryByRole(container, 'alert')).toBeNull();
+    expect(dataHost.querySelector('header')).toBeNull();
+    const toolbar = dataHost.querySelector('[data-slot="data-grid-toolbar"]')!;
+    const refresh = getByRole(dataHost, 'button', { name: 'Refresh preview' });
+    expect(getByRole(dataHost, 'searchbox').closest('[data-slot="data-grid-toolbar"]')).toBe(
+      toolbar
+    );
+    expect(refresh.closest('[data-slot="data-grid-toolbar"]')).toBe(toolbar);
+    const footer = dataHost.querySelector('footer')!;
+    expect(footer.textContent).toContain('1 rows');
+    expect(footer.textContent).toContain('1 columns');
+    expect(footer.textContent).toContain('SQL results');
+    expect(footer.textContent).toContain('LIVE');
+    const details = Array.from(footer.querySelectorAll('details')).find((item) =>
+      item.textContent?.includes('Revision: r1')
+    );
+    expect(details).toBeTruthy();
+    expect(details?.open).toBe(false);
+    expect(details?.textContent).toContain('the semantic Model has not been changed');
+    await act(async () => refresh.click());
+    expect(h.query.preview).toHaveBeenCalledTimes(2);
     expect(h.onApplyNodeDraft).not.toHaveBeenCalled();
   });
   it('generates only through the existing draft command and retains rejected SQL', async () => {
