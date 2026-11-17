@@ -31,6 +31,10 @@ describe('Model Output SQL inspection', () => {
       '[data-slot="canvas-model-sql-edit"]'
     );
     expect(button).not.toBeNull();
+    const output = container.querySelector('[data-slot="canvas-model-sql-output"]');
+    expect(output?.querySelectorAll('button')).toHaveLength(1);
+    expect(output?.querySelector('[data-slot="canvas-model-sql-generate"]')).toBeNull();
+    expect(output?.querySelector('pre')).toBeNull();
     act(() => button!.click());
     expect(edit).toHaveBeenCalledOnce();
     expect(query.projectTransformSql).not.toHaveBeenCalled();

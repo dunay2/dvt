@@ -123,9 +123,15 @@ describe('Model SQL authoring', () => {
     cy.get(
       '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
     ).click();
+    cy.get('[data-slot="canvas-model-sql-output"]').within(() => {
+      cy.get('button').should('have.length', 1);
+      cy.get('[data-slot="canvas-model-sql-generate"]').should('not.exist');
+      cy.get('.monaco-editor').should('not.exist');
+    });
     cy.get('[data-slot="canvas-model-sql-edit"]')
       .should('be.visible')
       .and('have.attr', 'aria-expanded', 'false');
+    cy.screenshot('gh3944-model-sql-single-entry', { capture: 'fullPage' });
     let compilationCount = 0,
       executionCount = 0,
       saveCount = 0;

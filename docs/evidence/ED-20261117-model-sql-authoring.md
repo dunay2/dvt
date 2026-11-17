@@ -173,6 +173,34 @@ VS Code browser reports hidden visibility and suspended animation frames even
 after browser activation, so its click stability wait is not live UI evidence.
 No forced click or operating-system permission change was used.
 
+## Single authoring entry and native proof ownership
+
+The Model authoring inspector now exposes only Edit SQL and does not mount a
+second generated-SQL query/viewer. Editing, validation, execution and Model
+application stay in the existing editor. Read-only inspection hosts retain the
+protected saved-SQL projection and its explicit generation behavior.
+
+- The existing inspection test reproduced two actions before the change (one
+  failed, eight passed). The composed run with SQL panel and operation data
+  tests passed all 28 cases after the change.
+- Native Chrome passed the complete SQL authoring, data, Apply and reload
+  journey with zero pending or skipped cases. It checks one inspector action,
+  no second Monaco view, retained text and unchanged explicit action counts.
+  Captures: `gh3944-model-sql-data.png` and `gh3944-model-sql-single-entry.png`.
+- The user explicitly authorized the native reconciliation described in
+  [the issue record](https://github.com/dunay2/dvt/issues/3944#issuecomment-6953788477).
+  Official operators revised the cohesive SQL component's exact ownership for
+  the unit harness and browser fixture, completed existing context symbol
+  declarations, and registered a reference-only native-browser proof consumer.
+  The primary Preview rail remains in place; no product command was added.
+- The native check passed 813 manifests for `97abab83a` after that correction.
+  Its first run rejected the proof consumer's missing Fowler citation and
+  unit-test references pruned by forbidden product paths. The consumer now
+  cites the governing policy and the existing package-level test command,
+  consistent with canonical runner consumers. Implementation surfaces and
+  forbidden product paths were unchanged. A missing operation-type invocation
+  rolled back before retry; neither failed attempt is acceptance evidence.
+
 ## Completion boundary
 
 Native component, port, contract, test and query records describe actual
