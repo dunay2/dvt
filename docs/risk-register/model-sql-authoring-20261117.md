@@ -44,6 +44,14 @@ this record does not accept new debt.
   pending SQL Apply; cancellation releases it only after actual settlement.
   Namespace invalidation includes name and instance-reference changes as well
   as plugin, kind, role, path and metadata.
+- Preserve protected physical SQL inspection and logical authoring as separate
+  representations behind one explicit entry. Keep the original/readable result
+  and simplification evidence; never copy physical SQL into the logical buffer.
+  A projection failure cannot prevent opening the independent editor.
+- Closing an inspector ends its local edit mode and discards an uncommitted
+  focused input without a blur-triggered save. Reopening enables SQL inspection;
+  already acknowledged edits and the separate Model transaction keep their
+  existing lifecycle. Browser evidence asserts unchanged save counts.
 - Use one data owner and mark retained results stale after context/text changes.
   API identity checks reject mismatched receipts. Late results cannot replace
   newer text, scope or revision.

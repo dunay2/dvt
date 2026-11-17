@@ -120,6 +120,31 @@ describe('Model SQL authoring', () => {
     cy.get('button[aria-label="Collapse SQL panel"]').last().click();
     cy.get('button[aria-label="Open Model SQL"]').should('have.attr', 'aria-expanded', 'false');
     cy.get('[data-slot="canvas-relational-tree-output-open"]').should('be.visible').click();
+    let writesOnClose = 0;
+    cy.then(() => {
+      writesOnClose = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-edit"]'
+    ).click();
+    cy.get('[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input')
+      .first()
+      .clear()
+      .type('unapplied_country');
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
+    ).should('be.disabled');
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-collapse"]'
+    ).click();
+    cy.get('[data-slot="canvas-model-output-inspector"]').should('not.exist');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesOnClose)
+    );
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
+    ).should('be.enabled');
     cy.get(
       '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
     ).click();

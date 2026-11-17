@@ -175,10 +175,13 @@ No forced click or operating-system permission change was used.
 
 ## Single authoring entry and native proof ownership
 
-The Model authoring inspector now exposes only Edit SQL and does not mount a
-second generated-SQL query/viewer. Editing, validation, execution and Model
-application stay in the existing editor. Read-only inspection hosts retain the
-protected saved-SQL projection and its explicit generation behavior.
+The first button-unification implementation removed the generated-SQL viewer
+from the authoring inspector. Cross-consumer review found that this exceeded
+the user's action-unification choice and broke the retained physical SQL and
+simplification workflow. That interpretation was corrected: one explicit action
+requests the protected readable SQL and opens logical authoring independently.
+The inspector retains its original/readable viewer and evidence; physical SQL
+is never copied into the editable logical source.
 
 - The existing inspection test reproduced two actions before the change (one
   failed, eight passed). The composed run with SQL panel and operation data
@@ -215,6 +218,31 @@ transitive consumers and checks their complete, disjoint runtime coverage.
 `pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.browserRouting.architecture.test.ts src/testing/vitestSuites.browserCatalog.architecture.test.ts src/testing/vitestSuites.browserCatalogReadiness.architecture.test.ts`
 passed all 210 contracts after that correction. This failed prepush remains
 diagnostic evidence, not an acceptance receipt.
+
+## Inspector edit cancellation and unified SQL action
+
+`RenderCanvasContextualGraphSurface` retains the inspector's presentation
+ownership. Closing clears local edit mode and selected-only state before
+unmounting its form. Pointer close prevents a focused field from committing
+through blur. It does not settle the Workbench's separate staged transaction.
+
+- The close/reopen regression reproduced persistent editing (one failed, seven
+  passed). After correction, the composed inspection/Apply/output-order run
+  passed 18 cases, including the existing close-before-Model-Apply contract.
+- The single-action regression reproduced the missing protected SQL query (one
+  failed, eight passed). The final combined run passed all 34 cases across SQL
+  inspection/panel and Workbench composition/Apply/output ordering. It includes
+  projection failure with authoring still available.
+- `pnpm --filter @dvt/web test:e2e:native --browser chrome --spec 'cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts,cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts'`
+  passed four cases across both specs, zero pending/skipped. A focused valid
+  alias is typed and discarded by Close, with unchanged PUT count and enabled
+  SQL on reopen. The retained projection proof keeps original/readable SQL,
+  simplification evidence, exactly two explicit GET requests and no writes/runs.
+  A first PowerShell invocation lacked quotes around the spec list and was
+  rejected before execution; it is not product-failure or acceptance evidence.
+- The complete gate for `a97b49e85` was interrupted for the user's new Close
+  requirement during early selected Vitest execution. It produced no acceptance
+  receipt. No source was modified until the execution tree had stopped.
 
 ## Completion boundary
 
