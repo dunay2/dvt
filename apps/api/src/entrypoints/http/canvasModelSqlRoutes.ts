@@ -66,12 +66,11 @@ export function registerCanvasModelSqlRoutes(
           !scope.ok ||
           !target.success ||
           Object.keys(request.query).some((key) => !permittedScopeKeys.has(key))
-        )
-          return reply
-            .code(400)
-            .send({
-              error: { type: 'bad_request', reason: HTTP_ERROR_REASON.invalidModelSqlRequest },
-            });
+        ) {
+          return reply.code(400).send({
+            error: { type: 'bad_request', reason: HTTP_ERROR_REASON.invalidModelSqlRequest },
+          });
+        }
         const authorized = await authorizeExecutionScope({
           authenticator: deps.authenticator,
           authorizer: deps.authorizer,
@@ -92,12 +91,11 @@ export function registerCanvasModelSqlRoutes(
             !parsed.success ||
             parsed.data.canvasId !== target.data.canvasId ||
             parsed.data.transformNodeId !== target.data.transformNodeId
-          )
-            return reply
-              .code(400)
-              .send({
-                error: { type: 'bad_request', reason: HTTP_ERROR_REASON.invalidModelSqlRequest },
-              });
+          ) {
+            return reply.code(400).send({
+              error: { type: 'bad_request', reason: HTTP_ERROR_REASON.invalidModelSqlRequest },
+            });
+          }
           if (route.mode === 'compile')
             return reply.send(await deps.compilation.execute(parsed.data, authorized.context));
           const rows = TransformSqlDraftDataSampleRequestSchema.parse(parsed.data);
@@ -108,19 +106,16 @@ export function registerCanvasModelSqlRoutes(
             error instanceof DbtModelProducerAccessDeniedError ||
             (error instanceof CanvasTransformProjectionUnavailableError &&
               error.reason === 'file_access_denied')
-          )
-            return reply
-              .code(403)
-              .send({
-                error: { type: 'forbidden', reason: HTTP_ERROR_REASON.modelSqlAccessDenied },
-              });
+          ) {
+            return reply.code(403).send({
+              error: { type: 'forbidden', reason: HTTP_ERROR_REASON.modelSqlAccessDenied },
+            });
+          }
           if (error instanceof CanvasModelSqlUnavailableError) {
             const stale = error.code === 'stale_context';
-            return reply
-              .code(stale ? 409 : 422)
-              .send({
-                error: { type: stale ? 'conflict' : 'unprocessable_entity', reason: error.code },
-              });
+            return reply.code(stale ? 409 : 422).send({
+              error: { type: stale ? 'conflict' : 'unprocessable_entity', reason: error.code },
+            });
           }
           if (error instanceof CanvasTransformDataSampleUnavailableError)
             return reply
