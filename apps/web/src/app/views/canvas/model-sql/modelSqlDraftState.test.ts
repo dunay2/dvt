@@ -67,4 +67,50 @@ describe('Model SQL lexical draft', () => {
     const edited = modelSqlDraftReducer(ready, { type: 'text', sql: 'bad sql' });
     expect(modelSqlDraftReducer(edited, { type: 'discard' }).sql).toBe('');
   });
+  it.each(['SELECT country AS nation FROM client', null])(
+    'discards against the refreshed semantic context instead of the old baseline: %s',
+    (sql) => {
+      const ready = modelSqlDraftReducer(initialModelSqlDraft, { type: 'context', context });
+      const accepted = modelSqlDraftReducer(ready, {
+        type: 'applied',
+        sql: ready.sql,
+        semanticSha256: 'b'.repeat(64),
+      });
+      const edited = modelSqlDraftReducer(accepted, { type: 'text', sql: 'SELECT * FROM client' });
+      const refreshed = modelSqlDraftReducer(edited, {
+        type: 'context',
+        context: ModelSqlContextResponseSchema.parse({
+          ...context,
+          semanticPlanSha256: 'c'.repeat(64),
+          sql,
+        }),
+      });
+      expect(refreshed.sql).toBe(edited.sql);
+      expect(hasModelSqlChanges(refreshed)).toBe(true);
+      const discarded = modelSqlDraftReducer(refreshed, { type: 'discard' });
+      expect(discarded.sql).toBe(sql ?? '');
+      expect(discarded.baseline).toBe(sql ?? '');
+      expect(discarded.acceptedSemanticSha256).toBeNull();
+      expect(hasModelSqlChanges(discarded)).toBe(false);
+    }
+  );
+  it('retains acknowledged lexical SQL on discard only for its matching semantic context', () => {
+    const lexical = 'SELECT country /* accepted spelling */ FROM client';
+    const accepted = modelSqlDraftReducer(initialModelSqlDraft, {
+      type: 'applied',
+      sql: lexical,
+      semanticSha256: 'b'.repeat(64),
+    });
+    const edited = modelSqlDraftReducer(accepted, { type: 'text', sql: 'SELECT * FROM client' });
+    const refreshed = modelSqlDraftReducer(edited, {
+      type: 'context',
+      context: ModelSqlContextResponseSchema.parse({
+        ...context,
+        semanticPlanSha256: 'b'.repeat(64),
+      }),
+    });
+    const discarded = modelSqlDraftReducer(refreshed, { type: 'discard' });
+    expect(discarded.sql).toBe(lexical);
+    expect(hasModelSqlChanges(discarded)).toBe(false);
+  });
 });

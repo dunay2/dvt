@@ -122,6 +122,10 @@ input changes invalidate compilation receipts and mark retained rows stale.
 Late responses cannot replace a newer buffer or context. Concurrent unapplied
 visual edits block SQL generation. The existing Model navigation decision
 coordinates apply/discard/stay for both editors and preserves rejected drafts.
+When the protected semantic context changes, retain dirty lexical text but move
+its discard baseline to the current context SQL. An acknowledged lexical source
+remains the baseline only while its semantic digest matches that context.
+Discard must never mark an obsolete semantic projection as clean.
 Apply is a separate command phase: editing is locked while it runs, cancellation
 uses its existing signal, and its actual acknowledgement survives the revision
 change caused by that command. A restricted Read keeps its canonical field
