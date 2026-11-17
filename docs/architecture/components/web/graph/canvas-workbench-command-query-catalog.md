@@ -175,6 +175,16 @@ drag/drop uses the dropped graph position and existing guarded instance admissio
 Disclosure and menus remain independent. The shared gesture arbiter inspects the
 first click immediately; subsequent native clicks do not duplicate inspection.
 Drag, replacement and unmount leave no delayed inspection to dispatch.
+
+The explicit Semantic/SQL browsing mode is a separate navigation intent through
+`SelectCanvasWorkbenchTab`. Its icon reveals the existing project list and
+Canvas; only selecting a block opens its supported view. Resolve a definition's
+existing occurrence context without allocating one, and ask when several
+contexts are possible. Other resources retain `InspectCanvasNode` and their
+actual Code capability. The [Model view contract](../appshell/model-view-navigation.md)
+owns this mode, retained drafts, focus and negative proof. Normal catalog
+inspection and drag placement keep the behavior described above.
+
 Instances reference one registered definition and retain their own placement
 identity, name and position. They do not create a consumer Read, copy the model
 document or add a dependency edge to the original. The shared contract resolves
