@@ -65,13 +65,29 @@ fallback. The adapter owns only this native event handoff.
 The left rail exposes Semantic view and SQL with distinct shared glyphs, localized
 accessible labels/tooltips and common navigation tokens. Exactly one destination
 is active: Canvas, project Code/Git, semantic Model or Model SQL. An unavailable
-Model or an in-progress Apply of a SQL proposal disables the Model shortcuts.
+Canvas disables the Model shortcuts. An in-progress Apply of a SQL proposal
+retains the existing protected Model replacement decision.
 Visual Apply retains its existing lifecycle while presentation switches without
 unmounting the semantic workspace.
 
-Semantic view selects the existing Model workspace and collapses SQL. SQL selects
-that workspace and expands its existing logical editor. The Model publishes both
-callbacks; Shell delegates without introducing a second navigation or draft owner.
+Both icons reveal the existing project Model list in the left Explorer and leave
+the Canvas visible until the user selects a block. They do not open the last
+active Model or introduce a popup picker. The selected block then determines the
+central content, using the requested semantic or SQL view when its existing
+capability admits that editor. Other resources retain their real inspection or
+Code capability; the view mode grants no new authoring permission.
+
+The registered Model projection, shared search, result counts, Source facet and
+file-publication adapter remain unchanged. Selection never creates an occurrence;
+placement remains a drag operation. The project list remains accessible while a
+Model is open. The Model-local input palette remains reachable through a compact
+Inputs control, with its existing inspection and occurrence actions.
+
+`SelectCanvasWorkbenchTab` delegates protected replacement to the current Model
+session. A fresh session receives its initial view atomically; selecting the same
+session reuses its published view callback. Semantic view collapses SQL and SQL
+expands its retained logical editor. Shell receives presentation mode and callbacks
+only, without owning SQL text, semantic drafts or authorization.
 Presentation switching retains the SQL buffer, current Model and lower data
 results. It never implicitly compiles, executes, applies, saves or discards.
 Expanding SQL may prepare the existing protected logical-input context. SQL
@@ -101,6 +117,11 @@ domain aggregate, backend endpoint or persistence schema.
 - Catalog activation and double click never create an occurrence.
 - Model shortcuts are unavailable without a current owner; callbacks cannot target
   an obsolete owner after registration changes.
+- Opening a view reveals the existing left Explorer and Canvas without selecting
+  or creating a block. Selecting a current Model opens the requested view. The
+  shared project list remains visible; cancelled replacement retains the current
+  session and dirty buffer. Empty, no-match, loading and error states reuse the
+  actual project catalog state.
 - One active destination follows current Model/Code/SQL visibility. Keyboard and
   pointer invoke the same callbacks, with visible focus and accessible names.
 - Switching views retains the actual SQL buffer and data, with no implicit
