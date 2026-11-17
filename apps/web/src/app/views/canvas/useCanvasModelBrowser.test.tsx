@@ -118,6 +118,33 @@ it('retains the current Model until its owner accepts replacement', () => {
   expect(model.initialView).toBe('sql');
 });
 
+it('opens the next Model in the actual active view after its toolbar changes SQL visibility', () => {
+  render();
+  act(() => store.getState().modelBrowser!.onBrowse('sql'));
+  act(() => browser.onSelect(first.id));
+  act(() =>
+    store.getState().registerModelTab({
+      canvasId: 'canvas',
+      nodeId: first.id,
+      label: first.name,
+      active: true,
+      onSelect: vi.fn(),
+      onCanvas: vi.fn(),
+      onClose: (next) => next?.(),
+      views: {
+        active: 'semantic',
+        sqlPanelId: 'sql',
+        disabled: false,
+        semantic: vi.fn(),
+        sql: vi.fn(),
+      },
+    })
+  );
+  act(() => browser.onSelect(second.id));
+  expect(model.selected?.id).toBe(second.id);
+  expect(model.initialView).toBe('semantic');
+});
+
 it('rejects obsolete browsing and delayed replacement after a Canvas change', () => {
   render();
   const obsolete = store.getState().modelBrowser!;

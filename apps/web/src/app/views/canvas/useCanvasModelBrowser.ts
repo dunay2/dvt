@@ -72,27 +72,34 @@ export function useCanvasModelBrowser({
   const onSelect: CanvasInspectorCommand = useCallback(
     (request, preferredTab) => {
       if (currentOwner.current !== owner) return false;
+      const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
+      const view =
+        mode != null && model.active && tab?.canvasId === canvasId
+          ? (tab.views?.active ?? mode)
+          : mode;
       const nodeId =
         typeof request === 'string'
           ? request
           : request.kind === 'canonical-node'
             ? request.nodeId
             : null;
-      if (mode != null && nodeId != null && model.modelIds.has(nodeId)) {
+      if (view != null && nodeId != null && model.modelIds.has(nodeId)) {
         showCanvas();
         const target = resolveCanvasModelNavigationTarget(nodeId, nodes, model.selected?.id);
         if (target.kind === 'contexts')
-          setPendingContext({ owner, view: mode, contexts: target.contexts });
-        else model.open(target.nodeId, mode);
+          setPendingContext({ owner, view, contexts: target.contexts });
+        else model.open(target.nodeId, view);
         return true;
       }
       showCanvas();
       model.setActive(false);
-      return onInspect(request, preferredTab ?? (mode === 'sql' ? 'code' : null));
+      return onInspect(request, preferredTab ?? (view === 'sql' ? 'code' : null));
     },
     [
       owner,
+      canvasId,
       mode,
+      model.active,
       nodes,
       model.modelIds,
       model.selected?.id,
