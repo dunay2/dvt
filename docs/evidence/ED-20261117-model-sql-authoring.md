@@ -244,6 +244,18 @@ through blur. It does not settle the Workbench's separate staged transaction.
   requirement during early selected Vitest execution. It produced no acceptance
   receipt. No source was modified until the execution tree had stopped.
 
+## Inspection contract ownership
+
+The exact-head native check for `2d4814dea` rejected a stale authority hash after
+inspection prose was added to the global command/query catalog. No command or
+rail declaration had changed. That presentation contract is now in the
+[existing Workbench's dedicated guide](../architecture/components/web/graph/relational-workbench-inspection-component.md).
+The global catalog is restored byte-for-byte to its admitted content. The
+existing Workbench component's governance references were extended through
+`ReviseGovernanceComponent` with revision CAS; ownership, parent and command/query
+rails were unchanged. No Planning DB import, rebuild or declaration-check bypass
+was performed. The fresh final-head native check remains an integration gate.
+
 ## Completion boundary
 
 Native component, port, contract, test and query records describe actual

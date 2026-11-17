@@ -79,16 +79,6 @@ DDD ownership rules:
 
 <!-- markdownlint-disable MD060 -->
 
-## Inspector close and edit presentation
-
-`RenderCanvasContextualGraphSurface` owns the inspector's local edit/inspect
-presentation. Closing it ends that edit mode and discards its uncommitted form
-inputs. Reopening returns to inspection with SQL navigation available. The
-pointer close action must not commit an input by moving focus first. No semantic
-save, SQL request or Model Apply is dispatched by closing. Already acknowledged
-changes and the Workbench's separate staged transaction retain their existing
-command lifecycle.
-
 ## Contextual surface composition ownership
 
 `RenderCanvasContextualGraphSurface` retains its existing authority. The
