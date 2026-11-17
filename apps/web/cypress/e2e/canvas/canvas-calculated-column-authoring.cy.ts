@@ -357,7 +357,11 @@ describe('Canvas calculated-column authoring', () => {
       .should('have.attr', 'aria-selected', 'true')
       .and('contain.text', 'Orders model');
     cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
-    cy.get('[data-slot="canvas-model-toolbar"] button').should('not.exist');
+    cy.get('[data-slot="canvas-model-toolbar"]').within(() => {
+      cy.get('button[aria-label="Open Model SQL"]').should('have.attr', 'aria-expanded', 'false');
+      cy.contains('button', /^Apply$/).should('not.exist');
+      cy.contains('button', /^Cancel$/).should('not.exist');
+    });
 
     cy.get(canvasTab).click();
     visibleNode('model-orders-secondary').find('[data-slot="graph-node-card-title"]').dblclick();

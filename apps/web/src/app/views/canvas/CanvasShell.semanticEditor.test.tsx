@@ -297,6 +297,7 @@ describe('Canvas Model inspection', () => {
     const sqlPanel = harness.container.querySelector('[data-slot="canvas-model-sql"]');
     expect(sqlDisclosure.getAttribute('aria-expanded')).toBe('false');
     expect(sqlPanel).not.toBeNull();
+    expect(sqlPanel?.hasAttribute('hidden')).toBe(true);
     expect(sqlDisclosure.getAttribute('aria-controls')).toBe(sqlPanel?.id);
     expect(
       useOperationalDrawerContributionStore

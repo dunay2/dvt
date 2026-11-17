@@ -93,6 +93,13 @@ omitting unavailable outputs, and reject unavailable row dependencies.
   authoring leaf explicitly admitted and all other isolation rules retained.
   All 1,105 architecture cases and 35 composed presentation cases passed after
   these corrections. Failed gate attempts are not acceptance evidence.
+- The retained SQL section now has native hidden state when collapsed. Thirty
+  affected composed cases passed; the three affected Chrome specs passed all
+  eight cases, including existing Model navigation and footer geometry. SQL
+  collapse preserves visible data in the external host and exact source on
+  reopen. A Cypress attribute/visibility subject error was corrected before
+  the successful SQL rerun. An earlier complete prepush was deliberately
+  interrupted to reconcile the old browser expectations; it is not acceptance.
 - Chrome on the existing `http://localhost:5173/canvas`: one controlled journey
   passed, with no pending or skipped tests. Real Monaco input and native
   Ctrl+Enter lead to rows in the existing data drawer. Keep-editing navigation
@@ -102,7 +109,7 @@ omitting unavailable outputs, and reject unavailable row dependencies.
   application/probe test separately establishes real PostgreSQL execution.
 
 The actual browser capture is retained under
-`.dvt/evidence/gh3944/screenshots/canvas-model-sql-authoring.cy.ts/gh3944-model-sql-data.png`.
+`.dvt/evidence/gh3944/sql-final-screenshots/canvas-model-sql-authoring.cy.ts/gh3944-model-sql-data.png`.
 An independent read-only review identified and re-reviewed three corrected
 defects: query/Apply fencing, restricted-publication seed generation and unused
 file provenance. A brittle Monaco whitespace assertion was corrected; a reload

@@ -149,7 +149,10 @@ describe('Model SQL authoring', () => {
       40,
       18
     );
-    cy.get('button[aria-label="Open Model SQL"]').click();
+    cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
+    cy.get('button[aria-label="Open Model SQL"]')
+      .should('have.attr', 'aria-expanded', 'false')
+      .click();
     cy.get(panel).should('be.visible');
     waitForE2eApiCall(`${prefix}/sql-context`, 'GET');
     cy.get(`${panel} .monaco-editor .view-lines`).click(80, 9);
@@ -198,6 +201,16 @@ describe('Model SQL authoring', () => {
     waitForE2eApiCall(`${prefix}/data-sample`, 'POST');
     cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
     cy.get(panel).should('be.visible');
+    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
+    cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
+    cy.get('button[aria-label="Open Model SQL"]').click();
+    cy.get(panel)
+      .should('be.visible')
+      .find('.view-lines')
+      .should(($lines) => {
+        expect($lines.text().replaceAll('\u00a0', ' ').trim()).to.equal(sql);
+      });
     cy.then(() =>
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBefore)
     );

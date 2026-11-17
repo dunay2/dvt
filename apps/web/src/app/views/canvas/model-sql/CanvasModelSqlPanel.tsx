@@ -82,6 +82,7 @@ export const CanvasModelSqlPanel = forwardRef<
     <section
       id={props.panelId}
       data-slot="canvas-model-sql"
+      hidden={!props.open}
       aria-label={copy.editor}
       className={styles.panel}
     >

@@ -251,8 +251,13 @@ describe('Workbench navigation', () => {
       .and('have.text', 'R');
     cy.get('[data-slot="canvas-model-toolbar"]').should(($toolbar) => {
       expect($toolbar[0]!.getBoundingClientRect().height).to.be.at.most(48);
-      expect($toolbar.find('[role="tab"], button')).to.have.length(0);
+      expect($toolbar.find('[role="tab"]')).to.have.length(0);
     });
+    cy.get('[data-slot="canvas-model-toolbar"] button[aria-label="Open Model SQL"]').should(
+      'have.attr',
+      'aria-expanded',
+      'false'
+    );
     cy.get('[data-slot="canvas-model-editor"]').should(($editor) => {
       const footer = $editor.find('[data-slot="canvas-model-toolbar"]')[0]!;
       const viewport = $editor.find('[data-slot="canvas-relational-tree-viewport"]')[0]!;

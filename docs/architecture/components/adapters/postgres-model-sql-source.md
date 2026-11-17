@@ -97,6 +97,12 @@ data table. The SQL pane opens between the semantic canvas and data drawer;
 the semantic Workbench stays mounted. One toolbar exposes Validate, Execute
 and Generate Model. There is no nested tab stack or automatic query on typing.
 
+The SQL disclosure follows the [W3C Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/):
+the button's expanded state and controlled section agree, and the retained
+section is hidden while collapsed. Its draft remains mounted and its data portal
+belongs to the external drawer. The workspace's focused layout hook controls
+resizing; the template remains passive.
+
 Only one owner publishes into the data host at a time. Buffer, scope, Model or
 input changes invalidate compilation receipts and mark retained rows stale.
 Late responses cannot replace a newer buffer or context. Concurrent unapplied
