@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * @file scripts/planning-db-schema.cjs
- * @ownedConcern Replace Planning DB with its one declarative current schema.
+ * @ownedConcern Coordinate explicit current-schema operations and readiness.
  * @baseline ADR-0063: Planning DB current-schema rebuild
  * @decision Planning DB is rebuilt from current truth and has no migration compatibility.
  */
@@ -10,33 +10,18 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
-const schemaName = 'planning_query_store';
-const schemaNames = ['architecture', 'component_engineering', schemaName];
 const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
+const {
+  assertCurrentPlanningDbSchema,
+  schemaName,
+  schemaNames,
+} = require('./planning-db-current-schema-policy.cjs');
+const {
+  reviseMechanizationStatusConstraint,
+} = require('./planning-db/current-mechanization-constraint.cjs');
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
-}
-
-function assertCurrentPlanningDbSchema(schemaSql) {
-  const sql = String(schemaSql || '');
-  const missingSchemas = schemaNames.filter(
-    (name) => !new RegExp(`create\\s+schema\\s+${name}\\s*;`, 'iu').test(sql)
-  );
-  if (missingSchemas.length > 0) {
-    throw new Error(`Current Planning DB schema must declare ${missingSchemas.join(', ')}.`);
-  }
-  if (
-    /schema_migrations|migration_state|migration_checksum|migration_ordinal|applied_migrations?(?:_identity)?|planning:db:migrate/iu.test(
-      sql
-    )
-  ) {
-    throw new Error('Current Planning DB schema must not contain migration state.');
-  }
-  if (/^\\(?:restrict|unrestrict)\b/imu.test(sql)) {
-    throw new Error('Current Planning DB schema must not contain psql session tokens.');
-  }
-  return sql;
 }
 
 async function applyCurrentPlanningDbSchema(options = {}) {
@@ -114,6 +99,29 @@ async function assertPlanningDbCurrentSchemaReady(client) {
 async function main() {
   if (process.argv.length > 2) {
     const args = process.argv.slice(2);
+    if (args[0] === '--revise-mechanization-status-constraint') {
+      const flags = new Map();
+      for (let index = 1; index < args.length; index += 2) {
+        if (
+          !['--expected-schema-sha256', '--expected-constraint-sha256'].includes(args[index]) ||
+          flags.has(args[index]) ||
+          !args[index + 1]
+        )
+          throw new Error('Fixed CHECK mode requires exactly two reviewed digests.');
+        flags.set(args[index], args[index + 1]);
+      }
+      if (flags.size !== 2)
+        throw new Error('Fixed CHECK mode requires exactly two reviewed digests.');
+      console.log(
+        JSON.stringify(
+          await reviseMechanizationStatusConstraint({
+            expectedSchemaSha256: flags.get('--expected-schema-sha256'),
+            expectedConstraintSha256: flags.get('--expected-constraint-sha256'),
+          })
+        )
+      );
+      return;
+    }
     if (args[0] === '--replace-read-views') {
       const flags = new Map();
       for (let index = 1; index < args.length; index += 2) {
@@ -325,6 +333,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  reviseMechanizationStatusConstraint,
   replaceCurrentPlanningDbViews,
   addCurrentPlanningDbTable,
   applyCurrentPlanningDbSchema,

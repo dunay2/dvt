@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * @file scripts/planning-db-current-schema-policy.cjs
- * @ownedConcern Prevent Planning DB migration compatibility from returning.
+ * @ownedConcern Admit current schema sources and prevent Planning DB migration compatibility.
  * @baseline ADR-0063: Planning DB current-schema rebuild
  */
 const { execFileSync } = require('node:child_process');
@@ -22,6 +22,30 @@ const exemptPaths = new Set([
   'docs/adr/ADR-0063-planning-db-current-schema-rebuild.md',
   'docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md',
 ]);
+
+const schemaName = 'planning_query_store';
+const schemaNames = ['architecture', 'component_engineering', schemaName];
+
+function assertCurrentPlanningDbSchema(schemaSql) {
+  const sql = String(schemaSql || '');
+  const missingSchemas = schemaNames.filter(
+    (name) => !new RegExp(`create\\s+schema\\s+${name}\\s*;`, 'iu').test(sql)
+  );
+  if (missingSchemas.length > 0) {
+    throw new Error(`Current Planning DB schema must declare ${missingSchemas.join(', ')}.`);
+  }
+  if (
+    /schema_migrations|migration_state|migration_checksum|migration_ordinal|applied_migrations?(?:_identity)?|planning:db:migrate/iu.test(
+      sql
+    )
+  ) {
+    throw new Error('Current Planning DB schema must not contain migration state.');
+  }
+  if (/^\\(?:restrict|unrestrict)\b/imu.test(sql)) {
+    throw new Error('Current Planning DB schema must not contain psql session tokens.');
+  }
+  return sql;
+}
 
 function toPosix(filePath) {
   return String(filePath || '')
@@ -258,6 +282,9 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assertCurrentPlanningDbSchema,
+  schemaName,
+  schemaNames,
   assertCurrentStateValue,
   assertNoPlanningDbMigrationArtifacts,
   assertNoPlanningDbSnapshotAuthorityReferences,

@@ -72,6 +72,14 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
   );
   assert.equal(preparations.length, 1);
   const preparation = preparations[0];
+  const focused = steps.find((step) =>
+    step.run?.startsWith('pnpm verify:changed --committed-tests')
+  );
+  assert.ok(focused, 'the selected committed tests retain their existing entry point');
+  assert.ok(
+    steps.indexOf(preparation) < steps.indexOf(focused),
+    'prepare DB before selected native tests'
+  );
   const consumers = steps.filter((step) => step.run?.startsWith('pnpm planning:db:'));
   for (const command of [
     'pnpm planning:db:inventory:check',
@@ -94,6 +102,8 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
     ['docs/architecture/components/api/dbt-project-analysis-component.md', false],
     ['tools/docs/check-links.ts', false],
     ['scripts/planning-db-query.cjs', true],
+    ['scripts/planning-db/current-mechanization-constraint.test.cjs', true],
+    ['tools/planning-db/schema/mechanization/rails/tables.sql', true],
     ['tools/ci/pr-quality-workflow-contract.test.mjs', false],
   ]) {
     const outputs = buildCiScopeOutputs([path]);

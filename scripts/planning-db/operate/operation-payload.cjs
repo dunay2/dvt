@@ -397,11 +397,15 @@ function operationPayload(command) {
       cypressFlows: command.cypressFlows || [],
       completionGate: command.completionGate || [],
       unitTests: command.unitTests || [],
-      redTest: command.redTest,
-      expectedFailure: command.expectedFailure,
+      ...(command.mechanizationStatus === 'declared'
+        ? { designId: command.designId }
+        : {
+            redTest: command.redTest,
+            expectedFailure: command.expectedFailure,
+            greenTest: command.greenTest,
+          }),
       patchSurfaces: command.patchSurfaces || [],
       ...(command.redGreenCycle === undefined ? {} : { redGreenCycle: command.redGreenCycle }),
-      greenTest: command.greenTest,
       replaceImplementationRefs: command.replaceImplementationRefs,
       replaceArchitectureGuards: command.replaceArchitectureGuards,
       ...(command.replaceDocumentationRefs === true ? { replaceDocumentationRefs: true } : {}),

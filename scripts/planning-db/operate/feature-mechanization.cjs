@@ -51,7 +51,7 @@ const { databaseUrl } = require('../../planning-db-schema.cjs');
 
 const { randomUuidV4 } = require('@dvt/crypto');
 
-const allowedFeatureMechanizationStatuses = new Set(['closed', 'implemented']);
+const allowedFeatureMechanizationStatuses = new Set(['closed', 'implemented', 'declared']);
 
 const allowedFeatureMechanizationRailTypes = new Set(['command', 'query']);
 
@@ -146,6 +146,25 @@ function featureMechanizationRailId({ featureId, railType, normalizedRailName })
 }
 
 function validateFeatureMechanizationRecordCommand(command) {
+  const prospective = command.mechanizationStatus === 'declared';
+  if (prospective) {
+    validateArchitectureDesignId(command.designId);
+    if (
+      command.railStatus !== 'declared' ||
+      command.implementationRefs.length ||
+      command.referenceOnly != null ||
+      command.authorityRef ||
+      command.redTest ||
+      command.expectedFailure ||
+      command.greenTest ||
+      command.redGreenCycle ||
+      command.patchSurfaces.length
+    ) {
+      throw new Error(
+        'Prospective declared rails cannot claim implementation, reference or RED/GREEN evidence.'
+      );
+    }
+  }
   const requiredTextFields = [
     ['feature', command.featureId],
     ['rail', command.railName],
@@ -154,9 +173,13 @@ function validateFeatureMechanizationRecordCommand(command) {
     ['adapter-surface', command.adapterSurface],
     ['authorization-scope', command.authorizationScope],
     ['implementation-plan', command.implementationPlan],
-    ['red-test', command.redTest],
-    ['expected-failure', command.expectedFailure],
-    ['green-test', command.greenTest],
+    ...(!prospective
+      ? [
+          ['red-test', command.redTest],
+          ['expected-failure', command.expectedFailure],
+          ['green-test', command.greenTest],
+        ]
+      : []),
     ['source-ref', command.sourceRef],
   ];
   for (const [field, value] of requiredTextFields) {
@@ -245,6 +268,7 @@ function validateFeatureMechanizationRecordCommand(command) {
   }
   if (
     !terminalRailStatus &&
+    !prospective &&
     !command.implementationRefs.some((implementationRef) => implementationRef.includes('#'))
   ) {
     throw new Error(
@@ -321,6 +345,11 @@ function parseFeatureMechanizationCommand(action, args) {
     mechanizationStatus: validateFeatureMechanizationStatus(
       options.mechanizationStatus || 'implemented'
     ),
+    ...(options.mechanizationStatus === 'declared'
+      ? {
+          designId: validateArchitectureDesignId(requireOption(options, 'design')),
+        }
+      : {}),
     railStatus: validateFeatureMechanizationRailStatus(options.railStatus || 'implemented'),
     referenceOnly: parseBooleanOption(options.referenceOnly, 'reference-only'),
     authorityRef: normalizeOptionalText(options.authorityRef),
@@ -338,13 +367,22 @@ function parseFeatureMechanizationCommand(action, args) {
     cypressFlows: normalizeListOption(options.cypressFlow),
     completionGate: normalizeListOption(options.completionGate),
     unitTests: normalizeListOption(options.unitTest),
-    redTest: requireOption(options, 'redTest'),
-    expectedFailure: requireOption(options, 'expectedFailure'),
+    redTest:
+      options.mechanizationStatus === 'declared'
+        ? options.redTest
+        : requireOption(options, 'redTest'),
+    expectedFailure:
+      options.mechanizationStatus === 'declared'
+        ? options.expectedFailure
+        : requireOption(options, 'expectedFailure'),
     patchSurfaces: normalizeListOption(options.patchSurface),
     ...(options.redGreenCycle === undefined
       ? {}
       : { redGreenCycle: requireOption(options, 'redGreenCycle') }),
-    greenTest: requireOption(options, 'greenTest'),
+    greenTest:
+      options.mechanizationStatus === 'declared'
+        ? options.greenTest
+        : requireOption(options, 'greenTest'),
     replaceImplementationRefs:
       parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
     replaceArchitectureGuards:
@@ -401,6 +439,7 @@ function normalizeFeatureMechanizationRail(row) {
 
   return {
     railId: row.rail_id ?? row.railId,
+    mechanizationStatus: row.mechanization_status ?? row.mechanizationStatus,
     revision: row.revision === null || row.revision === undefined ? null : Number(row.revision),
     createdAt: row.created_at ?? row.createdAt ?? row.imported_at ?? row.importedAt,
     symbolRefs: normalizeFeatureMechanizationReferences(row.symbol_refs ?? row.symbolRefs ?? []),
@@ -450,8 +489,16 @@ function buildFeatureMechanizationSymbols(command) {
 }
 
 function planFeatureMechanizationRailRecordOperation({ command, existingRail, operationId, now }) {
-  if (command.redGreenCycle !== undefined) validateFeatureMechanizationRecordCommand(command);
+  const prospective = command.mechanizationStatus === 'declared';
+  if (command.redGreenCycle !== undefined || prospective)
+    validateFeatureMechanizationRecordCommand(command);
   const previous = normalizeFeatureMechanizationRail(existingRail);
+  if (prospective && previous && previous.mechanizationStatus !== 'declared')
+    throw new Error(
+      'Cannot downgrade implemented or closed mechanization to a prospective declaration.'
+    );
+  if (previous?.mechanizationStatus === 'declared' && command.expectedRevision == null)
+    throw new Error('Updating or promoting a declared rail requires --expected-revision.');
   const previousRevision = previous ? previous.revision : null;
   if (command.responsibilityBindings !== undefined)
     throw new Error('Source responsibility bindings belong to RecordArchitectureComponent.');
@@ -502,6 +549,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     adapterSurface: command.adapterSurface,
     authorizationScope: command.authorizationScope,
     negativeTests: command.negativeTests,
+    ...(prospective ? { designId: command.designId, unitTests: command.unitTests } : {}),
     ...referenceMetadata,
   });
   const patchSurfaces =
@@ -512,7 +560,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     version: 1,
     featureId: command.featureId,
     mechanizationStatus: command.mechanizationStatus,
-    noHumanDecisionsRemaining: true,
+    noHumanDecisionsRemaining: !prospective,
     implementationPlan: command.implementationPlan,
     componentGuides: command.componentGuides,
     userStories: command.userStories,
@@ -525,15 +573,17 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     cypressFlows: command.cypressFlows,
     completionGate: command.completionGate,
     commandQueryRails: [rawRail],
-    redGreenCycles: [
-      {
-        id: command.redGreenCycle ?? `${command.normalizedRailName}-record`,
-        redTest: command.redTest,
-        expectedFailure: command.expectedFailure,
-        patchSurfaces,
-        greenTest: command.greenTest,
-      },
-    ],
+    redGreenCycles: prospective
+      ? []
+      : [
+          {
+            id: command.redGreenCycle ?? `${command.normalizedRailName}-record`,
+            redTest: command.redTest,
+            expectedFailure: command.expectedFailure,
+            patchSurfaces,
+            greenTest: command.greenTest,
+          },
+        ],
     symbols: buildFeatureMechanizationSymbols(command),
   };
   const rawManifest = mergeFeatureMechanizationManifest(
@@ -857,6 +907,22 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
       true,
       command
     );
+    if (command.mechanizationStatus === 'declared') {
+      const design = await readArchitectureDesign(client, command.designId);
+      if (!design || (design.design_id ?? design.designId) !== command.designId)
+        throw new Error('FEATURE-DECLARATION-DESIGN-MISSING: ' + command.designId);
+      if (!['review', 'approved', 'implementing'].includes(design.status))
+        throw new Error(
+          'Prospective declaration requires a review, approved or implementing design.'
+        );
+      assertArchitectureDesignScope(
+        await readArchitectureDesignScopes(client, command.designId),
+        command.railType,
+        command.railName,
+        ['may_create', 'may_update'],
+        'FEATURE-DECLARATION-DESIGN-SCOPE-MISSING'
+      );
+    }
     const planned = planFeatureMechanizationRailRecordOperation({
       command,
       existingRail,

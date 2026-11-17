@@ -5,6 +5,28 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+test('a prospective declaration cannot admit an implementation surface', () => {
+  const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+  const result = new FeatureImplementationGuard(
+    [
+      {
+        manifest: {
+          featureId: 'FUTURE',
+          mechanizationStatus: 'declared',
+          allowedImplementationSurfaces: ['future.cjs'],
+          symbols: [],
+        },
+      },
+    ],
+    {
+      changedFiles: ['future.cjs'],
+      currentFiles: ['future.cjs'],
+      fileContentsByPath: { 'future.cjs': 'module.exports = 1;' },
+    }
+  ).validate();
+  assert.ok(result.errors.some((error) => /outside allowedImplementationSurfaces/.test(error)));
+});
+
 test('the implementation guard rejects an undeclared Python production definition', () => {
   const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
   const path = 'scripts/owned.py';
@@ -280,6 +302,105 @@ test('all schema errors reject before component source work in the same authorit
   assert.equal(calls.filter((sql) => sql.includes('ranked_manifest_rows')).length, 1);
   assert.match(calls[0], /begin.*repeatable read.*read only/iu);
   assert.equal(calls.at(-1), 'commit');
+});
+
+test('prospective manifests remain distinct and explicit implementation selection rejects them', async (t) => {
+  const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+  const repo = repository(t);
+  const declared = structuredClone(validManifest);
+  Object.assign(declared, {
+    mechanizationStatus: 'declared',
+    noHumanDecisionsRemaining: false,
+    symbols: [],
+    redGreenCycles: [],
+    commandQueryRails: [
+      {
+        name: 'CompileFixtureSql',
+        type: 'query',
+        dddOwner: 'Fixture',
+        status: 'declared',
+        designId: 'DESIGN',
+        applicationPort: 'Proposed query',
+        adapterSurface: 'CLI',
+        authorizationScope: 'Repository',
+        unitTests: ['Prospective test'],
+        negativeTests: ['Deny missing scope'],
+      },
+    ],
+  });
+  const declaredRow = {
+    source_path: 'https://example.invalid/prospective',
+    raw_manifest: declared,
+  };
+  const implementedRow = {
+    source_path: declaredRow.source_path,
+    raw_manifest: { ...validManifest, mechanizationStatus: 'implemented' },
+  };
+  for (const rows of [
+    [declaredRow],
+    [declaredRow, implementedRow],
+    [implementedRow, declaredRow],
+  ]) {
+    const normalized = normalizeDbFeatureMechanizationManifestRows(rows);
+    assert.equal(normalized.length, rows.length);
+    assert.deepEqual(validateFeatureMechanizationManifestEntries(normalized).errors, []);
+    const prospective = normalized.find(
+      (entry) => entry.manifest.mechanizationStatus === 'declared'
+    );
+    assert.deepEqual(prospective.manifest.symbols, []);
+    assert.deepEqual(prospective.manifest.redGreenCycles, []);
+    for (const requiredFeatureIds of [
+      undefined,
+      [],
+      new Set(),
+      [declared.featureId],
+      new Set([declared.featureId]),
+    ]) {
+      const client = {
+        query: async (sql) => ({
+          rows: sql.includes('ranked_manifest_rows')
+            ? rows
+            : sql.includes('governance_component_definition_query')
+              ? [{ id: 'SYS-FIXTURE', level: 'component', status: 'canonical', owns: ['**'] }]
+              : [],
+        }),
+      };
+      const result = await readImplementationEvidence({
+        client,
+        gitReader: repo.reader(),
+        requiredFeatureIds,
+      });
+      const selected = new Set(requiredFeatureIds || []).has(declared.featureId);
+      assert.equal(result.manifestValidation.errors.length, selected ? 1 : 0);
+      if (selected) assert.match(result.manifestValidation.errors[0], /declared, not implemented/);
+    }
+  }
+});
+
+test('mixed lifecycle normalization never grants prospective implementation surfaces', () => {
+  const source_path = 'docs/architecture/command-query-rail-governance.md';
+  const declared = {
+    ...validManifest,
+    mechanizationStatus: 'declared',
+    allowedImplementationSurfaces: ['future.cjs'],
+    symbols: [],
+    redGreenCycles: [],
+  };
+  const implemented = { ...validManifest, mechanizationStatus: 'implemented' };
+  for (const manifests of [
+    [implemented, declared],
+    [declared, implemented],
+  ]) {
+    const entries = normalizeDbFeatureMechanizationManifestRows(
+      manifests.map((raw_manifest) => ({ source_path, raw_manifest }))
+    );
+    const result = validateFeatureImplementationManifests(entries, {
+      changedFiles: ['future.cjs'],
+      currentFiles: ['future.cjs'],
+      fileContentsByPath: { 'future.cjs': 'module.exports = 1;' },
+    });
+    assert.match(result.errors.join('\n'), /future.cjs is outside allowedImplementationSurfaces/);
+  }
 });
 
 test('valid schema still checks broken bindings in unchanged source files', async (t) => {

@@ -155,6 +155,19 @@ jobs:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
+      - name: Prepare planning DB for DB-backed validation
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant ==
+          true) || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
+        uses: ./.github/actions/prepare-planning-db
+        env:
+          GIT_BASE:
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
+            'origin/main' }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: Run focused committed-diff tests
         if:
           github.event_name == 'pull_request' &&
@@ -180,19 +193,6 @@ jobs:
             ${{ fromJSON(needs.detect-pr-scope.outputs.workflow_scope).any_code != true &&
             fromJSON(needs.detect-pr-scope.outputs.workflow_scope).docs_changed == true }}
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Prepare planning DB for DB-backed validation
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          fromJSON(needs.detect-pr-scope.outputs.workflow_scope).planning_db_inventory_relevant ==
-          true) || (github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.run_typecheck_gate == 'true')
-        uses: ./.github/actions/prepare-planning-db
-        env:
-          GIT_BASE:
-            ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
-            'origin/main' }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate Planning DB inventory for committed changes
