@@ -9,6 +9,7 @@ import {
   TransformSqlDraftDataSampleResponseSchema,
   TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION,
   WorkspaceGraphDraftSaveRequestSchema,
+  type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
@@ -24,7 +25,10 @@ import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from './workspaceSessio
 
 export const modelSqlSource = 'SELECT country FROM customers';
 
-export function stubModelSqlAuthoring() {
+export function stubModelSqlAuthoring(): Readonly<{
+  model: WorkspaceGraphAuthoringNode;
+  prefix: string;
+}> {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
