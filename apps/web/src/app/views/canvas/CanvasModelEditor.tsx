@@ -1,6 +1,6 @@
 /** Owned concern: compose the semantic Model workspace and its draft lifecycle. */
 import './canvasSemanticEditor.css';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useOptionalCanvasTransformSqlQueryPort } from '../../services/AppServicesContext';
 import { CanvasModelToolbar } from './CanvasModelToolbar';
 import { useCanvasModelNavigation } from './useCanvasModelNavigation';
@@ -23,6 +23,11 @@ import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types
 import { CanvasModelNavigationGuard } from './CanvasModelNavigationGuard';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import { canvasModelLayoutKey } from './CanvasModelLayoutSession';
+import { CanvasModelSqlPanel } from './model-sql/CanvasModelSqlPanel';
+import { CanvasModelSqlEditorAction } from './model-sql/CanvasModelSqlEditorAction';
+import { resolveModelSqlCopy } from './model-sql/modelSqlCopy';
+import { useCanvasModelDraftHandle } from './model-sql/useCanvasModelDraftHandle';
+import { useCanvasModelSqlPanelLayout } from './model-sql/useCanvasModelSqlPanelLayout';
 
 export function CanvasModelEditor({
   canvasId,
@@ -72,9 +77,43 @@ export function CanvasModelEditor({
     [canvasId, sqlQuery, scopeKey]
   );
   const workbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
+  const sqlWorkbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
+  const combinedWorkbench = useCanvasModelDraftHandle(workbench, sqlWorkbench);
+  const [sqlOpen, setSqlOpen] = useState(false);
+  const sqlPanelRef = useCanvasModelSqlPanelLayout(sqlOpen);
+  const [sqlApplying, setSqlApplying] = useState(false);
+  const sqlPanelId = useId();
+  const openSql = useCallback(() => setSqlOpen(true), []);
+  const sqlEditorAction = useMemo(
+    () => ({ open: openSql, panelId: sqlPanelId, expanded: sqlOpen }),
+    [openSql, sqlPanelId, sqlOpen]
+  );
+  const [dataOwner, setDataOwner] = useState<'operation' | 'sql'>('operation');
+  const sqlCopy = resolveModelSqlCopy(language);
+  const sqlRevision = useMemo(
+    () =>
+      JSON.stringify([
+        scopeKey,
+        canvasId,
+        transformNode.id,
+        nodes.map((node) => [
+          node.id,
+          node.name,
+          node.kind,
+          node.pluginId,
+          node.role,
+          node.definitionId,
+          node.sourceDefinitionId,
+          node.path,
+          node.metadata,
+        ]),
+        edges,
+      ]),
+    [scopeKey, canvasId, transformNode.id, nodes, edges]
+  );
   const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
   const navigation = useCanvasModelNavigation({
-    workbench,
+    workbench: combinedWorkbench,
     onClose,
     preparePreview,
     draftStatus,
@@ -95,42 +134,87 @@ export function CanvasModelEditor({
   });
   return (
     <CanvasModelEditorTemplate
+      sqlPanelRef={sqlPanelRef}
       label={`${transformNode.name} · ${copy.editor}`}
+      semanticBlocked={sqlApplying}
       footer={
         <CanvasModelToolbar
           data={{
             modelName: transformNode.name,
             draftStatus,
+            sqlOpen,
+            sqlPanelId,
+            sqlLabel: sqlOpen ? sqlCopy.close : sqlCopy.open,
           }}
-          actions={{ onActionsHost: setActionsHost }}
+          actions={{
+            onActionsHost: setActionsHost,
+            onToggleSql: () => setSqlOpen((open) => !open),
+          }}
         />
       }
       editor={
-        <CanvasRelationalTreeWorkbench
-          ref={workbench}
+        <CanvasModelSqlEditorAction.Provider value={sqlEditorAction}>
+          <CanvasRelationalTreeWorkbench
+            ref={workbench}
+            active={active && !sqlApplying}
+            codeProjection={codeProjection}
+            layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
+            transformNode={transformNode}
+            nodes={nodes}
+            edges={edges}
+            copy={treeCopy}
+            authoring={
+              sqlApplying && authoring != null ? { ...authoring, canEditNode: false } : authoring
+            }
+            actionsHost={actionsHost}
+            preview={{
+              canvasId,
+              query,
+              onExecuteSource:
+                onExecuteSource == null
+                  ? undefined
+                  : (...args) => {
+                      setDataOwner('operation');
+                      onExecuteSource(...args);
+                    },
+              preparePreview,
+              dataHost: dataOwner === 'operation' ? operationDataHost : null,
+              onOpenData: () => {
+                setDataOwner('operation');
+                onOpenOperationData?.();
+              },
+            }}
+          />
+        </CanvasModelSqlEditorAction.Provider>
+      }
+      sqlOpen={sqlOpen}
+      sql={
+        <CanvasModelSqlPanel
+          ref={sqlWorkbench}
+          panelId={sqlPanelId}
+          canvasId={canvasId}
+          node={transformNode}
+          scopeKey={scopeKey}
+          revision={sqlRevision}
+          open={sqlOpen}
           active={active}
-          codeProjection={codeProjection}
-          layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
-          transformNode={transformNode}
-          nodes={nodes}
-          edges={edges}
-          copy={treeCopy}
+          visual={workbench}
           authoring={authoring}
-          actionsHost={actionsHost}
-          preview={{
-            canvasId,
-            query,
-            onExecuteSource,
-            preparePreview,
-            dataHost: operationDataHost,
-            onOpenData: onOpenOperationData,
+          preparePreview={preparePreview}
+          onClose={() => setSqlOpen(false)}
+          onApplyingChange={setSqlApplying}
+          dataHost={operationDataHost}
+          ownsData={dataOwner === 'sql'}
+          onOpenData={() => {
+            setDataOwner('sql');
+            onOpenOperationData?.();
           }}
         />
       }
       guards={
         <>
           <CanvasModelNavigationGuard
-            workbench={workbench}
+            workbench={combinedWorkbench}
             hasUnpersistedChanges={draftStatus.persistence !== 'durable'}
             onBlocked={onRouteBlocked}
           />

@@ -4,6 +4,10 @@ import path from 'node:path';
 import ts from 'typescript';
 
 import { describe, expect, it } from 'vitest';
+import {
+  CANVAS_MONACO_EDITOR_OWNERS,
+  CANVAS_MONACO_READ_ONLY_OWNERS,
+} from '../../components/monaco/canvasMonacoAuthority.test-support';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..');
 const APP_ROOT = path.resolve(__dirname, '../..');
@@ -16,13 +20,6 @@ interface MonacoAuthorityFixture {
   modulePath: string;
   source: string;
 }
-
-const CANVAS_MONACO_EDITOR_OWNERS = new Set(['views/canvas/DerivedOutputFormulaEditor.tsx']);
-const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
-  'views/canvas/DbtModelCodeAuthoringSection.tsx',
-  'views/canvas/DvtTransformOutputView.tsx',
-  'views/canvas/CanvasModelSqlOutput.tsx',
-]);
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
   {

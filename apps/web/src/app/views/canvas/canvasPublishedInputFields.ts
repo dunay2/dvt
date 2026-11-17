@@ -1,9 +1,10 @@
 /** Read published producer fields from the existing canonical presentation authority. */
 import type { CanonicalNode } from '../../types/canonical';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import type { CanvasInputBindingEdge, CanvasPublishedInputField } from './canvasInputBindings';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { readCanvasModelCompositionPublication } from './canvasModelCompositionInput';
 
 export async function readCanvasPublishedInputFields(
   args: Readonly<{
@@ -17,7 +18,16 @@ export async function readCanvasPublishedInputFields(
   const isSource =
     ['dvt', 'dvt.warehouse-source'].includes(args.node.pluginId) && args.node.kind === 'dvt:source';
   if (!isModel && !isSource) return [];
-  if (isModel && readDvtTransformAuthoringAuthority(args.node) == null) return [];
+  if (isModel && readWorkspaceDbtModelReference(args.node) != null) {
+    const publication = readCanvasModelCompositionPublication(args.node, args.nodes, args.edges);
+    if (signal?.aborted || publication == null || publication.rootPublication.rowUnavailable)
+      return [];
+    return publication.fields.flatMap((field) =>
+      field.id != null && publication.publishedFieldIds.has(field.id)
+        ? [{ columnId: field.id, name: field.name, type: field.dataType }]
+        : []
+    );
+  }
   const truth = await projectCanvasNodePresentationTruth(args, undefined, signal);
   return projectCanvasPublishedInputFields(args.node, truth);
 }

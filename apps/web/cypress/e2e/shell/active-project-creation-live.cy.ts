@@ -34,6 +34,16 @@ function visitCanvasWithProjectCreationObservation(): void {
   });
 }
 
+function openProjectMenu(): void {
+  cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
+    'have.attr',
+    'aria-expanded',
+    'false'
+  );
+  cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+  cy.get('[data-slot="shell-workspace-menu-trigger"]').should('have.attr', 'aria-expanded', 'true');
+  cy.get('[data-slot="shell-workspace-scope-selector"]').should('be.visible');
+}
 describe('Active project creation live vertical', () => {
   before(() => {
     expect(hasLiveProtectedRuntimeEnv(), 'protected project-creation runtime').to.equal(true);
@@ -50,7 +60,7 @@ describe('Active project creation live vertical', () => {
       .should('be.visible')
       .invoke('attr', 'aria-label')
       .then((initialProjectTriggerText) => {
-        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+        openProjectMenu();
         cy.get('[data-slot="shell-new-project-command"]')
           .should('be.visible')
           .should(($command) => {
@@ -82,7 +92,7 @@ describe('Active project creation live vertical', () => {
           .should('be.visible');
         cy.get('.react-flow__node').should('not.exist');
 
-        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+        openProjectMenu();
         cy.get('[data-slot="shell-workspace-scope-selector"]')
           .contains(
             '[role="menuitemradio"]',
@@ -93,8 +103,9 @@ describe('Active project creation live vertical', () => {
           .should('have.attr', 'aria-label')
           .and('contain', (initialProjectTriggerText ?? '').replace(/^.*?:\s*/, '').trim())
           .and('not.contain', projectName);
+        cy.get('[data-slot="shell-workspace-scope-selector"]').should('not.exist');
 
-        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+        openProjectMenu();
         cy.get('[data-slot="shell-workspace-scope-selector"] [role="menuitemradio"]')
           .contains(projectName)
           .click();

@@ -270,7 +270,17 @@ describe('Model composition Workbench', () => {
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
         .click();
     });
-    expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).not.toBeNull();
+    const reopened = container.querySelector('[data-slot="canvas-model-output-inspector"]')!;
+    expect(reopened).not.toBeNull();
+    expect(
+      reopened.querySelector('[data-slot="canvas-relational-edit"]')?.getAttribute('aria-pressed')
+    ).toBe('false');
+    expect(reopened.querySelector('[data-slot="canvas-operation-sql-tab"]')).toHaveProperty(
+      'disabled',
+      false
+    );
+    expect(reopened.querySelector('[data-slot="relation-output-field"] input')).toBeNull();
+    expect(applied).toHaveBeenCalledOnce();
   });
 
   it('keeps exactly one fixed inspector when an operation is selected', async () => {

@@ -38,6 +38,7 @@ export function registerBrowserRoutingFixtureClosure(): void {
       'apps/web/cypress/support/canvasExecutionSelection.ts',
       'apps/web/cypress/support/canvasFirstAuthoring.ts',
       'apps/web/cypress/support/codeWorkbench/bootstrap.ts',
+      'apps/web/cypress/support/modelSqlAuthoring.ts',
       'apps/web/cypress/support/dbtProjectLive.ts',
       'apps/web/cypress/support/e2eApiStub.ts',
       'apps/web/cypress/support/relationalWorkbench/geometry.ts',

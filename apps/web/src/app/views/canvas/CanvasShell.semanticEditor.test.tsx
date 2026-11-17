@@ -291,7 +291,14 @@ describe('Canvas Model inspection', () => {
     expect(toolbar?.tagName).toBe('FOOTER');
     expect(editor?.firstElementChild).not.toBe(toolbar);
     expect(editor?.lastElementChild).toBe(toolbar);
-    expect(toolbar?.querySelectorAll('button')).toHaveLength(0);
+    const sqlDisclosure = within(toolbar as HTMLElement).getByRole('button', {
+      name: 'Open Model SQL',
+    });
+    const sqlPanel = harness.container.querySelector('[data-slot="canvas-model-sql"]');
+    expect(sqlDisclosure.getAttribute('aria-expanded')).toBe('false');
+    expect(sqlPanel).not.toBeNull();
+    expect(sqlPanel?.hasAttribute('hidden')).toBe(true);
+    expect(sqlDisclosure.getAttribute('aria-controls')).toBe(sqlPanel?.id);
     expect(
       useOperationalDrawerContributionStore
         .getState()

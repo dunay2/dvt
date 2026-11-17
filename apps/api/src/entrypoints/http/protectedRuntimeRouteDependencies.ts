@@ -7,6 +7,7 @@ import { IdempotencyKeyBuilder } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
+import { CompileCanvasModelSqlQuery } from '../../application/services/compileCanvasModelSqlQuery.js';
 import { CompilePlanUseCase } from '../../application/services/CompilePlanUseCase.js';
 import { DvtOperationalWorkloadProjector } from '../../application/services/dvtOperationalWorkloadProjector.js';
 import { DvtPostgresTargetProjectionPublisher } from '../../application/services/dvtPostgresTargetProjectionPublisher.js';
@@ -15,20 +16,26 @@ import { GetRunEventsUseCase } from '../../application/services/getRunEventsUseC
 import { GetRunStatusUseCase } from '../../application/services/getRunStatusUseCase.js';
 import { ImportPlanUseCase } from '../../application/services/ImportPlanUseCase.js';
 import { ListRunsUseCase } from '../../application/services/listRunsUseCase.js';
+import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
+import { PrepareCanvasSqlDraftProjection } from '../../application/services/prepareCanvasSqlDraftProjection.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../application/services/previewCanvasTransformRowsUseCase.js';
 import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
+import { ProjectCanvasModelSqlContextQuery } from '../../application/services/projectCanvasModelSqlContextQuery.js';
 import { ProjectCanvasSqlPresentation } from '../../application/services/projectCanvasSqlPresentation.js';
 import { ProjectCanvasTransformSqlQuery } from '../../application/services/projectCanvasTransformSqlQuery.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedDvtPreviewSelectionService } from '../../application/services/resolveAuthorizedDvtPreviewSelection.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
+import { ResolveCanvasModelSqlInputs } from '../../application/services/resolveCanvasModelSqlInputs.js';
+import { ResolveCanvasModelSqlPhysicalInput } from '../../application/services/resolveCanvasModelSqlPhysicalInput.js';
 import { ResolveCanvasTransformProjection } from '../../application/services/resolveCanvasTransformProjection.js';
 import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
 import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
 import { ValidatePostgresTransformSqlUseCase } from '../../application/services/validatePostgresTransformSqlUseCase.js';
+import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
 import { PostgresCanvasTransformDataSampleProbe } from '../../infrastructure/postgres/PostgresCanvasTransformDataSampleProbe.js';
 import { RunEventCancellationReceiptStore } from '../../infrastructure/runControl/RunEventCancellationReceiptStore.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
@@ -124,8 +131,27 @@ export function buildProtectedRuntimeRouteDependencies(
       validator: validatePostgresTransformSqlUseCase,
     }),
   });
+  const modelSqlContext = new ProjectCanvasModelSqlContextQuery({
+    store: protectedModule.workspaceGraphDraftStore,
+    authorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
+    inputs: new ResolveCanvasModelSqlInputs({
+      projection: canvasTransformProjection,
+      modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
+      physical: new ResolveCanvasModelSqlPhysicalInput({
+        authorizer: protectedModule.authorizer,
+        catalog: new ListWarehouseConnectionSourceObjectsUseCase(
+          new WarehouseConnectionSourceObjectReader(
+            protectedModule.warehouseConnectionCatalog,
+            warehouseConnectionProbe
+          )
+        ),
+      }),
+    }),
+  });
+  const modelSqlCompilation = new CompileCanvasModelSqlQuery(modelSqlContext);
   const previewCanvasTransformRowsUseCase = new PreviewCanvasTransformRowsUseCase({
     projection: canvasTransformProjection,
+    sqlDraftProjection: new PrepareCanvasSqlDraftProjection(modelSqlCompilation),
     connectionCatalog: protectedModule.warehouseConnectionCatalog,
     probe: new PostgresCanvasTransformDataSampleProbe({
       credentialResolver: protectedModule.postgresCredentialResolver,
@@ -177,6 +203,8 @@ export function buildProtectedRuntimeRouteDependencies(
     listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
     previewCanvasTransformRowsUseCase,
     projectCanvasTransformSqlQuery,
+    modelSqlContext,
+    modelSqlCompilation,
     previewWarehouseSourceObjectRowsUseCase,
     previewPlanUseCase,
     validatePostgresTransformSqlUseCase,

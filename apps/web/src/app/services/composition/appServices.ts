@@ -2,6 +2,8 @@
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { ICanvasTransformSqlQueryPort } from '../../ports/canvasTransformSql';
+import type { ICanvasModelSqlQueryPort } from '../../ports/canvasModelSql';
+import { createApiCanvasModelSqlQueryPort } from '../canvas/canvasModelSql.api';
 import { createApiCanvasTransformSqlQueryPort } from '../canvas/canvasTransformSql.api';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
@@ -63,6 +65,7 @@ export interface AppServices {
   readonly warehouseSourceDataSampleQuery: IWarehouseSourceDataSampleQueryPort;
   readonly canvasTransformDataSampleQuery: ICanvasTransformDataSampleQueryPort;
   readonly canvasTransformSqlQuery: ICanvasTransformSqlQueryPort;
+  readonly canvasModelSqlQuery: ICanvasModelSqlQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
@@ -93,6 +96,7 @@ export interface AppServicesOverrides {
   readonly warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   readonly canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   readonly canvasTransformSqlQuery?: ICanvasTransformSqlQueryPort;
+  readonly canvasModelSqlQuery?: ICanvasModelSqlQueryPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
@@ -173,6 +177,9 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery,
     canvasTransformSqlQuery,
+    canvasModelSqlQuery:
+      overrides.canvasModelSqlQuery ??
+      createApiCanvasModelSqlQueryPort(apiClient, frontendOperabilitySink),
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,

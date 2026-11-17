@@ -2,6 +2,12 @@ export {
   type DvtSubstraitLiteralValue,
   dvtSubstraitExpressionReader,
 } from './substraitExpressionReader.js';
+export { compileModelSqlSource } from './sqlSource/compile.js';
+export {
+  ModelSqlSourceError,
+  type ModelSqlSourceContext,
+  type ModelSqlSourceInput,
+} from './sqlSource/context.js';
 export { resolveFunctionReference } from './substrait-profile/functionReference.js';
 export { sumOverload } from './substrait-profile/sum.js';
 export { createSumFunction } from './substraitSumFunction.js';
@@ -145,6 +151,7 @@ export {
   type PostgresSqlSimplificationStep,
 } from './sqlPresentation/simplify.js';
 export { resolvePostgresInputDataType, sourceFieldType } from './postgresInputType.js';
+export { projectModelSqlSource } from './relationalSql/modelSource.js';
 export { inspectDvtConnectedFieldProjection } from './substraitConnectedFieldReader.js';
 export type {
   DvtCalculatedExpression,

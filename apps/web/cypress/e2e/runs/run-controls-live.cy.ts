@@ -29,14 +29,17 @@ const PROJECT_ROOT = 'run-controls';
 const CANVAS_ID = 'run-controls-files';
 const MODEL_ID = 'model.run_controls.controlled';
 const MODEL_PATH = `${PROJECT_ROOT}/models/controlled.sql`;
-// Only the disposable test workload waits; production clocks and timeouts stay unchanged.
-const LONG_RUNNING_SQL = "{{ config(materialized='table') }} select 1 as value from pg_sleep(20)";
+// Static project configuration admits analysis reuse while the workload remains cancellable.
+const LONG_RUNNING_SQL = 'select 1 as value from pg_sleep(20)';
 const PROJECT_FILES = {
   [`${PROJECT_ROOT}/dbt_project.yml`]: `name: run_controls
 version: '0.1.0'
 config-version: 2
 profile: dvt_live_proof
 model-paths: ['models']
+models:
+  run_controls:
+    +materialized: table
 `,
   [MODEL_PATH]: LONG_RUNNING_SQL,
 };

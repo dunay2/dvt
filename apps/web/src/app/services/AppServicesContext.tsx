@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { ICanvasTransformDataSampleQueryPort } from '../ports/canvasDataSample';
 import type { ICanvasTransformSqlQueryPort } from '../ports/canvasTransformSql';
+import type { ICanvasModelSqlQueryPort } from '../ports/canvasModelSql';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../ports/graphDbtModelCompilation';
@@ -66,6 +67,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.warehouseSourceDataSampleQuery,
       overrides?.canvasTransformDataSampleQuery,
       overrides?.canvasTransformSqlQuery,
+      overrides?.canvasModelSqlQuery,
       overrides?.workspaceFileContentCommand,
       overrides?.graphDbtWorkspaceArtifactPublicationCommand,
       overrides?.graphDbtModelCompilationQuery,
@@ -131,6 +133,10 @@ export function useCanvasTransformDataSampleQueryPort(): ICanvasTransformDataSam
 
 export function useOptionalCanvasTransformSqlQueryPort(): ICanvasTransformSqlQueryPort | undefined {
   return useContext(AppServicesContext)?.canvasTransformSqlQuery;
+}
+
+export function useOptionalCanvasModelSqlQueryPort(): ICanvasModelSqlQueryPort | undefined {
+  return useContext(AppServicesContext)?.canvasModelSqlQuery;
 }
 
 export function useOptionalWarehouseSourceImportPort(): IWarehouseSourceImportPort | undefined {

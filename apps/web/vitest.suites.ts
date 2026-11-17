@@ -33,6 +33,13 @@ const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
 /** Literal test-support ownership; executable evidence validates the complete closure. */
 export const WEB_VITEST_TEST_SOURCE_OWNERS = [
   {
+    entries: [
+      'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts',
+      'src/app/views/templates/templatesMonacoPreview.architecture.test.ts',
+    ],
+    helpers: ['src/app/components/monaco/canvasMonacoAuthority.test-support.ts'],
+  },
+  {
     entries: ['src/testing/vitestSuites.browserRouting.architecture.test.ts'],
     helpers: [
       'src/testing/vitestSuites.browserRouting.cli.test-cases.ts',

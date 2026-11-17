@@ -19,6 +19,7 @@
     "apps/web/cypress/e2e/canvas/canvas-model-card-materialization.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-model-session.cy.ts",
+    "apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-pending-read-coverage.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-predicate-reopen.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts",

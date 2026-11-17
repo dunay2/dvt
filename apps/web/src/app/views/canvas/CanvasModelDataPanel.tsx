@@ -147,7 +147,8 @@ export function CanvasModelDataPanel({
                       .replace('{limit}', String(sample.limit))}
                   >
                     <span>
-                      {sample.rows.length} {copy.rows}
+                      {sample.rows.length}
+                      {sample.truncated ? '+' : ''} {copy.rows}
                     </span>
                     <span>
                       {sample.columns.length} {copy.columns}
@@ -157,6 +158,7 @@ export function CanvasModelDataPanel({
                     provenance={sample.provenance}
                     copy={copy}
                     nodeName={nodeName}
+                    notice={`${copy.previewHint}\n${copy.revision}: ${sample.draftRevision}\n${sample.semanticPlanSha256}`}
                   />
                 </>
               ) : undefined

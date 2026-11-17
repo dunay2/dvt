@@ -2,7 +2,7 @@
 title: LIVE and LOCAL data access boundary
 status: Active
 owner: Contracts / Local Data / Preview
-last_reviewed: 2026-10-03
+last_reviewed: 2026-11-17
 ---
 
 # LIVE and LOCAL data access boundary
@@ -318,3 +318,40 @@ transitions. Neither arbitrary sleeps nor relaxed assertions establish readiness
 | --------------------------- | ----------------------- | --------------------------------------------- | ---------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Actual Transform provenance | Hidden authority        | Service Layer / CanvasTransformDataSample     | `PreviewCanvasTransformRows` | Existing contract, projection, use case and probe | Strict LIVE shape, actual fan-in/subrelation sources, empty results and denials | Existing read-only query boundary and DTO rejection   | Real PostgreSQL Transform preview and changed rows in the existing disposable lease | LOCAL and deep paging                           |
 | Current Transform refresh   | Responsibility overload | Presentation Model / current Canvas authority | Same query                   | Sample lifecycle hooks and shared facts view      | Current revision, deleted model, late response and no automatic query           | Rendering never queries or determines source identity | Pointer/keyboard Refresh in existing terminal runner                                | Background polling and new proof infrastructure |
+
+## Explicit Model SQL draft preview
+
+[#3944](https://github.com/dunay2/dvt/issues/3944) adds an explicit SQL-draft
+variant of `PreviewCanvasTransformRows`. The saved-Model GET and its strict v1
+DTO retain their existing semantics. SQL-draft requests use POST on the same
+data-sample resource, with `canvas-transform-sql-draft-data-sample.v1`, the exact
+saved revision, context digest, SQL buffer and existing bounded limit. SQL is
+never a query-string parameter. Responses bind both context and SQL digests to
+the existing LIVE sample; neither those digests nor a proposed document grant
+authorization.
+
+`ProjectCanvasModelSqlContext` prepares the authorized connected logical input
+namespace without requiring executable target semantics. `CompileCanvasModelSql`
+reauthorizes that context and returns a complete pinned Substrait proposal or
+diagnostics. Unknown types, withdrawn fields, stale signatures, ambiguous names,
+cross-connection inputs and unsupported syntax fail closed. Physical metadata
+completion uses the existing authorized exact Source object catalog query; it
+does not alter the graph or acquire rows. File Models keep their existing
+permission and native-compilation authority.
+
+Execute recompiles server-side and renders the canonical proposal through the
+existing read-only provider probe. It does not Apply, save, materialize, acquire
+working data or start a Run. Provenance contains only the sources and file
+producers consumed by the admitted canonical closure. Rows remain a transient,
+bounded first page, with no cursor or future freshness promise.
+
+Generate Model is a separate explicit application of the proposal through the
+existing Model draft command, output-dependency guard, autosave and revision CAS.
+The SQL buffer is locked during that transaction. Its acknowledgement is not
+discarded because the command itself advanced the graph revision. Conflicting
+unapplied visual edits block generation; the existing navigation decision owns
+Apply, discard and keep-editing behavior for both editors. Context or text
+changes invalidate analysis receipts and mark retained rows stale.
+
+See the [Model SQL source design](../architecture/components/adapters/postgres-model-sql-source.md)
+for the admitted SELECT profile and its canonical identity boundary.

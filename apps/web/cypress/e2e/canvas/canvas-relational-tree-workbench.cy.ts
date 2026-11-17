@@ -251,8 +251,13 @@ describe('Workbench navigation', () => {
       .and('have.text', 'R');
     cy.get('[data-slot="canvas-model-toolbar"]').should(($toolbar) => {
       expect($toolbar[0]!.getBoundingClientRect().height).to.be.at.most(48);
-      expect($toolbar.find('[role="tab"], button')).to.have.length(0);
+      expect($toolbar.find('[role="tab"]')).to.have.length(0);
     });
+    cy.get('[data-slot="canvas-model-toolbar"] button[aria-label="Open Model SQL"]').should(
+      'have.attr',
+      'aria-expanded',
+      'false'
+    );
     cy.get('[data-slot="canvas-model-editor"]').should(($editor) => {
       const footer = $editor.find('[data-slot="canvas-model-toolbar"]')[0]!;
       const viewport = $editor.find('[data-slot="canvas-relational-tree-viewport"]')[0]!;
@@ -278,7 +283,11 @@ describe('Workbench navigation', () => {
       cy.get('[role="tablist"]').should('have.length', 1);
       cy.get('[data-slot="canvas-operation-sql-tab"]').click();
       cy.then(() => expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(0));
-      cy.get('[data-slot="canvas-model-sql-generate"]').click();
+      cy.get('[data-slot="canvas-model-sql-edit"]').click();
+      cy.root()
+        .closest('[data-slot="canvas-model-editor"]')
+        .find('[data-slot="canvas-model-toolbar"] button[aria-label="Collapse SQL panel"]')
+        .click();
       cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor')
         .should('be.visible')
         .and('contain.text', 'customers');
@@ -316,7 +325,8 @@ describe('Workbench navigation', () => {
       'true'
     );
     cy.get('[data-slot="canvas-operation-sql-tab"]').click();
-    cy.get('[data-slot="canvas-model-sql-generate"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-sql-edit"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-toolbar"] button[aria-label="Collapse SQL panel"]').click();
     cy.get('[data-slot="canvas-model-sql-output"] .monaco-editor').should('be.visible');
     moveWorkbenchCard('[data-slot="canvas-relational-tree-output-open"]', 0, 0);
     cy.then(() => {

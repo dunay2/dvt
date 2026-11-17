@@ -7,3 +7,6 @@
  */
 export * from './TransformDataSample.v1.js';
 export * from './TransformSqlProjection.v1.js';
+export * from './ModelSqlContext.v1.js';
+export * from './ModelSqlCompilation.v1.js';
+export * from './TransformSqlDraftDataSample.v1.js';

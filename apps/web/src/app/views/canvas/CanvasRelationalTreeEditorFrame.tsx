@@ -219,7 +219,11 @@ export function CanvasRelationalTreeEditorFrame({
           data-slot="canvas-relational-collapse"
           aria-label={copy.collapse}
           title={copy.collapse}
-          onClick={onClose}
+          onMouseDown={editing ? (event) => event.preventDefault() : undefined}
+          onClick={() => {
+            updateInspector({ editing: false, selectedOnly: false });
+            onClose();
+          }}
           className="ml-auto grid size-7 place-items-center rounded hover:bg-(--surface-selected)"
         >
           <X aria-hidden="true" className="size-4" />
