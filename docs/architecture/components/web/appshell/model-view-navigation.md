@@ -39,7 +39,10 @@ flowchart LR
   Gesture[Native gesture] --> Admission[Existing control and drag admission]
   Admission -->|First click| Inspect[InspectCanvasNode immediately]
   Admission -->|Double click| Open[Existing Model open]
-  Rail[Shell view buttons] --> Tab[Existing Model tab contribution]
+  Rail[Shell view buttons] --> Browse[Canvas and project Explorer]
+  Browse --> Pick[Explicit Model selection]
+  Pick --> Context[Existing input context]
+  Context --> Tab[Protected Model tab contribution]
   Tab --> Semantic[Retained semantic workspace]
   Tab --> SQL[Retained logical SQL editor]
 ```
@@ -90,6 +93,14 @@ file-publication adapter remain unchanged. Selection never creates an occurrence
 placement remains a drag operation. The project list remains accessible while a
 Model is open. The Model-local input palette remains reachable through a compact
 Inputs control, with its existing inspection and occurrence actions.
+
+One presentation owner retains search, Models disclosure and expanded Model
+details across the Canvas and Model views. Both surfaces consume the shared
+Explorer's controlled presentation contract; placement and selection callbacks
+remain with their existing owners. Workspace scope, Canvas and project-root
+changes reset that presentation and reject obsolete callbacks. Keep only the
+current scoped state, without a growing map of past projects. Opening a Model
+or receiving its file projection must not clear the current filter.
 
 `SelectCanvasWorkbenchTab` delegates protected replacement to the current Model
 session. A fresh session receives its initial view atomically; selecting the same
@@ -156,6 +167,8 @@ change is part of this slice.
   actual project catalog state.
 - One active destination follows current Model/Code/SQL visibility. Keyboard and
   pointer invoke the same callbacks, with visible focus and accessible names.
+- Filter text, result counts and detail disclosure survive Model entry and view
+  switching; another workspace or Canvas cannot inherit them.
 - Switching views retains the actual SQL buffer and data, with no implicit
   compilation, row query, Apply or save.
 - The reported inspector layout shift requires rendered evidence before changing
