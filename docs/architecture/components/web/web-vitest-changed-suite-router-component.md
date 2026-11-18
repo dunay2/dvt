@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-11-16
+last_reviewed: 2026-11-18
 planning_type: architecture
 ---
 
@@ -1521,8 +1521,11 @@ admission retain their obligations; no universal Web runtime-consumer-absence
 or filesystem-expression inference is claimed.
 
 Resource-query edges follow the pinned Vite asset protocol. Plain imports retain
-normal module semantics; `raw` observes source text. Documented `worker` or
-`sharedworker` flags, optionally `inline` only, provide constructors: their real
+normal module semantics. A literal relative `raw` import whose exact target is
+a regular SQL or YAML file inside the Web workspace reads that asset's bytes.
+Raw executable sources retain source-observer coverage. Missing and ambiguous
+targets retain uncertainty. Documented `worker` or `sharedworker` flags,
+optionally `inline` only, provide constructors: their real
 resolved dependency remains conservative, but they neither create arbitrary
 filesystem-observation seeds nor establish Node test ownership. Internal worker
 dependencies still propagate every observation and uncertainty. Unsupported

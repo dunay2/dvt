@@ -1,21 +1,128 @@
 import { describe, expect, it } from 'vitest';
 
+import { defineRecipe } from './templateCatalog';
 import {
   EXECUTION_TEMPLATE_CATALOG,
+  createDefaultExecutionTemplateValues,
+  localizeExecutionTemplate,
   resolveExecutionTemplatePreview,
   resolveExecutionTemplateSelection,
 } from './templatesViewModel';
 
 describe('templatesViewModel', () => {
+  it('generates the same recipe source from Windows and Unix Git checkouts', () => {
+    const recipe = resolveExecutionTemplateSelection('calendar');
+    const fromWindows = defineRecipe({ ...recipe, templateSource: 'select\r\n  1\r\n' });
+    const fromUnix = defineRecipe({ ...recipe, templateSource: 'select\n  1\n' });
+    expect(fromWindows.templateSource).toBe(fromUnix.templateSource);
+  });
+
   it('lists governed provider-facing template profiles', () => {
-    expect(EXECUTION_TEMPLATE_CATALOG.map((template) => template.id)).toEqual([
-      'snowflake-task',
-      'snowflake-procedure',
-      'etl-scaffold',
-    ]);
+    expect(EXECUTION_TEMPLATE_CATALOG.map((template) => template.id)).toEqual(
+      expect.arrayContaining([
+        'snowflake-task',
+        'snowflake-procedure',
+        'etl-scaffold',
+        'task-chain',
+        'task-diamond',
+        'stage-replace',
+        'incremental-merge',
+        'audit-series',
+        'calendar',
+        'comparable-periods',
+        'latest-record',
+        'missing-days',
+      ])
+    );
+    expect(new Set(EXECUTION_TEMPLATE_CATALOG.map((template) => template.id)).size).toBe(
+      EXECUTION_TEMPLATE_CATALOG.length
+    );
     expect(EXECUTION_TEMPLATE_CATALOG.every((template) => template.parameters.length > 0)).toBe(
       true
     );
+  });
+
+  it('renders every new Git recipe with its declared parameters and leaves dbt untouched', () => {
+    for (const template of EXECUTION_TEMPLATE_CATALOG.slice(3)) {
+      const values = createDefaultExecutionTemplateValues(template);
+      if (template.id === 'inspect-relation') values.modelRelation = '"sales"."daily"';
+      const preview = resolveExecutionTemplatePreview(template, values);
+      expect(preview.kind, template.id).toBe('ready');
+      if (preview.kind === 'ready') expect(preview.source).not.toMatch(/\[\[\w/);
+    }
+    const latest = resolveExecutionTemplateSelection('latest-record');
+    const sql = "select * from {{ ref('my_model') }} where id = 2";
+    expect(resolveExecutionTemplatePreview(latest, {}, sql)).toMatchObject({
+      kind: 'ready',
+      source: sql,
+    });
+    expect(resolveExecutionTemplatePreview(latest, {}, 'select [[missing]]')).toMatchObject({
+      kind: 'blocked',
+      errors: [{ parameterId: 'source' }],
+    });
+    expect(resolveExecutionTemplatePreview(latest, {}, 'select [[missing')).toMatchObject({
+      kind: 'blocked',
+    });
+  });
+
+  it('requires an identified physical relation and a bounded integer for PostgreSQL inspection', () => {
+    const profile = resolveExecutionTemplateSelection('inspect-relation');
+    const values = { modelRelation: '"Regional Sales"."Order"', rowLimit: '25' };
+    expect(resolveExecutionTemplatePreview(profile, values)).toMatchObject({
+      kind: 'ready',
+      source: 'select *\nfrom "Regional Sales"."Order"\nfetch first 25 rows only',
+    });
+    for (const rowLimit of ['0', '1001', '-1', '1.5', '1; select 2']) {
+      expect(resolveExecutionTemplatePreview(profile, { ...values, rowLimit })).toMatchObject({
+        kind: 'blocked',
+        errors: [{ parameterId: 'rowLimit' }],
+      });
+    }
+    expect(resolveExecutionTemplatePreview(profile, {})).toMatchObject({
+      kind: 'blocked',
+      errors: [{ parameterId: 'modelRelation' }],
+    });
+  });
+
+  it('validates calendar bounds, relation identifiers and cleanup operations', () => {
+    const calendar = resolveExecutionTemplateSelection('calendar');
+    expect(resolveExecutionTemplatePreview(calendar, { startDate: '2023-02-29' }).kind).toBe(
+      'blocked'
+    );
+    expect(
+      resolveExecutionTemplatePreview(calendar, { startDate: '2025-02-01', endDate: '2024-01-01' })
+        .kind
+    ).toBe('blocked');
+    const stage = resolveExecutionTemplateSelection('stage-replace');
+    expect(resolveExecutionTemplatePreview(stage, { cleanup: 'drop table' }).kind).toBe('blocked');
+    expect(
+      resolveExecutionTemplatePreview(stage, { targetTable: 'staging.table; select 1' }).kind
+    ).toBe('blocked');
+    expect(resolveExecutionTemplatePreview(stage, { cleanup: 'truncate table' })).toMatchObject({
+      kind: 'ready',
+      source: expect.stringContaining('truncate table'),
+    });
+  });
+
+  it('keeps source and parameter identity when localizing the library', () => {
+    const template = resolveExecutionTemplateSelection('calendar');
+    const localized = localizeExecutionTemplate(template, 'es');
+    expect(localized.label).toBe('Calendario');
+    expect(localized.templateSource).toBe(template.templateSource);
+    expect(localized.parameters.map((p) => p.id)).toEqual(template.parameters.map((p) => p.id));
+    expect(resolveExecutionTemplatePreview(localized, { startDate: '' })).toMatchObject({
+      kind: 'blocked',
+      errors: [{ parameterId: 'startDate', message: expect.stringContaining('obligatorio') }],
+    });
+  });
+
+  it('preserves backslashes and apostrophes in a scheduled procedure argument', () => {
+    const profile = resolveExecutionTemplateSelection('scheduled-call');
+    const preview = resolveExecutionTemplatePreview(profile, { batch: "west\\night's" });
+    expect(preview).toMatchObject({
+      kind: 'ready',
+      source: expect.stringContaining("call pipeline.load_orders('west\\\\night''s')"),
+    });
   });
 
   it('falls back to the first template when route state carries an unknown id', () => {
@@ -39,6 +146,18 @@ describe('templatesViewModel', () => {
       { parameterId: 'taskName', message: 'Task name is required.' },
       { parameterId: 'warehouse', message: 'Warehouse is required.' },
     ]);
+  });
+
+  it('validates only the edited source and its export name', () => {
+    const selected = resolveExecutionTemplateSelection('snowflake-task');
+    expect(resolveExecutionTemplatePreview(selected, { taskName: 'nightly' }, 'select 1')).toEqual({
+      kind: 'ready',
+      errors: [],
+      exportFileName: 'nightly.task.sql',
+      source: 'select 1',
+    });
+    const preview = resolveExecutionTemplatePreview(selected, {}, 'select 1');
+    expect(preview.errors.map((error) => error.parameterId)).toEqual(['taskName']);
   });
 
   it.each([

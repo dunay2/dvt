@@ -25,12 +25,14 @@ describe('Templates workbench architecture', () => {
     const workbenchSource = readAppSource('views/templates/TemplatesRouteWorkbench.tsx');
     const modelSource = readAppSource('views/templates/templatesViewModel.ts');
 
-    expect(routeSource).toContain('Owned concern: adapt Templates route command state');
-    expect(workbenchSource).toContain('Owned concern: render Templates route slots');
-    expect(modelSource).toContain('Owned concern: own execution-template catalog');
+    expect(routeSource).toContain('TemplatesRouteWorkbench');
+    expect(modelSource).not.toMatch(/from ['"](?:react|.*(?:components\/|services\/|ports\/))/);
     expect(workbenchSource).toContain('resolveExecutionTemplatePreview');
     expect(workbenchSource).not.toMatch(/\bfetch\s*\(/);
-    expect(workbenchSource).not.toMatch(/\bdispatch\b|\bpersist\b|\bapply\b/i);
+    expect(workbenchSource).not.toMatch(/\bsaveFileContent\s*\(|\bstartRun\s*\(/);
+    const sourceEditor = readAppSource('views/templates/TemplateSourceEditor.tsx');
+    expect(sourceEditor).toContain('components/monaco/MonacoCodeEditor');
+    expect(sourceEditor).not.toMatch(/from ['"](?:@monaco-editor\/|monaco-editor)/);
   });
 
   it('keeps Templates visual rules in its tokenized asset and the existing view boundaries', () => {
@@ -55,7 +57,7 @@ describe('Templates workbench architecture', () => {
   });
 
   it('maps canonical template command and query rails to implementation surfaces', () => {
-    const routeSource = readAppSource('views/TemplatesView.tsx');
+    const authoring = readAppSource('views/templates/useTemplateAuthoring.ts');
     const modelSource = readAppSource('views/templates/templatesViewModel.ts');
     const ownSource = readFileSync(__filename, 'utf8');
     const rails = {
@@ -69,8 +71,8 @@ describe('Templates workbench architecture', () => {
     }
 
     expect(modelSource).toMatch(new RegExp(`\\b${rails.listProfiles}\\b`));
-    expect(routeSource).toMatch(new RegExp(`\\b${rails.selectProfile}\\b`));
-    expect(routeSource).toMatch(new RegExp(`\\b${rails.updateParameter}\\b`));
+    expect(authoring).toMatch(new RegExp(`\\b${rails.selectProfile}\\b`));
+    expect(authoring).toMatch(new RegExp(`\\b${rails.updateParameter}\\b`));
   });
 
   it('documents public API, invariants, transitions, consumers, and user stories', () => {
@@ -90,7 +92,11 @@ describe('Templates workbench architecture', () => {
     expect(storiesDoc).toContain('US-TEMPLATES-005');
     expect(componentDoc).toContain('Generated source is read-only route output');
     expect(componentDoc).toContain('No provider execution or apply action');
-    expect(componentDoc).toContain('No backend persistence');
+    expect(componentDoc).toContain('SaveWorkspaceFileContent');
+    const fileAdapter = readAppSource('views/templates/useProjectTemplateFiles.ts');
+    expect(fileAdapter).toContain('useWorkspaceFileContentCommandPort');
+    expect(fileAdapter).toContain('expectedRevision');
+    expect(fileAdapter).not.toMatch(/\bfetch\s*\(/);
   });
 
   it('registers Templates as a DVT shell route instead of a Canvas workbench tab', () => {

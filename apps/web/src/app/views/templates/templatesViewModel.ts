@@ -1,35 +1,24 @@
 /**
- * Owned concern: own execution-template catalog, parameter validation, and preview projection.
- * Command/query rails: `ListExecutionTemplateProfiles`, `GenerateExecutionTemplatePreview`.
+ * Own ListExecutionTemplateProfiles and GenerateExecutionTemplatePreview.
+ * Git source files are data; substitution never evaluates SQL, Jinja or JavaScript.
  */
-export type ExecutionTemplateParameterDefinition = Readonly<{
-  id: string;
-  label: string;
-  description: string;
-  required: boolean;
-  inputKind: 'text' | 'textarea';
-  defaultValue: string;
-  requiredMessage: string;
-}>;
+import { etlWorkflow, scheduledTask, taskGraphs } from './templateTaskRecipes';
+import { procedureRecipes, snowflakeProcedure } from './templateProcedureRecipes';
+import { modelRecipes } from './templateModelRecipes';
+import { formatTemplateValue, templateText } from './templateParameters';
+import type {
+  ExecutionTemplateDefinition,
+  ExecutionTemplateParameterValues,
+} from './templateCatalog';
 
-export type ExecutionTemplateDefinition = Readonly<{
-  id: string;
-  label: string;
-  provider: string;
-  description: string;
-  exportFileName: string;
-  parameters: readonly ExecutionTemplateParameterDefinition[];
-  renderSource: (values: ExecutionTemplateParameterValues) => string;
-  resolveExportFileName: (values: ExecutionTemplateParameterValues) => string;
-}>;
+export { localizeExecutionTemplate } from './templateCatalog';
+export type {
+  ExecutionTemplateDefinition,
+  ExecutionTemplateParameterValues,
+} from './templateCatalog';
+export type { ExecutionTemplateParameterDefinition } from './templateParameters';
 
-export type ExecutionTemplateParameterValues = Readonly<Record<string, string>>;
-
-export type ExecutionTemplatePreviewError = Readonly<{
-  parameterId: string;
-  message: string;
-}>;
-
+export type ExecutionTemplatePreviewError = Readonly<{ parameterId: string; message: string }>;
 export type ExecutionTemplatePreview =
   | Readonly<{
       kind: 'blocked';
@@ -43,210 +32,19 @@ export type ExecutionTemplatePreview =
       source: string;
     }>;
 
-function valueOrDefault(
-  values: ExecutionTemplateParameterValues,
-  parameter: ExecutionTemplateParameterDefinition
-): string {
-  return values[parameter.id] ?? parameter.defaultValue;
-}
-
-function normalizeIdentifier(value: string): string {
-  return value.trim().replaceAll(/\s+/g, '_').toLowerCase();
-}
-
-function renderSnowflakeTask(values: ExecutionTemplateParameterValues): string {
-  const taskName = normalizeIdentifier(values.taskName ?? '');
-  const warehouse = normalizeIdentifier(values.warehouse ?? '');
-  const schedule = values.schedule?.trim() ?? '';
-  const sqlBody = (values.sqlBody?.trim() ?? '').replace(/;+$/, '');
-
-  return [
-    `create or replace task ${taskName}`,
-    `  warehouse = ${warehouse}`,
-    `  schedule = '${schedule}'`,
-    'as',
-    sqlBody,
-    ';',
-  ].join('\n');
-}
-
-function renderSnowflakeProcedure(values: ExecutionTemplateParameterValues): string {
-  const procedureName = normalizeIdentifier(values.procedureName ?? '');
-  const language = (values.language ?? 'SQL').trim().toUpperCase();
-  const body = values.procedureBody?.trim() ?? '';
-
-  return [
-    `create or replace procedure ${procedureName}()`,
-    `returns string`,
-    `language ${language}`,
-    'as',
-    '$$',
-    body,
-    '$$;',
-  ].join('\n');
-}
-
-function renderEtlScaffold(values: ExecutionTemplateParameterValues): string {
-  const jobName = normalizeIdentifier(values.jobName ?? '');
-  const sourceRef = values.sourceRef?.trim() ?? '';
-  const targetRef = values.targetRef?.trim() ?? '';
-
-  return [
-    `job: ${jobName}`,
-    `source: ${sourceRef}`,
-    `target: ${targetRef}`,
-    'steps:',
-    '  - validate_source',
-    '  - transform',
-    '  - publish_target',
-  ].join('\n');
-}
-
 export const EXECUTION_TEMPLATE_CATALOG: readonly ExecutionTemplateDefinition[] = [
-  {
-    id: 'snowflake-task',
-    label: 'Snowflake Task',
-    provider: 'Snowflake',
-    description: 'Scheduled task scaffold for provider-facing SQL execution.',
-    exportFileName: 'snowflake-task.sql',
-    parameters: [
-      {
-        id: 'taskName',
-        label: 'Task name',
-        description: 'Identifier for the generated Snowflake task.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: '',
-        requiredMessage: 'Task name is required.',
-      },
-      {
-        id: 'warehouse',
-        label: 'Warehouse',
-        description: 'Snowflake warehouse that will own task execution capacity.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: '',
-        requiredMessage: 'Warehouse is required.',
-      },
-      {
-        id: 'schedule',
-        label: 'Schedule',
-        description: 'Snowflake schedule expression.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: 'USING CRON 0 * * * * UTC',
-        requiredMessage: 'Schedule is required.',
-      },
-      {
-        id: 'sqlBody',
-        label: 'SQL body',
-        description: 'SQL or procedure call rendered inside the task body.',
-        required: true,
-        inputKind: 'textarea',
-        defaultValue: 'select 1;',
-        requiredMessage: 'SQL body is required.',
-      },
-    ],
-    renderSource: renderSnowflakeTask,
-    resolveExportFileName: (values) =>
-      `${normalizeIdentifier(values.taskName || 'snowflake-task')}.task.sql`,
-  },
-  {
-    id: 'snowflake-procedure',
-    label: 'Snowflake Procedure',
-    provider: 'Snowflake',
-    description: 'Stored procedure scaffold for governed execution logic.',
-    exportFileName: 'snowflake-procedure.sql',
-    parameters: [
-      {
-        id: 'procedureName',
-        label: 'Procedure name',
-        description: 'Identifier for the generated procedure.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: 'run_pipeline_step',
-        requiredMessage: 'Procedure name is required.',
-      },
-      {
-        id: 'language',
-        label: 'Language',
-        description: 'Procedure language declaration.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: 'SQL',
-        requiredMessage: 'Language is required.',
-      },
-      {
-        id: 'procedureBody',
-        label: 'Procedure body',
-        description: 'Procedure implementation body.',
-        required: true,
-        inputKind: 'textarea',
-        defaultValue: "return 'ok';",
-        requiredMessage: 'Procedure body is required.',
-      },
-    ],
-    renderSource: renderSnowflakeProcedure,
-    resolveExportFileName: (values) =>
-      `${normalizeIdentifier(values.procedureName || 'snowflake-procedure')}.procedure.sql`,
-  },
-  {
-    id: 'etl-scaffold',
-    label: 'ETL Scaffold',
-    provider: 'DVT',
-    description: 'Provider-neutral ETL job outline for review before backend contract work.',
-    exportFileName: 'etl-scaffold.yaml',
-    parameters: [
-      {
-        id: 'jobName',
-        label: 'Job name',
-        description: 'Identifier for the generated ETL scaffold.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: 'publish_orders',
-        requiredMessage: 'Job name is required.',
-      },
-      {
-        id: 'sourceRef',
-        label: 'Source ref',
-        description: 'Logical source artifact or model reference.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: 'stg_orders',
-        requiredMessage: 'Source ref is required.',
-      },
-      {
-        id: 'targetRef',
-        label: 'Target ref',
-        description: 'Logical target artifact or model reference.',
-        required: true,
-        inputKind: 'text',
-        defaultValue: 'fct_orders',
-        requiredMessage: 'Target ref is required.',
-      },
-    ],
-    renderSource: renderEtlScaffold,
-    resolveExportFileName: (values) =>
-      `${normalizeIdentifier(values.jobName || 'etl-scaffold')}.scaffold.yaml`,
-  },
-] as const;
-
-function requireDefaultExecutionTemplate(): ExecutionTemplateDefinition {
-  const [defaultTemplate] = EXECUTION_TEMPLATE_CATALOG;
-  if (!defaultTemplate) {
-    throw new Error('Execution template catalog must contain at least one template.');
-  }
-
-  return defaultTemplate;
-}
+  scheduledTask,
+  snowflakeProcedure,
+  etlWorkflow,
+  ...taskGraphs,
+  ...procedureRecipes,
+  ...modelRecipes,
+];
 
 export function resolveExecutionTemplateSelection(
   templateId: string | null | undefined
 ): ExecutionTemplateDefinition {
-  return (
-    EXECUTION_TEMPLATE_CATALOG.find((template) => template.id === templateId) ??
-    requireDefaultExecutionTemplate()
-  );
+  return EXECUTION_TEMPLATE_CATALOG.find((recipe) => recipe.id === templateId) ?? scheduledTask;
 }
 
 export function createDefaultExecutionTemplateValues(
@@ -257,32 +55,78 @@ export function createDefaultExecutionTemplateValues(
   );
 }
 
+export function resolveTemplateSourceParameters(
+  template: ExecutionTemplateDefinition,
+  source: string
+) {
+  return template.parameters.filter(
+    ({ id }) => id === template.fileNameField || source.includes(`[[${id}]]`)
+  );
+}
+
 export function resolveExecutionTemplatePreview(
   template: ExecutionTemplateDefinition,
-  values: ExecutionTemplateParameterValues
+  values: ExecutionTemplateParameterValues,
+  sourceOverride?: string
 ): ExecutionTemplatePreview {
-  const resolvedValues = Object.fromEntries(
-    template.parameters.map((parameter) => [parameter.id, valueOrDefault(values, parameter)])
-  );
-  const errors = template.parameters
-    .filter((parameter) => parameter.required && valueOrDefault(values, parameter).trim() === '')
-    .map((parameter) => ({
-      parameterId: parameter.id,
-      message: parameter.requiredMessage,
-    }));
-
-  if (errors.length > 0) {
-    return {
-      kind: 'blocked',
-      errors,
-      exportFileName: template.exportFileName,
-    };
+  const source = sourceOverride ?? template.templateSource;
+  const substituted = new Map<string, string>();
+  const resolved: Record<string, string> = {};
+  const errors: ExecutionTemplatePreviewError[] = [];
+  for (const parameter of resolveTemplateSourceParameters(template, source)) {
+    const value = values[parameter.id] ?? parameter.defaultValue;
+    resolved[parameter.id] = value;
+    const formatted = formatTemplateValue(parameter.kind, value);
+    if (formatted !== undefined) {
+      substituted.set(parameter.id, formatted);
+    } else {
+      const invalid = templateText(['Invalid value', 'Valor no válido'], template.language);
+      errors.push({
+        parameterId: parameter.id,
+        message: value.trim() ? `${invalid}: ${parameter.label}.` : parameter.requiredMessage,
+      });
+    }
   }
+  const start = substituted.get('startDate');
+  const end = substituted.get('endDate');
+  if (start && end && start > end)
+    errors.push({
+      parameterId: 'endDate',
+      message: templateText(
+        [
+          'The last day must be on or after the first day.',
+          'El último día debe ser igual o posterior al primero.',
+        ],
+        template.language
+      ),
+    });
 
-  return {
-    kind: 'ready',
-    errors: [],
-    exportFileName: template.resolveExportFileName(resolvedValues),
-    source: template.renderSource(resolvedValues),
-  };
+  const declared = new Set(template.parameters.map((parameter) => parameter.id));
+  let sourceError = !source.trim();
+  const rendered = source.replace(
+    /\[\[(?:([A-Za-z][A-Za-z0-9_]*)\]\])?/g,
+    (match: string, id: string | undefined) => {
+      if (id === undefined || !declared.has(id)) sourceError = true;
+      return id === undefined ? match : (substituted.get(id) ?? match);
+    }
+  );
+  if (sourceError)
+    errors.push({
+      parameterId: 'source',
+      message: templateText(
+        [
+          'Enter source using declared [[parameter]] names.',
+          'Introduce código con nombres de [[parámetro]] declarados.',
+        ],
+        template.language
+      ),
+    });
+  return errors.length
+    ? { kind: 'blocked', errors, exportFileName: template.exportFileName }
+    : {
+        kind: 'ready',
+        errors: [],
+        source: rendered,
+        exportFileName: template.resolveExportFileName(resolved),
+      };
 }

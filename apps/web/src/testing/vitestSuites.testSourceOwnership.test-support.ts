@@ -5,7 +5,7 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire, isBuiltin } from 'node:module';
-import { relative, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import ts from 'typescript';
 
@@ -70,6 +70,22 @@ function closure(graph: ReadonlyMap<string, readonly string[]>, source: string):
   return seen;
 }
 
+function isResolvedDataFile(importer: string, reference: string, rawTemplate = false): boolean {
+  try {
+    const target = createRequire(importer).resolve(reference);
+    if (
+      rawTemplate &&
+      (!/^\.\.?\/.+\.(?:sql|ya?ml)$/iu.test(reference) ||
+        !normalized(target).startsWith(normalized(webRoot) + '/') ||
+        target !== resolve(dirname(importer), reference))
+    )
+      return false;
+    return !code.test(target) && statSync(target).isFile();
+  } catch {
+    return false;
+  }
+}
+
 export function inspectTestSourceEvidence(sources: ReadonlyMap<string, TestSourceFacts>) {
   const runtime = new Map<string, string[]>(),
     conservative = new Map<string, string[]>();
@@ -90,6 +106,9 @@ export function inspectTestSourceEvidence(sources: ReadonlyMap<string, TestSourc
     if (refs.uncertain) uncertainties.add(file);
     for (const ref of refs.conservative) {
       const query = moduleQueryKind(ref);
+      const reference = ref.split('?', 1)[0];
+      // A direct workspace SQL/YAML template is delivered as text by Vite.
+      if (query === 'source' && reference && isResolvedDataFile(file, reference, true)) continue;
       if (
         /^(?:node:)?(?:fs(?:\/promises)?|child_process|worker_threads|vm)$/.test(ref) ||
         query === 'source' ||
@@ -99,7 +118,6 @@ export function inspectTestSourceEvidence(sources: ReadonlyMap<string, TestSourc
       if (query === 'uncertain') uncertainties.add(file);
       if (/^(?:node:)?module$/.test(ref)) uncertainties.add(file);
       if (isBuiltin(ref)) continue;
-      const reference = ref.split('?', 1)[0];
       if (!reference) {
         uncertainties.add(file);
         continue;
@@ -119,16 +137,7 @@ export function inspectTestSourceEvidence(sources: ReadonlyMap<string, TestSourc
             live.push(target);
         } else if (target.startsWith(normalized(webRoot) + '/') && code.test(target))
           uncertainties.add(file);
-      } else {
-        let resource = false;
-        try {
-          const target = createRequire(file).resolve(reference);
-          resource = !code.test(target) && statSync(target).isFile();
-        } catch {
-          // An unresolved asset or module remains uncertainty, never a missing edge proof.
-        }
-        if (!resource) uncertainties.add(file);
-      }
+      } else if (!isResolvedDataFile(file, reference)) uncertainties.add(file);
     }
     runtime.set(file, live);
     conservative.set(file, edges);

@@ -1,176 +1,158 @@
-/** Owned concern: render Templates route slots from catalog, parameter state, and preview projection.
- * Why: catalog and form presentation delegate generated-source states to their existing adapter.
- * Corner: styling cannot change immediate validation, profile values or the read-only preview boundary.
+/** Owned concern: render Templates route slots for the selected project recipe.
+ * Generated SQL, project file writes and model references each have their own authority.
  */
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
-import type { ChangeEvent } from 'react';
-import { StatusIndicator } from '../../components/domain/StatusIndicator';
+import { FilePlus2, Pencil, Eye } from 'lucide-react';
+import { useRef } from 'react';
 import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { cn } from '../../components/ui/utils';
+import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
+import { FileCreationDialog } from '../code/FileCreationDialog';
+import { resolveCodeFileCreationCopy } from '../code/codeViewCopy';
+import { resolveDbtProjectWorkspaceFilePath } from '../code/codeViewFileSelection';
+import { useWorkspaceFileCreation } from '../code/useWorkspaceFileCreation';
 import {
-  EXECUTION_TEMPLATE_CATALOG,
-  type ExecutionTemplateDefinition,
-  type ExecutionTemplateParameterDefinition,
-  type ExecutionTemplateParameterValues,
-  type ExecutionTemplatePreview,
   resolveExecutionTemplatePreview,
+  resolveTemplateSourceParameters,
 } from './templatesViewModel';
 import { GeneratedSourcePanel } from './TemplateMonacoPreviewPanel';
+import { acceptsProjectModel } from './templateParameters';
+import { templatesCopy } from './templatesCopy';
+import { TemplateParameterForm } from './TemplateParameterForm';
+import { TemplateLibrary } from './TemplateLibrary';
+import { TemplateModelPicker } from './TemplateModelPicker';
+import { TemplateSourceEditor, type TemplateSourceHandle } from './TemplateSourceEditor';
+import { useTemplateAuthoring } from './useTemplateAuthoring';
+import { useTemplateProjectModels } from './useTemplateProjectModels';
 import styles from './templatesPresentation.module.css';
 
-type TemplatesRouteWorkbenchProps = Readonly<{
-  selectedTemplate: ExecutionTemplateDefinition;
-  parameterValues: ExecutionTemplateParameterValues;
-  onParameterChange: (parameterId: string, value: string) => void;
-  onTemplateSelect: (templateId: string) => void;
-}>;
-
 export function TemplatesRouteWorkbench({
-  selectedTemplate,
-  parameterValues,
-  onParameterChange,
-  onTemplateSelect,
-}: TemplatesRouteWorkbenchProps) {
-  const preview = resolveExecutionTemplatePreview(selectedTemplate, parameterValues);
+  scope,
+  language,
+}: {
+  scope: WorkspaceScope;
+  language: ApplicationLanguage;
+}) {
+  const copy = templatesCopy(language);
+  const author = useTemplateAuthoring(scope, language, copy);
+  const project = useTemplateProjectModels(
+    [scope.tenantId, scope.projectId, scope.environmentId].join('::')
+  );
+  const create = useWorkspaceFileCreation('.', scope, (path) =>
+    author.setNotice(copy.newFile + ' · ' + path)
+  );
+  const editor = useRef<TemplateSourceHandle>(null);
+  const fieldTarget = useRef<{ recipe: string; field: string } | null>(null);
+  const exportButton = useRef<HTMLButtonElement>(null);
+  const parameters = resolveTemplateSourceParameters(author.template, author.draft.source);
+  const preview = resolveExecutionTemplatePreview(
+    author.template,
+    author.draft.values,
+    author.draft.source
+  );
+  function insert(reference: string) {
+    if (author.busy) return;
+    if (author.edit && editor.current) editor.current.insert(reference);
+    else {
+      const active = fieldTarget.current;
+      const destinations = parameters.filter(acceptsProjectModel);
+      const field =
+        (active?.recipe === author.selected &&
+          destinations.find((p) => p.id === active.field)?.id) ||
+        destinations[0]?.id;
+      if (field) author.parameter(field, reference);
+      else {
+        author.setNotice(copy.choosePosition);
+        author.setEdit(true);
+      }
+    }
+  }
+  function createOutput() {
+    if (preview.kind !== 'ready') return;
+    const folder = author.template.category === 'model' ? 'models' : 'operations';
+    if (author.template.referenceStyle === 'dbt' && !project.projectRoot) {
+      create.begin({ path: '', content: preview.source });
+      return;
+    }
+    const root = author.template.referenceStyle === 'dbt' ? project.projectRoot! : '.';
+    create.begin({
+      path: resolveDbtProjectWorkspaceFilePath(root, folder + '/' + preview.exportFileName),
+      content: preview.source,
+    });
+  }
   return (
     <div data-slot="templates-workbench" className={styles.workbench}>
-      <TemplateCatalog selectedTemplate={selectedTemplate} onTemplateSelect={onTemplateSelect} />
+      <TemplateLibrary
+        copy={copy}
+        language={language}
+        selected={author.selected}
+        paths={author.paths}
+        onSelect={(id) => void author.select(id)}
+      >
+        <TemplateModelPicker
+          copy={copy}
+          models={project.models}
+          referenceStyle={author.template.referenceStyle}
+          onInsert={insert}
+          onInspectModel={() => void author.select('inspect-relation')}
+          loading={project.loading}
+          unavailable={project.unavailable || author.unavailable}
+        />
+      </TemplateLibrary>
       <div className={styles.content}>
         <TemplateParameterForm
-          selectedTemplate={selectedTemplate}
-          parameterValues={parameterValues}
+          selectedTemplate={{ ...author.template, parameters }}
+          parameterValues={author.draft.values}
+          onParameterChange={author.parameter}
           preview={preview}
-          onParameterChange={onParameterChange}
+          onRelationFocus={(field) => {
+            fieldTarget.current = { recipe: author.selected, field };
+          }}
         />
-        <GeneratedSourcePanel selectedTemplate={selectedTemplate} preview={preview} />
-      </div>
-    </div>
-  );
-}
-
-function TemplateCatalog({
-  selectedTemplate,
-  onTemplateSelect,
-}: Readonly<{
-  selectedTemplate: ExecutionTemplateDefinition;
-  onTemplateSelect: (templateId: string) => void;
-}>) {
-  return (
-    <Card data-slot="templates-catalog" className={styles.panel}>
-      <h2 className={styles.catalogHeading}>Template catalog</h2>
-      <div className={styles.catalogProfiles}>
-        {EXECUTION_TEMPLATE_CATALOG.map((template) => (
-          <Button
-            key={template.id}
-            type="button"
-            aria-pressed={template.id === selectedTemplate.id}
-            variant="outline"
-            className={styles.catalogItem}
-            onClick={() => onTemplateSelect(template.id)}
-          >
-            <span className={styles.catalogLabel}>
-              <span className={styles.fieldLabel}>{template.label}</span>
-              <span className={styles.helper}>{template.provider}</span>
-            </span>
-          </Button>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-function TemplateParameterForm({
-  selectedTemplate,
-  parameterValues,
-  preview,
-  onParameterChange,
-}: Readonly<{
-  selectedTemplate: ExecutionTemplateDefinition;
-  parameterValues: ExecutionTemplateParameterValues;
-  preview: ExecutionTemplatePreview;
-  onParameterChange: (parameterId: string, value: string) => void;
-}>) {
-  const errorsByParameter = new Map(preview.errors.map((error) => [error.parameterId, error]));
-  return (
-    <Card data-slot="templates-parameter-form" className={styles.panel}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <h2 className={styles.sectionTitle}>{selectedTemplate.label}</h2>
-          <p className={styles.description}>{selectedTemplate.description}</p>
+        <div className={styles.output}>
+          <div className={styles.actions}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={author.busy}
+              onClick={() => author.setEdit(!author.edit)}
+            >
+              {author.edit ? <Eye /> : <Pencil />}
+              {author.edit ? copy.preview : copy.edit}
+            </Button>
+            <Button
+              size="sm"
+              ref={exportButton}
+              disabled={author.busy || preview.kind !== 'ready'}
+              onClick={createOutput}
+            >
+              <FilePlus2 />
+              {copy.create}
+            </Button>
+          </div>
+          {(author.notice || author.busy) && (
+            <p role="status" className={styles.helper}>
+              {author.notice || copy.loading}
+            </p>
+          )}
+          {author.edit ? (
+            <TemplateSourceEditor key={author.selected} ref={editor} author={author} copy={copy} />
+          ) : (
+            <GeneratedSourcePanel selectedTemplate={author.template} preview={preview} />
+          )}
+          {preview.errors
+            .filter((e) => e.parameterId === 'source')
+            .map((e) => (
+              <p role="alert" key={e.parameterId} className={styles.fieldError}>
+                {e.message}
+              </p>
+            ))}
         </div>
-        <StatusIndicator
-          state={preview.kind === 'ready' ? 'ok' : 'error'}
-          label={preview.kind === 'ready' ? 'Preview ready' : 'Preview blocked'}
-          icon={
-            preview.kind === 'ready' ? (
-              <CheckCircle2 aria-hidden="true" className={styles.statusIcon} />
-            ) : (
-              <AlertTriangle aria-hidden="true" className={styles.statusIcon} />
-            )
-          }
-        />
       </div>
-      <div className={styles.parameterGrid}>
-        {selectedTemplate.parameters.map((parameter) => (
-          <TemplateParameterField
-            key={parameter.id}
-            parameter={parameter}
-            value={parameterValues[parameter.id] ?? parameter.defaultValue}
-            errorMessage={errorsByParameter.get(parameter.id)?.message}
-            onParameterChange={onParameterChange}
-          />
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-function TemplateParameterField({
-  parameter,
-  value,
-  errorMessage,
-  onParameterChange,
-}: Readonly<{
-  parameter: ExecutionTemplateParameterDefinition;
-  value: string;
-  errorMessage?: string;
-  onParameterChange: (parameterId: string, value: string) => void;
-}>) {
-  const fieldId = `template-parameter-${parameter.id}`;
-  const helpId = `${fieldId}-help`;
-  const errorId = `${fieldId}-error`;
-  const commonProps = {
-    id: fieldId,
-    name: parameter.id,
-    value,
-    'aria-invalid': errorMessage ? true : undefined,
-    'aria-describedby': errorMessage ? `${helpId} ${errorId}` : helpId,
-    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      onParameterChange(parameter.id, event.target.value);
-    },
-  };
-  return (
-    <div className={styles.parameterField}>
-      <Label className={styles.fieldLabel} htmlFor={fieldId}>
-        {parameter.label}
-      </Label>
-      <span id={helpId} className={styles.helper}>
-        {parameter.description}
-      </span>
-      {parameter.inputKind === 'textarea' ? (
-        <Textarea {...commonProps} className={cn(styles.control, styles.textarea)} />
-      ) : (
-        <Input {...commonProps} className={styles.control} />
-      )}
-      {errorMessage ? (
-        <span id={errorId} className={styles.fieldError}>
-          {errorMessage}
-        </span>
-      ) : null}
+      <FileCreationDialog
+        controller={create}
+        copy={resolveCodeFileCreationCopy(language)}
+        onReturnFocus={() => exportButton.current?.focus()}
+      />
     </div>
   );
 }
