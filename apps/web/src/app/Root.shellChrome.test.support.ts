@@ -144,9 +144,7 @@ export function expectRootShellNavigationChrome(container: ParentNode, activeHre
     '[data-slot="left-navigation-rail"]'
   );
   const leftNavigationLinks = [
-    ...container.querySelectorAll<HTMLElement>(
-      '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
-    ),
+    ...container.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]'),
   ];
   const activeNavigationLink = leftNavigationLinks.find(
     (link) => readShellNavigationDestination(link) === activeHref
@@ -170,9 +168,7 @@ export function expectActiveRootShellNavigationLink(
   activeHref: string
 ): void {
   const activeNavigationLink = [
-    ...container.querySelectorAll<HTMLElement>(
-      '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
-    ),
+    ...container.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]'),
   ].find((link) => readShellNavigationDestination(link) === activeHref);
   if (!activeNavigationLink) {
     throw new Error(`Expected left navigation link for "${activeHref}".`);
@@ -183,5 +179,5 @@ export function expectActiveRootShellNavigationLink(
 }
 
 function readShellNavigationDestination(entry: HTMLElement): string | null {
-  return entry.getAttribute('href') ?? entry.getAttribute('data-route');
+  return entry.getAttribute('href');
 }

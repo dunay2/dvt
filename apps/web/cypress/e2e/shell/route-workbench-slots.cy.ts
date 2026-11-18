@@ -94,6 +94,17 @@ function stubCodeWorkbenchApis(): void {
   });
 }
 
+function visitLocalizedRoute(path: string, language: 'en' | 'es'): void {
+  visitWithE2eWorkspaceSession(path, {
+    onBeforeLoad(window) {
+      window.localStorage.setItem(
+        'dvt-web-application-language',
+        JSON.stringify({ state: { language }, version: 0 })
+      );
+    },
+  });
+}
+
 function assertPrimaryRouteWorkbench(): void {
   cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
   cy.get('[data-slot="route-workbench-frame"]').should('be.visible');
@@ -108,7 +119,7 @@ describe('Route workbench semantic slots', () => {
 
   it('renders Plugins and Admin through the no-legacy primary route slot', () => {
     stubRouteWorkbenchBootstrapApis();
-    visitWithE2eWorkspaceSession('/plugins');
+    visitLocalizedRoute('/plugins', 'en');
 
     assertPrimaryRouteWorkbench();
     cy.get('[data-slot="route-workbench-header"]')
@@ -131,14 +142,13 @@ describe('Route workbench semantic slots', () => {
       .should('have.length', 1)
       .and('have.attr', 'data-plugin-id', 'unbound');
 
-    stubRouteWorkbenchBootstrapApis();
-    visitWithE2eWorkspaceSession('/admin');
+    cy.get('[data-slot="left-navigation-link"][href="/admin"]').click();
+    cy.location('pathname').should('equal', '/admin');
 
     assertPrimaryRouteWorkbench();
     cy.get('[data-slot="shell-top-bar"] h1').should('have.text', 'Admin & RBAC');
     cy.get('[data-slot="route-workbench-header"]').should('not.exist');
-    cy.get('[data-slot="left-navigation-section-trigger"][data-route="/admin"]').click();
-    cy.get('[data-slot="shell-route-section-link"][data-section="roles"]').click();
+    cy.get('[data-slot="route-workbench-primary-surface"] nav a[href="/admin?tab=roles"]').click();
     cy.location('search').should('contain', 'tab=roles');
     cy.get('[data-slot="route-workbench-primary-surface"] [data-slot="admin-section"]')
       .should('have.attr', 'data-section', 'roles')
@@ -214,7 +224,7 @@ describe('Admin operational observations', () => {
         version: { body: { error: 'not exposed' }, statusCode: 404 },
       },
     });
-    visitWithE2eWorkspaceSession('/admin');
+    visitWithE2eWorkspaceSession('/admin?tab=platform');
     const readyz = '[data-slot="admin-health-summary"][data-probe="readyz"]';
     const version = '[data-slot="admin-health-summary"][data-probe="version"]';
     cy.get('[data-slot="admin-health-summary"][data-probe="backend"]').should(
@@ -260,7 +270,7 @@ describe('Admin operational observations', () => {
         version: { body: { name: 'dvt-api', version: 'untrusted-error-version' }, statusCode: 500 },
       },
     });
-    visitWithE2eWorkspaceSession('/admin');
+    visitWithE2eWorkspaceSession('/admin?tab=platform');
     cy.get('[data-slot="admin-health-summary"][data-probe="readyz"]')
       .should('contain.text', optionalDisabled ? 'Not requested' : 'Access denied')
       .and('have.attr', 'data-tone', optionalDisabled ? 'neutral' : 'danger');
@@ -282,70 +292,53 @@ describe('Admin operational observations', () => {
   });
 });
 
-describe('Admin shell sections', () => {
-  it('keeps one compact shell heading and durable section navigation at the Admin icon', () => {
-    // Moving controls must preserve URL position, keyboard focus and the mounted shell.
+describe('Admin workbench navigation', () => {
+  it('opens the central directory from Templates and restores the selected section on reload', () => {
     cy.viewport(1400, 900);
     stubRouteWorkbenchBootstrapApis();
-    visitWithE2eWorkspaceSession('/admin?tab=permissions&filter=read#matrix');
-    const trigger = '[data-slot="left-navigation-section-trigger"][data-route="/admin"]';
-    cy.get('[data-slot="shell-top-bar"] h1').should('have.text', 'Admin & RBAC');
-    cy.get('[data-slot="route-workbench-header"], [role="tablist"]').should('not.exist');
-    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'permissions');
-    cy.get('[data-slot="app-shell-frame"]').as('adminFrame', { type: 'static' });
-    cy.get('[data-slot="left-navigation-rail"]').as('adminRail', { type: 'static' });
-    cy.get(trigger)
-      .as('adminTrigger', { type: 'static' })
-      .should('have.attr', 'aria-haspopup', 'menu')
-      .and('have.attr', 'aria-current', 'page')
-      .click();
-    cy.get('[data-slot="shell-route-section-link"]').should('have.length', 4);
-    cy.get('[data-slot="shell-route-section-link"][data-section="permissions"]').should(
-      'have.attr',
-      'aria-current',
-      'page'
-    );
-    cy.get('[role="menu"]').should(($menu) => {
-      const rect = $menu[0]!.getBoundingClientRect();
-      expect(rect.left).to.be.at.least(52);
-      expect(rect.right).to.be.at.most(1400);
-      expect(rect.bottom).to.be.at.most(900);
-    });
-    pressNativeKey('Escape');
-    cy.get('@adminTrigger').should('be.focused');
+    visitLocalizedRoute('/templates', 'es');
+    const shield = '[data-slot="left-navigation-link"][href="/admin"]';
+    const directory = '[data-slot="route-workbench-primary-surface"] nav';
+    cy.get('[data-slot="app-shell-frame"]').as('frame', { type: 'static' });
+    cy.get('[data-slot="left-navigation-rail"]').as('rail', { type: 'static' });
+    cy.get(shield).focus();
     pressNativeKey('Enter');
-    cy.get('[data-slot="shell-route-section-link"][data-section="audit"]').focus();
+    cy.location('pathname').should('eq', '/admin');
+    cy.get(shield).should('have.attr', 'aria-current', 'page');
+    cy.get('[role="menu"], [data-slot="admin-section"]').should('not.exist');
+    cy.get(directory).find('a').should('have.length', 4);
+    cy.get('[data-slot="shell-top-bar"] h1').should('have.text', 'Administración');
+    cy.get(directory).contains('a', 'Registro de auditoría').focus();
     pressNativeKey('Enter');
-    cy.location('search').should('contain', 'tab=audit').and('contain', 'filter=read');
-    cy.location('hash').should('equal', '#matrix');
+    cy.location('search').should('equal', '?tab=audit');
     cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'audit');
     cy.get('input[placeholder="Search audit log..."]').should('be.visible');
-    cy.get('@adminFrame').should('be.visible');
-    cy.get('@adminRail').should('be.visible');
-    cy.get('@adminTrigger').should('be.visible');
-    cy.go('back');
-    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'permissions');
+    cy.get('@frame').should('be.visible');
+    cy.get('@rail').should('be.visible');
     let sessionReads = 0;
     let draftWrites = 0;
     cy.then(() => {
       sessionReads = getE2eApiCalls('/session', 'GET').length;
       draftWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    // A new Window needs the same controlled transport; the application still performs admission.
     cy.on('window:before:load', installE2eApiFetchStub);
     cy.reload();
-    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'permissions');
+    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'audit');
     cy.then(() => {
       expect(getE2eApiCalls('/session', 'GET').length).to.be.greaterThan(sessionReads);
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(draftWrites);
     });
+    cy.go('back');
+    cy.get(directory).should('be.visible');
     cy.viewport(640, 768);
-    cy.get(trigger).should('be.visible').click();
-    cy.get('[data-slot="shell-route-section-link"][data-section="platform"]').click();
-    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'platform');
+    cy.get(directory).contains('a', 'Permisos').click();
+    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'permissions');
+    cy.get(shield).click();
+    cy.get(directory).should('be.visible');
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 640);
-    cy.screenshot('admin-shell-sections');
+    cy.screenshot('admin-security-directory');
     visitWithE2eWorkspaceSession('/admin?tab=invalid');
-    cy.get('[data-slot="admin-section"]').should('have.attr', 'data-section', 'platform');
+    cy.get(directory).find('a').should('have.length', 4);
+    cy.get('[data-slot="admin-section"]').should('not.exist');
   });
 });

@@ -9,11 +9,12 @@ describe('Admin route position', () => {
       expect(resolveActiveAdminTab(new URLSearchParams({ tab: id }))).toBe(id);
     }
   );
-  it('uses the route fallback for missing or invalid sections without changing the URL', () => {
-    expect(resolveActiveAdminTab(new URLSearchParams())).toBe('platform');
-    expect(resolveActiveAdminTab(new URLSearchParams('tab=unknown'))).toBe('platform');
-    expect(resolveActiveAdminTab(new URLSearchParams('tab=unknown'), 'audit')).toBe('audit');
-  });
+  it.each(['', 'tab=unknown'])(
+    'returns the directory for an unrecognized selection (%s)',
+    (search) => {
+      expect(resolveActiveAdminTab(new URLSearchParams(search))).toBeNull();
+    }
+  );
   it('preserves unrelated search and hash only for the current Admin route', () => {
     expect(
       buildAdminSectionLocation('roles', {
@@ -29,8 +30,5 @@ describe('Admin route position', () => {
         hash: '#node',
       })
     ).toEqual({ pathname: '/admin', search: '?tab=audit', hash: '' });
-    expect(
-      buildAdminSectionLocation('unknown', { pathname: '/admin', search: '', hash: '' }).search
-    ).toBe('?tab=platform');
   });
 });

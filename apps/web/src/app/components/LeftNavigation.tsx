@@ -7,7 +7,6 @@ import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasW
 import { canvasCodeRouteEntryState } from '../views/canvas/CanvasCodeRouteEntry';
 import { ShellAbout } from './shell/ShellAbout';
 import { ShellProjectMenu } from './shell/ShellProjectMenu';
-import { ShellNavigationSectionMenu } from './shell/ShellNavigationSectionMenu';
 import { ShellModelViewNavigation } from './shell/ShellModelViewNavigation';
 import type { ShellTopBarCopy } from './shell/copy';
 import styles from './LeftNavigation.module.css';
@@ -35,16 +34,6 @@ export function LeftNavigationRail({
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
-    if (item.sections != null)
-      return (
-        <ShellNavigationSectionMenu
-          key={item.to}
-          item={{ ...item, sections: item.sections }}
-          triggerClassName={cn(styles.link, styles.linkInteractive)}
-          iconClassName={styles.icon}
-          captionClassName={styles.caption}
-        />
-      );
     const Icon = item.icon;
     const isCanvas = item.to === '/canvas';
     return (

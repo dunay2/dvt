@@ -7,7 +7,7 @@ import { fireEvent, waitFor, within } from '@testing-library/dom';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import type { IWorkspaceAdminReadPort } from '../ports/workspace';
-import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
+import { withTestQueryClient } from '../../testing/reactQueryHarness';
 import AdminView from './AdminView';
 import { LeftNavigationRail } from '../components/LeftNavigation';
 import { buildShellNavigationModel } from '../shell/shellNavigationModel';
@@ -62,9 +62,7 @@ function buildWorkspaceAdminReadPort(
   };
 }
 
-function createAdminRouteElement(
-  initialTab?: 'platform' | 'roles' | 'permissions' | 'audit'
-): React.ReactElement {
+function createAdminRouteElement(workspaceAdminRead: IWorkspaceAdminReadPort): React.ReactElement {
   return (
     <AppServicesProvider
       overrides={{
@@ -76,30 +74,27 @@ function createAdminRouteElement(
             plugins: { dbt: { available: true } },
           }),
         },
-        workspaceAdminRead: buildWorkspaceAdminReadPort(),
+        workspaceAdminRead,
       }}
     >
       <LeftNavigationRail
         navigationModel={buildShellNavigationModel([])}
         copy={resolveShellTopBarCopy('en')}
       />
-      <AdminView initialTab={initialTab} />
+      <AdminView />
     </AppServicesProvider>
   );
 }
 
-function createAdminRouteRouter({
-  initialEntry = '/admin',
-  initialTab,
-}: {
-  initialEntry?: string;
-  initialTab?: 'platform' | 'roles' | 'permissions' | 'audit';
-} = {}): ReturnType<typeof createMemoryRouter> {
+function createAdminRouteRouter(
+  initialEntry: string,
+  workspaceAdminRead = buildWorkspaceAdminReadPort()
+): ReturnType<typeof createMemoryRouter> {
   return createMemoryRouter(
     [
       {
         path: '/admin',
-        element: createAdminRouteElement(initialTab),
+        element: createAdminRouteElement(workspaceAdminRead),
       },
     ],
     { initialEntries: [initialEntry] }
@@ -180,39 +175,39 @@ describe('AdminView', () => {
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   });
 
-  it('renders platform and roles data from services', async () => {
-    const router = createAdminRouteRouter();
+  it('shows four central destinations without reading protected section data', async () => {
+    const read = buildWorkspaceAdminReadPort();
+    const roles = vi.spyOn(read, 'getRoles');
+    const audit = vi.spyOn(read, 'getAuditLog');
+    const router = createAdminRouteRouter('/admin', read);
     mounted = await withTestQueryClient(<RouterProvider router={router} />);
+    const directory = within(mounted.container).getByRole('navigation', { name: 'Security' });
+    expect(directory.closest('[data-slot="route-workbench-primary-surface"]')).not.toBeNull();
+    const destinations = within(directory).getAllByRole('link');
+    expect(destinations.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Platform', '/admin?tab=platform'],
+      ['Roles', '/admin?tab=roles'],
+      ['Permissions', '/admin?tab=permissions'],
+      ['Audit Log', '/admin?tab=audit'],
+    ]);
+    expect(mounted.container.querySelector('[data-slot="admin-section"]')).toBeNull();
+    expect(roles).not.toHaveBeenCalled();
+    expect(audit).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
 
-    await waitForReactQuery(() => mounted?.container.textContent?.includes('Admin') === true, {
-      description: 'admin roles render',
-    });
-
-    expect(mounted.container.querySelector('[data-slot="route-workbench-header"]')).toBeNull();
-    expect(mounted.container.textContent).toContain('Backend status');
-    expect(mounted.container.textContent).toContain('Admin');
+    const rolesLink = within(directory).getByRole('link', { name: 'Roles' });
+    await act(async () => fireEvent.click(rolesLink));
+    const section = within(mounted.container).getByRole('region', { name: 'Roles' });
+    await within(section).findByRole('heading', { name: 'Admin' });
+    expect(roles).toHaveBeenCalledOnce();
   });
 
   it('filters audit entries by search query', async () => {
-    const router = createAdminRouteRouter({ initialTab: 'audit' });
+    const router = createAdminRouteRouter('/admin?tab=audit');
     mounted = await withTestQueryClient(<RouterProvider router={router} />);
 
-    await waitForReactQuery(() => mounted?.container.textContent?.includes('Admin') === true, {
-      description: 'admin roles render before audit tab',
-    });
-
-    await waitFor(() => {
-      expect(document.querySelector('input[placeholder="Search audit log..."]')).toBeTruthy();
-    });
-    const input = document.querySelector(
-      'input[placeholder="Search audit log..."]'
-    ) as HTMLInputElement | null;
-
-    await act(async () => {
-      if (input) {
-        fireEvent.change(input, { target: { value: 'anne' } });
-      }
-    });
+    const input = within(mounted.container).getByPlaceholderText('Search audit log...');
+    await act(async () => fireEvent.change(input, { target: { value: 'anne' } }));
 
     await waitFor(() => {
       expect(mounted?.container.textContent).toContain('plan://alpha');
@@ -221,29 +216,22 @@ describe('AdminView', () => {
   });
 
   it('records the selected tab in the route so F5 keeps the operator position', async () => {
-    const router = createAdminRouteRouter();
+    const router = createAdminRouteRouter('/admin?filter=pending#events');
     mounted = await withTestQueryClient(<RouterProvider router={router} />);
-
-    await waitForReactQuery(() => mounted?.container.textContent?.includes('Admin') === true, {
-      description: 'admin route ready before tab navigation',
-    });
-
-    const admin = within(mounted.container).getByRole('button', { name: 'Admin' });
-    await act(async () => {
-      fireEvent.keyDown(admin, { key: 'ArrowDown' });
-    });
-    const auditTab = await waitFor(() =>
-      within(document.body).getByRole('menuitem', { name: 'Audit Log' })
-    );
-    await act(async () => {
-      fireEvent.click(auditTab);
-    });
-
-    expect(router.state.location.search).toBe('?tab=audit');
+    const directory = within(mounted.container).getByRole('navigation', { name: 'Security' });
+    const audit = within(directory).getByRole('link', { name: 'Audit Log' });
+    await act(async () => fireEvent.click(audit));
+    expect(router.state.location.search).toBe('?filter=pending&tab=audit');
+    expect(router.state.location.hash).toBe('#events');
+    expect(within(mounted.container).getByRole('region', { name: 'Audit Log' })).toBeTruthy();
+    const shield = within(mounted.container).getByRole('link', { name: 'Admin' });
+    await act(async () => fireEvent.click(shield));
+    expect(router.state.location.search).toBe('');
+    expect(within(mounted.container).getByRole('navigation', { name: 'Security' })).toBeTruthy();
   });
 
   it('hydrates the selected tab from the route after a browser refresh', async () => {
-    const router = createAdminRouteRouter({ initialEntry: '/admin?tab=audit' });
+    const router = createAdminRouteRouter('/admin?tab=audit');
     mounted = await withTestQueryClient(<RouterProvider router={router} />);
 
     await waitFor(() => {
@@ -253,7 +241,9 @@ describe('AdminView', () => {
 
   it('keeps summary and details consistent for observed readiness and an absent API version', async () => {
     // API version absence previously looked like a failed warning while readiness claimed healthy without data.
-    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    mounted = await withTestQueryClient(
+      <RouterProvider router={createAdminRouteRouter('/admin?tab=platform')} />
+    );
     await waitFor(() => {
       expect(
         mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
@@ -290,7 +280,9 @@ describe('AdminView', () => {
           })
         : Promise.resolve(respondToAdminProbe(input))
     );
-    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    mounted = await withTestQueryClient(
+      <RouterProvider router={createAdminRouteRouter('/admin?tab=platform')} />
+    );
     expect(
       mounted.container.querySelector('[data-slot="admin-health-summary"][data-probe="backend"]')
         ?.textContent
@@ -316,7 +308,9 @@ describe('AdminView', () => {
         ? jsonResponse({ error: 'forbidden' }, 403)
         : respondToAdminProbe(input)
     );
-    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    mounted = await withTestQueryClient(
+      <RouterProvider router={createAdminRouteRouter('/admin?tab=platform')} />
+    );
     await waitFor(() =>
       expect(
         mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
@@ -340,7 +334,9 @@ describe('AdminView', () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) =>
       readRequestUrl(input).endsWith('/readyz') ? jsonResponse({}) : respondToAdminProbe(input)
     );
-    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    mounted = await withTestQueryClient(
+      <RouterProvider router={createAdminRouteRouter('/admin?tab=platform')} />
+    );
     await waitFor(() =>
       expect(
         mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
@@ -355,7 +351,9 @@ describe('AdminView', () => {
   });
 
   it('marks retained healthy data historical after a failed refresh', async () => {
-    mounted = await withTestQueryClient(<RouterProvider router={createAdminRouteRouter()} />);
+    mounted = await withTestQueryClient(
+      <RouterProvider router={createAdminRouteRouter('/admin?tab=platform')} />
+    );
     await waitFor(() =>
       expect(
         mounted?.container.querySelector('[data-slot="admin-health-summary"][data-probe="readyz"]')
