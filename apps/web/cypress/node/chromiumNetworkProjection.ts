@@ -1,7 +1,7 @@
 /**
  * Owned concern: project trusted Chromium net-log into credential-free correlation evidence.
  * Why: a finite rejection branch diagnoses refusal without exposing private capture text.
- * Corner: existing acceptance predicates stay strict; raw-file cleanup belongs to the lifecycle.
+ * Corner: child braces cannot close parents; root-only EOF remains terminated, never complete.
  */
 import {
   findNodeAtLocation,
@@ -262,7 +262,11 @@ function assertCaptureSyntax(
     throw new ChromiumProjectionError('captureSyntax', 'eventsNotArray');
   if (constants?.type !== 'object')
     throw new ChromiumProjectionError('captureSyntax', 'constantsNotObject');
-  const closedObject = (node: JsonNode): boolean => text[node.offset + node.length - 1] === '}';
+  const closedObject = (node: JsonNode): boolean =>
+    text[node.offset + node.length - 1] === '}' &&
+    (node.children ?? []).every(
+      (property) => property.offset + property.length < node.offset + node.length
+    );
   if (!closedObject(constants))
     throw new ChromiumProjectionError('captureSyntax', 'constantsNotClosed');
   const invalidEvent = events.children?.find(
@@ -290,7 +294,14 @@ function assertCaptureSyntax(
   if (errors.length === 0) return;
   const tail = events.children?.at(-1);
   if (tail === undefined) throw new ChromiumProjectionError('captureSyntax', 'lastEventMissing');
-  if (!/^\s*,?\s*$/u.test(text.slice(tail.offset + tail.length))) {
+  if (
+    !/^\s*,?\s*$/u.test(text.slice(tail.offset + tail.length)) &&
+    !(
+      errors.length === 1 &&
+      errors.every((error) => printParseErrorCode(error.error) === 'CloseBraceExpected') &&
+      /^\s*\]\s*$/u.test(text.slice(tail.offset + tail.length))
+    )
+  ) {
     throw new ChromiumProjectionError('captureSyntax', 'suffixNotAdmitted');
   }
 }
