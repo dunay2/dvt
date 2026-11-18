@@ -2,7 +2,7 @@
 title: Execution Template Source Generation Component
 status: Accepted
 date: 2026-05-22
-last_reviewed: 2026-05-22
+last_reviewed: 2026-11-18
 owners:
   - apps/web
 component: Templates workbench
@@ -27,7 +27,9 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
 | `resolveExecutionTemplateSelection`       | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Route-local template selection state                |
 | `resolveExecutionTemplatePreview`         | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Validation and deterministic preview projection     |
 | `TemplatesView`                           | `apps/web/src/app/views/TemplatesView.tsx`                        | Route controller and route-local command handlers   |
+| `TemplatesViewHeader`                     | `apps/web/src/app/views/TemplatesView.tsx`                        | Compact route header using the shared ViewHeader    |
 | `TemplatesRouteWorkbench`                 | `apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx`    | Workbench slot renderer                             |
+| `GeneratedSourcePanel`                    | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx` | Ready or blocked generated-preview presentation     |
 | `TemplateMonacoPreviewPanel`              | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx` | Ready generated-source preview adapter              |
 | DVT plugin `/templates` view contribution | `apps/web/src/app/plugins/dvt/dvtContributions.ts`                | Shell route registration                            |
 
@@ -55,6 +57,67 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
   accept provider-owned generation behavior.
 - The route uses `RouteWorkbenchFrame` slots and does not create a parallel
   shell layout.
+
+## Presentation alignment
+
+The presentation design is `GH-3954-TEMPLATES-PRESENTATION`, recorded in
+[#3954](https://github.com/dunay2/dvt/issues/3954#issuecomment-6977956926).
+The prior renderer mixed route-header, form and generated-preview presentation
+and used local sizes that overrode the shared application control scale. Its
+stretching grid separated the Schedule helper from its input, while catalog
+selection resembled a primary action. Required-field messages also used warning
+colors beside destructive input borders.
+
+The existing `TemplatesView` owns its shared `ViewHeader`, selection and parameter
+state. `TemplatesRouteWorkbench` composes the catalog, private parameter form and
+preview projection. `GeneratedSourcePanel` owns both preview states in the
+existing preview adapter; only its ready branch delegates to
+`TemplateMonacoPreviewPanel`. One `templatesPresentation.module.css` asset owns
+these consumers' layout and appearance. It uses the existing global `--text-ui`,
+control-height, spacing, radius, surface, border and semantic color tokens, with
+the existing Button, Card, Input, Textarea and StatusIndicator primitives.
+
+Catalog selection retains `aria-pressed` and uses the neutral selected surface.
+Field labels, helpers and inputs follow their intrinsic height; error messages
+and the scoped invalid border use the shared `--status-danger` token. Its
+contrast against `--surface-panel` is 4.89:1 in the current theme; the darker
+destructive token was 3.50:1 and unsuitable for small field text. The catalog no longer stretches
+to the form/preview height. The route uses the available width, stacks sections
+on narrow screens and places the form beside its preview when space permits.
+Long export filenames wrap without creating page overflow.
+
+```mermaid
+flowchart LR
+  Route[TemplatesView and shared header] --> Workbench[Catalog and parameter form]
+  Workbench --> Model[Existing deterministic preview model]
+  Workbench --> Preview[GeneratedSourcePanel]
+  Preview --> Blocked[Field errors and blocked source state]
+  Preview --> Ready[TemplateMonacoPreviewPanel read-only gateway]
+  Route --> Styles[Templates CSS using global tokens]
+  Workbench --> Styles
+  Preview --> Styles
+```
+
+The four command/query rails, validation timing, catalog/defaults, per-profile
+values, source text, filenames and read-only Monaco authority remain unchanged.
+Each shared Label supplies only its field's accessible name; helper and error
+text are separate `aria-describedby` targets. Existing `aria-invalid` and error
+associations are preserved. One blocked-state indicator accompanies the preview
+instruction without repeating its title. Inline icons use the shared spacing
+scale; unitless line-height tokens are not length dimensions. The
+two existing Templates browser stories cover token-derived density, aligned
+controls, consistent errors, long filenames and narrow reflow; route tests also
+cover profile-state retention and immediate withdrawal of a blocked preview.
+
+The native frontend owner remains
+`web.component.templates.TemplatesWorkbench`. The sole new source asset is CSS,
+without callable declarations. Physical `SYS-WEB-ROOT` fallback coverage is an
+inherited classification, not a declaration that Templates implements its Shell
+or application-port responsibilities. No public frontend-asset registry writer
+was available for this slice; the design admits the asset under the existing
+frontend family without manual SQL, a fabricated component or a claim of global
+architecture closure. Final source-reference and content-hash maintenance uses
+the existing native operators and preserves unrelated records and statuses.
 
 ## Transitions
 
