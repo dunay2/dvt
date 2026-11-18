@@ -14,6 +14,7 @@ import {
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
+import { useCanvasNativeNodeEntry } from './useCanvasNativeNodeEntry';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
@@ -313,8 +314,9 @@ export function CanvasShellMainPanel({
     projectFiles?.active !== true &&
     (layout.centerSurface == null || layout.centerSurfaceVisible === false);
 
+  const nodeEntryCapture = useCanvasNativeNodeEntry(panels.activeCanvasId, onOpenModelEditor);
   return (
-    <CanvasShellMainPanelFrame defaultSize={100}>
+    <CanvasShellMainPanelFrame defaultSize={100} nodeEntryCapture={nodeEntryCapture}>
       <CanvasShellMenuContributionRegistrars
         panels={panels}
         chromeState={chromeState}

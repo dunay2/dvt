@@ -16,6 +16,7 @@ export function CanvasProjectElementsExplorer({
   onInspectNode,
   inspectorTarget,
   catalogueScopeKey,
+  presentation,
   onDragStart,
   onAddModel,
   onImport,
@@ -52,6 +53,7 @@ export function CanvasProjectElementsExplorer({
         binding?.authority.projectRoot,
       ])}
       items={mergeCanvasExplorerModels(items, models)}
+      presentation={presentation}
       onAddModel={onAddModel}
       onImport={onImport}
       connections={connections}

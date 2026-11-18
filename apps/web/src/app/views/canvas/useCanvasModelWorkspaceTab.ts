@@ -17,8 +17,26 @@ export function useCanvasModelWorkspaceTab(props: CanvasModelWorkspaceTabContrib
       onSelect: () => latest.current.onSelect(),
       onCanvas: () => latest.current.onCanvas(),
       onClose: (afterClose) => latest.current.onClose(afterClose),
+      views:
+        props.views == null
+          ? undefined
+          : {
+              active: props.views.active,
+              sqlPanelId: props.views.sqlPanelId,
+              disabled: props.views.disabled,
+              semantic: () => latest.current.views?.semantic(),
+              sql: () => latest.current.views?.sql(),
+            },
     }),
-    [props.canvasId, props.nodeId, props.label, props.active]
+    [
+      props.canvasId,
+      props.nodeId,
+      props.label,
+      props.active,
+      props.views?.active,
+      props.views?.sqlPanelId,
+      props.views?.disabled,
+    ]
   );
   useEffect(() => {
     const store = useCanvasWorkspaceMenuContributionStore.getState();

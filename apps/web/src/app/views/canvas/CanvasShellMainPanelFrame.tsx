@@ -5,6 +5,7 @@ import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
 import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
 import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
+import type { CanvasNativeNodeEntryCapture } from './useCanvasNativeNodeEntry';
 
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
@@ -77,13 +78,17 @@ export function CanvasShellWorkspaceSurfaces({
 export function CanvasShellMainPanelFrame({
   children,
   defaultSize,
+  nodeEntryCapture,
 }: Readonly<{
   children: ReactNode;
   defaultSize: number;
+  nodeEntryCapture?: CanvasNativeNodeEntryCapture;
 }>): JSX.Element {
   return (
     <ResizablePanel id="canvas-shell-main-panel" order={1} defaultSize={defaultSize}>
-      <div className={canvasShellMainPanelFrameClassNames.root}>{children}</div>
+      <div className={canvasShellMainPanelFrameClassNames.root} {...nodeEntryCapture}>
+        {children}
+      </div>
     </ResizablePanel>
   );
 }

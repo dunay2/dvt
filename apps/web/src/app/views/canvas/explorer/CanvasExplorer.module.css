@@ -1,4 +1,34 @@
 /* Owned concern: shared explorer geometry, visual hierarchy and focus treatment. */
+.modelContexts {
+  display: grid;
+  gap: calc(var(--spacing) * 2);
+  min-width: 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+.modelContexts button {
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-ui-caption);
+}
+.paletteAction {
+  flex-shrink: 0;
+  margin: var(--spacing);
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption-line-height);
+}
+.palette {
+  width: calc(var(--spacing) * 72);
+  max-width: calc(100vw - var(--spacing) * 4);
+  max-height: var(--radix-popover-content-available-height);
+  overflow: auto;
+  padding: calc(var(--spacing) * 2);
+  background: var(--surface-panel);
+  color: var(--text-default);
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption-line-height);
+}
 .layout {
   display: flex;
   flex: 1;

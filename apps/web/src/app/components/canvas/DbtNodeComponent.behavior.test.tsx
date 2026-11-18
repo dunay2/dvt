@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/** Owned concern: prove the node adapter's admitted interactions across Model kinds. */
 
 import { ReactFlowProvider } from '@xyflow/react';
 import { fireEvent } from '@testing-library/dom';
@@ -119,8 +120,8 @@ describe('DbtNodeComponent behavior', () => {
     { pluginKind: 'dvt:transform', role: 'transform', opensEditor: true },
     { pluginKind: 'dbt:model', role: 'transform', opensEditor: false },
   ] as const)(
-    'separates complete pointer gestures for $pluginKind (editor: $opensEditor)',
-    ({ pluginKind, role, opensEditor }) => {
+    'inspects immediately and opens once for $pluginKind (editor: $opensEditor)',
+    async ({ pluginKind, role, opensEditor }) => {
       // GH-3765: Source used to bypass the shared Overview entry and request Columns on normal click.
       vi.useFakeTimers();
       const inspect = vi.fn();
@@ -147,24 +148,27 @@ describe('DbtNodeComponent behavior', () => {
         )
       );
       const shell = container.querySelector('[data-slot="canvas-node-shell"]')!;
-      act(() => {
+      await act(async () => {
         fireEvent.click(shell, { detail: 1 });
-        fireEvent.click(shell, { detail: 2 });
-        fireEvent.dblClick(shell, { detail: 2 });
-        vi.advanceTimersByTime(1000);
-      });
-      expect(inspect).not.toHaveBeenCalled();
-      expect(select).not.toHaveBeenCalled();
-      expect(open).toHaveBeenCalledTimes(opensEditor ? 1 : 0);
-      act(() => {
-        fireEvent.click(shell, { detail: 1 });
-      });
-      expect(inspect).not.toHaveBeenCalled();
-      act(() => {
-        vi.advanceTimersByTime(1000);
       });
       expect(inspect).toHaveBeenCalledExactlyOnceWith('node', 'general');
       expect(select).toHaveBeenCalledExactlyOnceWith('node');
+      expect(open).not.toHaveBeenCalled();
+      await act(async () => {
+        fireEvent.click(shell, { detail: 2 });
+        fireEvent.dblClick(shell, { detail: 2 });
+        vi.runAllTimers();
+      });
+      expect(inspect).toHaveBeenCalledOnce();
+      expect(select).toHaveBeenCalledOnce();
+      expect(open).toHaveBeenCalledTimes(opensEditor ? 1 : 0);
+      await act(async () => {
+        fireEvent.click(shell, { detail: 1 });
+      });
+      expect(inspect).toHaveBeenCalledTimes(2);
+      expect(inspect).toHaveBeenLastCalledWith('node', 'general');
+      expect(select).toHaveBeenCalledTimes(2);
+      expect(select).toHaveBeenLastCalledWith('node');
       expect(open).toHaveBeenCalledTimes(opensEditor ? 1 : 0);
     }
   );

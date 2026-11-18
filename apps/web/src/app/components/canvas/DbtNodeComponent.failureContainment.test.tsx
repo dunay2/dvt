@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/** Owned concern: contain plugin presentation failures and reject unsupported entry actions. */
 
 import { ReactFlowProvider } from '@xyflow/react';
 import { fireEvent } from '@testing-library/dom';
@@ -102,7 +103,7 @@ describe('DbtNodeComponent plugin failure containment', () => {
     expect(container.textContent).toContain('Healthy');
   });
 
-  it('keeps inspection explicit without a double-click Code fallback', () => {
+  it('inspects immediately without a double-click Code fallback', async () => {
     vi.useFakeTimers();
     const onInspectNode = vi.fn();
     const nodeProps = {
@@ -143,18 +144,21 @@ describe('DbtNodeComponent plugin failure containment', () => {
 
     try {
       const shell = container.querySelector('[data-slot="canvas-node-shell"]')!;
-      act(() => {
+      await act(async () => {
         fireEvent.click(shell, { detail: 1 });
-        fireEvent.click(shell, { detail: 2 });
-        fireEvent.dblClick(shell, { detail: 2 });
-        vi.advanceTimersByTime(1000);
-      });
-      expect(onInspectNode).not.toHaveBeenCalled();
-      act(() => {
-        fireEvent.click(shell, { detail: 1 });
-        vi.advanceTimersByTime(1000);
       });
       expect(onInspectNode).toHaveBeenCalledExactlyOnceWith('model.orders', 'general');
+      await act(async () => {
+        fireEvent.click(shell, { detail: 2 });
+        fireEvent.dblClick(shell, { detail: 2 });
+        vi.runAllTimers();
+      });
+      expect(onInspectNode).toHaveBeenCalledOnce();
+      await act(async () => {
+        fireEvent.click(shell, { detail: 1 });
+      });
+      expect(onInspectNode).toHaveBeenCalledTimes(2);
+      expect(onInspectNode).toHaveBeenLastCalledWith('model.orders', 'general');
     } finally {
       vi.useRealTimers();
     }

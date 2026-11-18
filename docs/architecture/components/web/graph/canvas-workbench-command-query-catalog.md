@@ -114,24 +114,18 @@ flowchart LR
 
 ## Canvas card gesture admission
 
-The [global gesture rule](https://github.com/dunay2/dvt/issues/3747#issuecomment-6715173265)
-keeps single-click inspection distinct from double-click node entry. A pointer
-click selects the card visually through React Flow immediately.
-`useCanvasNodeActivation` waits 500 ms before dispatching the existing `InspectCanvasNode`
-command. A second click or double click cancels that pending inspection. Double
-click invokes only a genuine node-open action, such as the native Model editor;
-Sources and file-backed dbt models do not open Properties through double click.
-Single-click Properties retains its existing Code section and permission guards.
+The [current Model view navigation policy](../appshell/model-view-navigation.md)
+supersedes delayed, mutually exclusive pointer inspection. The first admitted
+click selects and dispatches `InspectCanvasNode` immediately. A native double
+click invokes a genuine Model-open action once; its first click may inspect.
+Sources and file-backed dbt models retain inspection without acquiring a fallback
+open or creation action. Properties retains Code and its permission guards.
 
-The shell composes one gesture owner, including cancellation for embedded controls,
-context menus, conflicting gestures, node replacement and unmount. A new pointer
-or keyboard intent on another card or toolbar cancels pending inspection too.
-Document listeners exist only while that gesture is pending and are removed on
-cancel, expiry or teardown. Deferred inspection uses the current callback and
-cannot target an obsolete node. It does
-not dispatch inspection and then hide its result. The existing keyboard router
-uses the shell's open/inspect capability: Enter opens an eligible Model or invokes
-inspection directly, without the pointer delay. Controls retain their own keys.
+The shell composes one gesture owner. Embedded controls, default-prevented,
+modified and consumed drag clicks remain excluded. There is no pending-click
+timer or document-wide gesture listener. The existing keyboard router uses the
+shell's open/inspect capability: Enter opens an eligible Model or inspects
+directly. Controls retain their own keys.
 This changes no execution selection, file authority or command permission and
 adds no rail, navigation store or data-acquisition path.
 
@@ -178,8 +172,19 @@ Catalogue activation requests the existing `InspectCanvasNode` command and opens
 right Properties; it never creates an instance, focuses the camera or changes
 execution selection. Enter/Space has the same inspection intent. Only catalogue
 drag/drop uses the dropped graph position and existing guarded instance admission.
-Disclosure and menus remain independent, and the existing shared gesture arbiter
-cancels the pending inspection on double click, drag, replacement or unmount.
+Disclosure and menus remain independent. The shared gesture arbiter inspects the
+first click immediately; subsequent native clicks do not duplicate inspection.
+Drag, replacement and unmount leave no delayed inspection to dispatch.
+
+The explicit Semantic/SQL browsing mode is a separate navigation intent through
+`SelectCanvasWorkbenchTab`. Its icon reveals the existing project list and
+Canvas; only selecting a block opens its supported view. Resolve a definition's
+existing occurrence context without allocating one, and ask when several
+contexts are possible. Other resources retain `InspectCanvasNode` and their
+actual Code capability. The [Model view contract](../appshell/model-view-navigation.md)
+owns this mode, retained drafts, focus and negative proof. Normal catalog
+inspection and drag placement keep the behavior described above.
+
 Instances reference one registered definition and retain their own placement
 identity, name and position. They do not create a consumer Read, copy the model
 document or add a dependency edge to the original. The shared contract resolves
@@ -218,8 +223,9 @@ and detail disclosure as separate presentation states. Search uses names and
 actual metadata, including the localized Source property. A sibling disclosure
 button can inspect metadata even when placement is unavailable; it must not
 activate, drag or open Properties. Native keyboard activation retains the
-existing inspection command; a pointer double click cannot open Properties or
-create an instance. Section and detail controls expose coherent `aria-expanded` and
+existing inspection command. The first pointer click inspects immediately; a
+catalogue double-click sequence never creates an instance or opens a Model.
+Section and detail controls expose coherent `aria-expanded` and
 `aria-controls`. The dock retains the existing layout-state owner and resize
 persistence. The Model's internal relational input catalogue keeps its own
 existing owner. [Unified catalogue design and negative tests](https://github.com/dunay2/dvt/issues/3765#issuecomment-6727884137).
@@ -1129,9 +1135,10 @@ creation errors, scope changes and the unchanged import continuation.
 
 Normal card inspection for every role, including Source, requests
 `InspectCanvasNode` with internal `general`/Overview. Explicit Columns, Code and
-Inputs/Outputs requests retain their sections. The shared gesture arbiter still
-cancels pending Properties during double click, drag and owner replacement.
-No role-specific default, second timer or parallel command is admitted.
+Inputs/Outputs requests retain their sections. The shared gesture arbiter inspects
+the first click immediately and retains control/drag admission; a native double
+click opens an eligible Model. No role-specific default, timer or parallel
+command is admitted.
 
 ## Background Add Entry And Independent Model Admission
 

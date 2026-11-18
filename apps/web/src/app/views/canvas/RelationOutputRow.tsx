@@ -14,6 +14,7 @@ import type { RelationOutputSlot } from './canvasRelationOutputSchema';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { FieldInclusionToggle } from '../../components/inspector/FieldInclusionToggle';
+import { canAcceptWorkbenchFieldBlur } from '../../components/workbench/workbenchFieldBlur';
 
 export function RelationOutputRow({
   field,
@@ -116,7 +117,10 @@ export function RelationOutputRow({
                 aria-invalid={error == null ? undefined : true}
                 aria-describedby={error == null ? undefined : errorId}
                 onChange={(event) => onNameChange(event.currentTarget.value)}
-                onBlur={(event) => onRename(event.currentTarget.value)}
+                onBlur={(event) => {
+                  if (canAcceptWorkbenchFieldBlur(event.currentTarget, event.relatedTarget))
+                    onRename(event.currentTarget.value);
+                }}
               />
               {field.expression != null ? (
                 <code

@@ -8,6 +8,7 @@ import { canvasCodeRouteEntryState } from '../views/canvas/CanvasCodeRouteEntry'
 import { ShellAbout } from './shell/ShellAbout';
 import { ShellProjectMenu } from './shell/ShellProjectMenu';
 import { ShellNavigationSectionMenu } from './shell/ShellNavigationSectionMenu';
+import { ShellModelViewNavigation } from './shell/ShellModelViewNavigation';
 import type { ShellTopBarCopy } from './shell/copy';
 import styles from './LeftNavigation.module.css';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -25,6 +26,12 @@ export function LeftNavigationRail({
   const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
   const codeTab = contribution?.codeTab;
+  const registeredModelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
+  const modelTab =
+    contribution?.activeCanvas?.id === registeredModelTab?.canvasId ? registeredModelTab : null;
+  const registeredBrowser = useCanvasWorkspaceMenuContributionStore((state) => state.modelBrowser);
+  const modelBrowser =
+    contribution?.activeCanvas?.id === registeredBrowser?.canvasId ? registeredBrowser : null;
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
@@ -47,7 +54,14 @@ export function LeftNavigationRail({
             to={item.to}
             id={isCanvas ? 'shell-canvas-navigation' : undefined}
             aria-label={item.label}
-            data-active={isCanvas ? onCanvasRoute && codeTab?.active !== true : undefined}
+            data-active={
+              isCanvas
+                ? onCanvasRoute &&
+                  codeTab?.active !== true &&
+                  modelTab?.active !== true &&
+                  modelBrowser?.mode == null
+                : undefined
+            }
             aria-expanded={
               isCanvas && onCanvasRoute ? expanded && codeTab?.active !== true : undefined
             }
@@ -67,7 +81,9 @@ export function LeftNavigationRail({
                 return;
               event.preventDefault();
               // Reuse the published owner callback; opening Elements does not close its session.
-              if (codeTab?.active === true) codeTab.onCanvas();
+              if (modelBrowser?.mode != null) modelBrowser.onCanvas();
+              else if (codeTab?.active === true) codeTab.onCanvas();
+              else if (modelTab?.active === true) modelTab.onCanvas();
               dispatch({ type: 'expand' });
             }}
           >
@@ -87,6 +103,7 @@ export function LeftNavigationRail({
         <div className={styles.scroll}>
           <nav
             data-slot="left-navigation-nav"
+            data-workbench-navigation=""
             className={styles.nav}
             aria-label={copy.globalNavigation}
           >
@@ -136,6 +153,15 @@ export function LeftNavigationRail({
                 </TooltipTrigger>
                 <TooltipContent side="right">{copy.projectCode}</TooltipContent>
               </Tooltip>
+            )}
+            {canvasItem == null ? null : (
+              <ShellModelViewNavigation
+                tab={modelTab}
+                browser={modelBrowser}
+                available={onCanvasRoute}
+                foreground={codeTab?.active !== true}
+                copy={copy}
+              />
             )}
             <div className={cn(styles.nav, styles.destinations)}>
               {items.filter((item) => item !== canvasItem).map(renderDestination)}

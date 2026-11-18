@@ -6,6 +6,8 @@ import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { CanvasExplorerConnections } from './CanvasExplorerConnections';
 import styles from './CanvasExplorer.module.css';
+import type { CanvasExplorerCatalogPresentation } from './CanvasExplorer.types';
+import { useCanvasExplorerCatalogPresentation } from './useCanvasExplorerCatalogPresentation';
 
 export function CanvasExplorerList({
   items,
@@ -18,6 +20,7 @@ export function CanvasExplorerList({
   status,
   countKnown = true,
   pending = false,
+  presentation,
 }: Readonly<{
   items: readonly CanvasExplorerItem[];
   /** Observe completion/failure without interpreting the caller-owned admission result. */
@@ -30,10 +33,11 @@ export function CanvasExplorerList({
   status?: ReactNode;
   countKnown?: boolean;
   pending?: boolean;
+  presentation?: CanvasExplorerCatalogPresentation;
 }>): JSX.Element {
-  const [query, setQuery] = useState('');
-  const [open, setOpen] = useState(true);
-  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const localPresentation = useCanvasExplorerCatalogPresentation();
+  const controls = presentation ?? localPresentation;
+  const { query, open, expandedIds } = controls;
   const [inspectionFailed, setInspectionFailed] = useState(false);
   const inspectionAttempt = useRef(0);
   useEffect(
@@ -73,18 +77,11 @@ export function CanvasExplorerList({
     <CanvasExplorerListTemplate
       items={matches}
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={controls.onOpenChange}
       expandedIds={expandedIds}
-      onToggleDetails={(id) => {
-        setExpandedIds((previous) => {
-          const next = new Set(previous);
-          if (next.has(id)) next.delete(id);
-          else next.add(id);
-          return next;
-        });
-      }}
+      onToggleDetails={controls.onToggleDetails}
       query={query}
-      onQuery={setQuery}
+      onQuery={controls.onQuery}
       onSelect={(id) => {
         const attempt = ++inspectionAttempt.current;
         setInspectionFailed(false);

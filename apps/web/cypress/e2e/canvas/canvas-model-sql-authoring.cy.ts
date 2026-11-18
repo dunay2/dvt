@@ -26,10 +26,28 @@ describe('Model SQL authoring', () => {
       18
     );
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
-    cy.get('button[aria-label="Open Model SQL"]')
-      .should('have.attr', 'aria-expanded', 'false')
-      .click();
+    cy.get('[data-slot="shell-model-semantic-command"]').should(
+      'have.attr',
+      'aria-pressed',
+      'true'
+    );
+    cy.get('[data-slot="shell-model-sql-command"]')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get('[data-slot="left-navigation-nav"] [data-active="true"]').should('have.length', 1);
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').type(model.name);
+    cy.get(
+      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
+    ).click();
     cy.get(panel).should('be.visible');
+    cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').should(
+      'have.value',
+      model.name
+    );
+    cy.get(
+      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
+    ).should('have.attr', 'aria-pressed', 'true');
     waitForE2eApiCall(`${prefix}/sql-context`, 'GET');
     cy.get(`${panel} .monaco-editor .view-lines`).click(80, 9);
     cy.get(`${panel} .monaco-editor textarea.inputarea`).should('be.focused');
@@ -43,6 +61,23 @@ describe('Model SQL authoring', () => {
       expect(getE2eApiCalls(`${prefix}/sql-compilation`, 'POST')).to.have.length(0);
       expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(0);
     });
+    cy.get('#shell-canvas-navigation').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get('[data-slot="shell-model-sql-command"]').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.then(() => {
+      expect(getE2eApiCalls(`${prefix}/sql-compilation`, 'POST')).to.have.length(0);
+      expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(0);
+    });
+    cy.get(
+      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
+    ).click();
+    cy.get(panel)
+      .should('be.visible')
+      .find('.view-lines')
+      .should(($lines) => {
+        expect($lines.text().replaceAll('\u00a0', ' ').trim()).to.equal(sql);
+      });
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('[role="alertdialog"]').should('be.visible');
     cy.contains('[role="alertdialog"] button', 'Keep editing').click();
@@ -77,10 +112,19 @@ describe('Model SQL authoring', () => {
     waitForE2eApiCall(`${prefix}/data-sample`, 'POST');
     cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
     cy.get(panel).should('be.visible');
-    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    cy.get('[data-slot="shell-model-semantic-command"]')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get(
+      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
+    ).click();
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
     cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
-    cy.get('button[aria-label="Open Model SQL"]').click();
+    cy.get('[data-slot="shell-model-sql-command"]').click();
+    cy.get(
+      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
+    ).click();
     cy.get(panel)
       .should('be.visible')
       .find('.view-lines')
@@ -131,6 +175,17 @@ describe('Model SQL authoring', () => {
       .first()
       .clear()
       .type('unapplied_country');
+    cy.get('[data-slot="shell-model-semantic-command"]').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get(
+      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
+    ).click();
+    cy.get('[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input')
+      .first()
+      .should('have.value', 'unapplied_country');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesOnClose)
+    );
     cy.get(
       '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
     ).should('be.disabled');

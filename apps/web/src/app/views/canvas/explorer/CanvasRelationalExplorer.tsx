@@ -10,6 +10,10 @@ import type { useCanvasRelationalTreeWorkbenchModel } from '../useCanvasRelation
 import type { CanvasRelationalTreeWorkbenchCopy } from '../canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSourceCatalogue } from '../CanvasRelationalTreeSourceCatalogue';
 import { CanvasExplorer } from './CanvasExplorer';
+import { useCanvasModelBrowserPresentation } from '../CanvasModelBrowser';
+import { CanvasModelInputsPalette } from './CanvasModelInputsPalette';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
+import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 export function CanvasRelationalExplorer({
   model,
@@ -22,6 +26,10 @@ export function CanvasRelationalExplorer({
   pending: boolean;
   children: ReactNode;
 }>): JSX.Element {
+  const browser = useCanvasModelBrowserPresentation();
+  const explorerCopy = resolveCanvasExplorerCopy(
+    useApplicationLanguageStore((state) => state.language)
+  );
   const catalogue = (
     <CanvasRelationalTreeSourceCatalogue
       items={model.catalogue}
@@ -33,5 +41,25 @@ export function CanvasRelationalExplorer({
       occurrences={model.authoringAvailable && !pending ? model.session.occurrences : undefined}
     />
   );
-  return <CanvasExplorer elements={catalogue}>{children}</CanvasExplorer>;
+  return (
+    <CanvasExplorer
+      heading={
+        browser?.mode == null
+          ? undefined
+          : { label: explorerCopy.explorerTitle, contextLabel: explorerCopy.project }
+      }
+      elements={
+        browser?.mode == null ? (
+          catalogue
+        ) : (
+          <>
+            {browser.catalog}
+            <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
+          </>
+        )
+      }
+    >
+      {children}
+    </CanvasExplorer>
+  );
 }

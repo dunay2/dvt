@@ -1,76 +1,46 @@
-/** Owned concern: arbitrate one Canvas node gesture and cancel superseded inspection intent. */
-import { useCallback, useEffect, useRef, type MouseEventHandler } from 'react';
+/**
+ * Owned concern: admit immediate inspection and native card entry.
+ * @baseline ADR-0069: node gestures delegate existing inspection/open callbacks.
+ * @decision Inspect the first click immediately and keep double-click entry explicit.
+ * @consequence Controls, modifiers and consumed clicks cannot place or activate a node.
+ * @version 1.0.0
+ */
+import type { MouseEvent, MouseEventHandler } from 'react';
 import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
 
-const SINGLE_CLICK_DELAY_MS = 500;
+function admitsActivation(event: MouseEvent<HTMLElement>): boolean {
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    !isCanvasNodeEmbeddedControlTarget(event.target)
+  );
+}
 
 type CanvasNodeActivation = Readonly<{
   activation: 'open' | 'inspect' | undefined;
   onClick: MouseEventHandler<HTMLElement>;
   onDoubleClick: MouseEventHandler<HTMLElement>;
-  cancelPendingClick: () => void;
 }>;
 
 export function useCanvasNodeActivation(
-  nodeId: string,
   onSelectNode?: () => void,
   onOpenNode?: () => void
 ): CanvasNodeActivation {
-  const pendingClick = useRef<{
-    timer: ReturnType<typeof setTimeout>;
-    ownerDocument: Document;
-  } | null>(null);
-  const selectNode = useRef(onSelectNode);
-  selectNode.current = onSelectNode;
-  const cancelPendingClick = useCallback((): void => {
-    const pending = pendingClick.current;
-    if (pending == null) return;
-    clearTimeout(pending.timer);
-    pending.ownerDocument.removeEventListener('pointerdown', cancelPendingClick, true);
-    pending.ownerDocument.removeEventListener('keydown', cancelPendingClick, true);
-    pendingClick.current = null;
-  }, []);
-  useEffect(() => cancelPendingClick, [cancelPendingClick, nodeId]);
-
   const onClick: MouseEventHandler<HTMLElement> = (event) => {
-    cancelPendingClick();
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.detail > 1 ||
-      isCanvasNodeEmbeddedControlTarget(event.target)
-    ) {
-      return;
-    }
-    if (event.detail === 0) {
-      selectNode.current?.();
-      return;
-    }
-    if (onSelectNode == null) return;
-    const ownerDocument = event.currentTarget.ownerDocument;
-    pendingClick.current = {
-      ownerDocument,
-      timer: setTimeout(() => {
-        cancelPendingClick();
-        selectNode.current?.();
-      }, SINGLE_CLICK_DELAY_MS),
-    };
-    ownerDocument.addEventListener('pointerdown', cancelPendingClick, {
-      capture: true,
-      once: true,
-    });
-    ownerDocument.addEventListener('keydown', cancelPendingClick, { capture: true, once: true });
+    if (admitsActivation(event) && event.detail <= 1) onSelectNode?.();
   };
 
   const onDoubleClick: MouseEventHandler<HTMLElement> = (event) => {
-    cancelPendingClick();
-    if (!isCanvasNodeEmbeddedControlTarget(event.target)) onOpenNode?.();
+    if (admitsActivation(event)) onOpenNode?.();
   };
 
   return {
     activation: onOpenNode != null ? 'open' : onSelectNode != null ? 'inspect' : undefined,
     onClick,
     onDoubleClick,
-    cancelPendingClick,
   };
 }

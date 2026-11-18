@@ -38,6 +38,10 @@ const en = {
   collapse: 'Collapse explorer',
   close: 'Close explorer',
   models: 'Models',
+  modelInputs: 'Model inputs',
+  chooseModelContext: 'Choose a Model block',
+  modelContextDescription:
+    'This Model appears more than once on the Canvas. Choose the block whose inputs you want to use.',
   projectModelsLoading: 'Loading project models…',
   modelSchemaUnavailable: 'The model output schema or execution connection is unavailable.',
   projectModelsUnavailable: 'Project models are unavailable. Canvas elements remain accessible.',
@@ -75,6 +79,10 @@ const es: typeof en = {
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',
   models: 'Modelos',
+  modelInputs: 'Entradas del modelo',
+  chooseModelContext: 'Elegir un bloque del modelo',
+  modelContextDescription:
+    'Este modelo aparece varias veces en el canvas. Elige el bloque cuyas entradas quieres utilizar.',
   projectModelsLoading: 'Cargando modelos del proyecto…',
   modelSchemaUnavailable:
     'El esquema de salida o la conexión de ejecución del modelo no están disponibles.',

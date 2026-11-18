@@ -53,14 +53,9 @@ export function CanvasNodeShell({
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
-  const { activation, onClick, onDoubleClick, cancelPendingClick } = useCanvasNodeActivation(
-    contextMenuModel.target.nodeId,
-    onSelectNode,
-    onOpenNode
-  );
+  const { activation, onClick, onDoubleClick } = useCanvasNodeActivation(onSelectNode, onOpenNode);
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    cancelPendingClick();
     if (
       !isCanvasElement(event.target) ||
       event.target.closest('[data-canvas-context-menu-owner="column"]') == null

@@ -17,6 +17,15 @@ export type CanvasExplorerNavigationAction = 'elements' | 'git';
 export type CanvasExplorerActivityRail = Readonly<{ codeVisible: boolean }>;
 export type CanvasExplorerHeading = Readonly<{ label: string; contextLabel?: string }>;
 
+export type CanvasExplorerCatalogPresentation = Readonly<{
+  query: string;
+  open: boolean;
+  expandedIds: ReadonlySet<string>;
+  onQuery: (query: string) => void;
+  onOpenChange: (open: boolean) => void;
+  onToggleDetails: (id: string) => void;
+}>;
+
 export type CanvasProjectElementsInput = Readonly<{
   enabled: boolean;
   items: readonly CanvasExplorerItem[];
@@ -24,6 +33,7 @@ export type CanvasProjectElementsInput = Readonly<{
   onInspectNode: CanvasInspectorCommand;
   inspectorTarget?: CanvasInspectorResource | null;
   catalogueScopeKey?: string;
+  presentation?: CanvasExplorerCatalogPresentation;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onImport?: () => void;

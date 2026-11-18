@@ -1,8 +1,9 @@
 /** Own Model tab selection and delegate protected replacement to the current editor. */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
 import { canOpenCanvasRelationalTreeWorkbench } from './useCanvasRelationalTreeWorkbenchModel';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 import type { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 
 export function useCanvasModelSelection(
@@ -10,32 +11,57 @@ export function useCanvasModelSelection(
   nodes: readonly CanonicalNode[],
   focus: ReturnType<typeof useCanvasWorkbenchFocus>
 ) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<Readonly<{
+    owner: object;
+    id: string;
+    initialView: CanvasModelView;
+  }> | null>(null);
   const [active, setActive] = useState(true);
   const modelIds = useMemo(
     () => new Set(nodes.filter(canOpenCanvasRelationalTreeWorkbench).map((node) => node.id)),
     [nodes]
   );
-  const selected = nodes.find((node) => node.id === selectedId && modelIds.has(node.id)) ?? null;
+  const owner = useMemo(() => ({}), [canvasId]);
+  const current = useRef({ owner, modelIds });
+  current.current = { owner, modelIds };
+  const selected =
+    selection?.owner === owner
+      ? (nodes.find((node) => node.id === selection.id && modelIds.has(node.id)) ?? null)
+      : null;
   const { capture, enter, restore } = focus;
   const open = useCallback(
-    (nodeId: string) => {
-      if (!modelIds.has(nodeId)) return;
+    (nodeId: string, view?: CanvasModelView) => {
+      if (current.current.owner !== owner || !current.current.modelIds.has(nodeId)) return;
       capture(undefined, nodeId);
       const select = () => {
-        setSelectedId(nodeId);
+        if (current.current.owner !== owner || !current.current.modelIds.has(nodeId)) return;
+        setSelection({ owner, id: nodeId, initialView: view ?? 'semantic' });
         setActive(true);
         enter('[data-slot="canvas-model-editor"]');
       };
-      const current = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
-      if (current?.canvasId === canvasId && current.nodeId !== nodeId) current.onClose(select);
-      else select();
+      const currentTab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
+      if (currentTab?.canvasId === canvasId) {
+        if (currentTab.nodeId !== nodeId) currentTab.onClose(select);
+        else {
+          currentTab.onSelect();
+          if (view != null && currentTab.views?.disabled !== true) currentTab.views?.[view]();
+        }
+      } else select();
     },
-    [modelIds, canvasId, capture, enter]
+    [owner, canvasId, capture, enter]
   );
   const close = useCallback(() => {
-    setSelectedId(null);
+    if (current.current.owner !== owner) return;
+    setSelection(null);
     restore();
-  }, [restore]);
-  return { modelIds, selected, active, open, close, setActive };
+  }, [owner, restore]);
+  return {
+    modelIds,
+    selected,
+    initialView: selected == null ? undefined : selection?.initialView,
+    active,
+    open,
+    close,
+    setActive,
+  };
 }
