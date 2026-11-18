@@ -45,7 +45,7 @@ export function defineRecipe(recipe: Recipe): ExecutionTemplateDefinition {
     language: 'en',
     label: recipe.labels[0],
     description: recipe.descriptions[0],
-    templateSource: recipe.templateSource.trimEnd(),
+    templateSource: recipe.templateSource.replace(/\r\n/g, '\n').trimEnd(),
     exportFileName: recipe.id + (suffix.endsWith('.yaml') ? '.yaml' : '.sql'),
     resolveExportFileName: (values) => {
       const stem = recipe.fileNameField && values[recipe.fileNameField];

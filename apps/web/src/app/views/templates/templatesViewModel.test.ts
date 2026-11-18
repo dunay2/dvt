@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { defineRecipe } from './templateCatalog';
 import {
   EXECUTION_TEMPLATE_CATALOG,
   createDefaultExecutionTemplateValues,
@@ -9,6 +10,13 @@ import {
 } from './templatesViewModel';
 
 describe('templatesViewModel', () => {
+  it('generates the same recipe source from Windows and Unix Git checkouts', () => {
+    const recipe = resolveExecutionTemplateSelection('calendar');
+    const fromWindows = defineRecipe({ ...recipe, templateSource: 'select\r\n  1\r\n' });
+    const fromUnix = defineRecipe({ ...recipe, templateSource: 'select\n  1\n' });
+    expect(fromWindows.templateSource).toBe(fromUnix.templateSource);
+  });
+
   it('lists governed provider-facing template profiles', () => {
     expect(EXECUTION_TEMPLATE_CATALOG.map((template) => template.id)).toEqual(
       expect.arrayContaining([
