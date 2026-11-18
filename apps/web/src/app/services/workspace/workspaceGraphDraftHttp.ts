@@ -24,7 +24,11 @@ export function isWorkspaceHttpErrorEnvelope(
   return typeof errorRecord.type === 'string' && typeof errorRecord.reason === 'string';
 }
 
-export function readWorkspaceGraphDraftScope(): WorkspaceHttpScope {
+export function readWorkspaceGraphDraftScope(): {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+} {
   return readGrantedWorkspaceHttpScope();
 }
 
