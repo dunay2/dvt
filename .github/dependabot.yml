@@ -26,10 +26,9 @@ updates:
       # Group testing dependencies
       testing:
         patterns:
-          - 'jest'
+          - 'vitest'
+          - '@vitest/*'
           - '@testing-library/*'
-          - '@jest/*'
-          - 'ts-jest'
       # Group linting tools
       linting:
         patterns:

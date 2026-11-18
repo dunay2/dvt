@@ -5,6 +5,7 @@
  * @consequence Pointer and keyboard layout gestures never remount semantics or save the graph.
  * @version 1.0.0
  */
+import type { CanvasModelView } from '../../../src/app/views/canvas/canvasWorkspaceMenuContributionStore';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, installE2eApiFetchStub, stubE2eJsonApi } from '../../support/e2eApiStub';
@@ -92,7 +93,9 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
   cy.get('[data-slot="app-shell-outlet"]').should('exist');
 }
 
-function assertShellCanvasEntries(activeSurface: 'canvas' | 'code' = 'canvas'): void {
+function assertShellCanvasEntries(
+  activeSurface: 'canvas' | 'code' | CanvasModelView = 'canvas'
+): void {
   cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
     .should('have.length', 1)
     .and('be.visible')
@@ -131,7 +134,13 @@ function assertShellCanvasEntries(activeSurface: 'canvas' | 'code' = 'canvas'): 
   assertSelectedNavigation(activeSurface);
 }
 
-function assertSelectedNavigation(activeSurface: 'canvas' | 'code'): void {
+function assertSelectedNavigation(activeSurface: 'canvas' | 'code' | CanvasModelView): void {
+  const destination = {
+    canvas: '[data-slot="left-navigation-link"][href="/canvas"]',
+    code: '[data-slot="shell-project-code-command"]',
+    semantic: '[data-slot="shell-model-semantic-command"]',
+    sql: '[data-slot="shell-model-sql-command"]',
+  }[activeSurface];
   cy.get<HTMLElement>('[data-slot="left-navigation-rail"]').should(($rail) => {
     const rail = $rail[0]!;
     const selected = Array.from(rail.querySelectorAll('a, button')).filter((control) => {
@@ -142,13 +151,7 @@ function assertSelectedNavigation(activeSurface: 'canvas' | 'code'): void {
       );
     });
     expect(selected, 'one visually selected destination').to.have.length(1);
-    expect(selected[0]).to.equal(
-      rail.querySelector(
-        activeSurface === 'code'
-          ? '[data-slot="shell-project-code-command"]'
-          : '[data-slot="left-navigation-link"][href="/canvas"]'
-      )
-    );
+    expect(selected[0]).to.equal(rail.querySelector(destination));
   });
 }
 function assertNavigationTargetGeometry(): void {
@@ -443,7 +446,7 @@ describe('Shell layout contract', () => {
     openWorkbenchModel();
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get(modelViewport).as('retainedModel', { type: 'static' });
-    assertShellCanvasEntries();
+    assertShellCanvasEntries('semantic');
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -458,7 +461,7 @@ describe('Shell layout contract', () => {
       );
     });
     cy.get('[data-slot="canvas-model-main-tab"]').click();
-    assertShellCanvasEntries();
+    assertShellCanvasEntries('semantic');
     cy.get<JQuery<HTMLElement>>('@retainedModel').then(($original) => {
       cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
     });

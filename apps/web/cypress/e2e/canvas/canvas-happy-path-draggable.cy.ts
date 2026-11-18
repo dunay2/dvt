@@ -191,7 +191,12 @@ describe('Canvas happy path remains writable after create/save', () => {
     });
     cy.get('[data-element-id="catalog-client"]').dblclick();
     cy.get('.react-flow__node').should('have.length', 0);
-    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
     // Catalogue inspection must never take the placement rail, including an unplaced Source.
     cy.get('[data-element-id="catalog-client"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]')

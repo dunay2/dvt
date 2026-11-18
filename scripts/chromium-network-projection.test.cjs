@@ -79,7 +79,7 @@ for (const [syntaxReason, capture] of [
   ['interiorSyntaxError', completeCapture + ' private-token'],
   ['unsupportedEofError', completeCapture.slice(0, -1) + ',"unfinished"'],
   ['lastEventMissing', '{"constants":{},"events":['],
-  ['suffixNotAdmitted', completeCapture.slice(0, -1)],
+  ['suffixNotAdmitted', completeCapture.slice(0, -1) + ',"polledData":{}'],
 ]) {
   test(`capture rejection identifies its first existing condition: ${syntaxReason}`, () => {
     assert.throws(
@@ -94,6 +94,50 @@ for (const [syntaxReason, capture] of [
     );
   });
 }
+
+for (const [label, capture, syntaxReason] of [
+  ['event object', completeCapture.slice(0, -3), 'eventNotClosed'],
+  [
+    'event object and nested array',
+    JSON.stringify({ ...netlog(), events: [{ ...netlog().events[0], params: [{}] }] }).slice(0, -4),
+    'eventNotClosed',
+  ],
+  [
+    'constants object',
+    JSON.stringify({ events: netlog().events, constants: netlog().constants }).slice(0, -2),
+    'constantsNotClosed',
+  ],
+]) {
+  test(`a completed nested child cannot close its missing ${label} parent`, () => {
+    for (const suffix of ['', '\n', ' \r\n ']) {
+      assert.throws(
+        () => projectChromiumNetworkCapture(capture + suffix),
+        (error) => {
+          assert.equal(error.constructor, ChromiumProjectionError);
+          assert.equal(error.reason, 'captureSyntax');
+          assert.equal(error.syntaxReason, syntaxReason);
+          assert.doesNotMatch(JSON.stringify(error), /private|secret|token|https/iu);
+          return true;
+        }
+      );
+    }
+  });
+}
+
+test('a closed events array missing only the root brace remains terminated evidence', () => {
+  const complete = projectChromiumNetworkCapture(completeCapture);
+  for (const whitespace of ['', '\n', ' \r\n ']) {
+    const result = projectChromiumNetworkCapture(completeCapture.slice(0, -1) + whitespace);
+    assert.deepEqual(result, { ...complete, captureState: 'terminated' });
+    assert.doesNotMatch(JSON.stringify(result), /private|secret|Authorization|headers|body|token/);
+  }
+  for (const suffix of [',"polledData":{}', ',"polledData":{', ',"other":1', 'private-token']) {
+    assert.throws(
+      () => projectChromiumNetworkCapture(completeCapture.slice(0, -1) + suffix),
+      /Invalid Chromium network capture/
+    );
+  }
+});
 
 for (const [reason, capture] of [
   ['captureSyntax', 'https://private.invalid/?token=secret malformed capture'],

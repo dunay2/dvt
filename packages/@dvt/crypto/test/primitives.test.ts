@@ -88,9 +88,31 @@ describe('RFC 8785 canonicalization', () => {
     );
   });
 
-  it('rejects values outside the JSON data model', () => {
-    expect(() => jcsCanonicalize({ value: Number.NaN })).toThrow();
-    expect(() => jcsCanonicalize(1n)).toThrow();
+  it.each([
+    { name: 'root undefined', value: undefined },
+    { name: 'array undefined', value: [undefined] },
+    { name: 'NaN', value: { value: NaN } },
+    { name: 'positive infinity', value: { value: Infinity } },
+    { name: 'negative infinity', value: { value: -Infinity } },
+    { name: 'bigint', value: 1n },
+    { name: 'function', value: { value: () => 1 } },
+    { name: 'symbol', value: { value: Symbol('invalid') } },
+  ])('rejects $name outside the JSON data model', ({ value }) => {
+    expect(() => jcsCanonicalize(value)).toThrow('JCS_VALUE_OUTSIDE_JSON_DATA_MODEL');
+  });
+
+  it('rejects circular objects and arrays while accepting repeated references', () => {
+    const circularObject: Record<string, unknown> = {};
+    circularObject.self = circularObject;
+    const circularArray: unknown[] = [];
+    circularArray.push(circularArray);
+    for (const value of [circularObject, circularArray]) {
+      expect(() => jcsCanonicalize(value)).toThrow('JCS_CIRCULAR_REFERENCE');
+    }
+    const shared = { value: 1 };
+    expect(jcsCanonicalize({ right: shared, left: shared })).toBe(
+      '{"left":{"value":1},"right":{"value":1}}'
+    );
   });
 });
 
@@ -102,8 +124,14 @@ describe('secure random bytes and UUIDs', () => {
 
   it('fails closed when the secure platform API is unavailable', () => {
     vi.stubGlobal('crypto', undefined);
-    expect(() => secureRandomBytes(16)).toThrow('CRYPTO_SECURE_RANDOM_UNAVAILABLE');
-    vi.unstubAllGlobals();
+    try {
+      for (const allocate of [() => secureRandomBytes(16), randomUuidV4, randomUuidV7]) {
+        expect(allocate).toThrow('CRYPTO_SECURE_RANDOM_UNAVAILABLE');
+      }
+      expect(randomUuidV7(deterministicUuidV7Vector)).toBe(deterministicUuidV7Vector.uuid);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('creates RFC UUIDv4 values', () => {
@@ -118,4 +146,31 @@ describe('secure random bytes and UUIDs', () => {
     );
     expect(randomUuidV7(deterministicUuidV7Vector)).toBe(deterministicUuidV7Vector.uuid);
   });
+
+  it('preserves injected time, RFC bits, repeatability, and caller-owned bytes', () => {
+    const randomBytes = deterministicUuidV7Vector.randomBytes.slice();
+    const before = [...randomBytes];
+    const options = Object.freeze({ nowMs: deterministicUuidV7Vector.nowMs, randomBytes });
+    const first = randomUuidV7(options);
+    expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u);
+    expect(Number.parseInt(first.replaceAll('-', '').slice(0, 12), 16)).toBe(options.nowMs);
+    randomUuidV7({ nowMs: options.nowMs + 1, randomBytes: new Uint8Array(16).fill(255) });
+    expect(randomUuidV7(options)).toBe(first);
+    expect([...randomBytes]).toEqual(before);
+  });
+
+  it.each([0, 15, 17])('rejects a random byte length of %i', (length) => {
+    expect(() => randomUuidV7({ nowMs: 0, randomBytes: new Uint8Array(length) })).toThrow(
+      'UUID_V7_RANDOM_BYTES_INVALID'
+    );
+  });
+
+  it.each([-1, 0.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    'rejects invalid injected timestamps: %s',
+    (nowMs) => {
+      expect(() => randomUuidV7({ nowMs, randomBytes: new Uint8Array(16) })).toThrow(
+        'UUID_V7_TIMESTAMP_INVALID'
+      );
+    }
+  );
 });
