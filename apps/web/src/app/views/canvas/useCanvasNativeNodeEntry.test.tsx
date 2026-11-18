@@ -173,9 +173,10 @@ it.each([
     });
   else begin();
   const boundary = container.querySelector('[data-testid="boundary"]')!;
-  if (reason === 'unrelated-second-press') act(() => fireEvent.mouseDown(boundary, { detail: 2 }));
+  if (reason === 'unrelated-second-press')
+    await act(() => fireEvent.mouseDown(boundary, { detail: 2 }));
   if (reason === 'second-control')
-    act(() => fireEvent.mouseDown(container.querySelector('button')!, { detail: 2 }));
+    await act(() => fireEvent.mouseDown(container.querySelector('button')!, { detail: 2 }));
   if (reason === 'canvas-change') render(open, fieldClick, { canvasId: 'other' });
   if (reason === 'removed') render(open, fieldClick, { present: false });
   if (reason === 'hidden') render(open, fieldClick, { hidden: true });
