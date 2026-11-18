@@ -131,7 +131,7 @@ it('restores each recipe draft and removes the generated SQL when a required val
   }
 });
 
-it('preserves the project draft and uses create-only semantics when the user saves a copy', async () => {
+it('preserves a conflicting draft and reopens its saved copy outside the loaded page', async () => {
   const path = 'dvt_templates/nightly.json';
   const content = encodeProjectTemplate({
     version: 1,
@@ -164,7 +164,7 @@ it('preserves the project draft and uses create-only semantics when the user sav
         ...createAppServicesTestOverrides(),
         sessionContext: createMockSessionContextPort(),
         workspaceFileDirectoryQuery: {
-          listDirectoryPage: async () => ({ entries: [path], nextCursor: null }),
+          listDirectoryPage: async () => ({ entries: [path], nextCursor: 'more' }),
         },
         workspaceFilesQuery: {
           listFiles: async () => [{ name: file.name, path, kind: 'file' }],
@@ -197,6 +197,7 @@ it('preserves the project draft and uses create-only semantics when the user sav
         target: { value: 'Alternative' },
       })
     );
+    expect(ui.queryByRole('button', { name: 'alternative' })).toBeNull();
     await act(async () => fireEvent.click(ui.getByRole('button', { name: 'Save variant' })));
     expect(save).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -207,6 +208,20 @@ it('preserves the project draft and uses create-only semantics when the user sav
     expect(JSON.parse(save.mock.calls[1]![0].content)).toMatchObject({
       source: 'select [[limit]]',
       name: 'Alternative',
+    });
+    await act(async () =>
+      fireEvent.click(ui.getByRole('button', { name: /^Snowflake Procedure/ }))
+    );
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'alternative' })));
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'Edit template' })));
+    expect(ui.getByRole('textbox', { name: 'Variant name' })).toHaveProperty(
+      'value',
+      'Alternative'
+    );
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'Save variant' })));
+    expect(save.mock.lastCall?.[0].expectedRevision).toEqual({
+      kind: 'content_sha256',
+      value: sha256HexUtf8(save.mock.calls[1]![0].content),
     });
   } finally {
     await mounted.cleanup();
