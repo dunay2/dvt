@@ -11,6 +11,7 @@ import {
   EXECUTION_TEMPLATE_CATALOG,
   createDefaultExecutionTemplateValues,
   localizeExecutionTemplate,
+  resolveExecutionTemplateSelection,
 } from './templatesViewModel';
 import type { TemplatesCopy } from './templatesCopy';
 import { resolveCodeFileCreationFailure } from '../code/codeWorkbenchErrorModel';
@@ -38,9 +39,7 @@ export function useTemplateAuthoring(
     []
   );
   const savedDraft = drafts[selected];
-  const base = EXECUTION_TEMPLATE_CATALOG.find(
-    (t) => t.id === (savedDraft?.baseTemplateId ?? selected)
-  )!;
+  const base = resolveExecutionTemplateSelection(savedDraft?.baseTemplateId ?? selected);
   const template = localizeExecutionTemplate(base, language);
   const draft: Draft = savedDraft ?? {
     version: 1,

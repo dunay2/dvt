@@ -171,6 +171,8 @@ describe('Templates workbench', () => {
     cy.get('input[aria-label="Find templates"]').type('daily-events');
     cy.contains('button', 'daily-events').click();
     cy.get('[data-slot="templates-generated-source-readable-preview"]').should('have.text', edited);
+    cy.get('input[name="modelRelation"]').should('not.exist');
+    cy.viewport(1280, 700);
     cy.get('[data-slot="templates-generated-source-preview"] .monaco-editor .view-lines').should(
       'contain.text',
       'pedidos'

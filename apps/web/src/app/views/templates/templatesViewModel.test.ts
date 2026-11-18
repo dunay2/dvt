@@ -140,6 +140,18 @@ describe('templatesViewModel', () => {
     ]);
   });
 
+  it('validates only the edited source and its export name', () => {
+    const selected = resolveExecutionTemplateSelection('snowflake-task');
+    expect(resolveExecutionTemplatePreview(selected, { taskName: 'nightly' }, 'select 1')).toEqual({
+      kind: 'ready',
+      errors: [],
+      exportFileName: 'nightly.task.sql',
+      source: 'select 1',
+    });
+    const preview = resolveExecutionTemplatePreview(selected, {}, 'select 1');
+    expect(preview.errors.map((error) => error.parameterId)).toEqual(['taskName']);
+  });
+
   it.each([
     {
       caseName: 'without a terminator',

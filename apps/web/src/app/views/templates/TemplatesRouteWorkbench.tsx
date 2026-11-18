@@ -10,7 +10,10 @@ import { FileCreationDialog } from '../code/FileCreationDialog';
 import { resolveCodeFileCreationCopy } from '../code/codeViewCopy';
 import { resolveDbtProjectWorkspaceFilePath } from '../code/codeViewFileSelection';
 import { useWorkspaceFileCreation } from '../code/useWorkspaceFileCreation';
-import { resolveExecutionTemplatePreview } from './templatesViewModel';
+import {
+  resolveExecutionTemplatePreview,
+  resolveTemplateSourceParameters,
+} from './templatesViewModel';
 import { GeneratedSourcePanel } from './TemplateMonacoPreviewPanel';
 import { acceptsProjectModel } from './templateParameters';
 import { templatesCopy } from './templatesCopy';
@@ -40,6 +43,7 @@ export function TemplatesRouteWorkbench({
   const editor = useRef<TemplateSourceHandle>(null);
   const fieldTarget = useRef<{ recipe: string; field: string } | null>(null);
   const exportButton = useRef<HTMLButtonElement>(null);
+  const parameters = resolveTemplateSourceParameters(author.template, author.draft.source);
   const preview = resolveExecutionTemplatePreview(
     author.template,
     author.draft.values,
@@ -50,10 +54,11 @@ export function TemplatesRouteWorkbench({
     if (author.edit && editor.current) editor.current.insert(reference);
     else {
       const active = fieldTarget.current;
+      const destinations = parameters.filter(acceptsProjectModel);
       const field =
-        active?.recipe === author.selected
-          ? active.field
-          : author.template.parameters.find(acceptsProjectModel)?.id;
+        (active?.recipe === author.selected &&
+          destinations.find((p) => p.id === active.field)?.id) ||
+        destinations[0]?.id;
       if (field) author.parameter(field, reference);
       else {
         author.setNotice(copy.choosePosition);
@@ -95,7 +100,7 @@ export function TemplatesRouteWorkbench({
       </TemplateLibrary>
       <div className={styles.content}>
         <TemplateParameterForm
-          selectedTemplate={author.template}
+          selectedTemplate={{ ...author.template, parameters }}
           parameterValues={author.draft.values}
           onParameterChange={author.parameter}
           preview={preview}

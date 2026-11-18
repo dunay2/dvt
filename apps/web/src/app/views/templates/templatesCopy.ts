@@ -27,7 +27,6 @@ const en = {
   loading: 'Loading…',
   readError: 'Some project resources could not be loaded.',
   invalid: 'This project template cannot be read.',
-  saving: 'Saving…',
   saved: 'Saved',
   newFile: 'Created',
   conflict:
@@ -66,7 +65,6 @@ const es: typeof en = {
   loading: 'Cargando…',
   readError: 'No se han podido cargar algunos recursos del proyecto.',
   invalid: 'No se puede leer esta plantilla del proyecto.',
-  saving: 'Guardando…',
   saved: 'Guardado',
   newFile: 'Creado',
   conflict:

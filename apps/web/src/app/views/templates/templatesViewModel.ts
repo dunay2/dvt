@@ -55,6 +55,15 @@ export function createDefaultExecutionTemplateValues(
   );
 }
 
+export function resolveTemplateSourceParameters(
+  template: ExecutionTemplateDefinition,
+  source: string
+) {
+  return template.parameters.filter(
+    ({ id }) => id === template.fileNameField || source.includes(`[[${id}]]`)
+  );
+}
+
 export function resolveExecutionTemplatePreview(
   template: ExecutionTemplateDefinition,
   values: ExecutionTemplateParameterValues,
@@ -64,7 +73,7 @@ export function resolveExecutionTemplatePreview(
   const substituted = new Map<string, string>();
   const resolved: Record<string, string> = {};
   const errors: ExecutionTemplatePreviewError[] = [];
-  for (const parameter of template.parameters) {
+  for (const parameter of resolveTemplateSourceParameters(template, source)) {
     const value = values[parameter.id] ?? parameter.defaultValue;
     resolved[parameter.id] = value;
     const formatted = formatTemplateValue(parameter.kind, value);

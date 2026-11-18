@@ -16,6 +16,7 @@ export type ExecutionTemplateDefinition = Readonly<{
   category: 'task' | 'procedure' | 'model' | 'workflow';
   referenceStyle: 'dbt' | 'postgresql' | 'snowflake' | 'none';
   exportFileName: string;
+  fileNameField?: string;
   parameters: readonly ExecutionTemplateParameterDefinition[];
   templateSource: string;
   language: ApplicationLanguage;

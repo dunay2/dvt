@@ -51,7 +51,10 @@ extends this workbench. Built-in recipe bodies are SQL/YAML files in Git.
 Project variants inherit their base profile's parameter definitions. Each
 `dvt_templates/<slug>.json` file carries `version: 1`, `baseTemplateId`, `name`,
 `source` and `values`. The preview substitutes declared `[[id]]` variables in one
-pass. SQL expressions, procedure delimiters and dbt Jinja survive rendering.
+pass. The form validates the variables the current source uses and the parameter
+that supplies its file name. Removing a variable from a variant hides its field
+and retains its draft value if the author puts the variable back.
+SQL expressions, procedure delimiters and dbt Jinja survive rendering.
 Edits remain scoped to their selected draft and workspace.
 
 ```mermaid
