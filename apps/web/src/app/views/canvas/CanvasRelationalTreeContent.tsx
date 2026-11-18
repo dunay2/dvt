@@ -3,7 +3,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
-import { CanvasJoinTypeChangeContext } from './CanvasJoinTypeChangeContext';
+import { CanvasJoinTypeChangeProvider } from './CanvasJoinTypeChangeContext';
 import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
 import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
@@ -30,16 +30,7 @@ type CanvasRelationalTreeContentProps = Readonly<{
 
 export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
   const authoringView = projectCanvasRelationalTreeAuthoringView(props, props.onSelectRelation);
-  const { data, actions } = authoringView;
   const enabled = props.model.authoringAvailable && !props.pendingCondition;
-  const authority = enabled
-    ? {
-        changeDraft: props.model.session.setJoinDraft,
-        analysisBinding: data.analysisBinding,
-        stagedOperations: data.stagedOperations,
-        updateStagedOperation: actions.updateStagedOperation,
-      }
-    : null;
   return (
     <div
       data-slot="canvas-relational-tree-surface"
@@ -54,9 +45,9 @@ export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentPr
           enabled={enabled}
           label={props.copy.relationalTreeCanvasLabel}
         >
-          <CanvasJoinTypeChangeContext.Provider value={authority}>
+          <CanvasJoinTypeChangeProvider enabled={enabled} view={authoringView}>
             <CanvasRelationalTreeContentView {...props} authoringView={authoringView} />
-          </CanvasJoinTypeChangeContext.Provider>
+          </CanvasJoinTypeChangeProvider>
         </CanvasRelationalOperationMenuProvider>
       </CanvasRelationalFieldSelectionProvider>
     </div>

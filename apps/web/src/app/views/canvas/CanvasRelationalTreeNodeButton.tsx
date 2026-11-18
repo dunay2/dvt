@@ -8,7 +8,6 @@
 import { useContext } from 'react';
 import { CanvasJoinTypeIconMenu } from './CanvasJoinTypeIconMenu';
 import { CanvasJoinTypeChangeContext } from './CanvasJoinTypeChangeContext';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -73,7 +72,7 @@ export function CanvasRelationalTreeNodeButton({
     !pending &&
     node.relationId != null &&
     node.operator === 'join' &&
-    isCanvasJoinOperation(operation) &&
+    presentation.category === 'join' &&
     (stagedOperation == null || stagedOperation.semanticDocument != null);
   const button = (
     <button
