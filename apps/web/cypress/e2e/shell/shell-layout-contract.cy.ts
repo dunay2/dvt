@@ -5,6 +5,7 @@
  * @consequence Pointer and keyboard layout gestures never remount semantics or save the graph.
  * @version 1.0.0
  */
+import type { CanvasModelView } from '../../../src/app/views/canvas/canvasWorkspaceMenuContributionStore';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, installE2eApiFetchStub, stubE2eJsonApi } from '../../support/e2eApiStub';
@@ -92,9 +93,9 @@ function visitShellRouteWithUiLayout(path: string, partialState?: Record<string,
   cy.get('[data-slot="app-shell-outlet"]').should('exist');
 }
 
-type ShellDestination = 'canvas' | 'code' | 'semantic' | 'sql';
-
-function assertShellCanvasEntries(activeSurface: ShellDestination = 'canvas'): void {
+function assertShellCanvasEntries(
+  activeSurface: 'canvas' | 'code' | CanvasModelView = 'canvas'
+): void {
   cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
     .should('have.length', 1)
     .and('be.visible')
@@ -133,7 +134,7 @@ function assertShellCanvasEntries(activeSurface: ShellDestination = 'canvas'): v
   assertSelectedNavigation(activeSurface);
 }
 
-function assertSelectedNavigation(activeSurface: ShellDestination): void {
+function assertSelectedNavigation(activeSurface: 'canvas' | 'code' | CanvasModelView): void {
   const destination = {
     canvas: '[data-slot="left-navigation-link"][href="/canvas"]',
     code: '[data-slot="shell-project-code-command"]',
