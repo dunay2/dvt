@@ -187,6 +187,28 @@ describe('closed Web test-support ownership', () => {
   );
 
   it.each([
+    ['../app/views/templates/library/calendar.sql?raw', false, false],
+    ['../app/views/templates/library/etl-scaffold.yaml?raw', false, false],
+    ['../app/views/templates/library/missing.sql?raw', true, true],
+    ['../app/views/templates/library/calendar.sql?raw&worker', true, true],
+    ['../../package.json?raw', true, false],
+    ['../../../../pnpm-workspace.yaml?raw', true, false],
+    [
+      normalize(resolve(webRoot, 'src/app/views/templates/library/calendar.sql')) + '?raw',
+      true,
+      false,
+    ],
+  ] as const)('classifies the physical raw recipe %s', (resource, observed, uncertain) => {
+    const relativePath = 'src/testing/__raw_asset__.test.ts';
+    const file = normalize(resolve(webRoot, relativePath));
+    const content = `import value from ${JSON.stringify(resource)};`;
+    const result = inspectTestSourceEvidence(new Map([[file, readFacts({ path: file, content })]]));
+    expect(result.observers).toEqual(observed ? [relativePath] : []);
+    expect(result.uncertainties).toEqual(uncertain ? [relativePath] : []);
+    expect(result.runtime.get(file)).toEqual([]);
+  });
+
+  it.each([
     ['', true, false],
     ['?raw', false, true],
     ['?worker', false, false],
