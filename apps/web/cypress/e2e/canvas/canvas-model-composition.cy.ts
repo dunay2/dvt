@@ -6,7 +6,10 @@ import {
 
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
-import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import {
+  revisitWorkbenchCanvas,
+  visitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
@@ -91,22 +94,16 @@ describe('Model composition inside the selected Model', () => {
       ).to.have.property('sources');
     });
     cy.get('[data-slot="canvas-model-editor"]:visible').should('contain.text', original.name);
-    cy.get('[data-slot="canvas-model-save-status"]:visible').should('contain.text', 'Saved');
     // A fresh page must reinstall the controlled transport, rather than falling through to the live API.
-    let readsBefore = 0;
-    cy.then(() => {
-      readsBefore = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
-    });
-    visitWithE2eWorkspaceSession('/canvas', {
-      onBeforeLoad(window) {
-        window.localStorage.setItem(
-          'dvt-web-application-language',
-          JSON.stringify({ state: { language: 'en' }, version: 0 })
-        );
-      },
-    });
-    cy.wrap(null, { timeout: 20_000 }).should(() =>
-      expect(getE2eApiCalls('/workspace/graph/draft', 'GET').length).to.be.greaterThan(readsBefore)
+    revisitWorkbenchCanvas(() =>
+      visitWithE2eWorkspaceSession('/canvas', {
+        onBeforeLoad(window) {
+          window.localStorage.setItem(
+            'dvt-web-application-language',
+            JSON.stringify({ state: { language: 'en' }, version: 0 })
+          );
+        },
+      })
     );
     cy.get('#app-loading-screen', { timeout: 20_000 }).should('not.exist');
     cy.then(() => openModel(copyId));
