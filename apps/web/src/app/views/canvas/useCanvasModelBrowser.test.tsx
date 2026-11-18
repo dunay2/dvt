@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 /** Prove explicit Explorer selection, guarded Model replacement and stale owner rejection together. */
-import { act } from 'react';
+import { act, type ComponentProps } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { useCanvasModelSelection } from './useCanvasModelSelection';
 import { useCanvasModelBrowser } from './useCanvasModelBrowser';
+import { canvasModelNavigationScopeKey } from './canvasModelNavigationPreference';
 import {
   useCanvasWorkspaceMenuContributionStore as store,
+  type CanvasModelView,
   type CanvasModelWorkspaceTabContribution,
 } from './canvasWorkspaceMenuContributionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
@@ -38,19 +40,28 @@ const tabViews = {
 let model: ReturnType<typeof useCanvasModelSelection>;
 let browser: ReturnType<typeof useCanvasModelBrowser>;
 let root: Root;
-let host: HTMLDivElement;
 function Harness({
-  canvasId,
-  nodes,
+  canvasId = 'canvas',
+  nodes = [first, second, source],
+  projectId = 'project',
   target,
+  unavailable,
 }: {
-  canvasId: string;
-  nodes: readonly CanonicalNode[];
+  canvasId?: string;
+  projectId?: string;
+  unavailable?: boolean;
+  nodes?: readonly CanonicalNode[];
   target?: CanvasInspectorResource;
 }): null {
-  model = useCanvasModelSelection(canvasId, nodes, focus);
+  const scopeKey = canvasModelNavigationScopeKey(
+    { tenantId: 'tenant', projectId, environmentId: 'dev', targetAdapter: 'temporal' },
+    canvasId,
+    'root'
+  );
+  model = useCanvasModelSelection(canvasId, nodes, focus, scopeKey);
   browser = useCanvasModelBrowser({
     canvasId,
+    catalogueUnavailable: unavailable,
     nodes,
     model,
     showCanvas,
@@ -59,12 +70,11 @@ function Harness({
   });
   return null;
 }
-function render(
-  canvasId = 'canvas',
-  nodes = [first, second, source],
-  target?: CanvasInspectorResource
-): void {
-  act(() => root.render(<Harness canvasId={canvasId} nodes={nodes} target={target} />));
+function render(props: ComponentProps<typeof Harness> = {}): void {
+  act(() => root.render(<Harness {...props} />));
+}
+function browse(view: CanvasModelView): void {
+  act(() => store.getState().modelBrowser!.onBrowse(view));
 }
 function registerTab(overrides: Partial<CanvasModelWorkspaceTabContribution>): void {
   act(() =>
@@ -80,53 +90,58 @@ function registerTab(overrides: Partial<CanvasModelWorkspaceTabContribution>): v
     })
   );
 }
+function deferReplacement(nodeId = first.id): () => void {
+  const onClose = vi.fn<CanvasModelWorkspaceTabContribution['onClose']>();
+  registerTab({ nodeId, onClose });
+  return () => {
+    expect(onClose).toHaveBeenCalledOnce();
+    act(() => onClose.mock.calls[0]![0]!());
+  };
+}
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.clearAllMocks();
-  host = document.createElement('div');
-  document.body.append(host);
-  root = createRoot(host);
+  sessionStorage.clear();
+  root = createRoot(document.createElement('div'));
   store.setState({ modelTab: null, modelBrowser: null, contribution: null });
 });
 afterEach(() => {
   act(() => root.unmount());
-  host.remove();
   vi.unstubAllGlobals();
 });
 
-it('reveals the Canvas and Explorer without selecting or inspecting a Model', async () => {
-  render();
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  expect(model.selected).toBeNull();
-  expect(model.active).toBe(false);
-  expect(browser.mode).toBe('sql');
-  expect(useUiLayoutStore.getState().canvasExplorer.mode).toBe('expanded');
-  expect(showCanvas).toHaveBeenCalledOnce();
-  expect(inspect).not.toHaveBeenCalled();
-  await act(() => browser.onSelect({ kind: 'canonical-node', nodeId: first.id }));
-  expect(model.selected?.id).toBe(first.id);
-  expect(model.initialView).toBe('sql');
-  expect(model.active).toBe(true);
-  expect(inspect).not.toHaveBeenCalled();
-});
+it.each(['semantic', 'sql'] as const)(
+  'opens the first eligible catalog Model directly in %s',
+  (view) => {
+    render({ nodes: [source, first, second] });
+    expect(model.selected).toBeNull();
+    browse(view);
+    expect(model.selected?.id).toBe(first.id);
+    expect(model.initialView).toBe(view);
+    expect(model.active).toBe(true);
+    expect(browser.mode).toBe(view);
+    expect(useUiLayoutStore.getState().canvasExplorer.mode).toBe('expanded');
+    expect(inspect).not.toHaveBeenCalled();
+  }
+);
 
 it('switches the visible Model even when Canvas retained a different inspector target', () => {
-  render('canvas', [first, second, source], { kind: 'canonical-node', nodeId: second.id });
+  render({ target: { kind: 'canonical-node', nodeId: second.id } });
   act(() => model.open(first.id));
   const select = vi.fn();
   registerTab({ onSelect: select, views: tabViews });
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
+  browse('sql');
   expect(tabViews.sql).toHaveBeenCalledOnce();
   expect(select).toHaveBeenCalledOnce();
   expect(model.initialView).toBe('semantic');
 });
 
 it('leaves the active view in place while its Model session is busy', () => {
-  render('canvas', [first, second, source], { kind: 'canonical-node', nodeId: second.id });
+  render({ target: { kind: 'canonical-node', nodeId: second.id } });
   act(() => model.open(first.id));
   const close = vi.fn();
   registerTab({ onClose: close, views: { ...tabViews, disabled: true } });
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
+  browse('sql');
   expect(browser.mode).toBeNull();
   expect(model.selected?.id).toBe(first.id);
   expect(close).not.toHaveBeenCalled();
@@ -136,9 +151,9 @@ it('leaves the active view in place while its Model session is busy', () => {
 it.each(['semantic', 'sql'] as const)(
   'opens the highlighted Model directly in %s without another catalogue click',
   (view) => {
-    render('canvas', [first, second, source], { kind: 'canonical-node', nodeId: first.id });
+    render({ target: { kind: 'canonical-node', nodeId: first.id } });
     act(() => model.open(second.id));
-    act(() => store.getState().modelBrowser!.onBrowse(view));
+    browse(view);
     expect(model.selected?.id).toBe(first.id);
     expect(model.initialView).toBe(view);
     expect(model.active).toBe(true);
@@ -146,40 +161,78 @@ it.each(['semantic', 'sql'] as const)(
   }
 );
 
-it.each([source.id, 'missing'])(
-  'does not replace an explicit %s resource with a retained Model',
-  (nodeId) => {
-    render('canvas', [first, second, source], { kind: 'canonical-node', nodeId });
-    act(() => model.open(first.id));
-    act(() => store.getState().modelBrowser!.onBrowse('sql'));
-    expect(model.selected?.id).toBe(first.id);
-    expect(model.active).toBe(false);
-    expect(inspect).toHaveBeenCalledExactlyOnceWith({ kind: 'canonical-node', nodeId }, 'code');
-  }
-);
+it('inspects an explicitly selected Source even when a Model was remembered', () => {
+  const resource = { kind: 'canonical-node', nodeId: source.id } as const;
+  render({ target: resource });
+  act(() => model.open(first.id));
+  browse('sql');
+  expect(model.active).toBe(false);
+  expect(inspect).toHaveBeenCalledExactlyOnceWith(resource, 'code');
+});
+
+it('ignores unavailable catalog callbacks and waits for a new rail click when ready', () => {
+  render();
+  const stale = store.getState().modelBrowser!;
+  render({ nodes: [], unavailable: true });
+  expect(store.getState().modelBrowser).toBeNull();
+  act(() => stale.onBrowse('sql'));
+  render();
+  expect(model.selected).toBeNull();
+  expect(inspect).not.toHaveBeenCalled();
+  browse('sql');
+  expect(model.selected?.id).toBe(first.id);
+});
+
+it('rejects a remembered identity from another project even when both catalogs contain that id', () => {
+  render();
+  act(() => model.open(second.id));
+  render({ projectId: 'another-project' });
+  browse('sql');
+  expect(model.selected?.id).toBe(first.id);
+});
+
+it('rejects a pending replacement after its owner unmounts', () => {
+  render();
+  act(() => model.open(second.id));
+  const resume = deferReplacement(second.id);
+  act(() => model.open(first.id));
+  act(() => root.render(null));
+  store.setState({ modelTab: null });
+  render();
+  resume();
+  browse('semantic');
+  expect(model.selected?.id).toBe(second.id);
+});
+
+it('recovers a missing target through the remembered Model, then the first available if removed', () => {
+  const missing = { kind: 'canonical-node', nodeId: 'missing' } as const;
+  render({ target: missing });
+  act(() => model.open(second.id));
+  browse('sql');
+  expect(model.selected?.id).toBe(second.id);
+  expect(model.initialView).toBe('sql');
+  render({ nodes: [first], target: missing });
+  browse('semantic');
+  expect(model.selected?.id).toBe(first.id);
+  expect(inspect).not.toHaveBeenCalled();
+});
 
 it('retains the current Model until its owner accepts replacement', async () => {
   render();
   act(() => model.open(first.id));
-  let resume: (() => void) | undefined;
-  const close = vi.fn((continuation?: () => void) => {
-    resume = continuation;
-  });
-  registerTab({ onClose: close });
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
+  const resume = deferReplacement();
+  browse('sql');
   await act(() => browser.onSelect(second.id));
-  expect(close).toHaveBeenCalledOnce();
   expect(model.selected?.id).toBe(first.id);
   expect(model.initialView).toBe('semantic');
-  act(() => resume!());
+  resume();
   expect(model.selected?.id).toBe(second.id);
   expect(model.initialView).toBe('sql');
 });
 
 it('opens the next Model in the actual active view after its toolbar changes SQL visibility', async () => {
   render();
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  await act(() => browser.onSelect(first.id));
+  browse('sql');
   registerTab({ onClose: (next) => next?.(), views: tabViews });
   await act(() => browser.onSelect(second.id));
   expect(model.selected?.id).toBe(second.id);
@@ -190,29 +243,22 @@ it('rejects obsolete browsing and delayed replacement after a Canvas change', ()
   render();
   const obsolete = store.getState().modelBrowser!;
   act(() => model.open(first.id));
-  let resume: (() => void) | undefined;
-  registerTab({
-    onClose: (next) => {
-      resume = next;
-    },
-  });
+  const resume = deferReplacement();
   act(() => model.open(second.id, 'sql'));
-  render('other');
-  act(() => {
-    obsolete.onBrowse('sql');
-    resume!();
-  });
+  render({ canvasId: 'other' });
+  act(() => obsolete.onBrowse('sql'));
+  resume();
   expect(model.selected).toBeNull();
   expect(browser.mode).toBeNull();
-  render('canvas');
+  render();
   act(() => obsolete.onBrowse('sql'));
   expect(browser.mode).toBeNull();
   expect(model.selected).toBeNull();
 });
 
 it('keeps resource inspection and SQL capability admission with their existing owner', async () => {
-  render();
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
+  render({ nodes: [source] });
+  browse('sql');
   await act(() => browser.onSelect({ kind: 'canonical-node', nodeId: source.id }));
   expect(model.selected).toBeNull();
   expect(inspect).toHaveBeenCalledExactlyOnceWith(
@@ -223,14 +269,13 @@ it('keeps resource inspection and SQL capability admission with their existing o
 
 it('opens the existing occurrence or waits for an explicit context choice without allocating one', async () => {
   const instance = { ...first, id: 'placed', definitionId: first.id };
-  render('canvas', [first, instance]);
-  act(() => store.getState().modelBrowser!.onBrowse('sql'));
-  await act(() => browser.onSelect(first.id));
+  render({ nodes: [first, instance] });
+  browse('sql');
   expect(model.selected?.id).toBe(instance.id);
   expect(model.initialView).toBe('sql');
   const other = { ...instance, id: 'other-placement', name: 'Other Model block' };
   act(() => model.close());
-  render('canvas', [first, instance, other]);
+  render({ nodes: [first, instance, other] });
   await act(() => browser.onSelect(first.id));
   expect(model.selected).toBeNull();
   expect(browser.contexts.map((item) => item.nodeId)).toEqual([instance.id, other.id]);

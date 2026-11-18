@@ -5,8 +5,9 @@
  * @consequence View shortcuts reuse the current selection and never author graph state.
  * @version 1.1.0
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type {
   CanvasInspectorCommand,
   CanvasInspectorRequest,
@@ -20,13 +21,20 @@ import type { useCanvasModelSelection } from './useCanvasModelSelection';
 import type { CanonicalNode } from '../../types/canonical';
 import {
   resolveCanvasModelNavigationTarget,
+  resolveCanvasModelViewEntry,
   type CanvasModelNavigationContext,
 } from './canvasModelNavigationTarget';
+import { resolveCanvasExplorerCopy } from './explorer/canvasExplorerCopy';
+import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
+import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
+import { readCanvasModelNavigationPreference } from './canvasModelNavigationPreference';
 
 export function useCanvasModelBrowser({
   canvasId,
   nodes,
   model,
+  projectRoot,
+  catalogueUnavailable = false,
   inspectorTarget,
   showCanvas,
   onInspect,
@@ -34,6 +42,8 @@ export function useCanvasModelBrowser({
   canvasId: string | null;
   nodes: readonly CanonicalNode[];
   model: ReturnType<typeof useCanvasModelSelection>;
+  projectRoot?: string;
+  catalogueUnavailable?: boolean;
   inspectorTarget?: CanvasInspectorResource | null;
   showCanvas: () => void;
   onInspect: CanvasInspectorCommand;
@@ -41,14 +51,27 @@ export function useCanvasModelBrowser({
   const [choice, setChoice] = useState<Readonly<{ owner: object; mode: CanvasModelView }> | null>(
     null
   );
-  const owner = useMemo(() => ({}), [canvasId]);
+  const catalogueKey = model.scopeKey ?? JSON.stringify([canvasId, projectRoot]);
+  const catalogue = useMemo(
+    () => projectCanvasExplorerModels(nodes, canvasId ?? undefined),
+    [nodes, canvasId]
+  );
+  const cataloguePresentation = useCanvasExplorerCatalogPresentation(catalogueKey);
+  const language = useApplicationLanguageStore((state) => state.language);
+  const sourceLabel = resolveCanvasExplorerCopy(language).source;
+  const owner = useMemo(() => ({}), [catalogueKey, catalogueUnavailable]);
   const [pendingContext, setPendingContext] = useState<Readonly<{
     owner: object;
     view: CanvasModelView;
     contexts: readonly CanvasModelNavigationContext[];
   }> | null>(null);
-  const currentOwner = useRef(owner);
-  currentOwner.current = owner;
+  const currentOwner = useRef<object | null>(null);
+  useLayoutEffect(() => {
+    currentOwner.current = owner;
+    return () => {
+      currentOwner.current = null;
+    };
+  }, [owner]);
   const mode = choice?.owner === owner ? choice.mode : null;
   const onCanvas = useCallback(() => {
     if (currentOwner.current !== owner) return;
@@ -104,7 +127,7 @@ export function useCanvasModelBrowser({
   );
   const onBrowse = useCallback(
     (view: CanvasModelView) => {
-      if (canvasId == null || currentOwner.current !== owner) return;
+      if (canvasId == null || catalogueUnavailable || currentOwner.current !== owner) return;
       const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
       const currentTab = tab?.canvasId === canvasId ? tab : null;
       if (currentTab?.views?.disabled) return;
@@ -112,11 +135,17 @@ export function useCanvasModelBrowser({
       setChoice({ owner, mode: view });
       setPendingContext(null);
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' });
-      const selectedId = model.selected?.id;
-      const request =
-        currentTab?.active && currentTab.nodeId === selectedId
-          ? selectedId
-          : (inspectorTarget ?? selectedId);
+      const request = resolveCanvasModelViewEntry({
+        nodes,
+        catalogue,
+        modelIds: model.modelIds,
+        activeEditorId: currentTab?.active ? currentTab.nodeId : undefined,
+        inspected: inspectorTarget,
+        selectedId: model.selected?.id,
+        rememberedId: readCanvasModelNavigationPreference(model.scopeKey),
+        query: cataloguePresentation.query,
+        sourceLabel,
+      });
       if (request != null) {
         void onSelect(request, null, view);
       } else {
@@ -124,15 +153,30 @@ export function useCanvasModelBrowser({
         model.setActive(false);
       }
     },
-    [canvasId, owner, inspectorTarget, model.selected?.id, onSelect, showCanvas, model.setActive]
+    [
+      canvasId,
+      owner,
+      catalogueUnavailable,
+      catalogue,
+      nodes,
+      inspectorTarget,
+      model.selected?.id,
+      model.modelIds,
+      model.scopeKey,
+      cataloguePresentation.query,
+      sourceLabel,
+      onSelect,
+      showCanvas,
+      model.setActive,
+    ]
   );
   useEffect(() => {
-    if (canvasId == null) return;
+    if (canvasId == null || catalogueUnavailable) return;
     const browser = { canvasId, mode, onBrowse, onCanvas };
     const store = useCanvasWorkspaceMenuContributionStore.getState();
     store.registerModelBrowser(browser);
     return () => store.clearModelBrowser(browser);
-  }, [canvasId, mode, onBrowse, onCanvas]);
+  }, [canvasId, catalogueUnavailable, mode, onBrowse, onCanvas]);
   const contexts =
     pendingContext?.owner === owner
       ? pendingContext.contexts.filter((item) => model.modelIds.has(item.nodeId))
@@ -148,6 +192,9 @@ export function useCanvasModelBrowser({
     model.open(nodeId, pendingContext.view);
   };
   return {
+    scopeKey: model.scopeKey,
+    catalogue,
+    cataloguePresentation,
     mode,
     onSelect,
     contexts,

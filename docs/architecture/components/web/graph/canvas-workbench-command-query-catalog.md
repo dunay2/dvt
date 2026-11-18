@@ -178,8 +178,11 @@ Drag, replacement and unmount leave no delayed inspection to dispatch.
 
 The explicit Semantic/SQL browsing mode is a separate navigation intent through
 `SelectCanvasWorkbenchTab`. Its icon reveals the existing project list and opens
-the already selected Model's supported view directly. With no current selection,
-Canvas remains visible until a block is selected. Resolve a definition's
+the requested surface for the current eligible Model, the last accepted Model
+in the same workspace and Canvas, or the first eligible visible catalog result,
+in that order. With no eligible result the catalog handles its empty or
+unavailable state. Preserve an explicit Source or file inspection through its
+supported capability. Resolve a definition's
 existing occurrence context without allocating one, and ask when several
 contexts are possible. Other resources retain `InspectCanvasNode` and their
 actual Code capability. The [Model view contract](../appshell/model-view-navigation.md)

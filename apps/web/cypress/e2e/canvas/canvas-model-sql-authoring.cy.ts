@@ -27,6 +27,17 @@ describe('Model SQL authoring', () => {
       .click()
       .should('have.attr', 'aria-pressed', 'true');
     cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.get('[data-slot="shell-model-sql-command"]').click();
+    cy.get(`${panel} .monaco-editor`).should(($editor) => {
+      const editor = $editor[0]!;
+      const bounds = editor.getBoundingClientRect();
+      const hit = editor.ownerDocument.elementFromPoint(
+        bounds.left + bounds.width / 2,
+        bounds.top + bounds.height / 2
+      );
+      expect(bounds.height, 'initial SQL editor height').to.be.greaterThan(0);
+      expect(editor.contains(hit), 'SQL editor visible inside the workspace').to.equal(true);
+    });
     cy.get('[data-slot="shell-model-semantic-command"]').click();
     cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');

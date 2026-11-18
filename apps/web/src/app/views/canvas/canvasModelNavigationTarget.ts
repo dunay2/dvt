@@ -7,11 +7,56 @@
  */
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
+import type {
+  CanvasInspectorResource,
+  CanvasInspectorRequest,
+} from '../../stores/canvasInspectorTarget';
+import type { CanvasExplorerItem } from './explorer/canvasExplorerItems';
+import {
+  canvasExplorerSearchText,
+  normalizeCanvasExplorerQuery,
+} from './explorer/canvasExplorerSearch';
 
 export type CanvasModelNavigationContext = Readonly<{ nodeId: string; label: string }>;
 export type CanvasModelNavigationTarget =
   | Readonly<{ kind: 'model'; nodeId: string }>
   | Readonly<{ kind: 'contexts'; contexts: readonly CanvasModelNavigationContext[] }>;
+
+export function resolveCanvasModelViewEntry({
+  nodes,
+  catalogue,
+  modelIds,
+  activeEditorId,
+  inspected,
+  selectedId,
+  rememberedId,
+  query,
+  sourceLabel,
+}: Readonly<{
+  nodes: readonly CanonicalNode[];
+  catalogue: readonly CanvasExplorerItem[];
+  modelIds: ReadonlySet<string>;
+  activeEditorId?: string;
+  inspected?: CanvasInspectorResource | null;
+  selectedId?: string;
+  rememberedId?: string;
+  query: string;
+  sourceLabel: string;
+}>): CanvasInspectorRequest | undefined {
+  if (activeEditorId === selectedId && selectedId != null) return selectedId;
+  if (inspected?.kind === 'dbt-file-model') return inspected;
+  if (inspected?.kind === 'canonical-node' && nodes.some((node) => node.id === inspected.nodeId)) {
+    return inspected;
+  }
+  if (selectedId != null) return selectedId;
+  if (rememberedId != null && modelIds.has(rememberedId)) return rememberedId;
+  const search = normalizeCanvasExplorerQuery(query);
+  return catalogue.find(
+    (item) =>
+      modelIds.has(item.id) &&
+      (!search || canvasExplorerSearchText(item, sourceLabel).includes(search))
+  )?.id;
+}
 
 export function resolveCanvasModelNavigationTarget(
   definitionId: string,

@@ -1,7 +1,11 @@
 /** Prove catalog identity resolves an existing context without choosing or allocating an occurrence. */
 import { expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
-import { resolveCanvasModelNavigationTarget } from './canvasModelNavigationTarget';
+import {
+  resolveCanvasModelNavigationTarget,
+  resolveCanvasModelViewEntry,
+} from './canvasModelNavigationTarget';
+import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
 const definition: CanonicalNode = {
   id: 'definition',
   name: 'Model',
@@ -13,6 +17,19 @@ const definition: CanonicalNode = {
 };
 const first = { ...definition, id: 'first', definitionId: definition.id, name: 'Model first' };
 const second = { ...definition, id: 'second', definitionId: definition.id, name: 'Model second' };
+it('admits only matching catalog definitions as the first Model in a filtered Explorer', () => {
+  const matched = { ...definition, id: 'filtered', tags: ['finance'] };
+  const nodes = [first, second, definition, matched];
+  const input = {
+    nodes,
+    catalogue: projectCanvasExplorerModels(nodes),
+    modelIds: new Set(nodes.map((node) => node.id)),
+    sourceLabel: 'Source',
+  };
+  expect(resolveCanvasModelViewEntry({ ...input, query: '' })).toBe(definition.id);
+  expect(resolveCanvasModelViewEntry({ ...input, query: ' FINANCE ' })).toBe(matched.id);
+  expect(resolveCanvasModelViewEntry({ ...input, query: 'no matches' })).toBeUndefined();
+});
 it('keeps an unplaced definition and selects its sole existing context when placed', () => {
   expect(resolveCanvasModelNavigationTarget(definition.id, [definition])).toEqual({
     kind: 'model',

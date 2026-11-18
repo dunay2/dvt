@@ -1,13 +1,19 @@
-import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
   stageWorkbenchUnary,
+  visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import {
   workbenchOperation,
   closeWorkbenchOperations,
 } from '../../support/relationalWorkbench/operationMenu';
 import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
+import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('model-session', () => {
   afterEach(() => {
@@ -32,6 +38,34 @@ describe('model-session', () => {
         cy.get(model).should('not.exist');
       }
     });
+  });
+  it('opens the first Model and restores the last chosen Model after route exit and reload', () => {
+    stubWorkbenchScenario('generated', { includeLooseNode: true });
+    const semantic = '[data-slot="shell-model-semantic-command"]';
+    const row = (id: string): string =>
+      `[data-slot="canvas-explorer-panel"]:visible [data-element-id="${id}"]`;
+    const assertModel = (id: string, name: string): void => {
+      cy.get(row(id)).should('have.attr', 'aria-pressed', 'true');
+      cy.get('[data-slot="canvas-model-editor"]:visible')
+        .should('have.attr', 'aria-label')
+        .and('include', name);
+    };
+
+    visitWorkbenchCanvas();
+    cy.get(semantic).click();
+    assertModel('dvt-transform-1', 'Transform 1');
+    cy.get(row('orphan-transform-1')).click();
+    assertModel('orphan-transform-1', 'Orphan transform');
+    cy.get('[data-slot="left-navigation-link"][href="/admin"]').click();
+    cy.location('pathname').should('eq', '/admin');
+    cy.get('#shell-canvas-navigation').click();
+    cy.get(semantic).click();
+    assertModel('orphan-transform-1', 'Orphan transform');
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    cy.get(semantic).click();
+    assertModel('orphan-transform-1', 'Orphan transform');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
   it('keeps editing or applies local composition changes before closing the Model', () => {
     openEditor();
