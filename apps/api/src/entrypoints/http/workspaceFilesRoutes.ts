@@ -62,14 +62,11 @@ export function registerWorkspaceFilesRoutes(
       try {
         if (typeof directory !== 'string' || (cursor !== undefined && typeof cursor !== 'string'))
           throw new InvalidWorkspacePathError('directory');
-        reply
-          .code(200)
-          .send(
-            await deps.listUseCase.directoryPage(authorized.scope, {
-              directory,
-              ...(cursor === undefined ? {} : { cursor }),
-            })
-          );
+        const page = await deps.listUseCase.directoryPage(authorized.scope, {
+          directory,
+          ...(cursor === undefined ? {} : { cursor }),
+        });
+        reply.code(200).send(page);
       } catch (error) {
         if (!(error instanceof InvalidWorkspacePathError)) throw error;
         httpErrorTranslation.respond(
