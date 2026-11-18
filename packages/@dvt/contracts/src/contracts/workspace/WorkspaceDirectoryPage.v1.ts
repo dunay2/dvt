@@ -1,4 +1,10 @@
-/** A bounded list of direct workspace files uses their project-relative paths and an opaque continuation. */
+/**
+ * Owned concern: define the response for a page of direct workspace files.
+ * @baseline ADR-0062: Server-owned granted workspace context and default
+ * @decision Expose project-relative paths and an opaque continuation bound to the granted workspace.
+ * @consequence Consumers can resume a bounded listing within the same directory and scope.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 export const WORKSPACE_DIRECTORY_PAGE_SIZE = 100;
