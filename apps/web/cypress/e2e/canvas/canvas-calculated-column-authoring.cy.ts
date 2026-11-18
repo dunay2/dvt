@@ -345,14 +345,7 @@ describe('Canvas calculated-column authoring', () => {
     const canvasTab = '[data-slot="canvas-workspace-tab"]';
     const modelTab = '[data-slot="canvas-model-main-tab"]';
     const editorTab = '[data-slot="canvas-model-main-tab"]';
-    const visibleNode = (nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> =>
-      cy
-        .get(`.react-flow__node[data-id="${nodeId}"]`)
-        .filter(':visible')
-        .should('have.length', 1)
-        .first();
-
-    visibleNode('model-orders').find('[data-slot="graph-node-card-title"]').dblclick();
+    openWorkbenchModel('model-orders');
     cy.get(modelTab)
       .should('have.attr', 'aria-selected', 'true')
       .and('contain.text', 'Orders model');
@@ -363,8 +356,9 @@ describe('Canvas calculated-column authoring', () => {
       cy.contains('button', /^Cancel$/).should('not.exist');
     });
 
-    cy.get(canvasTab).click();
-    visibleNode('model-orders-secondary').find('[data-slot="graph-node-card-title"]').dblclick();
+    cy.get(canvasTab).click().should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
+    openWorkbenchModel('model-orders-secondary');
     cy.get(modelTab)
       .should('have.attr', 'aria-selected', 'true')
       .and('contain.text', 'Orders model secondary');

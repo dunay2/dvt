@@ -404,6 +404,10 @@ describe('Workbench viewport', () => {
       cy.press(Cypress.Keyboard.Keys.ENTER);
       cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true').click();
       cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true');
+      cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
+      cy.get('[data-slot="canvas-model-main-tab"]')
+        .should('have.attr', 'aria-selected', 'false')
+        .click();
       cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
       assertExplorerWidth(model, 32);
       cy.get(modelSearch).should('have.value', 'customers').clear();
