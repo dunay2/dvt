@@ -16,6 +16,18 @@ canonical command and source file for each one.
 - Map each capability to the workflow or script that enforces it in CI.
 - Reduce ambiguity when extending quality gates or adding new workspaces.
 
+Dependabot's npm `testing` group keeps `vitest`, `@vitest/*`, and
+`@testing-library/*` proposals together. Each testing pattern must match a
+declared dependency. Every tracked manifest's Vitest
+declarations and pnpm overrides must match the root runner's pinned version;
+first-match grouping, exclusions, and ignores must not split that family or
+exclude any semantic update level. The focused
+`tools/ci/dependabot-testing-family.test.mjs` contract runs in the existing
+executable CI-tool partition. Grouping proposes a joint review; dependency
+compatibility, explicit major-version migration, and all required checks still
+determine acceptance. The rationale and current-to-target diagram are recorded
+in [#3951](https://github.com/dunay2/dvt/issues/3951#issuecomment-6968415355).
+
 See also:
 
 - [`test-architecture.md`](./test-architecture.md) for repository rules on test taxonomy, harnesses, fixtures, and promotion to shared utilities.

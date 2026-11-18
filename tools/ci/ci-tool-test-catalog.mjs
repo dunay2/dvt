@@ -43,6 +43,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/arc-policy-state-store.test.mjs',
   TOOLING_CRYPTO_CONTRACT.testPath,
   'tools/ci/contracts-package-governance.test.mjs',
+  'tools/ci/dependabot-testing-family.test.mjs',
   'tools/ci/docs-changed-governance-policy.test.mjs',
   'tools/ci/docs-disposition-canon.test.mjs',
   'tools/ci/docs-frontmatter-policy.test.mjs',
