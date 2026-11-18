@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.23.0 (2026-11-18)
+
+## What's Changed
+* feat(web): Open Model Output and generate SQL on demand by @dunay2 in https://github.com/dunay2/dvt/pull/3941
+* feat(api): Apply governed simplification to inspected Model SQL by @dunay2 in https://github.com/dunay2/dvt/pull/3943
+* fix(ci): Admit native rail declarations before implementation by @dunay2 in https://github.com/dunay2/dvt/pull/3946
+* feat(web): Add a SQL authoring pane to the Model workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3948
+* feat(web): Keep project Models visible across semantic and SQL views by @dunay2 in https://github.com/dunay2/dvt/pull/3949
+* feat(web): Compose independent working Models inside the semantic Canvas by @dunay2 in https://github.com/dunay2/dvt/pull/3952
+* fix(ci): Close browser regressions and consolidate dependency maintenance by @dunay2 in https://github.com/dunay2/dvt/pull/3953
+* fix(web): Open the selected Model from its view shortcuts by @dunay2 in https://github.com/dunay2/dvt/pull/3962
+* style(web): Align Templates with shared application presentation by @dunay2 in https://github.com/dunay2/dvt/pull/3963
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.22.6...v0.23.0
+
 ## 0.22.6 (2026-11-15)
 
 ## What's Changed
