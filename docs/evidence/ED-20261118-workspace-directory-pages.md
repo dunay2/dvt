@@ -37,4 +37,4 @@ with its original revision. Exact candidate and CI results belong to
 [#3975](https://github.com/dunay2/dvt/issues/3975).
 
 See the [component contract](../architecture/components/web/workspace/workspace-port-decomposition-component.md)
-and [risk controls](../risk-register/R-20261118-workspace-directory-pages.md).
+and [risk controls](../risk-register/workspace-directory-pages-20261118.md).
