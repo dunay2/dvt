@@ -21,6 +21,8 @@ import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
 import { CanvasOperationInspectorTabs } from './CanvasRelationalTreeEditorFrame';
 import { useCanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 import styles from './CanvasRelationalTreeWorkbench.module.css';
+import { CanvasModelCompositionDropSurface } from './CanvasModelCompositionDropSurface';
+import { useCanvasModelBrowserPresentation } from './CanvasModelBrowser';
 import {
   useCanvasRelationalTreeWorkbenchHandle,
   type CanvasRelationalTreeWorkbenchHandle,
@@ -30,9 +32,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
   CanvasRelationalTreeWorkbenchProps
 >(function CanvasRelationalTreeWorkbench(props, ref) {
+  const browser = useCanvasModelBrowserPresentation();
   return (
     <CanvasRelationalTreeWorkbenchSession
-      key={props.layoutKey ?? props.transformNode.id}
+      key={JSON.stringify([props.layoutKey ?? props.transformNode.id, browser?.scopeKey])}
       {...props}
       ref={ref}
     />
@@ -42,7 +45,7 @@ const CanvasRelationalTreeWorkbenchSession = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
   CanvasRelationalTreeWorkbenchProps
 >(function CanvasRelationalTreeWorkbenchSession(props, ref) {
-  const { transformNode, nodes, edges, copy, authoring, actionsHost, preview, layoutKey } = props;
+  const { transformNode, copy, authoring, actionsHost, preview, layoutKey } = props;
   const focus = useCanvasWorkbenchFocusRecovery();
   const model = useCanvasRelationalTreeWorkbenchModel(props);
   const [pendingCondition, setPendingCondition] = useState(false);
@@ -116,21 +119,27 @@ const CanvasRelationalTreeWorkbenchSession = forwardRef<
                   resetRevision={presentationRevision}
                   active={props.active}
                 >
-                  <CanvasRelationalTreeContent
-                    model={model}
-                    authoring={authoring}
-                    transformNode={transformNode}
-                    nodes={nodes}
-                    edges={edges}
-                    copy={copy}
-                    expanded={expanded}
-                    onExpandedChange={setExpanded}
-                    onPendingConditionChange={setPendingCondition}
-                    pendingCondition={pending}
-                    onSelectRelation={navigation.select}
-                    modelOutput={modelOutput}
-                    codeProjection={props.codeProjection}
-                  />
+                  <CanvasModelCompositionDropSurface
+                    enabled={model.authoringAvailable && !pending}
+                    modelName={transformNode.name}
+                    onCopy={model.modelComposition.copy}
+                  >
+                    <CanvasRelationalTreeContent
+                      model={model}
+                      authoring={authoring}
+                      transformNode={transformNode}
+                      nodes={model.nodes}
+                      edges={model.edges}
+                      copy={copy}
+                      expanded={expanded}
+                      onExpandedChange={setExpanded}
+                      onPendingConditionChange={setPendingCondition}
+                      pendingCondition={pending}
+                      onSelectRelation={navigation.select}
+                      modelOutput={modelOutput}
+                      codeProjection={props.codeProjection}
+                    />
+                  </CanvasModelCompositionDropSurface>
                 </CanvasOperationInspectorTabs>
               </CanvasRelationAnalysisContext.Provider>
             </CanvasCardRemovalContext.Provider>

@@ -3,7 +3,7 @@
  * Reason: catalogue rows and metadata disclosure evolve independently of retained docking.
  * Corner invariant: disclosure never selects or places a model; click inspection and drag retain their owners.
  */
-import { Box, Search, Plus, ChevronRight, ChevronDown } from 'lucide-react';
+import { Box, Search, Plus, CopyPlus, ChevronRight, ChevronDown } from 'lucide-react';
 import { useId, type DragEvent, type JSX, type ReactNode } from 'react';
 import {
   Collapsible,
@@ -11,7 +11,7 @@ import {
   CollapsibleContent,
 } from '../../../components/ui/collapsible';
 import { useCanvasNodeActivation } from '../../../components/canvas/useCanvasNodeActivation';
-import type { CanvasExplorerCopy } from './CanvasExplorer.types';
+import type { CanvasExplorerCopy, CanvasExplorerModelAction } from './CanvasExplorer.types';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import styles from './CanvasExplorer.module.css';
 
@@ -78,6 +78,7 @@ function CanvasExplorerModelRow({
   disabled,
   onSelect,
   onDragStart,
+  modelAction,
 }: Readonly<{
   id: string;
   item: CanvasExplorerItem;
@@ -87,6 +88,7 @@ function CanvasExplorerModelRow({
   disabled?: boolean;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
+  modelAction?: CanvasExplorerModelAction;
 }>): JSX.Element {
   const unavailable = disabled || item.disabled;
   const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
@@ -143,6 +145,20 @@ function CanvasExplorerModelRow({
             </span>
           </span>
         </button>
+        {draggable && modelAction != null ? (
+          <button
+            type="button"
+            className={styles.headerAction}
+            aria-label={`${modelAction.label}: ${item.label}`}
+            title={`${modelAction.label}: ${item.label}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              modelAction.onActivate(item.id);
+            }}
+          >
+            <CopyPlus aria-hidden="true" />
+          </button>
+        ) : null}
         {item.details?.length ? (
           <button
             type="button"
@@ -184,6 +200,7 @@ export function CanvasExplorerListTemplate({
   onQuery,
   onSelect,
   onDragStart,
+  modelAction,
   onAddModel,
   connections,
   status,
@@ -201,6 +218,7 @@ export function CanvasExplorerListTemplate({
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
+  modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
   connections?: ReactNode;
   status?: ReactNode;
@@ -255,6 +273,7 @@ export function CanvasExplorerListTemplate({
               disabled={disabled}
               onSelect={onSelect}
               onDragStart={onDragStart}
+              modelAction={modelAction}
             />
           ))}
         </ul>

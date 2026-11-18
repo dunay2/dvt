@@ -18,11 +18,19 @@ import { CanvasModelContextPicker } from './CanvasModelContextPicker';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasExplorerCatalogPresentation } from './explorer/CanvasExplorer.types';
 import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
+import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 export type CanvasModelBrowserPresentation = Readonly<{
+  scopeKey: string | null;
   mode: CanvasModelView | null;
   onSelect: CanvasInspectorCommand;
-  catalog: ReactNode;
+  catalog: (
+    composition?: Readonly<{
+      nodeIds: ReadonlySet<string>;
+      copy: (id: string) => boolean;
+      label: string;
+    }>
+  ) => ReactNode;
   cataloguePresentation: CanvasExplorerCatalogPresentation;
 }>;
 export const CanvasModelBrowser = createContext<CanvasModelBrowserPresentation | null>(null);
@@ -51,6 +59,17 @@ export function CanvasModelBrowserProvider({
   onManageConnections?: () => void;
   children: ReactNode;
 }>): JSX.Element {
+  const scopeKey =
+    canvasId == null || workspaceScope == null
+      ? null
+      : JSON.stringify([
+          workspaceScope.tenantId,
+          workspaceScope.projectId,
+          workspaceScope.environmentId,
+          workspaceScope.targetAdapter,
+          canvasId,
+          projectRoot,
+        ]);
   const cataloguePresentation = useCanvasExplorerCatalogPresentation(
     JSON.stringify([
       workspaceScope?.tenantId,
@@ -74,12 +93,32 @@ export function CanvasModelBrowserProvider({
     <CanvasModelBrowser.Provider
       value={{
         ...navigation,
+        scopeKey,
         cataloguePresentation,
-        catalog: (
+        catalog: (composition) => (
           <CanvasProjectElementsExplorer
             enabled={active && navigation.mode != null}
             projectRoot={projectRoot}
-            items={items}
+            items={items.map((item) => ({
+              ...item,
+              draggable: composition?.nodeIds.has(item.id) === true,
+            }))}
+            modelAction={
+              composition == null
+                ? undefined
+                : { label: composition.label, onActivate: composition.copy }
+            }
+            onDragStart={(id, event) => {
+              if (!composition?.nodeIds.has(id) || scopeKey == null) {
+                event.preventDefault();
+                return;
+              }
+              event.dataTransfer.setData(
+                CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+                JSON.stringify({ id, scopeKey })
+              );
+              event.dataTransfer.effectAllowed = 'copy';
+            }}
             presentation={cataloguePresentation}
             catalogueScopeKey={canvasId ?? undefined}
             onInspectNode={navigation.onSelect}

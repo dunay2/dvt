@@ -23,6 +23,7 @@ import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 import type { CanvasColumnMappingSource } from './canvasColumnMappingModel';
 import type { CanvasModelIconPreference } from './canvasModelIdentity';
+import type { CanvasModelCompositionCopy } from './canvasModelCompositionCandidate';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -63,6 +64,7 @@ export type CanvasInspectorNodeDraftApplyResult =
 
 export type CanvasInspectorNodeDraftInputChanges = Readonly<{
   inputAdditions: readonly CanvasColumnMappingSource[];
+  modelCopies?: readonly CanvasModelCompositionCopy[];
   signal?: AbortSignal;
 }>;
 

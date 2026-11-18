@@ -1,6 +1,10 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyEs = {
+  relationalModelCopyDropLabel: 'Añadir una copia independiente a',
+  relationalModelCopyAddLabel: 'Añadir copia de trabajo',
+  relationalModelCopyUnavailableMessage:
+    'No se puede copiar este modelo aquí. Revisa su autoridad nativa, las entradas y el permiso de edición.',
   sourceOccurrenceFieldsUnavailable: 'No se han podido analizar los campos de esta relación.',
   sourceOccurrenceAdd: 'Añadir instancia',
   sourceOccurrenceAlias: 'Alias de instancia',

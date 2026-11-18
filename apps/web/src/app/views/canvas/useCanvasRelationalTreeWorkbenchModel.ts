@@ -11,9 +11,7 @@ import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
 import type { CanonicalNode } from '../../types/canonical';
 
-import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
-import { projectCanvasRelationalComposition } from './canvasRelationalCompositionTruth';
-import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import { useCanvasRelationalTreeAnalysis } from './useCanvasRelationalTreeAnalysis';
 import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
@@ -29,6 +27,9 @@ import type {
   CanvasRelationalTreeWorkbenchProps,
 } from './canvasRelationalTreeWorkbench.types';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
+import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
+import { useCanvasModelCompositionDrop } from './useCanvasModelCompositionDrop';
+import { getPluginPortMap } from '../../plugins/registry';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
   return (
@@ -40,36 +41,40 @@ export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boole
 }
 
 export function useCanvasRelationalTreeWorkbenchModel(
-  args: Pick<
+  inputArgs: Pick<
     CanvasRelationalTreeWorkbenchProps,
     'transformNode' | 'nodes' | 'edges' | 'copy' | 'authoring'
   >
 ) {
-  const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
-  const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
-  const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
-  const projection = result.ok ? result.projection : null;
-  const outputPlanRelationIds = useMemo(
-    () => new Set(analysis.semantic?.index.relations.keys()),
-    [analysis.semantic]
-  );
-  const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
-  const { inputs, projectedInputs } = analysis;
+  const state = useCanvasRelationalTreeDraftState();
+  const query = useCanvasRelationalTreeAnalysis({ ...inputArgs, copies: state.modelCopies });
+  const { graph, analysis, result, projection, composition, outputPlanRelationIds } = query;
+  const args = { ...inputArgs, ...graph };
+  const pluginPorts = useMemo(() => getPluginPortMap(), []);
   const pendingAuthoring =
     args.authoring != null &&
     canAuthorCanvasRelationalTree(analysis, projection, composition, args.transformNode);
   const session = useCanvasRelationalTreeAuthoringSession({
+    state,
+    persisted: query.persisted,
     enabled: pendingAuthoring,
     transformNode: args.transformNode,
     nodes: args.nodes,
     edges: args.edges,
-    inputs,
-    projection,
-    document: analysis.semantic?.document ?? null,
+    inputs: analysis.inputs,
     authoring: args.authoring,
   });
   const authoringAvailable =
     pendingAuthoring && args.authoring?.canEditNode === true && !session.restorationUnavailable;
+  const modelComposition = useCanvasModelCompositionDrop({
+    ...graph,
+    targetId: args.transformNode.id,
+    enabled: authoringAvailable,
+    pluginPorts,
+    state,
+    start: session.start,
+    analysis: session.analysis,
+  });
   const { sourceInputRecovery } = session;
   const sourceOutputFieldsByRelationId = useMemo(
     () =>
@@ -142,13 +147,9 @@ export function useCanvasRelationalTreeWorkbenchModel(
   };
 
   return {
-    inputRevision: JSON.stringify(
-      sourceInputRecovery.inputs
-        .filter(({ nodeId }) =>
-          projectedInputs.some((read) => read.sourceNodeId === nodeId && read.relationId != null)
-        )
-        .map((input) => [input.nodeId, input.fields, input.inputBindings])
-    ),
+    ...graph,
+    modelComposition,
+    inputRevision: query.inputRevisionFor(sourceInputRecovery.inputs),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
     connectedModelRelationIds: analysis.connectedModelRelationIds,
     outputPlanRelationIds,

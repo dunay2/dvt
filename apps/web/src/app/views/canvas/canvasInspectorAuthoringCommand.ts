@@ -16,6 +16,8 @@ import type { WorkspaceScope } from '../../ports/sessionContext';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { modelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 import { bindCanvasInputField } from './canvasInputBindingAuthoring';
+import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import { admitCanvasModelCopiesToSession } from './canvasModelCompositionCandidate';
 
 export function applyCanvasInspectorNodeDraftToSession(args: {
   draftSession: CanvasDraftSession;
@@ -68,7 +70,11 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
 /** Build the edge and node changes privately; the route owns the single CAS publication. */
 export async function applyCanvasInspectorNodeDraftWithInputsToSession(
   args: Parameters<typeof applyCanvasInspectorNodeDraftToSession>[0] &
-    Readonly<{ changes: CanvasInspectorNodeDraftInputChanges; editable: boolean }>
+    Readonly<{
+      changes: CanvasInspectorNodeDraftInputChanges;
+      editable: boolean;
+      pluginPorts?: PluginPortMap;
+    }>
 ): Promise<CanvasInspectorNodeDraftApplyResult> {
   if (!args.editable) return { outcome: 'rejected', reason: 'node_unavailable' };
   const { signal } = args.changes;
@@ -80,6 +86,20 @@ export async function applyCanvasInspectorNodeDraftWithInputsToSession(
     ])
   );
   let candidate = args.draftSession;
+  if ((args.changes.modelCopies?.length ?? 0) > 0) {
+    if (args.pluginPorts == null) return { outcome: 'rejected', reason: 'invalid_draft' };
+    try {
+      candidate = admitCanvasModelCopiesToSession({
+        draftSession: candidate,
+        canonicalNodesById: args.canonicalNodesById,
+        copies: args.changes.modelCopies!,
+        targetId: args.node.id,
+        pluginPorts: args.pluginPorts,
+      });
+    } catch {
+      return { outcome: 'rejected', reason: 'invalid_draft' };
+    }
+  }
   for (const source of additions.values()) {
     const result = await bindCanvasInputField({
       draftSession: candidate,

@@ -18,6 +18,7 @@ export function CanvasProjectElementsExplorer({
   catalogueScopeKey,
   presentation,
   onDragStart,
+  modelAction,
   onAddModel,
   onImport,
   connections,
@@ -55,6 +56,7 @@ export function CanvasProjectElementsExplorer({
       items={mergeCanvasExplorerModels(items, models)}
       presentation={presentation}
       onAddModel={onAddModel}
+      modelAction={modelAction}
       onImport={onImport}
       connections={connections}
       countKnown={!loading && !unavailable}

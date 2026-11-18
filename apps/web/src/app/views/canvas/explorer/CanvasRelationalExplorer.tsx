@@ -14,6 +14,8 @@ import { useCanvasModelBrowserPresentation } from '../CanvasModelBrowser';
 import { CanvasModelInputsPalette } from './CanvasModelInputsPalette';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import { resolveCanvasViewCopy } from '../copy';
+import { toast } from 'sonner';
 
 export function CanvasRelationalExplorer({
   model,
@@ -53,7 +55,20 @@ export function CanvasRelationalExplorer({
           catalogue
         ) : (
           <>
-            {browser.catalog}
+            {browser.catalog(
+              pending
+                ? undefined
+                : {
+                    ...model.modelComposition,
+                    label: resolveCanvasViewCopy().relationalModelCopyAddLabel,
+                    copy: (id) => {
+                      const accepted = model.modelComposition.copy(id);
+                      if (!accepted)
+                        toast.error(resolveCanvasViewCopy().relationalModelCopyUnavailableMessage);
+                      return accepted;
+                    },
+                  }
+            )}
             <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
           </>
         )
