@@ -29,6 +29,10 @@ import type {
   CanvasRelationalTreeWorkbenchProps,
 } from './canvasRelationalTreeWorkbench.types';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
+import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
+import { projectCanvasModelCopies } from './canvasModelCompositionCandidate';
+import { useCanvasModelCompositionDrop } from './useCanvasModelCompositionDrop';
+import { getPluginPortMap } from '../../plugins/registry';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
   return (
@@ -40,11 +44,33 @@ export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boole
 }
 
 export function useCanvasRelationalTreeWorkbenchModel(
-  args: Pick<
+  inputArgs: Pick<
     CanvasRelationalTreeWorkbenchProps,
     'transformNode' | 'nodes' | 'edges' | 'copy' | 'authoring'
   >
 ) {
+  const state = useCanvasRelationalTreeDraftState();
+  const graph = useMemo(
+    () =>
+      projectCanvasModelCopies({
+        nodes: inputArgs.nodes,
+        edges: inputArgs.edges,
+        copies: state.modelCopies,
+      }),
+    [inputArgs.nodes, inputArgs.edges, state.modelCopies]
+  );
+  const args = { ...inputArgs, ...graph };
+  const pluginPorts = useMemo(() => getPluginPortMap(), []);
+  const readPersistedAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
+  const persistedAnalysis = readPersistedAnalysis({
+    node: inputArgs.transformNode,
+    nodes: inputArgs.nodes,
+    edges: inputArgs.edges,
+  });
+  const persistedResult = useMemo(
+    () => projectAnalyzedCanvasRelationalTree(persistedAnalysis),
+    [persistedAnalysis]
+  );
   const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
   const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
   const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
@@ -59,6 +85,12 @@ export function useCanvasRelationalTreeWorkbenchModel(
     args.authoring != null &&
     canAuthorCanvasRelationalTree(analysis, projection, composition, args.transformNode);
   const session = useCanvasRelationalTreeAuthoringSession({
+    state,
+    persisted: {
+      projection: persistedResult.ok ? persistedResult.projection : null,
+      document: persistedAnalysis.semantic?.document ?? null,
+      inputs: persistedAnalysis.inputs,
+    },
     enabled: pendingAuthoring,
     transformNode: args.transformNode,
     nodes: args.nodes,
@@ -70,6 +102,15 @@ export function useCanvasRelationalTreeWorkbenchModel(
   });
   const authoringAvailable =
     pendingAuthoring && args.authoring?.canEditNode === true && !session.restorationUnavailable;
+  const modelComposition = useCanvasModelCompositionDrop({
+    ...graph,
+    targetId: args.transformNode.id,
+    enabled: authoringAvailable,
+    pluginPorts,
+    state,
+    start: session.start,
+    analysis: session.analysis,
+  });
   const { sourceInputRecovery } = session;
   const sourceOutputFieldsByRelationId = useMemo(
     () =>
@@ -142,6 +183,8 @@ export function useCanvasRelationalTreeWorkbenchModel(
   };
 
   return {
+    ...graph,
+    modelComposition,
     inputRevision: JSON.stringify(
       sourceInputRecovery.inputs
         .filter(({ nodeId }) =>

@@ -25,20 +25,26 @@ export function useCanvasRelationalTreeAuthoringSession(
     projection: CanvasRelationalTreeProjection | null;
     document: SubstraitDocument | null;
     authoring?: W.CanvasRelationalTreeAuthoringContract;
+    state: ReturnType<typeof useCanvasRelationalTreeDraftState>;
+    persisted: Readonly<{
+      projection: CanvasRelationalTreeProjection | null;
+      document: SubstraitDocument | null;
+      inputs: readonly CanvasDvtCompositionInput[];
+    }>;
   }>
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
-  const state = useCanvasRelationalTreeDraftState();
+  const { state } = args;
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
-    document: args.document,
-    projection: args.projection,
+    document: args.persisted.document,
+    projection: args.persisted.projection,
     onHydrate: state.hydrate,
   });
   const hydration = useCanvasRelationalAuthoringDraftHydration({
     enabled,
     transformNode,
-    document: args.document,
-    inputs,
+    document: args.persisted.document,
+    inputs: args.persisted.inputs,
     hydrateExisting,
     state,
   });
@@ -119,13 +125,23 @@ export function useCanvasRelationalTreeAuthoringSession(
   ): W.CanvasRelationalTreeApplyResult | Promise<W.CanvasRelationalTreeApplyResult> => {
     if (sourceOutputInitialization.blocked || sourceInputRecovery.isPending())
       return { outcome: 'rejected', reason: 'source_output_unavailable' };
-    if (sourceInputRecovery.additions.length === 0) return apply(document);
-    return sourceInputRecovery.runApply((lifetime) =>
-      apply(document, {
-        inputAdditions: sourceInputRecovery.additions,
-        signal: signal == null ? lifetime : AbortSignal.any([signal, lifetime]),
-      })
-    );
+    const settle = (
+      result: W.CanvasRelationalTreeApplyResult
+    ): W.CanvasRelationalTreeApplyResult => {
+      if (result.outcome !== 'rejected') state.clearModelCopies();
+      return result;
+    };
+    if (sourceInputRecovery.additions.length === 0 && state.modelCopies.length === 0)
+      return apply(document);
+    return sourceInputRecovery
+      .runApply((lifetime) =>
+        apply(document, {
+          inputAdditions: sourceInputRecovery.additions,
+          modelCopies: state.modelCopies,
+          signal: signal == null ? lifetime : AbortSignal.any([signal, lifetime]),
+        })
+      )
+      .then(settle);
   };
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
@@ -171,7 +187,13 @@ export function useCanvasRelationalTreeAuthoringSession(
     positions: state.positions,
     setPositions: state.setPositions,
     hasIncompleteGraph: prepared.hasIncompleteGraph,
-    hasOutputChanges: prepared.hasOutputChanges || sourceInputRecovery.additions.length > 0,
-    hasDraftChanges: prepared.hasDraftChanges || sourceInputRecovery.additions.length > 0,
+    hasOutputChanges:
+      prepared.hasOutputChanges ||
+      sourceInputRecovery.additions.length > 0 ||
+      state.modelCopies.length > 0,
+    hasDraftChanges:
+      prepared.hasDraftChanges ||
+      sourceInputRecovery.additions.length > 0 ||
+      state.modelCopies.length > 0,
   } as const;
 }

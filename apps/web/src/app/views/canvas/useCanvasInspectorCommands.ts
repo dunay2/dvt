@@ -23,6 +23,7 @@ import type { WorkspaceScope } from '../../ports/sessionContext';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { useCanvasColumnDraftCommand } from './useCanvasColumnDraftCommand';
+import { getPluginPortMap } from '../../plugins/registry';
 
 type UseCanvasInspectorCommandsArgs = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -88,6 +89,7 @@ export function useCanvasInspectorCommands({
             draft,
             workspaceScope: current.workspaceScope,
             editable: current.canEditNode,
+            pluginPorts: getPluginPortMap(),
             changes: { ...changes, signal },
           });
           signal.throwIfAborted();

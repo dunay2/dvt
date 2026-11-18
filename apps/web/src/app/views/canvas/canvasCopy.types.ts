@@ -2,6 +2,9 @@
 export type CanvasDisabledCapability = 'plan_preview' | 'run_start' | 'graph_edits';
 
 export type CanvasViewCopy = {
+  readonly relationalModelCopyDropLabel: string;
+  readonly relationalModelCopyUnavailableMessage: string;
+  readonly relationalModelCopyAddLabel: string;
   readonly sourceOccurrenceFieldsUnavailable: string;
   readonly sourceOccurrenceAdd: string;
   readonly sourceOccurrenceAlias: string;

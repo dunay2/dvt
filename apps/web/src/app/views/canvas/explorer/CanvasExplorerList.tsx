@@ -6,7 +6,10 @@ import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { CanvasExplorerConnections } from './CanvasExplorerConnections';
 import styles from './CanvasExplorer.module.css';
-import type { CanvasExplorerCatalogPresentation } from './CanvasExplorer.types';
+import type {
+  CanvasExplorerCatalogPresentation,
+  CanvasExplorerModelAction,
+} from './CanvasExplorer.types';
 import { useCanvasExplorerCatalogPresentation } from './useCanvasExplorerCatalogPresentation';
 
 export function CanvasExplorerList({
@@ -14,6 +17,7 @@ export function CanvasExplorerList({
   onSelect,
   disabled,
   onDragStart,
+  modelAction,
   onAddModel,
   onImport,
   connections,
@@ -27,6 +31,7 @@ export function CanvasExplorerList({
   onSelect: (id: string) => unknown;
   disabled?: boolean;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
+  modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onImport?: () => void;
   connections?: ReactNode;
@@ -96,6 +101,7 @@ export function CanvasExplorerList({
       }}
       disabled={disabled}
       onDragStart={onDragStart}
+      modelAction={modelAction}
       onAddModel={onAddModel}
       status={
         inspectionFailed ? (

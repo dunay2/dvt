@@ -6,11 +6,7 @@
  * @version 1.0.0
  */
 
-import {
-  allocateDvtFieldId,
-  allocateDvtRelationId,
-  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
-} from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY } from '@dvt/contracts';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -18,6 +14,7 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
+import { copyCanvasSemanticDocument } from './canvasSemanticDocumentCopy';
 
 type CanvasDuplicateSourceNode = Readonly<{
   id: string;
@@ -98,40 +95,10 @@ export function buildDuplicateNodeCommand({
   ) {
     const authority = readDvtTransformAuthoringAuthority(canonicalNode);
     if (authority != null) {
-      const { sidecar } = authority.semanticDocument;
-      const relationIds = new Map(
-        sidecar.relations.map((relation) => [relation.relationId, allocateDvtRelationId()])
+      canonicalNode = applyDvtSubstraitSemanticDocument(
+        canonicalNode,
+        copyCanvasSemanticDocument(authority.semanticDocument)
       );
-      const fieldIds = new Map(
-        sidecar.fields.map((field) => [field.fieldId, allocateDvtFieldId()])
-      );
-      canonicalNode = applyDvtSubstraitSemanticDocument(canonicalNode, {
-        ...authority.semanticDocument,
-        sidecar: {
-          ...sidecar,
-          relations: sidecar.relations.map((relation) => ({
-            ...relation,
-            relationId: relationIds.get(relation.relationId)!,
-            ...(relation.authoringOwnerRelationId == null
-              ? {}
-              : { authoringOwnerRelationId: relationIds.get(relation.authoringOwnerRelationId)! }),
-          })),
-          fields: sidecar.fields.map((field) => ({
-            ...field,
-            fieldId: fieldIds.get(field.fieldId)!,
-            relationId: relationIds.get(field.relationId)!,
-            ...(field.sourceFieldId == null
-              ? {}
-              : { sourceFieldId: fieldIds.get(field.sourceFieldId)! }),
-            ...(field.parentFieldId == null
-              ? {}
-              : { parentFieldId: fieldIds.get(field.parentFieldId)! }),
-            ...(field.operandFieldIds == null
-              ? {}
-              : { operandFieldIds: field.operandFieldIds.map((id) => fieldIds.get(id)!) }),
-          })),
-        },
-      });
     }
   }
   return {

@@ -10,26 +10,12 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CardPosition } from './canvasRelationalTreeGeometry';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import type { prepareCanvasSourceOccurrenceInputRecovery } from './canvasSourceOccurrenceInputRecovery';
-
-type GraphSnapshot = Readonly<{
-  joinDraft: SubstraitDocument | null;
-  pendingSources: readonly PendingSourceOccurrence[];
-  stagedOperations: readonly CanvasStagedOperation[];
-  outputRelationId: string | null;
-  inputRecovery:
-    | (Awaited<ReturnType<typeof prepareCanvasSourceOccurrenceInputRecovery>> & {
-        authorityIdentity: string;
-      })
-    | null;
-}>;
-const emptyGraph: GraphSnapshot = {
-  joinDraft: null,
-  pendingSources: [],
-  stagedOperations: [],
-  outputRelationId: null,
-  inputRecovery: null,
-};
+import type { CanvasModelCompositionCopy } from './canvasModelCompositionCandidate';
+import {
+  emptyGraph,
+  retainReferencedModelCopies,
+  type GraphSnapshot,
+} from './canvasRelationalTreeDraftGraph';
 
 export function useCanvasRelationalTreeDraftState() {
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
@@ -43,7 +29,9 @@ export function useCanvasRelationalTreeDraftState() {
           typeof update === 'function'
             ? (update as (previous: GraphSnapshot[K]) => GraphSnapshot[K])(current[key])
             : update;
-        return value === current[key] ? current : { ...current, [key]: value };
+        return value === current[key]
+          ? current
+          : retainReferencedModelCopies({ ...current, [key]: value });
       });
     },
     []
@@ -99,6 +87,17 @@ export function useCanvasRelationalTreeDraftState() {
     [replaceInputs]
   );
   return {
+    modelCopies: graph.modelCopies,
+    appendModelCopy: (addition: CanvasModelCompositionCopy, source: PendingSourceOccurrence) => {
+      setGraph((current) => ({
+        ...current,
+        modelCopies: [...current.modelCopies, addition],
+        pendingSources: [...current.pendingSources, source],
+      }));
+      setPendingSourceId(source.read.binding.relationId);
+      setSelectedStagedOperationId(null);
+    },
+    clearModelCopies: () => updateGraph('modelCopies', []),
     graphSnapshot: graph,
     commitInputRecovery: useCallback(
       (expected: GraphSnapshot, recovery: NonNullable<GraphSnapshot['inputRecovery']>) => {
@@ -170,13 +169,15 @@ export function useCanvasRelationalTreeDraftState() {
         }>
       ) => {
         setActive(true);
-        setGraph((current) => ({
-          ...current,
-          pendingSources: draft.sources,
-          stagedOperations: draft.operations,
-          outputRelationId: draft.outputRelationId,
-          inputRecovery: null,
-        }));
+        setGraph((current) =>
+          retainReferencedModelCopies({
+            ...current,
+            pendingSources: draft.sources,
+            stagedOperations: draft.operations,
+            outputRelationId: draft.outputRelationId,
+            inputRecovery: null,
+          })
+        );
         setPendingSourceId(null);
         setSelectedStagedOperationId(null);
         setPositions((current) => new Map([...current, ...draft.positions]));
@@ -187,7 +188,11 @@ export function useCanvasRelationalTreeDraftState() {
       setActive(true);
       setOperation(null);
       resetOperands();
-      setGraph((current) => ({ ...emptyGraph, pendingSources: current.pendingSources }));
+      setGraph((current) => ({
+        ...emptyGraph,
+        pendingSources: current.pendingSources,
+        modelCopies: current.modelCopies,
+      }));
       setPendingSourceId(null);
       setSelectedStagedOperationId(null);
       setApplyRejection(null);
