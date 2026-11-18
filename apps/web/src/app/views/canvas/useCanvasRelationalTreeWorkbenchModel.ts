@@ -72,7 +72,10 @@ export function useCanvasRelationalTreeWorkbenchModel(
     [persistedAnalysis]
   );
   const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
-  const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
+  const analysis =
+    graph.nodes === inputArgs.nodes && graph.edges === inputArgs.edges
+      ? persistedAnalysis
+      : readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
   const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
   const projection = result.ok ? result.projection : null;
   const outputPlanRelationIds = useMemo(

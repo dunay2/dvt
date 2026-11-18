@@ -37,7 +37,7 @@ export function CanvasModelCompositionDropSurface({
       className={styles.compositionSurface}
       data-slot="canvas-model-composition-target"
       onDragEnterCapture={(event) => {
-        if (!event.dataTransfer.types.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
+        if (!event.dataTransfer?.types?.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
         depth.current += 1;
         setHover(true);
         setFailed(false);
@@ -47,13 +47,13 @@ export function CanvasModelCompositionDropSurface({
         if (depth.current === 0) setHover(false);
       }}
       onDragOverCapture={(event) => {
-        if (!event.dataTransfer.types.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
+        if (!event.dataTransfer?.types?.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
         event.preventDefault();
         event.stopPropagation();
         event.dataTransfer.dropEffect = enabled ? 'copy' : 'none';
       }}
       onDropCapture={(event) => {
-        if (!event.dataTransfer.types.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
+        if (!event.dataTransfer?.types?.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
         event.preventDefault();
         event.stopPropagation();
         depth.current = 0;
