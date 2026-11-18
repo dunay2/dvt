@@ -6,7 +6,7 @@
  * @consequence Removing a pending Read cannot later publish an orphan working definition.
  * @version 1.0.0
  */
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import type { CanvasModelCompositionCopy } from './canvasModelCompositionCandidate';
@@ -32,6 +32,21 @@ export const emptyGraph: GraphSnapshot = {
   outputRelationId: null,
   inputRecovery: null,
 };
+
+/** Seed a private graph without changing the identities of its pending producers. */
+export function initializeCanvasRelationalTreeDraftGraph(
+  current: GraphSnapshot,
+  document: SubstraitDocument
+): GraphSnapshot {
+  const indexed = indexSubstraitRelations(document);
+  return {
+    ...current,
+    joinDraft: document,
+    stagedOperations: [],
+    outputRelationId: indexed.ok ? indexed.index.rootId : null,
+    inputRecovery: null,
+  };
+}
 
 /** Deleting a pending Read must not later publish an unused working definition. */
 export function retainReferencedModelCopies(graph: GraphSnapshot): GraphSnapshot {

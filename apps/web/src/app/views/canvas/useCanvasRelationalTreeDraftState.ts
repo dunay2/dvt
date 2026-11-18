@@ -7,12 +7,12 @@ import type { CanvasRelationalTreeSeedHydration } from './useCanvasRelationalTre
 import { useCanvasRelationalOperandSlots } from './useCanvasRelationalOperandSlots';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
-import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CardPosition } from './canvasRelationalTreeGeometry';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import type { CanvasModelCompositionCopy } from './canvasModelCompositionCandidate';
 import {
   emptyGraph,
+  initializeCanvasRelationalTreeDraftGraph,
   retainReferencedModelCopies,
   type GraphSnapshot,
 } from './canvasRelationalTreeDraftGraph';
@@ -75,14 +75,7 @@ export function useCanvasRelationalTreeDraftState() {
       replaceInputs(seed.inputIds);
       setOperation(seed.operation);
       setSelectedStagedOperationId(null);
-      const indexed = indexSubstraitRelations(seed.draft);
-      setGraph((current) => ({
-        ...current,
-        joinDraft: seed.draft,
-        stagedOperations: [],
-        outputRelationId: indexed.ok ? indexed.index.rootId : null,
-        inputRecovery: null,
-      }));
+      setGraph((current) => initializeCanvasRelationalTreeDraftGraph(current, seed.draft));
     },
     [replaceInputs]
   );

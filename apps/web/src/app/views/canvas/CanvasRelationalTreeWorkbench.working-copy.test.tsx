@@ -12,6 +12,7 @@ import {
 import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 import { CanvasModelBrowser, type CanvasModelBrowserPresentation } from './CanvasModelBrowser';
+import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 
 async function dropModel(id: string, scopeKey?: string): Promise<void> {
   const event = new MouseEvent('drop', { bubbles: true, cancelable: true });
@@ -31,6 +32,33 @@ async function dropModel(id: string, scopeKey?: string): Promise<void> {
 
 describe('working Models inside the open Model', () => {
   setupWorkbenchTest();
+  it('does not publish private copies through the separate output-order command', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const apply = vi.fn(() => ({ outcome: 'rejected', reason: 'invalid_draft' }) as const);
+    let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+    function Host(): React.JSX.Element | null {
+      model = useCanvasRelationalTreeWorkbenchModel({
+        transformNode: graph.consumer,
+        nodes: graph.nodes,
+        edges: graph.edges,
+        copy: COPY,
+        authoring: { canEditNode: true, onApplyNodeDraft: apply },
+      });
+      return null;
+    }
+    await act(async () => {
+      root.render(<Host />);
+    });
+    await act(async () => {
+      expect(model!.modelComposition.copy(graph.producer.id)).toBe(true);
+    });
+    await act(async () => {
+      expect(model!.session.applyOutputOrder(graph.consumerDocument)).toBe(false);
+    });
+    expect(model!.session.occurrences.pending).toHaveLength(1);
+    expect(apply).not.toHaveBeenCalled();
+  });
+
   it('stages independent copies in the same receiver and Cancel discards them without writes', async () => {
     const graph = await createModelOutputDependencyFixture();
     const original = structuredClone(graph.producer);

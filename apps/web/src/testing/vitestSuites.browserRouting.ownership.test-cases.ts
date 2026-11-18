@@ -30,6 +30,7 @@ export function registerBrowserRoutingOwnership(): void {
         .sort();
       const expectedConsumers = [
         ['controlled', 'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+        ['controlled', 'apps/web/cypress/e2e/canvas/canvas-model-composition.cy.ts'],
         ['controlled', 'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'],
         ['available', 'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts'],
         [

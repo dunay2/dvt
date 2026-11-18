@@ -1,13 +1,10 @@
 /** Owned concern: coordinate one discardable guided relation-authoring session. */
 import { useCallback } from 'react';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type * as W from './canvasRelationalTreeWorkbench.types';
 import { createCanvasRelationalTreeApplyCommand } from './canvasRelationalTreeApplyCommand';
-import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasRelationalTreeExistingSeed } from './useCanvasRelationalTreeExistingSeed';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
-import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
+import type { CanvasRelationalTreeAuthoringSessionArgs } from './canvasRelationalTreeSession.types';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { useCanvasRelationalTreeAnalysisContext } from './useCanvasRelationalTreeAnalysisContext';
 import { useCanvasRelationalAuthoringDraftHydration } from './useCanvasRelationalAuthoringDraftHydration';
@@ -16,25 +13,9 @@ import { prepareCanvasRelationalTreeApply } from './canvasRelationalTreeApplyDra
 import { useCanvasSourceOutputInitialization } from './useCanvasSourceOutputInitialization';
 import { useCanvasSourceInputRecovery } from './useCanvasSourceInputRecovery';
 export function useCanvasRelationalTreeAuthoringSession(
-  args: Readonly<{
-    enabled: boolean;
-    transformNode: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly CanonicalEdge[];
-    inputs: readonly CanvasDvtCompositionInput[];
-    projection: CanvasRelationalTreeProjection | null;
-    document: SubstraitDocument | null;
-    authoring?: W.CanvasRelationalTreeAuthoringContract;
-    state: ReturnType<typeof useCanvasRelationalTreeDraftState>;
-    persisted: Readonly<{
-      projection: CanvasRelationalTreeProjection | null;
-      document: SubstraitDocument | null;
-      inputs: readonly CanvasDvtCompositionInput[];
-    }>;
-  }>
+  args: CanvasRelationalTreeAuthoringSessionArgs
 ) {
-  const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
-  const { state } = args;
+  const { authoring, edges, enabled, inputs, nodes, transformNode, state } = args;
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
     document: args.persisted.document,
     projection: args.persisted.projection,
@@ -119,6 +100,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     nodes,
     edges: sourceInputRecovery.edges,
   });
+  const hasInputChanges = sourceInputRecovery.additions.length > 0 || state.modelCopies.length > 0;
   const applyCurrent = (
     document?: SubstraitDocument,
     signal?: AbortSignal
@@ -131,8 +113,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       if (result.outcome !== 'rejected') state.clearModelCopies();
       return result;
     };
-    if (sourceInputRecovery.additions.length === 0 && state.modelCopies.length === 0)
-      return apply(document);
+    if (!hasInputChanges) return apply(document);
     return sourceInputRecovery
       .runApply((lifetime) =>
         apply(document, {
@@ -171,7 +152,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     seed,
     apply: (signal?: AbortSignal) => applyCurrent(undefined, signal),
     applyOutputOrder: (document: SubstraitDocument) => {
-      if (sourceInputRecovery.additions.length > 0) return false;
+      if (hasInputChanges) return false;
       const result = applyCurrent(document);
       return !(result instanceof Promise) && result.outcome !== 'rejected';
     },
@@ -187,13 +168,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     positions: state.positions,
     setPositions: state.setPositions,
     hasIncompleteGraph: prepared.hasIncompleteGraph,
-    hasOutputChanges:
-      prepared.hasOutputChanges ||
-      sourceInputRecovery.additions.length > 0 ||
-      state.modelCopies.length > 0,
-    hasDraftChanges:
-      prepared.hasDraftChanges ||
-      sourceInputRecovery.additions.length > 0 ||
-      state.modelCopies.length > 0,
+    hasOutputChanges: prepared.hasOutputChanges || hasInputChanges,
+    hasDraftChanges: prepared.hasDraftChanges || hasInputChanges,
   } as const;
 }

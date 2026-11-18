@@ -11,9 +11,7 @@ import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
 import type { CanonicalNode } from '../../types/canonical';
 
-import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
-import { projectCanvasRelationalComposition } from './canvasRelationalCompositionTruth';
-import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import { useCanvasRelationalTreeAnalysis } from './useCanvasRelationalTreeAnalysis';
 import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
@@ -30,7 +28,6 @@ import type {
 } from './canvasRelationalTreeWorkbench.types';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
 import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
-import { projectCanvasModelCopies } from './canvasModelCompositionCandidate';
 import { useCanvasModelCompositionDrop } from './useCanvasModelCompositionDrop';
 import { getPluginPortMap } from '../../plugins/registry';
 
@@ -50,57 +47,21 @@ export function useCanvasRelationalTreeWorkbenchModel(
   >
 ) {
   const state = useCanvasRelationalTreeDraftState();
-  const graph = useMemo(
-    () =>
-      projectCanvasModelCopies({
-        nodes: inputArgs.nodes,
-        edges: inputArgs.edges,
-        copies: state.modelCopies,
-      }),
-    [inputArgs.nodes, inputArgs.edges, state.modelCopies]
-  );
+  const query = useCanvasRelationalTreeAnalysis({ ...inputArgs, copies: state.modelCopies });
+  const { graph, analysis, result, projection, composition, outputPlanRelationIds } = query;
   const args = { ...inputArgs, ...graph };
   const pluginPorts = useMemo(() => getPluginPortMap(), []);
-  const readPersistedAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
-  const persistedAnalysis = readPersistedAnalysis({
-    node: inputArgs.transformNode,
-    nodes: inputArgs.nodes,
-    edges: inputArgs.edges,
-  });
-  const persistedResult = useMemo(
-    () => projectAnalyzedCanvasRelationalTree(persistedAnalysis),
-    [persistedAnalysis]
-  );
-  const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
-  const analysis =
-    graph.nodes === inputArgs.nodes && graph.edges === inputArgs.edges
-      ? persistedAnalysis
-      : readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
-  const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
-  const projection = result.ok ? result.projection : null;
-  const outputPlanRelationIds = useMemo(
-    () => new Set(analysis.semantic?.index.relations.keys()),
-    [analysis.semantic]
-  );
-  const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
-  const { inputs, projectedInputs } = analysis;
   const pendingAuthoring =
     args.authoring != null &&
     canAuthorCanvasRelationalTree(analysis, projection, composition, args.transformNode);
   const session = useCanvasRelationalTreeAuthoringSession({
     state,
-    persisted: {
-      projection: persistedResult.ok ? persistedResult.projection : null,
-      document: persistedAnalysis.semantic?.document ?? null,
-      inputs: persistedAnalysis.inputs,
-    },
+    persisted: query.persisted,
     enabled: pendingAuthoring,
     transformNode: args.transformNode,
     nodes: args.nodes,
     edges: args.edges,
-    inputs,
-    projection,
-    document: analysis.semantic?.document ?? null,
+    inputs: analysis.inputs,
     authoring: args.authoring,
   });
   const authoringAvailable =
@@ -188,13 +149,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
   return {
     ...graph,
     modelComposition,
-    inputRevision: JSON.stringify(
-      sourceInputRecovery.inputs
-        .filter(({ nodeId }) =>
-          projectedInputs.some((read) => read.sourceNodeId === nodeId && read.relationId != null)
-        )
-        .map((input) => [input.nodeId, input.fields, input.inputBindings])
-    ),
+    inputRevision: query.inputRevisionFor(sourceInputRecovery.inputs),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
     connectedModelRelationIds: analysis.connectedModelRelationIds,
     outputPlanRelationIds,
