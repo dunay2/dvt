@@ -44,5 +44,5 @@ export const md5Vectors = [
 export const deterministicUuidV7Vector = {
   nowMs: 1_704_164_645_000,
   randomBytes: Uint8Array.from({ length: 16 }, (_, index) => index),
-  uuid: '018cc820-d888-7fa0-9c20-260b0c0d0e0f',
+  uuid: '018cc820-d888-7060-9c20-260b0c0d0e0f',
 } as const;
