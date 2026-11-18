@@ -2,12 +2,16 @@
  * Owned concern: reveal project browsing and delegate selection to existing scoped navigation.
  * @baseline ADR-0069: view intent is presentation state, never a Model aggregate or write command.
  * @decision Register scoped rail callbacks and reuse guarded Model replacement and inspection.
- * @consequence Choosing a view cannot choose a Model, create an occurrence or execute SQL.
- * @version 1.0.0
+ * @consequence View shortcuts reuse the current selection and never author graph state.
+ * @version 1.1.0
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget';
+import type {
+  CanvasInspectorCommand,
+  CanvasInspectorRequest,
+  CanvasInspectorResource,
+} from '../../stores/canvasInspectorTarget';
 import {
   useCanvasWorkspaceMenuContributionStore,
   type CanvasModelView,
@@ -23,12 +27,14 @@ export function useCanvasModelBrowser({
   canvasId,
   nodes,
   model,
+  inspectorTarget,
   showCanvas,
   onInspect,
 }: Readonly<{
   canvasId: string | null;
   nodes: readonly CanonicalNode[];
   model: ReturnType<typeof useCanvasModelSelection>;
+  inspectorTarget?: CanvasInspectorResource | null;
   showCanvas: () => void;
   onInspect: CanvasInspectorCommand;
 }>) {
@@ -51,32 +57,19 @@ export function useCanvasModelBrowser({
     showCanvas();
     model.setActive(false);
   }, [owner, showCanvas, model.setActive]);
-  const onBrowse = useCallback(
-    (view: CanvasModelView) => {
-      if (canvasId == null || currentOwner.current !== owner) return;
-      setChoice({ owner, mode: view });
-      setPendingContext(null);
-      showCanvas();
-      model.setActive(false);
-      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' });
-    },
-    [canvasId, owner, showCanvas, model.setActive]
-  );
-  useEffect(() => {
-    if (canvasId == null) return;
-    const browser = { canvasId, mode, onBrowse, onCanvas };
-    const store = useCanvasWorkspaceMenuContributionStore.getState();
-    store.registerModelBrowser(browser);
-    return () => store.clearModelBrowser(browser);
-  }, [canvasId, mode, onBrowse, onCanvas]);
-  const onSelect: CanvasInspectorCommand = useCallback(
-    (request, preferredTab) => {
+  const onSelect = useCallback(
+    (
+      request: CanvasInspectorRequest,
+      preferredTab?: string | null,
+      requestedView?: CanvasModelView
+    ) => {
       if (currentOwner.current !== owner) return false;
       const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
       const view =
-        mode != null && model.active && tab?.canvasId === canvasId
+        requestedView ??
+        (mode != null && model.active && tab?.canvasId === canvasId
           ? (tab.views?.active ?? mode)
-          : mode;
+          : mode);
       const nodeId =
         typeof request === 'string'
           ? request
@@ -109,6 +102,37 @@ export function useCanvasModelBrowser({
       onInspect,
     ]
   );
+  const onBrowse = useCallback(
+    (view: CanvasModelView) => {
+      if (canvasId == null || currentOwner.current !== owner) return;
+      const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
+      const currentTab = tab?.canvasId === canvasId ? tab : null;
+      if (currentTab?.views?.disabled) return;
+
+      setChoice({ owner, mode: view });
+      setPendingContext(null);
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' });
+      const selectedId = model.selected?.id;
+      const request =
+        currentTab?.active && currentTab.nodeId === selectedId
+          ? selectedId
+          : (inspectorTarget ?? selectedId);
+      if (request != null) {
+        void onSelect(request, null, view);
+      } else {
+        showCanvas();
+        model.setActive(false);
+      }
+    },
+    [canvasId, owner, inspectorTarget, model.selected?.id, onSelect, showCanvas, model.setActive]
+  );
+  useEffect(() => {
+    if (canvasId == null) return;
+    const browser = { canvasId, mode, onBrowse, onCanvas };
+    const store = useCanvasWorkspaceMenuContributionStore.getState();
+    store.registerModelBrowser(browser);
+    return () => store.clearModelBrowser(browser);
+  }, [canvasId, mode, onBrowse, onCanvas]);
   const contexts =
     pendingContext?.owner === owner
       ? pendingContext.contexts.filter((item) => model.modelIds.has(item.nodeId))

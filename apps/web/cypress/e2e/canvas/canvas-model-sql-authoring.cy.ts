@@ -21,10 +21,14 @@ describe('Model SQL authoring', () => {
       },
     });
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get(`.react-flow__node[data-id="${model.id}"] [data-slot="canvas-node-shell"]`).dblclick(
-      40,
-      18
-    );
+    cy.get('#shell-canvas-navigation').click();
+    cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').type(model.name);
+    cy.get(`[data-slot="canvas-explorer-panel"]:visible [data-element-id="${model.id}"]`)
+      .click()
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.get('[data-slot="shell-model-semantic-command"]').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
     cy.get('[data-slot="shell-model-semantic-command"]').should(
       'have.attr',
@@ -35,11 +39,6 @@ describe('Model SQL authoring', () => {
       .click()
       .should('have.attr', 'aria-pressed', 'true');
     cy.get('[data-slot="left-navigation-nav"] [data-active="true"]').should('have.length', 1);
-    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
-    cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').type(model.name);
-    cy.get(
-      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
-    ).click();
     cy.get(panel).should('be.visible');
     cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').should(
       'have.value',
@@ -64,14 +63,11 @@ describe('Model SQL authoring', () => {
     cy.get('#shell-canvas-navigation').click();
     cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
     cy.get('[data-slot="shell-model-sql-command"]').click();
-    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.then(() => {
       expect(getE2eApiCalls(`${prefix}/sql-compilation`, 'POST')).to.have.length(0);
       expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(0);
     });
-    cy.get(
-      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
-    ).click();
     cy.get(panel)
       .should('be.visible')
       .find('.view-lines')
@@ -115,16 +111,10 @@ describe('Model SQL authoring', () => {
     cy.get('[data-slot="shell-model-semantic-command"]')
       .click()
       .should('have.attr', 'aria-pressed', 'true');
-    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
-    cy.get(
-      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
-    ).click();
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.get(panel).should('not.be.visible').and('have.attr', 'hidden');
     cy.contains('[data-slot="canvas-model-data"]', 'SQL_ROW_3944').should('be.visible');
     cy.get('[data-slot="shell-model-sql-command"]').click();
-    cy.get(
-      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
-    ).click();
     cy.get(panel)
       .should('be.visible')
       .find('.view-lines')
@@ -176,10 +166,7 @@ describe('Model SQL authoring', () => {
       .clear()
       .type('unapplied_country');
     cy.get('[data-slot="shell-model-semantic-command"]').click();
-    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
-    cy.get(
-      '[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]'
-    ).click();
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.get('[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input')
       .first()
       .should('have.value', 'unapplied_country');

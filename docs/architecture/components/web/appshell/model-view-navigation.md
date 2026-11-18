@@ -2,7 +2,7 @@
 title: Model View Navigation
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-11-17
+last_reviewed: 2026-11-18
 ---
 
 # Model View Navigation
@@ -40,7 +40,9 @@ flowchart LR
   Gesture[Native gesture] --> Admission[Existing control and drag admission]
   Admission -->|First click| Inspect[InspectCanvasNode immediately]
   Admission -->|Double click| Open[Existing Model open]
-  Rail[Shell view buttons] --> Browse[Canvas and project Explorer]
+  Rail[Shell view buttons] --> Selected{Existing admitted selection?}
+  Selected -->|Model| Context[Existing input context]
+  Selected -->|None| Browse[Canvas and project Explorer]
   Browse --> Pick[Explicit Model selection]
   Pick --> Context[Existing input context]
   Context --> Tab[Protected Model tab contribution]
@@ -74,12 +76,17 @@ retains the existing protected Model replacement decision.
 Visual Apply retains its existing lifecycle while presentation switches without
 unmounting the semantic workspace.
 
-Both icons reveal the existing project Model list in the left Explorer and leave
-the Canvas visible until the user selects a block. They do not open the last
-active Model or introduce a popup picker. The selected block then determines the
-central content, using the requested semantic or SQL view when its existing
-capability admits that editor. Other resources retain their real inspection or
-Code capability; the view mode grants no new authoring permission.
+Both icons reveal the existing project Model list in the left Explorer. When a
+Model is already selected, the requested semantic or SQL view opens directly
+through its existing capability and protected session. A visible Model editor
+supplies its own selection. On Canvas, prefer the current scoped inspector
+selection and fall back to the retained Model only when no inspector target is
+present. An explicit Source, file resource or missing node
+must not silently open an older Model. Other resources retain their real
+inspection or Code capability; the view mode grants no new authoring permission.
+With no selection, Canvas and the project list remain available for an explicit
+choice. This refines the original second-click posture under
+`GH-3955-SELECTED-MODEL-VIEW-ENTRY`; it introduces no separate selection store.
 
 The catalog identity is the shared definition. Resolve a real existing instance
 for its input context before entering the editor: reuse a matching current
@@ -161,8 +168,8 @@ change is part of this slice.
 - Catalog activation and double click never create an occurrence.
 - Model shortcuts are unavailable without a current owner; callbacks cannot target
   an obsolete owner after registration changes.
-- Opening a view reveals the existing left Explorer and Canvas without selecting
-  or creating a block. Selecting a current Model opens the requested view. The
+- Opening a view reuses an already selected eligible Model directly; without a
+  selection it reveals Canvas and the Explorer. Neither action creates a block. The
   shared project list remains visible; cancelled replacement retains the current
   session and dirty buffer. Empty, no-match, loading and error states reuse the
   actual project catalog state.
