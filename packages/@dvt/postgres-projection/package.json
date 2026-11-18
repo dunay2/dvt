@@ -27,7 +27,7 @@
     "@dvt/crypto": "workspace:*",
     "@buf/substrait_substrait.bufbuild_es": "2.14.0-20260816025439-ce0808dab3ac.1",
     "@dvt/contracts": "workspace:*",
-    "pgsql-deparser": "16.1.1"
+    "pgsql-deparser": "18.4.5"
   },
   "devDependencies": {
     "typescript": "5.9.3",
