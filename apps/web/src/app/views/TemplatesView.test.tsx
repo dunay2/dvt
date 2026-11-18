@@ -1,186 +1,139 @@
 // @vitest-environment jsdom
-/**
- * Owned concern: prove Templates route selection, parameter state and generated output.
- * Why: shared presentation must preserve each profile's real draft and validation transition.
- * Corner: clearing a required value must remove stale source and retain its accessible error.
- */
-import { fireEvent, getByRole } from '@testing-library/dom';
-import React, { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+/** Project variation edits must retain the loaded revision on conflict and allow a safe copy. */
+import { sha256HexUtf8 } from '@dvt/crypto';
+import { fireEvent, within } from '@testing-library/dom';
+import { act } from 'react';
+import { MemoryRouter } from 'react-router';
+import { expect, it, vi } from 'vitest';
 
-import { withTestQueryClient } from '../../testing/reactQueryHarness';
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { withTestQueryClient, waitForReactQuery } from '../../testing/reactQueryHarness';
+import { createMockSessionContextPort } from '../../testing/runsPortDoubles';
+import type { IWorkspaceFileContentCommandPort } from '../ports/workspace';
+import { AppServicesProvider } from '../services/AppServicesContext';
+import { WorkspaceFileRevisionConflictError } from '../services/workspace/workspaceErrors';
 import TemplatesView from './TemplatesView';
+import { encodeProjectTemplate } from './templates/projectTemplateFile';
 
-vi.mock('../components/monaco/MonacoCodeViewer', () => ({
-  MonacoCodeViewer: ({
-    ariaLabel,
-    language,
-    loadingLabel,
+it('restores each recipe draft and removes the generated SQL when a required value is cleared', async () => {
+  const mounted = await withTestQueryClient(
+    <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+      <MemoryRouter>
+        <TemplatesView />
+      </MemoryRouter>
+    </AppServicesProvider>
+  );
+  const ui = within(mounted.container);
+  const field = (name: string): HTMLElement => ui.getByRole('textbox', { name });
+  const change = async (name: string, value: string): Promise<void> => {
+    await act(async () => {
+      fireEvent.change(field(name), { target: { value } });
+    });
+  };
+  const select = async (name: RegExp): Promise<void> => {
+    await act(async () => {
+      fireEvent.click(ui.getByRole('button', { name }));
+    });
+  };
+  const generated = (): Element | null =>
+    mounted.container.querySelector('[data-slot="templates-generated-source-readable-preview"]');
+  try {
+    await change('Task name', 'retained_task');
+    await change('Warehouse', 'retained_wh');
+    expect(generated()?.textContent).toContain('create or replace task retained_task');
+    await select(/^Snowflake Procedure/);
+    await change('Procedure name', 'retained_procedure');
+    await select(/^Snowflake Task/);
+    expect(field('Task name')).toHaveProperty('value', 'retained_task');
+    expect(field('Warehouse')).toHaveProperty('value', 'retained_wh');
+    await change('Warehouse', '');
+    expect(field('Warehouse').getAttribute('aria-invalid')).toBe('true');
+    expect(field('Warehouse').getAttribute('aria-describedby')).toContain(
+      'template-parameter-warehouse-error'
+    );
+    expect(generated()).toBeNull();
+    await select(/^Snowflake Procedure/);
+    expect(generated()?.textContent).toContain('create or replace procedure retained_procedure()');
+  } finally {
+    await mounted.cleanup();
+  }
+});
+
+it('preserves the project draft and uses create-only semantics when the user saves a copy', async () => {
+  const path = 'dvt_templates/nightly.json';
+  const content = encodeProjectTemplate({
+    version: 1,
+    baseTemplateId: 'snowflake-task',
+    name: 'Nightly',
+    source: 'select [[limit]]',
+    values: {},
+  });
+  const file = {
     path,
-    value,
-  }: {
-    ariaLabel: string;
-    language: string;
-    loadingLabel?: string;
-    path?: string;
-    value: string;
-  }) => (
-    <div
-      data-aria-label={ariaLabel}
-      data-language={language}
-      data-loading-label={loadingLabel}
-      data-path={path}
-      data-testid="monaco-code-viewer"
+    name: 'nightly.json',
+    language: 'json',
+    content,
+    contentSha256: sha256HexUtf8(content),
+    lastModified: '2026-11-18T12:00:00Z',
+  };
+  const save = vi
+    .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+    .mockRejectedValueOnce(new WorkspaceFileRevisionConflictError(path))
+    .mockImplementation(async (input) => ({
+      ...file,
+      kind: 'saved',
+      disposition: 'created',
+      path: input.path,
+      contentSha256: sha256HexUtf8(input.content),
+    }));
+  const mounted = await withTestQueryClient(
+    <AppServicesProvider
+      overrides={{
+        ...createAppServicesTestOverrides(),
+        sessionContext: createMockSessionContextPort(),
+        workspaceFilesQuery: {
+          listFiles: async () => [{ name: file.name, path, kind: 'file' }],
+          getFileContent: async () => file,
+        },
+        workspaceFileContentCommand: { saveFileContent: save },
+      }}
     >
-      {value}
-    </div>
-  ),
-}));
-
-describe('TemplatesView', () => {
-  let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
-
-  beforeEach(() => {
-    mounted = null;
-    (
-      globalThis as typeof globalThis & {
-        ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
-      }
-    ).ResizeObserver = class ResizeObserver {
-      observe(): void {}
-      unobserve(): void {}
-      disconnect(): void {}
-    } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
-  });
-
-  afterEach(async () => {
-    if (mounted) {
-      await mounted.cleanup();
-    }
-
-    Reflect.deleteProperty(globalThis, 'ResizeObserver');
-  });
-
-  it('renders the templates route workbench with catalog, parameters, and blocked preview', async () => {
-    mounted = await withTestQueryClient(<TemplatesView />);
-
-    expect(mounted.container.textContent).toContain('Templates');
-    expect(mounted.container.textContent).toContain('Snowflake Task');
-    expect(mounted.container.textContent).toContain('Snowflake Procedure');
-    expect(mounted.container.textContent).toContain('ETL Scaffold');
-    expect(mounted.container.textContent).toContain('Preview blocked');
-    expect(mounted.container.textContent).toContain('Task name is required.');
-    expect(mounted.container.textContent).toContain('Warehouse is required.');
-    for (const name of ['Task name', 'Warehouse', 'Schedule', 'SQL body']) {
-      expect(getByRole(mounted.container, 'textbox', { name })).not.toBeNull();
-    }
-    expect(mounted.container.querySelector('button[aria-pressed="true"]')?.textContent).toContain(
-      'Snowflake Task'
+      <MemoryRouter>
+        <TemplatesView />
+      </MemoryRouter>
+    </AppServicesProvider>
+  );
+  try {
+    const ui = within(mounted.container);
+    await waitForReactQuery(() => !!ui.queryByRole('button', { name: 'nightly' }));
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'nightly' })));
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'Edit template' })));
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'Save variant' })));
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path,
+        expectedRevision: { kind: 'content_sha256', value: file.contentSha256 },
+      })
     );
-    expect(
-      mounted.container.querySelector('input[name="taskName"]')?.getAttribute('aria-describedby')
-    ).toBe('template-parameter-taskName-help template-parameter-taskName-error');
-    expect(mounted.container.querySelector('#template-parameter-taskName-help')?.textContent).toBe(
-      'Identifier for the generated Snowflake task.'
+    expect(ui.getByRole('textbox', { name: 'Variant name' })).toHaveProperty('value', 'Nightly');
+    expect(mounted.container.textContent).toContain('Another version exists');
+    await act(async () =>
+      fireEvent.change(ui.getByRole('textbox', { name: 'Variant name' }), {
+        target: { value: 'Alternative' },
+      })
     );
-    expect(mounted.container.querySelector('[data-slot="route-workbench-frame"]')).not.toBeNull();
-    expect(
-      mounted.container.querySelector('[data-slot="templates-generated-source-preview"]')
-    ).toBeNull();
-    expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
-  });
-
-  it('updates parameter state and renders deterministic generated source preview', async () => {
-    mounted = await withTestQueryClient(<TemplatesView />);
-
-    await act(async () => {
-      fireEvent.input(
-        mounted?.container.querySelector('input[name="taskName"]') as HTMLInputElement,
-        {
-          target: { value: 'load_orders' },
-        }
-      );
-      fireEvent.input(
-        mounted?.container.querySelector('input[name="warehouse"]') as HTMLInputElement,
-        {
-          target: { value: 'transforming_wh' },
-        }
-      );
-      fireEvent.input(
-        mounted?.container.querySelector('textarea[name="sqlBody"]') as HTMLTextAreaElement,
-        {
-          target: { value: 'call analytics.load_orders();' },
-        }
-      );
-    });
-
-    const preview = mounted.container.querySelector(
-      '[data-slot="templates-generated-source-preview"]'
+    await act(async () => fireEvent.click(ui.getByRole('button', { name: 'Save variant' })));
+    expect(save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        path: 'dvt_templates/alternative.json',
+        expectedRevision: { kind: 'absent' },
+      })
     );
-    const viewer = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
-
-    expect(mounted.container.textContent).toContain('Preview ready');
-    expect(mounted.container.textContent).toContain('load_orders.task.sql');
-    expect(viewer).not.toBeNull();
-    expect(viewer?.getAttribute('data-language')).toBe('sql');
-    expect(viewer?.getAttribute('data-path')).toBe('load_orders.task.sql');
-    expect(preview?.textContent).toContain('create or replace task load_orders');
-    expect(preview?.textContent).toContain('warehouse = transforming_wh');
-    expect(viewer?.textContent).toContain('call analytics.load_orders()\n;');
-  });
-
-  it('retains each profile draft and immediately withdraws source when a required value is cleared', async () => {
-    mounted = await withTestQueryClient(<TemplatesView />);
-    const container = mounted.container;
-    const input = (name: string): HTMLInputElement =>
-      container.querySelector<HTMLInputElement>(`input[name="${name}"]`)!;
-    const profile = (name: string): HTMLButtonElement =>
-      Array.from(
-        container.querySelectorAll<HTMLButtonElement>('[data-slot="templates-catalog"] button')
-      ).find((button) => button.textContent?.startsWith(name))!;
-
-    await act(async () => {
-      fireEvent.input(input('taskName'), { target: { value: 'retained_task' } });
-      fireEvent.input(input('warehouse'), { target: { value: 'retained_wh' } });
+    expect(JSON.parse(save.mock.calls[1]![0].content)).toMatchObject({
+      source: 'select [[limit]]',
+      name: 'Alternative',
     });
-    expect(container.textContent).toContain('retained_task.task.sql');
-    await act(async () => {
-      fireEvent.click(profile('Snowflake Procedure'));
-    });
-    expect(profile('Snowflake Procedure').getAttribute('aria-pressed')).toBe('true');
-    await act(async () => {
-      fireEvent.input(input('procedureName'), { target: { value: 'retained_procedure' } });
-      fireEvent.click(profile('Snowflake Task'));
-    });
-    expect(input('taskName').value).toBe('retained_task');
-    expect(input('warehouse').value).toBe('retained_wh');
-    expect(container.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toContain(
-      'create or replace task retained_task'
-    );
-
-    await act(async () => {
-      fireEvent.input(input('warehouse'), { target: { value: '' } });
-    });
-    expect(input('warehouse').getAttribute('aria-invalid')).toBe('true');
-    const descriptionIds = input('warehouse').getAttribute('aria-describedby')!.split(' ');
-    expect(descriptionIds).toEqual([
-      'template-parameter-warehouse-help',
-      'template-parameter-warehouse-error',
-    ]);
-    expect(container.querySelector(`#${descriptionIds[1]}`)?.textContent).toBe(
-      'Warehouse is required.'
-    );
-    expect(container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
-    expect(container.querySelector('[data-slot="templates-generated-source-preview"]')).toBeNull();
-
-    await act(async () => {
-      fireEvent.click(profile('Snowflake Procedure'));
-    });
-    expect(input('procedureName').value).toBe('retained_procedure');
-    expect(container.textContent).toContain('retained_procedure.procedure.sql');
-    expect(container.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toContain(
-      'create or replace procedure retained_procedure()'
-    );
-    expect(container.querySelector('input[aria-invalid="true"]')).toBeNull();
-  });
+  } finally {
+    await mounted.cleanup();
+  }
 });

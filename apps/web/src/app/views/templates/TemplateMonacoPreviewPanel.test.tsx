@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TemplateMonacoPreviewPanel } from './TemplateMonacoPreviewPanel';
+import { templatesCopy } from './templatesCopy';
 
 vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({
@@ -58,6 +59,7 @@ describe('TemplateMonacoPreviewPanel', () => {
     act(() => {
       root?.render(
         <TemplateMonacoPreviewPanel
+          copy={templatesCopy('es')}
           exportFileName="load_orders.task.sql"
           language="sql"
           provider="Snowflake"
@@ -72,7 +74,7 @@ describe('TemplateMonacoPreviewPanel', () => {
 
     const viewer = container?.querySelector('[data-testid="monaco-code-viewer"]');
 
-    expect(container?.textContent).toContain('Generated preview');
+    expect(container?.textContent).toContain('Vista previa generada');
     expect(container?.textContent).toContain('load_orders.task.sql');
     expect(container?.textContent).not.toContain('Save');
     expect(container?.textContent).not.toContain('Apply');
@@ -80,11 +82,9 @@ describe('TemplateMonacoPreviewPanel', () => {
     expect(viewer?.getAttribute('data-language')).toBe('sql');
     expect(viewer?.getAttribute('data-path')).toBe('load_orders.task.sql');
     expect(viewer?.getAttribute('data-aria-label')).toBe(
-      'Generated Snowflake preview: load_orders.task.sql'
+      'Vista previa generada · load_orders.task.sql'
     );
-    expect(viewer?.getAttribute('data-loading-label')).toBe(
-      'Loading load_orders.task.sql preview...'
-    );
+    expect(viewer?.getAttribute('data-loading-label')).toBe('Cargando… load_orders.task.sql');
     expect(viewer?.textContent).toContain('create or replace task load_orders;');
   });
 });

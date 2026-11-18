@@ -1,0 +1,7 @@
+job: [[jobName]]
+source: [[sourceRef]]
+target: [[targetRef]]
+steps:
+  - validate_source
+  - transform
+  - publish_target

@@ -3,15 +3,33 @@
  * Why: shared controls and responsive layout must retain the real route transitions.
  * Corner: token checks cannot hide blocked output, clipped names or overflow after reflow.
  */
-import { stubE2eJsonApi } from '../../support/e2eApiStub';
+import { sha256HexUtf8 } from '@dvt/crypto';
+
+import type { FileContent, SaveWorkspaceFileContentInput } from '../../../src/app/ports/workspace';
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
+import { contextFixture } from '../../../src/app/views/code/codeWorkspaceFileContext.test-support';
+import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
+import { stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
+function visitInEnglish(path: string): void {
+  visitWithE2eWorkspaceSession(path, {
+    onBeforeLoad(window) {
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
+    },
+  });
+}
+
 function stubTemplatesRouteBootstrapApis(): void {
   stubShellBootstrapApis();
+  stubCanvasDraftRead();
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',
     minFrontendVersion: '1.0.0',
@@ -80,10 +98,100 @@ describe('Templates workbench', () => {
     cy.viewport(1400, 900);
   });
 
+  it('inserts a verified model, reopens a saved variation and creates its generated SQL', () => {
+    stubTemplatesRouteBootstrapApis();
+    const { project, file } = contextFixture();
+    const root = 'inline_code_demo';
+    const config = {
+      ...file,
+      path: root + '/dbt_project.yml',
+      name: 'dbt_project.yml',
+      language: 'yaml',
+      content: 'name: demo',
+      contentSha256: sha256HexUtf8('name: demo'),
+    };
+    const files = new Map<string, FileContent>([[config.path, config]]);
+    stubE2eApi('GET', '/workspace/files', () => ({
+      body: [...files.values()].map(({ path, name }) => ({ path, name, kind: 'file' })),
+    }));
+    stubE2eApi('GET', /\/workspace\/files\/.+/, ({ url }) => ({
+      body: files.get(decodeURIComponent(url.pathname.slice('/workspace/files/'.length))),
+    }));
+    stubE2eJsonApi('GET', '/workspace/dbt/graph', project);
+    stubE2eApi('POST', /\/workspace\/files\/.+/, ({ url, body }) => {
+      const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
+      const { content, expectedRevision } = body as SaveWorkspaceFileContentInput;
+      const prior = files.get(path);
+      expect(expectedRevision).to.deep.equal(
+        prior ? { kind: 'content_sha256', value: prior.contentSha256 } : { kind: 'absent' }
+      );
+      const contentSha256 = sha256HexUtf8(content);
+      files.set(path, {
+        path,
+        name: path.split('/').at(-1)!,
+        language: path.endsWith('.sql') ? 'sql' : 'json',
+        content,
+        contentSha256,
+        lastModified: file.lastModified,
+      });
+      return {
+        body: {
+          kind: 'saved',
+          disposition: prior ? 'updated' : 'created',
+          path,
+          contentSha256,
+          lastModified: file.lastModified,
+        },
+      };
+    });
+    visitInEnglish('/templates');
+    cy.get('input[aria-label="Find templates"]').type('Latest record');
+    cy.contains('button', 'Latest record per key').click();
+    cy.get('button[aria-label="Insert clientes"]').click();
+    const reference = '{{ ref("demo", "clientes") }}';
+    cy.get('[data-slot="templates-generated-source-readable-preview"]').should(
+      'contain',
+      reference
+    );
+    cy.contains('button', 'Edit template').click();
+    cy.get('.monaco-editor .view-lines').click(80, 9);
+    cy.get('.monaco-editor textarea.inputarea').should('be.focused').type('{ctrl+a}');
+    cy.then(() =>
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Input.insertText',
+        params: { text: 'select * from ' },
+      })
+    );
+    cy.get('button[aria-label="Insert pedidos"]').click();
+    const edited = 'select * from {{ ref("demo", "pedidos") }}';
+    cy.get('input[aria-label="Variant name"]').type('Daily events');
+    cy.contains('button', 'Save variant').click();
+    cy.contains('[role="status"]', 'dvt_templates/daily-events.json').should('be.visible');
+    visitInEnglish('/templates');
+    cy.get('input[aria-label="Find templates"]').type('daily-events');
+    cy.contains('button', 'daily-events').click();
+    cy.get('[data-slot="templates-generated-source-readable-preview"]').should('have.text', edited);
+    cy.get('[data-slot="templates-generated-source-preview"] .monaco-editor .view-lines').should(
+      'contain.text',
+      'pedidos'
+    );
+    cy.screenshot('project-template-with-inserted-model', { capture: 'viewport' });
+    cy.contains('button', 'Create project file').click();
+    cy.get('[role="dialog"]').within(() => {
+      cy.get('input[name="path"]').should('have.value', root + '/models/latest-record.sql');
+      cy.get('textarea').should('have.value', edited);
+      cy.get('button[type="submit"]').click();
+    });
+    cy.wrap(null).should(() =>
+      expect(files.get(root + '/models/latest-record.sql')?.content).to.equal(edited)
+    );
+  });
+
   it('is reachable from shell navigation and announces the active template', () => {
     // Destinations stay directly discoverable; opening Templates must not require a brand menu.
     stubTemplatesRouteBootstrapApis();
-    visitWithE2eWorkspaceSession('/plugins');
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitInEnglish('/plugins');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
     cy.get('[data-slot="shell-app-menu-trigger"]').should('not.exist');
@@ -111,7 +219,8 @@ describe('Templates workbench', () => {
 
   it('blocks missing parameters and then renders generated source preview', () => {
     stubTemplatesRouteBootstrapApis();
-    visitWithE2eWorkspaceSession('/templates');
+    stubE2eJsonApi('GET', '/workspace/files', []);
+    visitInEnglish('/templates');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
     cy.get('[data-slot="route-workbench-frame"]').should('be.visible');

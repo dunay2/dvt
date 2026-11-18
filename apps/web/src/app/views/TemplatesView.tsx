@@ -1,79 +1,51 @@
-/** Owned concern: adapt Templates route command state into the execution-template workbench.
- * Why: the route owns its shared header and profile-local values, while preview rules stay in the model.
- * Corner: changing presentation or profile cannot discard another profile's captured parameters.
- * Command/query rails: `SelectExecutionTemplateProfile`, `UpdateExecutionTemplateParameterValue`.
+/** Owned concern: adapt Templates route command state to the scoped project workbench.
+ * Rails: SelectExecutionTemplateProfile and UpdateExecutionTemplateParameterValue.
+ * Corner: a workspace change retires local drafts, pending reads and editor selection.
  */
 import { WandSparkles } from 'lucide-react';
-import { useState } from 'react';
-
+import { useSyncExternalStore } from 'react';
 import { createCompleteRouteBootstrapPresentation } from '../bootstrap/routeBootstrapContract';
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain/ViewHeader';
 import { Badge } from '../components/ui/badge';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
-
+import { useSessionContext } from '../services/AppServicesContext';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import { TemplatesRouteWorkbench } from './templates/TemplatesRouteWorkbench';
 import styles from './templates/templatesPresentation.module.css';
-import {
-  EXECUTION_TEMPLATE_CATALOG,
-  createDefaultExecutionTemplateValues,
-  resolveExecutionTemplateSelection,
-} from './templates/templatesViewModel';
+import { EXECUTION_TEMPLATE_CATALOG } from './templates/templatesViewModel';
+import { templatesCopy } from './templates/templatesCopy';
 
 export function TemplatesViewHeader() {
+  const copy = templatesCopy(useApplicationLanguageStore((s) => s.language));
   return (
     <div data-slot="templates-view-header-band" className={styles.headerBand}>
       <ViewHeader
         className={styles.viewHeader}
-        title="Templates"
+        title={copy.title}
         icon={<WandSparkles aria-hidden="true" className={styles.headerIcon} />}
-        subtitle="Generate governed execution scaffolds for provider-facing review."
+        subtitle={copy.subtitle}
         actions={
           <Badge variant="outline" className={styles.fileName}>
-            Profiles: {EXECUTION_TEMPLATE_CATALOG.length}
+            {copy.profiles}: {EXECUTION_TEMPLATE_CATALOG.length}
           </Badge>
         }
       />
     </div>
   );
 }
-
 export default function TemplatesView() {
   usePublishedRouteBootstrap(
     'dvt.templates',
     createCompleteRouteBootstrapPresentation('Templates route is ready')
   );
-  const [selectedTemplateId, setSelectedTemplateId] = useState('snowflake-task');
-  const selectedTemplate = resolveExecutionTemplateSelection(selectedTemplateId);
-  const [parameterValuesByTemplate, setParameterValuesByTemplate] = useState<
-    Record<string, Record<string, string>>
-  >(() => ({
-    [selectedTemplate.id]: createDefaultExecutionTemplateValues(selectedTemplate),
-  }));
-  const parameterValues =
-    parameterValuesByTemplate[selectedTemplate.id] ??
-    createDefaultExecutionTemplateValues(selectedTemplate);
-
-  function handleTemplateSelect(templateId: string): void {
-    const nextTemplate = resolveExecutionTemplateSelection(templateId);
-    setSelectedTemplateId(nextTemplate.id);
-    setParameterValuesByTemplate((current) => ({
-      ...current,
-      [nextTemplate.id]:
-        current[nextTemplate.id] ?? createDefaultExecutionTemplateValues(nextTemplate),
-    }));
-  }
-
-  function handleParameterChange(parameterId: string, value: string): void {
-    setParameterValuesByTemplate((current) => ({
-      ...current,
-      [selectedTemplate.id]: {
-        ...parameterValues,
-        [parameterId]: value,
-      },
-    }));
-  }
-
+  const session = useSessionContext();
+  const scope = useSyncExternalStore(
+    session.subscribeWorkspaceScope,
+    session.getWorkspaceScopeSnapshot,
+    session.getWorkspaceScopeSnapshot
+  );
+  const language = useApplicationLanguageStore((s) => s.language);
   return (
     <RouteWorkbenchFrame
       header={<TemplatesViewHeader />}
@@ -81,12 +53,7 @@ export default function TemplatesView() {
       bodyContainerClassName={styles.bodyContainer}
       slots={{
         primarySurface: (
-          <TemplatesRouteWorkbench
-            selectedTemplate={selectedTemplate}
-            parameterValues={parameterValues}
-            onParameterChange={handleParameterChange}
-            onTemplateSelect={handleTemplateSelect}
-          />
+          <TemplatesRouteWorkbench key={JSON.stringify(scope)} scope={scope} language={language} />
         ),
       }}
     />

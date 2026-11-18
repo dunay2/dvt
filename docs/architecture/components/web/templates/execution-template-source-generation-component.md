@@ -12,12 +12,11 @@ component: Templates workbench
 
 ## Owned Concern
 
-The Templates workbench owns presentation-local selection, parameter capture,
-validation, deterministic preview generation, and export metadata for governed
-execution-template scaffolds.
-
-It does not own provider execution, persistence, credentials, backend template
-contracts, or Monaco infrastructure. Those remain separate governed surfaces.
+The Templates workbench owns template selection, editable recipe text, typed
+parameters, project Model insertion and deterministic preview. Workspace file
+queries and conditional commands own reading and publishing project variants
+and generated files. The project root and its current workspace scope govern
+these commands.
 
 ## Public API
 
@@ -26,21 +25,79 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
 | `EXECUTION_TEMPLATE_CATALOG`              | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Built-in read model for available template profiles |
 | `resolveExecutionTemplateSelection`       | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Route-local template selection state                |
 | `resolveExecutionTemplatePreview`         | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Validation and deterministic preview projection     |
-| `TemplatesView`                           | `apps/web/src/app/views/TemplatesView.tsx`                        | Route controller and route-local command handlers   |
+| `TemplatesView`                           | `apps/web/src/app/views/TemplatesView.tsx`                        | Binds the workbench to its active project scope     |
 | `TemplatesViewHeader`                     | `apps/web/src/app/views/TemplatesView.tsx`                        | Compact route header using the shared ViewHeader    |
 | `TemplatesRouteWorkbench`                 | `apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx`    | Workbench slot renderer                             |
+| `TemplateParameterForm`                   | `apps/web/src/app/views/templates/TemplateParameterForm.tsx`      | Parameter controls, descriptions and errors         |
+| `TemplateSourceEditor`                    | `apps/web/src/app/views/templates/TemplateSourceEditor.tsx`       | Editable draft and undoable reference insertion     |
 | `GeneratedSourcePanel`                    | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx` | Ready or blocked generated-preview presentation     |
 | `TemplateMonacoPreviewPanel`              | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx` | Ready generated-source preview adapter              |
 | DVT plugin `/templates` view contribution | `apps/web/src/app/plugins/dvt/dvtContributions.ts`                | Shell route registration                            |
 
 ## Command And Query Rails
 
-| Rail                                    | Type    | DDD owner                            | Status      |
-| --------------------------------------- | ------- | ------------------------------------ | ----------- |
-| `ListExecutionTemplateProfiles`         | query   | `ExecutionTemplateCatalogReadModel`  | Implemented |
-| `GenerateExecutionTemplatePreview`      | query   | `ExecutionTemplatePreviewProjection` | Implemented |
-| `SelectExecutionTemplateProfile`        | command | `ExecutionTemplateSelectionState`    | Implemented |
-| `UpdateExecutionTemplateParameterValue` | command | `ExecutionTemplateParameterState`    | Implemented |
+| Rail                                    | Type    | DDD owner                            | Status                                            |
+| --------------------------------------- | ------- | ------------------------------------ | ------------------------------------------------- |
+| `ListExecutionTemplateProfiles`         | query   | `ExecutionTemplateCatalogReadModel`  | Implemented                                       |
+| `GenerateExecutionTemplatePreview`      | query   | `ExecutionTemplatePreviewProjection` | Implemented                                       |
+| `SelectExecutionTemplateProfile`        | command | `ExecutionTemplateSelectionState`    | Implemented                                       |
+| `UpdateExecutionTemplateParameterValue` | command | `ExecutionTemplateParameterState`    | Implemented                                       |
+| `EditExecutionTemplateSource`           | command | `ExecutionTemplateSourceDraft`       | Local editor input and insertion at the selection |
+
+## Project templates
+
+The design [GH-3971-PROJECT-SQL-TEMPLATES](https://github.com/dunay2/dvt/issues/3971#issuecomment-6988217523)
+extends this workbench. Built-in recipe bodies are SQL/YAML files in Git.
+Project variants inherit their base profile's parameter definitions. Each
+`dvt_templates/<slug>.json` file carries `version: 1`, `baseTemplateId`, `name`,
+`source` and `values`. The preview substitutes declared `[[id]]` variables in one
+pass. SQL expressions, procedure delimiters and dbt Jinja survive rendering.
+Edits remain scoped to their selected draft and workspace.
+
+```mermaid
+flowchart LR
+  Recipes[Git recipe bodies] --> Draft[Template source and parameters]
+  Project[Scoped workspace file queries] --> Draft
+  Catalog[Scoped Model definitions] --> Reference[Dialect-compatible reference]
+  Reference --> Draft
+  Draft --> ProjectFile[Save project variant using expected revision]
+  Draft --> Validate[Validate declared variables]
+  Validate --> Preview[Generated source preview]
+  Preview --> Output[Create workspace file using absent precondition]
+```
+
+The local edit command accepts keyboard edits and inserts eligible
+model/source references at the cursor through the same draft callback.
+The existing catalog and dbt projections establish identity. A model without
+a usable logical or physical reference for the selected dialect remains
+visible and unavailable for insertion. The source editor can show a draft
+while incomplete parameters keep its generated preview blocked.
+
+The working tree uses `ListWorkspaceFiles`, `GetWorkspaceFileContent` and
+`SaveWorkspaceFileContent`. A new file requires absence. Editing a saved
+variant requires its observed revision. Scope changes retire stale callbacks.
+Conflicts retain the draft for recovery. Git commit and provider execution
+have separate lifecycles.
+
+## Choosing a recipe
+
+| Family            | Built-in recipes                                                                                                                   | Inputs and behavior                                                                                                                                                                                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Snowflake tasks   | Scheduled SQL, procedure call, sequential chain, parallel branches with a join                                                     | The root owns the schedule. Child tasks name predecessors with `AFTER`. A graph is generated suspended. Deployments must enable participating tasks deliberately.                                                                                                    |
+| Procedures        | Editable Snowflake SQL procedure, PostgreSQL stage and replace, Snowflake incremental merge, PostgreSQL batch generator with audit | The stage validates its minimum row count before replacing the target under a write lock. The incremental model assumes a non-null business key and a unique ingestion sequence for ties. The generator writes items and the audit count in the calling transaction. |
+| Analytical models | PostgreSQL relation inspection and calendar, dbt monthly comparisons, latest row per key and missing dates                         | Inspection accepts a physical relation and a limit of 1–1000 rows. The calendar includes both bounds. Comparisons use the preceding calendar month. Latest-row selection resolves equal timestamps with ingestion sequence.                                          |
+| Workflow outline  | ETL scaffold                                                                                                                       | The editable YAML names the source, target and workflow. Its provider-neutral outline is a project artifact for review.                                                                                                                                              |
+
+The relation inspector leaves the reference empty until the user supplies it.
+A dbt model reference stays a `ref` or `source` expression in generated files.
+The preview performs typed substitution. Platform compilation and deployment use
+the corresponding database or dbt tools.
+
+Task graph dependencies follow [Snowflake task graphs](https://docs.snowflake.com/en/user-guide/tasks-graphs).
+The merge uses one incoming row per business key as described in [Snowflake MERGE](https://docs.snowflake.com/en/sql-reference/sql/merge).
+The PostgreSQL calendar uses integer date offsets and [generate_series](https://www.postgresql.org/docs/current/functions-srf.html).
+Target replacement uses the caller's transaction and [table locking](https://www.postgresql.org/docs/current/explicit-locking.html).
+The dbt templates use [ref](https://docs.getdbt.com/reference/dbt-jinja-functions/ref) and [source](https://docs.getdbt.com/reference/dbt-jinja-functions/source).
 
 ## Invariants
 
@@ -49,8 +106,8 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
 - Required parameters block preview and expose field-specific errors.
 - Unknown template ids resolve to the first catalog entry rather than creating
   unowned semantics.
-- Generated source is read-only route output; the route does not dispatch,
-  persist, or apply generated artifacts.
+- Generated source is read-only route output. An explicit file action
+  publishes its current text through the project working-tree owner.
 - Ready generated source is inspected through `TemplateMonacoPreviewPanel` and
   the shared read-only `MonacoCodeViewer` gateway.
 - Provider semantics are descriptive profile metadata until backend contracts
@@ -58,7 +115,7 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
 - The route uses `RouteWorkbenchFrame` slots and does not create a parallel
   shell layout.
 
-## Presentation alignment
+## Presentation alignment (original workbench)
 
 The presentation design is `GH-3954-TEMPLATES-PRESENTATION`, recorded in
 [#3954](https://github.com/dunay2/dvt/issues/3954#issuecomment-6977956926).
@@ -68,8 +125,8 @@ stretching grid separated the Schedule helper from its input, while catalog
 selection resembled a primary action. Required-field messages also used warning
 colors beside destructive input borders.
 
-The existing `TemplatesView` owns its shared `ViewHeader`, selection and parameter
-state. `TemplatesRouteWorkbench` composes the catalog, private parameter form and
+The original `TemplatesView` owned its shared `ViewHeader`, selection and parameter
+state. The project authoring session now owns draft and parameter values. `TemplatesRouteWorkbench` composes the catalog, private parameter form and
 preview projection. `GeneratedSourcePanel` owns both preview states in the
 existing preview adapter; only its ready branch delegates to
 `TemplateMonacoPreviewPanel`. One `templatesPresentation.module.css` asset owns
@@ -98,8 +155,7 @@ flowchart LR
   Preview --> Styles
 ```
 
-The four command/query rails, validation timing, catalog/defaults, per-profile
-values, source text, filenames and read-only Monaco authority remain unchanged.
+The original alignment kept validation timing and the read-only preview boundary.
 Each shared Label supplies only its field's accessible name; helper and error
 text are separate `aria-describedby` targets. Existing `aria-invalid` and error
 associations are preserved. One blocked-state indicator accompanies the preview
@@ -109,15 +165,10 @@ two existing Templates browser stories cover token-derived density, aligned
 controls, consistent errors, long filenames and narrow reflow; route tests also
 cover profile-state retention and immediate withdrawal of a blocked preview.
 
-The native frontend owner remains
-`web.component.templates.TemplatesWorkbench`. The sole new source asset is CSS,
-without callable declarations. Physical `SYS-WEB-ROOT` fallback coverage is an
-inherited classification, not a declaration that Templates implements its Shell
-or application-port responsibilities. No public frontend-asset registry writer
-was available for this slice; the design admits the asset under the existing
-frontend family without manual SQL, a fabricated component or a claim of global
-architecture closure. Final source-reference and content-hash maintenance uses
-the existing native operators and preserves unrelated records and statuses.
+The native frontend owner is `web.component.templates.TemplatesWorkbench`.
+Its source editor uses the shared editable Monaco adapter. The generated
+preview delegates to the read-only adapter. The project file command port owns
+writes and reports conditional save failures.
 
 ## Transitions
 
@@ -157,10 +208,9 @@ flowchart LR
 ## Non-Goals
 
 - No provider execution or apply action.
-- No backend persistence.
-- No generic template engine.
-- No credentials, tenant-specific catalog, or provider API calls.
-- No Monaco editing, save, apply, or export command.
+- No backend persistence owned by Templates. Project files use the existing
+  scoped working-tree port.
+- Variable substitution accepts declared parameters and never evaluates code.
 
 <a id="section-execution-template-source-generation-user-stories"></a>
 
@@ -168,15 +218,15 @@ flowchart LR
 
 ### Stories
 
-| Story id         | Scenario                       | Acceptance criteria                                                                       |
-| ---------------- | ------------------------------ | ----------------------------------------------------------------------------------------- |
-| US-TEMPLATES-001 | Select a template profile      | User can open `/templates`, see provider profiles, and switch the selected profile.       |
-| US-TEMPLATES-002 | Block incomplete generation    | Missing required parameters show field-specific validation and no generated source.       |
-| US-TEMPLATES-003 | Generate preview               | Completing required fields produces deterministic read-only source and filename metadata. |
-| US-TEMPLATES-004 | Preserve route ownership       | Templates uses the shared route workbench frame and is not embedded as a Canvas tab.      |
-| US-TEMPLATES-005 | Avoid hidden backend authority | The route exposes preview/export posture only and does not persist, dispatch, or apply.   |
-| US-TEMPLATES-006 | Navigate from shell            | User can reach Templates from shell navigation without manually entering the route URL.   |
-| US-TEMPLATES-007 | Understand active form state   | The selected template and required-field errors are exposed through accessible state.     |
+| Story id         | Scenario                     | Acceptance criteria                                                                       |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
+| US-TEMPLATES-001 | Select a template profile    | User can open `/templates`, see provider profiles, and switch the selected profile.       |
+| US-TEMPLATES-002 | Block incomplete generation  | Missing required parameters show field-specific validation and no generated source.       |
+| US-TEMPLATES-003 | Generate preview             | Completing required fields produces deterministic read-only source and filename metadata. |
+| US-TEMPLATES-004 | Preserve route ownership     | Templates uses the shared route workbench frame and is not embedded as a Canvas tab.      |
+| US-TEMPLATES-005 | Publish explicitly           | Only an explicit action creates a project variant or output through the scoped file port. |
+| US-TEMPLATES-006 | Navigate from shell          | User can reach Templates from shell navigation without manually entering the route URL.   |
+| US-TEMPLATES-007 | Understand active form state | The selected template and required-field errors are exposed through accessible state.     |
 
 ### UX Flow
 
@@ -253,8 +303,8 @@ third-party editor binding.
   or dispatch command.
 - `TemplatesView` and `TemplatesRouteWorkbench` do not import
   `@monaco-editor/react` directly.
-- The shared `MonacoCodeViewer` remains the only gateway from Templates to the
-  Monaco code surface.
+- The shared `MonacoCodeViewer` renders generated source. `TemplateSourceEditor`
+  uses the shared `MonacoCodeEditor` to update the editable draft.
 - Canvas production modules do not become Monaco hosts through this slice.
 
 ### Transitions
@@ -292,9 +342,7 @@ flowchart LR
 
 ### Non-Goals
 
-- No edit mode.
-- No export/download command.
-- No backend template persistence.
+- Source editing and persistence remain with the draft editor and working-tree adapter.
 - No provider execution.
 - No route shell changes.
 
@@ -302,29 +350,28 @@ flowchart LR
 
 ### Execution Template Monaco Preview User Stories
 
-| Story ID      | User               | Goal                                         | Acceptance Criteria                                                          |
-| ------------- | ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------- |
-| `US-F17D-001` | Analytics engineer | Review generated SQL with editor ergonomics. | A ready Snowflake task preview renders in read-only Monaco.                  |
-| `US-F17D-002` | Operator           | Understand why preview is unavailable.       | Missing required parameters show blocked state and field-level messages.     |
-| `US-F17D-003` | Maintainer         | Keep Templates route-owned.                  | Architecture guard proves route and workbench do not import Monaco directly. |
-| `US-F17D-004` | Maintainer         | Reuse shared Monaco gateway.                 | Templates delegates ready preview to `MonacoCodeViewer`.                     |
-| `US-F17D-005` | Product reviewer   | Avoid fake commands.                         | Preview has no save, apply, dispatch, or export command in this slice.       |
+| Story ID      | User               | Goal                                         | Acceptance Criteria                                                                            |
+| ------------- | ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `US-F17D-001` | Analytics engineer | Review generated SQL with editor ergonomics. | A ready Snowflake task preview renders in read-only Monaco.                                    |
+| `US-F17D-002` | Operator           | Understand why preview is unavailable.       | Missing required parameters show blocked state and field-level messages.                       |
+| `US-F17D-003` | Maintainer         | Keep Templates route-owned.                  | Architecture guard proves route and workbench do not import Monaco directly.                   |
+| `US-F17D-004` | Maintainer         | Reuse shared Monaco gateway.                 | Templates delegates ready preview to `MonacoCodeViewer`.                                       |
+| `US-F17D-005` | Product reviewer   | Avoid fake commands.                         | The preview panel reads generated text. A separate workbench action can create a project file. |
 
 #### Scenario Matrix
 
-| Scenario                 | State   | Expected UX                                       | Guard                                         |
-| ------------------------ | ------- | ------------------------------------------------- | --------------------------------------------- |
-| Required fields missing  | blocked | Validation state only, no Monaco viewer.          | `TemplatesView.test.tsx`                      |
-| Required fields complete | ready   | Monaco read-only preview with deterministic text. | `TemplateMonacoPreviewPanel.test.tsx`         |
-| Route ownership drift    | n/a     | Route delegates to panel and not editor binding.  | `templatesMonacoPreview.architecture.test.ts` |
-| Fake command temptation  | n/a     | No save/export/apply affordance.                  | `templatesMonacoPreview.architecture.test.ts` |
+| Scenario                 | State   | Expected UX                                                             | Guard                                         |
+| ------------------------ | ------- | ----------------------------------------------------------------------- | --------------------------------------------- |
+| Required fields missing  | blocked | Validation state only, no Monaco viewer.                                | `TemplatesView.test.tsx`                      |
+| Required fields complete | ready   | Monaco read-only preview with deterministic text.                       | `TemplateMonacoPreviewPanel.test.tsx`         |
+| Route ownership drift    | n/a     | Route delegates to panel and not editor binding.                        | `templatesMonacoPreview.architecture.test.ts` |
+| File creation boundary   | ready   | Preview remains read-only; the workbench opens the project file dialog. | `templatesMonacoPreview.architecture.test.ts` |
 
 #### Boundaries
 
 - Templates previews generated source only.
 - The Monaco panel is not an editor.
-- Generated source remains local presentation output until backend contracts
-  define a persisted template-generation rail.
+- Generated source remains local until the explicit working-tree save command succeeds.
 
 > Acceptance scope status: Accepted. Owner: See component owner.
 >
