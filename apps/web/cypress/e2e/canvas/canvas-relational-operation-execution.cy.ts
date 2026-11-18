@@ -2,7 +2,7 @@
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
   revisitWorkbenchCanvas,
@@ -24,9 +24,17 @@ const card = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
 const properties = '[data-slot="canvas-relational-tree-inline-editor"]:visible';
 const data = '[data-slot="canvas-operation-data-preview"]';
 
+function stubOperationCardScenario(): ReturnType<typeof stubWorkbenchScenario> {
+  const draft = stubWorkbenchScenario('saved-join');
+  // Register before the first visit so an accidental run is observable across every gesture.
+  stubE2eJsonApi('POST', '/runs/start', {}, { statusCode: 409 });
+  return draft;
+}
+
 describe('Internal operation card execution', () => {
   it('explains why a saved detached operation cannot preview without changing the output', () => {
-    stubWorkbenchScenario('saved-join');
+    stubOperationCardScenario();
+    stubE2eJsonApi('GET', /\/data-sample$/, {}, { statusCode: 409 });
     cy.viewport(1440, 900);
     visitWorkbenchCanvas();
     openWorkbenchModel();
@@ -71,7 +79,7 @@ describe('Internal operation card execution', () => {
   });
   for (const wrapped of [false, true]) {
     it(`opens JOIN properties and explicitly retrieves its own rows (wrapped: ${wrapped})`, () => {
-      const draft = stubWorkbenchScenario('saved-join');
+      const draft = stubOperationCardScenario();
       const original = decodeDvtSubstraitSemanticDocument(
         (
           draft.nodes.find((node) => node.id === 'join-transform')!.metadata!
@@ -318,7 +326,10 @@ describe('Internal operation card execution', () => {
         cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
         cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
         cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
-        cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBefore));
+        cy.then(() => {
+          expect(semanticWrites('join-transform')).to.have.length(writesBefore);
+          expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+        });
       });
     });
   }
