@@ -1,5 +1,6 @@
 /** Owned concern: centralize scoped workspace-file HTTP endpoints and reason tokens. */
 import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
+import type { WorkspaceDirectoryRequest } from '@dvt/contracts';
 
 export const WORKSPACE_FILES_ENDPOINT = '/workspace/files';
 
@@ -20,8 +21,16 @@ export function readWorkspaceFilesScope(): WorkspaceFilesScope {
   return { tenantId, projectId, environmentId };
 }
 
-export function buildWorkspaceFilesEndpoint(scope: WorkspaceFilesScope): string {
-  return `${WORKSPACE_FILES_ENDPOINT}?${new URLSearchParams(scope).toString()}`;
+export function buildWorkspaceFilesEndpoint(
+  { tenantId, projectId, environmentId }: WorkspaceFilesScope,
+  request?: WorkspaceDirectoryRequest
+): string {
+  const params = new URLSearchParams({ tenantId, projectId, environmentId });
+  if (request) {
+    params.set('directory', request.directory);
+    if (request.cursor != null) params.set('cursor', request.cursor);
+  }
+  return `${WORKSPACE_FILES_ENDPOINT}?${params.toString()}`;
 }
 
 export function buildWorkspaceFileContentEndpoint(

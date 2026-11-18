@@ -9,11 +9,83 @@ import { expect, it, vi } from 'vitest';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { withTestQueryClient, waitForReactQuery } from '../../testing/reactQueryHarness';
 import { createMockSessionContextPort } from '../../testing/runsPortDoubles';
+import type { WorkspaceScope } from '../ports/sessionContext';
 import type { IWorkspaceFileContentCommandPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileRevisionConflictError } from '../services/workspace/workspaceErrors';
 import TemplatesView from './TemplatesView';
 import { encodeProjectTemplate } from './templates/projectTemplateFile';
+
+it('keeps loaded variants while retrying the next page and searches additional results', async () => {
+  const listDirectoryPage = vi
+    .fn()
+    .mockResolvedValueOnce({
+      entries: ['dvt_templates/first.json'],
+      nextCursor: 'page-2',
+    })
+    .mockRejectedValueOnce(new Error('Unavailable'))
+    .mockResolvedValueOnce({
+      entries: ['dvt_templates/second.json'],
+      nextCursor: null,
+    });
+  const session = createMockSessionContextPort();
+  const route = (scope: WorkspaceScope): JSX.Element => (
+    <AppServicesProvider
+      overrides={{
+        ...createAppServicesTestOverrides(),
+        workspaceFileDirectoryQuery: { listDirectoryPage },
+        sessionContext: {
+          ...session,
+          getWorkspaceScope: () => scope,
+          getWorkspaceScopeSnapshot: () => scope,
+        },
+      }}
+    >
+      <MemoryRouter>
+        <TemplatesView />
+      </MemoryRouter>
+    </AppServicesProvider>
+  );
+  const scope = session.getWorkspaceScopeSnapshot();
+  const mounted = await withTestQueryClient(route(scope));
+  try {
+    const ui = within(mounted.container);
+    const button = (name: string): HTMLElement | null => ui.queryByRole('button', { name });
+    await waitForReactQuery(() => !!button('first'));
+    await act(async () => fireEvent.click(button('Load more project templates')!));
+    await waitForReactQuery(() => !!button('Retry'));
+    expect(button('first')).toBeTruthy();
+    await act(async () =>
+      fireEvent.change(ui.getByRole('textbox', { name: 'Find templates' }), {
+        target: { value: 'second' },
+      })
+    );
+    expect(ui.queryByText('No matches')).toBeNull();
+    await act(async () => fireEvent.click(button('Retry')!));
+    await waitForReactQuery(() => !!button('second'));
+    expect(button('Load more project templates')).toBeNull();
+    expect(listDirectoryPage.mock.calls.map(([request]) => request)).toEqual([
+      { directory: 'dvt_templates', cursor: null },
+      { directory: 'dvt_templates', cursor: 'page-2' },
+      { directory: 'dvt_templates', cursor: 'page-2' },
+    ]);
+    listDirectoryPage.mockResolvedValueOnce({
+      entries: ['dvt_templates/other.json'],
+      nextCursor: null,
+    });
+    const otherScope = { ...scope, environmentId: 'other' };
+    await mounted.render(route(otherScope));
+    await waitForReactQuery(() => !!button('other'));
+    expect(button('first')).toBeNull();
+    expect(button('second')).toBeNull();
+    expect(listDirectoryPage).toHaveBeenLastCalledWith(
+      { directory: 'dvt_templates', cursor: null },
+      otherScope
+    );
+  } finally {
+    await mounted.cleanup();
+  }
+});
 
 it('restores each recipe draft and removes the generated SQL when a required value is cleared', async () => {
   const mounted = await withTestQueryClient(
@@ -91,6 +163,9 @@ it('preserves the project draft and uses create-only semantics when the user sav
       overrides={{
         ...createAppServicesTestOverrides(),
         sessionContext: createMockSessionContextPort(),
+        workspaceFileDirectoryQuery: {
+          listDirectoryPage: async () => ({ entries: [path], nextCursor: null }),
+        },
         workspaceFilesQuery: {
           listFiles: async () => [{ name: file.name, path, kind: 'file' }],
           getFileContent: async () => file,

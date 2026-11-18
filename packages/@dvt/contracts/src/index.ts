@@ -16,6 +16,7 @@ export * from './contracts/source-import/index.js';
 export * from './contracts/canvas/index.js';
 export * from './contracts/dbt-project/index.js';
 export * from './contracts/workspace/ProjectWorkspace.v1.js';
+export * from './contracts/workspace/WorkspaceDirectoryPage.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';

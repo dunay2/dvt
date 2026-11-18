@@ -46,6 +46,24 @@ function stubTemplatesRouteBootstrapApis(): void {
   });
 }
 
+function stubProjectFiles(files: ReadonlyMap<string, FileContent> = new Map()): void {
+  stubE2eApi('GET', '/workspace/files', ({ url }) => {
+    const directory = url.searchParams.get('directory');
+    const inventory = [...files.values()];
+    return {
+      body:
+        directory === null
+          ? inventory.map(({ path, name }) => ({ path, name, kind: 'file' }))
+          : {
+              entries: inventory
+                .map((file) => file.path)
+                .filter((path) => path.slice(0, path.lastIndexOf('/')) === directory),
+              nextCursor: null,
+            },
+    };
+  });
+}
+
 function resolvedToken(window: Window, property: string, token: string): string {
   const probe = window.document.createElement('span');
   probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;display:block';
@@ -111,9 +129,7 @@ describe('Templates workbench', () => {
       contentSha256: sha256HexUtf8('name: demo'),
     };
     const files = new Map<string, FileContent>([[config.path, config]]);
-    stubE2eApi('GET', '/workspace/files', () => ({
-      body: [...files.values()].map(({ path, name }) => ({ path, name, kind: 'file' })),
-    }));
+    stubProjectFiles(files);
     stubE2eApi('GET', /\/workspace\/files\/.+/, ({ url }) => ({
       body: files.get(decodeURIComponent(url.pathname.slice('/workspace/files/'.length))),
     }));
@@ -196,7 +212,7 @@ describe('Templates workbench', () => {
   it('is reachable from shell navigation and announces the active template', () => {
     // Destinations stay directly discoverable; opening Templates must not require a brand menu.
     stubTemplatesRouteBootstrapApis();
-    stubE2eJsonApi('GET', '/workspace/files', []);
+    stubProjectFiles();
     visitInEnglish('/plugins');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
@@ -225,7 +241,7 @@ describe('Templates workbench', () => {
 
   it('blocks missing parameters and then renders generated source preview', () => {
     stubTemplatesRouteBootstrapApis();
-    stubE2eJsonApi('GET', '/workspace/files', []);
+    stubProjectFiles();
     visitInEnglish('/templates');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');

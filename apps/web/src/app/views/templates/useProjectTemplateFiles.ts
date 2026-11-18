@@ -1,14 +1,13 @@
 /** Load a selected variation and conditionally update its original project revision. */
-import { useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { sha256HexUtf8 } from '@dvt/crypto';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import { queryKeys } from '../../queries/queryKeys';
-import { useWorkspaceFileTreeQuery } from '../../queries/workspaceQueries';
 import {
   useWorkspaceFileContentCommandPort,
+  useWorkspaceFileDirectoryQueryPort,
   useWorkspaceFilesQueryPort,
 } from '../../services/AppServicesContext';
-import { flattenCodeWorkspaceFiles } from '../code/codeViewFileSelection';
 import {
   decodeProjectTemplate,
   encodeProjectTemplate,
@@ -20,10 +19,24 @@ export function useProjectTemplateFiles(scope: WorkspaceScope) {
   const files = useWorkspaceFilesQueryPort();
   const command = useWorkspaceFileContentCommandPort();
   const cache = useQueryClient();
-  const tree = useWorkspaceFileTreeQuery();
-  const paths = flattenCodeWorkspaceFiles(tree.data ?? [])
-    .map((f) => f.path)
-    .filter((p) => /^dvt_templates\/[a-z0-9][a-z0-9_-]*\.json$/.test(p));
+  const pages = useWorkspaceFileDirectoryQueryPort();
+  const directory = 'dvt_templates';
+  const key = queryKeys.workspace.directory(
+    scope.tenantId,
+    scope.projectId,
+    scope.environmentId,
+    directory
+  );
+  const listing = useInfiniteQuery({
+    queryKey: key,
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) => pages.listDirectoryPage({ directory, cursor: pageParam }, scope),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
+  const paths =
+    listing.data?.pages
+      .flatMap((page) => page.entries)
+      .filter((p) => /^dvt_templates\/[a-z0-9][a-z0-9_-]*\.json$/.test(p)) ?? [];
   async function read(path: string) {
     if (!paths.includes(path)) return null;
     const result = await files.getFileContent(path);
@@ -40,8 +53,18 @@ export function useProjectTemplateFiles(scope: WorkspaceScope) {
     if (result.path !== path || result.contentSha256 !== sha256HexUtf8(content))
       throw new Error('Unconfirmed workspace file receipt');
     void cache.invalidateQueries({ queryKey: queryKeys.workspace.fileTree(workspace) });
+    void cache.invalidateQueries({ queryKey: key });
     void cache.invalidateQueries({ queryKey: queryKeys.workspace.fileContent(workspace, path) });
     return result.contentSha256;
   }
-  return { paths, read, save, unavailable: tree.isError };
+  const pagination = {
+    more: listing.hasNextPage,
+    error: listing.isError,
+    loading: listing.isFetching,
+    load: () =>
+      listing.hasNextPage && !listing.isRefetchError
+        ? void listing.fetchNextPage()
+        : void listing.refetch(),
+  };
+  return { paths, read, save, pagination };
 }

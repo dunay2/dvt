@@ -7,7 +7,19 @@
  * @consequence File-backed authoring cannot silently overwrite a newer authoritative project revision.
  * @version 1.0.0
  */
-import type { CanvasAuthoringAuthorityResolution } from '@dvt/contracts';
+import type {
+  CanvasAuthoringAuthorityResolution,
+  WorkspaceDirectoryPage,
+  WorkspaceDirectoryRequest,
+} from '@dvt/contracts';
+
+export interface IWorkspaceFileListingPort {
+  listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]>;
+  listDirectoryPage(
+    scope: WorkspaceStorageScope,
+    request: WorkspaceDirectoryRequest
+  ): Promise<WorkspaceDirectoryPage>;
+}
 
 export type WorkspaceFileEntry = {
   readonly path: string;
@@ -167,8 +179,7 @@ export class InvalidWorkspaceFileBatchReceiptError extends Error {
   }
 }
 
-export interface IWorkspaceFileRepository {
-  listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]>;
+export interface IWorkspaceFileRepository extends Pick<IWorkspaceFileListingPort, 'listFiles'> {
   getFileContent(scope: WorkspaceStorageScope, path: string): Promise<WorkspaceFileContent>;
   saveFileContent(
     scope: WorkspaceStorageScope,

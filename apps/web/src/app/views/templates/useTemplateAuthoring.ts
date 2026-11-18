@@ -132,8 +132,11 @@ export function useTemplateAuthoring(
     parameter,
     update,
     save,
-    paths: files.paths,
-    unavailable: files.unavailable,
+    paths:
+      savedDraft?.digest && !files.paths.includes(selected)
+        ? [...files.paths, selected]
+        : files.paths,
+    pagination: files.pagination,
   };
 }
 export type TemplateAuthoring = ReturnType<typeof useTemplateAuthoring>;

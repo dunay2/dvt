@@ -2,7 +2,7 @@
 title: Workspace Port Decomposition Component
 status: Implemented
 owner: Web / API / Architecture
-last_reviewed: 2026-05-10
+last_reviewed: 2026-11-18
 planning_type: architecture
 ---
 
@@ -32,11 +32,36 @@ admin RBAC truth, or file write semantics.
 | ---------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `IWorkspaceGraphSnapshotQueryPort` | web query port         | `GetWorkspaceGraphDraft`                                                                     | Return a presentation graph snapshot projected from the protected graph draft read model.                               |
 | `IWorkspaceFilesQueryPort`         | web query port         | `ListWorkspaceFiles`, `GetWorkspaceFileContent`                                              | List and read workspace files through existing protected API reads.                                                     |
+| `IWorkspaceFileDirectoryQueryPort` | web query port         | `ListWorkspaceFiles`                                                                         | Page direct files in a named directory of the selected workspace.                                                       |
 | `IWorkspaceDiffQueryPort`          | web query port         | `GetWorkspaceDiffChanges`                                                                    | Return authoritative diff changes through `GET /workspace/diff/changes`.                                                |
 | `IWorkspacePluginCatalogQueryPort` | web query port         | `ListWorkspacePlugins`                                                                       | Return backend-published plugin catalog/readiness when the backend rail exists; presentation registry remains separate. |
 | `IWorkspaceAdminReadPort`          | web query port         | `ListAdminRoles`, `ListAdminAuditLog`                                                        | Return admin roles and audit read models when backend rails exist; unavailable in product runtime until then.           |
 | `IWarehouseSourceImportPort`       | web command/query port | `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, `ImportWarehouseSources` | Discover provider-neutral source objects and import supported objects through protected runtime source-import rails.    |
 | `IWorkspaceFileContentCommandPort` | web command port       | `SaveWorkspaceFileContent`                                                                   | Persist file content through the accepted scoped backend command.                                                       |
+
+## Scoped directory pages
+
+`ListWorkspaceFiles` also supports discovery inside a known project directory.
+The recursive tree retains its existing response and 500-file traversal budget.
+A directory request to the same endpoint has its own bound of 100 direct files
+per page. It returns their workspace-relative paths and a continuation cursor.
+Callers request the next page until the cursor is null. Filename order is stable
+across requests. Files added before a cursor appear on a fresh listing.
+
+```mermaid
+flowchart LR
+  Consumer[Workspace consumer] --> Query[ListWorkspaceFiles]
+  Query --> Tree[Existing bounded recursive tree]
+  Query --> Directory[Direct files in authorized directory]
+  Directory --> Page[Paths and optional continuation]
+  Page --> Templates[Templates library]
+```
+
+The scope is the same tenant, project and environment as the recursive query.
+Only visible workspace directories and accepted file extensions are eligible.
+Missing directories yield an empty page. Invalid directory selectors, symlinks
+and malformed or foreign cursors are rejected. The Templates library can load
+additional pages without competing with unrelated workspace files.
 
 ## Invariants
 

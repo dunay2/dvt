@@ -7,6 +7,15 @@ import {
 } from '../../application/ports/workspaceFiles.js';
 
 const SCOPE_STORAGE_DIRECTORY = 'scopes';
+export const excludedWorkspaceNames = new Set([
+  '.git',
+  '.next',
+  '.turbo',
+  '.vite',
+  'coverage',
+  'dist',
+  'node_modules',
+]);
 const ALLOWED_WORKSPACE_FILE_EXTENSIONS = new Set([
   '.cjs',
   '.csv',
