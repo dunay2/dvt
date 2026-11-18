@@ -77,6 +77,7 @@ export function CanvasRelationalTreeGraphNode({
           }
           detailed={detailed}
           movable={movable}
+          stagedOperation={stagedOperation}
           pending={pending}
           missingInput={stagedOperation?.inputs.includes(null)}
           hideDetail={stagedOperation != null && !pending}

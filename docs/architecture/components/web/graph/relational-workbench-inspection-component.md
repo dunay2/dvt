@@ -73,6 +73,13 @@ acceptance and persistence.
 
 ## Corners and proof
 
+The type icon on a configured JOIN opens its eligible types. Choosing LEFT or
+RIGHT preserves the identity and order of both inputs. The icon and the
+Properties selector share `ConfigureCanvasDvtNode` and its output-field checks.
+Apply saves the working copy through `SaveWorkspaceGraphDraft`. Cancel restores
+the original type. Read-only cards and incomplete JOINs keep a passive icon.
+Keyboard focus on the type control is independent of card selection and drag.
+
 - A valid focused alias followed by pointer Close causes no PUT. Reopening is
   passive and SQL is enabled.
 - Closing after an acknowledged alias preserves that accepted change.

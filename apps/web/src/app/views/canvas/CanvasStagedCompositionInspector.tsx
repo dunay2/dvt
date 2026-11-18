@@ -5,28 +5,17 @@
  * @consequence No UNION-specific inspector, copied semantic state or parallel save rail is added.
  * @version 1.0.0
  */
-import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalTreeOperationEditor } from './CanvasRelationalTreeOperationEditor';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
-import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { projectCanvasStagedCompositionUpdate } from './canvasStagedCompositionUpdate';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-
-function operationFor(document: SubstraitDocument, staged: CanvasStagedOperation) {
-  const indexed = indexSubstraitRelations(document);
-  const relation = indexed.ok
-    ? indexed.index.relations.get(staged.id)?.relation.relType
-    : undefined;
-  if (relation?.case === 'cross' || relation?.case === 'set') return staged.operation;
-  if (relation?.case !== 'join') return null;
-  const operation = canvasJoinOperationForType(relation.value.type);
-  return isCanvasJoinOperation(operation) ? operation : null;
-}
 
 export function CanvasStagedCompositionInspector({
   staged,
@@ -49,9 +38,8 @@ export function CanvasStagedCompositionInspector({
 }>): JSX.Element | null {
   const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
   const change = (next: SubstraitDocument) => {
-    const operation = operationFor(next, staged);
-    if (operation == null) return;
-    return onChange({ operation, semanticDocument: encodeDvtSubstraitSemanticDocument(next) });
+    const update = projectCanvasStagedCompositionUpdate(next, staged);
+    return update != null && onChange(update);
   };
   return (
     <CanvasRelationalTreeEditorFrame

@@ -5,6 +5,10 @@
  * @consequence Stale JOIN codes cannot imply another type or leave an empty card row.
  * @version 1.0.0
  */
+import { useContext } from 'react';
+import { CanvasJoinTypeIconMenu } from './CanvasJoinTypeIconMenu';
+import { CanvasJoinTypeChangeContext } from './CanvasJoinTypeChangeContext';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -21,6 +25,7 @@ export function CanvasRelationalTreeNodeButton({
   pending = false,
   missingInput = false,
   hideDetail = false,
+  stagedOperation,
   onSelect,
   onExpand,
   onDelete,
@@ -33,6 +38,7 @@ export function CanvasRelationalTreeNodeButton({
   pending?: boolean;
   missingInput?: boolean;
   hideDetail?: boolean;
+  stagedOperation?: CanvasStagedOperation;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
   onDelete?: () => void;
@@ -60,7 +66,15 @@ export function CanvasRelationalTreeNodeButton({
   const isSource = node.operator === 'read';
   const { operation, presentation, title, detail } = resolveCanvasRelationalNodeCopy(node, copy);
   const Icon = presentation.icon;
-  return (
+  const authority = useContext(CanvasJoinTypeChangeContext);
+  const editableJoin =
+    authority != null &&
+    !pending &&
+    node.relationId != null &&
+    node.operator === 'join' &&
+    presentation.category === 'join' &&
+    (stagedOperation == null || stagedOperation.semanticDocument != null);
+  const button = (
     <button
       type="button"
       draggable={false}
@@ -96,7 +110,7 @@ export function CanvasRelationalTreeNodeButton({
       className={styles.nodeButton}
     >
       <span className={styles.identity}>
-        <Icon aria-hidden="true" className={styles.icon} />
+        {editableJoin ? null : <Icon aria-hidden="true" className={styles.icon} />}
         <span data-slot="canvas-relational-node-title" title={title} className={styles.title}>
           {title}
         </span>
@@ -110,5 +124,18 @@ export function CanvasRelationalTreeNodeButton({
       )}
       {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}
     </button>
+  );
+  if (!editableJoin) return button;
+  return (
+    <div className={styles.joinHeader} data-detailed={detailed}>
+      {button}
+      <CanvasJoinTypeIconMenu
+        title={title}
+        copy={copy}
+        relationId={node.relationId!}
+        authority={authority}
+        staged={stagedOperation}
+      />
+    </div>
   );
 }
