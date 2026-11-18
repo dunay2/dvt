@@ -107,8 +107,8 @@ describe('RootShell chrome', () => {
       const rail = mounted.container.querySelector('[data-slot="left-navigation-rail"]');
       const frame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
       const nav = rail?.querySelector('[data-slot="left-navigation-nav"]');
-      const admin = nav?.querySelector<HTMLButtonElement>(
-        '[data-slot="left-navigation-section-trigger"][data-route="/admin"]'
+      const admin = nav?.querySelector<HTMLAnchorElement>(
+        '[data-slot="left-navigation-link"][href="/admin"]'
       );
       const runs = nav?.querySelector<HTMLAnchorElement>(
         '[data-slot="left-navigation-link"][href="/runs"]'
@@ -146,14 +146,14 @@ describe('RootShell chrome', () => {
       expectRootShellWorkbenchFrameChrome(mounted.container, 'Canvas route');
       const rail = mounted.container.querySelector('[data-slot="left-navigation-rail"]');
       expect(rail).not.toBeNull();
-      const links = [
-        ...rail!.querySelectorAll<HTMLElement>(
-          '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
-        ),
-      ];
-      expect(
-        links.map((link) => link.getAttribute('href') ?? link.getAttribute('data-route'))
-      ).toEqual(['/canvas', '/runs', '/templates', '/plugins', '/admin']);
+      const links = [...rail!.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')];
+      expect(links.map((link) => link.getAttribute('href'))).toEqual([
+        '/canvas',
+        '/runs',
+        '/templates',
+        '/plugins',
+        '/admin',
+      ]);
       expect(links[0]?.getAttribute('aria-current')).toBe('page');
       expect(mounted.container.querySelector('[data-slot="shell-app-menu-trigger"]')).toBeNull();
       expect(rail!.querySelector('[data-slot="shell-about-command"]')).not.toBeNull();

@@ -159,30 +159,26 @@ flowchart LR
 
 ## Shell Navigation Ownership
 
-An existing navigation item may opt into a route heading and concern-owned
-section navigation. Root projects the active optional heading from that same
-model into ShellTopBar; a route does not publish a second title state.
-
-Admin uses this composition: its title occupies the existing top bar, and the
-left Admin icon opens Platform, Roles, Permissions and Audit Log through the
-existing Radix menu and Router. The route no longer repeats a large header or a
-centered tab list. The Admin URL contract owns valid section IDs, fallback and
-search/hash preservation; the shell menu merely presents those destinations.
+Root projects the active route heading from its navigation model into
+ShellTopBar. The Administration shield links to `/admin`. The protected route
+renders its Security navigation in the main work area. Platform, Roles,
+Permissions and Audit Log are ordinary links to the sections of that route.
+The Admin URL contract owns section identifiers, query parameters and hash
+preservation. Detail URLs open the same section on reload or history traversal.
 
 ```mermaid
 flowchart LR
-  Admin["Admin route-position contract"] --> Model["Existing shell navigation model"]
-  Model --> Menu["Admin icon section menu"]
-  Menu --> Router["Existing Router admission"]
-  Router --> Content["Selected passive Admin section"]
+  Model["Shell navigation model"] --> Shield["Administration link"]
+  Shield --> Router["Protected Router outlet"]
+  Router -->|"/admin"| Index["Security navigation in AdminView"]
+  Index -->|"section link"| Router
+  Router -->|"valid tab"| Content["Selected passive Admin section"]
   Model --> Heading["Root active heading projection"]
   Heading --> TopBar["Existing ShellTopBar"]
 ```
 
-Canvas and Git retain their existing controls and DOM lifetime. Other navigation
-items remain direct links; no new registry, route store or permission policy is
-introduced. Section menu items are real links, while their trigger is a real
-button with menu semantics and existing focus/tooltip/geometry roles.
+Selecting the shield from a detail returns to the index. Router and the active
+session govern admission. Section-specific data belongs to the detail view.
 
 The current left navigation implementation follows the same boundary rule as
 the rest of the shell:

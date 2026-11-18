@@ -40,9 +40,8 @@ route-family reason remains useful for File/Project and identity presentation.
 - Runtime capability filtering and Router/session guards remain authoritative.
   Existing Plugins/Admin contributions are not newly granted or filtered by
   interpreting presentation `level` metadata as permissions.
-- Global destinations are links with `aria-current`, or an opted-in route section
-  menu whose button owns menu disclosure and whose items are real Router links.
-  Admin opts into the section menu by the user's explicit choice. Following the user's
+- Global destinations are links with `aria-current`. The Administration shield
+  opens the Security index in the main work area at `/admin`. Following the user's
   [explicit clarification](https://github.com/dunay2/dvt/issues/3765#issuecomment-6725338570),
   an unmodified primary Canvas click on the current route opens Elements with
   the existing `expand` event, never a toggle. Modified/new-tab activation keeps
@@ -74,9 +73,9 @@ route-family reason remains useful for File/Project and identity presentation.
   heading from its existing model and pathname, then ShellTopBar presents it in
   the existing identity area. Admin removes its duplicate local header; other
   route headers are unaffected. No mutable title publication is introduced.
-- Admin owns section IDs and URL construction in `adminRoutePosition`; both the
-  passive route and generic menu consume this contract. The generic renderer
-  has no Admin ID list, tab query key or selected-section state of its own.
+- Admin owns section IDs and URL construction in `adminRoutePosition`. Its
+  route projects section links in the index and resolves the active detail
+  from the URL. The shell owns the link to the index and current-route styling.
 
 ## Transitions
 
@@ -137,7 +136,7 @@ focus and elevation. Do not create another spacing scale or status palette.
 Only one destination is visually selected. Canvas keeps its current-route ARIA
 when Code is open, but its visual `data-active` override is false; Git is selected
 from the existing active Code contribution on the Canvas route. Other destinations
-retain route currentness. Menu disclosure does not select another destination.
+retain route currentness. Administration remains current across its sections.
 Icons use the shared primary color, strong foreground when selected and disabled
 foreground when unavailable; no route-specific palette is introduced.
 

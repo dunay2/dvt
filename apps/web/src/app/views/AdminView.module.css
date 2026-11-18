@@ -1,4 +1,4 @@
-/* Route composition owns useful width; diagnostic cards own their own presentation. */
+/* Own the security directory layout and route width. Detail views own their content styles. */
 .surface {
   width: 100%;
   max-width: var(--container-6xl);
@@ -7,4 +7,49 @@
 .section {
   min-width: 0;
   width: 100%;
+}
+
+.directory {
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+.heading {
+  margin: 0 0 calc(var(--spacing) * 3);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--spacing) * 56)), 1fr));
+  gap: calc(var(--spacing) * 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.destination {
+  width: 100%;
+  height: auto;
+  min-height: var(--control-size-navigation);
+  justify-content: flex-start;
+  border-color: var(--border-default);
+  background: var(--surface-panel);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  color: var(--text-default);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  white-space: normal;
+  text-align: start;
+}
+
+.icon {
+  color: var(--primary);
+}
+
+.chevron {
+  margin-inline-start: auto;
+  color: var(--text-subtle);
 }

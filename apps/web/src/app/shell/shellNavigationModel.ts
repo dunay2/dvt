@@ -3,19 +3,11 @@ import { Shield, Puzzle } from 'lucide-react';
 
 import { resolveString, type LocalizableString } from '../plugins/contracts/PluginManifest';
 import type { ShellNavigationViewContribution } from '../plugins/registry';
-import { adminRouteHeading, adminSectionNavigation } from '../views/admin/adminRoutePosition';
+import { adminViewCopy } from '../views/admin/copy';
 
 export type ShellRouteHeading = Readonly<{
   title: string;
   icon: ShellNavigationViewContribution['placement']['icon'];
-}>;
-export type ShellRouteSectionNavigation = Readonly<{
-  items: readonly Readonly<{ id: string; label: string; icon: ShellRouteHeading['icon'] }>[];
-  activeId(search: URLSearchParams): string;
-  locationFor(
-    id: string,
-    current: Readonly<{ pathname: string; search: string; hash: string }>
-  ): Readonly<{ pathname: string; search: string; hash: string }>;
 }>;
 
 export type ShellNavigationItem = {
@@ -25,7 +17,6 @@ export type ShellNavigationItem = {
   readonly level: ShellNavigationViewContribution['placement']['level'];
   readonly source: 'runtime' | 'shell';
   readonly heading?: ShellRouteHeading;
-  readonly sections?: ShellRouteSectionNavigation;
 };
 
 export type ShellNavigationModel = {
@@ -34,7 +25,10 @@ export type ShellNavigationModel = {
 };
 
 const SHELL_NAV: readonly Readonly<
-  Omit<ShellNavigationItem, 'label'> & { label: LocalizableString }
+  Omit<ShellNavigationItem, 'label' | 'heading'> & {
+    label: LocalizableString;
+    headingTitle?: LocalizableString;
+  }
 >[] = [
   {
     to: '/plugins',
@@ -53,8 +47,7 @@ const SHELL_NAV: readonly Readonly<
     },
     level: 'admin',
     source: 'shell',
-    heading: adminRouteHeading,
-    sections: adminSectionNavigation,
+    headingTitle: adminViewCopy.title,
   },
 ] as const;
 
@@ -94,6 +87,12 @@ export function buildShellNavigationModel(
           : {}),
       };
     }),
-    footerItems: SHELL_NAV.map((item) => ({ ...item, label: resolveString(item.label, locale) })),
+    footerItems: SHELL_NAV.map(({ headingTitle, ...item }) => ({
+      ...item,
+      label: resolveString(item.label, locale),
+      ...(headingTitle == null
+        ? {}
+        : { heading: { title: resolveString(headingTitle, locale), icon: item.icon } }),
+    })),
   };
 }

@@ -209,9 +209,7 @@ describe('Shell layout contract', () => {
       const rail = window.document.querySelector('[data-slot="left-navigation-rail"]');
       const nav = window.document.querySelector('[data-slot="left-navigation-nav"]');
       const links = Array.from(
-        window.document.querySelectorAll<HTMLElement>(
-          '[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]'
-        )
+        window.document.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')
       );
 
       expect(body, 'shell body').to.not.equal(null);
@@ -243,7 +241,7 @@ describe('Shell layout contract', () => {
     assertNavigationTargetGeometry();
     cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
     cy.viewport(640, 400);
-    cy.get('[data-slot="left-navigation-link"], [data-slot="left-navigation-section-trigger"]')
+    cy.get('[data-slot="left-navigation-link"]')
       .last()
       .scrollIntoView()
       .focus()
@@ -430,12 +428,6 @@ describe('Shell layout contract', () => {
     assertShellCanvasEntries('code');
     assertNavigationTargetGeometry();
     cy.get('[data-slot="shell-project-code-command"]').should('have.attr', 'aria-expanded', 'true');
-    cy.get('[data-slot="left-navigation-section-trigger"][data-route="/admin"]').click();
-    cy.get('[role="menu"]').should('be.visible');
-    assertSelectedNavigation('code');
-    cy.get('[role="menu"]').should('be.visible');
-    pressNativeKey('Escape');
-    cy.get('[role="menu"]').should('not.exist');
     cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').click();
     cy.get(canvas).should('be.visible');
     // Repeated Canvas activation opens Elements; it must not collapse or recreate the graph.
@@ -469,7 +461,7 @@ describe('Shell layout contract', () => {
     cy.get('[data-pending-operation="true"]').should('exist');
     // Staging starts the existing draft presentation; a rejected route change must retain that owner.
     cy.get(modelViewport).as('pendingModel', { type: 'static' });
-    cy.get('[data-slot="left-navigation-link"][href="/plugins"]').focus();
+    cy.get('[data-slot="left-navigation-link"][href="/admin"]').focus();
     pressNativeKey('Enter');
     cy.get('[role="alertdialog"]').should('be.visible');
     cy.location('pathname').should('eq', '/canvas');

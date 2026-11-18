@@ -1,5 +1,12 @@
+/** Own Admin presentation strings, including the security directory in the active language. */
+import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
+
 export const adminViewCopy = {
-  title: 'Admin & RBAC',
+  title: {
+    key: 'navigation.admin.title',
+    fallback: 'Admin & RBAC',
+    translations: { es: 'Administración' },
+  },
   tabs: {
     platform: 'Platform',
     roles: 'Roles',
@@ -50,3 +57,21 @@ export const adminViewCopy = {
     auditPlaceholder: 'Search audit log...',
   },
 } as const;
+
+export type AdminNavigationCopy = Readonly<{
+  title: string;
+  tabs: Readonly<Record<keyof typeof adminViewCopy.tabs, string>>;
+}>;
+
+export const adminNavigationCopy = {
+  en: { title: 'Security', tabs: adminViewCopy.tabs },
+  es: {
+    title: 'Seguridad',
+    tabs: {
+      platform: 'Plataforma',
+      roles: 'Roles',
+      permissions: 'Permisos',
+      audit: 'Registro de auditoría',
+    },
+  },
+} as const satisfies Record<ApplicationLanguage, AdminNavigationCopy>;

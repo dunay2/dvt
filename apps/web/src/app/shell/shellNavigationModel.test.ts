@@ -39,16 +39,15 @@ describe('buildShellNavigationModel', () => {
       )
     ).toBeNull();
   });
-  it('projects opted-in headings and section destinations without another route-title state', () => {
+  it('projects opted-in headings without another route-title state', () => {
     const model = buildShellNavigationModel([]);
     expect(resolveShellRouteHeading(model, '/admin')?.title).toBe('Admin & RBAC');
+    expect(resolveShellRouteHeading(buildShellNavigationModel([], 'es-ES'), '/admin')?.title).toBe(
+      'Administración'
+    );
     expect(resolveShellRouteHeading(model, '/admin/')).not.toBeNull();
     expect(resolveShellRouteHeading(model, '/administrator')).toBeNull();
     expect(resolveShellRouteHeading(model, '/canvas')).toBeNull();
-    expect(
-      model.footerItems.find((item) => item.to === '/admin')?.sections?.items.map((item) => item.id)
-    ).toEqual(['platform', 'roles', 'permissions', 'audit']);
-    expect(model.footerItems.find((item) => item.to === '/plugins')?.sections).toBeUndefined();
   });
   it('maps runtime navigation views into primary shell items and appends shell footer items', () => {
     const model = buildShellNavigationModel([

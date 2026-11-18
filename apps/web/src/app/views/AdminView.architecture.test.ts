@@ -32,29 +32,11 @@ describe('Admin route architecture', () => {
     expect(componentGuide).toContain('?tab=audit');
   });
 
-  it('keeps one route-position contract for the passive view and shell menu', () => {
-    const adminSource = readViewSource('AdminView.tsx');
-    const adminTestSource = readViewSource('AdminView.test.tsx');
-    const position = readViewSource('admin/adminRoutePosition.ts');
-
-    expect(adminSource.trimStart().startsWith('/** Owned concern:')).toBe(true);
-    expect(adminSource).toContain('useSearchParams');
-    expect(adminSource).toContain('resolveActiveAdminTab(searchParams, initialTab)');
-    expect(adminSource).toContain("from './admin/adminRoutePosition'");
-    expect(position).toContain('function resolveActiveAdminTab(');
-    expect(position).toContain('function buildAdminSectionLocation(');
-    expect(position).toContain("search.set('tab',");
-    expect(adminSource).not.toContain('useState(');
-    expect(adminSource).not.toMatch(/TabsList|ViewHeader|handleTabChange/u);
-    expect(adminSource).toContain('aria-label={copy.tabs[activeTab]}');
-
-    expect(adminTestSource).toContain(
-      'records the selected tab in the route so F5 keeps the operator position'
-    );
-    expect(adminTestSource).toContain(
-      'hydrates the selected tab from the route after a browser refresh'
-    );
-    expect(adminTestSource).toContain("initialEntry: '/admin?tab=audit'");
+  it('delegates URL position to the route contract and data access to section owners', () => {
+    const admin = readViewSource('AdminView.tsx');
+    expect(admin).toContain("from './admin/adminRoutePosition'");
+    expect(admin).not.toMatch(/useState\(|useQuery\(|\bfetch\(|new URLSearchParams/u);
+    expect(admin).not.toMatch(/TabsList|ViewHeader/u);
   });
 
   it('keeps the route-position component discoverable from the web component index', () => {
