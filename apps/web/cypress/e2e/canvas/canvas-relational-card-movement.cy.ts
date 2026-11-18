@@ -114,7 +114,10 @@ describe('Relational card movement', () => {
       const writes = semanticWrites('join-transform').length;
       cy.get(source).focus().type('{alt}{rightarrow}{alt}');
       cy.get(source).should(($moved) => {
-        expect(readWorkbenchCardPosition($moved[0])).to.deep.equal([before.x + 10, before.y]);
+        expect(readWorkbenchCardPosition($moved[0])).to.deep.equal({
+          x: before.x + 10,
+          y: before.y,
+        });
       });
       moveWorkbenchCard(source, 20, 12);
       cy.get(source).should(($moved) => {
