@@ -114,6 +114,23 @@ describe('workspaceFilesRoutes', () => {
     return { app, authorize, resolveFileContext };
   }
 
+  it('lists direct files only for an admitted directory and authorized workspace', async () => {
+    const { app } = buildApp();
+    const endpoint = '/workspace/files?' + SCOPE_QUERY;
+    const listing = await app.inject(endpoint + '&directory=models/staging');
+    expect(listing.statusCode).toBe(200);
+    expect(listing.json()).toEqual({
+      entries: ['models/staging/stg_orders.sql'],
+      nextCursor: null,
+    });
+    for (const invalid of ['cursor=x', 'directory=..', 'directory=a&directory=b']) {
+      expect((await app.inject(endpoint + '&' + invalid)).statusCode).toBe(400);
+    }
+    expect(
+      (await buildApp({ authorized: false }).app.inject(endpoint + '&directory=models')).statusCode
+    ).toBe(403);
+  });
+
   it('returns scoped workspace file tree', async () => {
     const { app, authorize } = buildApp();
 

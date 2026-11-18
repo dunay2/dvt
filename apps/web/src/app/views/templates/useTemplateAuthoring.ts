@@ -119,6 +119,10 @@ export function useTemplateAuthoring(
         description: copy.project + ' · ' + template.label,
       }
     : template;
+  const projectPaths = new Set(files.paths);
+  for (const [path, localDraft] of Object.entries(drafts)) {
+    if (localDraft.digest) projectPaths.add(path);
+  }
   return {
     selected,
     template: displayTemplate,
@@ -132,8 +136,8 @@ export function useTemplateAuthoring(
     parameter,
     update,
     save,
-    paths: files.paths,
-    unavailable: files.unavailable,
+    paths: [...projectPaths],
+    pagination: files.pagination,
   };
 }
 export type TemplateAuthoring = ReturnType<typeof useTemplateAuthoring>;

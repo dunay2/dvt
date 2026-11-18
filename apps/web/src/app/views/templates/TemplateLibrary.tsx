@@ -13,6 +13,7 @@ export function TemplateLibrary({
   language,
   selected,
   paths,
+  pagination,
   onSelect,
   children,
 }: Readonly<{
@@ -20,6 +21,7 @@ export function TemplateLibrary({
   language: ApplicationLanguage;
   selected: string;
   paths: readonly string[];
+  pagination: { more: boolean; error: boolean; loading: boolean; load: () => void };
   onSelect: (id: string) => void;
   children: ReactNode;
 }>) {
@@ -77,9 +79,27 @@ export function TemplateLibrary({
               {projectFiles.map((p) => row(p, p.slice(p.lastIndexOf('/') + 1, -5)))}
             </div>
           )}
-          {!recipes.length && !projectFiles.length && (
-            <p className={styles.helper}>{copy.noMatches}</p>
+          {pagination.error && (
+            <p role="status" className={styles.helper}>
+              {copy.directoryError}
+            </p>
           )}
+          {(pagination.more || pagination.error) && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pagination.loading}
+              onClick={pagination.load}
+            >
+              {pagination.error ? copy.retry : copy.moreTemplates}
+            </Button>
+          )}
+          {!recipes.length &&
+            !projectFiles.length &&
+            !pagination.more &&
+            !pagination.error &&
+            !pagination.loading && <p className={styles.helper}>{copy.noMatches}</p>}
         </div>
       </section>
       {children}

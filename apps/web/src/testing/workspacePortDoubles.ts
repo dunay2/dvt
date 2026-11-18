@@ -1,5 +1,5 @@
 /** Owned concern: provide test-only workspace capability ports backed by fixture state. */
-import { buildRelationalSourceObjectId } from '@dvt/contracts';
+import { buildRelationalSourceObjectId, WORKSPACE_DIRECTORY_PAGE_SIZE } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 
 import {
@@ -25,6 +25,7 @@ import type {
   IWorkspaceFileContentCommandPort,
   IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
+  IWorkspaceFileDirectoryQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
   SourceObjectMetricEvidence,
@@ -721,6 +722,7 @@ export type MockWorkspacePorts = {
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileDirectoryQuery: IWorkspaceFileDirectoryQueryPort;
   readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 };
@@ -945,6 +947,17 @@ export function createMockWorkspacePorts(
     workspaceAdminRead: createMockWorkspaceAdminReadPort(),
     warehouseSourceImport: createMockWarehouseSourceImportPort(state),
     workspaceFilesQuery: createMockWorkspaceFilesQueryPort(state),
+    workspaceFileDirectoryQuery: {
+      listDirectoryPage: async ({ directory, cursor }) => {
+        const paths = Object.keys(state.fileContents)
+          .filter(
+            (path) => path.slice(0, path.lastIndexOf('/')) === directory && path > (cursor ?? '')
+          )
+          .sort();
+        const entries = paths.slice(0, WORKSPACE_DIRECTORY_PAGE_SIZE);
+        return { entries, nextCursor: paths.length > entries.length ? entries.at(-1)! : null };
+      },
+    },
     workspaceFileHistoryQuery: createMockWorkspaceFileHistoryQueryPort(state),
     workspaceFileContentCommand: createMockWorkspaceFileContentCommandPort(state),
   };

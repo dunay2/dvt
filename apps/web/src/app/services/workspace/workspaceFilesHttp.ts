@@ -1,5 +1,6 @@
 /** Owned concern: centralize scoped workspace-file HTTP endpoints and reason tokens. */
-import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
+import type { WorkspaceDirectoryRequest } from '@dvt/contracts';
+import { readGrantedWorkspaceHttpScope, type WorkspaceHttpScope } from './workspaceHttpScope';
 
 export const WORKSPACE_FILES_ENDPOINT = '/workspace/files';
 
@@ -9,19 +10,22 @@ export const WORKSPACE_FILES_HTTP_ERROR_REASON = Object.freeze({
   revisionConflict: 'workspace_file_revision_conflict',
 } as const);
 
-export type WorkspaceFilesScope = {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-};
+export type WorkspaceFilesScope = WorkspaceHttpScope;
 
 export function readWorkspaceFilesScope(): WorkspaceFilesScope {
-  const { tenantId, projectId, environmentId } = readGrantedWorkspaceScope();
-  return { tenantId, projectId, environmentId };
+  return readGrantedWorkspaceHttpScope();
 }
 
-export function buildWorkspaceFilesEndpoint(scope: WorkspaceFilesScope): string {
-  return `${WORKSPACE_FILES_ENDPOINT}?${new URLSearchParams(scope).toString()}`;
+export function buildWorkspaceFilesEndpoint(
+  { tenantId, projectId, environmentId }: WorkspaceFilesScope,
+  request?: WorkspaceDirectoryRequest
+): string {
+  const params = new URLSearchParams({ tenantId, projectId, environmentId });
+  if (request) {
+    params.set('directory', request.directory);
+    if (request.cursor != null) params.set('cursor', request.cursor);
+  }
+  return `${WORKSPACE_FILES_ENDPOINT}?${params.toString()}`;
 }
 
 export function buildWorkspaceFileContentEndpoint(

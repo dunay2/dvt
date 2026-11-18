@@ -2,6 +2,8 @@
 import {
   SOURCE_IMPORT_GROUPING,
   WAREHOUSE_CONNECTION_TYPE,
+  type WorkspaceDirectoryPage,
+  type WorkspaceDirectoryRequest,
   type CanvasAuthoringAuthorityResolution,
   type ConnectionRef,
   type CreateWarehouseConnectionRequest,
@@ -18,6 +20,7 @@ import {
 } from '@dvt/contracts';
 
 import type { AuditLogEntry, DbtEdge, DbtNode, DiffChange, Plugin, Role } from '../types/dbt';
+import type { WorkspaceScope } from './sessionContext';
 
 export type {
   RelationalSourceObject,
@@ -168,6 +171,14 @@ export interface IWorkspaceGraphSnapshotQueryPort {
 export interface IWorkspaceFilesQueryPort {
   listFiles: () => Promise<WorkspaceFileEntry[]>;
   getFileContent: (path: string) => Promise<FileContent>;
+}
+
+/** Direct pages of the existing ListWorkspaceFiles query. */
+export interface IWorkspaceFileDirectoryQueryPort {
+  listDirectoryPage(
+    request: WorkspaceDirectoryRequest,
+    scope: WorkspaceScope
+  ): Promise<WorkspaceDirectoryPage>;
 }
 
 /** Owns read-only, file-scoped Git history access for workspace files. */

@@ -7,6 +7,7 @@ import {
   TestWarehouseConnectionResultSchema,
   WarehouseConnectionListSchema,
   WarehouseConnectionSchema,
+  WorkspaceDirectoryPageSchema,
   parseWorkspaceGraphDraftReadResponse,
 } from '@dvt/contracts';
 
@@ -18,6 +19,7 @@ import type {
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
   IWorkspaceFileHistoryQueryPort,
+  IWorkspaceFileDirectoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   PostgresTransformSqlDiagnostic,
@@ -382,6 +384,17 @@ export function createApiWarehouseSourceDataSampleQueryPort(
         }
         throw error;
       }
+    },
+  };
+}
+
+export function createApiWorkspaceFileDirectoryQueryPort(
+  apiClient: ApiClient
+): IWorkspaceFileDirectoryQueryPort {
+  return {
+    listDirectoryPage: async (request, scope) => {
+      const result = await apiClient.getJson<unknown>(buildWorkspaceFilesEndpoint(scope, request));
+      return WorkspaceDirectoryPageSchema.parse(result);
     },
   };
 }

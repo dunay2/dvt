@@ -47,14 +47,35 @@ export function registerWorkspaceFilesRoutes(
   app: FastifyInstance,
   deps: WorkspaceFilesRouteDeps
 ): void {
-  app.get<{ Querystring: WorkspaceFilesQuery }>(
+  app.get<{ Querystring: WorkspaceFilesQuery & { directory?: string; cursor?: string } }>(
     RUNTIME_ROUTE_PATH.workspaceFiles,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
       const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
       if (!authorized) return;
 
-      reply.code(200).send(await deps.listUseCase.execute(authorized.scope));
+      const { directory, cursor } = request.query;
+      if (directory === undefined && cursor === undefined) {
+        reply.code(200).send(await deps.listUseCase.execute(authorized.scope));
+        return;
+      }
+      try {
+        if (typeof directory !== 'string' || (cursor !== undefined && typeof cursor !== 'string'))
+          throw new InvalidWorkspacePathError('directory');
+        const page = await deps.listUseCase.directoryPage(authorized.scope, {
+          directory,
+          ...(cursor === undefined ? {} : { cursor }),
+        });
+        reply.code(200).send(page);
+      } catch (error) {
+        if (!(error instanceof InvalidWorkspacePathError)) throw error;
+        httpErrorTranslation.respond(
+          reply,
+          httpErrorTranslation.parse.issue(
+            badRequestIssue(HTTP_ERROR_REASON.invalidWorkspacePath, { target: 'directory' })
+          )
+        );
+      }
     }
   );
 

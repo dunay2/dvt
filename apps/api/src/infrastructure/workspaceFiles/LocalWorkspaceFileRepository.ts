@@ -11,11 +11,14 @@ import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 
+import type { WorkspaceDirectoryRequest } from '@dvt/contracts';
+
 import {
   InvalidWorkspacePathError,
   WorkspaceFileNotFoundError,
   type DeleteWorkspaceFileContentInput,
   type IWorkspaceFileRepository,
+  type IWorkspaceFileListingPort,
   type SaveWorkspaceFileContentInput,
   type WorkspaceFileContent,
   type WorkspaceFileDeleteResult,
@@ -28,22 +31,14 @@ import {
   type LocalWorkspaceFileMutationCoordinator,
   sharedLocalWorkspaceFileMutationCoordinator,
 } from './LocalWorkspaceFileMutationCoordinator.js';
+import { readWorkspaceDirectoryPage } from './workspaceDirectoryPage.js';
 import {
+  excludedWorkspaceNames,
   isAllowedWorkspaceFileName,
   resolveWorkspaceFileStoragePath,
   resolveWorkspaceScopeMutationLockKey,
   resolveWorkspaceScopeStorageRoot,
 } from './workspaceScopeStoragePath.js';
-
-const EXCLUDED_NAMES = new Set([
-  '.git',
-  '.next',
-  '.turbo',
-  '.vite',
-  'coverage',
-  'dist',
-  'node_modules',
-]);
 
 const MAX_LISTED_FILES = 500;
 const MAX_FILE_BYTES = 1_000_000;
@@ -55,7 +50,9 @@ export type LocalWorkspaceFileRepositoryOptions = Readonly<{
   mutationCoordinator?: LocalWorkspaceFileMutationCoordinator;
 }>;
 
-export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
+export class LocalWorkspaceFileRepository
+  implements IWorkspaceFileRepository, IWorkspaceFileListingPort
+{
   private readonly root: string;
   private readonly maxListedFiles: number;
   private readonly maxFileBytes: number;
@@ -71,6 +68,10 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
 
   public async listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]> {
     return this.listDirectory(this.resolveScopeRoot(scope), '', { value: 0 });
+  }
+
+  public listDirectoryPage(scope: WorkspaceStorageScope, request: WorkspaceDirectoryRequest) {
+    return readWorkspaceDirectoryPage(this.root, scope, request);
   }
 
   public async getFileContent(
@@ -180,7 +181,7 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
         Number(right.isDirectory()) - Number(left.isDirectory()) ||
         left.name.localeCompare(right.name)
     )) {
-      if (counter.value >= this.maxListedFiles || EXCLUDED_NAMES.has(entry.name)) {
+      if (counter.value >= this.maxListedFiles || excludedWorkspaceNames.has(entry.name)) {
         continue;
       }
 

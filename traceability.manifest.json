@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-17",
+  "generated": "2026-11-18",
   "repo": {
     "sha": "local"
   },
@@ -1270,12 +1270,14 @@
     {
       "number": "ADR-0062",
       "decisions": [
+        "Expose project-relative paths and an opaque continuation bound to the granted workspace.",
         "Keep effective workspace selection behind a distinct server-owned query port.",
         "The server owns granted workspace truth through one strict shared contract."
       ],
       "implemented_by": [
         "apps/api/src/application/ports/workspaceContext.ts",
-        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts"
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+        "packages/@dvt/contracts/src/contracts/workspace/WorkspaceDirectoryPage.v1.ts"
       ],
       "title": "ADR-0062 - Server-Owned Granted Workspace Context And Default"
     },

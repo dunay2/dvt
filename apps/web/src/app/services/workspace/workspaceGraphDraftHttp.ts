@@ -1,6 +1,6 @@
 /** Owned concern: centralize workspace graph draft HTTP endpoint, scope, and error-envelope semantics. */
 import { ApiError } from '../api/createApiClient';
-import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
+import { readGrantedWorkspaceHttpScope } from './workspaceHttpScope';
 
 export const WORKSPACE_GRAPH_DRAFT_ENDPOINT = '/workspace/graph/draft';
 
@@ -29,8 +29,7 @@ export function readWorkspaceGraphDraftScope(): {
   projectId: string;
   environmentId: string;
 } {
-  const { tenantId, projectId, environmentId } = readGrantedWorkspaceScope();
-  return { tenantId, projectId, environmentId };
+  return readGrantedWorkspaceHttpScope();
 }
 
 export function buildWorkspaceGraphDraftEndpoint(scope: {

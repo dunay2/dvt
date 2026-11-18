@@ -86,6 +86,7 @@ export function TemplatesRouteWorkbench({
         language={language}
         selected={author.selected}
         paths={author.paths}
+        pagination={author.pagination}
         onSelect={(id) => void author.select(id)}
       >
         <TemplateModelPicker
@@ -95,7 +96,7 @@ export function TemplatesRouteWorkbench({
           onInsert={insert}
           onInspectModel={() => void author.select('inspect-relation')}
           loading={project.loading}
-          unavailable={project.unavailable || author.unavailable}
+          unavailable={project.unavailable}
         />
       </TemplateLibrary>
       <div className={styles.content}>

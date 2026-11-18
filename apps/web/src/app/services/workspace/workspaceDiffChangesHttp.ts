@@ -1,17 +1,12 @@
 /** Owned concern: centralize scoped workspace diff-change HTTP endpoints. */
-import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
+import { readGrantedWorkspaceHttpScope, type WorkspaceHttpScope } from './workspaceHttpScope';
 
 export const WORKSPACE_DIFF_CHANGES_ENDPOINT = '/workspace/diff/changes';
 
-export type WorkspaceDiffChangesScope = {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-};
+export type WorkspaceDiffChangesScope = WorkspaceHttpScope;
 
 export function readWorkspaceDiffChangesScope(): WorkspaceDiffChangesScope {
-  const { tenantId, projectId, environmentId } = readGrantedWorkspaceScope();
-  return { tenantId, projectId, environmentId };
+  return readGrantedWorkspaceHttpScope();
 }
 
 export function buildWorkspaceDiffChangesEndpoint(scope: WorkspaceDiffChangesScope): string {

@@ -52,6 +52,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ordered UNION inputs and bounded composition concerns](ED-20261004-union-inputs-composition-concerns.md)
 - [Pending Source Output And Shared Edit](ED-20261026-pending-source-output-selection.md)
 - [Producer Input and passive Output boundary](ED-20260926-producer-consumer-input-boundary.md)
+- [Project template discovery](ED-20261118-workspace-directory-pages.md)
 - [Readable Model SQL](ED-20261116-readable-model-sql.md)
 - [RIGHT and FULL OUTER JOIN end to end](ED-20260919-right-full-join-end-to-end.md)
 - [Scope](ed-20260924-historical-document-test-consumers.md)

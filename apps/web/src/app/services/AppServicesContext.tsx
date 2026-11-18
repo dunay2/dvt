@@ -21,6 +21,7 @@ import type {
   IWorkspaceFileContentCommandPort,
   IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
+  IWorkspaceFileDirectoryQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
 } from '../ports/workspace';
@@ -59,6 +60,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.costAttributionSummaryPort,
       overrides?.workspaceGraphSnapshotQuery,
       overrides?.workspaceFilesQuery,
+      overrides?.workspaceFileDirectoryQuery,
       overrides?.workspaceFileHistoryQuery,
       overrides?.workspaceDiffQuery,
       overrides?.workspacePluginCatalogQuery,
@@ -101,6 +103,10 @@ export function useWorkspaceGraphSnapshotQueryPort(): IWorkspaceGraphSnapshotQue
 
 export function useWorkspaceFilesQueryPort(): IWorkspaceFilesQueryPort {
   return useRequiredAppServicesContext().workspaceFilesQuery;
+}
+
+export function useWorkspaceFileDirectoryQueryPort(): IWorkspaceFileDirectoryQueryPort {
+  return useRequiredAppServicesContext().workspaceFileDirectoryQuery;
 }
 
 export function useWorkspaceFileHistoryQueryPort(): IWorkspaceFileHistoryQueryPort {
