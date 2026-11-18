@@ -516,6 +516,15 @@ normalization or second semantic authority is introduced. Proof covers already
 saved INNER/`left_join`, all eight codes, both locales, free names, unchanged
 canonical data and actual type-change/Apply/reopen consumers.
 
+Under #3973 a configured JOIN card exposes its canonical type choices on its
+icon. Opening the menu inspects the current revision and output impact.
+Selecting LEFT or RIGHT preserves the identity of both input relations. The
+icon and Properties share the existing `ConfigureCanvasDvtNode` editor command.
+A configured staged operation edits its own working document. Apply publishes
+the change through `SaveWorkspaceGraphDraft`, and Cancel restores the accepted
+revision. A read-only canvas or a pending input exposes the ordinary glyph.
+Card selection, disclosure and movement keep their own interaction targets.
+
 ### Calculated SELECT Fields
 
 Issue #3613 exposes the existing calculated-field editor in editable `Output`.

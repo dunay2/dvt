@@ -26,6 +26,31 @@
     box-shadow 150ms;
 }
 
+.joinHeader {
+  position: relative;
+  height: 100%;
+}
+
+.joinHeader .nodeButton {
+  padding-inline-start: calc(var(--spacing) * 10);
+}
+
+.joinHeader .joinTypeTrigger {
+  position: absolute;
+  inset-inline-start: var(--spacing);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 8);
+  color: var(--text-muted);
+}
+
+.joinHeader .joinTypeTrigger:is(:hover, :focus-visible, [data-state='open']) {
+  color: var(--primary);
+  background: var(--surface-selected);
+}
+
+.joinHeader[data-detailed='true'],
 .nodeButton[data-detailed='true'] {
   height: 76px;
 }

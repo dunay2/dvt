@@ -36,11 +36,9 @@ describe('join-consumers', () => {
     openWorkbenchModel('join-transform');
     const card = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
     cy.get(card).should('contain.text', 'INNER JOIN').and('not.contain.text', 'left_join');
-    cy.get(card).click();
     const applyType = (label: string): void => {
-      cy.get('[data-slot="canvas-relational-edit"]').click();
-      cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
-      cy.get('[data-slot="canvas-relational-tree-join-type"]').select(label);
+      cy.get('[data-slot="canvas-join-type-trigger"]').click();
+      cy.contains('[role="menuitemradio"]', new RegExp('^' + label + '$')).click();
       cy.get(card).should('contain.text', label).and('not.contain.text', 'left_join');
       let writesBeforeApply = 0;
       cy.then(() => {
@@ -57,14 +55,14 @@ describe('join-consumers', () => {
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     };
     applyType('LEFT JOIN');
-    applyType('INNER JOIN');
+    applyType('RIGHT JOIN');
     cy.on('window:before:load', installE2eApiFetchStub);
     cy.reload();
     openWorkbenchModel('join-transform');
-    cy.get(card).should('contain.text', 'INNER JOIN').and('not.contain.text', 'left_join');
+    cy.get(card).should('contain.text', 'RIGHT JOIN').and('not.contain.text', 'left_join');
     cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
     cy.get('[data-slot="canvas-model-composition-steps"]')
-      .should('contain.text', 'INNER JOIN')
+      .should('contain.text', 'RIGHT JOIN')
       .and('not.contain.text', 'left_join');
   });
   it('creates and reopens a calculated SELECT field from JOIN Output without requiring a predicate', () => {

@@ -3,6 +3,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import { CanvasJoinTypeChangeContext } from './CanvasJoinTypeChangeContext';
 import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
 import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
@@ -28,33 +29,50 @@ type CanvasRelationalTreeContentProps = Readonly<{
 }>;
 
 export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
+  const authoringView = projectCanvasRelationalTreeAuthoringView(props, props.onSelectRelation);
+  const { data, actions } = authoringView;
+  const enabled = props.model.authoringAvailable && !props.pendingCondition;
+  const authority = enabled
+    ? {
+        changeDraft: props.model.session.setJoinDraft,
+        analysisBinding: data.analysisBinding,
+        stagedOperations: data.stagedOperations,
+        updateStagedOperation: actions.updateStagedOperation,
+      }
+    : null;
   return (
     <div
       data-slot="canvas-relational-tree-surface"
       className="relative h-full min-h-0 w-full min-w-0 overflow-hidden"
     >
       <CanvasRelationalFieldSelectionProvider
-        enabled={props.model.authoringAvailable && !props.pendingCondition}
+        enabled={enabled}
         onChange={props.model.session.setJoinDraft}
         onConnect={props.model.session.staged.connectField}
       >
         <CanvasRelationalOperationMenuProvider
-          enabled={props.model.authoringAvailable && !props.pendingCondition}
+          enabled={enabled}
           label={props.copy.relationalTreeCanvasLabel}
         >
-          <CanvasRelationalTreeContentView {...props} />
+          <CanvasJoinTypeChangeContext.Provider value={authority}>
+            <CanvasRelationalTreeContentView {...props} authoringView={authoringView} />
+          </CanvasJoinTypeChangeContext.Provider>
         </CanvasRelationalOperationMenuProvider>
       </CanvasRelationalFieldSelectionProvider>
     </div>
   );
 }
 
-function CanvasRelationalTreeContentView(props: CanvasRelationalTreeContentProps): JSX.Element {
+function CanvasRelationalTreeContentView(
+  props: CanvasRelationalTreeContentProps & {
+    authoringView: ReturnType<typeof projectCanvasRelationalTreeAuthoringView>;
+  }
+): JSX.Element {
   const { model } = props;
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
     return (
       <CanvasRelationalTreeAuthoring
-        {...projectCanvasRelationalTreeAuthoringView(props, props.onSelectRelation)}
+        {...props.authoringView}
         onPendingConditionChange={props.onPendingConditionChange}
         expanded={props.expanded}
         onExpandedChange={props.onExpandedChange}

@@ -4,14 +4,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { DvtSubstraitJoinType } from '@dvt/postgres-projection';
 import type { SelectedJoin } from './canvasSelectedJoin';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import {
-  changeSelectedJoinType,
-  editableJoinTypes,
-  selectedJoinTypeMapping,
-} from './canvasSelectedJoinType';
-import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
-import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
-import { useRelationCommand } from './useRelationCommand';
+import { useCanvasJoinTypeControl } from './useCanvasJoinTypeControl';
 
 export function CanvasJoinTypeProperties({
   selected,
@@ -24,20 +17,9 @@ export function CanvasJoinTypeProperties({
   onChange: (document: SubstraitDocument) => void;
   disabled?: boolean;
 }>) {
-  const command = useRelationCommand(selected.relationId, onChange);
-  const message = selected.target.relation.relType;
-  if (message.case !== 'join') return null;
-  const choices = editableJoinTypes.map((type) => ({
-    type,
-    disabled:
-      selectedJoinTypeMapping(
-        message.value,
-        selected.inputs.map((input) => input.fields.length),
-        type
-      ) == null,
-    label:
-      copy[resolveCanvasRelationalOperationPresentation(canvasJoinOperationForType(type)).labelKey],
-  }));
+  const command = useCanvasJoinTypeControl(selected, copy, onChange);
+  const { choices } = command;
+  if (choices.length === 0) return null;
   const unavailable = choices.some((choice) => choice.disabled);
   const roles: Partial<Record<JoinRel_JoinType, string>> = {
     [JoinRel_JoinType.LEFT]: copy.inspectorDvtSubstraitLeftJoinRolesHint,
@@ -59,9 +41,7 @@ export function CanvasJoinTypeProperties({
           className="h-8 w-full rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-xs"
           onChange={(event) => {
             const joinType = Number(event.currentTarget.value) as DvtSubstraitJoinType;
-            void command.execute((session, request) =>
-              changeSelectedJoinType(session, { ...request, joinType })
-            );
+            void command.select(joinType);
           }}
         >
           {choices.map((choice) => (
@@ -81,7 +61,9 @@ export function CanvasJoinTypeProperties({
           {roles[selected.type]}
         </p>
       )}
-      {command.state === 'error' ? <p role="alert">No se pudo cambiar el tipo de JOIN.</p> : null}
+      {command.state === 'error' ? (
+        <p role="alert">{copy.inspectorDvtRelationalUnavailable}</p>
+      ) : null}
     </div>
   );
 }
