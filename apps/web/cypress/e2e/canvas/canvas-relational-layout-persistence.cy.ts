@@ -4,7 +4,10 @@ import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls, installE2eApiFetchStub } from '../../support/e2eApiStub';
-import { verifyCompleteTreeFit } from '../../support/relationalWorkbench/geometry';
+import {
+  readWorkbenchCardPosition,
+  verifyCompleteTreeFit,
+} from '../../support/relationalWorkbench/geometry';
 import {
   connectWorkbenchProducer,
   openWorkbenchModel,
@@ -38,11 +41,7 @@ describe('Completed relational layout persistence', () => {
         .first()
         .then(($card) => {
           const host = $card[0]!.closest<HTMLElement>('[data-relational-card-id]')!;
-          const position = host.style.left === '' ? host.parentElement! : host;
-          placed.set(host.dataset.relationalCardId!, {
-            x: parseFloat(position.style.left),
-            y: parseFloat(position.style.top),
-          });
+          placed.set(host.dataset.relationalCardId!, readWorkbenchCardPosition(host));
         });
     }
     const assertRetained = (): void => {
@@ -50,9 +49,9 @@ describe('Completed relational layout persistence', () => {
         expect(placed.size).to.equal(3);
         for (const [id, position] of placed) {
           cy.get(`[data-relational-card-id="${id}"]`).should(($card) => {
-            const host = $card[0]!.style.left === '' ? $card[0]!.parentElement! : $card[0]!;
-            expect(parseFloat(host.style.left)).to.be.closeTo(position.x, 0.001);
-            expect(parseFloat(host.style.top)).to.be.closeTo(position.y, 0.001);
+            const restored = readWorkbenchCardPosition($card[0]!);
+            expect(restored.x).to.be.closeTo(position.x, 0.001);
+            expect(restored.y).to.be.closeTo(position.y, 0.001);
           });
         }
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
@@ -87,24 +86,15 @@ describe('Completed relational layout persistence', () => {
       if (signed) {
         panWorkbenchViewport('[data-slot="canvas-relational-tree-viewport"]', 240, 160);
         cy.get(join).then(($card) => {
-          const host = $card[0]!.parentElement!;
+          const before = readWorkbenchCardPosition($card[0]!);
           const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0]!;
           const zoom = Number(tree.style.zoom);
-          moveWorkbenchCard(
-            join,
-            -(parseFloat(host.style.left) + 80) * zoom,
-            -(parseFloat(host.style.top) + 60) * zoom
-          );
+          moveWorkbenchCard(join, -(before.x + 80) * zoom, -(before.y + 60) * zoom);
         });
       } else moveWorkbenchCard(join, 40, 48);
       cy.get(join).then(($card) => {
-        const container = $card[0]?.parentElement;
-        if (container == null) throw new Error('Expected the moved card position container.');
         relationId = $card.attr('data-relation-id')!;
-        moved = {
-          x: parseFloat(container.style.left),
-          y: parseFloat(container.style.top),
-        };
+        moved = readWorkbenchCardPosition($card[0]!);
         if (signed) {
           expect(moved.x).to.be.lessThan(0);
           expect(moved.y).to.be.lessThan(0);
@@ -170,10 +160,9 @@ describe('Completed relational layout persistence', () => {
         visitWorkbenchCanvas();
         openWorkbenchModel();
         cy.get(join).should(($card) => {
-          const container = $card[0]?.parentElement;
-          if (container == null) throw new Error('Expected the restored card position container.');
-          expect(parseFloat(container.style.left)).to.be.closeTo(moved.x, 1);
-          expect(parseFloat(container.style.top)).to.be.closeTo(moved.y, 1);
+          const restored = readWorkbenchCardPosition($card[0]!);
+          expect(restored.x).to.be.closeTo(moved.x, 1);
+          expect(restored.y).to.be.closeTo(moved.y, 1);
         });
         cy.get('[data-slot="canvas-relational-tree-node"][data-operator="filter"]').should(
           'have.length',

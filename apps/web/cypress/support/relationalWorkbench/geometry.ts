@@ -1,5 +1,20 @@
 /** Owned concern: assert actual graph fit, wheel zoom and semantic detail without changing the draft. */
 import { revealWorkbenchCard } from './navigation';
+
+/** Coordinates belong to the positioned card, including when its title has separate controls. */
+export function readWorkbenchCardPosition(element: Element | undefined): { x: number; y: number } {
+  const host = element?.closest<HTMLElement>(
+    '[data-slot="canvas-relational-card"], [data-slot="canvas-relational-tree-output"]'
+  );
+  if (host == null) throw new Error('Expected a positioned relational card or Output.');
+  const x = Number.parseFloat(host.style.left);
+  const y = Number.parseFloat(host.style.top);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    throw new Error('Expected finite layout coordinates on the positioned card.');
+  }
+  return { x, y };
+}
+
 export function verifyCompleteTreeFit(viewportSelector: string): void {
   cy.get('[data-slot="canvas-relational-tree-fit"]').click();
   cy.get(viewportSelector).should(($viewport) => {

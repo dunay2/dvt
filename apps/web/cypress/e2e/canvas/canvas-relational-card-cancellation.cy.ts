@@ -1,6 +1,9 @@
 /** Owned concern: cancelled native card gestures preserve automatic layout and query boundaries. */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
-import { verifyCompleteTreeFit } from '../../support/relationalWorkbench/geometry';
+import {
+  readWorkbenchCardPosition,
+  verifyCompleteTreeFit,
+} from '../../support/relationalWorkbench/geometry';
 import {
   connectWorkbenchProducer,
   openWorkbenchModel,
@@ -14,10 +17,6 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 const viewport = '[data-slot="canvas-relational-tree-viewport"]';
 const join = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
 const output = '[data-slot="canvas-relational-tree-output"]';
-const position = (element: HTMLElement): number[] => [
-  Number.parseFloat(element.style.left),
-  Number.parseFloat(element.style.top),
-];
 
 describe('Relational card drag cancellation', () => {
   for (const reason of ['Escape', 'pointercancel', 'lostpointercapture']) {
@@ -30,11 +29,11 @@ describe('Relational card drag cancellation', () => {
       let pointerId = -1;
       let outputX = 0;
       cy.get(output).then(($output) => {
-        outputX = position($output[0]!)[0]!;
+        outputX = readWorkbenchCardPosition($output[0]!).x;
       });
       cy.get(join).then(($card) => {
         const element = $card[0]!;
-        const before = position(element.parentElement!);
+        const before = readWorkbenchCardPosition(element);
         const writes = semanticWrites('join-transform').length;
         const queryPattern = /\/(data-sample|preview|runs|execute)(\/|$)/;
         const queries = getE2eApiCalls(queryPattern).length;
@@ -49,7 +48,7 @@ describe('Relational card drag cancellation', () => {
           cy.get(join).should(($held) => {
             expect($held[0]).to.equal(element);
             expect(element.hasPointerCapture(pointerId), 'native pointer capture').to.equal(true);
-            expect(position(element.parentElement!)).not.to.deep.equal(before);
+            expect(readWorkbenchCardPosition(element)).not.to.deep.equal(before);
           });
           if (reason === 'Escape') cy.press(Cypress.Keyboard.Keys.ESC);
           else
@@ -66,7 +65,7 @@ describe('Relational card drag cancellation', () => {
         });
         cy.get(join).should(($held) => {
           expect($held[0]).to.equal(element);
-          expect(position($held[0]!.parentElement!)).to.deep.equal(before);
+          expect(readWorkbenchCardPosition($held[0]!)).to.deep.equal(before);
           expect(element.dataset.dragging).to.equal(undefined);
         });
         cy.then(() => {
@@ -101,7 +100,7 @@ describe('Relational card drag cancellation', () => {
       });
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.get(output).should(($output) =>
-        expect(position($output[0]!)[0]).to.be.greaterThan(outputX)
+        expect(readWorkbenchCardPosition($output[0]!).x).to.be.greaterThan(outputX)
       );
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.screenshot(`cancel-${reason}-then-reflow`, { capture: 'viewport', scale: true });

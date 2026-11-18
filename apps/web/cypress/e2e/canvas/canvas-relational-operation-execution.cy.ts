@@ -252,7 +252,7 @@ describe('Internal operation card execution', () => {
       cy.get(`${properties} [data-slot="canvas-relational-collapse"]`).click();
       hoverWorkbenchCard(card);
       cy.get(card)
-        .parent()
+        .closest('[data-slot="canvas-relational-card"]')
         .find('[data-slot="canvas-node-execute"]')
         .focus()
         .should('be.visible')
