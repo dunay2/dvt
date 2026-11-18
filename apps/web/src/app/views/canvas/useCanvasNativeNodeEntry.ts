@@ -1,9 +1,9 @@
 /**
  * Owned concern: retain native card entry when inspection covers the second target.
  * @baseline ADR-0069: one scoped adapter delegates to the existing Model-open owner.
- * @decision Admit a completed first click and native second-click detail without timers.
- * @consequence Cancelled, hidden, disconnected and stale Canvas origins cannot receive entry.
- * @version 1.0.0
+ * @decision Retain the originating second press while layout retargets later native events.
+ * @consequence Only the inspector can receive a redirected entry; excluded origins remain rejected.
+ * @version 1.0.1
  */
 import { useRef, type HTMLAttributes, type MouseEvent } from 'react';
 import {
@@ -27,7 +27,7 @@ type Origin = {
   nodeId: string;
   open: boolean;
   clicked: boolean;
-  covered: boolean;
+  secondPressed: boolean;
 };
 
 export function useCanvasNativeNodeEntry(
@@ -38,7 +38,10 @@ export function useCanvasNativeNodeEntry(
   const clear = (): void => {
     origin.current = null;
   };
-  const covered = (event: MouseEvent<HTMLDivElement>): Origin | null => {
+  const covered = (
+    event: MouseEvent<HTMLDivElement>,
+    target: 'inspector' | 'card-or-inspector' = 'inspector'
+  ): Origin | null => {
     const first = origin.current;
     return first != null &&
       first.clicked &&
@@ -47,7 +50,10 @@ export function useCanvasNativeNodeEntry(
       event.currentTarget.contains(first.shell) &&
       first.shell.closest('[hidden], [inert], [aria-hidden="true"]') == null &&
       isCanvasElement(event.target) &&
-      event.target.closest('[data-slot="canvas-node-workbench-overlay"]') != null
+      (event.target.closest('[data-slot="canvas-node-workbench-overlay"]') != null ||
+        (target === 'card-or-inspector' &&
+          first.shell.contains(event.target) &&
+          !isCanvasNodeEmbeddedControlTarget(event.target)))
       ? first
       : null;
   };
@@ -86,16 +92,16 @@ export function useCanvasNativeNodeEntry(
             nodeId,
             open: capability === 'open',
             clicked: false,
-            covered: false,
+            secondPressed: false,
           };
       } else if (event.detail === 2) {
-        const first = covered(event);
+        const first = covered(event, 'card-or-inspector');
         if (first == null) {
           clear();
           return;
         }
-        first.covered = true;
-        suppress(event);
+        first.secondPressed = true;
+        if (covered(event) != null) suppress(event);
       } else clear();
     },
     onClickCapture: (event) => {
@@ -103,7 +109,7 @@ export function useCanvasNativeNodeEntry(
         clear();
         return;
       }
-      if (event.detail === 2 && covered(event)?.covered) suppress(event);
+      if (event.detail === 2 && covered(event)?.secondPressed) suppress(event);
     },
     onClick: (event) => {
       const first = origin.current;
@@ -130,7 +136,7 @@ export function useCanvasNativeNodeEntry(
       }
       const first = covered(event);
       clear();
-      if (event.detail !== 2 || first?.covered !== true) return;
+      if (event.detail !== 2 || first?.secondPressed !== true) return;
       suppress(event);
       if (first.open) openModel?.(first.nodeId);
     },

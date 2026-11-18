@@ -1,5 +1,10 @@
 // @vitest-environment jsdom
-/** Prove native second-click ownership when immediate inspection covers its originating card. */
+/**
+ * Prove native Model entry across immediate inspector layout changes.
+ * @baseline ADR-0069: scoped gesture admission delegates existing callbacks.
+ * @decision Replay the observed target sequence and preserve excluded origins.
+ * @consequence Retargeting cannot lose entry or activate an unrelated inspector field.
+ */
 import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent } from '@testing-library/dom';
@@ -114,6 +119,20 @@ it('leaves an ordinary same-card native double click to its existing node handle
   expect(open).toHaveBeenCalledExactlyOnceWith('model');
 });
 
+it('retains the card second press when layout retargets the later click and double click', () => {
+  const open = vi.fn(),
+    fieldClick = vi.fn();
+  render(open, fieldClick);
+  const card = begin();
+  act(() => {
+    fireEvent.mouseDown(card, { detail: 2 });
+    fireEvent.click(container.querySelector('[data-testid="boundary"]')!, { detail: 2 });
+    fireEvent.doubleClick(container.querySelector('label')!, { detail: 2 });
+  });
+  expect(open).toHaveBeenCalledExactlyOnceWith('model');
+  expect(fieldClick).not.toHaveBeenCalled();
+});
+
 it('respects a native double click cancelled by an outer boundary', () => {
   const open = vi.fn();
   render(open, vi.fn());
@@ -136,6 +155,8 @@ it.each([
   'consumed-click',
   'new-inspector-intent',
   'embedded-control',
+  'unrelated-second-press',
+  'second-control',
   'source',
 ] as const)('never redirects an excluded %s owner', async (reason) => {
   const open = vi.fn(),
@@ -152,6 +173,9 @@ it.each([
     });
   else begin();
   const boundary = container.querySelector('[data-testid="boundary"]')!;
+  if (reason === 'unrelated-second-press') act(() => fireEvent.mouseDown(boundary, { detail: 2 }));
+  if (reason === 'second-control')
+    act(() => fireEvent.mouseDown(container.querySelector('button')!, { detail: 2 }));
   if (reason === 'canvas-change') render(open, fieldClick, { canvasId: 'other' });
   if (reason === 'removed') render(open, fieldClick, { present: false });
   if (reason === 'hidden') render(open, fieldClick, { hidden: true });
