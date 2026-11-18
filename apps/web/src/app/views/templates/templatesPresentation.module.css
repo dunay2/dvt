@@ -1,0 +1,243 @@
+/* Owned concern: style the existing Templates route with shared application tokens.
+ * Why: density, responsive regions and state hierarchy change together within this workbench.
+ * Corner: compact fields retain intrinsic rows, focus/error controls and readable source metadata.
+ */
+.headerBand {
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-panel);
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+}
+
+.viewHeader {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.viewHeader h1,
+.viewHeader h1 + div {
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+
+.viewHeader h1 {
+  font-weight: var(--font-weight-medium);
+}
+
+.viewHeader > div {
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 2);
+}
+
+.headerIcon,
+.errorIcon {
+  width: calc(var(--spacing) * 4);
+  height: calc(var(--spacing) * 4);
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.routeBody {
+  padding: calc(var(--spacing) * 4);
+  padding-bottom: calc(var(--spacing) * 6);
+}
+
+.bodyContainer {
+  width: 100%;
+  min-width: 0;
+}
+
+.workbench,
+.content {
+  display: grid;
+  min-width: 0;
+  align-items: start;
+  gap: calc(var(--spacing) * 3);
+}
+
+.workbench {
+  grid-template-columns: minmax(0, 1fr);
+  color: var(--text-default);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+
+.panel {
+  min-width: 0;
+  gap: calc(var(--spacing) * 3);
+  border-color: var(--border-default);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  padding: calc(var(--spacing) * 3);
+  color: var(--text-default);
+}
+
+.catalogProfiles,
+.parameterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  align-items: start;
+  gap: calc(var(--spacing) * 3);
+}
+
+.catalogProfiles {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: calc(var(--spacing) * 2);
+}
+
+.catalogItem {
+  height: auto;
+  min-height: var(--shell-control-height);
+  justify-content: flex-start;
+  border-color: var(--border-default);
+  background: var(--surface-app);
+  padding: calc(var(--spacing) * 2);
+  text-align: left;
+  white-space: normal;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  color: var(--text-default);
+}
+
+.catalogItem:hover {
+  background: var(--surface-elevated);
+}
+
+.catalogItem[aria-pressed='true'] {
+  border-color: var(--border-strong);
+  background: var(--surface-selected);
+}
+
+.catalogLabel,
+.parameterField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-self: start;
+  gap: calc(var(--spacing) * 1.5);
+}
+
+.catalogLabel {
+  gap: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 2);
+}
+
+.sectionTitle,
+.catalogHeading,
+.fieldLabel {
+  margin: 0;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-strong);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.catalogHeading {
+  color: var(--text-muted);
+}
+
+.description,
+.helper,
+.fieldError {
+  margin: 0;
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  color: var(--text-muted);
+}
+
+.description {
+  margin-top: var(--spacing);
+}
+
+.helper {
+  color: var(--text-subtle);
+}
+
+.fieldError,
+.errorIcon {
+  color: var(--status-danger);
+}
+
+.control {
+  height: var(--shell-control-height);
+  border-color: var(--border-default);
+  background: var(--surface-app);
+  padding-inline: calc(var(--spacing) * 2);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  color: var(--text-default);
+}
+
+.control:focus-visible {
+  border-color: var(--focus-ring);
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--status-danger);
+}
+
+.textarea {
+  height: auto;
+  min-height: calc(var(--shell-control-height) * 3);
+  resize: vertical;
+}
+
+.statusIcon {
+  width: var(--text-ui);
+  height: var(--text-ui);
+}
+
+.fileName {
+  max-width: 100%;
+  border-color: var(--border-default);
+  background: var(--surface-app);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+}
+
+.validationState {
+  display: flex;
+  align-items: start;
+  gap: calc(var(--spacing) * 2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--surface-app);
+  padding: calc(var(--spacing) * 3);
+}
+
+.generatedSource {
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 64rem) {
+  .workbench {
+    grid-template-columns: 13rem minmax(0, 1fr);
+  }
+
+  .catalogProfiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 80rem) {
+  .content {
+    grid-template-columns: minmax(22rem, 0.9fr) minmax(0, 1.1fr);
+  }
+}

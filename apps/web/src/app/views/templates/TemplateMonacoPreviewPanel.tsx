@@ -1,15 +1,13 @@
-/** Owned concern: adapt one ready Templates generated-source preview to the read-only Monaco code viewer. */
-import { FileCode2 } from 'lucide-react';
-
+/** Owned concern: present generated-preview states and adapt ready source to the read-only Monaco viewer.
+ * Why: blocked and ready presentation share one header while generation remains with the pure model.
+ * Corner: a blocked preview cannot mount Monaco or retain previously generated source.
+ */
+import { AlertTriangle, FileCode2 } from 'lucide-react';
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
-import { cn } from '../../components/ui/utils';
-import {
-  routeWorkbenchFieldClassName,
-  routeWorkbenchMutedTextClassName,
-  routeWorkbenchPanelClassName,
-} from '../../components/workbench/RouteWorkbenchFrame';
+import type { ExecutionTemplateDefinition, ExecutionTemplatePreview } from './templatesViewModel';
+import styles from './templatesPresentation.module.css';
 
 type TemplateMonacoPreviewPanelProps = Readonly<{
   exportFileName: string;
@@ -18,6 +16,59 @@ type TemplateMonacoPreviewPanelProps = Readonly<{
   source: string;
 }>;
 
+function TemplatePreviewHeader({
+  exportFileName,
+  provider,
+}: Pick<TemplateMonacoPreviewPanelProps, 'exportFileName' | 'provider'>) {
+  return (
+    <div className={styles.sectionHeader}>
+      <div>
+        <h2 className={styles.sectionTitle}>
+          <FileCode2 aria-hidden="true" className={styles.headerIcon} />
+          Generated preview
+        </h2>
+        <p className={styles.description}>Read-only source preview for {provider} export review.</p>
+      </div>
+      <Badge variant="outline" className={styles.fileName}>
+        {exportFileName}
+      </Badge>
+    </div>
+  );
+}
+
+export function GeneratedSourcePanel({
+  selectedTemplate,
+  preview,
+}: Readonly<{
+  selectedTemplate: ExecutionTemplateDefinition;
+  preview: ExecutionTemplatePreview;
+}>) {
+  if (preview.kind === 'ready') {
+    return (
+      <TemplateMonacoPreviewPanel
+        exportFileName={preview.exportFileName}
+        language={selectedTemplate.exportFileName.endsWith('.yaml') ? 'yaml' : 'sql'}
+        provider={selectedTemplate.provider}
+        source={preview.source}
+      />
+    );
+  }
+  return (
+    <Card data-slot="templates-preview-panel" className={styles.panel}>
+      <TemplatePreviewHeader
+        exportFileName={preview.exportFileName}
+        provider={selectedTemplate.provider}
+      />
+      <div data-slot="templates-validation-state" className={styles.validationState}>
+        <AlertTriangle aria-hidden="true" className={styles.errorIcon} />
+        <p className={styles.helper}>
+          Complete the required parameters before generated source is shown.
+        </p>
+      </div>
+    </Card>
+  );
+}
+
 export function TemplateMonacoPreviewPanel({
   exportFileName,
   language,
@@ -25,23 +76,9 @@ export function TemplateMonacoPreviewPanel({
   source,
 }: TemplateMonacoPreviewPanelProps) {
   return (
-    <Card data-slot="templates-preview-panel" className={cn(routeWorkbenchPanelClassName, 'p-4')}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 font-semibold text-[var(--text-strong)]">
-            <FileCode2 className="size-4 text-[var(--status-info)]" />
-            Generated preview
-          </h2>
-          <p className={cn('mt-1 text-sm', routeWorkbenchMutedTextClassName)}>
-            Read-only source preview for {provider} export review.
-          </p>
-        </div>
-        <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-          {exportFileName}
-        </Badge>
-      </div>
-
-      <div data-slot="templates-generated-source-preview" className="mt-4">
+    <Card data-slot="templates-preview-panel" className={styles.panel}>
+      <TemplatePreviewHeader exportFileName={exportFileName} provider={provider} />
+      <div data-slot="templates-generated-source-preview" className={styles.generatedSource}>
         <span data-slot="templates-generated-source-readable-preview" className="sr-only">
           {source}
         </span>

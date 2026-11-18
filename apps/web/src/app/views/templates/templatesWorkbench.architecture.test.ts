@@ -1,3 +1,8 @@
+/**
+ * Owned concern: guard Templates presentation ownership and its existing command/query seams.
+ * Why: visual alignment cannot move preview semantics or introduce an independent style policy.
+ * Corner: the shared-token asset does not grant provider or Monaco authority to the route.
+ */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -26,6 +31,27 @@ describe('Templates workbench architecture', () => {
     expect(workbenchSource).toContain('resolveExecutionTemplatePreview');
     expect(workbenchSource).not.toMatch(/\bfetch\s*\(/);
     expect(workbenchSource).not.toMatch(/\bdispatch\b|\bpersist\b|\bapply\b/i);
+  });
+
+  it('keeps Templates visual rules in its tokenized asset and the existing view boundaries', () => {
+    const route = readAppSource('views/TemplatesView.tsx');
+    const workbench = readAppSource('views/templates/TemplatesRouteWorkbench.tsx');
+    const preview = readAppSource('views/templates/TemplateMonacoPreviewPanel.tsx');
+    const styles = readAppSource('views/templates/templatesPresentation.module.css');
+
+    for (const source of [route, workbench, preview]) {
+      expect(source).toContain('templatesPresentation.module.css');
+      expect(source).not.toMatch(/\bstyle=|\btext-(?:sm|base|lg|xl|2xl)\b/);
+    }
+    expect(route).toContain('function TemplatesViewHeader');
+    expect(workbench).not.toContain('function TemplatesViewHeader');
+    expect(workbench).not.toContain('templates-validation-state');
+    expect(preview).toContain('templates-validation-state');
+    expect(styles).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(/i);
+    expect(styles).toContain('var(--text-ui)');
+    expect(styles).toContain('var(--shell-control-height)');
+    for (const [, size] of styles.matchAll(/font-size:\s*([^;]+);/g))
+      expect(size).toBe('var(--text-ui)');
   });
 
   it('maps canonical template command and query rails to implementation surfaces', () => {

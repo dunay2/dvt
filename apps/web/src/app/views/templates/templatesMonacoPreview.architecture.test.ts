@@ -1,4 +1,7 @@
-/** Owned concern: guard Templates route Monaco preview semantics and documentation closure. */
+/** Owned concern: guard Templates route Monaco preview semantics and documentation closure.
+ * Why: blocked and ready presentation share their adapter without adding another Monaco host.
+ * Corner: moving a blocked-state assertion preserves every existing forbidden-authority fixture.
+ */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -261,7 +264,7 @@ describe('Templates Monaco preview architecture', () => {
       })
     ).toEqual([]);
 
-    expect(workbench).toContain('TemplateMonacoPreviewPanel');
+    expect(workbench).toContain('GeneratedSourcePanel');
     expect(
       collectMonacoAuthorityViolations({
         surface: 'templates-route',
@@ -270,7 +273,8 @@ describe('Templates Monaco preview architecture', () => {
       })
     ).toEqual([]);
     expect(workbench).not.toContain('<pre');
-    expect(workbench).toContain('templates-validation-state');
+    expect(previewPanel).toContain('templates-validation-state');
+    expect(workbench).not.toContain('templates-validation-state');
 
     expect(previewPanel).toContain('MonacoCodeViewer');
     expect(previewPanel).toContain('language={language}');
