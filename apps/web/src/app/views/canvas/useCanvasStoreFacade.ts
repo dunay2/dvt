@@ -6,6 +6,7 @@ import {
   isCanvasInspectorScopeCurrent,
   type CanvasInspectorRequest,
   type CanvasInspectorTarget,
+  type CanvasInspectorWorkspaceScope,
 } from '../../stores/canvasInspectorTarget';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -15,6 +16,39 @@ import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecution
 
 const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
+
+type SetInspectorTarget = ReturnType<
+  typeof useCanvasInteractionStore.getState
+>['setInspectorTarget'];
+
+function setScopedCanvasInspectorNode(
+  setTarget: SetInspectorTarget,
+  scope: CanvasInspectorWorkspaceScope,
+  request: CanvasInspectorRequest | null,
+  preferredTabId?: string | null
+): boolean {
+  if (!isCanvasInspectorScopeCurrent(scope, useSessionStore.getState())) return false;
+  const resource =
+    typeof request === 'string' ? { kind: 'canonical-node' as const, nodeId: request } : request;
+  setTarget(resource == null ? null : { ...resource, workspaceScope: scope }, preferredTabId);
+  return true;
+}
+
+/** Align an existing Inspector selection after Model admission, preserving panel visibility. */
+export function syncCanvasInspectedModel(
+  scope: CanvasInspectorWorkspaceScope | undefined,
+  nodeId: string
+): void {
+  if (scope == null) return;
+  const { inspectorTarget, setInspectorTarget } = useCanvasInteractionStore.getState();
+  if (
+    inspectorTarget == null ||
+    !isCanvasInspectorScopeCurrent(inspectorTarget.workspaceScope, scope)
+  )
+    return;
+  if (inspectorTarget.kind === 'canonical-node' && inspectorTarget.nodeId === nodeId) return;
+  setScopedCanvasInspectorNode(setInspectorTarget, inspectorTarget.workspaceScope, nodeId);
+}
 
 type CanvasStoreFacade = {
   _hasHydrated: boolean;
@@ -117,37 +151,17 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   );
   const setInspectorTarget = useCanvasInteractionStore((state) => state.setInspectorTarget);
   const setInspectorNode = useCallback(
-    (request: CanvasInspectorRequest | null, preferredTabId?: string | null) => {
-      const current = useSessionStore.getState();
-      // Async file handoffs can retain this callback after the selected workspace changes.
-      if (
-        !isCanvasInspectorScopeCurrent(
-          {
-            tenantId: selectedTenant,
-            projectId: selectedProject,
-            environmentId: selectedEnvironment,
-          },
-          current
-        )
-      )
-        return false;
-      setInspectorTarget(
-        request == null
-          ? null
-          : {
-              ...(typeof request === 'string'
-                ? { kind: 'canonical-node' as const, nodeId: request }
-                : request),
-              workspaceScope: {
-                tenantId: selectedTenant,
-                projectId: selectedProject,
-                environmentId: selectedEnvironment,
-              },
-            },
+    (request: CanvasInspectorRequest | null, preferredTabId?: string | null) =>
+      setScopedCanvasInspectorNode(
+        setInspectorTarget,
+        {
+          tenantId: selectedTenant,
+          projectId: selectedProject,
+          environmentId: selectedEnvironment,
+        },
+        request,
         preferredTabId
-      );
-      return true;
-    },
+      ),
     [selectedTenant, selectedProject, selectedEnvironment, setInspectorTarget]
   );
   const impactOverlayEnabled = useCanvasInteractionStore((state) => state.impactOverlayEnabled);

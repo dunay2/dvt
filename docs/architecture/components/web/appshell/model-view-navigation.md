@@ -84,9 +84,10 @@ last accepted Model for this workspace and Canvas. If neither is available,
 use the first eligible visible entry in Explorer order, honoring its search.
 An empty or unavailable catalog keeps its existing posture. The Explorer remains
 available for choosing another entry. An explicit row click keeps the selected
-resource's own inspection, Code or Model-open behavior. If the current
-inspection is a Source or file, switching views honors that resource's
-capability before considering a previous Model.
+resource's own inspection, Code or Model-open behavior. Accepting Model B
+updates an earlier inspection of A in the same scope. Returning from another
+route therefore reopens B. A later explicit inspection of A, a Source or a
+file takes precedence on the next shortcut and uses that resource's capability.
 
 The browser tab remembers one scoped Model identity across route changes and
 reloads. Revalidate it against the current catalog at entry. An unavailable

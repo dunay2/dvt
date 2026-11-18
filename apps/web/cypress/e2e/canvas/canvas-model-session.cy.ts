@@ -41,7 +41,13 @@ describe('model-session', () => {
   });
   it('opens the first Model and restores the last chosen Model after route exit and reload', () => {
     stubWorkbenchScenario('generated', { includeLooseNode: true });
-    const semantic = '[data-slot="shell-model-semantic-command"]';
+    const enterSemantic = (): void => {
+      cy.get('[data-slot="shell-model-semantic-command"]')
+        .should('have.attr', 'aria-disabled', 'false')
+        .click();
+    };
+    const canvas = '#shell-canvas-navigation';
+    const inspector = '[data-slot="canvas-node-workbench-overlay"]:visible';
     const row = (id: string): string =>
       `[data-slot="canvas-explorer-panel"]:visible [data-element-id="${id}"]`;
     const assertModel = (id: string, name: string): void => {
@@ -52,19 +58,35 @@ describe('model-session', () => {
     };
 
     visitWorkbenchCanvas();
-    cy.get(semantic).click();
+    enterSemantic();
+    assertModel('dvt-transform-1', 'Transform 1');
+    cy.get(canvas).click();
+    cy.get(row('dvt-transform-1')).click();
+    cy.get(inspector).should('contain.text', 'Transform 1');
+    enterSemantic();
     assertModel('dvt-transform-1', 'Transform 1');
     cy.get(row('orphan-transform-1')).click();
     assertModel('orphan-transform-1', 'Orphan transform');
     cy.get('[data-slot="left-navigation-link"][href="/admin"]').click();
     cy.location('pathname').should('eq', '/admin');
-    cy.get('#shell-canvas-navigation').click();
-    cy.get(semantic).click();
+    cy.get(canvas).click();
+    enterSemantic();
+    assertModel('orphan-transform-1', 'Orphan transform');
+    cy.get(canvas).click();
+    cy.get(row('dvt-transform-1')).click();
+    enterSemantic();
+    assertModel('dvt-transform-1', 'Transform 1');
+    cy.get(row('orphan-transform-1')).click();
     assertModel('orphan-transform-1', 'Orphan transform');
     cy.on('window:before:load', installE2eApiFetchStub);
     cy.reload();
-    cy.get(semantic).click();
+    enterSemantic();
     assertModel('orphan-transform-1', 'Orphan transform');
+    cy.get(canvas).click();
+    cy.get(row('source-1')).click();
+    enterSemantic();
+    cy.get(inspector).should('contain.text', 'Source 1');
+    cy.get('[data-slot="canvas-model-editor"]:visible').should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
   it('keeps editing or applies local composition changes before closing the Model', () => {

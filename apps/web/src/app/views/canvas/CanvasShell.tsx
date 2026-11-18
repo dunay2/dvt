@@ -29,7 +29,6 @@ import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpressionInspection';
 import { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 import { useCanvasModelSelection } from './useCanvasModelSelection';
-import { canvasModelNavigationScopeKey } from './canvasModelNavigationPreference';
 import { useCanvasModelBrowser } from './useCanvasModelBrowser';
 import { CanvasModelBrowserProvider } from './CanvasModelBrowser';
 import { useCanvasCodeWorkbench } from './useCanvasCodeWorkbench';
@@ -64,11 +63,8 @@ export default function CanvasShell({
     panels.activeCanvasId,
     panels.inspectorGraphNodes,
     focus,
-    canvasModelNavigationScopeKey(
-      panels.inspectorAuthoring.workspaceScope,
-      panels.activeCanvasId,
-      workspaceCommands?.projectRoot
-    )
+    panels.inspectorAuthoring.workspaceScope,
+    workspaceCommands?.projectRoot
   );
   const code = useCanvasCodeWorkbench(
     layout,
@@ -362,7 +358,7 @@ export default function CanvasShell({
                       active={model.active && !code.active}
                       onSelect={() => {
                         code.showCanvas();
-                        model.setActive(true);
+                        model.activate();
                       }}
                       onShowCanvas={() => {
                         code.showCanvas();

@@ -6,7 +6,6 @@ import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { useCanvasModelSelection } from './useCanvasModelSelection';
 import { useCanvasModelBrowser } from './useCanvasModelBrowser';
-import { canvasModelNavigationScopeKey } from './canvasModelNavigationPreference';
 import {
   useCanvasWorkspaceMenuContributionStore as store,
   type CanvasModelView,
@@ -53,12 +52,13 @@ function Harness({
   nodes?: readonly CanonicalNode[];
   target?: CanvasInspectorResource;
 }): null {
-  const scopeKey = canvasModelNavigationScopeKey(
-    { tenantId: 'tenant', projectId, environmentId: 'dev', targetAdapter: 'temporal' },
+  model = useCanvasModelSelection(
     canvasId,
+    nodes,
+    focus,
+    { tenantId: 'tenant', projectId, environmentId: 'dev', targetAdapter: 'temporal' },
     'root'
   );
-  model = useCanvasModelSelection(canvasId, nodes, focus, scopeKey);
   browser = useCanvasModelBrowser({
     canvasId,
     catalogueUnavailable: unavailable,
@@ -151,8 +151,9 @@ it('leaves the active view in place while its Model session is busy', () => {
 it.each(['semantic', 'sql'] as const)(
   'opens the highlighted Model directly in %s without another catalogue click',
   (view) => {
-    render({ target: { kind: 'canonical-node', nodeId: first.id } });
+    render();
     act(() => model.open(second.id));
+    render({ target: { kind: 'canonical-node', nodeId: first.id } });
     browse(view);
     expect(model.selected?.id).toBe(first.id);
     expect(model.initialView).toBe(view);
@@ -163,8 +164,9 @@ it.each(['semantic', 'sql'] as const)(
 
 it('inspects an explicitly selected Source even when a Model was remembered', () => {
   const resource = { kind: 'canonical-node', nodeId: source.id } as const;
-  render({ target: resource });
+  render();
   act(() => model.open(first.id));
+  render({ target: resource });
   browse('sql');
   expect(model.active).toBe(false);
   expect(inspect).toHaveBeenCalledExactlyOnceWith(resource, 'code');
