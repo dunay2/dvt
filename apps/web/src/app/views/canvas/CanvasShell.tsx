@@ -73,6 +73,7 @@ export default function CanvasShell({
     canvasId: panels.activeCanvasId,
     nodes: panels.inspectorGraphNodes,
     model,
+    inspectorTarget: panels.inspectorTarget,
     showCanvas: code.showCanvas,
     onInspect: graphCommands.onInspectNode,
   });
