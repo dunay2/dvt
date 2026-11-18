@@ -32,6 +32,32 @@ async function dropModel(id: string, scopeKey?: string): Promise<void> {
 
 describe('working Models inside the open Model', () => {
   setupWorkbenchTest();
+  it('rejects an incoming physical Source before editing and refreshes admission for a new receiver', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const apply = vi.fn();
+    let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+    function Host({ target }: { target: typeof graph.consumer }): null {
+      model = useCanvasRelationalTreeWorkbenchModel({
+        transformNode: target,
+        nodes: graph.nodes,
+        edges: graph.edges,
+        copy: COPY,
+        authoring: { canEditNode: true, onApplyNodeDraft: apply },
+      });
+      return null;
+    }
+    await act(async () => root.render(<Host target={graph.consumer} />));
+    expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(false);
+    await act(async () => {
+      expect(model!.modelComposition.copy(graph.right.id)).toBe(false);
+    });
+    expect(model!.session.active).toBe(false);
+    expect(model!.session.occurrences.pending).toHaveLength(0);
+    await act(async () => root.render(<Host target={graph.producer} />));
+    expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(true);
+    expect(apply).not.toHaveBeenCalled();
+  });
+
   it('does not publish private copies through the separate output-order command', async () => {
     const graph = await createModelOutputDependencyFixture();
     const apply = vi.fn(() => ({ outcome: 'rejected', reason: 'invalid_draft' }) as const);

@@ -3,7 +3,7 @@
  * Reason to change: Model composition gesture-to-session coordination changes.
  * @baseline ADR-0064 / ADR-0069: canonical semantics and focused application boundaries.
  * @decision Delegate semantic preparation and dependency admission before opening the editing transaction.
- * @consequence Cancel owns all staged copies and repeated gestures allocate distinct identities.
+ * @consequence Cancel owns all staged copies and admitted gestures allocate distinct identities.
  * @version 1.0.0
  */
 import { useMemo } from 'react';
@@ -18,6 +18,7 @@ import { createPendingSourceOccurrence } from './relational-source-occurrence/pe
 import { nextSourceOccurrenceAlias } from './relational-source-occurrence/sourceOccurrenceAlias';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { assertCanvasModelCompositionPhysicalInputAvailable } from './canvasModelCompositionPhysicalAdmission';
 
 export function useCanvasModelCompositionDrop(
   args: Readonly<{
@@ -31,7 +32,7 @@ export function useCanvasModelCompositionDrop(
     analysis: Readonly<{ session: CanvasRelationAnalysisSession; revision: number }> | null;
   }>
 ) {
-  const { nodes, edges, enabled } = args;
+  const { nodes, edges, enabled, targetId } = args;
   const nodeIds = useMemo(
     () =>
       new Set(
@@ -40,6 +41,12 @@ export function useCanvasModelCompositionDrop(
               .filter((node) => {
                 try {
                   canvasModelCopySourceSignature({ nodes, edges, sourceId: node.id });
+                  assertCanvasModelCompositionPhysicalInputAvailable({
+                    nodes,
+                    edges,
+                    sourceId: node.id,
+                    targetId,
+                  });
                   return true;
                 } catch {
                   return false;
@@ -48,7 +55,7 @@ export function useCanvasModelCompositionDrop(
               .map((node) => node.id)
           : []
       ),
-    [nodes, edges, enabled]
+    [nodes, edges, enabled, targetId]
   );
   return {
     nodeIds,

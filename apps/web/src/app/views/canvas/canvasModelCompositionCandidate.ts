@@ -2,7 +2,7 @@
  * Owned concern: Prepare and admit one private producer and receiver composition transaction.
  * Reason to change: Model composition admission and aggregate candidate invariants change.
  * @baseline ADR-0064 / ADR-0069: canonical semantics and focused application boundaries.
- * @decision Validate source freshness, native topology and Input publication before returning the whole candidate.
+ * @decision Validate source freshness, physical identity, topology and Input publication before returning the whole candidate.
  * @consequence Rejected preparation leaves the original draft unchanged.
  * @version 1.0.0
  */
@@ -23,6 +23,7 @@ import { canvasInputSlotId } from './canvasInputBindings';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
+import { assertCanvasModelCompositionPhysicalInputAvailable } from './canvasModelCompositionPhysicalAdmission';
 
 type CandidateArgs = Readonly<{
   copy: CanvasModelWorkingCopy;
@@ -70,6 +71,12 @@ export function prepareCanvasModelCompositionCandidate(args: CandidateArgs) {
   const target = nodes.find((node) => node.id === targetId);
   if (target?.pluginId !== 'dvt' || target.kind !== 'dvt:transform')
     throw new Error('Unavailable receiver.');
+  assertCanvasModelCompositionPhysicalInputAvailable({
+    nodes,
+    edges: args.edges,
+    sourceId: copy.node.id,
+    targetId,
+  });
   const edges = [...args.edges];
   const append = (edge: CanonicalEdge) => {
     const source = nodes.find((node) => node.id === edge.sourceId);
