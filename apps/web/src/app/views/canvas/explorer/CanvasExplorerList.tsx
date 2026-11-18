@@ -11,6 +11,7 @@ import type {
   CanvasExplorerModelAction,
 } from './CanvasExplorer.types';
 import { useCanvasExplorerCatalogPresentation } from './useCanvasExplorerCatalogPresentation';
+import { canvasExplorerSearchText, normalizeCanvasExplorerQuery } from './canvasExplorerSearch';
 
 export function CanvasExplorerList({
   items,
@@ -52,21 +53,12 @@ export function CanvasExplorerList({
     []
   );
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
-  const search = query.trim().toLocaleLowerCase();
+  const search = normalizeCanvasExplorerQuery(query);
   const searchIndex = useMemo(
     () =>
       items.map((item) => ({
         item,
-        text: [
-          item.label,
-          item.description,
-          item.searchText,
-          ...(item.details ?? []).map((detail) => detail.value),
-          item.isSource ? copy.source : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLocaleLowerCase(),
+        text: canvasExplorerSearchText(item, copy.source),
       })),
     [items, copy.source]
   );

@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useSessionStore } from '../../stores/sessionStore';
-import { useCanvasStoreFacade } from './useCanvasStoreFacade';
+import { syncCanvasInspectedModel, useCanvasStoreFacade } from './useCanvasStoreFacade';
 
 const scope = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' };
 const file = {
@@ -66,6 +66,34 @@ it('derives canonical IDs only from the one canonical target and keeps file iden
     current.setInspectorNode(null);
   });
   expect(current.inspectorTarget).toBeNull();
+});
+
+it('aligns an existing inspection with an admitted Model without opening the panel or selecting run inputs', () => {
+  act(() => {
+    current.setInspectorNode('old-model');
+    current.hideInspectorPanel();
+    current.setSelectedNodes(['run-input']);
+    syncCanvasInspectedModel(scope, 'chosen-model');
+  });
+  expect(current.inspectorNodeId).toBe('chosen-model');
+  expect(current.inspectorPanelVisible).toBe(false);
+  expect(current.selectedNodeIds).toEqual(['run-input']);
+});
+
+it('keeps an absent or foreign inspection intact on Model admission', () => {
+  act(() => syncCanvasInspectedModel(scope, 'candidate'));
+  expect(current.inspectorTarget).toBeNull();
+  act(() => {
+    current.setInspectorNode(file);
+  });
+  const stored = current.inspectorTarget;
+  const other = { ...scope, projectId: 'other' };
+  act(() => {
+    useSessionStore.setState(other);
+    syncCanvasInspectedModel(scope, 'candidate');
+    syncCanvasInspectedModel(other, 'candidate');
+  });
+  expect(useCanvasInteractionStore.getState().inspectorTarget).toBe(stored);
 });
 
 it('masks foreign targets and rejects an old scope callback before it can replace or clear current inspection', async () => {

@@ -11,6 +11,8 @@ import {
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import type { CanvasExplorerCatalogPresentation } from './CanvasExplorer.types';
+import { useCanvasExplorerCatalogPresentation } from './useCanvasExplorerCatalogPresentation';
+import { canvasModelNavigationScopeKey } from '../canvasModelNavigationPreference';
 
 let root: Root;
 let host: HTMLDivElement;
@@ -35,31 +37,40 @@ function Surface(): JSX.Element {
     </>
   );
 }
-function render(projectId = 'project', canvasId = 'canvas'): void {
-  act(() =>
-    root.render(
-      <CanvasModelBrowserProvider
-        nodes={[]}
-        canvasId={canvasId}
-        active={true}
-        workspaceScope={{
-          tenantId: 'tenant',
-          projectId,
-          environmentId: 'dev',
-          targetAdapter: 'temporal',
-        }}
-        navigation={{
-          mode: 'semantic',
-          onSelect: vi.fn(),
-          contexts: [],
-          selectContext: vi.fn(),
-          cancelContext: vi.fn(),
-        }}
-      >
-        <Surface />
-      </CanvasModelBrowserProvider>
-    )
+function ScopedExplorer({
+  projectId,
+  canvasId,
+}: {
+  projectId: string;
+  canvasId: string;
+}): JSX.Element {
+  const scopeKey = canvasModelNavigationScopeKey(
+    { tenantId: 'tenant', projectId, environmentId: 'dev', targetAdapter: 'temporal' },
+    canvasId
   );
+  const cataloguePresentation = useCanvasExplorerCatalogPresentation(scopeKey!);
+  return (
+    <CanvasModelBrowserProvider
+      nodes={[]}
+      canvasId={canvasId}
+      active={true}
+      navigation={{
+        scopeKey,
+        cataloguePresentation,
+        catalogue: [],
+        mode: 'semantic',
+        onSelect: vi.fn(),
+        contexts: [],
+        selectContext: vi.fn(),
+        cancelContext: vi.fn(),
+      }}
+    >
+      <Surface />
+    </CanvasModelBrowserProvider>
+  );
+}
+function render(projectId = 'project', canvasId = 'canvas'): void {
+  act(() => root.render(<ScopedExplorer projectId={projectId} canvasId={canvasId} />));
 }
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);

@@ -10,14 +10,11 @@ import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget'
 import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 import type { CanonicalNode } from '../../types/canonical';
 import type { useCanvasModelBrowser } from './useCanvasModelBrowser';
-import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
 import { CanvasProjectElementsExplorer } from './explorer/CanvasProjectElementsExplorer';
 import { CanvasWarehouseConnections } from './explorer/CanvasWarehouseConnections';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CanvasModelContextPicker } from './CanvasModelContextPicker';
-import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasExplorerCatalogPresentation } from './explorer/CanvasExplorer.types';
-import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 export type CanvasModelBrowserPresentation = Readonly<{
@@ -45,7 +42,6 @@ export function CanvasModelBrowserProvider({
   selectedId,
   active,
   projectRoot,
-  workspaceScope,
   onManageConnections,
   children,
 }: Readonly<{
@@ -55,46 +51,23 @@ export function CanvasModelBrowserProvider({
   selectedId?: string;
   active: boolean;
   projectRoot?: string;
-  workspaceScope?: WorkspaceScope;
   onManageConnections?: () => void;
   children: ReactNode;
 }>): JSX.Element {
-  const scopeKey =
-    canvasId == null || workspaceScope == null
-      ? null
-      : JSON.stringify([
-          workspaceScope.tenantId,
-          workspaceScope.projectId,
-          workspaceScope.environmentId,
-          workspaceScope.targetAdapter,
-          canvasId,
-          projectRoot,
-        ]);
-  const cataloguePresentation = useCanvasExplorerCatalogPresentation(
-    JSON.stringify([
-      workspaceScope?.tenantId,
-      workspaceScope?.projectId,
-      workspaceScope?.environmentId,
-      workspaceScope?.targetAdapter,
-      canvasId,
-      projectRoot,
-    ])
-  );
+  const { scopeKey, cataloguePresentation, catalogue } = navigation;
   const items = useMemo(() => {
     const selected = nodes.find((node) => node.id === selectedId);
     const definitionId = workspaceNodeDefinitionId(selected) ?? selectedId;
-    return projectCanvasExplorerModels(nodes, canvasId ?? undefined).map((item) => ({
+    return catalogue.map((item) => ({
       ...item,
       selected: item.id === definitionId,
       draggable: false,
     }));
-  }, [nodes, canvasId, selectedId]);
+  }, [nodes, catalogue, selectedId]);
   return (
     <CanvasModelBrowser.Provider
       value={{
         ...navigation,
-        scopeKey,
-        cataloguePresentation,
         catalog: (composition) => (
           <CanvasProjectElementsExplorer
             enabled={active && navigation.mode != null}

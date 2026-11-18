@@ -40,11 +40,13 @@ flowchart LR
   Gesture[Native gesture] --> Admission[Existing control and drag admission]
   Admission -->|First click| Inspect[InspectCanvasNode immediately]
   Admission -->|Double click| Open[Existing Model open]
-  Rail[Shell view buttons] --> Selected{Existing admitted selection?}
-  Selected -->|Model| Context[Existing input context]
-  Selected -->|None| Browse[Canvas and project Explorer]
-  Browse --> Pick[Explicit Model selection]
-  Pick --> Context[Existing input context]
+  Rail[Semantic or SQL shortcut] --> Selected{Current eligible Model?}
+  Selected -->|Yes| Context[Resolve occurrence context]
+  Selected -->|No| Saved{Valid remembered Model?}
+  Saved -->|Yes| Context
+  Saved -->|No| First{First eligible visible Model?}
+  First -->|Yes| Context
+  First -->|No| Browse[Canvas and project Explorer]
   Context --> Tab[Protected Model tab contribution]
   Tab --> Semantic[Retained semantic workspace]
   Tab --> SQL[Retained logical SQL editor]
@@ -76,17 +78,23 @@ retains the existing protected Model replacement decision.
 Visual Apply retains its existing lifecycle while presentation switches without
 unmounting the semantic workspace.
 
-Both icons reveal the existing project Model list in the left Explorer. When a
-Model is already selected, the requested semantic or SQL view opens directly
-through its existing capability and protected session. A visible Model editor
-supplies its own selection. On Canvas, prefer the current scoped inspector
-selection and fall back to the retained Model only when no inspector target is
-present. An explicit Source, file resource or missing node
-must not silently open an older Model. Other resources retain their real
-inspection or Code capability; the view mode grants no new authoring permission.
-With no selection, Canvas and the project list remain available for an explicit
-choice. This refines the original second-click posture under
-`GH-3955-SELECTED-MODEL-VIEW-ENTRY`; it introduces no separate selection store.
+Both shortcuts reveal the project Model list and activate the requested editor
+surface on the same gesture. Reuse an eligible current Model or restore the
+last accepted Model for this workspace and Canvas. If neither is available,
+use the first eligible visible entry in Explorer order, honoring its search.
+An empty or unavailable catalog keeps its existing posture. The Explorer remains
+available for choosing another entry. An explicit row click keeps the selected
+resource's own inspection, Code or Model-open behavior. Accepting Model B
+updates an earlier inspection of A in the same scope. Returning from another
+route therefore reopens B. A later explicit inspection of A, a Source or a
+file takes precedence on the next shortcut and uses that resource's capability.
+
+The browser tab remembers one scoped Model identity across route changes and
+reloads. Revalidate it against the current catalog at entry. An unavailable
+preference, removed Model or scope mismatch follows the ordinary selection
+order. Record only an accepted destination. A rejected replacement preserves
+the prior Model. The governing decision is
+[`GH-3969-MODEL-VIEW-DEFAULT-ENTRY`](https://github.com/dunay2/dvt/issues/3969#issuecomment-6985780529).
 
 The catalog identity is the shared definition. Resolve a real existing instance
 for its input context before entering the editor: reuse a matching current
@@ -133,6 +141,8 @@ generation, validation, row execution and Model Apply remain explicit actions.
 | `CanvasNodeShell`            | Compose the admitted node gesture with its existing menu and ports  |
 | `ShellModelViewNavigation`   | Render the two view controls from published posture                 |
 | `LeftNavigationRail`         | Compose direct destinations and exclusive active presentation       |
+| `useCanvasModelBrowser`      | Resolve shortcut entry against the current project catalog          |
+| `useCanvasModelSelection`    | Admit Model session changes and retain an accepted selection        |
 | `useCanvasModelWorkspaceTab` | Publish current Model navigation callbacks                          |
 | `CanvasModelEditor`          | Own semantic/SQL presentation and delegate existing draft lifecycle |
 
@@ -168,11 +178,12 @@ change is part of this slice.
 - Catalog activation and double click never create an occurrence.
 - Model shortcuts are unavailable without a current owner; callbacks cannot target
   an obsolete owner after registration changes.
-- Opening a view reuses an already selected eligible Model directly; without a
-  selection it reveals Canvas and the Explorer. Neither action creates a block. The
-  shared project list remains visible; cancelled replacement retains the current
-  session and dirty buffer. Empty, no-match, loading and error states reuse the
-  actual project catalog state.
+- A rail click opens the chosen surface for the current or valid saved Model.
+  With neither, the first eligible visible result opens. Route return and
+  browser reload exercise restoration. A stale or foreign identity cannot
+  select another workspace's Model. An ambiguous definition still prompts
+  for its occurrence, and cancelled replacement retains the current draft.
+  Empty, no-match, loading and error states follow the project catalog.
 - One active destination follows current Model/Code/SQL visibility. Keyboard and
   pointer invoke the same callbacks, with visible focus and accessible names.
 - Filter text, result counts and detail disclosure survive Model entry and view

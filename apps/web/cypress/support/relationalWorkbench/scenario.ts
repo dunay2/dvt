@@ -17,7 +17,8 @@ export function stubWorkbenchScenario(
     | 'pending-chain'
     | 'pending-set'
     | 'projection'
-    | 'withdrawn-projection'
+    | 'withdrawn-projection',
+  options: Readonly<{ includeLooseNode?: boolean }> = {}
 ): WorkspaceGraphAuthoringDraft {
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
   stubE2eJsonApi('GET', '/workspace/context', {
@@ -30,6 +31,7 @@ export function stubWorkbenchScenario(
     plugins: { dvt: { available: true } },
   });
   const draft = stubStatefulCanvasDraftAuthoring({
+    ...options,
     authoringGenerated: scenario === 'generated',
     projectionModel: scenario === 'projection' || scenario === 'withdrawn-projection',
     ...(scenario === 'withdrawn-projection' ? { projectionInputFields: ['country'] } : {}),

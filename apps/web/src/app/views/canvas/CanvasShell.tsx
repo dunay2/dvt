@@ -59,7 +59,13 @@ export default function CanvasShell({
   const copy = resolveCanvasViewCopy(language);
   const semanticCopy = resolveCanvasSemanticEditorCopy(language);
   const focus = useCanvasWorkbenchFocus();
-  const model = useCanvasModelSelection(panels.activeCanvasId, panels.inspectorGraphNodes, focus);
+  const model = useCanvasModelSelection(
+    panels.activeCanvasId,
+    panels.inspectorGraphNodes,
+    focus,
+    panels.inspectorAuthoring.workspaceScope,
+    workspaceCommands?.projectRoot
+  );
   const code = useCanvasCodeWorkbench(
     layout,
     panels.activeCanvasId,
@@ -73,6 +79,12 @@ export default function CanvasShell({
     canvasId: panels.activeCanvasId,
     nodes: panels.inspectorGraphNodes,
     model,
+    projectRoot: workspaceCommands?.projectRoot,
+    catalogueUnavailable:
+      panels.inspectorGraphNodes.length === 0 &&
+      ['loading_graph', 'loading_backend', 'blocked_backend', 'error_graph'].includes(
+        chromeState.routeState
+      ),
     inspectorTarget: panels.inspectorTarget,
     showCanvas: code.showCanvas,
     onInspect: graphCommands.onInspectNode,
@@ -238,7 +250,6 @@ export default function CanvasShell({
       navigation={modelBrowser}
       nodes={panels.inspectorGraphNodes}
       canvasId={panels.activeCanvasId}
-      workspaceScope={panels.inspectorAuthoring.workspaceScope}
       selectedId={model.selected?.id}
       active={model.active && !code.active}
       projectRoot={workspaceCommands?.projectRoot}
@@ -347,7 +358,7 @@ export default function CanvasShell({
                       active={model.active && !code.active}
                       onSelect={() => {
                         code.showCanvas();
-                        model.setActive(true);
+                        model.activate();
                       }}
                       onShowCanvas={() => {
                         code.showCanvas();
