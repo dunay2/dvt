@@ -173,6 +173,10 @@ describe('Templates workbench', () => {
     cy.get('[data-slot="templates-generated-source-readable-preview"]').should('have.text', edited);
     cy.get('input[name="modelRelation"]').should('not.exist');
     cy.viewport(1280, 700);
+    cy.get('[data-slot="templates-parameter-form"]').should(
+      'contain.text',
+      'Project templates · Latest record per key'
+    );
     cy.get('[data-slot="templates-generated-source-preview"] .monaco-editor .view-lines').should(
       'contain.text',
       'pedidos'

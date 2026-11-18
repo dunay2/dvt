@@ -113,7 +113,11 @@ export function useTemplateAuthoring(
     }
   }
   const displayTemplate = selected.startsWith('dvt_templates/')
-    ? { ...template, label: draft.name || template.label }
+    ? {
+        ...template,
+        label: draft.name || template.label,
+        description: copy.project + ' · ' + template.label,
+      }
     : template;
   return {
     selected,
