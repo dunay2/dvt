@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "5.1.0"
   },
   "dependencies": {
     "@buf/substrait_substrait.bufbuild_es": "2.14.0-20260816025439-ce0808dab3ac.1",
