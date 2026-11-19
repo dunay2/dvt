@@ -24,6 +24,8 @@ import {
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import navigationStyles from './components/LeftNavigation.module.css';
+import { useOperationalDrawerContributionStore } from './components/shell/operationalDrawerContributionStore';
+import { buildCanvasRunContribution } from './components/shell/shellRunContribution.test-fixtures';
 import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 
 describe('RootShell chrome', () => {
@@ -302,14 +304,28 @@ describe('RootShell chrome', () => {
     }
   });
 
-  it('renders the bottom operational drawer inside the app shell frame when enabled', async () => {
+  it('preserves the contextual drawer and Canvas when switching to the workbench views', async () => {
     setRootShellBottomDrawer({ visible: true, height: 160 });
+    const contribution = buildCanvasRunContribution({
+      problems: {
+        items: [
+          { id: 'preview', severity: 'warning', message: 'Preview required', detail: 'Draft' },
+        ],
+      },
+    });
     const mounted = await withTestQueryClient(
-      createRootShellNode(createHealthyPlatformCapability())
+      createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
     );
 
     try {
       await waitForShellBootstrapSurface(mounted);
+
+      expect(mounted.container.querySelector('[data-slot="bottom-operational-drawer"]')).toBeNull();
+      await act(async () => {
+        useOperationalDrawerContributionStore
+          .getState()
+          .registerOperationalDrawerContribution(contribution);
+      });
 
       const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
       const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
@@ -322,10 +338,32 @@ describe('RootShell chrome', () => {
       expect(operationalDrawer).not.toBeNull();
       // The region stays named after removing the redundant visible heading row.
       expect(operationalDrawer?.getAttribute('role')).toBe('region');
-      expect(operationalDrawer?.getAttribute('aria-label')).toBe('Operations');
-      expect(bottomDrawer?.textContent).toContain('Start a run to see live run events here.');
+      expect(operationalDrawer?.getAttribute('aria-label')).toBe('Canvas operations');
+      expect(bottomDrawer?.querySelectorAll('[role="tab"]')).toHaveLength(1);
+      const problems = mounted.container.querySelector<HTMLButtonElement>(
+        '#shell-operational-problems'
+      )!;
+      expect(problems.getAttribute('aria-label')).toBe('Problems (1)');
+      await act(async () => fireEvent.click(problems));
+      const workspace = '[data-slot="shell-operational-workspace"]';
+      expect(mounted.container.querySelector(workspace)?.textContent).toContain('Preview required');
+      expect(mounted.container.querySelector('[data-slot="bottom-operational-drawer"]')).toBeNull();
+      await act(async () =>
+        fireEvent.click(mounted.container.querySelector('#shell-operational-log')!)
+      );
+      expect(mounted.container.querySelector(workspace)?.textContent).toContain(
+        'Start a run to see live run events here.'
+      );
+      await act(async () => fireEvent.click(mounted.container.querySelector('a[href="/canvas"]')!));
+      expect(mounted.container.querySelector(workspace)).toBeNull();
+      expect(
+        mounted.container.querySelector('[data-slot="bottom-operational-drawer"]')
+      ).not.toBeNull();
     } finally {
       await mounted.cleanup();
+      useOperationalDrawerContributionStore
+        .getState()
+        .clearOperationalDrawerContribution(contribution);
     }
   });
 });
