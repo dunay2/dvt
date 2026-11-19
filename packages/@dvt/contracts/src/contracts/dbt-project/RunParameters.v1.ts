@@ -1,6 +1,8 @@
 /**
  * Owned concern: version the bounded, non-secret inputs declared by a dbt model.
- * @baseline ADR-0071: an operator chooses scalar data within the authored model's domain.
+ * @baseline ADR-0060: the dbt project files own the model's declarations.
+ * @decision Accept only bounded scalar values admitted by the model's parameter metadata.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

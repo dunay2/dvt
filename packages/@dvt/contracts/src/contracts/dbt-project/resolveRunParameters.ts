@@ -1,6 +1,8 @@
 /**
  * Owned concern: resolve declared business inputs for one authorized execution selection.
- * @baseline ADR-0071: the plan binds effective values independently of how the operator chose them.
+ * @baseline ADR-0042: the canonical execution plan binds the effective invocation.
+ * @decision Resolve the selected models' defaults and overrides in the authorized environment before canonicalizing dbt variables.
+ * @version 1.0.0
  */
 import { jcsCanonicalize } from '@dvt/crypto';
 
