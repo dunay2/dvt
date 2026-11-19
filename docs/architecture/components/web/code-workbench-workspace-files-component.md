@@ -307,6 +307,13 @@ compilation evidence. See the [prospective rationale and negative test matrix](h
 
 ### Current-file compilation and materialization
 
+The [typed run parameter proposal](../../../adr/ADR-0071-typed-parameters-for-model-execution.md)
+adds model-declared inputs to this same Code session. Parameter edits retire
+its accepted plan. Compile and Run open the same parameter dialog. Confirming
+Compile forwards the overrides for server-side validation. Confirming Run
+compiles and proceeds only on the resulting accepted plan. The existing
+unparameterized command flow remains available for other models.
+
 The model command bar has a different intent from reference inspection.
 **Compile** prepares the selected SQL model through existing `PreviewPlan`
 (`IPlansPort.previewPlan` to `POST /plans/preview`). The protected server requires

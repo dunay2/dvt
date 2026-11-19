@@ -127,6 +127,17 @@ export async function analyzeDbtSnapshot(
       ...(operation.kind === 'compile' && operation.targetName !== undefined
         ? ['--target', operation.targetName]
         : []),
+      ...(operation.kind === 'compile' && operation.dbtVariablesJson !== undefined
+        ? [
+            '--log-level',
+            'none',
+            '--log-level-file',
+            'none',
+            '--no-print',
+            '--vars',
+            operation.dbtVariablesJson,
+          ]
+        : []),
     ],
     cwd: snapshotDirectory,
     env: buildSanitizedProcessEnvironment(environment, analysisRoot),
@@ -150,7 +161,7 @@ export async function analyzeDbtSnapshot(
   const manifest = JSON.parse(
     await readFile(path.join(targetPath, 'manifest.json'), 'utf8')
   ) as unknown;
-  const projection = projectDbtManifest(manifest);
+  const projection = projectDbtManifest(manifest, operation.kind);
   const semanticEvidence = await buildDbtProjectSemanticEvidence({
     snapshotDirectory,
     contentRevision,

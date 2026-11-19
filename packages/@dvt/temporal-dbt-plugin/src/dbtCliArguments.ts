@@ -13,7 +13,8 @@ export function buildDbtCliArgs(
   stepKind: string,
   stepId: string,
   targetProfile: string | undefined,
-  profilesDir: string
+  profilesDir: string,
+  dbtVariablesJson?: string
 ): readonly string[] {
   const subcommand = resolveDbtCliSubcommand(stepKind);
   return [
@@ -25,5 +26,16 @@ export function buildDbtCliArgs(
       : []),
     '--profiles-dir',
     profilesDir,
+    ...(dbtVariablesJson === undefined
+      ? []
+      : [
+          '--log-level',
+          'none',
+          '--log-level-file',
+          'none',
+          '--no-print',
+          '--vars',
+          dbtVariablesJson,
+        ]),
   ];
 }

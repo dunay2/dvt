@@ -65,6 +65,13 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
             },
             {
               uniqueId: 'model.analytics.orders',
+              runParameters: [
+                {
+                  name: 'minimum',
+                  type: 'integer',
+                  environmentDefaults: { 'env-a': 2, 'other-env': 5 },
+                },
+              ],
               resourceType: 'model' as const,
               name: 'orders',
               packageName: 'analytics',
@@ -278,6 +285,9 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
     expect(projection.nodes.map((node) => node.uniqueId)).toEqual([
       'model.analytics.orders',
       'source.analytics.raw.orders',
+    ]);
+    expect(projection.nodes[0]?.runParameters).toEqual([
+      { name: 'minimum', type: 'integer', environmentDefaults: { 'env-a': 2 } },
     ]);
     expect(projection.edges).toEqual([
       {

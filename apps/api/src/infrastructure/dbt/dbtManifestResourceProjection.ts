@@ -3,6 +3,8 @@
  * @decision Preserve compiled_code for every existing executable resource kind.
  * @consequence Parse-only, blank or absent SQL is never synthesized into compilation evidence.
  */
+import { RunParameterDefinitionsSchema } from '@dvt/contracts';
+
 import type { DbtProjectAnalysisResource } from '../../application/ports/dbtProjectAnalysis.js';
 
 import {
@@ -31,7 +33,8 @@ export const SUPPORTED_RESOURCE_TYPES = new Set([
 
 export function projectResource(
   value: unknown,
-  rootProjectName: string
+  rootProjectName: string,
+  operation: 'compile' | 'parse'
 ): DbtProjectAnalysisResource | null {
   const resource = record(value);
   const resourceType = stringValue(resource.resource_type);
@@ -49,6 +52,10 @@ export function projectResource(
   }
 
   const projectedType = resourceType as DbtProjectAnalysisResource['resourceType'];
+  const meta = record(record(resource.config).meta);
+  const declaration = projectedType === 'model' ? record(meta.dvt).run_parameters : undefined;
+  const parameters =
+    declaration === undefined ? undefined : RunParameterDefinitionsSchema.safeParse(declaration);
   const originalFilePath = stringValue(resource.original_file_path);
   const normalizedOriginalFilePath =
     originalFilePath === undefined ? undefined : normalizeManifestPath(originalFilePath);
@@ -82,6 +89,7 @@ export function projectResource(
     projectedType === 'model' || projectedType === 'test' || projectedType === 'snapshot'
       ? stringValue(resource.compiled_code)
       : undefined;
+  const fqn = operation === 'compile' ? resource.fqn : undefined;
   const sourceIdentityRef = projectSourceIdentityRef(resource, projectedType);
   const identifier = projectedType === 'source' ? stringValue(resource.identifier) : undefined;
   const sourceTableDeclaration = projectSourceTableDeclaration({
@@ -98,6 +106,8 @@ export function projectResource(
   return {
     uniqueId,
     resourceType: projectedType,
+    ...(parameters?.success === true ? { runParameters: parameters.data } : {}),
+    ...(parameters?.success === false ? { runParameterError: 'invalid_declaration' as const } : {}),
     name,
     ...(identifier === undefined ? {} : { identifier }),
     packageName,
@@ -116,6 +126,9 @@ export function projectResource(
     tags: [...new Set(stringArray(resource.tags))].sort(),
     ...(testMetadata === undefined ? {} : { testMetadata }),
     ...(compiledSql === undefined ? {} : { compiledSql }),
+    ...(Array.isArray(fqn) && fqn.every((part): part is string => typeof part === 'string')
+      ? { fqn }
+      : {}),
     ...(sourceIdentityRef === undefined ? {} : { sourceIdentityRef }),
     ...(sourceTableDeclaration === undefined ? {} : { sourceTableDeclaration }),
     codeOnlyReasons: ['phase_two_read_only_projection'],

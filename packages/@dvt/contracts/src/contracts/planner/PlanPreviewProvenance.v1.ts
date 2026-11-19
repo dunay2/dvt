@@ -14,6 +14,7 @@ import {
   isSha256HexString,
   SHA256_HEX_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
+import { DbtVariablesJsonSchema } from '../dbt-project/RunParameters.v1.js';
 import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
 import { WorkspaceRelativeProjectRootSchema } from './CanvasAuthoringAuthorityBinding.v1.js';
@@ -119,6 +120,17 @@ export const NonDvtPlanPreviewProvenanceSchema = z.discriminatedUnion('kind', [
 export const PlanPreviewProvenanceSchema = z.discriminatedUnion('kind', [
   TransformationGitArtifactsProvenanceSchema,
   DbtProjectFilesProvenanceSchema,
+  DvtProtectedWorkspaceGraphProvenanceSchema,
+]);
+
+// Only native Preview may attach effective variables to the persisted artifact.
+// The public request schema above stays strict for server-owned evidence.
+export const StoredDbtProjectFilesProvenanceSchema = DbtProjectFilesProvenanceSchema.safeExtend({
+  dbtVariablesJson: DbtVariablesJsonSchema.optional(),
+});
+export const StoredPlanPreviewProvenanceSchema = z.discriminatedUnion('kind', [
+  TransformationGitArtifactsProvenanceSchema,
+  StoredDbtProjectFilesProvenanceSchema,
   DvtProtectedWorkspaceGraphProvenanceSchema,
 ]);
 

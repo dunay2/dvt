@@ -3,6 +3,7 @@ import { parseExecutionSelection } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
+  COMPILED_MODEL_SELECTOR,
   MODEL_ID,
   GRAPH_SOURCE,
   PROVENANCE,
@@ -109,7 +110,15 @@ describe('ResolveAuthorizedPreviewSelectionService authority routing', () => {
     ).resolves.toEqual({
       ok: true,
       value: {
-        graphSource: GRAPH_SOURCE,
+        graphSource: {
+          ...GRAPH_SOURCE,
+          nodes: [
+            {
+              ...GRAPH_SOURCE.nodes[0]!,
+              stepTypeConfig: { custom: { dbtStepSelector: COMPILED_MODEL_SELECTOR } },
+            },
+          ],
+        },
         nodeIds: [MODEL_ID],
         decisionScopeNodeIds: [MODEL_ID],
         requestedRootNodeIds: [MODEL_ID],
@@ -120,6 +129,29 @@ describe('ResolveAuthorizedPreviewSelectionService authority routing', () => {
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
     });
     expect(graphDraftResolver.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a submitted CLI selector before compiling the project resource', async () => {
+    const { service, dbtCompilation } = buildService();
+    const graphSource = {
+      ...GRAPH_SOURCE,
+      nodes: [
+        {
+          ...GRAPH_SOURCE.nodes[0]!,
+          stepTypeConfig: {
+            custom: { dbtStepSelector: { ...COMPILED_MODEL_SELECTOR, selector: '*' } },
+          },
+        },
+      ],
+    };
+    const selection = parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] });
+    await expect(
+      service.execute({ graphSource, selection, provenance: PROVENANCE }, buildContext())
+    ).resolves.toMatchObject({
+      ok: false,
+      rejection: { cause: 'dbt_project_graph_source_mismatch' },
+    });
+    expect(dbtCompilation.execute).not.toHaveBeenCalled();
   });
 
   it('delegates non-file Preview to protected graph-draft selection resolution', async () => {

@@ -8,14 +8,29 @@
  * @version 1.0.0
  */
 import { execFile } from 'node:child_process';
+import { mkdtemp } from 'node:fs/promises';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import type { DbtCliCommandRunner } from './dbtCliTypes.js';
+import { assertDbtRunResult } from './dbtRunResult.js';
 
 const execFileAsync = promisify(execFile);
 const DBT_CLI_MAX_BUFFER_BYTES = 10 * 1024 * 1024;
 
 export const runDbtCommand: DbtCliCommandRunner = async (dbtBin, args, options) => {
+  // The project's normal cleanup also removes these invocation-local artifacts.
+  const target = await mkdtemp(join(options.cwd, '.dvt-run-'));
+  const result = await executeDbtProcess(
+    dbtBin,
+    [...args, '--target-path', target, '--write-json'],
+    options
+  );
+  await assertDbtRunResult(target, options.expectedUniqueId);
+  return result;
+};
+
+const executeDbtProcess: DbtCliCommandRunner = async (dbtBin, args, options) => {
   const result = await execFileAsync(dbtBin, [...args], {
     cwd: options.cwd,
     encoding: 'utf8',
@@ -32,7 +47,7 @@ export const runDbtCommand: DbtCliCommandRunner = async (dbtBin, args, options) 
 
 export async function assertDbtCliAvailable(
   dbtBin: string,
-  runCommand: DbtCliCommandRunner = runDbtCommand
+  runCommand: DbtCliCommandRunner = executeDbtProcess
 ): Promise<void> {
   await runCommand(dbtBin, ['--version'], { cwd: process.cwd() });
 }

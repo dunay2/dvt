@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-18",
+  "generated": "2026-11-19",
   "repo": {
     "sha": "local"
   },
@@ -1022,6 +1022,16 @@
       "title": "ADR-0040 - Retry Ownership and Attempt Authority"
     },
     {
+      "number": "ADR-0042",
+      "decisions": [
+        "Resolve the selected models' defaults and overrides in the authorized environment before canonicalizing dbt variables."
+      ],
+      "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/dbt-project/resolveRunParameters.ts"
+      ],
+      "title": "ADR-0042 - ExecutionPlan canonical identity unification"
+    },
+    {
       "number": "ADR-0043",
       "decisions": [
         "Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.",
@@ -1221,6 +1231,7 @@
     {
       "number": "ADR-0060",
       "decisions": [
+        "Accept only bounded scalar values admitted by the model's parameter metadata.",
         "Bind byte-preserving moves to the source revision and plan identity.",
         "Compile only already-published Graph Draft artifacts through native DBT.",
         "Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.",
@@ -1249,6 +1260,7 @@
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/RunParameters.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",

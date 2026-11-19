@@ -95,6 +95,11 @@ describe('startRunRoute plan-source policy', () => {
 
   const invalidPlanSourceCases = [
     {
+      description: 'rejects new parameter values on an accepted plan reference',
+      body: { ...VALID_BODY, parameterOverrides: [{ name: 'minimum_amount', value: 0 }] },
+      expectedReason: 'invalid_plan_source',
+    },
+    {
       description: 'returns 400 when planRef and planner source are both supplied',
       body: {
         ...VALID_BODY,

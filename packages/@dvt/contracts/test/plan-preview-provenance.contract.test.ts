@@ -4,6 +4,7 @@ import {
   DbtProjectGraphProjectionSchema,
   PLAN_PREVIEW_PROVENANCE_KIND,
   PlanPreviewProvenanceSchema,
+  StoredPlanPreviewProvenanceSchema,
 } from '../src/index.js';
 
 const FILE_AUTHORITY = {
@@ -39,6 +40,21 @@ const DBT_PROVENANCE = {
 describe('PlanPreviewProvenance.v1', () => {
   it('accepts file-authoritative dbt provenance without credential material', () => {
     expect(PlanPreviewProvenanceSchema.parse(DBT_PROVENANCE)).toEqual(DBT_PROVENANCE);
+  });
+
+  it('accepts scalar dbt variables only on server-persisted provenance', () => {
+    const resolved = {
+      ...DBT_PROVENANCE,
+      dbtVariablesJson: '{"minimum_amount":0,"use_minimum":true}',
+    };
+    expect(StoredPlanPreviewProvenanceSchema.parse(resolved)).toEqual(resolved);
+    expect(PlanPreviewProvenanceSchema.safeParse(resolved).success).toBe(false);
+    expect(
+      StoredPlanPreviewProvenanceSchema.safeParse({
+        ...DBT_PROVENANCE,
+        dbtVariablesJson: '{"nested":{"a":1}}',
+      }).success
+    ).toBe(false);
   });
 
   it('accepts protected DVT graph provenance without browser graph semantics', () => {

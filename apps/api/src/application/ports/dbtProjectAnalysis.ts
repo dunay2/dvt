@@ -22,7 +22,12 @@ export type AnalyzeDbtProjectInput = Readonly<{
   projectRoot: string;
   operation?:
     | Readonly<{ kind: 'parse' }>
-    | Readonly<{ kind: 'compile'; selectors: readonly string[]; targetName?: string }>;
+    | Readonly<{
+        kind: 'compile';
+        selectors: readonly string[];
+        targetName?: string;
+        dbtVariablesJson?: string;
+      }>;
 }>;
 
 export type DbtProjectAnalysisResource = Omit<
@@ -34,6 +39,7 @@ export type DbtProjectAnalysisResource = Omit<
     sourceIdentityRef?: DbtProjectSourceIdentityRef;
     sourceTableDeclaration?: DbtProjectSourceTableDeclaration;
     compiledSql?: string;
+    fqn?: readonly string[];
   }>;
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;

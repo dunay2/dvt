@@ -5,10 +5,15 @@
  * @consequence Parse results, missing SQL and stale compilations cannot enable Run.
  * @version 1.0.0
  */
-import type { DbtProjectGraphProjection } from '@dvt/contracts';
+import type { DbtProjectGraphProjection, DbtStepSelector } from '@dvt/contracts';
 
-import type { IDbtProjectAnalyzerPort } from '../../ports/dbtProjectAnalysis.js';
+import type {
+  DbtProjectAnalysisDependency,
+  IDbtProjectAnalyzerPort,
+} from '../../ports/dbtProjectAnalysis.js';
 import type { WorkspaceStorageScope } from '../../ports/workspaceFiles.js';
+
+import { compiledDbtStepSelectors } from './dbtCompiledStepSelectors.js';
 
 type CompilationInput = Readonly<{
   scope: WorkspaceStorageScope;
@@ -19,18 +24,24 @@ type CompilationInput = Readonly<{
   targetName: string;
   resources: readonly Pick<
     DbtProjectGraphProjection['nodes'][number],
-    'uniqueId' | 'resourceType' | 'originalFilePath'
+    'uniqueId' | 'resourceType' | 'originalFilePath' | 'materialized'
   >[];
-}>;
+}> &
+  (
+    | { dbtVariablesJson: string; expectedDependencies: readonly DbtProjectAnalysisDependency[] }
+    | { dbtVariablesJson?: never; expectedDependencies?: never }
+  );
 
-type CompilationResult = Readonly<{ ok: true }> | Readonly<{ ok: false; reason: string }>;
+type CompilationResult =
+  | Readonly<{ ok: true; selectors: ReadonlyMap<string, DbtStepSelector> }>
+  | Readonly<{ ok: false; reason: string }>;
 
 export class DbtPreviewCompilationGate {
   public constructor(private readonly analyzer: IDbtProjectAnalyzerPort) {}
 
   public async execute(input: CompilationInput): Promise<CompilationResult> {
-    const selectors = input.resources.map((resource) => resource.originalFilePath);
-    if (selectors.length === 0 || selectors.some((path) => !path?.trim())) {
+    const paths = input.resources.map((resource) => resource.originalFilePath);
+    if (paths.length === 0 || paths.some((path) => !path?.trim())) {
       return { ok: false, reason: 'The selected dbt resources have no compilable file identity.' };
     }
     try {
@@ -39,8 +50,11 @@ export class DbtPreviewCompilationGate {
         projectRoot: input.projectRoot,
         operation: {
           kind: 'compile',
-          selectors: [...new Set(selectors.map((path) => `path:${path}`))].sort(),
+          selectors: [...new Set(paths.map((path) => `path:${path}`))].sort(),
           targetName: input.targetName,
+          ...(input.dbtVariablesJson === undefined
+            ? {}
+            : { dbtVariablesJson: input.dbtVariablesJson }),
         },
       });
       if (
@@ -67,7 +81,30 @@ export class DbtPreviewCompilationGate {
           reason: 'Native dbt compilation produced no SQL for a selected resource.',
         };
       }
-      return { ok: true };
+      const selected = new Set(input.resources.map(({ uniqueId }) => uniqueId));
+      if (input.dbtVariablesJson !== undefined) {
+        const resourceChanged = input.resources.some((resource) => {
+          const result = compiled.get(resource.uniqueId)!;
+          return (
+            result.originalFilePath !== resource.originalFilePath ||
+            result.materialized !== resource.materialized
+          );
+        });
+        if (
+          resourceChanged ||
+          !sameSelectedDependencies(selected, analysis.dependencies, input.expectedDependencies)
+        ) {
+          return {
+            ok: false,
+            reason:
+              'The compiled dbt variables changed the selected model structure or dependencies. Review the model before running.',
+          };
+        }
+      }
+      const selectors = compiledDbtStepSelectors(analysis.resources, selected);
+      return selectors
+        ? { ok: true, selectors }
+        : { ok: false, reason: 'A compiled dbt resource has no unambiguous execution selector.' };
     } catch {
       return {
         ok: false,
@@ -75,4 +112,20 @@ export class DbtPreviewCompilationGate {
       };
     }
   }
+}
+
+function sameSelectedDependencies(
+  selected: ReadonlySet<string>,
+  actual: readonly DbtProjectAnalysisDependency[],
+  expected: readonly DbtProjectAnalysisDependency[]
+): boolean {
+  const incoming = (edges: readonly DbtProjectAnalysisDependency[]): string[] =>
+    edges
+      .filter((edge) => selected.has(edge.targetUniqueId))
+      .map(({ sourceUniqueId, targetUniqueId, relation }) =>
+        JSON.stringify([sourceUniqueId, targetUniqueId, relation])
+      );
+  const authorized = new Set(incoming(expected));
+  const compiled = new Set(incoming(actual));
+  return compiled.size === authorized.size && [...compiled].every((edge) => authorized.has(edge));
 }

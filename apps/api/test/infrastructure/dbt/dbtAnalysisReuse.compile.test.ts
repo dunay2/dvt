@@ -42,6 +42,33 @@ describe('native dbt analysis reuse compile operation, selection and target isol
     ]);
   });
 
+  it('compiles each distinct resolved variable set with exactly those CLI values', async () => {
+    const analyzer = fixture.analyzer();
+    const compile = (dbtVariablesJson?: string): Promise<DbtProjectAnalysis> =>
+      analyzer.analyze({
+        ...fixture.input,
+        operation: {
+          kind: 'compile',
+          selectors: ['orders'],
+          ...(dbtVariablesJson === undefined ? {} : { dbtVariablesJson }),
+        },
+      });
+    const withZero = '{"amount":0,"use_amount":true}';
+    const disabled = '{"use_amount":false}';
+    for (const variables of [undefined, withZero, withZero, disabled]) await compile(variables);
+    expect(
+      fixture.run.mock.calls.map(([{ args }]) => {
+        const index = args.indexOf('--vars');
+        return index === -1 ? undefined : args[index + 1];
+      })
+    ).toEqual([undefined, withZero, disabled]);
+    const protectedArgs = ['--log-level', 'none', '--log-level-file', 'none', '--no-print'];
+    for (const [{ args }] of fixture.run.mock.calls.slice(1)) {
+      const index = args.indexOf('--log-level');
+      expect(args.slice(index, index + protectedArgs.length)).toEqual(protectedArgs);
+    }
+  });
+
   it.each(
     (['parse', 'compile'] as const).flatMap((kind) =>
       (['model', 'profile'] as const).map((location) => [kind, location] as const)

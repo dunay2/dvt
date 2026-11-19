@@ -21,6 +21,11 @@ import { ResolveAuthorizedPreviewSelectionService } from '../../../src/applicati
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 export const MODEL_ID = 'model.analytics.orders';
+export const COMPILED_MODEL_SELECTOR = {
+  version: 'v1' as const,
+  uniqueId: MODEL_ID,
+  selector: 'package:analytics,resource_type:model,file:orders.sql,fqn:analytics.orders',
+};
 const CONTENT_SHA = asSha256HexString('a'.repeat(64));
 const ANALYSIS_SHA = asSha256HexString('b'.repeat(64));
 
@@ -179,9 +184,12 @@ export function buildService(projection = buildProjection()): {
       .mockResolvedValue(projection),
   };
   const dbtCompilation = {
-    execute: vi
-      .fn<SelectionDependencies['dbtCompilation']['execute']>()
-      .mockResolvedValue({ ok: true }),
+    execute: vi.fn<SelectionDependencies['dbtCompilation']['execute']>().mockResolvedValue({
+      ok: true,
+      selectors: new Map(
+        projection.nodes.map(({ uniqueId }) => [uniqueId, { ...COMPILED_MODEL_SELECTOR, uniqueId }])
+      ),
+    }),
   };
   return {
     graphDraftResolver,

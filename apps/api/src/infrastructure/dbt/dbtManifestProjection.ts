@@ -33,7 +33,10 @@ export type ManifestProjection = Readonly<{
   diagnostics: DbtProjectAnalysis['diagnostics'];
 }>;
 
-export function projectDbtManifest(value: unknown): ManifestProjection {
+export function projectDbtManifest(
+  value: unknown,
+  operation: 'compile' | 'parse' = 'parse'
+): ManifestProjection {
   const manifest = record(value);
   const metadata = record(manifest.metadata);
   const projectName = stringValue(metadata.project_name);
@@ -59,7 +62,7 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
   const diagnostics: DbtProjectAnalysis['diagnostics'][number][] = [];
   const resources: DbtProjectAnalysisResource[] = [];
   for (const candidate of candidates) {
-    const resource = projectResource(candidate, projectName);
+    const resource = projectResource(candidate, projectName, operation);
     if (resource !== null) {
       resources.push(resource);
       continue;

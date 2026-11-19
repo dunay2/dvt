@@ -25,6 +25,9 @@ export function parseStartRunCommand(
   adapterRegistry: IStartRunTargetAdapterRegistry,
   runIdGenerator: StartRunRunIdGenerator
 ): RouteParseResult<StartRunCommand> {
+  if (Object.hasOwn(record, 'parameterOverrides')) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
+  }
   const selection = parsePlanRouteSelection(record.selection);
   if (!selection.ok) {
     return selection;

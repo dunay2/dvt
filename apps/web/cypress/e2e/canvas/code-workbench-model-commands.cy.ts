@@ -13,6 +13,30 @@ import {
 } from '../../support/e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
+function persistedModelPlan(
+  planRef: ReturnType<typeof makePlanRef>,
+  provenance: unknown
+): ReturnType<typeof PlanPreviewPersistResponseSchema.parse> {
+  return PlanPreviewPersistResponseSchema.parse({
+    previewProfile: 'planner-generic-v1',
+    plan: {
+      metadata: {
+        planVersion: '1.0',
+        schemaVersion: '1.0',
+        contractVersion: '1.0.0',
+        inputHashSha256: 'a'.repeat(64),
+        planId: planRef.planId,
+        createdAtIso: '2026-11-11T00:00:00Z',
+      },
+      steps: [{ stepId: 'model.demo.ventas', kind: 'DBT_MODEL', dependsOn: [] }],
+    },
+    planRef,
+    persisted: { planRecordId: planRef.planId, canonicalPlanSha256: planRef.sha256 },
+    provenance,
+    validation: { valid: true, warnings: [] },
+  });
+}
+
 describe('Canvas Project Code accepted compilation before model execution', () => {
   // Parse/reference inspection must never unlock materialization; only the accepted Preview does.
   it('compiles the open SQL before enabling materialization through its accepted plan', () => {
@@ -36,24 +60,7 @@ describe('Canvas Project Code accepted compilation before model execution', () =
           });
           acceptCompilation = () =>
             resolve({
-              body: PlanPreviewPersistResponseSchema.parse({
-                previewProfile: 'planner-generic-v1',
-                plan: {
-                  metadata: {
-                    planVersion: '1.0',
-                    schemaVersion: '1.0',
-                    contractVersion: '1.0.0',
-                    inputHashSha256: 'a'.repeat(64),
-                    planId: planRef.planId,
-                    createdAtIso: '2026-11-11T00:00:00Z',
-                  },
-                  steps: [{ stepId: 'model.demo.ventas', kind: 'DBT_MODEL', dependsOn: [] }],
-                },
-                planRef,
-                persisted: { planRecordId: planRef.planId, canonicalPlanSha256: planRef.sha256 },
-                provenance: request.provenance,
-                validation: { valid: true, warnings: [] },
-              }),
+              body: persistedModelPlan(planRef, request.provenance),
             });
         })
     );
@@ -93,6 +100,71 @@ describe('Canvas Project Code accepted compilation before model execution', () =
       expect(starts[0]!.body).to.have.property('planRef').that.deep.equals(planRef);
       expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0);
       expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+    });
+  });
+  it('reviews effective values, cancels, and starts only the confirmed parameterized plan', () => {
+    const { file, project } = executableContextFixture();
+    const planRef = makePlanRef({ planId: sha256HexUtf8('confirmed-parameterized-model') });
+    stubContextualCodeWorkbenchApis(
+      [file],
+      ['workspace:graph-draft:view', 'plan:preview', 'run:start']
+    );
+    stubE2eJsonApi('GET', '/workspace/dbt/graph', {
+      ...project,
+      nodes: project.nodes.map((node) =>
+        node.name === 'ventas'
+          ? {
+              ...node,
+              runParameters: [
+                { name: 'cutoff', type: 'date', defaultValue: '2026-01-01' },
+                {
+                  name: 'country',
+                  type: 'text',
+                  choices: ['ES', 'FR'],
+                  defaultValue: 'ES',
+                  enabledBy: 'with_country',
+                },
+              ],
+            }
+          : node
+      ),
+    });
+    stubE2eApi('POST', '/plans/preview', ({ body }) => {
+      const request = body as { provenance: unknown; parameterOverrides: unknown };
+      expect(request.parameterOverrides).to.deep.equal([
+        { name: 'country', enabled: true, value: 'FR' },
+      ]);
+      return { body: persistedModelPlan(planRef, request.provenance) };
+    });
+    stubE2eJsonApi('POST', '/runs/start', { runId: 'run-with-country', accepted: true });
+    visitWithE2eWorkspaceSession('/canvas');
+    cy.get('[data-slot="shell-project-code-command"]').click();
+    const run = '[data-slot="workspace-file-code-editor"] [data-slot="code-execute-model"]';
+    cy.get(run).should('be.enabled').click();
+    cy.get('[role="dialog"]')
+      .should('be.visible')
+      .within(() => {
+        cy.get('[name="cutoff"]').should('have.value', '2026-01-01');
+        cy.get('[name="country"]').should('be.disabled');
+        cy.contains('button', 'Cancel').click();
+      });
+    cy.get(run).should('be.focused');
+    cy.then(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('[role="dialog"] [role="switch"][aria-label$=" country"]').click();
+    cy.get('select[name="country"]').select('FR');
+    cy.screenshot('code-parameterized-model-review');
+    cy.get('[role="dialog"] button[type="submit"]').click();
+    waitForE2eApiCall('/runs/start', 'POST');
+    cy.get('a[href="/runs/run-with-country"]').should('be.visible');
+    cy.then(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(1);
+      const runs = getE2eApiCalls('/runs/start', 'POST');
+      expect(runs).to.have.length(1);
+      expect(runs[0]!.body).to.have.property('planRef').that.deep.equals(planRef);
     });
   });
 });

@@ -65,47 +65,67 @@ const INPUT = {
 } as const;
 
 describe('DbtCliPluginRunner', () => {
-  it('maps DBT_MODEL to dbt run and returns COMPLETED on exit code 0', async () => {
-    const cleanup = vi.fn(async () => undefined);
-    const materializeProject = vi.fn(async () => ({
-      projectDir: '/tmp/dbt-project',
-      cleanup,
-    }));
-    const runCommand = vi.fn(async () => ({
-      stdout: 'ok',
-      stderr: '',
-    }));
-    const runner = new DbtCliPluginRunner({
-      bundleReader: {
-        read: vi.fn(async (_ref, _options) => new Uint8Array()),
-      },
-      materializeProject,
-      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
-      runCommand,
-      dbtBin: 'dbt',
-    });
+  it.each([undefined, '{"minimum_amount":0,"use_minimum":true}'])(
+    'materializes the accepted model with its invocation variables (%s)',
+    async (dbtVariablesJson) => {
+      const cleanup = vi.fn(async () => undefined);
+      const materializeProject = vi.fn(async () => ({
+        projectDir: '/tmp/dbt-project',
+        cleanup,
+      }));
+      const runCommand = vi.fn(async () => ({
+        stdout: 'ok',
+        stderr: '',
+      }));
+      const runner = new DbtCliPluginRunner({
+        bundleReader: {
+          read: vi.fn(async (_ref, _options) => new Uint8Array()),
+        },
+        materializeProject,
+        materializeRuntimeProfile: createRuntimeProfileMaterializer(),
+        runCommand,
+        dbtBin: 'dbt',
+      });
 
-    const result = await runner.execute(INPUT);
+      const result = await runner.execute({
+        ...INPUT,
+        pluginContext: {
+          ...INPUT.pluginContext,
+          ...(dbtVariablesJson === undefined ? {} : { dbtVariablesJson }),
+        },
+      });
 
-    expect(result).toEqual({
-      stepId: 'model.analytics.orders',
-      status: 'COMPLETED',
-    });
-    expect(runCommand).toHaveBeenCalledWith(
-      'dbt',
-      [
-        'run',
-        '--select',
-        'model.analytics.orders',
-        '--target',
-        'analytics',
-        '--profiles-dir',
-        '/tmp/dbt-profile',
-      ],
-      { cwd: '/tmp/dbt-project' }
-    );
-    expect(cleanup).toHaveBeenCalledTimes(1);
-  });
+      expect(result).toEqual({
+        stepId: 'model.analytics.orders',
+        status: 'COMPLETED',
+      });
+      expect(runCommand).toHaveBeenCalledWith(
+        'dbt',
+        [
+          'run',
+          '--select',
+          'model.analytics.orders',
+          '--target',
+          'analytics',
+          '--profiles-dir',
+          '/tmp/dbt-profile',
+          ...(dbtVariablesJson === undefined
+            ? []
+            : [
+                '--log-level',
+                'none',
+                '--log-level-file',
+                'none',
+                '--no-print',
+                '--vars',
+                dbtVariablesJson,
+              ]),
+        ],
+        { cwd: '/tmp/dbt-project' }
+      );
+      expect(cleanup).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it('maps DBT_TEST to dbt test', async () => {
     const runCommand = vi.fn(async () => ({
@@ -172,6 +192,7 @@ describe('DbtCliPluginRunner', () => {
             dbtStepSelector: {
               version: 'v1',
               selector: 'not_null_orders_model_order_id',
+              uniqueId: 'test.analytics.not_null_orders_model_order_id.a38ba3',
             },
           },
         },
@@ -190,7 +211,10 @@ describe('DbtCliPluginRunner', () => {
         '--profiles-dir',
         '/tmp/dbt-profile',
       ],
-      { cwd: '/tmp/dbt-project' }
+      {
+        cwd: '/tmp/dbt-project',
+        expectedUniqueId: 'test.analytics.not_null_orders_model_order_id.a38ba3',
+      }
     );
   });
 

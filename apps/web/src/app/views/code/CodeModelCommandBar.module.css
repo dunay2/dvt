@@ -32,6 +32,82 @@
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+.help {
+  color: var(--text-secondary);
+  font-size: var(--text-ui);
+  overflow-wrap: anywhere;
+}
+.help[open] {
+  flex-basis: 100%;
+}
+.help summary {
+  cursor: pointer;
+}
+.help pre {
+  font-family: var(--font-mono);
+  overflow-x: auto;
+}
+.dialog {
+  background: var(--surface-panel);
+  color: var(--text-default);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+.dialog .title,
+.dialog label,
+.dialog input,
+.dialog button,
+.description {
+  font-size: inherit;
+}
+.parameterForm,
+.fields,
+.parameter {
+  display: grid;
+}
+.fields {
+  max-height: 55dvh;
+  overflow-y: auto;
+  gap: calc(var(--spacing) * 3);
+  padding: var(--spacing);
+}
+.parameter {
+  gap: var(--spacing);
+}
+.fieldHeading,
+.footer {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+.fieldHeading {
+  justify-content: space-between;
+}
+.footer {
+  margin-top: calc(var(--spacing) * 3);
+  justify-content: flex-end;
+}
+.description {
+  color: var(--text-secondary);
+}
+.error {
+  color: var(--status-danger);
+}
+.dialog input,
+.select {
+  height: var(--shell-control-height);
+}
+.select {
+  background: var(--surface-elevated);
+  color: var(--text-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  padding-inline: calc(var(--spacing) * 2);
+}
+.select:focus-visible,
+.help summary:focus-visible {
+  outline: 2px solid var(--ring);
+}
 .spinner {
   animation: spin 1s linear infinite;
 }

@@ -11,6 +11,7 @@ import {
   SHA256_HEX_STRING_MESSAGE,
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
+import { DbtVariablesJsonSchema } from '../dbt-project/RunParameters.v1.js';
 import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
 const NonBlankStringSchema = z
@@ -67,6 +68,7 @@ export const GenericPluginContextSchema = z
 export const DbtPluginContextSchema = z
   .object({
     projectBundleRef: DbtProjectBundleRefSchema,
+    dbtVariablesJson: DbtVariablesJsonSchema.optional(),
     targetProfile: NonBlankStringSchema.optional(),
     credentialRef: CredentialReferenceSchema,
   })

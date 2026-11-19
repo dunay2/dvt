@@ -21,6 +21,7 @@ Evidence documents that justify or validate relevant changes.
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
 - [Canvas Instances And Lossless dbt Project Navigation](ED-20261102-dbt-project-root-relocation.md)
 - [Canvas Save And Readiness](ED-20261023-canvas-save-readiness.md)
+- [Code model parameter acceptance](ED-20261118-code-model-run-parameters.md)
 - [Confirmed Layer Outcomes Before Run Failure](ED-20261015-layer-result-evidence.md)
 - [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)
 - [Dependency maintenance compatibility evidence](ED-20261111-dependency-maintenance-validation.md)

@@ -19,10 +19,12 @@ import type {
   PlannerSelection,
   NonDvtPlanPreviewProvenance,
   PlanPreviewSelectionRejection,
+  RunParameterOverride,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
+import { bindDbtInvocationPlan, hasSubmittedDbtInvocation } from './dbt/dbtRunParameterBinding.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 import {
@@ -45,6 +47,7 @@ export type PreviewPlanCommand =
   | (PreviewPlanCommandCommon & {
       readonly graphSource: GenericGraphSourceV1;
       readonly provenance?: NonDvtPlanPreviewProvenance;
+      readonly parameterOverrides?: readonly RunParameterOverride[];
     });
 
 export const PREVIEW_PLAN_RESULT_KIND = {
@@ -98,6 +101,16 @@ export class PreviewPlanUseCase {
     command: PreviewPlanCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewPlanUseCaseResult> {
+    if (hasSubmittedDbtInvocation(command)) {
+      return {
+        kind: PREVIEW_PLAN_RESULT_KIND.selectionRejected,
+        rejection: {
+          code: 'REJECTED',
+          cause: 'dbt_project_parameters_invalid',
+          reason: 'Invocation evidence is produced by native dbt Preview.',
+        },
+      };
+    }
     const selectionInput =
       command.graphSource === undefined
         ? { selection: command.selection, provenance: command.provenance }
@@ -105,6 +118,9 @@ export class PreviewPlanUseCase {
             selection: command.selection,
             graphSource: command.graphSource,
             ...(command.provenance === undefined ? {} : { provenance: command.provenance }),
+            ...(command.parameterOverrides === undefined
+              ? {}
+              : { parameterOverrides: command.parameterOverrides }),
           };
     const previewSelection = await this.deps.previewSelectionResolver.execute(
       selectionInput,
@@ -132,12 +148,20 @@ export class PreviewPlanUseCase {
     const plannerInput = resolveAuthorizedPlannerInputEnvelope(plannerInputSeed, context);
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
-    const admission = await this.planAdmission.admit(buildResult, command.targetAdapter);
+    const variables = previewSelection.value.dbtVariablesJson;
+    const compiled =
+      variables !== undefined && command.provenance?.kind === 'dbt-project-files'
+        ? {
+            ...buildResult,
+            plan: bindDbtInvocationPlan(buildResult.plan, command.provenance, variables),
+          }
+        : buildResult;
+    const admission = await this.planAdmission.admit(compiled, command.targetAdapter);
 
     if (!admission.accepted) {
       return {
         kind: PREVIEW_PLAN_RESULT_KIND.planInvalid,
-        plan: admission.materialized?.plan ?? buildResult.plan,
+        plan: admission.materialized?.plan ?? compiled.plan,
         planRef: admission.planRef,
         planRecord: admission.planRecord,
         validation: admission.validation,
