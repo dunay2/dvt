@@ -68,7 +68,9 @@ describe('Code accepted file context through normal Code entry', () => {
     await h.analyzeReferences();
     await h.waitFor(() => h.container.querySelectorAll('[data-reference]').length === 2);
     expect(h.container.querySelector('textarea')).toBeNull();
-    expect(h.container.querySelector('pre')?.textContent).toBe(h.scenario.fixture.file.content);
+    expect(h.container.querySelector('[data-testid="code-file-viewer"]')?.textContent).toBe(
+      h.scenario.fixture.file.content
+    );
     expect(h.save).not.toHaveBeenCalled();
     expect(h.container.querySelector('[data-phase="read_only"]')).not.toBeNull();
   });
@@ -120,7 +122,7 @@ describe('Code accepted file context through normal Code entry', () => {
       resolveGraph = resolve;
     });
     await h.renderEntry();
-    expect(h.container.querySelector('pre')).toBeNull();
+    expect(h.container.querySelector('[data-testid="code-file-viewer"]')).toBeNull();
     expect(h.graph).not.toHaveBeenCalled();
     await act(async () =>
       resolveGraph({
@@ -140,7 +142,7 @@ describe('Code accepted file context through normal Code entry', () => {
         ],
       })
     );
-    await h.waitFor(() => h.container.querySelector('pre') != null);
+    await h.waitFor(() => h.container.querySelector('[data-testid="code-file-viewer"]') != null);
     expect(h.graph).not.toHaveBeenCalled();
     expect(h.analysis).not.toHaveBeenCalled();
     expect(h.container.querySelectorAll('[data-reference]')).toHaveLength(0);

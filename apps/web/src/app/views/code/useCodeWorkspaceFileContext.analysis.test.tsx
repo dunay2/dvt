@@ -37,7 +37,10 @@ describe('Code explicit reference analysis and evidence reuse', () => {
       contentSha256: sha256HexUtf8('select 1'),
     };
     await h.renderFile();
-    await h.waitFor(() => h.container.querySelector('pre')?.textContent === 'select 1');
+    await h.waitFor(
+      () =>
+        h.container.querySelector('[data-testid="code-file-viewer"]')?.textContent === 'select 1'
+    );
     expect(h.analysis).toHaveBeenCalledTimes(1);
     h.scenario.fixture.file = original;
     await h.renderFile();

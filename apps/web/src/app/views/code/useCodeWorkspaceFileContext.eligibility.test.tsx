@@ -31,7 +31,9 @@ describe('Code reference candidate eligibility', () => {
     };
     await h.renderEntry();
     await h.waitFor(() => h.container.querySelector('[data-testid="code-file-viewer"]') != null);
-    expect(h.container.querySelector('pre')?.textContent).toBe(h.scenario.fixture.file.content);
+    expect(h.container.querySelector('[data-testid="code-file-viewer"]')?.textContent).toBe(
+      h.scenario.fixture.file.content
+    );
     expect(h.container.querySelector('[data-phase="read_only"]')).not.toBeNull();
     expect(h.container.querySelector('textarea')).toBeNull();
     expect(h.container.querySelectorAll('[data-reference]')).toHaveLength(0);
@@ -50,7 +52,9 @@ describe('Code reference candidate eligibility', () => {
       if (context === 'provided') await h.renderFile('read-only', h.scenario.fixture.project);
       else await h.renderEntry();
       await h.waitFor(() => h.container.querySelector('[data-testid="code-file-viewer"]') != null);
-      expect(h.container.querySelector('pre')?.textContent).toBe(h.scenario.fixture.file.content);
+      expect(h.container.querySelector('[data-testid="code-file-viewer"]')?.textContent).toBe(
+        h.scenario.fixture.file.content
+      );
       expect(h.container.querySelector('[data-phase="read_only"]')).not.toBeNull();
       expect(h.container.querySelector('textarea')).toBeNull();
       expect(h.container.querySelectorAll('[data-reference]')).toHaveLength(0);
@@ -107,9 +111,15 @@ describe('Code reference candidate eligibility', () => {
       const targetFile = h.scenario.fixture.file;
       await h.renderFile();
       await act(async () => finishGraph(first.project));
-      await h.waitFor(() => h.container.querySelector('pre')?.textContent === targetFile.content);
+      await h.waitFor(
+        () =>
+          h.container.querySelector('[data-testid="code-file-viewer"]')?.textContent ===
+          targetFile.content
+      );
       await h.waitFor(() => h.client.isFetching() === 0);
-      expect(h.container.querySelector('pre')?.textContent).toBe(targetFile.content);
+      expect(h.container.querySelector('[data-testid="code-file-viewer"]')?.textContent).toBe(
+        targetFile.content
+      );
       expect(h.container.querySelectorAll('[data-reference]')).toHaveLength(0);
       expect(h.container.querySelector('[data-phase="read_only"]')).not.toBeNull();
       const copy = resolveCodeInlineReferenceCopy('en-US');
