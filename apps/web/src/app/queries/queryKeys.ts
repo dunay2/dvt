@@ -78,8 +78,11 @@ export const queryKeys = {
       ['workspace', 'file-content', workspaceLayoutKey] as const,
     fileContent: (workspaceLayoutKey: string, path: string) =>
       ['workspace', 'file-content', workspaceLayoutKey, path] as const,
-    fileHistory: (workspaceLayoutKey: string, path: string) =>
-      ['workspace', 'file-history', workspaceLayoutKey, path] as const,
+    fileHistory: (
+      workspaceLayoutKey: string,
+      path: string,
+      selection: readonly [] | readonly ['pages'] | readonly ['version', string | undefined] = []
+    ) => ['workspace', 'file-history', workspaceLayoutKey, path, ...selection] as const,
     artifacts: (workspaceLayoutKey: string) =>
       ['workspace', 'artifacts', workspaceLayoutKey] as const,
   },

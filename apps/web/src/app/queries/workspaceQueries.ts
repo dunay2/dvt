@@ -154,14 +154,14 @@ export function useWorkspaceFileVersionQueries(path: string, revision: string | 
   const { scope, layoutKey } = useWorkspaceQueryContext();
   const key = queryKeys.workspace.fileHistory(layoutKey, path);
   const pages = useInfiniteQuery({
-    queryKey: [...key, 'pages'],
+    queryKey: queryKeys.workspace.fileHistory(layoutKey, path, ['pages']),
     queryFn: ({ pageParam }) => query.getFileHistory(path, pageParam ?? undefined, scope),
     initialPageParam: null as string | null,
     getNextPageParam: (page) => (page.length === 20 ? page.at(-1)?.commitSha : undefined),
   });
   const version = useQuery({
     enabled: revision !== undefined,
-    queryKey: [...key, 'version', revision],
+    queryKey: queryKeys.workspace.fileHistory(layoutKey, path, ['version', revision]),
     queryFn: async () => {
       const result = await query.getFileVersionContent(path, revision!, scope);
       if (result.path !== path || result.commitSha !== revision)
