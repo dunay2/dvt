@@ -47,6 +47,7 @@ export const inspectorVisualClasses = {
   contextPanelTabsList: 'justify-start rounded-md border border-slate-700 bg-transparent p-1',
   contextPanelTabsTrigger:
     'text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white',
+  contextPanelWorkbenchTabs: 'gap-3',
   contextPanelFlatTabsList:
     'flex h-auto min-h-10 w-full flex-wrap justify-start gap-x-3 gap-y-1 overflow-visible rounded-none border-0 border-b border-slate-700 bg-transparent p-0 pb-1',
   contextPanelFlatTabTrigger:

@@ -188,7 +188,10 @@ export function NodePropertiesTabs({
       data-slot={slots.root}
       value={activeTab}
       onValueChange={onActiveTabChange}
-      className={cn('gap-4', fillAvailableHeight && 'h-full min-h-0')}
+      className={cn(
+        surface === 'workbench' ? inspectorVisualClasses.contextPanelWorkbenchTabs : 'gap-4',
+        fillAvailableHeight && 'h-full min-h-0'
+      )}
     >
       <div
         data-slot={slots.list}

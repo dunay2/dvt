@@ -40,7 +40,6 @@
   text-overflow: ellipsis;
 }
 .field {
-  padding-block: calc(var(--spacing) * 2);
   font-size: var(--text-ui);
   line-height: var(--text-ui-line-height);
 }
