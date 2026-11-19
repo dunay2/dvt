@@ -39,6 +39,7 @@ export const RUNTIME_ROUTE_PATH = {
   warehouseSourceRebind: '/workspace/sources/:nodeId/binding',
   workspaceFiles: '/workspace/files',
   workspaceFileHistory: '/workspace/file-history/:path',
+  workspaceFileVersion: '/workspace/file-history/:path/:revision',
   workspaceFileContent: '/workspace/files/:path',
   costAttributionSummary: '/cost/attribution-summary',
   list: '/runs',

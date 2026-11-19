@@ -1,5 +1,5 @@
 /** Owned concern: bind workspace query hooks to their minimal service ports. */
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useSyncExternalStore } from 'react';
 import {
   useWorkspaceAdminReadPort,
@@ -11,6 +11,7 @@ import {
   useSessionContext,
 } from '../services/AppServicesContext';
 import type { FileContent, WorkspaceFileEntry } from '../ports/workspace';
+import type { WorkspaceScope } from '../ports/sessionContext';
 import { classifyWorkspaceArtifact, type WorkspaceArtifactKind } from './workspaceArtifactPolicy';
 import { queryKeys } from './queryKeys';
 
@@ -25,14 +26,18 @@ export type WorkspaceArtifactRecord = {
 
 export type WorkspaceArtifactMap = Record<string, WorkspaceArtifactRecord>;
 
-function useWorkspaceLayoutKey(): string {
+function useWorkspaceQueryContext(): Readonly<{ scope: WorkspaceScope; layoutKey: string }> {
   const sessionContext = useSessionContext();
-  const { tenantId, projectId, environmentId } = useSyncExternalStore(
+  const scope = useSyncExternalStore(
     sessionContext.subscribeWorkspaceScope,
     sessionContext.getWorkspaceScopeSnapshot,
     sessionContext.getWorkspaceScopeSnapshot
   );
-  return `${tenantId}::${projectId}::${environmentId}`;
+  return { scope, layoutKey: `${scope.tenantId}::${scope.projectId}::${scope.environmentId}` };
+}
+
+function useWorkspaceLayoutKey(): string {
+  return useWorkspaceQueryContext().layoutKey;
 }
 
 function flattenWorkspaceEntries(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
@@ -142,6 +147,29 @@ export function useWorkspaceFileHistoryQuery(path: string | undefined) {
     queryKey: queryKeys.workspace.fileHistory(workspaceLayoutKey, path ?? ''),
     queryFn: () => workspaceFileHistoryQuery.getFileHistory(path ?? ''),
   });
+}
+
+export function useWorkspaceFileVersionQueries(path: string, revision: string | undefined) {
+  const query = useWorkspaceFileHistoryQueryPort();
+  const { scope, layoutKey } = useWorkspaceQueryContext();
+  const key = queryKeys.workspace.fileHistory(layoutKey, path);
+  const pages = useInfiniteQuery({
+    queryKey: [...key, 'pages'],
+    queryFn: ({ pageParam }) => query.getFileHistory(path, pageParam ?? undefined, scope),
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => (page.length === 20 ? page.at(-1)?.commitSha : undefined),
+  });
+  const version = useQuery({
+    enabled: revision !== undefined,
+    queryKey: [...key, 'version', revision],
+    queryFn: async () => {
+      const result = await query.getFileVersionContent(path, revision!, scope);
+      if (result.path !== path || result.commitSha !== revision)
+        throw new Error('Unconfirmed file version');
+      return result;
+    },
+  });
+  return { pages, version, historyKey: key, scope };
 }
 
 export function useWorkspaceRolesQuery() {

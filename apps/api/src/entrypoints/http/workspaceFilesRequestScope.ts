@@ -25,7 +25,7 @@ export async function authorizeWorkspaceFilesRequest(
   reply: FastifyReply,
   deps: WorkspaceFilesAuthorizationDeps,
   options: { readonly action?: WorkspaceFilesAction } = {}
-): Promise<{ readonly scope: WorkspaceStorageScope } | false> {
+): Promise<{ readonly scope: WorkspaceStorageScope; readonly subjectId: string } | false> {
   const parsed = parseRequiredEnvironmentScope(request.query);
   if (!parsed.ok) {
     httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
@@ -48,6 +48,7 @@ export async function authorizeWorkspaceFilesRequest(
   }
 
   return {
+    subjectId: auth.context.principal.subjectId,
     scope: {
       tenantId: parsed.value.tenantId.value,
       projectId: parsed.value.projectId.value,

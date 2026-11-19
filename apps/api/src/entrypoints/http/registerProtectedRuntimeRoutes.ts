@@ -143,13 +143,14 @@ export async function registerProtectedRuntimeRoutes(
     previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
     validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
   });
+  const fileHistory = new LocalWorkspaceFileHistoryRepository({
+    root: protectedModule.workspaceFilesRoot,
+  });
   registerWorkspaceFileHistoryRoutes(app, {
     ...dependencies.runtimeAuth,
-    listUseCase: new ListWorkspaceFileHistoryUseCase(
-      new LocalWorkspaceFileHistoryRepository({
-        root: protectedModule.workspaceFilesRoot,
-      })
-    ),
+    listUseCase: new ListWorkspaceFileHistoryUseCase(fileHistory),
+    versionQuery: fileHistory,
+    versionCommand: fileHistory,
     rateLimit: {
       max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
       timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,

@@ -888,6 +888,9 @@ export function createMockWorkspaceFileHistoryQueryPort(
 ): IWorkspaceFileHistoryQueryPort {
   return {
     getFileHistory: async (path) => state.fileHistory[path]?.map((entry) => ({ ...entry })) ?? [],
+    getFileVersionContent: async () => {
+      throw new Error('File version missing from test fixture');
+    },
   };
 }
 

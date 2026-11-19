@@ -12,6 +12,80 @@ import { stubCodeWorkbenchBootstrapApis } from '../../support/codeWorkbench/boot
 import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
+it('compares and restores a Git version of the selected operation through the Code editor', () => {
+  const path = 'operations/tarea.task.sql';
+  const file = {
+    path,
+    name: 'tarea.task.sql',
+    language: 'sql',
+    content: 'CREATE TASK tarea AS SELECT 2;',
+    contentSha256: sha256HexUtf8('CREATE TASK tarea AS SELECT 2;'),
+    lastModified: '2026-11-19T19:00:00Z',
+  };
+  const original = 'CREATE TASK tarea AS SELECT 1;';
+  const revision = 'a'.repeat(40);
+  stubCodeWorkbenchBootstrapApis();
+  stubE2eJsonApi('GET', '/workspace/files', [{ path, name: file.name, kind: 'file' }]);
+  stubE2eApi('GET', /\/workspace\/files\/.+/, () => ({ body: file }));
+  stubE2eApi('GET', /\/workspace\/file-history\/.+/, ({ url }) => ({
+    body: url.pathname.endsWith(revision)
+      ? { path, commitSha: revision, content: original }
+      : [
+          {
+            path,
+            commitSha: revision,
+            shortSha: revision.slice(0, 7),
+            authorName: 'Ada',
+            authoredAt: file.lastModified,
+            subject: 'Initial version',
+          },
+        ],
+  }));
+  stubE2eApi('POST', /\/workspace\/file-history\/.+/, ({ body }) => {
+    expect(body).to.deep.equal({ expectedContentSha256: file.contentSha256 });
+    return { body: { kind: 'committed', commitSha: 'b'.repeat(40) } };
+  });
+  stubE2eApi('POST', /\/workspace\/files\/.+/, ({ body }) => {
+    expect(body).to.deep.equal({
+      content: original,
+      expectedRevision: { kind: 'content_sha256', value: file.contentSha256 },
+    });
+    file.content = original;
+    file.contentSha256 = sha256HexUtf8(original);
+    return { body: { ...file, kind: 'saved', disposition: 'updated' } };
+  });
+  visitWithE2eWorkspaceSession('/canvas', {
+    onBeforeLoad: (window) =>
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      ),
+  });
+  cy.get('[data-slot="shell-project-code-command"]').click();
+  cy.get('[data-testid="monaco-code-editor"]').should('be.visible');
+  const properties = '[role="region"][aria-label="File properties"]';
+  cy.get(properties).should('not.contain.text', 'Loaded version modified');
+  cy.get(`${properties} [data-slot="code-file-version-history"]`).within(() => {
+    cy.contains('button', 'Save version').click();
+    cy.contains('Version saved.').should('be.visible');
+    cy.contains('button', 'Initial version').click();
+  });
+  cy.get('[role="dialog"]')
+    .should('be.visible')
+    .within(() => {
+      cy.get('[data-testid="monaco-diff-viewer"] .view-lines').should('be.visible');
+      cy.contains('button', 'Restore version').should('be.enabled').click();
+    });
+  cy.get('[role="dialog"]').should('not.exist');
+  cy.contains(`${properties} button`, 'Initial version').should('be.focused');
+  cy.get('[data-testid="monaco-code-editor"] .view-lines').should((lines) => {
+    expect(lines.text().replace(/\u00a0/g, ' ')).to.contain(original);
+  });
+  cy.wrap(null).should(() => {
+    expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(1);
+  });
+});
+
 it('creates and imports files with compact keyboard-accessible Explorer actions', () => {
   const { file, project } = contextFixture('select 1 as id');
   const files: FileContent[] = [file];

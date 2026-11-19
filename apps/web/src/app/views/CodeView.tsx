@@ -14,12 +14,10 @@ import {
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
-import { NodePropertyFacts } from '../components/inspector/NodePropertyFacts';
 import { Button } from '../components/ui/button';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
-  routeWorkbenchPanelHeaderClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
 import {
   useWorkspaceFileContentQuery,
@@ -38,6 +36,7 @@ import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './code/code
 import { CodeReferenceDetails } from './code/CodeReferenceDetails';
 import type { CodeInlineReferenceDetail } from './code/codeInlineReferences';
 import { CodeFileHistoryPanel } from './code/CodeFileHistoryPanel';
+import { CodeWorkspaceFileProperties } from './code/CodeWorkspaceFileProperties';
 import {
   hasCodeWorkspaceFilePath,
   hasCodeWorkspaceFiles,
@@ -102,6 +101,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   const inlineCopy = resolveCodeInlineReferenceCopy(applicationLanguage);
   const isProjectWorkspace = presentation === 'project-workspace';
   const [propertiesOpen, setPropertiesOpen] = useState(true);
+  const [fileHistoryHost, setFileHistoryHost] = useState<HTMLDivElement | null>(null);
   const [inspectedReference, setInspectedReference] = useState<CodeInlineReferenceDetail>();
   const referenceOpener = useRef<HTMLElement | null>(null);
   const inspectReference = useCallback((reference: CodeInlineReferenceDetail | undefined) => {
@@ -178,10 +178,6 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     fileContentQuery.isSuccess && fileContentQuery.data.path === resolvedPath
       ? fileContentQuery.data
       : undefined;
-  const loadedModifiedAt =
-    selectedFile != null && !Number.isNaN(Date.parse(selectedFile.lastModified))
-      ? new Date(selectedFile.lastModified)
-      : null;
   const fileTreeErrorPresentation = fileTreeQuery.isError
     ? resolveCodeWorkbenchErrorPresentation({
         scope: 'file-tree',
@@ -331,39 +327,13 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
                   onClose={closeReference}
                 />
               ) : (
-                <>
-                  <h2 className={routeWorkbenchPanelHeaderClassName}>{copy.filePropertiesTitle}</h2>
-                  <div className="min-h-0 flex-1 overflow-auto p-3">
-                    {filePropertiesMessage != null ? (
-                      <p
-                        role={filePropertiesMessage.error ? 'alert' : undefined}
-                        className="text-xs text-(--text-muted)"
-                      >
-                        {filePropertiesMessage.text}
-                      </p>
-                    ) : selectedFile != null ? (
-                      <NodePropertyFacts
-                        rows={[
-                          { label: copy.name, value: selectedFile.name },
-                          { label: copy.path, value: selectedFile.path },
-                          { label: copy.language, value: selectedFile.language },
-                          ...(loadedModifiedAt == null
-                            ? []
-                            : [
-                                {
-                                  label: copy.loadedVersionModified,
-                                  value: (
-                                    <time dateTime={selectedFile.lastModified}>
-                                      {loadedModifiedAt.toLocaleString(applicationLanguage)}
-                                    </time>
-                                  ),
-                                },
-                              ]),
-                        ]}
-                      />
-                    ) : null}
-                  </div>
-                </>
+                <CodeWorkspaceFileProperties
+                  copy={copy}
+                  file={selectedFile}
+                  message={filePropertiesMessage}
+                  locale={applicationLanguage}
+                  historyHost={setFileHistoryHost}
+                />
               )}
             </section>
           ) : undefined
@@ -379,6 +349,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         primarySurface: (
           <WorkspaceFileCodeEditor
             access={isProjectWorkspace ? 'operation-sql' : 'read-only'}
+            fileHistoryHost={fileHistoryHost}
             ref={workspaceFileEditorRef}
             fillAvailableSpace
             headerActions={

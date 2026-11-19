@@ -183,7 +183,35 @@ export interface IWorkspaceFileDirectoryQueryPort {
 
 /** Owns read-only, file-scoped Git history access for workspace files. */
 export interface IWorkspaceFileHistoryQueryPort {
-  getFileHistory: (path: string) => Promise<WorkspaceFileHistoryEntry[]>;
+  getFileHistory: (
+    path: string,
+    before?: string,
+    scope?: WorkspaceFileVersionScope
+  ) => Promise<WorkspaceFileHistoryEntry[]>;
+  getFileVersionContent: (
+    path: string,
+    commitSha: string,
+    scope: WorkspaceFileVersionScope
+  ) => Promise<WorkspaceFileVersionContent>;
+}
+
+export type WorkspaceFileVersionScope = Readonly<{
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+}>;
+export type WorkspaceFileVersionContent = Readonly<{
+  path: string;
+  commitSha: string;
+  content: string;
+}>;
+
+export interface IWorkspaceFileVersionCommandPort {
+  commitFileVersion: (
+    path: string,
+    expectedContentSha256: string,
+    scope: WorkspaceFileVersionScope
+  ) => Promise<Readonly<{ kind: 'committed'; commitSha: string }>>;
 }
 
 /** Owns workspace diff read-model access for diff presentation consumers. */

@@ -196,8 +196,10 @@ flowchart LR
 
 ### Version operation SQL in Git
 
-Project Code's file properties can show a file's Git versions, newest first.
-The current editor flushes its working-tree changes before **Save version**.
+Project Code lists the selected operation file's Git versions directly in
+the file properties panel, newest first. Each commit displays its own date.
+Selecting a commit opens a comparison with the current editor content.
+**Save version** is available once the working tree is synchronized.
 The command verifies the exact synchronized digest and records the bytes in the
 managed Git repository for that workspace scope. Repeating a save of the same
 current content returns the existing tip. The first version starts from bytes

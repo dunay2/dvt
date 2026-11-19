@@ -184,6 +184,7 @@ describe('CodeView presentation', () => {
     await renderCodeView(undefined, true, undefined, {
       workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
       workspaceFileHistoryQuery: {
+        getFileVersionContent: async (path, commitSha) => ({ path, commitSha, content: '' }),
         getFileHistory: async (path) => [
           {
             commitSha: '0123456789abcdef',

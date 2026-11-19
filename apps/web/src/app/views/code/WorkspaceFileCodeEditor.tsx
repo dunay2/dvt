@@ -12,6 +12,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useSessionContext } from '../../services/AppServicesContext';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './codeViewCopy';
@@ -30,6 +31,7 @@ import {
 } from './codeEditorStatusPresentation';
 import { resolveWorkspaceFileEditorPresentation } from './workspaceFileEditorPresentation';
 import { WorkspaceFileCodeEditorView } from './WorkspaceFileCodeEditorView';
+import { CodeFileVersionHistory } from './CodeFileVersionHistory';
 
 export type WorkspaceFileCodeEditorHandle = Readonly<{ flush: () => Promise<boolean> }>;
 export type WorkspaceFileCodeEditorProps = WorkspaceFileSessionInput &
@@ -37,6 +39,7 @@ export type WorkspaceFileCodeEditorProps = WorkspaceFileSessionInput &
     className?: string;
     fillAvailableSpace?: boolean;
     headerActions?: ReactNode;
+    fileHistoryHost?: HTMLElement | null;
     onInspectReference?: (reference: CodeInlineReferenceDetail | undefined) => void;
   }>;
 
@@ -110,12 +113,38 @@ const WorkspaceFileCodeEditorSession = forwardRef<
     context.status === 'checking',
     references.isReanalyzing
   );
+  const versionedFile =
+    presentation.surface.kind === 'file' ? presentation.surface.file : undefined;
+  const versionHistory =
+    props.fileHistoryHost && posture.kind === 'editable' && versionedFile
+      ? createPortal(
+          <CodeFileVersionHistory
+            key={versionedFile.path}
+            copy={copy}
+            path={versionedFile.path}
+            language={versionedFile.language}
+            value={workingTree.value}
+            synchronized={
+              acceptedFile !== undefined &&
+              workingTree.filePath === versionedFile.path &&
+              workingTree.phase === 'synchronized'
+            }
+            onRestore={changeValue}
+          />,
+          props.fileHistoryHost
+        )
+      : null;
   return (
     <WorkspaceFileCodeEditorView
       path={path}
       className={props.className}
       fillAvailableSpace={fillAvailableSpace}
-      headerActions={props.headerActions}
+      headerActions={
+        <>
+          {props.headerActions}
+          {versionHistory}
+        </>
+      }
       copy={copy}
       surface={presentation.surface}
       navigation={{ blocked: workingTree.navigationBlocked, flush: workingTree.flush }}

@@ -19,6 +19,8 @@ import type {
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
   IWorkspaceFileHistoryQueryPort,
+  IWorkspaceFileVersionCommandPort,
+  WorkspaceFileVersionScope,
   IWorkspaceFileDirectoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
@@ -138,9 +140,39 @@ export function createApiWorkspaceFileHistoryQueryPort(
   apiClient: ApiClient
 ): IWorkspaceFileHistoryQueryPort {
   return {
-    getFileHistory: (path) =>
-      apiClient.getJson(buildWorkspaceFileHistoryEndpoint(path, readWorkspaceFilesScope())),
+    getFileHistory: async (path, before, scope) =>
+      apiClient.getJson(
+        buildWorkspaceFileHistoryEndpoint(path, requireFileHistoryScope(scope), { before })
+      ),
+    getFileVersionContent: async (path, revision, scope) =>
+      apiClient.getJson(
+        buildWorkspaceFileHistoryEndpoint(path, requireFileHistoryScope(scope), { revision })
+      ),
   };
+}
+
+export function createApiWorkspaceFileVersionCommandPort(
+  apiClient: ApiClient
+): IWorkspaceFileVersionCommandPort {
+  return {
+    commitFileVersion: async (path, expectedContentSha256, scope) =>
+      apiClient.postJson(buildWorkspaceFileHistoryEndpoint(path, requireFileHistoryScope(scope)), {
+        expectedContentSha256,
+      }),
+  };
+}
+
+function requireFileHistoryScope(expected?: WorkspaceFileVersionScope): WorkspaceFileVersionScope {
+  const actual = readWorkspaceFilesScope();
+  if (
+    expected &&
+    (expected.tenantId !== actual.tenantId ||
+      expected.projectId !== actual.projectId ||
+      expected.environmentId !== actual.environmentId)
+  ) {
+    throw new Error('Workspace file version request belongs to a retired scope');
+  }
+  return actual;
 }
 
 export function createApiWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {

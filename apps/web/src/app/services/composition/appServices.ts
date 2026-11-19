@@ -21,6 +21,7 @@ import type {
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
   IWorkspaceFileHistoryQueryPort,
+  IWorkspaceFileVersionCommandPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceFileDirectoryQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
@@ -60,6 +61,7 @@ export interface AppServices {
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
   readonly workspaceFileDirectoryQuery: IWorkspaceFileDirectoryQueryPort;
   readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
+  readonly workspaceFileVersionCommand: IWorkspaceFileVersionCommandPort;
   readonly workspaceDiffQuery: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
@@ -92,6 +94,7 @@ export interface AppServicesOverrides {
   readonly workspaceFilesQuery?: IWorkspaceFilesQueryPort;
   readonly workspaceFileDirectoryQuery?: IWorkspaceFileDirectoryQueryPort;
   readonly workspaceFileHistoryQuery?: IWorkspaceFileHistoryQueryPort;
+  readonly workspaceFileVersionCommand?: IWorkspaceFileVersionCommandPort;
   readonly workspaceDiffQuery?: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery?: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead?: IWorkspaceAdminReadPort;
@@ -175,6 +178,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceFileDirectoryQuery:
       overrides.workspaceFileDirectoryQuery ?? workspacePorts.workspaceFileDirectoryQuery,
     workspaceFileHistoryQuery,
+    workspaceFileVersionCommand:
+      overrides.workspaceFileVersionCommand ?? workspacePorts.workspaceFileVersionCommand,
     workspaceDiffQuery,
     workspacePluginCatalogQuery,
     workspaceAdminRead,
