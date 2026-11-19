@@ -1,5 +1,5 @@
-/** Owned concern: bind @monaco-editor/react DiffEditor with DVT read-only diff invariants. */
-import { DiffEditor, type MonacoDiffEditor } from '@monaco-editor/react';
+/** Owned concern: bind the read-only diff editor and own its worker model lifetime. */
+import { useMonaco, type MonacoDiffEditor } from '@monaco-editor/react';
 import { useLayoutEffect, useRef } from 'react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
@@ -27,33 +27,46 @@ export default function MonacoDiffSurface({
   modified,
   original,
 }: MonacoDiffSurfaceProps) {
+  const monaco = useMonaco();
+  const host = useRef<HTMLDivElement | null>(null);
   const diff = useRef<MonacoDiffEditor | null>(null);
-  useLayoutEffect(
-    () => () => {
-      const editor = diff.current;
-      const models = editor?.getModel();
-      if (!editor || !models) return;
-      // Detach both models before the React integration disposes the diff editor.
+  useLayoutEffect(() => {
+    if (!monaco || !host.current) return;
+    configureMonacoVisualTheme(monaco);
+    monaco.editor.setTheme(monacoTheme);
+    const editor = monaco.editor.createDiffEditor(
+      host.current,
+      createMonacoDiffOptions({ ariaLabel: '' })
+    );
+    const models = {
+      original: monaco.editor.createModel(''),
+      modified: monaco.editor.createModel(''),
+    };
+    const viewModel = editor.createViewModel(models);
+    editor.setModel(viewModel);
+    diff.current = editor;
+    return () => {
+      // Cancel in-flight worker reads before disposing the text models.
+      diff.current = null;
       editor.setModel(null);
+      viewModel.dispose();
+      editor.dispose();
       models.original.dispose();
       models.modified.dispose();
-    },
-    []
-  );
-  return (
-    <div className={containerClassName} data-testid="monaco-diff-viewer">
-      <DiffEditor
-        beforeMount={configureMonacoVisualTheme}
-        height="100%"
-        language={language}
-        modified={modified}
-        onMount={(editor) => {
-          diff.current = editor;
-        }}
-        options={createMonacoDiffOptions({ ariaLabel })}
-        original={original}
-        theme={monacoTheme}
-      />
-    </div>
-  );
+    };
+  }, [monaco]);
+  useLayoutEffect(() => {
+    const editor = diff.current;
+    const models = editor?.getModel();
+    if (!monaco || !editor || !models) return;
+    editor.updateOptions(createMonacoDiffOptions({ ariaLabel }));
+    for (const [model, content] of [
+      [models.original, original],
+      [models.modified, modified],
+    ] as const) {
+      if (model.getLanguageId() !== language) monaco.editor.setModelLanguage(model, language);
+      if (model.getValue() !== content) model.setValue(content);
+    }
+  }, [ariaLabel, language, modified, monaco, original]);
+  return <div ref={host} className={containerClassName} data-testid="monaco-diff-viewer" />;
 }
