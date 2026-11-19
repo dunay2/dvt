@@ -102,8 +102,8 @@ layout fields when viewport, coordinates, freeze state or list order change.
 The component owns accepted scoped file selection, the shared Code file surface,
 reference inspection and presentation access. It does not own authorization,
 project creation, native semantic editing, Git lifecycle or analysis semantics.
-The existing `SaveWorkspaceFileContent` rail remains available to artifact
-publication and recovery of edits accepted before the read-only restriction.
+The existing `SaveWorkspaceFileContent` rail owns artifact publication and
+revision-guarded edits to operation SQL in the project Code workbench.
 
 The component's native responsibilities separate accepted-file context,
 revision-aware editor recovery, passive presentation, and file-model command
@@ -170,6 +170,68 @@ shared HTTP classifier and Code presentation model; views use the existing
 locale catalog resolver and expose no raw transport diagnostics. The dialog and
 tree reuse common visual tokens, named controls and visible keyboard focus.
 
+### Edit published operation SQL in project Code
+
+Task and procedure templates publish their editable source to the scoped
+`operations/` directory. Once saved there, the SQL file is the source for
+subsequent edits. The project Code surface accepts an exact listed SQL file
+under that directory, uses the existing working-tree editor, and saves through
+`SaveWorkspaceFileContent` with the loaded content SHA. The protected HTTP
+adapter retains the workspace file write authorization check. Graph-owned files,
+unresolved or mixed Canvas authority, inspection surfaces, and files outside
+`operations/` retain their read-only posture. Operation edits do not invoke
+dbt model analysis or project graph reconciliation.
+
+```mermaid
+flowchart LR
+  Existing[Published operation SQL] --> Viewer[Project Code viewer]
+  Existing --> Selected[Accepted file in project Code]
+  Selected --> Admission{Operation SQL and resolved ownership?}
+  Admission -->|No| Viewer
+  Admission -->|Yes| Editor[Working-tree editor]
+  Editor --> Save[SaveWorkspaceFileContent with current digest]
+  Save --> Accepted[Scoped operation source]
+  Save -->|Stale digest or denied access| Recovery[Existing synchronization recovery]
+```
+
+### Version operation SQL in Git
+
+Project Code's file properties can show a file's Git versions, newest first.
+The current editor flushes its working-tree changes before **Save version**.
+The command verifies the exact synchronized digest and records the bytes in the
+managed Git repository for that workspace scope. Repeating a save of the same
+current content returns the existing tip. The first version starts from bytes
+the operator explicitly versions. Git history is independent of Canvas and is
+never read from the DVT application's source checkout. A repository outside the
+managed workspace is outside this command's authority.
+
+Each versioned file owns a linear Git reference within the scoped repository.
+Commits on it retain the baseline and subsequent versions. History is
+cursor-paginated and includes commit identity, date, author and subject. Preview
+accepts an immutable commit only if it belongs to that file's reference. It
+compares historical bytes against the open working copy. Recovery explicitly
+applies the selected bytes through the existing editor and `SaveWorkspaceFileContent`
+CAS. The historical commit remains available and the restored content can be
+saved as a new version.
+
+```mermaid
+flowchart LR
+  Sync[Flush the accepted operation source] --> Commit[CommitWorkspaceFileVersion with digest]
+  Commit --> Ref[Scoped Git file reference]
+  Ref --> History[GetWorkspaceFileHistory pages]
+  History --> Revision[GetWorkspaceFileVersionContent]
+  Revision --> Preview[Compare with working copy]
+  Preview -->|Recover| CAS[Existing revision-guarded save]
+  CAS --> Sync
+```
+
+| Rail                                   | Owner and domain object                              | Application port and adapter                                                               | Admission and negative evidence                                                                                                                                       |
+| -------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GetWorkspaceFileHistory` query        | Workspace Version Control, file history projection   | `IWorkspaceFileHistoryRepository`, protected `GET /workspace/file-history/:path`           | `workspaceFilesView` on the exact workspace and canonical file path. Missing repository returns empty, while invalid cursor or unavailable Git rejects.               |
+| `GetWorkspaceFileVersionContent` query | Workspace Version Control, immutable file revision   | `IWorkspaceFileHistoryRepository`, protected `GET /workspace/file-history/:path/:revision` | Same read scope. Invalid SHA, a commit outside the selected file history, or a different scope rejects.                                                               |
+| `CommitWorkspaceFileVersion` command   | Workspace Version Control, scoped Git file reference | `IWorkspaceFileVersionCommandPort`, protected `POST /workspace/file-history/:path`         | `workspaceFilesSave` on the exact workspace, published operation SQL, and required synchronized SHA. Stale digest, scope mismatch, or conflicting ref update rejects. |
+| `SaveWorkspaceFileContent` command     | Workspace Files, working-tree content                | Existing file command and protected `POST /workspace/files/:path`                          | Restoration uses existing scope, CAS and editability. A stale working copy or retired editor cannot overwrite another file.                                           |
+
 ## Public API
 
 ### Queries
@@ -194,9 +256,9 @@ path's base or authorization.
 `SaveWorkspaceFileContent` accepts scoped path, content and mandatory
 `expectedRevision`; its receipt reports saved/unchanged content and its SHA.
 Stale revisions are rejected. The Explorer's explicit creation actions use the
-absent revision. Browsing and read-only Code surfaces never invoke this command.
-Existing artifact publishers and previously accepted pending edits retain their
-command boundary and conditional synchronization lifecycle.
+absent revision. In project Code only edits to admitted operation SQL invoke
+the command. Browsing, artifact publishers and conditional synchronization keep
+their existing command boundaries.
 
 `useDbtProjectFileWorkbenchSession` owns the refs and guarded handoff between
 project Code and node inspection. Unknown identities are refused before either

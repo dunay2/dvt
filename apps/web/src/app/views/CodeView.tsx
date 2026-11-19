@@ -378,7 +378,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         ) : undefined,
         primarySurface: (
           <WorkspaceFileCodeEditor
-            access="read-only"
+            access={isProjectWorkspace ? 'operation-sql' : 'read-only'}
             ref={workspaceFileEditorRef}
             fillAvailableSpace
             headerActions={

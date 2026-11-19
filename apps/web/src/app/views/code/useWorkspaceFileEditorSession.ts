@@ -11,6 +11,7 @@ import { useWorkspaceFileContentQuery } from '../../queries/workspaceQueries';
 import { useWorkspaceFileContentCommandPort } from '../../services/AppServicesContext';
 import type { CodeWorkingTreeReconciliationOutcome } from './codeWorkingTreeSyncModel';
 import {
+  isWorkspaceOperationSqlPath,
   resolveCodeWorkspaceFileEditPosture,
   type CodeWorkspaceFileAccess,
 } from './codeWorkspaceFileEditPosture';
@@ -63,12 +64,16 @@ export function useWorkspaceFileEditorSession({
     fileQuery.isSuccess && !fileQuery.isFetching && fileQuery.data.path === path
       ? fileQuery.data
       : undefined;
+  const operationSql = access === 'operation-sql' && isWorkspaceOperationSqlPath(path);
   const context = useCodeWorkspaceFileContext({
     file: acceptedFile,
-    project: dbtProject,
-    allowed: authority !== 'mixed' && (path === undefined || !graphOwnedPaths.has(path)),
+    project: operationSql ? undefined : dbtProject,
+    allowed:
+      !operationSql && authority !== 'mixed' && (path === undefined || !graphOwnedPaths.has(path)),
   });
-  const reconcileProject = reconcilePersistedFile ?? context.reconcilePersistedFile;
+  const reconcileProject = operationSql
+    ? undefined
+    : (reconcilePersistedFile ?? context.reconcilePersistedFile);
   const reconcileAuthority = useCallback(
     async (receipt: WorkspaceFileSaveReceipt): Promise<CodeWorkingTreeReconciliationOutcome> => {
       if (reconcileProject == null) throw new Error('Project reconciliation is unavailable.');
