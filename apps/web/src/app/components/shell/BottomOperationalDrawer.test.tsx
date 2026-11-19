@@ -42,7 +42,7 @@ vi.mock('../console/XtermConsole', () => ({
   ),
 }));
 
-function LogWorkspace() {
+function LogWorkspace(): React.JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   return <ShellOperationalWorkspace view="log" copy={resolveShellTopBarCopy(language)} />;
 }
