@@ -143,6 +143,12 @@ describe('dbt parameters at Preview admission and Run binding', () => {
       '{"minimum_amount":0,"use_minimum":true}',
     ]);
     [inheritedZero, explicitZero, off, seven, otherEnvironment].forEach((plan, index) => {
+      expect(plan.steps).toMatchObject([
+        {
+          stepId: MODEL_ID,
+          stepTypeConfig: { custom: { dbtStepSelector: { uniqueId: MODEL_ID } } },
+        },
+      ]);
       expect(runBinding(plan)).toMatchObject({ ok: true, dbtVariablesJson: nativeValues[index] });
     });
     const altered = { ...off, observability: seven.observability! };
@@ -188,18 +194,16 @@ describe('dbt parameters at Preview admission and Run binding', () => {
     const target = PROVENANCE.executionTarget;
     const scope = original.metadata.ownership!;
     const bundleSha = 'c'.repeat(64);
-    const build = vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        contentSetSha256: PROVENANCE.contentSetSha256,
-        projectBundleRef: {
-          kind: 'dbt-project-bundle',
-          tenantId: scope.tenantId,
-          uri: 'file:///orders.bundle',
-          sha256: bundleSha,
-        },
-      });
+    const build = vi.fn().mockResolvedValue({
+      ok: true,
+      contentSetSha256: PROVENANCE.contentSetSha256,
+      projectBundleRef: {
+        kind: 'dbt-project-bundle',
+        tenantId: scope.tenantId,
+        uri: 'file:///orders.bundle',
+        sha256: bundleSha,
+      },
+    });
     const preparer = new DbtRunExecutionContextPreparer({
       bundleBuilder: { build },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
