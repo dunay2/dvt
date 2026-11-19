@@ -11,13 +11,14 @@ import { projectCanvasCanonicalGraphEditing } from '../../../src/app/views/canva
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { createCanvasRelationalAuthoringDraft } from '../../../src/app/views/canvas/canvasRelationalAuthoringDraft';
+import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, stubE2eApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchProperties,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
-import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { hoverWorkbenchCard, moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 import { E2E_WORKSPACE_SESSION } from '../../support/workspaceSession';
 
@@ -207,6 +208,26 @@ describe('Workbench navigation', () => {
       ).to.deep.equal([]);
     });
   });
+  it('keeps the resize cursor on the separator and accepts an occurrence afterwards', () => {
+    cy.viewport(1280, 720);
+    visitWorkbenchCanvas();
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
+      .focus()
+      .type('{enter}');
+    revealOperationalDrawer();
+
+    const separator = '[data-panel-resize-handle-id="app-shell-bottom-drawer-resize-handle"]';
+    hoverWorkbenchCard(separator);
+    cy.get(separator).should('have.css', 'cursor', 'ns-resize');
+    cy.get('body').should('not.have.css', 'cursor', 'ns-resize');
+
+    cy.get('[data-slot="source-occurrence-add"]').first().click();
+    cy.get(
+      '[data-slot="canvas-relational-tree-node"][data-operator="read"][data-pending="true"]'
+    ).should('have.length', 1);
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+  });
+
   it('opens and closes the Model by its supported keyboard and workspace controls', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();

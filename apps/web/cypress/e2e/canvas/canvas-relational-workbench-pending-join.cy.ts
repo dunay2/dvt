@@ -22,6 +22,7 @@ import {
   semanticWrites,
   semanticDocumentFromWrite,
 } from '../../support/relationalWorkbench/persistence';
+import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench pending binary operations', () => {
@@ -30,6 +31,27 @@ describe('Workbench pending binary operations', () => {
     stubWorkbenchScenario('pending-join');
     visitWorkbenchCanvas();
     openWorkbenchModel();
+  });
+
+  it('accepts a native drag and an add-button occurrence in an Output-only Model', () => {
+    const viewport = '[data-slot="canvas-relational-tree-draft-viewport"]';
+    const reads = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should('be.visible');
+    cy.get(reads).should('not.exist');
+    dragWorkbenchField(
+      '[data-slot="canvas-relational-tree-source"][data-node-id="source-customers"]',
+      viewport,
+      { x: 130, y: 220 }
+    );
+    cy.get(reads).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-source"][data-node-id="source-orders"]')
+      .closest('li')
+      .find('[data-slot="source-occurrence-add"]')
+      .click();
+    cy.get(reads).should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get(reads).should('not.exist');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
   });
 
   it('cancels a connected JOIN without publishing semantic changes', () => {

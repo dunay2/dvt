@@ -35,6 +35,14 @@
       0 0 0 2px var(--ring);
   }
 
+  .resizeHandle[data-panel-resize-handle-enabled='true'] {
+    cursor: ew-resize;
+  }
+
+  .resizeHandle[data-panel-resize-handle-enabled='true'][data-panel-group-direction='vertical'] {
+    cursor: ns-resize;
+  }
+
   @media (forced-colors: active) {
     .resizeHandle:focus-visible {
       outline: 2px solid transparent;

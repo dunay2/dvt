@@ -7,6 +7,9 @@ import * as ResizablePrimitive from 'react-resizable-panels';
 import { cn } from './utils';
 import styles from './resizable.module.css';
 
+// Native canvas drags can finish without clearing the library's document-wide cursor.
+ResizablePrimitive.disableGlobalCursorStyles();
+
 function ResizablePanelGroup({
   className,
   ...props
