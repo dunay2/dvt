@@ -114,9 +114,19 @@ The Canvas route behaves as one contextual graph workbench with:
 - Code and node details opened contextually while the graph remains visible;
 - Source Import and project exploration opened on demand rather than as fixed
   resource rails;
-- Log, Problems, Runs, and Preview retained in the bottom operational drawer;
+- Log and Problems opened as full workbench views from the left rail, using
+  the current Canvas Problems read model for the count on the rail;
+- Preview and contextual data retained as bottom drawer tabs;
+- Runs opened from the left rail at `/runs`, where execution detail and controls live;
 - Preview and run-start actions tied to the same authoritative persisted
   preview and immutable `PlanRef`.
+
+The rail selects a workbench view while the Canvas session stays mounted.
+Returning to Canvas restores that session and its contextual drawer layout.
+Problems is scoped to the current Canvas contribution. Its badge uses the
+number of reported problems and is hidden for an empty list. Preview and data
+tabs retain keyboard selection and close/restore through
+`SetOperationalDrawerTabVisibility` and `ConfigureOperationalDrawerLayout`.
 
 This is the route model delivered by
 [US-F10.1](https://github.com/dunay2/dvt/issues/2102). Legacy peer workbench
@@ -128,7 +138,10 @@ flowchart LR
   Entry["Open /canvas"] --> Shell["Shell frame stays visible"]
   Shell --> Viewport["Viewport primary surface"]
   Viewport --> Contextual["Code / source / node work context"]
-  Viewport --> Drawer["Log / Problems / Runs / Preview"]
+  Shell --> Rail["Log / Problems / Runs"]
+  Rail -->|Log or Problems| OperationalWorkspace["Operational workbench view"]
+  Rail -->|Runs| Runs["Runs workspace"]
+  Viewport -->|Preview or contextual data| Drawer["Bottom drawer"]
 
   Viewport --> Overlay["Visual overlays only"]
   Viewport --> Plan["Plan from current selection"]
@@ -658,7 +671,7 @@ peer graph, duplicate navigation, or parallel command/query owner.
 | Source Import              | contextual modal/wizard | discover/register governed sources     | source-import commands and read models                   | wizard back/close; operation-specific truth         | loading, empty, dirty, rejected, in-flight, complete |
 | Project dbt Import         | contextual dialog       | validate/import a dbt project          | dbt validation/import ports                              | dialog close only; accepted import is not cancelled | pristine, validating, rejected, importing, receipt   |
 | Inspector/palette          | Canvas contextual UI    | inspect or create graph content        | Canvas inspector/catalog and `CreateCanvasAuthoringNode` | owning popover/menu controller                      | empty, grouped, filtered, selected                   |
-| Log/Problems/Runs/Preview  | operational drawer      | show evidence and readiness            | Canvas/run operational read models                       | drawer presentation owner                           | collapsed, loading, blocked, active, terminal        |
+| Log/Problems/Preview       | workbench and drawer    | show evidence and readiness            | Canvas/run operational read models                       | shell and drawer presentation owners                | collapsed, loading, blocked, active, terminal        |
 | Runs list/detail           | `/runs` routes          | investigate execution evidence         | `ListRuns`, run snapshot/events, `CancelRun`             | navigation is close; `CancelRun` alone cancels      | loading, empty, error, degraded, missing, terminal   |
 | Templates                  | `/templates` route      | generate governed source               | template catalog/validation/preview owner                | route/form dirty policy                             | loading, empty, validation error, preview ready      |
 | Plugins                    | `/plugins` route        | inspect capability truth               | capability/catalog read models                           | route navigation                                    | loading, unavailable, degraded, diagnostic           |
@@ -766,7 +779,8 @@ today and the mature implementation direction for each one.
 | Contextual Code            | Canvas Code workbench and revision-guarded workspace-file rails        | Real and editable            |
 | Lineage lens               | Canvas impact and column-lineage overlays                              | Real and read-only           |
 | Source Import              | contextual wizard plus warehouse connection and catalog API rails      | Real and API-backed          |
-| Operational drawer         | Log, Problems, Runs, and typed Preview outcome panels                  | Real and contextual          |
+| Operational workbench      | Rail-opened Log and Problems views                                     | Real and contextual          |
+| Operational drawer         | Contextual Preview and data tabs                                       | Real and contextual          |
 | Runs workbench             | `RunsView.tsx` and tabbed run detail                                   | Real and growing             |
 | Internal review primitives | Monaco code/diff viewers and artifact state models without peer routes | Retained implementation APIs |
 | Observability              | shell health, node metrics, and Runs evidence                          | Real but distributed         |

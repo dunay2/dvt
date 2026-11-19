@@ -16,11 +16,6 @@ const operationalDrawerPanelClassNames = {
     'h-fit rounded border border-amber-400/50 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-100',
   codeToken: 'rounded border border-amber-400/40 px-2 py-0.5 font-mono text-[11px] text-amber-100',
   detailCode: 'mt-1 block font-mono text-[11px] text-[var(--text-muted)]',
-  runSummary: 'grid gap-1',
-  runLayout: 'flex flex-wrap items-center justify-between gap-3',
-  runSummaryLabel: 'text-[var(--text-muted)]',
-  runSummaryValue: 'font-mono text-[var(--text-strong)]',
-  runSummaryText: 'text-[var(--text-default)]',
   previewLayout: 'flex flex-wrap items-start gap-3',
   previewContent: 'min-w-0 flex-1',
   previewSummary: 'mt-1 text-[var(--text-default)]',
@@ -151,46 +146,6 @@ export function OperationalDrawerSectionKicker({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={operationalDrawerPanelClassNames.sectionKicker}>{children}</div>;
-}
-
-export function OperationalDrawerRunActiveSummary({
-  activeRunId,
-  statusLabel,
-  summary,
-}: Readonly<{ activeRunId: string; statusLabel: string; summary?: string }>): JSX.Element {
-  return (
-    <div className={operationalDrawerPanelClassNames.runSummary}>
-      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
-      <code className={operationalDrawerPanelClassNames.runSummaryValue}>{activeRunId}</code>
-      {summary == null ? null : (
-        <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
-      )}
-    </div>
-  );
-}
-
-export function OperationalDrawerRunLayout({
-  actions,
-  children,
-}: Readonly<{ actions: ReactNode; children: ReactNode }>): JSX.Element {
-  return (
-    <div className={operationalDrawerPanelClassNames.runLayout}>
-      {children}
-      {actions}
-    </div>
-  );
-}
-
-export function OperationalDrawerRunStatusSummary({
-  statusLabel,
-  summary,
-}: Readonly<{ statusLabel: string; summary: string }>): JSX.Element {
-  return (
-    <div className={operationalDrawerPanelClassNames.runSummary}>
-      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
-      <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
-    </div>
-  );
 }
 
 export function OperationalDrawerPreviewLayout({

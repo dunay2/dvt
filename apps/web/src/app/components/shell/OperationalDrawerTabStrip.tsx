@@ -123,7 +123,7 @@ export function OperationalDrawerTabStrip({
           aria-orientation="horizontal"
           aria-label={ariaLabel}
         >
-          {visibleTabs.map((tab) => (
+          {visibleTabs.map((tab, index) => (
             <button
               key={tab.id}
               type="button"
@@ -132,7 +132,7 @@ export function OperationalDrawerTabStrip({
               aria-controls={`bottom-operational-drawer-panel-${tab.id}`}
               aria-selected={activeTab === tab.id}
               aria-keyshortcuts="Delete"
-              tabIndex={activeTab === tab.id ? 0 : -1}
+              tabIndex={activeTab === tab.id || (activeTab == null && index === 0) ? 0 : -1}
               data-slot="bottom-operational-drawer-tab"
               data-tab={tab.id}
               className={styles.tab}

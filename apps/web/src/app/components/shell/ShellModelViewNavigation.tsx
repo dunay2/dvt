@@ -20,12 +20,14 @@ export function ShellModelViewNavigation({
   browser,
   available,
   foreground,
+  onActivate,
   copy,
 }: Readonly<{
   tab: CanvasModelWorkspaceTabContribution | null;
   browser: CanvasModelBrowserContribution | null;
   available: boolean;
   foreground: boolean;
+  onActivate?: () => void;
   copy: ShellTopBarCopy;
 }>) {
   const views = tab?.views;
@@ -51,6 +53,7 @@ export function ShellModelViewNavigation({
               className={cn(styles.link, styles.linkInteractive)}
               onClick={() => {
                 if (disabled) return;
+                onActivate?.();
                 browser?.onBrowse(id);
               }}
             >

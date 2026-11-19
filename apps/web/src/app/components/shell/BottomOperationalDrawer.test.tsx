@@ -16,6 +16,9 @@ import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import BottomOperationalDrawer from './BottomOperationalDrawer';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import styles from './BottomOperationalDrawer.module.css';
+import workspaceStyles from './ShellOperationalWorkspace.module.css';
+import { ShellOperationalWorkspace } from './ShellOperationalWorkspace';
+import { resolveShellTopBarCopy } from './copy';
 
 const liveLogStreamState: {
   lines: string[];
@@ -39,7 +42,12 @@ vi.mock('../console/XtermConsole', () => ({
   ),
 }));
 
-describe('BottomOperationalDrawer', () => {
+function LogWorkspace() {
+  const language = useApplicationLanguageStore((state) => state.language);
+  return <ShellOperationalWorkspace view="log" copy={resolveShellTopBarCopy(language)} />;
+}
+
+describe('Operational surfaces', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -50,7 +58,7 @@ describe('BottomOperationalDrawer', () => {
     liveLogStreamState.retry.mockReset();
     localStorage.removeItem(APPLICATION_LANGUAGE_STORAGE_KEY);
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
-    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useOperationalDrawerContributionStore.setState({ activeTab: null, contribution: null });
     useUiLayoutStore.setState({
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
@@ -71,7 +79,7 @@ describe('BottomOperationalDrawer', () => {
     act(() => {
       root.unmount();
     });
-    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useOperationalDrawerContributionStore.setState({ activeTab: null, contribution: null });
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     localStorage.removeItem(APPLICATION_LANGUAGE_STORAGE_KEY);
     vi.restoreAllMocks();
@@ -82,20 +90,17 @@ describe('BottomOperationalDrawer', () => {
     await act(async () => {
       root.render(
         <AppServicesProvider>
-          <BottomOperationalDrawer />
+          <LogWorkspace />
         </AppServicesProvider>
       );
     });
 
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-idle"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-log-idle"]')?.textContent
     ).toContain('Start a run to see live run events here.');
-    expect(document.body.querySelector('[data-slot="bottom-operational-drawer"]')?.className).toBe(
-      styles.drawer
+    expect(document.body.querySelector('[data-slot="shell-operational-log-idle"]')?.className).toBe(
+      workspaceStyles.bodyMessage
     );
-    expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-idle"]')?.className
-    ).toBe(styles.bodyMessage);
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-mode-badge"]')
     ).toBeNull();
@@ -111,16 +116,16 @@ describe('BottomOperationalDrawer', () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={createAppServicesTestOverrides()}>
-          <BottomOperationalDrawer />
+          <LogWorkspace />
         </AppServicesProvider>
       );
     });
 
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-feed-health"]')?.textContent
     ).toContain('Loading run events...');
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-log-run"]')?.textContent
     ).toContain('Run run-42');
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-mode-badge"]')
@@ -135,40 +140,31 @@ describe('BottomOperationalDrawer', () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={createAppServicesTestOverrides()}>
-          <BottomOperationalDrawer />
+          <LogWorkspace />
         </AppServicesProvider>
       );
     });
 
-    expect(
-      document.body
-        .querySelector('[data-slot="bottom-operational-drawer"]')
-        ?.getAttribute('aria-label')
-    ).toBe('Operations');
+    expect(document.body.querySelector('#shell-operational-workspace-title')?.textContent).toBe(
+      'Log'
+    );
 
     await act(async () => {
       useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     });
 
+    expect(document.body.querySelector('#shell-operational-workspace-title')?.textContent).toBe(
+      'Registro'
+    );
     expect(
-      document.body
-        .querySelector('[data-slot="bottom-operational-drawer"]')
-        ?.getAttribute('aria-label')
-    ).toBe('Operaciones');
-    expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-log-run"]')?.textContent
     ).toBe('Ejecución run-42');
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-feed-health"]')?.textContent
     ).toContain('La actualización de eventos está degradada temporalmente.');
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-feed-retry"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-feed-retry"]')?.textContent
     ).toBe('Reintentar eventos');
-    expect(
-      document.body
-        .querySelector('[data-slot="bottom-operational-drawer-close"]')
-        ?.getAttribute('aria-label')
-    ).toBe('Cerrar panel de operaciones');
   });
 
   it('renders the terminal when the stream is ready', async () => {
@@ -179,17 +175,15 @@ describe('BottomOperationalDrawer', () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={createAppServicesTestOverrides()}>
-          <BottomOperationalDrawer />
+          <LogWorkspace />
         </AppServicesProvider>
       );
     });
 
+    expect(document.body.querySelector('[data-slot="shell-operational-log-stream"]')).toBeTruthy();
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-stream"]')
-    ).toBeTruthy();
-    expect(
-      document.body.querySelector('[data-slot="bottom-operational-drawer-stream"]')?.className
-    ).toBe(styles.stream);
+      document.body.querySelector('[data-slot="shell-operational-log-stream"]')?.className
+    ).toBe(workspaceStyles.stream);
     expect(document.body.querySelector('[data-testid="xterm-console"]')?.textContent).toContain(
       'step: started'
     );
@@ -203,26 +197,26 @@ describe('BottomOperationalDrawer', () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={createAppServicesTestOverrides()}>
-          <BottomOperationalDrawer />
+          <LogWorkspace />
         </AppServicesProvider>
       );
     });
 
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.textContent
+      document.body.querySelector('[data-slot="shell-operational-feed-health"]')?.textContent
     ).toContain('Degraded');
     expect(document.body.querySelector('[data-testid="xterm-console"]')?.textContent).toContain(
       'step: started'
     );
 
     const retry = document.body.querySelector<HTMLButtonElement>(
-      '[data-slot="bottom-operational-feed-retry"]'
+      '[data-slot="shell-operational-feed-retry"]'
     );
     expect(retry?.textContent).toContain('Retry event feed');
-    expect(retry?.classList).toContain(styles.feedRetry);
+    expect(retry?.classList).toContain(workspaceStyles.feedRetry);
     expect(
-      document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.className
-    ).toBe(styles.feedHealth);
+      document.body.querySelector('[data-slot="shell-operational-feed-health"]')?.className
+    ).toBe(workspaceStyles.feedHealth);
     fireEvent.click(retry!);
     expect(liveLogStreamState.retry).toHaveBeenCalledTimes(1);
   });
@@ -247,10 +241,7 @@ describe('BottomOperationalDrawer', () => {
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(false);
   });
 
-  it('keeps run identity and close in one row without inventing tabs or a visible title', async () => {
-    // The old static title consumed a complete row even when it added no information.
-    liveLogStreamState.runId = 'run-compact';
-    liveLogStreamState.health = { state: 'loading', events: [], canRetry: false };
+  it('keeps the close control and contextual drawer body separate from the feed', async () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={createAppServicesTestOverrides()}>
@@ -266,9 +257,7 @@ describe('BottomOperationalDrawer', () => {
     expect(container.querySelector('[data-slot="bottom-operational-drawer-header"]')).toBeNull();
     expect(container.querySelector('[data-slot="bottom-operational-drawer-title"]')).toBeNull();
     expect(container.querySelector('[role="tablist"]')).toBeNull();
-    expect(
-      controls?.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
-    ).toBe('Run run-compact');
+    expect(container.querySelector('[data-slot="shell-operational-log-run"]')).toBeNull();
     const close = controls?.querySelector('[data-slot="bottom-operational-drawer-close"]');
     expect(close).not.toBeNull();
     expect(close?.closest('[role="tablist"]')).toBeNull();

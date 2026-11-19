@@ -1,90 +1,21 @@
 /**
- * Owned concern: compose the operational drawer and its existing contribution and log surfaces.
+ * Owned concern: compose contextual Preview and data tabs within the operational drawer.
  * @baseline GH-3629: drawer appearance does not depend on the TopBar stylesheet.
  * @decision Import concern-owned CSS directly without changing contribution or feed lifecycle.
- * @consequence Tabs, retry, close, localization and terminal behavior retain their owners.
+ * @consequence Tab navigation, close, restore and drawer layout retain their existing owners.
  * @version 1.0.0
  */
-import { Suspense, lazy } from 'react';
 import { X } from 'lucide-react';
 
-import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import { useConsoleLogStream } from '../console/useConsoleLogStream';
-import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
 import styles from './BottomOperationalDrawer.module.css';
 import { resolveShellTopBarCopy } from './copy';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import { BottomOperationalDrawerBody } from './OperationalDrawerPanels';
 import { OperationalDrawerTabStrip } from './OperationalDrawerTabStrip';
 
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-
-const XtermConsole = lazy(() => import('../console/XtermConsole'));
-
-function BottomOperationalLogBody({
-  model,
-  onRetry,
-}: Readonly<{
-  model: ReturnType<typeof buildBottomOperationalDrawerLogModel>;
-  onRetry: () => void;
-}>): JSX.Element {
-  if (model.kind === 'idle') {
-    return (
-      <div data-slot="bottom-operational-drawer-idle" className={styles.bodyMessage}>
-        {model.message}
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.logBody}>
-      <div
-        role="status"
-        aria-live="polite"
-        data-slot="bottom-operational-feed-health"
-        data-state={model.healthState}
-        className={styles.feedHealth}
-      >
-        <Badge variant="outline" className={styles.feedHealthBadge}>
-          {model.statusLabel}
-        </Badge>
-        <span className={styles.feedHealthMessage}>{model.message}</span>
-        {model.canRetry ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className={styles.feedRetry}
-            data-slot="bottom-operational-feed-retry"
-            onClick={onRetry}
-          >
-            {model.retryLabel}
-          </Button>
-        ) : null}
-      </div>
-
-      {model.lines.length > 0 ? (
-        <Suspense
-          fallback={
-            <div
-              data-slot="bottom-operational-drawer-terminal-loading"
-              className={styles.bodyMessage}
-            >
-              {model.terminalLoadingLabel}
-            </div>
-          }
-        >
-          <div data-slot="bottom-operational-drawer-stream" className={styles.stream}>
-            <XtermConsole key={model.runLabel} lines={[...model.lines]} />
-          </div>
-        </Suspense>
-      ) : null}
-    </div>
-  );
-}
 
 export function BottomOperationalDrawer() {
   const locale = useApplicationLanguageStore((state) => state.language);
@@ -99,16 +30,6 @@ export function BottomOperationalDrawer() {
   const setOperationalDrawerTabVisibility = useOperationalDrawerContributionStore(
     (state) => state.setOperationalDrawerTabVisibility
   );
-  const feedCopy = resolveRunEventFeedHealthCopy(locale);
-  const { lines, runId, health, retry } = useConsoleLogStream();
-  const model = buildBottomOperationalDrawerLogModel({
-    title: copy.operationalDrawer,
-    runId,
-    health,
-    copy: feedCopy,
-    lines,
-  });
-  const drawerTitle = contribution?.title ?? model.title;
   const visibleTabs =
     contribution?.tabs.filter((tab) => !hiddenOperationalTabs.includes(tab.id)) ?? [];
   const hiddenTabs =
@@ -119,7 +40,7 @@ export function BottomOperationalDrawer() {
       data-slot="bottom-operational-drawer"
       className={styles.drawer}
       role="region"
-      aria-label={drawerTitle}
+      aria-label={contribution?.title ?? copy.operationalDrawer}
     >
       <div data-slot="bottom-operational-drawer-controls" className={styles.controls}>
         {contribution == null ? null : (
@@ -135,16 +56,6 @@ export function BottomOperationalDrawer() {
             visibleTabs={visibleTabs}
           />
         )}
-        {model.runLabel && (
-          <Badge
-            variant="outline"
-            className={styles.runBadge}
-            data-slot="bottom-operational-drawer-run-badge"
-            title={model.runLabel}
-          >
-            {model.runLabel}
-          </Badge>
-        )}
         <Button
           variant="ghost"
           size="icon"
@@ -158,11 +69,7 @@ export function BottomOperationalDrawer() {
       </div>
 
       <div data-slot="bottom-operational-drawer-body" className={styles.body}>
-        <BottomOperationalDrawerBody
-          activeTab={activeOperationalTab}
-          contribution={contribution}
-          logBody={<BottomOperationalLogBody model={model} onRetry={retry} />}
-        />
+        <BottomOperationalDrawerBody activeTab={activeOperationalTab} contribution={contribution} />
       </div>
     </div>
   );

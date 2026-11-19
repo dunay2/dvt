@@ -83,7 +83,7 @@ export function createShellTopBarHarness() {
     });
     useUiLayoutStore.setState({ focusMode: false });
     useApplicationLanguageStore.setState({ language: 'en' });
-    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useOperationalDrawerContributionStore.setState({ activeTab: null, contribution: null });
     useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
   });
 
@@ -91,7 +91,7 @@ export function createShellTopBarHarness() {
     act(() => {
       root.unmount();
     });
-    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useOperationalDrawerContributionStore.setState({ activeTab: null, contribution: null });
     useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
     container.remove();
     document.body.replaceChildren();

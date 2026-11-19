@@ -17,10 +17,6 @@ export function buildCanvasRunContribution(
     copy: {
       problemsAriaLabel: 'Canvas problems',
       noProblemsMessage: 'No current Canvas problems.',
-      runsAriaLabel: 'Canvas runs',
-      runReadyStatus: 'Run ready',
-      runBlockedStatus: 'Run blocked',
-      runActiveStatus: 'Active run',
       previewAriaLabel: 'Canvas execution preview',
       previewAction: 'Create Execution Preview',
       previewReadyStatus: 'Preview ready',
@@ -44,22 +40,15 @@ export function buildCanvasRunContribution(
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
-    tabs: [
-      { id: 'log', label: 'Log', count: null },
-      { id: 'problems', label: 'Problems', count: 1 },
-      { id: 'runs', label: 'Runs', count: 1 },
-      { id: 'preview', label: 'Preview', count: 1 },
-    ],
+    tabs: [{ id: 'preview', label: 'Preview', count: 1 }],
     problems: {
       items: [],
     },
     runs: {
       activeRunId: null,
       canStartRun: false,
-      controls: null,
       onStartRun,
       status: 'blocked',
-      summary: 'Preview required before running.',
     },
     preview: {
       status: 'blocked',

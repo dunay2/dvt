@@ -86,6 +86,20 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+.count {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  min-inline-size: var(--icon-size-navigation);
+  padding-inline: var(--spacing);
+  border: 1px solid var(--status-warning);
+  border-radius: var(--radius);
+  background: var(--surface-shell);
+  color: var(--status-warning);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+  font-variant-numeric: tabular-nums;
+}
 .footer {
   flex: 0 0 auto;
   padding: var(--spacing);

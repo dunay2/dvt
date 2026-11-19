@@ -146,7 +146,6 @@ export type CanvasShellPropsOverrides = {
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
-  runControls?: CanvasShellProps['runControls'];
 };
 
 export function getCanvasShellState(): typeof shellState {
@@ -290,7 +289,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onSelectCanvas: vi.fn(),
       ...overrides?.canvasCommands,
     },
-    runControls: overrides?.runControls ?? null,
     workspaceCommands: overrides?.workspaceCommands,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery: overrides?.canvasTransformDataSampleQuery,
@@ -424,7 +422,7 @@ export function createCanvasShellHarness(
         root.unmount();
         navigationRoot.unmount();
       });
-      useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+      useOperationalDrawerContributionStore.setState({ activeTab: null, contribution: null });
       useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
       useCanvasInteractionStore.setState({
         contextualWorkbenchId: null,

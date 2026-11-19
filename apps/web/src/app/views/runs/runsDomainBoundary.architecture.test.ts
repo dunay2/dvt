@@ -299,7 +299,7 @@ describe('Runs domain boundary', () => {
       'components/shell/bottomOperationalDrawerLogModel.ts'
     );
     const feedHealthCopySource = readAppSource('services/runs/runEventFeedHealthCopy.ts');
-    const operationalDrawerSource = readAppSource('components/shell/BottomOperationalDrawer.tsx');
+    const operationalLogSource = readAppSource('components/shell/ShellOperationalWorkspace.tsx');
     const xtermConsoleSource = readAppSource('components/console/XtermConsole.tsx');
     const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
     const timelineTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
@@ -327,8 +327,8 @@ describe('Runs domain boundary', () => {
     expect(operationalDrawerModelSource).toContain('copy.messages.idle');
     expect(operationalDrawerModelSource).not.toContain('not available');
     expect(feedHealthCopySource).toContain('Start a run to see live run events here.');
-    expect(operationalDrawerSource).toContain('lazy(() => import');
-    expect(operationalDrawerSource).toContain('../console/XtermConsole');
+    expect(operationalLogSource).toContain('lazy(() => import');
+    expect(operationalLogSource).toContain('../console/XtermConsole');
     expect(xtermConsoleSource).toContain('@xterm/xterm');
     expect(xtermConsoleSource).toContain('disableStdin: true');
 

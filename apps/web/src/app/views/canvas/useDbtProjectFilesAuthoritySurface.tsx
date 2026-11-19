@@ -22,7 +22,6 @@ import { buildDbtExecutionTargetWorkbenchContributions } from './dbtExecutionTar
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
 import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
-import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
 import { useDbtProjectFilesAuthorityController } from './useDbtProjectFilesAuthorityController';
 
 const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DVT_AUTHORING_NODE_KINDS.filter(
@@ -171,10 +170,6 @@ export function useDbtProjectFilesAuthoritySurface({
   ]);
   usePublishedRouteBootstrap(CANVAS_ROUTE_ID, bootstrapPresentation);
 
-  const runControls = useCanvasRunControlSurface(
-    controller.workspaceLayoutKey,
-    controller.activeRunId
-  );
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const projectRoot = controller.authorityBinding.authority.projectRoot;
@@ -295,7 +290,6 @@ export function useDbtProjectFilesAuthoritySurface({
     graphCommands: controller.graphCommands,
     chromeCommands: controller.chromeCommands,
     canvasCommands: controller.canvasCommands,
-    runControls,
     workspaceCommands: {
       projectRoot,
       onOpenProjectCode: controller.openProjectCode,

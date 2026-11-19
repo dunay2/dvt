@@ -86,6 +86,14 @@
   outline-offset: calc(-1 * var(--focus-ring-width));
 }
 
+.routeContent {
+  display: contents;
+}
+
+.routeContent[hidden] {
+  display: none;
+}
+
 .skipLink {
   position: absolute;
   width: 1px;

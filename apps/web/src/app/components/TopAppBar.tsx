@@ -30,6 +30,8 @@ export function ShellTopBar({
   connectionStateOverride,
   isConnectionChecking = false,
   routeHeading = null,
+  showCanvasWorkspaceIdentity = true,
+  showDrawerToggle = true,
 }: ShellTopBarProps) {
   const location = useLocation();
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
@@ -65,7 +67,7 @@ export function ShellTopBar({
               <routeHeading.icon aria-hidden="true" className={styles.routeHeadingIcon} />
               <h1 className={styles.routeHeadingTitle}>{routeHeading.title}</h1>
             </div>
-          ) : isWorkbenchShell ? (
+          ) : isWorkbenchShell && showCanvasWorkspaceIdentity ? (
             <CanvasWorkspaceTopBarIdentity />
           ) : null}
           <ShellWorkspaceBreadcrumb copy={copy} />
@@ -74,7 +76,10 @@ export function ShellTopBar({
         <div data-slot="shell-top-bar-command-cluster" className={topAppBarClasses.commandCluster}>
           <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
           <ShellMenu
-            viewControls={shellViewControls}
+            viewControls={{
+              ...shellViewControls,
+              showBottomDrawerToggle: shellViewControls.showBottomDrawerToggle && showDrawerToggle,
+            }}
             bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
             toggleBottomDrawer={toggleBottomDrawer}

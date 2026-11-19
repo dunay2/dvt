@@ -6,7 +6,10 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BottomOperationalDrawerBody } from './OperationalDrawerPanels';
+import {
+  BottomOperationalDrawerBody,
+  BottomOperationalProblemsPanel,
+} from './OperationalDrawerPanels';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 
 function buildCanvasOperationalDrawerContribution(
@@ -18,10 +21,6 @@ function buildCanvasOperationalDrawerContribution(
     copy: {
       problemsAriaLabel: 'Canvas problems',
       noProblemsMessage: 'No current Canvas problems.',
-      runsAriaLabel: 'Canvas runs',
-      runReadyStatus: 'Run ready',
-      runBlockedStatus: 'Run blocked',
-      runActiveStatus: 'Active run',
       previewAriaLabel: 'Canvas execution preview',
       previewAction: 'Create Execution Preview',
       previewReadyStatus: 'Preview ready',
@@ -45,12 +44,7 @@ function buildCanvasOperationalDrawerContribution(
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
-    tabs: [
-      { id: 'log', label: 'Log', count: null },
-      { id: 'problems', label: 'Problems', count: 1 },
-      { id: 'runs', label: 'Runs', count: 1 },
-      { id: 'preview', label: 'Preview', count: 1 },
-    ],
+    tabs: [{ id: 'preview', label: 'Preview', count: 1 }],
     problems: {
       items: [
         {
@@ -64,10 +58,8 @@ function buildCanvasOperationalDrawerContribution(
     runs: {
       activeRunId: 'run-42',
       canStartRun: false,
-      controls: null,
       onStartRun: vi.fn(),
       status: 'active',
-      summary: 'Run run-42 is active.',
     },
     preview: {
       status: 'blocked',
@@ -106,9 +98,6 @@ describe('OperationalDrawerPanels', () => {
     const longPayload = '{"runId":"run_019fc867-d439-7319-995f-4af3457311ba","planId":"5579993a"}';
     const contribution = buildCanvasOperationalDrawerContribution({
       tabs: [
-        { id: 'log', label: 'Log', count: null },
-        { id: 'problems', label: 'Problems', count: 0 },
-        { id: 'runs', label: 'Runs', count: null },
         { id: 'preview', label: 'Preview', count: null },
         {
           id: 'data:orders',
@@ -154,11 +143,7 @@ describe('OperationalDrawerPanels', () => {
 
     await act(async () => {
       root.render(
-        <BottomOperationalDrawerBody
-          activeTab="data:orders"
-          contribution={contribution}
-          logBody={null}
-        />
+        <BottomOperationalDrawerBody activeTab="data:orders" contribution={contribution} />
       );
     });
     expect(
@@ -231,7 +216,6 @@ describe('OperationalDrawerPanels', () => {
               },
             ],
           }}
-          logBody={null}
         />
       )
     );
@@ -275,7 +259,6 @@ describe('OperationalDrawerPanels', () => {
             ...baseContribution,
             tabs: [...baseContribution.tabs, ordersTab, customersTab],
           }}
-          logBody={null}
         />
       );
     });
@@ -290,7 +273,6 @@ describe('OperationalDrawerPanels', () => {
             ...baseContribution,
             tabs: [...baseContribution.tabs, ordersTab, customersTab],
           }}
-          logBody={null}
         />
       );
     });
@@ -343,7 +325,6 @@ describe('OperationalDrawerPanels', () => {
               customersTab,
             ],
           }}
-          logBody={null}
         />
       );
     });
@@ -366,7 +347,6 @@ describe('OperationalDrawerPanels', () => {
       root.render(
         <BottomOperationalDrawerBody
           activeTab="data:orders"
-          logBody={null}
           contribution={buildCanvasOperationalDrawerContribution({
             tabs: [
               {
@@ -392,7 +372,7 @@ describe('OperationalDrawerPanels', () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
-  it('renders problems, runs, and preview bodies from the route contribution', async () => {
+  it('renders Problems and Preview from the route contribution', async () => {
     const onPreviewExecutionPlan = vi.fn();
     const contribution = buildCanvasOperationalDrawerContribution({
       preview: {
@@ -406,13 +386,7 @@ describe('OperationalDrawerPanels', () => {
     });
 
     await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="problems"
-          contribution={contribution}
-          logBody={<div data-testid="log-body">log stream</div>}
-        />
-      );
+      root.render(<BottomOperationalProblemsPanel contribution={contribution} />);
     });
 
     expect(container.textContent).toContain('Preview required before running.');
@@ -423,26 +397,7 @@ describe('OperationalDrawerPanels', () => {
     ).toBe('Warning');
 
     await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="runs"
-          contribution={contribution}
-          logBody={<div data-testid="log-body">log stream</div>}
-        />
-      );
-    });
-
-    expect(container.textContent).toContain('Active run');
-    expect(container.textContent).toContain('run-42');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="preview"
-          contribution={contribution}
-          logBody={<div data-testid="log-body">log stream</div>}
-        />
-      );
+      root.render(<BottomOperationalDrawerBody activeTab="preview" contribution={contribution} />);
     });
 
     expect(container.textContent).toContain('Preview required before running.');
@@ -473,17 +428,11 @@ describe('OperationalDrawerPanels', () => {
     expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
   });
 
-  it('delegates to log body when no route contribution owns the drawer', async () => {
+  it('renders no drawer content without a route contribution', async () => {
     await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="problems"
-          contribution={null}
-          logBody={<div data-testid="log-body">log stream</div>}
-        />
-      );
+      root.render(<BottomOperationalDrawerBody activeTab={null} contribution={null} />);
     });
 
-    expect(container.textContent).toBe('log stream');
+    expect(container.textContent).toBe('');
   });
 });

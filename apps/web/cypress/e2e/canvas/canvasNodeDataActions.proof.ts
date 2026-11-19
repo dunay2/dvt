@@ -357,7 +357,8 @@ export function registerCanvasNodeDataActionsProof(): void {
           .and('contain.text', 'PostgreSQL')
           .and('contain.text', '20')
           .and('contain.text', 'No guaranteed row order');
-        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="log"]').click();
+        cy.get('#shell-operational-log').click();
+        cy.get('#shell-operational-log').click();
         cy.get(`[data-slot="bottom-operational-drawer-tab"][data-tab="data:${nodeId}"]`).click();
         cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(1));
         cy.get('[data-slot="data-sample-refresh"]')

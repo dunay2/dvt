@@ -6,7 +6,6 @@ import { useOperationalDrawerContributionStore } from '../../components/shell/op
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
 import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
-import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { OperationalDrawerDataSampleTab } from '../../components/shell/operationalDrawerContributionStore';
 import type { OperationalDrawerTab } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
@@ -17,7 +16,6 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
   panels: CanvasShellPanels;
   chromeState: CanvasShellChromeState;
-  runControls: OperationalDrawerRunControls | null;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
   selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
@@ -31,7 +29,6 @@ export function CanvasOperationalDrawerContributionRegistrar({
   onStartRun,
   panels,
   policy,
-  runControls,
   chromeState,
   selectionRecoveryCommands,
   dataSampleTabs,
@@ -68,7 +65,6 @@ export function CanvasOperationalDrawerContributionRegistrar({
         policy: stablePolicy,
         canPlan: panels.userPermissions.canPlan,
         activeRunId: panels.activeRunId ?? null,
-        runControls,
         canPlanGraph: chromeState.canPlanGraph,
         canStartRun: chromeState.canStartRun,
         planRunReadiness: readiness,
@@ -92,7 +88,6 @@ export function CanvasOperationalDrawerContributionRegistrar({
       panels.activeRunId,
       panels.userPermissions.canPlan,
       stablePolicy,
-      runControls,
       semanticBody,
       operationDataTab,
       selectionRecoveryCommands,

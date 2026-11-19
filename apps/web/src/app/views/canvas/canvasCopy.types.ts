@@ -317,9 +317,6 @@ export type CanvasViewCopy = {
   readonly planStatusPreviewNotPersistedMessage: string;
   readonly planStatusPreviewReadyMessage: string;
   readonly operationalDrawerTitle: string;
-  readonly operationalDrawerLogTab: string;
-  readonly operationalDrawerProblemsTab: string;
-  readonly operationalDrawerRunsTab: string;
   readonly operationalDrawerPreviewTab: string;
   readonly operationalDrawerDataTab: string;
   readonly operationalDrawerSemanticTab: string;
@@ -327,12 +324,6 @@ export type CanvasViewCopy = {
   readonly operationalDrawerSemanticTopologyMismatchMessage: string;
   readonly operationalDrawerProblemsAriaLabel: string;
   readonly operationalDrawerNoProblemsMessage: string;
-  readonly operationalDrawerRunsAriaLabel: string;
-  readonly operationalDrawerRunReadyStatus: string;
-  readonly operationalDrawerRunBlockedStatus: string;
-  readonly operationalDrawerRunActiveStatus: string;
-  readonly operationalDrawerActiveRunSummaryTemplate: string;
-  readonly operationalDrawerReadyRunSummary: string;
   readonly operationalDrawerPreviewAriaLabel: string;
   readonly operationalDrawerPreviewAction: string;
   readonly operationalDrawerPreviewReadyStatus: string;

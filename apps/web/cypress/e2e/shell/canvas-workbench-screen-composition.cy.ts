@@ -874,27 +874,25 @@ describe('Canvas workbench screen composition', () => {
         const element = $tabList.get(0);
         expect(element.scrollWidth).to.be.at.most(element.clientWidth);
       });
+    cy.get('[data-slot="bottom-operational-drawer-tab"]').should('have.length', 1);
+    cy.get('#shell-operational-problems')
+      .should('have.attr', 'aria-label')
+      .and('match', /^Problemas \([1-9]\d*\)$/u);
+    cy.get('#shell-operational-problems').focus().type('{enter}');
+    cy.get('[data-slot="shell-operational-workspace"][data-view="problems"]').should('be.visible');
+    cy.get('[data-slot="bottom-operational-drawer"]').should('not.exist');
+    cy.get('#shell-operational-log').click();
+    cy.get('[data-slot="shell-operational-workspace"][data-view="log"]').should('be.visible');
+    cy.get('#shell-operational-log').click();
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]')
-      .focus()
-      .type('{leftarrow}');
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]')
       .should('have.attr', 'aria-selected', 'true')
-      .and('have.attr', 'tabindex', '0')
-      .and('have.attr', 'aria-controls', 'bottom-operational-drawer-panel-runs');
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should(
-      'have.attr',
-      'tabindex',
-      '-1'
-    );
-    cy.get('#bottom-operational-drawer-panel-runs')
-      .should('be.visible')
-      .and('have.attr', 'role', 'tabpanel')
-      .and('have.attr', 'aria-labelledby', 'bottom-operational-drawer-tab-runs');
+      .and('have.attr', 'tabindex', '0');
     assertViewportHasNoGlobalHorizontalOverflow(390);
     assertNoSeriousAccessibilityViolations('[data-slot="bottom-operational-drawer"]');
     cy.get('[data-tab-close="preview"]').click();
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should('not.exist');
-    cy.get('[data-slot="bottom-operational-drawer-tabs"]').rightclick();
+    cy.get('[data-slot="bottom-operational-drawer-restore"]').click();
     cy.get('[data-restore-tab="preview"]').should('be.visible').click();
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]')
       .should('be.visible')

@@ -25,7 +25,6 @@ import {
 } from '../services/AppServicesContext';
 import type { DbtProjectFilesAuthorityBinding } from '../ports/dbtProjectGraph';
 import type { CanvasShellProps } from './canvas/canvasShell.types';
-import { useCanvasRunControlSurface } from './canvas/useCanvasRunControlSurface';
 import {
   resolveDbtSourceImportContinuation,
   useCanvasDbtSourceImportContinuationStore,
@@ -61,10 +60,6 @@ function GraphDraftAuthorityContent({
   const controller = useCanvasController();
   const effectiveRunId = referencedRunId ?? controller.activeRunId ?? undefined;
   const runSnapshotQuery = useRunSnapshotQuery(controller.workspaceLayoutKey, effectiveRunId);
-  const runControls = useCanvasRunControlSurface(
-    controller.workspaceLayoutKey,
-    effectiveRunId ?? null
-  );
   const routeViewState = deriveCanvasRouteViewState(controller);
   const { presentationState } = routeViewState;
 
@@ -74,7 +69,6 @@ function GraphDraftAuthorityContent({
     ...buildCanvasShellProps({
       controller,
       routeViewState,
-      runControls,
     }),
     warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery,

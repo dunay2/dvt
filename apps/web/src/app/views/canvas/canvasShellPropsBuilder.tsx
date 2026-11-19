@@ -189,7 +189,6 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     chromeState: buildCanvasShellChromeState(buildCanvasShellChromeStateArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
-    runControls: args.runControls,
     prepareModelPreview: args.controller.flushDraftForExecution,
     canvasCommands: {
       onSelectCanvas: (canvasId) => {

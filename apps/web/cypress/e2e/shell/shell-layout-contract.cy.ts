@@ -524,9 +524,9 @@ describe('Shell layout contract', () => {
       .focus()
       .should('be.focused');
     pressNativeKey('Enter');
-    cy.get('[data-restore-tab="log"]').should('be.visible').focus();
+    cy.get('[data-restore-tab="preview"]').should('be.visible').focus();
     pressNativeKey('Enter');
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="log"]').should(
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should(
       'have.attr',
       'aria-selected',
       'true'
@@ -540,18 +540,16 @@ describe('Shell layout contract', () => {
     cy.get(drawer).should('not.exist');
   });
 
-  it('keeps the drawer closable on a route without operational tabs', () => {
-    // A shell log companion has no Canvas contribution and must not fabricate an empty tablist.
+  it('opens Log in the workbench on a route without contextual drawer tabs', () => {
     visitShellRouteWithUiLayout('/cost');
     cy.get('[data-slot="shell-menu-trigger"]').click();
-    cy.contains('[role="menuitemcheckbox"]', /^Operations$/).click();
-    cy.get('[data-slot="bottom-operational-drawer"]')
-      .should('be.visible')
-      .and('have.attr', 'aria-label', 'Operations');
-    cy.get('[data-slot="bottom-operational-drawer"] [role="tablist"]').should('not.exist');
-    cy.get('[data-slot="bottom-operational-drawer-header"]').should('not.exist');
-    cy.get('[data-slot="bottom-operational-drawer-close"]').click();
+    cy.contains('[role="menuitemcheckbox"]', /^Operations$/).should('not.exist');
+    pressNativeKey('Escape');
+    cy.get('#shell-operational-log').click();
+    cy.get('[data-slot="shell-operational-workspace"][data-view="log"]').should('be.visible');
     cy.get('[data-slot="bottom-operational-drawer"]').should('not.exist');
+    cy.get('#shell-operational-log').click();
+    cy.get('[data-slot="shell-operational-workspace"]').should('not.exist');
   });
 
   it('resizes the operational drawer without losing the selected expression or saving a draft', () => {

@@ -1,5 +1,5 @@
 /** Owned concern: compose the Raven shell frame and publish root bootstrap posture. */
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import {
   buildShellHealthPresentationModel,
@@ -12,6 +12,9 @@ import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame, { APP_SHELL_MAIN_CONTENT_ID } from './components/shell/AppShellFrame';
 import BottomOperationalDrawer from './components/shell/BottomOperationalDrawer';
+import { ShellOperationalWorkspace } from './components/shell/ShellOperationalWorkspace';
+import { useOperationalDrawerContributionStore } from './components/shell/operationalDrawerContributionStore';
+import type { ShellOperationalView } from './components/shell/types';
 import { ShellRouteHeadingProvider } from './components/shell/ShellRouteHeading';
 import { AuthRouteSurface } from './bootstrap/AuthRouteGate';
 import { resolveShellTopBarCopy } from './components/shell/copy';
@@ -61,11 +64,15 @@ type RootShellProps = {
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const location = useLocation();
+  const [operationalView, setOperationalView] = useState<ShellOperationalView | null>(null);
   const previousPathnameRef = useRef(location.pathname);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const bottomDrawerHeight = useUiLayoutStore((state) => state.bottomDrawerHeight);
   const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
+  const hasDrawerTabs = useOperationalDrawerContributionStore(
+    (state) => (state.contribution?.tabs.length ?? 0) > 0
+  );
   const closeCanvasContextualWorkbench = useCanvasInteractionStore(
     (state) => state.closeContextualWorkbench
   );
@@ -101,6 +108,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     }
 
     previousPathnameRef.current = location.pathname;
+    setOperationalView(null);
     document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
   }, [location.pathname]);
   const getRouteBootstrapSnapshot = () => {
@@ -305,12 +313,26 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
           }}
         />
       }
-      leftNavigation={<LeftNavigation navigationModel={navigationModel} copy={shellCopy} />}
-      showBottomDrawer={bottomDrawerVisible && bottomDrawerHeight > 0}
+      leftNavigation={
+        <LeftNavigation
+          navigationModel={navigationModel}
+          copy={shellCopy}
+          operationalView={operationalView}
+          onOperationalViewChange={setOperationalView}
+        />
+      }
+      operationalWorkspace={
+        operationalView == null ? null : (
+          <ShellOperationalWorkspace view={operationalView} copy={shellCopy} />
+        )
+      }
+      showBottomDrawer={hasDrawerTabs && bottomDrawerVisible && bottomDrawerHeight > 0}
       skipToMainContentLabel={shellCopy.skipToMainContent}
       topBar={
         <TopAppBar
           routeHeading={routeHeading}
+          showCanvasWorkspaceIdentity={operationalView == null}
+          showDrawerToggle={hasDrawerTabs && operationalView == null}
           connectionDetail={shellHealth.connectionDetail}
           connectionStateOverride={shellHealth.connectionState}
           isConnectionChecking={shellHealth.isInitialHealthCheckPending}

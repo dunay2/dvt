@@ -6,7 +6,6 @@ import type {
   OperationalDrawerBuiltInTabId,
   OperationalDrawerDataSampleTab,
   OperationalDrawerProblem,
-  OperationalDrawerRunControls,
   OperationalDrawerTab,
 } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
@@ -20,13 +19,12 @@ import {
   resolvePlanRunReadinessBlockerMessage,
   resolvePlanRunReadinessBlockerLabel,
 } from './canvasReadinessPresentation';
-import { canvasViewCopy, formatCanvasCopyTemplate, type CanvasViewCopy } from './copy';
+import { canvasViewCopy, type CanvasViewCopy } from './copy';
 
 type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
   canPlan: boolean;
   activeRunId: string | null;
-  runControls?: OperationalDrawerRunControls | null;
   canPlanGraph: boolean;
   canStartRun: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
@@ -92,7 +90,6 @@ export function buildCanvasOperationalDrawerContribution({
   planRunReadiness,
   policy,
   copy = canvasViewCopy,
-  runControls = null,
   selectionRecovery = null,
   selectionRecoveryCommands = null,
   selectionRecoveryMessages = canvasViewCopy,
@@ -105,9 +102,6 @@ export function buildCanvasOperationalDrawerContribution({
   const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
     resolvePlanRunReadinessBlockerLabel(blocker, copy);
   const tabLabels = {
-    log: copy.operationalDrawerLogTab,
-    problems: copy.operationalDrawerProblemsTab,
-    runs: copy.operationalDrawerRunsTab,
     preview: copy.operationalDrawerPreviewTab,
     data: copy.operationalDrawerDataTab,
     semantic: copy.operationalDrawerSemanticTab,
@@ -152,10 +146,6 @@ export function buildCanvasOperationalDrawerContribution({
     copy: {
       problemsAriaLabel: copy.operationalDrawerProblemsAriaLabel,
       noProblemsMessage: copy.operationalDrawerNoProblemsMessage,
-      runsAriaLabel: copy.operationalDrawerRunsAriaLabel,
-      runReadyStatus: copy.operationalDrawerRunReadyStatus,
-      runBlockedStatus: copy.operationalDrawerRunBlockedStatus,
-      runActiveStatus: copy.operationalDrawerRunActiveStatus,
       previewAriaLabel: copy.operationalDrawerPreviewAriaLabel,
       previewAction: copy.operationalDrawerPreviewAction,
       previewReadyStatus: copy.operationalDrawerPreviewReadyStatus,
@@ -201,13 +191,9 @@ export function buildCanvasOperationalDrawerContribution({
               label: tabLabels[id],
               ...(id === 'semantic' && semanticBody !== undefined ? { content: semanticBody } : {}),
               count:
-                id === 'problems'
-                  ? problems.length
-                  : id === 'runs' && (activeRunId != null || !canStartRun)
-                    ? 1
-                    : id === 'preview' && previewStatus === 'blocked'
-                      ? Math.max(1, previewBlockers.length)
-                      : null,
+                id === 'preview' && previewStatus === 'blocked'
+                  ? Math.max(1, previewBlockers.length)
+                  : null,
             },
           ]
     ),
@@ -217,17 +203,8 @@ export function buildCanvasOperationalDrawerContribution({
     runs: {
       activeRunId,
       canStartRun,
-      controls: runControls,
       onStartRun,
       status: runsStatus,
-      summary:
-        runsStatus === 'active'
-          ? formatCanvasCopyTemplate(copy.operationalDrawerActiveRunSummaryTemplate, {
-              runId: activeRunId ?? '',
-            })
-          : runsStatus === 'ready'
-            ? copy.operationalDrawerReadyRunSummary
-            : planRunReadiness.summary,
     },
     preview: {
       status: previewStatus,

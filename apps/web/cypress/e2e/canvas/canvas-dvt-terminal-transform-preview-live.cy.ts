@@ -305,8 +305,8 @@ describe('DVT terminal Transform Preview and Run live', () => {
 
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     revealOperationalDrawer();
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]').click();
-    cy.get('[data-slot="bottom-operational-drawer-runs"]')
+    cy.get('#shell-operational-problems').click();
+    cy.get('[data-slot="bottom-operational-drawer-problems"]')
       .should('be.visible')
       .and('contain.text', 'Execution Preview')
       .invoke('text')

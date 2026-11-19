@@ -37,23 +37,10 @@ describe('CanvasShell operational drawer registration', () => {
 
   it('registers Canvas operational drawer tabs from the surface strategy', async () => {
     const onRun = vi.fn();
-    const runControls = {
-      runId: 'run-42',
-      availability: {
-        cancel: { available: true as const },
-        recover: { available: false as const, reason: 'run_active' as const },
-      },
-      activity: null,
-      outcome: null,
-      failure: null,
-      onCancel: vi.fn(),
-      onRecover: vi.fn(),
-    };
     await renderShell({
       panels: {
         activeRunId: 'run-42',
       },
-      runControls,
       chromeCommands: {
         onRun,
       },
@@ -64,15 +51,9 @@ describe('CanvasShell operational drawer registration', () => {
     expect(contribution).toMatchObject({
       source: 'canvas',
       title: 'Canvas operations',
-      tabs: [
-        { id: 'log', label: 'Log' },
-        { id: 'problems', label: 'Problems' },
-        { id: 'runs', label: 'Runs' },
-        { id: 'preview', label: 'Preview' },
-      ],
+      tabs: [{ id: 'preview', label: 'Preview' }],
       runs: {
         activeRunId: 'run-42',
-        controls: runControls,
       },
       preview: {
         status: 'blocked',
