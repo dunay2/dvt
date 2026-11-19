@@ -1,6 +1,9 @@
 /** Owned concern: real card gestures move geometry without invoking semantic commands or queries. */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
-import { verifyCompleteTreeFit } from '../../support/relationalWorkbench/geometry';
+import {
+  readWorkbenchCardPosition,
+  verifyCompleteTreeFit,
+} from '../../support/relationalWorkbench/geometry';
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
@@ -14,12 +17,6 @@ const viewport = '[data-slot="canvas-relational-tree-viewport"]';
 const join = `${viewport} [data-slot="canvas-relational-tree-node"][data-operator="join"]`;
 const source = `${viewport} [data-slot="canvas-relational-tree-node"][data-operator="read"]:first`;
 const output = `${viewport} [data-slot="canvas-relational-tree-output"]`;
-const position = (element: HTMLElement | undefined): [number, number] => {
-  if (element === undefined) throw new Error('Expected the positioned workbench card.');
-  const parent = element.parentElement;
-  if (parent === null) throw new Error('Expected the workbench card position container.');
-  return [Number.parseFloat(parent.style.left), Number.parseFloat(parent.style.top)];
-};
 
 describe('Relational card movement', () => {
   beforeEach(() => {
@@ -35,30 +32,31 @@ describe('Relational card movement', () => {
   it('moves through the world origin after panning and Fits signed cards without writes', () => {
     cy.get(source).then(($card) => {
       const held = $card[0]!;
-      const before = position(held);
+      const before = readWorkbenchCardPosition(held);
       const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0]!;
       const zoom = Number(tree.style.zoom);
       const otherCards = Cypress.$(`${viewport} [data-slot="canvas-relational-tree-node"]`)
         .toArray()
         .filter((card) => card !== held)
-        .map((card) => ({ card, position: position(card) }));
+        .map((card) => ({ card, position: readWorkbenchCardPosition(card) }));
       const outputStyle = Cypress.$(output).attr('style');
       const writes = semanticWrites('join-transform').length;
       const queries = /\/(data-sample|preview|runs|execute)(\/|$)/;
       const requests = getE2eApiCalls(queries).length;
       panWorkbenchViewport(viewport, 240, 160);
-      moveWorkbenchCard(source, -(before[0] + 80) * zoom, -(before[1] + 60) * zoom);
+      moveWorkbenchCard(source, -(before.x + 80) * zoom, -(before.y + 60) * zoom);
       cy.get(source).should(($moved) => {
         expect($moved[0]).to.equal(held);
-        expect(position($moved[0])[0]).to.be.closeTo(-80, 2);
-        expect(position($moved[0])[1]).to.be.closeTo(-60, 2);
-        for (const other of otherCards) expect(position(other.card)).to.deep.equal(other.position);
+        expect(readWorkbenchCardPosition($moved[0]).x).to.be.closeTo(-80, 2);
+        expect(readWorkbenchCardPosition($moved[0]).y).to.be.closeTo(-60, 2);
+        for (const other of otherCards)
+          expect(readWorkbenchCardPosition(other.card)).to.deep.equal(other.position);
         expect(Cypress.$(output).attr('style')).to.equal(outputStyle);
       });
       verifyCompleteTreeFit(viewport);
       cy.get(source).should(($moved) => {
-        expect(position($moved[0])[0]).to.be.closeTo(-80, 2);
-        expect(position($moved[0])[1]).to.be.closeTo(-60, 2);
+        expect(readWorkbenchCardPosition($moved[0]).x).to.be.closeTo(-80, 2);
+        expect(readWorkbenchCardPosition($moved[0]).y).to.be.closeTo(-60, 2);
       });
       cy.then(() => {
         expect(semanticWrites('join-transform')).to.have.length(writes);
@@ -69,7 +67,7 @@ describe('Relational card movement', () => {
 
   it('moves a JOIN and its ports at the actual zoom without opening properties or saving', () => {
     cy.get(join).then(($card) => {
-      const before = position($card[0]);
+      const before = readWorkbenchCardPosition($card[0]);
       const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0];
       if (tree === undefined) throw new Error('Expected the relational tree zoom surface.');
       const zoom = Number(tree.style.zoom);
@@ -78,9 +76,9 @@ describe('Relational card movement', () => {
       const requests = getE2eApiCalls(dataRequests).length;
       moveWorkbenchCard(join, 40, 24);
       cy.get(join).should(($moved) => {
-        const after = position($moved[0]);
-        expect(after[0]).to.be.closeTo(before[0] + 40 / zoom, 2);
-        expect(after[1]).to.be.closeTo(before[1] + 24 / zoom, 2);
+        const after = readWorkbenchCardPosition($moved[0]);
+        expect(after.x).to.be.closeTo(before.x + 40 / zoom, 2);
+        expect(after.y).to.be.closeTo(before.y + 24 / zoom, 2);
       });
       cy.get('[data-slot="canvas-relational-tree-input-label"]')
         .first()
@@ -89,7 +87,7 @@ describe('Relational card movement', () => {
             .attr('transform')!
             .match(/[\d.]+/g)!
             .map(Number);
-          expect(coordinates[0]).to.be.closeTo(before[0] + 40 / zoom - 24, 2);
+          expect(coordinates[0]).to.be.closeTo(before.x + 40 / zoom - 24, 2);
         });
       cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('not.exist');
       cy.get(viewport).should('have.attr', 'data-panning', 'false');
@@ -102,9 +100,9 @@ describe('Relational card movement', () => {
       cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get('[data-slot="canvas-relational-tree-draft-viewport"] [data-operator="join"]').should(
         ($editing) => {
-          const after = position($editing[0]);
-          expect(after[0]).to.be.closeTo(before[0] + 40 / zoom, 2);
-          expect(after[1]).to.be.closeTo(before[1] + 24 / zoom, 2);
+          const after = readWorkbenchCardPosition($editing[0]);
+          expect(after.x).to.be.closeTo(before.x + 40 / zoom, 2);
+          expect(after.y).to.be.closeTo(before.y + 24 / zoom, 2);
         }
       );
     });
@@ -112,21 +110,26 @@ describe('Relational card movement', () => {
 
   it('moves a source with pointer and keyboard and retains normal card navigation', () => {
     cy.get(source).then(($card) => {
-      const before = position($card[0]);
+      const before = readWorkbenchCardPosition($card[0]);
       const writes = semanticWrites('join-transform').length;
       cy.get(source).focus().type('{alt}{rightarrow}{alt}');
       cy.get(source).should(($moved) => {
-        expect(position($moved[0])).to.deep.equal([before[0] + 10, before[1]]);
+        expect(readWorkbenchCardPosition($moved[0])).to.deep.equal({
+          x: before.x + 10,
+          y: before.y,
+        });
       });
       moveWorkbenchCard(source, 20, 12);
       cy.get(source).should(($moved) => {
-        const after = position($moved[0]);
-        expect(after[0]).to.be.greaterThan(before[0] + 10);
-        expect(after[1]).to.be.greaterThan(before[1]);
+        const after = readWorkbenchCardPosition($moved[0]);
+        expect(after.x).to.be.greaterThan(before.x + 10);
+        expect(after.y).to.be.greaterThan(before.y);
       });
       verifyCompleteTreeFit(viewport);
       cy.get('[data-slot="canvas-relational-tree-arrange"]').click();
-      cy.get(source).should(($arranged) => expect(position($arranged[0])).to.deep.equal(before));
+      cy.get(source).should(($arranged) =>
+        expect(readWorkbenchCardPosition($arranged[0])).to.deep.equal(before)
+      );
       const relationId = $card.attr('data-relation-id')!;
       cy.get(source).click();
       cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`).should(
@@ -143,7 +146,7 @@ describe('Relational card movement', () => {
     const cards = '[data-slot="canvas-relational-tree-node"]';
     cy.get(cards).then(($before) => {
       const nodes = $before.toArray();
-      const compact = nodes.map((card) => position(card));
+      const compact = nodes.map((card) => readWorkbenchCardPosition(card));
       const writes = semanticWrites('join-transform').length;
       const requests = getE2eApiCalls(/data-sample/, 'GET').length;
       for (let step = 0; step < 5; step++)
@@ -169,7 +172,9 @@ describe('Relational card movement', () => {
         cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom out"]').click();
       cy.get(cards).should(($collapsed) => {
         expect($collapsed.toArray()).to.deep.equal(nodes);
-        expect($collapsed.toArray().map((card) => position(card))).to.deep.equal(compact);
+        expect($collapsed.toArray().map((card) => readWorkbenchCardPosition(card))).to.deep.equal(
+          compact
+        );
       });
       cy.then(() => {
         expect(semanticWrites('join-transform')).to.have.length(writes);
@@ -183,7 +188,7 @@ describe('Relational card movement', () => {
     cy.get('[data-slot="canvas-relational-card-detail"]').should('exist');
     cy.get(source).then(($card) => {
       const card = $card[0];
-      const before = position(card);
+      const before = readWorkbenchCardPosition(card);
       const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0];
       if (tree === undefined) throw new Error('Expected the relational tree zoom surface.');
       const zoom = Number(tree.style.zoom);
@@ -193,11 +198,11 @@ describe('Relational card movement', () => {
       let displacement = 0;
       for (const delta of [220, -8, 8, -8, 8]) {
         displacement += delta;
-        const expected = before[1] + displacement;
+        const expected = before.y + displacement;
         moveWorkbenchCard(source, 0, delta * zoom);
         cy.get(source).should(($moved) => {
           expect($moved[0]).to.equal(card);
-          expect(position($moved[0])[1]).to.be.closeTo(expected, 1);
+          expect(readWorkbenchCardPosition($moved[0]).y).to.be.closeTo(expected, 1);
         });
       }
       cy.then(() => {
@@ -211,10 +216,7 @@ describe('Relational card movement', () => {
     cy.get(output).then(($output) => {
       const initialOutput = $output[0];
       if (initialOutput === undefined) throw new Error('Expected the relational Output card.');
-      const before: [number, number] = [
-        Number.parseFloat(initialOutput.style.left),
-        Number.parseFloat(initialOutput.style.top),
-      ];
+      const before = readWorkbenchCardPosition(initialOutput);
       const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0];
       if (tree === undefined) throw new Error('Expected the relational tree zoom surface.');
       const zoom = Number(tree.style.zoom);
@@ -222,8 +224,8 @@ describe('Relational card movement', () => {
       cy.get(output).should(($moved) => {
         const moved = $moved[0];
         if (moved === undefined) throw new Error('Expected the moved relational Output card.');
-        expect(Number.parseFloat(moved.style.left)).to.be.closeTo(before[0] + 40 / zoom, 2);
-        expect(Number.parseFloat(moved.style.top)).to.be.closeTo(before[1] + 24 / zoom, 2);
+        expect(Number.parseFloat(moved.style.left)).to.be.closeTo(before.x + 40 / zoom, 2);
+        expect(Number.parseFloat(moved.style.top)).to.be.closeTo(before.y + 24 / zoom, 2);
         const edge = Cypress.$('[data-slot="canvas-relational-output-edge"]')[0];
         if (edge === undefined) throw new Error('Expected the relational Output connection.');
         const coordinates = edge
@@ -330,7 +332,7 @@ describe('Relational card movement', () => {
       .and('have.css', 'overflow-y', 'clip');
     cy.get(source).should('have.css', 'cursor', 'crosshair');
     cy.get(source).then(($card) => {
-      const before = position($card[0]);
+      const before = readWorkbenchCardPosition($card[0]);
       const bounds = $card[0]!.getBoundingClientRect();
       const writes = semanticWrites('join-transform').length;
       let x = 0,
@@ -357,7 +359,9 @@ describe('Relational card movement', () => {
       cy.get(viewport).should(($panned) => {
         expect([$panned[0]!.scrollLeft, $panned[0]!.scrollTop]).to.deep.equal([0, 0]);
       });
-      cy.get(source).should(($same) => expect(position($same[0])).to.deep.equal(before));
+      cy.get(source).should(($same) =>
+        expect(readWorkbenchCardPosition($same[0])).to.deep.equal(before)
+      );
       cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('not.exist');
       cy.get(viewport).should('have.css', 'cursor', 'default');
       cy.get(source).should('have.css', 'cursor', 'crosshair');
