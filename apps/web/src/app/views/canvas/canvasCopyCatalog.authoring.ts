@@ -63,7 +63,7 @@ export const canvasViewAuthoringCopyByKey = {
   nodeAddedPrefix: 'Added',
   nodeAddedSuffix: 'to canvas',
   nodeRemovedPrefix: 'Removed',
-  nodeRemovedSuffix: '',
+  nodeRemovedSuffix: 'from the canvas',
   inspectorEditablePropertiesTitle: 'Editable properties',
   inspectorEditablePropertiesDescription: 'Name, tags, and description saved with this canvas.',
   nodePresentationColumnsLabel: 'Columns',

@@ -68,8 +68,8 @@ export const canvasViewAuthoringCopyEs = {
   serialConjunctionAnd: 'y',
   nodeAddedPrefix: 'Se ha añadido',
   nodeAddedSuffix: 'al canvas',
-  nodeRemovedPrefix: 'Se ha eliminado',
-  nodeRemovedSuffix: '',
+  nodeRemovedPrefix: 'Se quitó',
+  nodeRemovedSuffix: 'del lienzo',
   inspectorEditablePropertiesTitle: 'Propiedades editables',
   inspectorEditablePropertiesDescription:
     'Nombre, etiquetas y descripción guardados con este canvas.',
