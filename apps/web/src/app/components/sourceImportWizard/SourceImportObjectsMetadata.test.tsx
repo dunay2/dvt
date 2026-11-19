@@ -65,11 +65,13 @@ describe('SourceImportObjectsMetadata', () => {
         ?.getAttribute('data-state')
     ).toBe('closed');
 
+    const ordersCaption = 'ERP.ORDERS Relations 1,500 rows 3.9 MB 1 column';
     const ordersTrigger = getByRole(container, 'button', {
-      name: 'ERP.ORDERS Relations 1,500 rows 3.9 MB 1 column',
+      name: ordersCaption,
       expanded: false,
     });
     expect(ordersTrigger.getAttribute('aria-description')).toBe('RAW.ERP.ORDERS');
+    expect(ordersTrigger.textContent).toBe(ordersCaption);
     await act(async () => ordersTrigger.click());
 
     expect(
