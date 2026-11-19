@@ -21,13 +21,13 @@ function readRepoDoc(relativePathFromRepo: string): string {
 }
 
 function collectProductionSourceFiles(root: string): string[] {
-  return readdirSync(root).flatMap((entry) => {
-    const fullPath = path.join(root, entry);
-    if (statSync(fullPath).isDirectory()) {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(root, entry.name);
+    if (entry.isDirectory() || (entry.isSymbolicLink() && statSync(fullPath).isDirectory())) {
       return collectProductionSourceFiles(fullPath);
     }
 
-    if (!/\.(ts|tsx)$/.test(entry) || /\.test\./.test(entry)) {
+    if (!/\.(ts|tsx)$/.test(entry.name) || /\.test\./.test(entry.name)) {
       return [];
     }
 
