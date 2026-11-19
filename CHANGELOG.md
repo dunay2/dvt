@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.24.0 (2026-11-19)
+
+## What's Changed
+* style(web): Compact Model Explorer rows with shared control sizing by @dunay2 in https://github.com/dunay2/dvt/pull/3965
+* feat(web): Open the security menu in the Administration workspace by @dunay2 in https://github.com/dunay2/dvt/pull/3968
+* fix(web): Open the selected or first model from the view shortcuts by @dunay2 in https://github.com/dunay2/dvt/pull/3970
+* feat(web): Change the JOIN type from its semantic card icon by @dunay2 in https://github.com/dunay2/dvt/pull/3976
+* feat(web): Author project SQL from reusable templates by @dunay2 in https://github.com/dunay2/dvt/pull/3978
+* feat(api): Page scoped workspace directories for template discovery by @dunay2 in https://github.com/dunay2/dvt/pull/3980
+* feat(web): Run Code models with typed conditional parameters by @dunay2 in https://github.com/dunay2/dvt/pull/3981
+* test(web): Restore relational card browser evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3982
+* chore(deps): Integrate four updates and preserve accessible control names by @dunay2 in https://github.com/dunay2/dvt/pull/3983
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.23.0...v0.24.0
+
 ## 0.23.0 (2026-11-18)
 
 ## What's Changed
