@@ -53,7 +53,6 @@ describe('PluginsView catalog reconciliation', () => {
         copy={copy}
         pluginCatalogError={null}
         pluginCatalogLoading={false}
-        probeStatus={{ state: 'ok', label: 'Available', description: 'Available' }}
         reconciliation={reconciliation}
       />
     );
@@ -113,7 +112,6 @@ describe('PluginsView catalog reconciliation', () => {
         copy={copy}
         pluginCatalogError={null}
         pluginCatalogLoading={false}
-        probeStatus={{ state: 'ok', label: 'Available', description: 'Available' }}
         reconciliation={reconciliation}
       />
     );

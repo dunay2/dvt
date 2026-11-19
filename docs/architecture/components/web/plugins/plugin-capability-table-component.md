@@ -45,6 +45,13 @@ execution authority.
 - Backend-only and unbound rows never claim a frontend contribution is loaded.
 - The component uses route workbench tokens and does not introduce plugin-local
   shell chrome.
+- The table uses shared table and form controls. Its selected detail provides
+  the version, declared capabilities, registered node kinds and backend
+  diagnostic, while the table shows the frontend, backend and operational states.
+- The header summarizes the runtime capability query. The warning for unmatched
+  local contributions belongs next to the catalog and appears when needed.
+- The route resolves UI messages from the application language preference.
+  Backend diagnostic text is displayed as supplied by the capability query.
 
 ## Transitions
 
@@ -72,8 +79,9 @@ flowchart LR
   Registry["PLUGIN_REGISTRY"] --> Reconcile["reconcilePluginCatalog"]
   View --> Reconcile
   View --> Query["useCapabilitiesQuery"]
+  Language["ConfigureApplicationLanguage preference"] --> View
   View --> Workbench["PluginsRouteWorkbench"]
-  Workbench --> Probe["Capability probe card"]
+  Workbench --> Probe["Compact capability status"]
   Workbench --> Table["PluginCapabilityTable"]
   Reconcile --> Table
   Reconcile --> Diagnostic["Local-only diagnostic"]
@@ -102,8 +110,8 @@ flowchart LR
 | -------------- | ------------------- | --------------------------------------- | ----------------------------------------------------------------------------- |
 | US-F25-PCT-001 | Operator            | Searches plugin declarations.           | The catalog filters by plugin name, id, capability, backend id, or kind.      |
 | US-F25-PCT-002 | Operator            | Reviews blocked backend-backed plugins. | Backend-state filter can show only blocked plugins and keeps reasons visible. |
-| US-F25-PCT-003 | Frontend maintainer | Adds a new static plugin contribution.  | The plugin appears in the table without adding route-local card chrome.       |
-| US-F25-PCT-004 | Plugin author       | Checks what the shell can execute.      | Detail shows declared, frontend, backend, and executable readiness states.    |
+| US-F25-PCT-003 | Frontend maintainer | Adds a new static plugin contribution.  | A catalog match enriches the row. An unmatched contribution is diagnostic.    |
+| US-F25-PCT-004 | Plugin author       | Checks what the shell can execute.      | The table shows the runtime states. The detail shows the backend diagnostic.  |
 
 ### Test Matrix
 

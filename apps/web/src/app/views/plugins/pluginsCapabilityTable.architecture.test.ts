@@ -26,13 +26,11 @@ describe('Plugins capability table architecture', () => {
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/plugins/plugin-capability-table-component.md'
     );
-    const userStories = readRepoDoc(
-      'docs/architecture/components/web/plugins/plugin-capability-table-component.md'
-    );
 
     expect(route).toContain('Owned concern: adapt the Plugins route query state');
     expect(route).toContain('RouteWorkbenchFrame');
     expect(route).toContain('reconcilePluginCatalog');
+    expect(route).toContain('useApplicationLanguageStore');
     expect(route).not.toContain('PluginCapabilityTable');
 
     expect(workbench).toContain('PluginCapabilityTable');
@@ -48,6 +46,8 @@ describe('Plugins capability table architecture', () => {
     expect(table).toContain('data-slot="plugin-backend-state-filter"');
     expect(table).toContain('data-slot="plugin-capability-detail"');
     expect(table).toContain('resolvePluginReadiness');
+    expect(table).toContain('../../components/ui/table');
+    expect(table).toContain('routeWorkbenchTableTokens');
     expect(table).not.toContain('useCapabilitiesQuery');
     expect(table).not.toContain('PLUGIN_REGISTRY');
 
@@ -55,11 +55,12 @@ describe('Plugins capability table architecture', () => {
     expect(reconciliation).toContain('localOnlyContributions');
     expect(reconciliation).toContain("runtimeShape: 'backend-only'");
     expect(reconciliation).toContain("runtimeShape: 'unbound'");
-    expect(model).toContain('PluginReadinessItem');
     expect(model).toContain('PluginBackendState');
     expect(model).toContain('PluginOperationalState');
     expect(copy).toContain('searchPlaceholder');
     expect(copy).toContain('resolvePluginsViewCopy');
+    expect(copy).toContain('normalizeApplicationLanguage');
+    expect(copy).not.toContain('navigator');
 
     for (const requiredSection of [
       '## Public API',
@@ -72,7 +73,7 @@ describe('Plugins capability table architecture', () => {
     }
 
     for (const story of ['US-F25-PCT-001', 'US-F25-PCT-002', 'US-F25-PCT-003']) {
-      expect(userStories).toContain(story);
+      expect(componentGuide).toContain(story);
     }
   });
 });
