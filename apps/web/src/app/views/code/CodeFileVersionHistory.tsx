@@ -35,7 +35,7 @@ export function CodeFileVersionHistory({
   onRestore: (value: string) => void;
 }>): JSX.Element {
   const [selected, setSelected] = useState<string>();
-  const opener = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
   const locale = useApplicationLanguageStore((state) => state.language);
   const { pages, version, historyKey, scope } = useWorkspaceFileVersionQueries(path, selected);
   const command = useWorkspaceFileVersionCommandPort();
