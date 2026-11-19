@@ -1,6 +1,6 @@
 /** Owned concern: present compact, accessible model commands using shared visual tokens. */
 import { Hammer, LoaderCircle, Play } from 'lucide-react';
-import { useId } from 'react';
+import { useId, type Ref } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '../../components/ui/button';
@@ -12,6 +12,9 @@ export type CodeModelCommandBarProps = Readonly<{
   modelName: string;
   synchronized: boolean;
   compiled: boolean;
+  parameterized?: boolean;
+  compileRef?: Ref<HTMLButtonElement>;
+  executeRef?: Ref<HTMLButtonElement>;
   unavailable: boolean;
   blockedReason: string;
   phase: 'idle' | 'compiling' | 'running';
@@ -37,7 +40,9 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
             ? props.blockedReason
             : props.compiled
               ? copy.ready
-              : copy.compileFirst;
+              : props.parameterized
+                ? copy.parameterReady
+                : copy.compileFirst;
   return (
     <div
       className={styles.bar}
@@ -47,6 +52,7 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
     >
       <div className={styles.actions}>
         <Button
+          ref={props.compileRef}
           type="button"
           className={styles.command}
           variant="outline"
@@ -64,6 +70,7 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
           {copy.compile}
         </Button>
         <Button
+          ref={props.executeRef}
           type="button"
           className={styles.command}
           size="sm"
@@ -88,6 +95,15 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
           {copy.viewRun}
         </Link>
       )}
+      <details className={styles.help}>
+        <summary>{copy.parametersHelp}</summary>
+        <p>{copy.declarationHint}</p>
+        <pre>
+          {
+            'config:\n  meta:\n    dvt:\n      run_parameters:\n        - name: cutoff_date\n          type: date\n          defaultValue: "2026-01-01"'
+          }
+        </pre>
+      </details>
     </div>
   );
 }

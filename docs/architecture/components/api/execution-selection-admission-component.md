@@ -25,6 +25,15 @@ and [command/query governance](../../command-query-rail-governance.md).
 
 ## Boundary and responsibilities
 
+The [typed parameter proposal](../../../adr/ADR-0071-typed-parameters-for-model-execution.md)
+extends the existing file selection. `PreviewPlan` receives explicit overrides,
+checks the selected model's declarations under the effective scope and binds the
+resolved values to native compilation and execution identity. `StartRun` consumes
+the stored plan and scoped provider context. The worker must receive the exact
+dbt values used to compile. Omitted declarations preserve the existing path.
+The governing product decision and negative cases are in
+[#3120](https://github.com/dunay2/dvt/issues/3120).
+
 | Collaborator            | Owned decision                                                                |
 | ----------------------- | ----------------------------------------------------------------------------- |
 | Authority router        | Dispatch the named file, protected DVT or graph-draft authority               |

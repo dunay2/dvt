@@ -3,6 +3,27 @@ import { describe, expect, it } from 'vitest';
 import { projectDbtManifest } from '../../../src/infrastructure/dbt/dbtManifestProjection.js';
 
 describe('projectDbtManifest', () => {
+  it('exposes invalid parameter metadata on its model while keeping its siblings available', () => {
+    const model = { resource_type: 'model', name: 'orders', package_name: 'demo' };
+    const manifest = projectDbtManifest({
+      metadata: { dbt_version: '1.11.11', project_name: 'demo' },
+      nodes: {
+        first: {
+          ...model,
+          unique_id: 'model.demo.orders',
+          config: { meta: { dvt: { run_parameters: 'invalid' } } },
+        },
+        second: { ...model, name: 'customers', unique_id: 'model.demo.customers' },
+      },
+      sources: {},
+    });
+    expect(manifest.resources.find((item) => item.name === 'orders')?.runParameterError).toBe(
+      'invalid_declaration'
+    );
+    expect(
+      manifest.resources.find((item) => item.name === 'customers')?.runParameterError
+    ).toBeUndefined();
+  });
   it('projects supported resources and reports unsupported graph resources', () => {
     const projection = projectDbtManifest({
       metadata: {
@@ -19,6 +40,15 @@ describe('projectDbtManifest', () => {
           original_file_path: 'models\\orders.sql',
           patch_path: 'analytics://models/schema.yml',
           description: 'Curated customer orders',
+          config: {
+            meta: {
+              dvt: {
+                run_parameters: [
+                  { name: 'minimum_amount', type: 'integer', enabledBy: 'apply_minimum' },
+                ],
+              },
+            },
+          },
           depends_on: {
             nodes: ['source.analytics.raw.orders'],
             macros: ['macro.analytics.normalize_order'],
@@ -93,6 +123,7 @@ describe('projectDbtManifest', () => {
           originalFilePath: 'models/orders.sql',
           descriptionFilePath: 'models/schema.yml',
           description: 'Curated customer orders',
+          runParameters: [{ name: 'minimum_amount', type: 'integer', enabledBy: 'apply_minimum' }],
         }),
         expect.objectContaining({
           uniqueId: 'source.analytics.raw.orders',

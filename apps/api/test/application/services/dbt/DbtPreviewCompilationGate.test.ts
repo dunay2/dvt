@@ -99,6 +99,45 @@ describe('DbtPreviewCompilationGate', () => {
     });
   });
 
+  it('binds the exact admitted variables to the scoped native compile operation', async () => {
+    const { gate, analyze, analysis } = setup();
+    const dbtVariablesJson = '{"minimum_amount":0,"use_minimum":true}';
+    await expect(
+      gate.execute({ ...input, dbtVariablesJson, expectedDependencies: analysis.dependencies })
+    ).resolves.toEqual({ ok: true });
+    expect(analyze).toHaveBeenCalledExactlyOnceWith({
+      scope,
+      projectRoot: 'analytics',
+      operation: {
+        kind: 'compile',
+        selectors: ['path:models/orders.sql'],
+        targetName: 'production',
+        dbtVariablesJson,
+      },
+    });
+  });
+
+  it.each(['dependency', 'materialization'] as const)(
+    'refuses variables which change the authorized %s during native compilation',
+    async (change) => {
+      const { gate, analyze, analysis } = setup();
+      analyze.mockResolvedValue({
+        ...analysis,
+        ...(change === 'dependency'
+          ? { dependencies: [] }
+          : { resources: [{ ...analysis.resources[0]!, materialized: 'incremental' }] }),
+      });
+      expect(
+        await gate.execute({
+          ...input,
+          resources: [model],
+          dbtVariablesJson: '{"use_minimum":true}',
+          expectedDependencies: analysis.dependencies,
+        })
+      ).toMatchObject({ ok: false });
+    }
+  );
+
   // An old manifest or another target must never authorize materialization.
   it.each([
     ['invalid', { status: 'invalid' as const }],

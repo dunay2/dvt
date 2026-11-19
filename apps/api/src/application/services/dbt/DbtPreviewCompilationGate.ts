@@ -7,7 +7,10 @@
  */
 import type { DbtProjectGraphProjection } from '@dvt/contracts';
 
-import type { IDbtProjectAnalyzerPort } from '../../ports/dbtProjectAnalysis.js';
+import type {
+  DbtProjectAnalysisDependency,
+  IDbtProjectAnalyzerPort,
+} from '../../ports/dbtProjectAnalysis.js';
 import type { WorkspaceStorageScope } from '../../ports/workspaceFiles.js';
 
 type CompilationInput = Readonly<{
@@ -19,9 +22,13 @@ type CompilationInput = Readonly<{
   targetName: string;
   resources: readonly Pick<
     DbtProjectGraphProjection['nodes'][number],
-    'uniqueId' | 'resourceType' | 'originalFilePath'
+    'uniqueId' | 'resourceType' | 'originalFilePath' | 'materialized'
   >[];
-}>;
+}> &
+  (
+    | { dbtVariablesJson: string; expectedDependencies: readonly DbtProjectAnalysisDependency[] }
+    | { dbtVariablesJson?: never; expectedDependencies?: never }
+  );
 
 type CompilationResult = Readonly<{ ok: true }> | Readonly<{ ok: false; reason: string }>;
 
@@ -41,6 +48,9 @@ export class DbtPreviewCompilationGate {
           kind: 'compile',
           selectors: [...new Set(selectors.map((path) => `path:${path}`))].sort(),
           targetName: input.targetName,
+          ...(input.dbtVariablesJson === undefined
+            ? {}
+            : { dbtVariablesJson: input.dbtVariablesJson }),
         },
       });
       if (
@@ -67,6 +77,26 @@ export class DbtPreviewCompilationGate {
           reason: 'Native dbt compilation produced no SQL for a selected resource.',
         };
       }
+      if (input.dbtVariablesJson !== undefined) {
+        const selected = new Set(input.resources.map(({ uniqueId }) => uniqueId));
+        const resourceChanged = input.resources.some((resource) => {
+          const result = compiled.get(resource.uniqueId)!;
+          return (
+            result.originalFilePath !== resource.originalFilePath ||
+            result.materialized !== resource.materialized
+          );
+        });
+        if (
+          resourceChanged ||
+          !sameSelectedDependencies(selected, analysis.dependencies, input.expectedDependencies)
+        ) {
+          return {
+            ok: false,
+            reason:
+              'The compiled dbt variables changed the selected model structure or dependencies. Review the model before running.',
+          };
+        }
+      }
       return { ok: true };
     } catch {
       return {
@@ -75,4 +105,20 @@ export class DbtPreviewCompilationGate {
       };
     }
   }
+}
+
+function sameSelectedDependencies(
+  selected: ReadonlySet<string>,
+  actual: readonly DbtProjectAnalysisDependency[],
+  expected: readonly DbtProjectAnalysisDependency[]
+): boolean {
+  const incoming = (edges: readonly DbtProjectAnalysisDependency[]): string[] =>
+    edges
+      .filter((edge) => selected.has(edge.targetUniqueId))
+      .map(({ sourceUniqueId, targetUniqueId, relation }) =>
+        JSON.stringify([sourceUniqueId, targetUniqueId, relation])
+      );
+  const authorized = new Set(incoming(expected));
+  const compiled = new Set(incoming(actual));
+  return compiled.size === authorized.size && [...compiled].every((edge) => authorized.has(edge));
 }

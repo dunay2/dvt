@@ -127,6 +127,17 @@ export async function analyzeDbtSnapshot(
       ...(operation.kind === 'compile' && operation.targetName !== undefined
         ? ['--target', operation.targetName]
         : []),
+      ...(operation.kind === 'compile' && operation.dbtVariablesJson !== undefined
+        ? [
+            '--log-level',
+            'none',
+            '--log-level-file',
+            'none',
+            '--no-print',
+            '--vars',
+            operation.dbtVariablesJson,
+          ]
+        : []),
     ],
     cwd: snapshotDirectory,
     env: buildSanitizedProcessEnvironment(environment, analysisRoot),

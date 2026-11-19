@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 import type { DbtProjectGraphProjection } from '@dvt/contracts';
-import { useSyncExternalStore } from 'react';
+import { useRef, useSyncExternalStore } from 'react';
 
 import type { FileContent } from '../../ports/workspace';
 import { useSessionContext } from '../../services/AppServicesContext';
@@ -15,6 +15,8 @@ import { useAuthorizationStore } from '../../stores/authorizationStore';
 import { resolveCodeSelectedModel } from './codeInlineReferences';
 import { CodeModelCommandBar } from './CodeModelCommandBar';
 import { useCodeModelExecution } from './useCodeModelExecution';
+import { CodeRunParametersDialog } from './CodeRunParametersDialog';
+import { resolveCodeModelCommandCopy } from './codeViewCopy';
 
 export function CodeModelCommands({
   file,
@@ -70,14 +72,37 @@ function CodeModelCommandSession(
 ) {
   const execution = useCodeModelExecution(props);
   const language = useApplicationLanguageStore((state) => state.language);
+  const compileButton = useRef<HTMLButtonElement>(null);
+  const executeButton = useRef<HTMLButtonElement>(null);
   const modelName =
     props.project.nodes.find((node) => node.uniqueId === props.modelId)?.name ?? props.modelId;
   return (
-    <CodeModelCommandBar
-      {...execution}
-      language={language}
-      modelName={modelName}
-      synchronized={props.synchronized}
-    />
+    <>
+      <CodeModelCommandBar
+        {...execution}
+        compileRef={compileButton}
+        executeRef={executeButton}
+        language={language}
+        modelName={modelName}
+        synchronized={props.synchronized}
+      />
+      {execution.dialog && execution.parameters && (
+        <CodeRunParametersDialog
+          command={execution.dialog}
+          definitions={execution.parameters}
+          modelName={modelName}
+          environmentId={execution.environmentId}
+          copy={resolveCodeModelCommandCopy(language)}
+          overrides={execution.overrides}
+          busy={execution.phase !== 'idle'}
+          onCancel={execution.cancel}
+          onEdit={execution.invalidate}
+          onConfirm={execution.confirm}
+          returnFocus={() =>
+            (execution.dialog === 'compile' ? compileButton : executeButton).current?.focus()
+          }
+        />
+      )}
+    </>
   );
 }

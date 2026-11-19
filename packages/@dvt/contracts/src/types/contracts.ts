@@ -212,6 +212,7 @@ export type PluginContextValue = PluginContextScalar | DbtProjectBundleRef | Con
 export type GenericPluginContext = Record<string, PluginContextValue>;
 
 export interface DbtPluginContext {
+  dbtVariablesJson?: string | undefined;
   projectBundleRef: DbtProjectBundleRef;
   targetProfile?: NonBlankString | undefined;
   credentialRef: NonBlankString;

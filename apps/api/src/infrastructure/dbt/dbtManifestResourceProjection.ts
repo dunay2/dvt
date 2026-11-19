@@ -3,6 +3,8 @@
  * @decision Preserve compiled_code for every existing executable resource kind.
  * @consequence Parse-only, blank or absent SQL is never synthesized into compilation evidence.
  */
+import { RunParameterDefinitionsSchema } from '@dvt/contracts';
+
 import type { DbtProjectAnalysisResource } from '../../application/ports/dbtProjectAnalysis.js';
 
 import {
@@ -49,6 +51,10 @@ export function projectResource(
   }
 
   const projectedType = resourceType as DbtProjectAnalysisResource['resourceType'];
+  const meta = record(record(resource.config).meta);
+  const declaration = projectedType === 'model' ? record(meta.dvt).run_parameters : undefined;
+  const parameters =
+    declaration === undefined ? undefined : RunParameterDefinitionsSchema.safeParse(declaration);
   const originalFilePath = stringValue(resource.original_file_path);
   const normalizedOriginalFilePath =
     originalFilePath === undefined ? undefined : normalizeManifestPath(originalFilePath);
@@ -98,6 +104,8 @@ export function projectResource(
   return {
     uniqueId,
     resourceType: projectedType,
+    ...(parameters?.success === true ? { runParameters: parameters.data } : {}),
+    ...(parameters?.success === false ? { runParameterError: 'invalid_declaration' as const } : {}),
     name,
     ...(identifier === undefined ? {} : { identifier }),
     packageName,

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { RunParameterOverridesSchema } from '../contracts/dbt-project/RunParameters.v1.js';
 import { ExecutionSelectionSchema } from '../contracts/planner/ExecutionSelection.v1.js';
 import {
   DvtProtectedWorkspaceGraphProvenanceSchema,
@@ -31,8 +32,17 @@ const ExternalGraphPreviewRequestSchema = z
     ...CommonPreviewRequestShape,
     graphSource: GenericGraphSourceV1Schema,
     provenance: NonDvtPlanPreviewProvenanceSchema.optional(),
+    parameterOverrides: RunParameterOverridesSchema.optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (request) =>
+      request.parameterOverrides === undefined || request.provenance?.kind === 'dbt-project-files',
+    {
+      path: ['parameterOverrides'],
+      message: 'Run parameter overrides require dbt file authority.',
+    }
+  );
 
 export const PlanPreviewRequestSchema = z.union([
   ProtectedDvtPreviewRequestSchema,

@@ -80,6 +80,9 @@ export class DbtRunExecutionContextPreparer implements IRunExecutionContextPrepa
         projectBundleRef: bundle.projectBundleRef,
         targetProfile: source.targetProfile,
         credentialRef: source.credentialRef,
+        ...(source.dbtVariablesJson === undefined
+          ? {}
+          : { dbtVariablesJson: source.dbtVariablesJson }),
       },
     };
   }

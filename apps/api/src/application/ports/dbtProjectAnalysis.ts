@@ -22,7 +22,12 @@ export type AnalyzeDbtProjectInput = Readonly<{
   projectRoot: string;
   operation?:
     | Readonly<{ kind: 'parse' }>
-    | Readonly<{ kind: 'compile'; selectors: readonly string[]; targetName?: string }>;
+    | Readonly<{
+        kind: 'compile';
+        selectors: readonly string[];
+        targetName?: string;
+        dbtVariablesJson?: string;
+      }>;
 }>;
 
 export type DbtProjectAnalysisResource = Omit<

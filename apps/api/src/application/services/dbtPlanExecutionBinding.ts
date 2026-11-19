@@ -7,11 +7,13 @@ import {
   RUN_REJECTIONS,
   type RunExecutionRejection,
   PLAN_PREVIEW_PROVENANCE_KIND,
-  PlanPreviewProvenanceSchema,
+  StoredPlanPreviewProvenanceSchema,
   type DbtExecutionTargetIdentity,
   type ExecutionPlan,
   type StartRunCommand,
 } from '@dvt/contracts';
+
+import { readDbtInvocationVariables } from './dbt/dbtRunParameterBinding.js';
 
 export type DbtPlanExecutionBinding =
   | Readonly<{
@@ -21,6 +23,7 @@ export type DbtPlanExecutionBinding =
       targetProfile: string;
       connectionRef: DbtExecutionTargetIdentity['connectionRef'];
       credentialRef: string;
+      dbtVariablesJson?: string;
     }>
   | (Readonly<{ ok: false }> & RunExecutionRejection);
 
@@ -44,6 +47,9 @@ export function resolveDbtPlanExecutionBinding(input: {
 
   const rawProvenance = input.plan.observability?.extra?.['planPreviewProvenance'];
   if (rawProvenance === undefined) {
+    if (!readDbtInvocationVariables(input.plan).ok) {
+      return { ok: false, ...RUN_REJECTIONS.dbtProvenanceInvalid };
+    }
     return {
       ok: true,
       projectRoot: '.',
@@ -53,7 +59,7 @@ export function resolveDbtPlanExecutionBinding(input: {
     };
   }
 
-  const parsedProvenance = PlanPreviewProvenanceSchema.safeParse(rawProvenance);
+  const parsedProvenance = StoredPlanPreviewProvenanceSchema.safeParse(rawProvenance);
   if (!parsedProvenance.success) {
     return { ok: false, ...RUN_REJECTIONS.dbtProvenanceInvalid };
   }
@@ -70,6 +76,9 @@ export function resolveDbtPlanExecutionBinding(input: {
     };
   }
 
+  const { dbtVariablesJson, ...projectProvenance } = parsedProvenance.data;
+  const variables = readDbtInvocationVariables(input.plan, projectProvenance, dbtVariablesJson);
+  if (!variables.ok) return { ok: false, ...RUN_REJECTIONS.dbtProvenanceInvalid };
   return {
     ok: true,
     projectRoot: parsedProvenance.data.projectRoot,
@@ -77,6 +86,9 @@ export function resolveDbtPlanExecutionBinding(input: {
     targetProfile: input.executionTarget.targetName,
     connectionRef: input.executionTarget.connectionRef,
     credentialRef: input.executionTarget.credentialRef,
+    ...(variables.dbtVariablesJson === undefined
+      ? {}
+      : { dbtVariablesJson: variables.dbtVariablesJson }),
   };
 }
 

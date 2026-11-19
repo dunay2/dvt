@@ -10,6 +10,7 @@ import type {
   ExecutionSelection,
   GenericGraphSourceV1,
   PlanPreviewProvenance,
+  RunParameterOverride,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
@@ -37,6 +38,7 @@ type PreviewSelectionResolution =
         readonly nodeIds: readonly string[];
         readonly decisionScopeNodeIds: readonly string[];
         readonly requestedRootNodeIds: readonly string[];
+        readonly dbtVariablesJson?: string;
       };
     }
   | PreviewSelectionRejection;
@@ -45,6 +47,7 @@ type PreviewSelectionInput = {
   readonly selection: ExecutionSelection;
   readonly graphSource?: GenericGraphSourceV1;
   readonly provenance?: PlanPreviewProvenance;
+  readonly parameterOverrides?: readonly RunParameterOverride[];
 };
 
 type ExternalPreviewSelectionInput = PreviewSelectionInput & {
@@ -68,6 +71,12 @@ export class ResolveAuthorizedPreviewSelectionService {
     input: PreviewSelectionInput,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewSelectionResolution> {
+    if (input.parameterOverrides !== undefined && input.provenance?.kind !== 'dbt-project-files') {
+      return reject(
+        'dbt_project_parameters_invalid',
+        'Run parameters require a file-authoritative dbt selection.'
+      );
+    }
     if (input.provenance?.kind === 'dvt-protected-workspace-graph') {
       const resolver = this.deps.dvtPreviewSelectionResolver;
       if (resolver === undefined) {

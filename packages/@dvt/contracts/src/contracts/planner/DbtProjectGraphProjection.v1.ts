@@ -15,6 +15,7 @@ import {
   SHA256_HEX_STRING_MESSAGE,
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
+import { RunParameterDefinitionsSchema } from '../dbt-project/RunParameters.v1.js';
 
 import { CanvasAuthoringAuthorityBindingSchema } from './CanvasAuthoringAuthorityBinding.v1.js';
 import { DbtExecutionTargetIdentitySchema } from './PlanPreviewProvenance.v1.js';
@@ -112,6 +113,8 @@ const DbtProjectedNodeSchema = z
     sourceIdentity: DbtProjectedSourceIdentitySchema.optional(),
     description: z.string().optional(),
     materialized: NonBlankStringSchema.optional(),
+    runParameters: RunParameterDefinitionsSchema.optional(),
+    runParameterError: z.literal('invalid_declaration').optional(),
     columns: z.array(DbtProjectedColumnSchema),
     tags: UniqueNonBlankStringArraySchema,
     testMetadata: DbtProjectedTestMetadataSchema.optional(),

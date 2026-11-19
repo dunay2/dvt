@@ -94,6 +94,39 @@ const PLAN_RECORD = {
 };
 
 describe('PlannerBackedStartRunUseCase', () => {
+  it('rejects a caller-supplied native parameter receipt before persistence', async () => {
+    const storePlanArtifact = vi.fn();
+    const execute = vi.fn();
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: new PlannerFacade(),
+      planStore: {
+        storePlanArtifact,
+        markStoredPlanArtifactInvalid: vi.fn(),
+        markStoredPlanArtifactValid: vi.fn(),
+        getPlanRecordByRef: vi.fn(),
+        getStoredPlanValidationRecord: vi.fn(),
+      },
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
+      validator: { materializeAndValidatePlan: vi.fn() },
+      delegate: { execute, executeAdmitted: vi.fn() },
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
+    });
+    const result = await useCase.execute(
+      {
+        ...PLANNER_COMMAND,
+        observability: {
+          extra: { planPreviewProvenance: { dbtVariablesJson: '{"use_minimum":false}' } },
+        },
+      },
+      AUTHORIZED_CONTEXT
+    );
+    expect(result).toMatchObject({
+      ok: true,
+      value: { kind: 'plan_rejected', accepted: false, cause: 'dbt_project_parameters_invalid' },
+    });
+    expect(storePlanArtifact).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+  });
   it('keeps policy-first precedence through planner-backed flow', async () => {
     let capturedBuildResult: PlannerBuildResultV1 | undefined;
     const planStore = {

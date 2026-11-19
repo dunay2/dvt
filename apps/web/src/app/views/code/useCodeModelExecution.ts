@@ -1,47 +1,38 @@
 /**
- * Owned concern: compile and materialize one accepted Code model through existing execution rails.
- * @baseline ADR-0060: file authority and revision own dbt execution semantics.
- * @decision Keep the accepted plan local to a keyed file/session lifetime; reuse Canvas admission.
- * @consequence An unrelated Canvas preview or a late response cannot enable this file's Run.
- * @version 1.0.0
+ * Owned concern: sequence a Code user's command against one current file and one accepted plan.
+ * @decision Run with parameters uses the returned compilation receipt in the same gesture.
+ * @consequence Cancelled dialogs, changed files and subsequent sessions cannot submit a late plan.
  */
-import type { DbtProjectGraphProjection } from '@dvt/contracts';
-import { useEffect, useMemo, useRef, useState } from 'react';
-
+import type { DbtProjectGraphProjection, RunParameterOverride } from '@dvt/contracts';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { FileContent } from '../../ports/workspace';
 import {
-  useGraphDbtModelCompilationQueryPort,
-  useGraphDbtWorkspaceArtifactPublicationCommandPort,
   usePlansService,
   useRunsService,
   useSessionContext,
   useShellFeedback,
   useWorkspaceFilesQueryPort,
 } from '../../services/AppServicesContext';
+import { getApplicationLanguage } from '../../stores/applicationLanguageStore';
 import { useAuthorizationStore } from '../../stores/authorizationStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
-import type { PlanViewModel } from '../../types/plans';
-import type { FileContent } from '../../ports/workspace';
+import type { CanvasPreviewAttempt } from '../canvas/canvasExecutionActions.types';
+import {
+  presentCanvasRunStartFailure,
+  presentPlanRunReadiness,
+} from '../canvas/canvasReadinessPresentation';
 import { resolveCanvasRunAdmission } from '../canvas/canvasRuntimePolicy';
-import { buildDbtProjectFileExecutionStrategy } from '../canvas/dbtProjectFileExecutionStrategy';
-import { projectDbtProjectGraphToCanonicalCanvas } from '../canvas/dbtProjectFileProjection';
-import { useCanvasExecutionActions } from '../canvas/useCanvasExecutionActions';
-import { isCurrentCodeModelRevision } from './codeModelRevision';
-import { getApplicationLanguage } from '../../stores/applicationLanguageStore';
-import { resolveCodeViewCopy } from './codeViewCopy';
-import { resolveCodeWorkbenchErrorPresentation } from './codeWorkbenchErrorModel';
-import { WorkspaceFileRevisionConflictError } from '../../services/workspace/workspaceErrors';
+import { executeCanvasRunStartAction } from '../canvas/canvasRunStartAction';
+import { canvasViewCopy } from '../canvas/copy';
+import {
+  compileCodeFilePlan,
+  observeCodeFilePlan,
+  prepareCodeFileModel,
+  verifyCodeFilePlanRevision,
+} from './codeFileModelPlan';
+import { resolveCodeModelCommandCopy } from './codeViewCopy';
 
-function rejectFileVerification(error: unknown): never {
-  throw new Error(
-    resolveCodeWorkbenchErrorPresentation({
-      scope: 'file-preview',
-      error,
-      copy: resolveCodeViewCopy(getApplicationLanguage()),
-    }).message
-  );
-}
-
+type Command = 'compile' | 'execute';
 export function useCodeModelExecution({
   file,
   project,
@@ -53,141 +44,160 @@ export function useCodeModelExecution({
   modelId: string;
   synchronized: boolean;
 }>) {
-  const [plan, setPlan] = useState<PlanViewModel | null>(null);
+  const model = useMemo(() => prepareCodeFileModel(project, modelId), [project, modelId]);
+  const [accepted, setAccepted] = useState<CanvasPreviewAttempt | null>(null);
   const [phase, setPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
   const [runId, setRunId] = useState<string>();
+  const [dialog, setDialog] = useState<Command | null>(null);
+  const [overrides, setOverrides] = useState<RunParameterOverride[]>([]);
+  const generation = useRef(0);
   const busy = useRef(false);
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  useLayoutEffect(
+    () => () => {
+      generation.current++;
+    },
+    []
+  );
   const permissions = useAuthorizationStore((state) => state.userPermissions);
   const sessionContext = useSessionContext();
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const plansService = usePlansService();
-  const shellFeedback = useShellFeedback();
-  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
-  const expectedScope = sessionContext.getWorkspaceScopeSnapshot();
-  async function verifyCurrentFile() {
-    const current = await workspaceFilesQuery.getFileContent(file.path);
-    const scope = sessionContext.getWorkspaceScopeSnapshot();
-    if (
-      !mounted.current ||
-      !isCurrentCodeModelRevision(
-        { file, scope: expectedScope, authorityBinding: project.authorityBinding },
-        { file: current, scope }
-      )
-    ) {
-      throw new WorkspaceFileRevisionConflictError(file.path);
-    }
-  }
-  const strategy = useMemo(() => buildDbtProjectFileExecutionStrategy(project), [project]);
-  const graph = useMemo(() => projectDbtProjectGraphToCanonicalCanvas(project), [project]);
-  const selection = useMemo(
-    () => createCanvasExecutionSelectionIntent([modelId], 'explicit'),
-    [modelId]
-  );
-  const workspaceNodeIds = useMemo(() => graph.nodes.map((node) => node.id), [graph]);
-  const actions = useCanvasExecutionActions({
-    graphDraftCanvasId: null,
-    plansService: {
-      ...plansService,
-      previewPlan: async (input) => {
-        await verifyCurrentFile().catch(rejectFileVerification);
-        const result = await plansService.previewPlan(input);
-        await verifyCurrentFile().catch(rejectFileVerification);
-        return result;
-      },
-    },
-    runsService: useRunsService(),
-    workspaceFilesQuery,
-    graphDbtWorkspaceArtifactPublicationCommand:
-      useGraphDbtWorkspaceArtifactPublicationCommandPort(),
-    graphDbtModelCompilationQuery: useGraphDbtModelCompilationQueryPort(),
-    shellFeedback: {
-      success: (message) => {
-        if (mounted.current) shellFeedback.success(message);
-      },
-      error: (message) => {
-        if (mounted.current) shellFeedback.error(message);
-      },
-    },
-    executionStrategy: strategy,
-    canonicalNodes: graph.nodes,
-    canonicalEdges: graph.edges,
-    selectionIntent: selection,
-    workspaceNodeIds,
-    canPlan: synchronized && permissions.canPlan,
-    runAdmission: resolveCanvasRunAdmission({
-      permissionGranted: permissions.canRun,
+  const runsService = useRunsService();
+  const feedback = useShellFeedback();
+  const scope = sessionContext.getWorkspaceScopeSnapshot();
+  const runAdmission = () =>
+    resolveCanvasRunAdmission({
+      permissionGranted: useAuthorizationStore.getState().userPermissions.canRun,
       executionAvailable: project.capabilities.canRun,
       draftBarrier: synchronized ? null : 'saving',
-    }),
-    sessionContext,
-    currentPlan: plan,
-    setCurrentPlan: (value) => {
-      if (mounted.current) setPlan(value);
-    },
-    showBottomDrawer: () => {
-      if (mounted.current) showBottomDrawer();
-    },
-    onRunStarted: (id) => {
-      if (mounted.current) setRunId(id);
-    },
-  });
+    });
+  const readiness = observeCodeFilePlan(model, runAdmission(), accepted);
   const canCompile =
-    synchronized && permissions.canPlan && actions.canPlanGraph && phase === 'idle';
-  const canExecute = synchronized && actions.canStartRun && phase === 'idle';
+    synchronized &&
+    permissions.canPlan &&
+    model.graph.canPlanGraph &&
+    model.parameters !== null &&
+    phase === 'idle';
+  const parameterized = Boolean(model.parameters?.length);
+  const canExecute = parameterized
+    ? canCompile && runAdmission().allowed
+    : synchronized && phase === 'idle' && readiness.status === 'ready';
 
-  async function compile() {
-    if (!canCompile || busy.current) return;
+  async function submit(command: Command, values: RunParameterOverride[]) {
+    if (busy.current || !(command === 'execute' ? canExecute : canCompile)) return;
     busy.current = true;
-    setPlan(null);
-    setPhase('compiling');
+    const token = ++generation.current;
+    const current = () => token === generation.current;
+    const verify = () =>
+      verifyCodeFilePlanRevision({
+        file,
+        scope,
+        authorityBinding: project.authorityBinding,
+        workspaceFilesQuery,
+        sessionContext,
+        isCurrent: current,
+      });
     try {
-      await actions.handlePreviewExecutionPlan();
-    } finally {
-      busy.current = false;
-      if (mounted.current) setPhase('idle');
-    }
-  }
-
-  async function execute() {
-    if (!canExecute || busy.current) return;
-    busy.current = true;
-    setPhase('running');
-    try {
-      await verifyCurrentFile();
-      await actions.handleStartRun();
+      let attempt = accepted;
+      if (command === 'compile' || parameterized) {
+        if (parameterized) setRunId(undefined);
+        setAccepted(null);
+        setPhase('compiling');
+        const result = await compileCodeFilePlan({
+          model,
+          sessionContext,
+          plansService,
+          canPlan: canCompile,
+          overrides: values,
+          verify,
+        });
+        if (!current()) return;
+        if (!result.ok) {
+          feedback.error(result.message);
+          return;
+        }
+        attempt = { draftSignature: result.draftSignature, outcome: result.previewOutcome };
+        setAccepted(attempt);
+        const observed = observeCodeFilePlan(model, runAdmission(), attempt);
+        if (attempt.outcome.kind !== 'accepted') {
+          feedback.error(presentPlanRunReadiness(observed).summary);
+          return;
+        }
+        if (command === 'compile') {
+          feedback.success(canvasViewCopy.planCreatedMessage);
+          setDialog(null);
+          return;
+        }
+      }
+      // Parameterized Preview already re-read the file after receiving this exact plan.
+      if (!parameterized) await verify();
+      if (!current()) return;
+      setPhase('running');
+      setDialog(null);
+      const result = await executeCanvasRunStartAction({
+        observeReadiness: () => observeCodeFilePlan(model, runAdmission(), attempt),
+        runsService,
+        sessionContext,
+      });
+      if (!current()) return;
+      if (!result.ok) {
+        feedback.error(presentCanvasRunStartFailure(result.failure).message);
+        return;
+      }
+      useUiLayoutStore.getState().showBottomDrawer();
+      feedback.success(canvasViewCopy.runStartedMessage);
+      setRunId(result.runId);
     } catch (error) {
-      if (mounted.current) {
-        setPlan(null);
-        shellFeedback.error(
-          resolveCodeWorkbenchErrorPresentation({
-            scope: 'file-preview',
-            error,
-            copy: resolveCodeViewCopy(getApplicationLanguage()),
-          }).message
-        );
+      if (current()) {
+        setAccepted(null);
+        feedback.error(error instanceof Error ? error.message : canvasViewCopy.runFailedMessage);
       }
     } finally {
-      busy.current = false;
-      if (mounted.current) setPhase('idle');
+      if (current()) {
+        busy.current = false;
+        setPhase('idle');
+      }
     }
   }
-
+  function cancel() {
+    generation.current++;
+    busy.current = false;
+    setPhase('idle');
+    setDialog(null);
+  }
+  async function request(command: Command) {
+    if (busy.current || !(command === 'execute' ? canExecute : canCompile)) return;
+    if (parameterized) setDialog(command);
+    else await submit(command, []);
+  }
   return {
-    compile,
-    execute,
+    compile: () => request('compile'),
+    execute: () => request('execute'),
     canCompile,
     canExecute,
     phase,
     runId,
-    compiled: actions.canStartRun,
-    unavailable: !permissions.canPlan || !permissions.canRun || !actions.canPlanGraph,
-    blockedReason: actions.planRunReadiness.summary,
+    compiled: readiness.status === 'ready',
+    parameterized,
+    unavailable:
+      !permissions.canPlan ||
+      !permissions.canRun ||
+      !model.graph.canPlanGraph ||
+      model.parameters === null,
+    blockedReason:
+      model.parameters === null
+        ? resolveCodeModelCommandCopy(getApplicationLanguage()).conflict
+        : presentPlanRunReadiness(readiness).summary,
+    parameters: model.parameters,
+    environmentId: scope.environmentId,
+    overrides,
+    dialog,
+    cancel,
+    invalidate: () => setAccepted(null),
+    confirm: async (values: RunParameterOverride[]) => {
+      if (!dialog || busy.current) return;
+      setOverrides(values);
+      await submit(dialog, values);
+    },
   };
 }

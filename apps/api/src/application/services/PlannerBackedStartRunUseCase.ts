@@ -25,6 +25,7 @@ import type {
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
+import { hasSubmittedDbtInvocation } from './dbt/dbtRunParameterBinding.js';
 import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 import type { ExecutableSubgraphSelectionRejection } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
@@ -118,6 +119,13 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     const compileStartMs = Date.now();
     let compileOutcome: PlanCompileLatencyOutcome = 'error';
     try {
+      if (hasSubmittedDbtInvocation(command)) {
+        return toPlanRejectedResult({
+          code: 'REJECTED',
+          cause: 'dbt_project_parameters_invalid',
+          reason: 'Parameterized execution requires an accepted file Preview plan reference.',
+        });
+      }
       const executableSubgraph = await this.deps.executableSubgraphResolver.execute(
         toExecutableSubgraphRequest(command),
         context

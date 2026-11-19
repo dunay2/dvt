@@ -120,7 +120,7 @@ export class ProjectDbtGraphFromFilesUseCase {
                   connectionLookups
                 )
               : undefined;
-          const projectedResource = projectAnalysisResource(resource);
+          const projectedResource = projectAnalysisResource(resource, input.scope.environmentId);
           return {
             ...projectedResource,
             ...(sourceIdentity === undefined ? {} : { sourceIdentity }),
@@ -178,7 +178,7 @@ export class ProjectDbtGraphFromFilesUseCase {
   }
 }
 
-function projectAnalysisResource(resource: DbtProjectAnalysisResource) {
+function projectAnalysisResource(resource: DbtProjectAnalysisResource, environmentId: string) {
   return {
     uniqueId: resource.uniqueId,
     resourceType: resource.resourceType,
@@ -196,6 +196,17 @@ function projectAnalysisResource(resource: DbtProjectAnalysisResource) {
     ...(resource.materialized === undefined ? {} : { materialized: resource.materialized }),
     columns: resource.columns,
     tags: resource.tags,
+    ...(resource.runParameters === undefined
+      ? {}
+      : {
+          runParameters: resource.runParameters.map(({ environmentDefaults, ...definition }) => ({
+            ...definition,
+            ...(environmentDefaults && Object.hasOwn(environmentDefaults, environmentId)
+              ? { environmentDefaults: { [environmentId]: environmentDefaults[environmentId]! } }
+              : {}),
+          })),
+        }),
+    ...(resource.runParameterError ? { runParameterError: resource.runParameterError } : {}),
     ...(resource.testMetadata === undefined ? {} : { testMetadata: resource.testMetadata }),
   };
 }

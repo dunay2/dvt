@@ -8,6 +8,7 @@ import type {
   DbtProjectGraphProjection,
   ExecutionSelection,
   GenericGraphSourceV1,
+  RunParameterOverride,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../../ports/authContract.js';
@@ -23,6 +24,7 @@ import {
   sameGraphSource,
   sameStringSet,
 } from './dbtPreviewSelectionPolicy.js';
+import { bindDbtInvocationGraph, resolveDbtCompileVariables } from './dbtRunParameterBinding.js';
 
 type DbtPreviewSelectionDependencies = Readonly<{
   projectGraph: Pick<ProjectDbtGraphFromFilesUseCase, 'execute'>;
@@ -32,6 +34,7 @@ type DbtPreviewSelectionDependencies = Readonly<{
 type DbtPreviewSelectionInput = Readonly<{
   selection: ExecutionSelection;
   graphSource: GenericGraphSourceV1;
+  parameterOverrides?: readonly RunParameterOverride[];
 }>;
 
 type DbtPreviewSelectionResolution =
@@ -42,6 +45,7 @@ type DbtPreviewSelectionResolution =
         readonly nodeIds: readonly string[];
         readonly requestedRootNodeIds: readonly string[];
         readonly decisionScopeNodeIds: readonly string[];
+        readonly dbtVariablesJson?: string;
       };
     }>
   | ReturnType<typeof reject>;
@@ -106,16 +110,41 @@ export async function resolveDbtProjectPreviewSelection(
     );
   }
 
+  const scope = { tenantId: context.scope.tenantId.value, projectId, environmentId };
+  const selectedIds = new Set(provenance.selectedUniqueIds);
+  const resources = projection.nodes.filter((node) => selectedIds.has(node.uniqueId));
+  const invalid = resources.find((node) => node.runParameterError === 'invalid_declaration');
+  if (invalid) {
+    return reject(
+      'dbt_project_parameters_invalid',
+      `Check config.meta.dvt.run_parameters for ${invalid.uniqueId} in ${invalid.originalFilePath ?? provenance.projectRoot}.`
+    );
+  }
+  let dbtVariablesJson: string | undefined;
+  try {
+    dbtVariablesJson = resolveDbtCompileVariables(
+      resources,
+      input.parameterOverrides ?? [],
+      environmentId
+    );
+  } catch {
+    return reject(
+      'dbt_project_parameters_invalid',
+      'The supplied values do not match the selected model parameter declarations.'
+    );
+  }
+
   const compilation = await deps.dbtCompilation.execute({
-    scope: { tenantId: context.scope.tenantId.value, projectId, environmentId },
+    scope,
     projectRoot: provenance.projectRoot,
     contentSetSha256: provenance.contentSetSha256,
     dbtVersion: provenance.dbtVersion,
     adapter: provenance.executionTarget.adapter,
     targetName: provenance.executionTarget.targetName,
-    resources: projection.nodes.filter((node) =>
-      provenance.selectedUniqueIds.includes(node.uniqueId)
-    ),
+    resources,
+    ...(dbtVariablesJson === undefined
+      ? {}
+      : { dbtVariablesJson, expectedDependencies: projection.edges }),
   });
   if (!compilation.ok) {
     return reject('dbt_project_compilation_required', compilation.reason);
@@ -139,7 +168,11 @@ export async function resolveDbtProjectPreviewSelection(
   return {
     ok: true,
     value: {
-      graphSource: canonicalGraph.value,
+      graphSource:
+        dbtVariablesJson === undefined
+          ? canonicalGraph.value
+          : bindDbtInvocationGraph(canonicalGraph.value, scope, provenance, dbtVariablesJson),
+      ...(dbtVariablesJson === undefined ? {} : { dbtVariablesJson }),
       nodeIds: [...provenance.selectedUniqueIds],
       requestedRootNodeIds: [...input.selection.nodeIds],
       decisionScopeNodeIds: projection.nodes

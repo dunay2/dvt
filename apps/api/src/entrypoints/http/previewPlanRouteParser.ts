@@ -100,6 +100,9 @@ function buildPreviewPlanCommand(
   return {
     ...common,
     graphSource: toPlanRouteGraphSource(request.graphSource),
+    ...(request.parameterOverrides === undefined
+      ? {}
+      : { parameterOverrides: request.parameterOverrides }),
     ...(request.provenance === undefined ? {} : { provenance: request.provenance }),
   };
 }

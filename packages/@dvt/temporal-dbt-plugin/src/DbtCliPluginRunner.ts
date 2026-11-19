@@ -146,7 +146,8 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
         input.step.kind,
         resolveDbtCommandSelector(input.step.stepId, input.step.stepTypeConfig),
         input.pluginContext.targetProfile,
-        profile.profilesDir
+        profile.profilesDir,
+        input.pluginContext.dbtVariablesJson
       );
       const commandEnvironment = this.resolveCommandEnvironment(input);
       await this.runCommand(this.dbtBin, args, {

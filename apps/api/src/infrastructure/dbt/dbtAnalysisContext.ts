@@ -143,6 +143,7 @@ export function dbtAnalysisReuseKey(input: {
     operation.kind,
     operation.kind === 'compile' ? [...new Set(operation.selectors)].sort() : null,
     operation.kind === 'compile' ? (operation.targetName ?? null) : null,
+    operation.kind === 'compile' ? (operation.dbtVariablesJson ?? null) : null,
   ]);
 }
 
