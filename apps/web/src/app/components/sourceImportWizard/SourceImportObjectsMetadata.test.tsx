@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -64,10 +65,12 @@ describe('SourceImportObjectsMetadata', () => {
         ?.getAttribute('data-state')
     ).toBe('closed');
 
-    const ordersTrigger = container.querySelector<HTMLButtonElement>(
-      `[data-source-import-object-metadata-trigger="${orders.objectId}"]`
-    );
-    await act(async () => ordersTrigger?.click());
+    const ordersTrigger = getByRole(container, 'button', {
+      name: 'ERP.ORDERS Relations 1,500 rows 3.9 MB 1 column',
+      expanded: false,
+    });
+    expect(ordersTrigger.getAttribute('aria-description')).toBe('RAW.ERP.ORDERS');
+    await act(async () => ordersTrigger.click());
 
     expect(
       container
@@ -83,7 +86,7 @@ describe('SourceImportObjectsMetadata', () => {
       container.querySelector('[data-source-import-constraint-marker="primary-key"]')
     ).not.toBeNull();
     expect(
-      ordersTrigger?.querySelector('[tabindex="0"], button, a, input, select, textarea')
+      ordersTrigger.querySelector('[tabindex="0"], button, a, input, select, textarea')
     ).toBeNull();
   });
 
@@ -121,6 +124,8 @@ describe('SourceImportObjectsMetadata', () => {
     expect(
       container.querySelector(`[data-source-import-object-metadata="${file.objectId}"]`)
     ).not.toBeNull();
+    const fileTrigger = getByRole(container, 'button', { name: /^orders\.parquet Files / });
+    expect(fileTrigger.getAttribute('aria-description')).toBe('/landing/orders.parquet');
     expect(container.querySelector('[data-source-import-metadata-column]')).not.toBeNull();
     expect(container.querySelector('[data-source-import-importability]')).not.toBeNull();
     expect(container.querySelector('[data-source-import-shared-catalog]')).toBeNull();

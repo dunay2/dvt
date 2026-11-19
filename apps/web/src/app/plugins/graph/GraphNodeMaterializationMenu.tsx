@@ -18,6 +18,9 @@ export function GraphNodeMaterializationMenu({
   control: GraphNodeMaterializationControl;
   icon: ReactNode;
 }>) {
+  const visibleValue =
+    control.options.find((option) => option.value === control.value)?.label ?? control.value;
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -25,7 +28,7 @@ export function GraphNodeMaterializationMenu({
           type="button"
           data-slot="graph-node-materialization"
           data-canvas-node-control="true"
-          aria-label={control.label}
+          aria-label={`${visibleValue} · ${control.label}`}
           disabled={control.disabled}
           className={styles.trigger}
           onPointerDown={(event) => event.stopPropagation()}
@@ -34,10 +37,7 @@ export function GraphNodeMaterializationMenu({
           onKeyDown={(event) => event.stopPropagation()}
         >
           {icon}
-          <span className={styles.value}>
-            {control.options.find((option) => option.value === control.value)?.label ??
-              control.value}
-          </span>
+          <span className={styles.value}>{visibleValue}</span>
           <ChevronDown aria-hidden="true" className={styles.chevron} />
         </button>
       </DropdownMenuTrigger>

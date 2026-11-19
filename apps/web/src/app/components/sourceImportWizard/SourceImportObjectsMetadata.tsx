@@ -27,12 +27,12 @@ export function SourceImportObjectsMetadata({
   scope,
 }: SourceImportObjectsMetadataProps): JSX.Element {
   const { copy, numberFormatter } = useSourceImportLocalization();
-  const viewModels = sourceObjects.map((sourceObject, index) => ({
-    sourceObject,
-    viewModel: buildSourceImportObjectViewModel(sourceObject, index, copy.catalog, numberFormatter),
-  }));
   const sharedCatalog =
     scope === 'selected' ? resolveSourceImportSharedCatalog(sourceObjects) : null;
+  const viewModels = sourceObjects.map((sourceObject, index) => ({
+    objectName: resolveSourceImportContextualName(sourceObject, sharedCatalog),
+    viewModel: buildSourceImportObjectViewModel(sourceObject, index, copy.catalog, numberFormatter),
+  }));
   const activeKey =
     viewModels.find(({ viewModel }) => viewModel.identityKey === activeSourceObjectKey)?.viewModel
       .identityKey ?? viewModels[0]?.viewModel.identityKey;
@@ -65,7 +65,7 @@ export function SourceImportObjectsMetadata({
           defaultValue={scope === 'selected' && activeKey ? [activeKey] : []}
           className={sourceImportSelectedMetadataClassNames.list}
         >
-          {viewModels.map(({ sourceObject, viewModel }) => (
+          {viewModels.map(({ objectName, viewModel }) => (
             <AccordionItem
               key={viewModel.identityKey}
               value={viewModel.identityKey}
@@ -74,13 +74,22 @@ export function SourceImportObjectsMetadata({
             >
               <AccordionTrigger
                 className={sourceImportSelectedMetadataClassNames.trigger}
-                aria-label={viewModel.inspectionAccessibilityLabel}
+                aria-label={[
+                  objectName,
+                  viewModel.kindLabel,
+                  viewModel.rowCountLabel,
+                  viewModel.byteSizeLabel,
+                  viewModel.columnCountLabel,
+                ].join(' ')}
+                aria-description={
+                  objectName === viewModel.canonicalName ? undefined : viewModel.canonicalName
+                }
                 data-source-import-object-metadata-trigger={viewModel.identityKey}
               >
                 <div className={sourceImportSelectedMetadataClassNames.triggerContent}>
                   <div className={sourceImportSelectedMetadataClassNames.identity}>
                     <span className={sourceImportSelectedMetadataClassNames.objectName}>
-                      {resolveSourceImportContextualName(sourceObject, sharedCatalog)}
+                      {objectName}
                     </span>
                     <Badge variant="outline">{viewModel.kindLabel}</Badge>
                   </div>

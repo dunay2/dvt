@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, within } from '@testing-library/dom';
 import { ReactFlowProvider } from '@xyflow/react';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -212,10 +212,10 @@ describe('GraphNodeCardView', () => {
               ],
             }}
             materializationControl={{
-              label: 'Materialization',
+              label: 'Materialización',
               value: 'view',
               options: [
-                { value: 'view', label: 'view' },
+                { value: 'view', label: 'Vista' },
                 { value: 'table', label: 'table' },
               ],
               onChange: change,
@@ -224,8 +224,7 @@ describe('GraphNodeCardView', () => {
         </div>
       )
     );
-    const trigger = container.querySelector('button[aria-label="Materialization"]')!;
-    expect(trigger).not.toBeNull();
+    const trigger = within(container).getByRole('button', { name: /^Vista.*Materialización$/ });
     expect(container.querySelector('select')).toBeNull();
     expect(trigger.querySelector('[data-icon="eye"]')).not.toBeNull();
     await act(async () => {
