@@ -878,7 +878,8 @@ describe('Canvas workbench screen composition', () => {
     cy.get('#shell-operational-problems')
       .should('have.attr', 'aria-label')
       .and('match', /^Problemas \([1-9]\d*\)$/u);
-    cy.get('#shell-operational-problems').focus().type('{enter}');
+    cy.get('#shell-operational-problems').focus().should('be.focused');
+    pressNativeKey('Enter');
     cy.get('[data-slot="shell-operational-workspace"][data-view="problems"]').should('be.visible');
     cy.get('[data-slot="bottom-operational-drawer"]').should('not.exist');
     cy.get('#shell-operational-log').click();
