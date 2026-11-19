@@ -355,9 +355,7 @@ describe('SourceImportCatalogView', () => {
 
     expect(container.textContent).toContain('No source objects');
     await act(async () => {
-      fireEvent.click(
-        getByRole(container, 'button', { name: 'Filter source catalog by All. 1 object.' })
-      );
+      fireEvent.click(getByRole(container, 'button', { name: 'All 1', pressed: false }));
     });
     expect(onSelectFilter).toHaveBeenCalledWith('all');
   });

@@ -102,7 +102,7 @@ export function SourceImportCatalogFilterList({
   onSelectFilter,
 }: SourceImportCatalogFilterListProps): JSX.Element {
   return (
-    <div className={sourceImportCatalogClassNames.filterList} aria-label={label}>
+    <div role="group" className={sourceImportCatalogClassNames.filterList} aria-label={label}>
       {filters.map((filter) => {
         const className = filter.active
           ? `${sourceImportCatalogClassNames.filterButton} ${sourceImportCatalogClassNames.activeFilterButton}`
@@ -112,14 +112,14 @@ export function SourceImportCatalogFilterList({
           <button
             key={filter.id}
             type="button"
-            aria-label={filter.accessibilityLabel}
+            aria-description={filter.accessibilityLabel}
             aria-pressed={filter.active}
             data-source-import-catalog-filter={filter.id}
             className={className}
             disabled={filter.disabled}
             onClick={() => onSelectFilter(filter.id)}
           >
-            {filter.label}
+            {filter.label}{' '}
             <span className={sourceImportCatalogClassNames.filterCount}>{filter.countLabel}</span>
           </button>
         );

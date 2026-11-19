@@ -1,4 +1,6 @@
 /** Owned concern: render selected source metadata without owning wizard flow state. */
+import { useId } from 'react';
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
@@ -27,12 +29,14 @@ export function SourceImportObjectsMetadata({
   scope,
 }: SourceImportObjectsMetadataProps): JSX.Element {
   const { copy, numberFormatter } = useSourceImportLocalization();
-  const viewModels = sourceObjects.map((sourceObject, index) => ({
-    sourceObject,
-    viewModel: buildSourceImportObjectViewModel(sourceObject, index, copy.catalog, numberFormatter),
-  }));
+  const summaryId = useId();
   const sharedCatalog =
     scope === 'selected' ? resolveSourceImportSharedCatalog(sourceObjects) : null;
+  const viewModels = sourceObjects.map((sourceObject, index) => ({
+    labelId: `${summaryId}-${index}`,
+    objectName: resolveSourceImportContextualName(sourceObject, sharedCatalog),
+    viewModel: buildSourceImportObjectViewModel(sourceObject, index, copy.catalog, numberFormatter),
+  }));
   const activeKey =
     viewModels.find(({ viewModel }) => viewModel.identityKey === activeSourceObjectKey)?.viewModel
       .identityKey ?? viewModels[0]?.viewModel.identityKey;
@@ -65,7 +69,7 @@ export function SourceImportObjectsMetadata({
           defaultValue={scope === 'selected' && activeKey ? [activeKey] : []}
           className={sourceImportSelectedMetadataClassNames.list}
         >
-          {viewModels.map(({ sourceObject, viewModel }) => (
+          {viewModels.map(({ labelId, objectName, viewModel }) => (
             <AccordionItem
               key={viewModel.identityKey}
               value={viewModel.identityKey}
@@ -74,30 +78,36 @@ export function SourceImportObjectsMetadata({
             >
               <AccordionTrigger
                 className={sourceImportSelectedMetadataClassNames.trigger}
-                aria-label={viewModel.inspectionAccessibilityLabel}
+                aria-labelledby={`${labelId}-identity ${labelId}-rows ${labelId}-size ${labelId}-columns`}
+                aria-description={
+                  objectName === viewModel.canonicalName ? undefined : viewModel.canonicalName
+                }
                 data-source-import-object-metadata-trigger={viewModel.identityKey}
               >
                 <div className={sourceImportSelectedMetadataClassNames.triggerContent}>
-                  <div className={sourceImportSelectedMetadataClassNames.identity}>
+                  <div
+                    className={sourceImportSelectedMetadataClassNames.identity}
+                    id={`${labelId}-identity`}
+                  >
                     <span className={sourceImportSelectedMetadataClassNames.objectName}>
-                      {resolveSourceImportContextualName(sourceObject, sharedCatalog)}
-                    </span>
+                      {objectName}
+                    </span>{' '}
                     <Badge variant="outline">{viewModel.kindLabel}</Badge>
-                  </div>
+                  </div>{' '}
                   <div className={sourceImportSelectedMetadataClassNames.metrics}>
                     <MetricEvidenceHotspot
                       detail={viewModel.rowCountDetail}
                       focusable={false}
                       tone={viewModel.rowCountTone}
-                      value={viewModel.rowCountLabel}
-                    />
+                      value={<span id={`${labelId}-rows`}>{viewModel.rowCountLabel}</span>}
+                    />{' '}
                     <MetricEvidenceHotspot
                       detail={viewModel.byteSizeDetail}
                       focusable={false}
                       tone={viewModel.byteSizeTone}
-                      value={viewModel.byteSizeLabel}
-                    />
-                    <span>{viewModel.columnCountLabel}</span>
+                      value={<span id={`${labelId}-size`}>{viewModel.byteSizeLabel}</span>}
+                    />{' '}
+                    <span id={`${labelId}-columns`}>{viewModel.columnCountLabel}</span>
                   </div>
                 </div>
               </AccordionTrigger>
