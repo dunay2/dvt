@@ -5,13 +5,15 @@
  * @consequence Parse results, missing SQL and stale compilations cannot enable Run.
  * @version 1.0.0
  */
-import type { DbtProjectGraphProjection } from '@dvt/contracts';
+import type { DbtProjectGraphProjection, DbtStepSelector } from '@dvt/contracts';
 
 import type {
   DbtProjectAnalysisDependency,
   IDbtProjectAnalyzerPort,
 } from '../../ports/dbtProjectAnalysis.js';
 import type { WorkspaceStorageScope } from '../../ports/workspaceFiles.js';
+
+import { compiledDbtStepSelectors } from './dbtCompiledStepSelectors.js';
 
 type CompilationInput = Readonly<{
   scope: WorkspaceStorageScope;
@@ -30,14 +32,16 @@ type CompilationInput = Readonly<{
     | { dbtVariablesJson?: never; expectedDependencies?: never }
   );
 
-type CompilationResult = Readonly<{ ok: true }> | Readonly<{ ok: false; reason: string }>;
+type CompilationResult =
+  | Readonly<{ ok: true; selectors: ReadonlyMap<string, DbtStepSelector> }>
+  | Readonly<{ ok: false; reason: string }>;
 
 export class DbtPreviewCompilationGate {
   public constructor(private readonly analyzer: IDbtProjectAnalyzerPort) {}
 
   public async execute(input: CompilationInput): Promise<CompilationResult> {
-    const selectors = input.resources.map((resource) => resource.originalFilePath);
-    if (selectors.length === 0 || selectors.some((path) => !path?.trim())) {
+    const paths = input.resources.map((resource) => resource.originalFilePath);
+    if (paths.length === 0 || paths.some((path) => !path?.trim())) {
       return { ok: false, reason: 'The selected dbt resources have no compilable file identity.' };
     }
     try {
@@ -46,7 +50,7 @@ export class DbtPreviewCompilationGate {
         projectRoot: input.projectRoot,
         operation: {
           kind: 'compile',
-          selectors: [...new Set(selectors.map((path) => `path:${path}`))].sort(),
+          selectors: [...new Set(paths.map((path) => `path:${path}`))].sort(),
           targetName: input.targetName,
           ...(input.dbtVariablesJson === undefined
             ? {}
@@ -77,8 +81,8 @@ export class DbtPreviewCompilationGate {
           reason: 'Native dbt compilation produced no SQL for a selected resource.',
         };
       }
+      const selected = new Set(input.resources.map(({ uniqueId }) => uniqueId));
       if (input.dbtVariablesJson !== undefined) {
-        const selected = new Set(input.resources.map(({ uniqueId }) => uniqueId));
         const resourceChanged = input.resources.some((resource) => {
           const result = compiled.get(resource.uniqueId)!;
           return (
@@ -97,7 +101,10 @@ export class DbtPreviewCompilationGate {
           };
         }
       }
-      return { ok: true };
+      const selectors = compiledDbtStepSelectors(analysis.resources, selected);
+      return selectors
+        ? { ok: true, selectors }
+        : { ok: false, reason: 'A compiled dbt resource has no unambiguous execution selector.' };
     } catch {
       return {
         ok: false,

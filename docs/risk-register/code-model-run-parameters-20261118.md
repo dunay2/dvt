@@ -31,6 +31,11 @@ disabled filter, active filter, conflicting declarations, unsupported parameters
 stale receipts and replay in another environment. The provider proof must
 materialize different rows from the same source model at two different values.
 
+dbt can exit successfully after selecting zero resources. The provider must
+bind the selected manifest resource to its native selector and verify the result
+from the current invocation. A stale artifact, an empty result or an unexpected
+resource can otherwise give the user a completed run with an unchanged table.
+
 The parameter model is for non-secret business inputs. Passing `--vars` as
 structured process arguments preserves the CLI boundary. dbt still renders
 Jinja into SQL, so the declaration restricts text inputs to a fixed domain

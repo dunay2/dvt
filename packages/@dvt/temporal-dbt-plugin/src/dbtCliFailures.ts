@@ -38,7 +38,7 @@ export function classifyDbtCliFailure(error: unknown): string {
   }
 
   const message = toErrorMessage(error);
-  if (message === 'DBT_STEP_SELECTOR_INVALID') {
+  if (message === 'DBT_STEP_SELECTOR_INVALID' || message === 'DBT_STEP_RESULT_UNCONFIRMED') {
     return message;
   }
   if (message === 'DBT_PROJECT_DIRECTORY_NOT_FOUND') {
@@ -53,6 +53,9 @@ export function classifyDbtCliFailure(error: unknown): string {
 }
 
 export function toDbtCliFailureMessage(failureReason: string): string {
+  if (failureReason === 'DBT_STEP_RESULT_UNCONFIRMED') {
+    return 'dbt did not confirm execution of the selected resource.';
+  }
   if (failureReason === 'DBT_CLI_NOT_FOUND') {
     return 'DBT CLI executable is unavailable.';
   }

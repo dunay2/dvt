@@ -142,9 +142,10 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
   ): Promise<StepResult> {
     let outcome: DbtCommandOutcome;
     try {
+      const resource = resolveDbtCommandSelector(input.step.stepId, input.step.stepTypeConfig);
       const args = buildDbtCliArgs(
         input.step.kind,
-        resolveDbtCommandSelector(input.step.stepId, input.step.stepTypeConfig),
+        resource.selector,
         input.pluginContext.targetProfile,
         profile.profilesDir,
         input.pluginContext.dbtVariablesJson
@@ -152,6 +153,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
       const commandEnvironment = this.resolveCommandEnvironment(input);
       await this.runCommand(this.dbtBin, args, {
         cwd: project.projectDir,
+        ...(resource.uniqueId === undefined ? {} : { expectedUniqueId: resource.uniqueId }),
         ...(Object.keys(commandEnvironment).length === 0 ? {} : { env: commandEnvironment }),
         ...(cancellationSignal === undefined ? {} : { signal: cancellationSignal }),
       });
@@ -226,12 +228,15 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
   }
 }
 
-function resolveDbtCommandSelector(stepId: string, stepTypeConfig: unknown): string {
+function resolveDbtCommandSelector(
+  stepId: string,
+  stepTypeConfig: unknown
+): { selector: string; uniqueId?: string | undefined } {
   const resolution = resolveDbtStepSelector(stepTypeConfig);
   if (resolution.status === 'invalid') {
     throw new Error('DBT_STEP_SELECTOR_INVALID');
   }
-  return resolution.status === 'valid' ? resolution.target.selector : stepId;
+  return resolution.status === 'valid' ? resolution.target : { selector: stepId };
 }
 
 function asAbortedSignal(

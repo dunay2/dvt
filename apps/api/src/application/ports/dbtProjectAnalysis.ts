@@ -39,6 +39,7 @@ export type DbtProjectAnalysisResource = Omit<
     sourceIdentityRef?: DbtProjectSourceIdentityRef;
     sourceTableDeclaration?: DbtProjectSourceTableDeclaration;
     compiledSql?: string;
+    fqn?: readonly string[];
   }>;
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;

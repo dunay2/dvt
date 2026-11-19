@@ -10,7 +10,6 @@ import type {
   IDbtProjectAnalyzerPort,
 } from '../../../../src/application/ports/dbtProjectAnalysis.js';
 import { DbtPreviewCompilationGate } from '../../../../src/application/services/dbt/DbtPreviewCompilationGate.js';
-import { projectDbtManifest } from '../../../../src/infrastructure/dbt/dbtManifestProjection.js';
 import {
   SELECTED_MODEL_ANALYSIS_SCOPE as scope,
   validSelectedModelProjectAnalysis,
@@ -22,6 +21,7 @@ const model = {
   name: 'orders',
   packageName: 'analytics',
   originalFilePath: 'models/orders.sql',
+  fqn: ['analytics', 'orders'],
   columns: [],
   tags: [],
   codeOnlyReasons: [],
@@ -35,6 +35,7 @@ const input = {
   targetName: 'production',
   resources: [model],
 };
+const modelSelector = 'package:analytics,resource_type:model,file:orders.sql,fqn:analytics.orders';
 
 function setup(): {
   analysis: DbtProjectAnalysis;
@@ -50,44 +51,15 @@ function setup(): {
 }
 
 describe('DbtPreviewCompilationGate', () => {
-  it.each(['model', 'test', 'snapshot'] as const)(
-    'admits native compiled %s evidence through the real manifest projector',
-    async (resourceType) => {
-      const uniqueId = `${resourceType}.analytics.orders`;
-      const originalFilePath = `${resourceType}s/orders.sql`;
-      const { resources } = projectDbtManifest({
-        metadata: { dbt_version: '1.10.0', project_name: 'analytics', adapter_type: 'postgres' },
-        nodes: {
-          [uniqueId]: {
-            unique_id: uniqueId,
-            resource_type: resourceType,
-            name: 'orders',
-            package_name: 'analytics',
-            original_file_path: originalFilePath,
-            compiled_code: 'select 1 as order_id',
-          },
-        },
-        sources: {},
-      });
-      const { gate, analyze, analysis } = setup();
-      analyze.mockResolvedValue({ ...analysis, resources });
-      expect(await gate.execute({ ...input, resources })).toEqual({ ok: true });
-      expect(analyze).toHaveBeenCalledExactlyOnceWith({
-        scope,
-        projectRoot: 'analytics',
-        operation: {
-          kind: 'compile',
-          selectors: [`path:${originalFilePath}`],
-          targetName: 'production',
-        },
-      });
-    }
-  );
-
   // Parse success is not compilation evidence, even for SQL without Jinja.
   it('requires native compilation against the accepted execution target', async () => {
     const { gate, analyze } = setup();
-    expect(await gate.execute(input)).toEqual({ ok: true });
+    expect(await gate.execute(input)).toEqual({
+      ok: true,
+      selectors: new Map([
+        [model.uniqueId, { version: 'v1', uniqueId: model.uniqueId, selector: modelSelector }],
+      ]),
+    });
     expect(analyze).toHaveBeenCalledExactlyOnceWith({
       scope,
       projectRoot: 'analytics',
@@ -104,7 +76,7 @@ describe('DbtPreviewCompilationGate', () => {
     const dbtVariablesJson = '{"minimum_amount":0,"use_minimum":true}';
     await expect(
       gate.execute({ ...input, dbtVariablesJson, expectedDependencies: analysis.dependencies })
-    ).resolves.toEqual({ ok: true });
+    ).resolves.toMatchObject({ ok: true });
     expect(analyze).toHaveBeenCalledExactlyOnceWith({
       scope,
       projectRoot: 'analytics',
@@ -211,5 +183,19 @@ describe('DbtPreviewCompilationGate', () => {
         ],
       })
     ).toMatchObject({ ok: false });
+  });
+
+  it.each<readonly [string, readonly string[] | undefined]>([
+    ['absent FQN', undefined],
+    ['selector operator in FQN', ['analytics', 'orders+']],
+  ])('rejects %s before an imprecise command can execute', async (_name, fqn) => {
+    const { gate, analyze, analysis } = setup();
+    const resource = { ...analysis.resources[0]! };
+    delete resource.fqn;
+    analyze.mockResolvedValue({
+      ...analysis,
+      resources: [{ ...resource, ...(fqn ? { fqn } : {}) }],
+    });
+    await expect(gate.execute(input)).resolves.toMatchObject({ ok: false });
   });
 });

@@ -86,6 +86,12 @@ scope and provenance, and projects the values into its typed dbt plugin context
 through retries. A change of file revision, target, scope or parameters requires
 fresh compilation.
 
+File-authoritative execution binds each step to its manifest resource identity
+and native selector. The worker accepts completion only when this invocation's
+dbt results identify the admitted resource and a successful outcome. A dbt
+command can exit successfully after selecting zero resources. That outcome
+must fail the step.
+
 The dbt adapter projects the resolved values through its native
 [`var()` and `--vars` contract](https://docs.getdbt.com/docs/build/project-variables)
 for both compilation and execution. Invoke the process using structured

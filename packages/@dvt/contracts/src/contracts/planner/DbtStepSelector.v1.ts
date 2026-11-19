@@ -21,6 +21,7 @@ export const DbtStepSelectorSchema = z
   .object({
     version: z.literal('v1'),
     selector: DbtSelectorSchema,
+    uniqueId: DbtSelectorSchema.optional(),
   })
   .strict();
 

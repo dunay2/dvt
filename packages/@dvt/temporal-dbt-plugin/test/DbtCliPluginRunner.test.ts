@@ -192,6 +192,7 @@ describe('DbtCliPluginRunner', () => {
             dbtStepSelector: {
               version: 'v1',
               selector: 'not_null_orders_model_order_id',
+              uniqueId: 'test.analytics.not_null_orders_model_order_id.a38ba3',
             },
           },
         },
@@ -210,7 +211,10 @@ describe('DbtCliPluginRunner', () => {
         '--profiles-dir',
         '/tmp/dbt-profile',
       ],
-      { cwd: '/tmp/dbt-project' }
+      {
+        cwd: '/tmp/dbt-project',
+        expectedUniqueId: 'test.analytics.not_null_orders_model_order_id.a38ba3',
+      }
     );
   });
 

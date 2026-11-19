@@ -15,6 +15,7 @@ import type { AuthorizedCommandExecutionContext } from '../../ports/authContract
 import { compareGraphIds } from '../compareGraphIds.js';
 import type { ProjectDbtGraphFromFilesUseCase } from '../projectDbtGraphFromFilesUseCase.js';
 
+import { bindCompiledDbtStepSelectors } from './dbtCompiledStepSelectors.js';
 import type { DbtPreviewCompilationGate } from './DbtPreviewCompilationGate.js';
 import {
   buildAuthoritativeGraph,
@@ -165,13 +166,14 @@ export async function resolveDbtProjectPreviewSelection(
     );
   }
 
+  const admittedGraph = bindCompiledDbtStepSelectors(canonicalGraph.value, compilation.selectors);
   return {
     ok: true,
     value: {
       graphSource:
         dbtVariablesJson === undefined
-          ? canonicalGraph.value
-          : bindDbtInvocationGraph(canonicalGraph.value, scope, provenance, dbtVariablesJson),
+          ? admittedGraph
+          : bindDbtInvocationGraph(admittedGraph, scope, provenance, dbtVariablesJson),
       ...(dbtVariablesJson === undefined ? {} : { dbtVariablesJson }),
       nodeIds: [...provenance.selectedUniqueIds],
       requestedRootNodeIds: [...input.selection.nodeIds],

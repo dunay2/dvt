@@ -33,7 +33,8 @@ export const SUPPORTED_RESOURCE_TYPES = new Set([
 
 export function projectResource(
   value: unknown,
-  rootProjectName: string
+  rootProjectName: string,
+  operation: 'compile' | 'parse'
 ): DbtProjectAnalysisResource | null {
   const resource = record(value);
   const resourceType = stringValue(resource.resource_type);
@@ -88,6 +89,7 @@ export function projectResource(
     projectedType === 'model' || projectedType === 'test' || projectedType === 'snapshot'
       ? stringValue(resource.compiled_code)
       : undefined;
+  const fqn = operation === 'compile' ? resource.fqn : undefined;
   const sourceIdentityRef = projectSourceIdentityRef(resource, projectedType);
   const identifier = projectedType === 'source' ? stringValue(resource.identifier) : undefined;
   const sourceTableDeclaration = projectSourceTableDeclaration({
@@ -124,6 +126,9 @@ export function projectResource(
     tags: [...new Set(stringArray(resource.tags))].sort(),
     ...(testMetadata === undefined ? {} : { testMetadata }),
     ...(compiledSql === undefined ? {} : { compiledSql }),
+    ...(Array.isArray(fqn) && fqn.every((part): part is string => typeof part === 'string')
+      ? { fqn }
+      : {}),
     ...(sourceIdentityRef === undefined ? {} : { sourceIdentityRef }),
     ...(sourceTableDeclaration === undefined ? {} : { sourceTableDeclaration }),
     codeOnlyReasons: ['phase_two_read_only_projection'],

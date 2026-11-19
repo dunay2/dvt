@@ -161,7 +161,7 @@ export async function analyzeDbtSnapshot(
   const manifest = JSON.parse(
     await readFile(path.join(targetPath, 'manifest.json'), 'utf8')
   ) as unknown;
-  const projection = projectDbtManifest(manifest);
+  const projection = projectDbtManifest(manifest, operation.kind);
   const semanticEvidence = await buildDbtProjectSemanticEvidence({
     snapshotDirectory,
     contentRevision,
