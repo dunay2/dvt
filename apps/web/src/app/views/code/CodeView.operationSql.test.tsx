@@ -50,7 +50,8 @@ describe('operation SQL in project Code', () => {
       }),
     });
 
-    const editor = () => harness.getContainer().querySelector('[data-testid="monaco-code-editor"]');
+    const editor = (): Element | null =>
+      harness.getContainer().querySelector('[data-testid="monaco-code-editor"]');
     await harness.waitFor(() => editor() != null);
     await act(async () => {
       fireEvent.change(editor()!, { target: { value: content } });
