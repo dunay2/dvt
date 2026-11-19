@@ -2,7 +2,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { AUTHORIZATION_ACTION } from '../../application/ports/accessDecision.js';
-import type { IAuthenticator } from '../../application/ports/auth.js';
+import type { AuthorizedExecutionContext, IAuthenticator } from '../../application/ports/auth.js';
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
@@ -25,7 +25,13 @@ export async function authorizeWorkspaceFilesRequest(
   reply: FastifyReply,
   deps: WorkspaceFilesAuthorizationDeps,
   options: { readonly action?: WorkspaceFilesAction } = {}
-): Promise<{ readonly scope: WorkspaceStorageScope; readonly subjectId: string } | false> {
+): Promise<
+  | {
+      readonly scope: WorkspaceStorageScope;
+      readonly context: AuthorizedExecutionContext<WorkspaceFilesAction>;
+    }
+  | false
+> {
   const parsed = parseRequiredEnvironmentScope(request.query);
   if (!parsed.ok) {
     httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
@@ -48,7 +54,7 @@ export async function authorizeWorkspaceFilesRequest(
   }
 
   return {
-    subjectId: auth.context.principal.subjectId,
+    context: auth.context,
     scope: {
       tenantId: parsed.value.tenantId.value,
       projectId: parsed.value.projectId.value,

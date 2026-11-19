@@ -99,7 +99,7 @@ export function registerWorkspaceFileHistoryRoutes(
       const result = await deps.versionCommand.commitFileVersion(authorized.scope, {
         path,
         expectedContentSha256: expected,
-        author: authorized.subjectId,
+        author: authorized.context.principal.subjectId,
       });
       if (result.kind === 'conflict') {
         httpErrorTranslation.respond(reply, httpErrorTranslation.workspaceFiles.revisionConflict());
