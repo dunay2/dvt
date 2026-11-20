@@ -114,7 +114,7 @@ describe('shared property table cells', () => {
     }
   );
 
-  it('focuses the specific relationship on double click or keyboard activation', () => {
+  it('focuses the specific relationship on double click or keyboard activation', async () => {
     const focusNode = vi.fn();
     const section: NodePropertySection = {
       id: 'inputs-outputs',
@@ -133,10 +133,14 @@ describe('shared property table cells', () => {
       )
     );
     const [input, output] = container.querySelectorAll('button');
-    act(() => input!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 })));
+    await act(() => {
+      input!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    });
     expect(focusNode).not.toHaveBeenCalled();
-    act(() => input!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 })));
-    act(() => output!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 })));
+    await act(() => {
+      input!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+      output!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
+    });
     expect(focusNode.mock.calls).toEqual([['dates-input'], ['dates-output']]);
   });
 
