@@ -75,7 +75,9 @@ it('shows unavailable if parsing times out and accepts an explicit retry', () =>
   vi.useFakeTimers();
   render(TASK, 'CREATE TASK tarea AS SELECT 2;');
   act(() => current.compile());
-  act(() => vi.advanceTimersByTime(15_000));
+  act(() => {
+    vi.advanceTimersByTime(15_000);
+  });
   expect(current.result).toEqual({ kind: 'unavailable' });
   expect(ControlledWorker.instances[0]?.terminate).toHaveBeenCalledOnce();
   act(() => current.compile());
