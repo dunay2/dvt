@@ -75,6 +75,7 @@ describe('Explicit PostgreSQL Sink live', () => {
     cy.then(() => {
       openWorkbenchProperties(sinkId);
       cy.get('[data-slot="canvas-card-metrics-switch"]')
+        .should('have.attr', 'aria-checked', 'false')
         .click()
         .should('have.attr', 'aria-checked', 'true');
       cy.contains('[role="tab"]', /^Sink$/).click();
