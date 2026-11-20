@@ -12,6 +12,49 @@ import { stubCodeWorkbenchBootstrapApis } from '../../support/codeWorkbench/boot
 import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
+it('compiles the current Snowflake task buffer and marks syntax errors before saving', () => {
+  const path = 'operations/tarea.task.sql';
+  const content = 'CREATE TASK tarea AS SELECT 2;';
+  const action = '[data-slot="code-compile-operation"]';
+  const status = '[data-slot="code-operation-compilation-status"]';
+  const editor = '[data-testid="monaco-code-editor"]';
+  stubCodeWorkbenchBootstrapApis();
+  stubE2eJsonApi('GET', '/workspace/files', [{ path, name: 'tarea.task.sql', kind: 'file' }]);
+  stubE2eJsonApi('GET', /\/workspace\/files\/.+/, {
+    path,
+    name: 'tarea.task.sql',
+    language: 'sql',
+    content,
+    contentSha256: sha256HexUtf8(content),
+    lastModified: '2026-11-19T19:00:00Z',
+  });
+  stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
+  visitWithE2eWorkspaceSession('/canvas', {
+    onBeforeLoad: (window) =>
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'es' }, version: 0 })
+      ),
+  });
+  cy.get('[data-slot="shell-project-code-command"]').click();
+  cy.get(`${editor} .view-lines`).should('contain.text', 'tarea');
+  cy.clock(Date.now(), ['setTimeout', 'clearTimeout']);
+  cy.get(`${editor} textarea.inputarea`).type("{ctrl+end}{enter}P'K", { force: true });
+  cy.get(action).should('contain.text', 'Compilar').click();
+  cy.get(status).should('contain.text', 'Error de sintaxis en la línea 2, columna 1.');
+  cy.get(`${editor} .squiggly-error`).should('exist');
+
+  cy.get(`${editor} textarea.inputarea`).type('{shift+home}{backspace}', { force: true });
+  cy.get(status).should('not.exist');
+  cy.get(action).click();
+  cy.get(status).should('contain.text', 'Sintaxis de Snowflake correcta.');
+  cy.get(`${editor} .squiggly-error`).should('not.exist');
+  cy.then(() => {
+    expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+    expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+  });
+});
+
 it('compares and restores a Git version of the selected operation through the Code editor', () => {
   const path = 'operations/tarea.task.sql';
   const file = {

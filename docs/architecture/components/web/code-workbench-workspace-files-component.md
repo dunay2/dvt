@@ -113,6 +113,33 @@ its workspace, revision, complete execution target or permissions change. Its
 reason to change is file-command admission and lifetime policy. It does not own
 the backend compiler, plan persistence or run aggregate.
 
+### Compile a Snowflake task in Code
+
+The project Code editor admits an explicit syntax check for editable
+`operations/**/*.task.sql` files. The suffix is produced by the existing
+Snowflake task recipes. These files have no dbt model identity. The existing
+dbt model compile and execution controls continue to consume their own rails.
+
+| Rail                            | Type  | Bounded context / read model                                       | Application port           | Adapter                                                                          | Scope and negative cases                                                                                                                                                             |
+| ------------------------------- | ----- | ------------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ValidateWorkspaceOperationSql` | Query | Code Workbench Workspace Files / Snowflake task syntax diagnostics | `validateSnowflakeTaskSql` | An on-demand Web Worker with the Snowflake grammar and the shared Monaco markers | Only the loaded, editable task and current local buffer. Empty or malformed scripts return diagnostics. Replaced buffers, file switches and expired workers cannot publish a result. |
+
+```mermaid
+flowchart LR
+  Before[Operation SQL editor buffer] --> Save[Existing guarded file save]
+  Before --> Click[Explicit Compile action]
+  Click --> Check[Snowflake syntax worker]
+  Check --> Result[Location and editor markers on the checked buffer]
+  Changed[Edit or navigate] --> Discard[Retire result and worker]
+```
+
+The query checks the exact visible text, including unsaved edits, independently
+of conditional save and Git history. It reports syntax using Snowflake's
+grammar, with line and column and Monaco markers. An unavailable or timed-out
+parser does not report success. Syntax success does not certify objects,
+privileges or execution in Snowflake. The worker makes no API or warehouse
+request and creates no plan, run, file write or Git commit.
+
 ### Explicit file creation in the Explorer
 
 The shared project Explorer offers **New file** and **Import file** header
