@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { asIsoUtcString } from '@dvt/contracts';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getAllByRole, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -165,16 +165,12 @@ describe('OperationalDrawerPanels', () => {
       container.querySelector('[data-slot="bottom-operational-data-table"]')?.textContent
     ).toContain('integer');
 
-    const table = container.querySelector<HTMLTableElement>(
-      '[data-slot="bottom-operational-data-table"]'
-    );
-    expect(table).not.toBeNull();
+    const table = getByRole(container, 'table', { name: 'Sample from orders' });
     expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
-    expect(
-      Array.from(table?.querySelectorAll('th[scope="col"] button') ?? []).map(
-        (cell) => cell.textContent
-      )
-    ).toEqual(['order_id', 'customer']);
+    const headers = getAllByRole(table, 'columnheader');
+    expect(headers).toHaveLength(3);
+    expect(getByRole(headers[1]!, 'button', { name: 'order_id' })).toBeTruthy();
+    expect(getByRole(headers[2]!, 'button', { name: 'customer' })).toBeTruthy();
     const longValue = Array.from(
       table?.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ??
         []
