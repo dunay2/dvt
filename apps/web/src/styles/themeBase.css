@@ -7,6 +7,22 @@
     @apply border-border outline-ring/50;
   }
 
+  :where(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) transparent;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+    :where(:not(:hover, :focus-visible, :focus-within:has(:focus-visible))) {
+      scrollbar-color: transparent transparent;
+    }
+
+    :where(:not(:hover, :focus-within:has(:focus-visible)))
+      > :where([data-slot='scroll-area-scrollbar']) {
+      visibility: hidden;
+    }
+  }
+
   html.dark {
     color-scheme: dark;
   }

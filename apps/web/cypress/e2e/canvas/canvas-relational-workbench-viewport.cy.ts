@@ -384,12 +384,22 @@ describe('Workbench viewport', () => {
       assertExplorerWidth(main, 22);
 
       const tabs = `${inspector} [role="tablist"]`;
+      const body = `${inspector} [data-slot="canvas-node-workbench-scroll-body"]`;
       const transparent = 'rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)';
+      cy.viewport(1800, 440);
       hoverWorkbenchCard(`${graph} .react-flow__controls-fitview`);
       cy.get(tabs)
         .should('have.css', 'scrollbar-width', 'thin')
         .and('have.css', 'scrollbar-color', transparent)
         .should(($tabs) => expect($tabs[0]!.scrollWidth).to.be.greaterThan($tabs[0]!.clientWidth));
+      cy.get(body)
+        .should('have.css', 'scrollbar-width', 'thin')
+        .and('have.css', 'scrollbar-color', transparent)
+        .should(($body) =>
+          expect($body[0]!.scrollHeight).to.be.greaterThan($body[0]!.clientHeight)
+        );
+      hoverWorkbenchCard(body);
+      cy.get(body).should('not.have.css', 'scrollbar-color', transparent);
       hoverWorkbenchCard(tabs);
       cy.get(tabs).should('not.have.css', 'scrollbar-color', transparent);
       hoverWorkbenchCard(`${graph} .react-flow__controls-fitview`);

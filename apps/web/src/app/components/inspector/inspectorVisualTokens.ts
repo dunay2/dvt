@@ -48,10 +48,6 @@ export const inspectorVisualClasses = {
   contextPanelTabsTrigger:
     'text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white',
   contextPanelWorkbenchTabs: 'gap-3',
-  // Keep the track size constant so revealing the thumb does not shift the tabs.
-  contextPanelWorkbenchTabScroll:
-    'min-w-0 flex-1 flex-nowrap overflow-x-auto [scrollbar-width:thin] [scrollbar-color:var(--text-muted)_transparent] ' +
-    '[@media(hover:hover)_and_(pointer:fine)_and_(forced-colors:none)]:[&:not(:hover,:has(:focus-visible))]:[scrollbar-color:transparent_transparent]',
   contextPanelFlatTabsList:
     'flex h-auto min-h-10 w-full flex-wrap justify-start gap-x-3 gap-y-1 overflow-visible rounded-none border-0 border-b border-slate-700 bg-transparent p-0 pb-1',
   contextPanelFlatTabTrigger:
