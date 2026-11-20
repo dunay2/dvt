@@ -126,7 +126,7 @@ here before implementation so the DDD owner and C&Q rail are explicit.
 | `uiLayoutStore.ts`           | `activeTabs`                | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current shell tab list.                                                                            |
 | `uiLayoutStore.ts`           | `activeTabId`               | query   | Web shell layout aggregate         | Shell panel/layout updates           | Current active shell tab.                                                                          |
 | `uiLayoutStore.ts`           | `dispatchCanvasExplorer`    | command | Web shell layout aggregate         | `ConfigureCanvasViewportPreferences` | Central expand, collapse, toggle, close and resize transitions; unchanged state performs no write. |
-| `uiLayoutStore.ts`           | `setInspectorPanelWidth`    | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes inspector width.                                                                           |
+| `uiLayoutStore.ts`           | `setInspectorPanelWidth`    | command | Web shell layout aggregate         | `ConfigureCanvasViewportPreferences` | Retains the last positive inspector width in CSS pixels.                                           |
 | `uiLayoutStore.ts`           | `setBottomDrawerHeight`     | command | Web shell layout aggregate         | Shell panel/layout updates           | Changes bottom operational drawer height.                                                          |
 | `uiLayoutStore.ts`           | `toggleFocusMode`           | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles focus mode.                                                                                |
 | `uiLayoutStore.ts`           | `toggleInspectorPanel`      | command | Web shell layout aggregate         | Shell panel/layout updates           | Toggles inspector visibility.                                                                      |
@@ -455,6 +455,27 @@ stateDiagram-v2
   closed --> expanded: expand or toggle
   expanded --> closed: close
   collapsed --> closed: close
+```
+
+### Canvas inspector layout
+
+The right Canvas inspector previously rendered beside the graph at a fixed width.
+Its existing `inspectorPanelWidth` preference is a positive CSS pixel value.
+The Canvas docks share the resize adapter and continuous, keyboard-focusable
+separator. The Inspector opens at its saved width within the space available.
+Responsive clipping is presentation only and never replaces the preference.
+Dragging the Inspector's left edge toward the right narrows it. At the collapsed
+boundary, the adapter requests the existing guarded inspector close and uses
+the existing focus recovery. A refused close returns the panel to the last
+visible width. Reopening through graph inspection uses that width. The graph
+and the local selection remain owned by the current Canvas surface.
+
+```mermaid
+flowchart LR
+  Before[Fixed-width inspector] --> Existing[Existing guarded close]
+  Separator[Shared split-panel separator] --> Width[Existing layout width command]
+  Separator --> Existing
+  Existing --> Focus[Existing graph focus recovery]
 ```
 
 ### Transitions

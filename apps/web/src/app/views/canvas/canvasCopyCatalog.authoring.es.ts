@@ -111,6 +111,7 @@ export const canvasViewAuthoringCopyEs = {
   reactFlowMinimapLabel: 'Minimapa del lienzo',
   reactFlowHandleLabel: 'Puerto de conexión',
   nodeWorkbenchCloseLabel: 'Cerrar',
+  nodeWorkbenchResizeLabel: 'Cambiar ancho de propiedades',
   nodeWorkbenchCloseFailedMessage: 'No se pudieron cerrar las propiedades. Inténtalo de nuevo.',
   nodeWorkbenchMoreLabel: 'Más',
   sqlContextWorkbenchProjectTitle: 'Código del proyecto',

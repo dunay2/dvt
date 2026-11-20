@@ -18,6 +18,11 @@ import {
 } from '../views/canvas/canvasPalette';
 
 export const CANVAS_EXPLORER_WIDTH = { default: 22, max: 40 } as const;
+const DEFAULT_INSPECTOR_WIDTH = 380;
+
+function isUsableInspectorWidth(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0;
+}
 
 type OperationalDrawerLayout = Readonly<{
   bottomDrawerVisible: boolean;
@@ -167,7 +172,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       };
       return {
         canvasExplorer: { mode: 'expanded', widthPercent: CANVAS_EXPLORER_WIDTH.default },
-        inspectorPanelWidth: 380,
+        inspectorPanelWidth: DEFAULT_INSPECTOR_WIDTH,
         inspectorPanelVisible: false,
         bottomDrawerHeight: OPERATIONAL_DRAWER_HEIGHT.default,
         bottomDrawerVisible: false,
@@ -184,7 +189,10 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           const canvasExplorer = transitionCanvasExplorer(current, event);
           if (canvasExplorer !== current) set({ canvasExplorer });
         },
-        setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
+        setInspectorPanelWidth: (width) => {
+          if (isUsableInspectorWidth(width) && width !== get().inspectorPanelWidth)
+            set({ inspectorPanelWidth: width });
+        },
         setBottomDrawerHeight: (height) => dispatchOperationalDrawer({ type: 'resize', height }),
         toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
         toggleInspectorPanel: () =>
@@ -217,8 +225,9 @@ export const useUiLayoutStore = create<UiLayoutState>()(
             persistedLayoutState.canvasExplorer,
             persistedLayoutState.canvasExplorerVisible
           ),
-          inspectorPanelWidth:
-            persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
+          inspectorPanelWidth: isUsableInspectorWidth(persistedLayoutState.inspectorPanelWidth)
+            ? persistedLayoutState.inspectorPanelWidth
+            : currentState.inspectorPanelWidth,
           inspectorPanelVisible: currentState.inspectorPanelVisible,
           bottomDrawerHeight: normalizeOperationalDrawerHeight(
             persistedLayoutState.bottomDrawerHeight

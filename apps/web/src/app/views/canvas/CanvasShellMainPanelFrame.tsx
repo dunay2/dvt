@@ -102,11 +102,11 @@ export function CanvasShellReadOnlyBannerSlot({
 export function CanvasShellContextualWorkbenchSplit({
   baseSurface,
   workbench,
-  inspector,
+  wrapInspector,
 }: Readonly<{
   baseSurface: ReactNode;
   workbench?: import('./canvasShell.types').CanvasShellContextualWorkbench;
-  inspector?: ReactNode;
+  wrapInspector?: (surface: ReactNode) => ReactNode;
 }>): JSX.Element {
   const docked = workbench?.presentation === 'docked';
   const positionController = useCanvasNodeWorkbenchPosition(workbench != null && !docked);
@@ -124,15 +124,17 @@ export function CanvasShellContextualWorkbenchSplit({
         {workbench.panel}
       </CanvasContextualWorkbenchPanel>
     );
+  const surface = (
+    <div
+      data-slot="canvas-contextual-workbench-base-surface"
+      className={canvasShellMainPanelFrameClassNames.workbenchBaseSurface}
+    >
+      {baseSurface}
+    </div>
+  );
   return (
     <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>
-      <div
-        data-slot="canvas-contextual-workbench-base-surface"
-        className={canvasShellMainPanelFrameClassNames.workbenchBaseSurface}
-      >
-        {baseSurface}
-      </div>
-      {workbench == null ? inspector : null}
+      {wrapInspector?.(surface) ?? surface}
       {workbench == null || docked ? (
         panel
       ) : (

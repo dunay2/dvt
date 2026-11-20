@@ -112,7 +112,7 @@ function CanvasShellViewport({
   contextMenuPresenter,
   workspaceTask,
   projectFiles,
-  inspector,
+  wrapInspector,
   activityRail,
   externalNodeSurfaceActive,
 }: Pick<
@@ -127,7 +127,7 @@ function CanvasShellViewport({
   | 'workspaceTask'
   | 'projectFiles'
 > & {
-  inspector: ReactNode;
+  wrapInspector?: (surface: ReactNode) => ReactNode;
   activityRail: CanvasExplorerActivityRail;
   externalNodeSurfaceActive: boolean;
 }): JSX.Element {
@@ -144,7 +144,7 @@ function CanvasShellViewport({
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={activityRail}
-      inspector={inspector}
+      wrapInspector={wrapInspector}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
       referencePlacementScope={layout.referencePlacementScope}
@@ -209,7 +209,7 @@ function CanvasShellMainSurface({
   onOpenSourceImport,
   onOpenCanvasSettings,
   contextMenuPresenter,
-  inspector,
+  wrapInspector,
   workspaceTask,
   projectFiles,
 }: Pick<
@@ -223,7 +223,7 @@ function CanvasShellMainSurface({
   | 'contextMenuPresenter'
   | 'workspaceTask'
   | 'projectFiles'
-> & { inspector: ReactNode }): JSX.Element {
+> & { wrapInspector: (surface: ReactNode, hidden: boolean) => ReactNode }): JSX.Element {
   const codeVisible = workspaceTask == null && projectFiles?.active === true;
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
@@ -244,14 +244,14 @@ function CanvasShellMainSurface({
     nodeWorkbenchVisible ||
     contextualWorkbench != null ||
     layout.centerSurfaceVisible === true;
-  const nodeInspector = workspaceTask == null && contextualWorkbench == null ? inspector : null;
+  const hideNodeInspector = workspaceTask != null || contextualWorkbench != null;
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={{ codeVisible }}
       externalNodeSurfaceActive={externalNodeSurfaceActive}
-      inspector={inspectorInViewport ? nodeInspector : null}
+      wrapInspector={(surface) => wrapInspector(surface, hideNodeInspector || !inspectorInViewport)}
       layout={layout}
       panels={panels}
       graph={graph}
@@ -288,7 +288,7 @@ function CanvasShellMainSurface({
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
       workbench={workspaceTask == null ? contextualWorkbench : undefined}
-      inspector={inspectorInViewport ? null : nodeInspector}
+      wrapInspector={(surface) => wrapInspector(surface, hideNodeInspector || inspectorInViewport)}
     />
   );
 }
@@ -339,15 +339,18 @@ export function CanvasShellMainPanel({
         onOpenSourceImport={onOpenSourceImport}
         onOpenCanvasSettings={onOpenCanvasSettings}
         contextMenuPresenter={contextMenuPresenter}
-        inspector={
+        wrapInspector={(surface, hidden) => (
           <CanvasNodeWorkbenchOverlay
             layout={layout}
             panels={panels}
             currentProjectRoot={projectFiles?.projectRoot}
             onHide={chromeCommands.onHideInspector}
             onOpenModelEditor={onOpenModelEditor}
-          />
-        }
+            hidden={hidden}
+          >
+            {surface}
+          </CanvasNodeWorkbenchOverlay>
+        )}
       />
       {shouldShowGraphStatusOverlay ? (
         <CanvasGraphStatusOverlay

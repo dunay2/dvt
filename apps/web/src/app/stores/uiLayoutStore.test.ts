@@ -27,6 +27,18 @@ describe('useUiLayoutStore', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
+  it('keeps the last visible inspector width when a resize reports zero', async () => {
+    const { setInspectorPanelWidth, hideInspectorPanel, showInspectorPanel } =
+      useUiLayoutStore.getState();
+    setInspectorPanelWidth(270);
+    setInspectorPanelWidth(0);
+    hideInspectorPanel();
+    showInspectorPanel();
+    await useUiLayoutStore.persist.rehydrate();
+    expect(useUiLayoutStore.getState().inspectorPanelWidth).toBe(270);
+    expect(useUiLayoutStore.getState().inspectorPanelVisible).toBe(true);
+  });
+
   it('starts with one expanded Explorer state and retires the old visibility commands', () => {
     // GH-3818: separate visibility and local expansion owners disagreed after reopening.
     expect(useUiLayoutStore.getInitialState().canvasExplorer).toEqual({

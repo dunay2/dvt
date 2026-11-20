@@ -341,6 +341,45 @@ describe('Workbench viewport', () => {
       });
     });
 
+    it('narrows the right inspector and reopens it at the retained width', () => {
+      const graph = `${main} [data-testid="canvas-viewport"]`;
+      const node = `${graph} .react-flow__node[data-id="join-transform"]`;
+      const title = `${node} [data-slot="graph-node-card-title"]`;
+      const inspector = `${main} [data-slot="canvas-node-workbench-overlay"]`;
+      const handle = `${main} [role="separator"][aria-label="Resize properties"]`;
+      const assertWidth = (width: number): void => {
+        cy.get(inspector).should(($inspector) => {
+          expect($inspector[0]!.getBoundingClientRect().width).to.be.closeTo(width, 3);
+        });
+      };
+      const dragTo = (width: number): void => {
+        cy.get(inspector).then(($inspector) => {
+          moveWorkbenchCard(handle, $inspector[0]!.getBoundingClientRect().width - width, 0);
+        });
+      };
+      cy.viewport(1800, 900);
+      cy.get(`${graph} .react-flow__controls-fitview`).click();
+      cy.get(title).click();
+      assertWidth(380);
+      dragTo(260);
+      assertWidth(260);
+      cy.get(handle).focus();
+      assertResizeHandlePresentation(handle, 'horizontal');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get(inspector).should('not.exist');
+      cy.get(node).should(($node) => {
+        expect($node[0]!.contains($node[0]!.ownerDocument.activeElement)).to.equal(true);
+      });
+
+      cy.get(title).click();
+      assertWidth(260);
+      dragTo(60);
+      cy.get(inspector).should('not.exist');
+      cy.get(title).click();
+      cy.get(inspector).should('be.visible');
+      assertExplorerWidth(main, 22);
+    });
+
     it('keeps zoom, source search and narrow reflow while toggling the rail', () => {
       // Layout gestures must preserve the editor's local search and camera without saving semantics.
       let writesBeforeZoom = 0;

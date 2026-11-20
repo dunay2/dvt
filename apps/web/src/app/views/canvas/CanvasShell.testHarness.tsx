@@ -73,7 +73,11 @@ vi.mock('./CanvasViewport', async () => {
           activityRail={props.activityRail as Parameters<typeof CanvasExplorer>[0]['activityRail']}
           workspaceTask={props.workspaceTask as React.ReactNode}
         >
-          <div data-testid="canvas-viewport">{props.inspector as React.ReactNode}</div>
+          <div data-testid="canvas-viewport">
+            {(props.wrapInspector as ((surface: React.ReactNode) => React.ReactNode) | undefined)?.(
+              <div />
+            )}
+          </div>
         </CanvasExplorer>
       );
     },

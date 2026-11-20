@@ -129,8 +129,8 @@ export function CanvasExplorerTemplate(props: CanvasExplorerTemplateProps): JSX.
           aria-orientation="vertical"
           disabled={props.active == null}
           tabIndex={props.active == null ? -1 : 0}
-          className={props.active == null ? styles.hidden : styles.resize}
           {...props.dock.handle}
+          className={props.active == null ? styles.hidden : props.dock.handle.className}
         />
         <ResizablePanel
           id={`${props.id}-surface`}
