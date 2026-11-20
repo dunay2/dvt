@@ -20,7 +20,7 @@ import {
   type SourceCardAppearance,
 } from '../../types/sourceCardAppearance';
 import { SourceCardAppearancePanel } from './SourceCardAppearancePanel';
-import { sourceCardAppearanceCopy } from './sourceCardAppearanceCopy';
+import { resolveSourceCardAppearanceCopy } from './sourceCardAppearanceCopy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 const emptyIds: readonly string[] = [];
@@ -33,8 +33,8 @@ export function useCanvasCardPresentation(
   projectRoot?: string,
   filePlacementLayoutKey?: string
 ) {
-  const appearanceCopy = useApplicationLanguageStore(
-    (state) => sourceCardAppearanceCopy[state.language]
+  const appearanceCopy = useApplicationLanguageStore((state) =>
+    resolveSourceCardAppearanceCopy(state.language)
   );
   const scopeKey = useSessionStore((scope) =>
     canvasModelNavigationScopeKey(scope, activeCanvasId, projectRoot)

@@ -28,7 +28,7 @@ import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCell
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { buildNodeWorkbenchReadModel } from './canvasNodeWorkbenchReadModel';
 import { projectCanvasPublishedInputFields } from './canvasPublishedInputFields';
-import { sourceCardAppearanceCopy } from './sourceCardAppearanceCopy';
+import { resolveSourceCardAppearanceCopy } from './sourceCardAppearanceCopy';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -157,7 +157,7 @@ export function useCanvasNodeWorkbenchController({
           ...unfilteredModel.sections,
           {
             id: 'appearance',
-            label: sourceCardAppearanceCopy[applicationLanguage].title,
+            label: resolveSourceCardAppearanceCopy(applicationLanguage).title,
             rows: [],
             tableRows: [],
           },

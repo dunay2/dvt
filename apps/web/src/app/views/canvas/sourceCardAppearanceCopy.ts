@@ -6,9 +6,7 @@ export type SourceCardAppearanceCopy = Readonly<
   Record<keyof SourceCardAppearance | 'title' | 'reset', string>
 >;
 
-export const sourceCardAppearanceCopy: Readonly<
-  Record<ApplicationLanguage, SourceCardAppearanceCopy>
-> = {
+const sourceCardAppearanceCopy: Readonly<Record<ApplicationLanguage, SourceCardAppearanceCopy>> = {
   en: {
     title: 'Appearance',
     tags: 'Tags',
@@ -34,3 +32,9 @@ export const sourceCardAppearanceCopy: Readonly<
     reset: 'Restablecer apariencia',
   },
 };
+
+export function resolveSourceCardAppearanceCopy(
+  language: ApplicationLanguage
+): SourceCardAppearanceCopy {
+  return sourceCardAppearanceCopy[language];
+}

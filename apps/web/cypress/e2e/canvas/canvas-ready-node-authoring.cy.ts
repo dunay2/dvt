@@ -990,18 +990,14 @@ describe('Canvas ready node authoring', () => {
     cy.get(columnToggle).should('not.exist');
     cy.get('[data-slot="source-card-appearance-columns"]').click();
     cy.get(columnToggle).should('contain.text', 'Columns (2)').click();
-    cy.get(payments).find('[data-slot="graph-node-column-type"]').first().should('be.visible');
-    cy.get(payments)
-      .find('[data-slot="graph-node-column-nullability"]')
-      .first()
-      .should('be.visible');
+    const type = `${payments} [data-slot="graph-node-column-type"]`;
+    const nullability = `${payments} [data-slot="graph-node-column-nullability"]`;
+    cy.get(type).first().should('not.have.css', 'display', 'none');
+    cy.get(nullability).first().should('not.have.css', 'display', 'none');
     cy.get('[data-slot="source-card-appearance-types"]').click();
     cy.get('[data-slot="source-card-appearance-nullability"]').click();
-    cy.get(payments).find('[data-slot="graph-node-column-type"]').first().should('not.be.visible');
-    cy.get(payments)
-      .find('[data-slot="graph-node-column-nullability"]')
-      .first()
-      .should('not.be.visible');
+    cy.get(type).first().should('have.css', 'display', 'none');
+    cy.get(nullability).first().should('have.css', 'display', 'none');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="orders_model"]').as('ordersModel').should('be.visible');
