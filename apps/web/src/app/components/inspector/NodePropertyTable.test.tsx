@@ -133,11 +133,11 @@ describe('shared property table cells', () => {
       )
     );
     const [input, output] = container.querySelectorAll('button');
-    await act(() => {
+    await act(async () => {
       input!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
     });
     expect(focusNode).not.toHaveBeenCalled();
-    await act(() => {
+    await act(async () => {
       input!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
       output!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
     });
