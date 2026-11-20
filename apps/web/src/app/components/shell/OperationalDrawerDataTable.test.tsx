@@ -7,7 +7,7 @@
  * @consequence Tests cover settled user behavior without fire-and-forget updates.
  * @version 1.0.0
  */
-import { fireEvent, getByRole } from '@testing-library/dom';
+import { fireEvent, getByLabelText, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -225,6 +225,11 @@ describe('OperationalDrawerDataTable', () => {
       getByRole(container, 'searchbox', { name: 'Buscar en las filas cargadas' })
     ).toBeTruthy();
     expect(getByRole(container, 'button', { name: 'Copiar celda' })).toBeTruthy();
+    const swatch = getByLabelText<HTMLInputElement>(container, 'Color de fondo de Datos');
+    const grid = getByRole(container, 'region', { name: 'Sample' });
+    expect(swatch.value).toBe('#191a1c');
+    act(() => fireEvent.input(swatch, { target: { value: '#284560' } }));
+    expect(grid.style.getPropertyValue('--grid-primary')).toBe('#284560');
     expect(visibleRows()[0]).toEqual(['1', 'beta']);
   });
 });

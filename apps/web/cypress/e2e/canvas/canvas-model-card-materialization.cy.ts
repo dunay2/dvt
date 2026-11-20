@@ -187,6 +187,23 @@ describe('Model card materialization', () => {
     const tableSelector = '[data-slot="bottom-operational-data-table"]';
     const frameSelector = '[data-slot="bottom-operational-data-table-frame"]';
     cy.get(tableSelector).find('tbody tr').should('have.length', 20);
+    cy.get(frameSelector)
+      .invoke('css', 'background-image')
+      .should('include', 'linear-gradient')
+      .then((before) => {
+        cy.get<HTMLInputElement>('[data-slot="data-grid-toolbar"] input[type="color"]')
+          .should('have.attr', 'aria-label', 'Data grid background color')
+          .then(($swatch) => {
+            const input = $swatch[0]!;
+            const view = input.ownerDocument.defaultView!;
+            Object.getOwnPropertyDescriptor(view.HTMLInputElement.prototype, 'value')!.set!.call(
+              input,
+              '#e19b57'
+            );
+            input.dispatchEvent(new view.Event('input', { bubbles: true }));
+          });
+        cy.get(frameSelector).invoke('css', 'background-image').should('not.equal', before);
+      });
     cy.get(searchSelector).type('customer');
     cy.get(tableSelector).find('[data-column-id="name"]').click();
     cy.get(frameSelector)

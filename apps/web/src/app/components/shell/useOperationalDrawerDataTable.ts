@@ -31,6 +31,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
   const [search, setSearch] = useState('');
   const [comfortable, setComfortable] = useState(false);
   const [wrap, setWrap] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState('#191a1c');
   const [selection, setSelection] = useState<Selection | null>(null);
   const [feedback, setFeedback] = useState<{
     selection: Selection;
@@ -87,6 +88,8 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     setComfortable,
     wrap,
     setWrap,
+    backgroundColor,
+    setBackgroundColor,
     total: rows.length,
     canCopy: selectedCell != null,
     copyCell,

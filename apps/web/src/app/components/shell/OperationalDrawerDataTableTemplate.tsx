@@ -6,7 +6,8 @@
  * @version 1.0.0
  */
 import { AlignJustify, Copy, Info, Search, WrapText } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { Input } from '../ui/input';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import styles from './OperationalDrawerDataTable.module.css';
@@ -29,6 +30,7 @@ export function OperationalDrawerDataTableTemplate({
       data-density={model.comfortable ? 'comfortable' : 'compact'}
       data-wrap={model.wrap}
       aria-label={model.caption}
+      style={{ '--grid-primary': model.backgroundColor } as CSSProperties}
     >
       <div className={styles.toolbar} data-slot="data-grid-toolbar">
         <label className={styles.search}>
@@ -75,6 +77,14 @@ export function OperationalDrawerDataTableTemplate({
           >
             <Copy aria-hidden="true" />
           </button>
+          <Input
+            type="color"
+            className={styles.swatch}
+            aria-label={copy.backgroundColor}
+            title={copy.backgroundColor}
+            value={model.backgroundColor}
+            onChange={(event) => model.setBackgroundColor(event.currentTarget.value)}
+          />
         </div>
       </div>
       <div data-slot="bottom-operational-data-table-frame" className={styles.frame}>
