@@ -963,14 +963,6 @@ describe('Canvas ready node authoring', () => {
     cy.get(rows).click();
     cy.get(rail).should('contain.text', 'Rows').and('not.contain.text', 'Size');
     cy.get(size).should('have.attr', 'aria-checked', 'false').click();
-    cy.get('[data-slot="source-card-appearance-columns"]').click();
-    cy.get('.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-column-toggle"]').should(
-      'not.exist'
-    );
-    cy.get('[data-slot="source-card-appearance-columns"]').click();
-    cy.get('.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-column-toggle"]').should(
-      'exist'
-    );
     cy.then(() =>
       expect(
         getE2eApiCalls('/workspace/graph/draft', 'PUT'),
@@ -987,6 +979,30 @@ describe('Canvas ready node authoring', () => {
       .and('contain.text', '18.2k')
       .and('contain.text', 'Size')
       .and('contain.text', '3.9 MB');
+
+    const payments = '.react-flow__node[data-id="warehouse_payments"]';
+    const columnToggle = `${payments} [data-slot="graph-node-column-toggle"]`;
+    openNodeProperties('warehouse_payments');
+    cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+    cy.get(rows).should('have.attr', 'aria-checked', 'false');
+    cy.get(columnToggle).should('contain.text', 'Columns (2)');
+    cy.get('[data-slot="source-card-appearance-columns"]').click();
+    cy.get(columnToggle).should('not.exist');
+    cy.get('[data-slot="source-card-appearance-columns"]').click();
+    cy.get(columnToggle).should('contain.text', 'Columns (2)').click();
+    cy.get(payments).find('[data-slot="graph-node-column-type"]').first().should('be.visible');
+    cy.get(payments)
+      .find('[data-slot="graph-node-column-nullability"]')
+      .first()
+      .should('be.visible');
+    cy.get('[data-slot="source-card-appearance-types"]').click();
+    cy.get('[data-slot="source-card-appearance-nullability"]').click();
+    cy.get(payments).find('[data-slot="graph-node-column-type"]').first().should('not.be.visible');
+    cy.get(payments)
+      .find('[data-slot="graph-node-column-nullability"]')
+      .first()
+      .should('not.be.visible');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="orders_model"]').as('ordersModel').should('be.visible');
     openNodeProperties('orders_model');
