@@ -220,7 +220,7 @@ describe('OperationalDrawerDataTable', () => {
 
   it('localizes controls and feedback without changing the sample', async () => {
     renderTable();
-    await act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
+    act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
     expect(
       getByRole(container, 'searchbox', { name: 'Buscar en las filas cargadas' })
     ).toBeTruthy();
