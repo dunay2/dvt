@@ -1,6 +1,6 @@
 /** Owned concern: GraphNodeCardView. */
 
-import { type ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { cn } from '../../components/ui/utils';
 import { GraphNodeColumnViews } from './GraphNodeColumnViews';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
@@ -69,13 +69,18 @@ export function GraphNodeCardView({
             (id === 'size' && sourceCardAppearance.size)
         );
   const { borderColor: overlayBorderColor, ...cardOverlayStyle } = overlayStyle ?? {};
-  const hasCardOverlayStyle = Object.keys(cardOverlayStyle).length > 0;
+  const sourceColor = sourceCardAppearance?.color;
+  const cardStyle = {
+    ...cardOverlayStyle,
+    ...(sourceColor == null ? {} : { '--source-card-color': sourceColor }),
+  } as CSSProperties;
 
   return (
     <div
       data-slot="graph-node-card"
       className={cn(
         graphNodeCardSurfaceClasses.root,
+        sourceColor != null && graphNodeCardSurfaceClasses.sourceTint,
         borderClass,
         graphNodeHealthBorderClasses[cardModel.health.tone],
         selected && graphNodeCardSurfaceClasses.selected,
@@ -85,18 +90,16 @@ export function GraphNodeCardView({
         sourceCardAppearance?.nullability === false &&
           '[&_[data-slot=graph-node-column-nullability]]:hidden'
       )}
-      {...(hasCardOverlayStyle ? { style: cardOverlayStyle } : {})}
+      style={cardStyle}
     >
-      {sourceCardAppearance?.color != null && (
-        <div
-          data-slot="source-card-accent"
-          aria-hidden="true"
-          className="pointer-events-none h-[3px] shrink-0"
-          style={{ backgroundColor: sourceCardAppearance.color }}
-        />
-      )}
       <div className={graphNodeCardLayoutClasses.body}>
-        <div data-slot="graph-node-card-header" className={graphNodeCardLayoutClasses.header}>
+        <div
+          data-slot="graph-node-card-header"
+          className={cn(
+            graphNodeCardLayoutClasses.header,
+            sourceColor != null && graphNodeCardLayoutClasses.sourceTintedHeader
+          )}
+        >
           <div className={graphNodeCardLayoutClasses.titleRow}>
             {modelIdentity != null ? (
               <span data-slot="graph-node-card-icon">

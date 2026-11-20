@@ -52,8 +52,10 @@ Canonical local C&Q catalog:
 
 Source Properties provides an **Appearance** tab for each placed card. Rows and
 Size are separate switches and start hidden. Tags, Columns, Qualified name,
-Data types and Nullability preserve their default display. A color swatch
-sets a neutral accent and a reset returns the placement to its defaults.
+Data types and Nullability preserve their default display. The color swatch
+tints the card body and its measurements, with a gradient derived from the
+same color across the header. The tint blends with the shared surfaces to
+keep labels readable. A reset returns the placement to its defaults.
 The diagram presents the existing Source facts, following the visibility
 patterns in [DBeaver's diagram guide](https://dbeaver.com/docs/dbeaver/How-to-use-Diagrams/#control-visibility-and-appearance).
 

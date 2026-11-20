@@ -68,7 +68,7 @@ describe('GraphNodeCardView', () => {
     vi.unstubAllGlobals();
   });
 
-  it('uses only the selected Source details and paints the accent independently of health', () => {
+  it('uses only the selected Source details and scopes the chosen tint independently of health', () => {
     act(() =>
       root.render(
         <GraphNodeCardView
@@ -94,11 +94,9 @@ describe('GraphNodeCardView', () => {
     expect(container.textContent).not.toContain('Size');
     expect(container.textContent).not.toContain('analytics');
     expect(container.textContent).not.toContain('Raw');
-    const accent = container.querySelector<HTMLElement>('[data-slot="source-card-accent"]');
-    expect(accent?.style.backgroundColor).toBe('rgb(119, 153, 170)');
-    expect(container.querySelector('[data-slot="graph-node-card"]')?.className).toContain(
-      graphNodeHealthBorderClasses.neutral
-    );
+    const card = container.querySelector<HTMLElement>('[data-slot="graph-node-card"]');
+    expect(card?.style.getPropertyValue('--source-card-color')).toBe('#7799aa');
+    expect(card?.className).toContain(graphNodeHealthBorderClasses.neutral);
   });
 
   it.each([false, true])(

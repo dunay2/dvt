@@ -8,7 +8,7 @@ const metricValueTones = {
   running: 'text-(--status-running)',
 } as const;
 const operationalRail =
-  'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-(--border-subtle) bg-(--surface-panel)';
+  'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-(--border-subtle) bg-[color:var(--graph-node-rail-surface,var(--surface-panel))]';
 export const graphNodeMetricRowClasses = {
   root: {
     body: 'mt-3 flex flex-wrap items-center gap-2 text-[length:var(--text-meta)] leading-(--text-meta-line-height) text-(--text-muted)',

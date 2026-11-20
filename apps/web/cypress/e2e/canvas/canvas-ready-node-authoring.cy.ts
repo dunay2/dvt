@@ -998,6 +998,27 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="source-card-appearance-nullability"]').click();
     cy.get(type).first().should('have.css', 'display', 'none');
     cy.get(nullability).first().should('have.css', 'display', 'none');
+    const card = `${payments} [data-slot="graph-node-card"]`;
+    cy.get(card)
+      .invoke('css', 'background-color')
+      .then((before) => {
+        cy.get<HTMLInputElement>('[data-slot="source-card-appearance"] input[type="color"]').then(
+          ($swatch) => {
+            const input = $swatch[0]!;
+            const view = input.ownerDocument.defaultView!;
+            Object.getOwnPropertyDescriptor(view.HTMLInputElement.prototype, 'value')!.set!.call(
+              input,
+              '#c62828'
+            );
+            input.dispatchEvent(new view.Event('input', { bubbles: true }));
+          }
+        );
+        cy.get(card).invoke('css', 'background-color').should('not.equal', before);
+      });
+    cy.get(card)
+      .find('[data-slot="graph-node-card-header"]')
+      .invoke('css', 'background-image')
+      .should('include', 'linear-gradient');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="orders_model"]').as('ordersModel').should('be.visible');
