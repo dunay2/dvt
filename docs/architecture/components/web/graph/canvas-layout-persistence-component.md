@@ -141,6 +141,24 @@ responsibility is retired as a duplicate of the implemented composition concern.
 The [ownership review](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564854173)
 records the concrete source boundary; it does not declare the feature implemented.
 
+## Column disclosure at maximum zoom
+
+The main Canvas projects card columns and column lineage through
+`RenderCanvasContextualGraphSurface`. The viewport observes the configured
+React Flow zoom limit. At that limit, eligible cards expand their column
+preview while retaining each card's manual disclosure preference. A manual
+close can suppress the preview until the viewport next reaches the limit.
+Leaving maximum zoom removes the temporary expansion. This projection also
+covers read-only graph presentation. The existing viewport and layout rails
+retain their separate persistence responsibilities.
+
+```mermaid
+flowchart LR
+  Camera[Viewport zoom limit] --> Preview[Effective column disclosure]
+  Manual[Manual disclosure preference] --> Preview
+  Preview --> Card[Column preview and visible lineage]
+```
+
 ## Model editor layout persistence
 
 The Model editor reuses `PersistCanvasLayout` and `GetCanvasLayout` through

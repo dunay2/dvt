@@ -49,6 +49,8 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@xyflow/react', async () => {
   const ReactModule = await import('react');
   return {
+    useStore: (select: (state: { transform: number[]; maxZoom: number }) => boolean) =>
+      select({ transform: [0, 0, 1], maxZoom: 2 }),
     applyNodeChanges: <
       T extends { id: string; position?: { x: number; y: number }; dragging?: boolean },
     >(

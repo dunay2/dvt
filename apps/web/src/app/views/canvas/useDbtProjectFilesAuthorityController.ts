@@ -38,6 +38,11 @@ import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { useDbtProjectFileInspector } from './useDbtProjectFileInspector';
 import { useDbtProjectFileWorkbenchSession } from './useDbtProjectFileWorkbenchSession';
 import { useDbtProjectFilePlacements } from './useDbtProjectFilePlacements';
+import {
+  setCanvasColumnDisclosure,
+  useCanvasMaximumZoom,
+  useCanvasZoomColumnDisclosure,
+} from './useCanvasZoomColumnDisclosure';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -307,9 +312,23 @@ export function useDbtProjectFilesAuthorityController(
     () => getGraphNodeCardStrategies(runtimeCapabilities),
     [runtimeCapabilities]
   );
+  const { setNodes } = graphModel;
+  const onManualDisclosureChange = useCallback(
+    (nodeId: string, expanded: boolean): void => {
+      setNodes((nodes) => setCanvasColumnDisclosure(nodes, nodeId, expanded));
+    },
+    [setNodes]
+  );
+  const atMaximumZoom = useCanvasMaximumZoom();
+  const disclosure = useCanvasZoomColumnDisclosure(
+    graphModel.nodes,
+    atMaximumZoom,
+    onManualDisclosureChange,
+    layoutKey
+  );
   const nodesWithCommands = useMemo<Node[]>(
     () =>
-      graphModel.nodes.map((node) => {
+      disclosure.nodes.map((node) => {
         const resourceId = placements.definitionIdByInstanceId.get(node.id) ?? node.id;
         const isInstance = placements.definitionIdByInstanceId.has(node.id);
         const placedNode = { ...node, deletable: isInstance };
@@ -325,6 +344,7 @@ export function useDbtProjectFilesAuthorityController(
             void inspectCatalogueResource(resourceId, preferredTabId);
           },
           canOpenNodeCode: node.data.path != null,
+          onColumnDisclosureChange: disclosure.onColumnDisclosureChange,
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
@@ -361,7 +381,8 @@ export function useDbtProjectFilesAuthorityController(
       executionSelectableNodeIds,
       executionScope.requestedNodeIds,
       graphNodeCardStrategies,
-      graphModel.nodes,
+      disclosure.nodes,
+      disclosure.onColumnDisclosureChange,
       inspectCatalogueResource,
       runtimeCapabilities,
       selectedNodeIds,

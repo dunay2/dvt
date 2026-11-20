@@ -117,6 +117,45 @@ describe('Canvas Source Inspector ordering', () => {
     stubCanvas();
   });
 
+  it('opens collapsed columns at maximum zoom and restores manual disclosure when leaving it', () => {
+    visitCanvas();
+    let writesBeforeZoom = 0;
+    const columns =
+      '.react-flow__node[data-id="source-orders"] [data-slot="graph-node-column-toggle"]';
+    const zoomIn = '.react-flow__controls-zoomin';
+    const zoomOut = '.react-flow__controls-zoomout';
+    const fitView = '.react-flow__controls-fitview';
+    const zoomToMaximum = (): void => {
+      for (let step = 0; step < 15; step += 1) {
+        cy.get(zoomIn).then((button) => {
+          if (!button.prop('disabled')) cy.wrap(button).click();
+        });
+      }
+      cy.get(zoomIn).should('be.disabled');
+    };
+
+    // Let route-entry normalization settle before measuring what the gestures write.
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+    cy.then(() => {
+      writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(columns).should('have.attr', 'aria-expanded', 'false');
+    zoomToMaximum();
+    cy.get(columns).should('have.attr', 'aria-expanded', 'true');
+    cy.get(zoomOut).click();
+    cy.get(columns).should('have.attr', 'aria-expanded', 'false');
+
+    cy.get(fitView).click();
+    cy.get(columns).click().should('have.attr', 'aria-expanded', 'true');
+    zoomToMaximum();
+    cy.get(fitView).click();
+    cy.get(columns).should('have.attr', 'aria-expanded', 'true');
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeZoom);
+    });
+  });
+
   it('offers the sets icon for a canonical join and saves only its visual preference', () => {
     // Reuse the real canonical JOIN scenario; a name or two incoming edges must not be enough.
     const draft = stubCanvas(true);

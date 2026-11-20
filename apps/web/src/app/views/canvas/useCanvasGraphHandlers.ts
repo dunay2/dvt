@@ -19,6 +19,7 @@ import { useCanvasNodeAuthoringHandlers } from './useCanvasNodeAuthoringHandlers
 import { useCanvasSelectionHandlers } from './useCanvasSelectionHandlers';
 import { useCanvasAlgebraicCompositionHandler } from './useCanvasAlgebraicCompositionHandler';
 import { useCanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
+import { setCanvasColumnDisclosure } from './useCanvasZoomColumnDisclosure';
 
 export function useCanvasGraphHandlers({
   graphStrategy,
@@ -92,13 +93,7 @@ export function useCanvasGraphHandlers({
   const algebraicComposition = useCanvasAlgebraicCompositionHandler(interactionContracts);
   const handleColumnDisclosureChange = useCallback(
     (nodeId: string, expanded: boolean) => {
-      setNodes((currentNodes) =>
-        currentNodes.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...node.data, columnDisclosureExpanded: expanded } }
-            : node
-        )
-      );
+      setNodes((currentNodes) => setCanvasColumnDisclosure(currentNodes, nodeId, expanded));
     },
     [setNodes]
   );

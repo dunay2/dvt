@@ -42,4 +42,6 @@ export type CanvasControllerReadModelArgs = {
   canMutateGraph: boolean;
   canSelectExecution: boolean;
   columnLevelLineageEnabled: boolean;
+  atMaximumZoom?: boolean;
+  zoomDisclosureScopeKey?: string;
 };
