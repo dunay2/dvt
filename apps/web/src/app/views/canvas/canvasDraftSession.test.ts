@@ -64,7 +64,11 @@ function buildAuthoringDraft(
   };
 }
 
-function buildSourceToTransformFixture() {
+function buildSourceToTransformFixture(): Readonly<{
+  canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
+  persistedDraft: WorkspaceGraphAuthoringDraft;
+}> {
   const canonicalNodes = [
     {
       id: 'source_node',
