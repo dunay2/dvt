@@ -581,6 +581,12 @@ Retain the first sort when another header adds a tie-breaker. Show the
 priorities on sorted columns and retain them while filtering. Number active
 filters in the order they were applied.
 
+In the Data drawer, a cell anchors a rectangular selection. Shift with an
+arrow key or a click extends the rectangle. Copy uses the displayed row and
+column order and produces tab-separated text for a range. If the displayed
+order changes, retain only the active cell while it remains in the sample.
+Only already loaded and visible cells participate.
+
 The action is hidden at rest and revealed only while its card/action area is
 hovered or contains keyboard-visible focus. A mouse-selected card does not pin
 the action open. Keep the button mounted and its space reserved: showing it

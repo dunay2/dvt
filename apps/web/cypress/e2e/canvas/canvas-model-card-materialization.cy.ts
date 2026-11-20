@@ -187,6 +187,44 @@ describe('Model card materialization', () => {
     const tableSelector = '[data-slot="bottom-operational-data-table"]';
     const frameSelector = '[data-slot="bottom-operational-data-table-frame"]';
     cy.get(tableSelector).find('tbody tr').should('have.length', 20);
+    const selectedValue = 'td[data-selected="true"] button';
+    cy.get(tableSelector).find('tbody tr').first().find('td button').first().click();
+    cy.focused().then(($cell) => {
+      const cell = $cell[0]!;
+      const view = cell.ownerDocument.defaultView!;
+      const key = new view.KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      expect(cell.dispatchEvent(key), 'selection consumes the arrow').to.be.false;
+    });
+    cy.get(tableSelector).find(selectedValue).should('have.length', 2);
+    cy.get(tableSelector).find('tbody tr').eq(1).find('td button').eq(1).click({ shiftKey: true });
+    cy.get(tableSelector).find(selectedValue).should('have.length', 4);
+    cy.window().then((window) => {
+      const expected = Array.from(window.document.querySelectorAll(`${tableSelector} tbody tr`))
+        .slice(0, 2)
+        .map((row) =>
+          Array.from(row.querySelectorAll(selectedValue), (cell) => cell.textContent).join('\t')
+        )
+        .join('\n');
+      const writeText = cy.stub(window.navigator.clipboard, 'writeText').resolves();
+      cy.focused().then(($cell) => {
+        const cell = $cell[0]!;
+        const view = cell.ownerDocument.defaultView!;
+        const key = new view.KeyboardEvent('keydown', {
+          key: 'c',
+          ctrlKey: true,
+          bubbles: true,
+          cancelable: true,
+        });
+        expect(cell.dispatchEvent(key), 'selection consumes copy').to.be.false;
+      });
+      cy.wrap(writeText).should('have.been.calledOnceWithExactly', expected);
+    });
+    cy.get('[data-slot="data-grid-toolbar"] button[aria-label="Copy range"]').should('be.enabled');
     cy.get(frameSelector)
       .invoke('css', 'background-image')
       .should('include', 'linear-gradient')

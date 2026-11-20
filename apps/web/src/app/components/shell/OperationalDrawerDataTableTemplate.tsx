@@ -6,12 +6,44 @@
  * @version 1.0.0
  */
 import { AlignJustify, Copy, Info, Search, WrapText } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { Input } from '../ui/input';
 import { OperationalDrawerDataColumnHeader } from './OperationalDrawerDataColumnHeader';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import styles from './OperationalDrawerDataTable.module.css';
+
+type DataTable = ReturnType<typeof useOperationalDrawerDataTable>;
+
+function handleCellKey(
+  event: KeyboardEvent<HTMLTableSectionElement>,
+  selection: DataTable['selection']
+) {
+  const target = event.target;
+  if (event.altKey || !(target instanceof HTMLButtonElement)) return;
+  if (event.ctrlKey || event.metaKey) {
+    if (!event.shiftKey && event.key.toLowerCase() === 'c' && selection.canCopy) {
+      event.preventDefault();
+      void selection.copy();
+    }
+    return;
+  }
+  const cell = target.closest('td');
+  const row = cell?.closest('tr');
+  if (cell == null || row == null) return;
+  const next = selection.move(
+    { row: row.sectionRowIndex, column: cell.cellIndex - 1 },
+    event.key,
+    event.shiftKey
+  );
+  if (next == null) return;
+  event.preventDefault();
+  event.currentTarget.rows
+    .item(next.row)
+    ?.cells.item(next.column + 1)
+    ?.querySelector('button')
+    ?.focus();
+}
 
 export function OperationalDrawerDataTableTemplate({
   model,
@@ -19,11 +51,13 @@ export function OperationalDrawerDataTableTemplate({
   toolbarActions,
   footer,
 }: Readonly<{
-  model: ReturnType<typeof useOperationalDrawerDataTable>;
+  model: DataTable;
   copy: OperationalDrawerDataTableCopy;
   toolbarActions?: ReactNode;
   footer?: ReactNode;
 }>): JSX.Element {
+  const { selection } = model;
+  const copyLabel = selection.isRange ? copy.copyRange : copy.copy;
   return (
     <section
       className={styles.grid}
@@ -71,10 +105,10 @@ export function OperationalDrawerDataTableTemplate({
           </button>
           <button
             type="button"
-            title={copy.copy}
-            aria-label={copy.copy}
-            disabled={!model.canCopy}
-            onClick={() => void model.copyCell()}
+            title={copyLabel}
+            aria-label={copyLabel}
+            disabled={!selection.canCopy}
+            onClick={() => void selection.copy()}
           >
             <Copy aria-hidden="true" />
           </button>
@@ -101,7 +135,7 @@ export function OperationalDrawerDataTableTemplate({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody onKeyDown={(event) => handleCellKey(event, selection)}>
             {model.rows.map((row) => (
               <tr key={row.id}>
                 <th scope="row" className={styles.rowNumber}>
@@ -113,7 +147,7 @@ export function OperationalDrawerDataTableTemplate({
                       type="button"
                       data-slot="bottom-operational-data-value"
                       className={styles.cell}
-                      onClick={cell.select}
+                      onClick={(event) => cell.select(event.shiftKey)}
                       aria-pressed={cell.selected}
                       aria-label={
                         cell.value === '' ? copy.emptyText : (cell.value ?? model.nullValueLabel)
@@ -137,7 +171,7 @@ export function OperationalDrawerDataTableTemplate({
         ) : null}
       </div>
       <footer className={styles.footer}>
-        <span role="status">{model.feedback == null ? '' : copy[model.feedback]}</span>
+        <span role="status">{selection.feedback == null ? '' : copy[selection.feedback]}</span>
         <div className={styles.footerFacts}>
           {footer}
           <span className={styles.help} tabIndex={0} aria-label={copy.scope} title={copy.scope}>

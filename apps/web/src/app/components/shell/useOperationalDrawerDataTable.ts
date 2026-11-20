@@ -16,6 +16,7 @@ import {
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useOperationalDrawerDataColumns } from './useOperationalDrawerDataColumns';
+import { useOperationalDrawerDataSelection } from './useOperationalDrawerDataSelection';
 
 type SampleRow = Readonly<{ values: readonly (string | null)[] }>;
 export type OperationalDrawerDataTableInput = Readonly<{
@@ -24,8 +25,6 @@ export type OperationalDrawerDataTableInput = Readonly<{
   nullValueLabel: string;
   rows: readonly SampleRow[];
 }>;
-type Selection = { row: SampleRow; columnId: string };
-
 export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableInput) {
   const { columns, rows, nullValueLabel } = input;
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -34,11 +33,6 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
   const [comfortable, setComfortable] = useState(false);
   const [wrap, setWrap] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('#191a1c');
-  const [selection, setSelection] = useState<Selection | null>(null);
-  const [feedback, setFeedback] = useState<{
-    selection: Selection;
-    result: 'copied' | 'copyFailed';
-  } | null>(null);
   const columnMovement = useOperationalDrawerDataColumns(columns);
   const tableColumns = useMemo<ColumnDef<SampleRow>[]>(
     () =>
@@ -68,21 +62,11 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     state: { sorting, columnFilters, columnOrder: columnMovement.order, globalFilter: search },
   });
   const visibleRows = table.getRowModel().rows;
-  const selectedCell = visibleRows
-    .find((row) => row.original === selection?.row)
-    ?.getVisibleCells()
-    .find((cell) => cell.column.id === selection?.columnId);
-  const copyCell = async () => {
-    if (selection == null || selectedCell == null) return;
-    try {
-      await navigator.clipboard.writeText(
-        selectedCell.getValue<string | undefined>() ?? nullValueLabel
-      );
-      setFeedback({ selection, result: 'copied' });
-    } catch {
-      setFeedback({ selection, result: 'copyFailed' });
-    }
-  };
+  const selection = useOperationalDrawerDataSelection(
+    visibleRows,
+    columnMovement.order,
+    nullValueLabel
+  );
   return {
     caption: input.caption,
     nullValueLabel,
@@ -96,9 +80,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     backgroundColor,
     setBackgroundColor,
     total: rows.length,
-    canCopy: selectedCell != null,
-    copyCell,
-    feedback: selectedCell != null && feedback?.selection === selection ? feedback.result : null,
+    selection,
     headers: table.getFlatHeaders().map((header) => ({
       id: header.column.id,
       type: columns.find((column) => column.name === header.column.id)?.type,
@@ -118,14 +100,11 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     rows: visibleRows.map((row, index) => ({
       id: row.id,
       number: index + 1,
-      cells: row.getVisibleCells().map((cell) => ({
+      cells: row.getVisibleCells().map((cell, column) => ({
         id: cell.id,
         value: cell.getValue<string | undefined>(),
-        selected: cell.id === selectedCell?.id,
-        select: () => {
-          setSelection({ row: row.original, columnId: cell.column.id });
-          setFeedback(null);
-        },
+        selected: selection.contains({ row: index, column }),
+        select: (extend: boolean) => selection.select({ row: index, column }, extend),
       })),
     })),
   };

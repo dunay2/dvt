@@ -185,6 +185,45 @@ describe('OperationalDrawerDataTable', () => {
     expect((copy as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it('extends and copies a rectangle, then keeps only the active cell when sorted', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    renderTable();
+    const cell = (row: number, column: number): HTMLButtonElement =>
+      container.querySelectorAll('tbody tr')[row]!.querySelectorAll<HTMLButtonElement>('td button')[
+        column
+      ]!;
+    const selected = (): (string | null)[] =>
+      Array.from(
+        container.querySelectorAll('td[data-selected="true"]'),
+        (item) => item.textContent
+      );
+    const key = async (
+      name: string,
+      options: { shiftKey?: boolean; ctrlKey?: boolean }
+    ): Promise<void> => {
+      await act(async () => fireEvent.keyDown(document.activeElement!, { key: name, ...options }));
+    };
+
+    act(() => {
+      cell(0, 0).focus();
+      fireEvent.click(cell(0, 0));
+    });
+    await key('ArrowRight', { shiftKey: true });
+    await key('ArrowDown', { shiftKey: true });
+    expect(document.activeElement).toBe(cell(1, 1));
+    expect(selected()).toEqual(['1', 'beta', '2', 'alpha']);
+    await key('c', { ctrlKey: true });
+    expect(writeText).toHaveBeenLastCalledWith('1\tbeta\n2\talpha');
+    expect(getByRole(container, 'status').textContent).toBe('Range copied');
+
+    await act(() => fireEvent.click(cell(3, 1), { shiftKey: true }));
+    await act(async () => fireEvent.click(getByRole(container, 'button', { name: 'Copy range' })));
+    expect(writeText).toHaveBeenLastCalledWith('1\tbeta\n2\talpha\n3\talpha\n4\tNULL');
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'customer' })));
+    expect(selected()).toEqual(['NULL']);
+  });
+
   it('reports clipboard failure without pretending success', async () => {
     vi.stubGlobal('navigator', {
       clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
