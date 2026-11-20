@@ -72,6 +72,7 @@ flowchart LR
 
 Other card measurements are hidden on first use. In Properties, the Overview switch
 shows or hides the operational rail on one placed card. The layout preference
+can be selected for a Sink before a publication produces measurement evidence. It
 survives reloads and is scoped by tenant, project, environment, adapter, Canvas,
 project root and placement id. Two placements of the same model can therefore
 display different details. The switch also works on read-only file projections.

@@ -75,12 +75,15 @@ export function useCanvasCardPresentation(
         ),
       };
     }
-    const card = buildGraphNodeCardReadModel(
-      inspectorNode,
-      placed.data,
-      getGraphNodeCardStrategies(runtimeCapabilities)
-    );
-    if (!card.operationalMetrics.length && !card.metrics.some(isRuntimeSummaryMetric)) return null;
+    if (inspectorNode.kind !== 'dvt:sink') {
+      const card = buildGraphNodeCardReadModel(
+        inspectorNode,
+        placed.data,
+        getGraphNodeCardStrategies(runtimeCapabilities)
+      );
+      if (!card.operationalMetrics.length && !card.metrics.some(isRuntimeSummaryMetric))
+        return null;
+    }
     return {
       id: 'canvas-card-metric-visibility',
       nodeId: inspectorNode.id,
