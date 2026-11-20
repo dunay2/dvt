@@ -66,7 +66,7 @@ function buildAuthoringDraft(
 
 function buildSourceToTransformFixture(): Readonly<{
   canonicalNodes: readonly CanonicalNode[];
-  canonicalEdges: readonly CanonicalEdge[];
+  canonicalEdges: CanonicalEdge[];
   persistedDraft: WorkspaceGraphAuthoringDraft;
 }> {
   const canonicalNodes = [
