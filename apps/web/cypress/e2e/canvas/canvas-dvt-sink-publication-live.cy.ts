@@ -74,9 +74,6 @@ describe('Explicit PostgreSQL Sink live', () => {
     cy.get('.react-flow__edge').should('have.length', 3);
     cy.then(() => {
       openWorkbenchProperties(sinkId);
-      cy.get('[data-slot="canvas-card-metrics-switch"]')
-        .click()
-        .should('have.attr', 'aria-checked', 'true');
       cy.contains('[role="tab"]', /^Sink$/).click();
       cy.get('select[name="dvt-sink-connection"]').should('have.value', '').select(connectionId);
       cy.get('input[name="dvt-sink-schema"]').clear().type(schema);
@@ -127,7 +124,15 @@ describe('Explicit PostgreSQL Sink live', () => {
       loadPublicationRows(evidence.publication.token, publicationRows);
       cy.contains('[data-slot="run-detail-tabs"] [role="tab"]', /^Summary$/).click();
       cy.get(`a[href="/canvas?runId=${encodeURIComponent(runId)}"]`).click();
-      cy.get(`.react-flow__node[data-id="${sinkId}"]`, { timeout: 30_000 })
+      const sinkCard = `.react-flow__node[data-id="${sinkId}"]`;
+      cy.get(sinkCard, { timeout: 30_000 }).should('be.visible');
+      openWorkbenchProperties(sinkId);
+      cy.get('[data-slot="canvas-card-metrics-switch"]')
+        .should('have.attr', 'aria-checked', 'false')
+        .click()
+        .should('have.attr', 'aria-checked', 'true');
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.get(sinkCard)
         .contains('[data-slot="graph-node-operational-metric"]', 'Rows')
         .find('[data-slot="graph-node-metric-hotspot"]')
         .should('have.text', String(evidence.rowsWritten));
