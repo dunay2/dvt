@@ -8,6 +8,7 @@ import {
 } from '../canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeNode } from '../canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeNodeSize } from '../canvasRelationalTreeGeometryMetrics';
+import type { projectCanvasRelationalMovableCards } from '../projectCanvasRelationalMovableCards';
 
 type Positions = ReadonlyMap<string, CardPosition>;
 type Extent = Pick<CanvasRelationalTreeLayout, 'width' | 'height'> | null;
@@ -20,6 +21,9 @@ export function useRelationalCardPlacement(
 ) {
   const [positions, setPositions] = useState<Positions>(() => new Map(initialPositions));
   const positionsRef = useRef(positions);
+  const displayedCards = useRef<Readonly<ReturnType<typeof projectCanvasRelationalMovableCards>>>(
+    []
+  );
   const expansionFrame = useRef<Expansion>(null);
   const contentSize = useRef<Pick<
     CanvasRelationalTreeLayout,
@@ -124,6 +128,23 @@ export function useRelationalCardPlacement(
     },
     [onPositionsChange, place]
   );
+  const retainPositionsAfterRemoval = useCallback(
+    (removedId: string) => {
+      const settled = provisional.current?.positions ?? positionsRef.current;
+      const next = new Map(settled);
+      for (const { id, x, y, offset } of displayedCards.current) {
+        if (id !== removedId && id !== provisional.current?.id)
+          next.set(id, { x: x - (offset?.x ?? 0), y: y - (offset?.y ?? 0) });
+      }
+      provisional.current = null;
+      autoFit.current = false;
+      if (areCanvasPositionsEqual(next, positionsRef.current)) return;
+      positionsRef.current = next;
+      setPositions(next);
+      onPositionsChange?.(next);
+    },
+    [onPositionsChange]
+  );
   const arrange = useCallback(() => {
     provisional.current = null;
     expansionFrame.current = null;
@@ -136,6 +157,8 @@ export function useRelationalCardPlacement(
 
   return {
     positions,
+    displayedCards,
+    retainPositionsAfterRemoval,
     projectLayout,
     contentSize,
     setExtent,

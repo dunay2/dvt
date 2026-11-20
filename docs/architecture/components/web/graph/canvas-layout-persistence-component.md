@@ -216,6 +216,14 @@ replacement publish nothing. An absent-to-empty position map creates a local
 record once; subsequent equivalent writes are suppressed. Local coordinates
 survive Model close/reopen and browser reload without semantic Apply.
 
+Accepted card removal retains the displayed graph's compact coordinates before
+the owning `ConfigureCanvasDvtNode` command replaces the tree with its editable
+graph. The viewport captures automatic and manually positioned cards by stable
+relation identity, including Output, and publishes through the existing layout
+callback. The layout still derives detail offsets from card sizes. Canceling or
+rejecting a removal proposal publishes nothing. Arrange clears the retained
+coordinates through the same layout command.
+
 One pure Canvas-position value predicate serves store write suppression, outer
 Canvas persistence, and relational layout restoration. Equivalent record or Map
 coordinates are acknowledgements of the current placement; they do not reset

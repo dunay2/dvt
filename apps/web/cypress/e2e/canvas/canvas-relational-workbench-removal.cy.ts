@@ -6,11 +6,13 @@ import {
 } from '@dvt/contracts';
 
 import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { readWorkbenchCardPosition } from '../../support/relationalWorkbench/geometry';
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
   revisitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
+import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 /** Traverse real tab stops, without placing focus on the requested control. */
@@ -50,6 +52,32 @@ describe('Workbench removal', () => {
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
 
+    // The surviving read is placed manually while the JOIN and Output are automatic.
+    moveWorkbenchCard(`${source}:contains("customers")`, 25, 35);
+    const positions = new Map<string, { x: number; y: number }>();
+    const cards = '[data-relational-card-id]';
+    cy.contains(source, 'orders')
+      .closest(cards)
+      .then(($target) => {
+        const removedId = $target.attr('data-relational-card-id');
+        cy.get(cards)
+          .should('have.length', 4)
+          .each(($card) => {
+            const id = $card.attr('data-relational-card-id')!;
+            if (id !== removedId) positions.set(id, readWorkbenchCardPosition($card[0]));
+          });
+      });
+    const assertSurvivorPositions = (): void => {
+      cy.get(cards).should(($cards) => {
+        expect(positions.size).to.equal(3);
+        expect($cards).to.have.length(positions.size);
+        for (const card of $cards) {
+          const id = card.getAttribute('data-relational-card-id')!;
+          expect(readWorkbenchCardPosition(card), id).to.deep.equal(positions.get(id));
+        }
+      });
+    };
+
     cy.contains(source, 'orders').rightclick();
     cy.get('[data-slot="canvas-relational-remove-source"]').click();
     cy.get('[data-slot="canvas-card-removal-bar"]').should('contain.text', 'INNER JOIN');
@@ -57,6 +85,7 @@ describe('Workbench removal', () => {
     cy.get(confirm).click();
     cy.get(join).should('contain.text', 'Missing input');
     cy.get(source).should('have.length', 1);
+    assertSurvivorPositions();
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
@@ -84,6 +113,7 @@ describe('Workbench removal', () => {
     cy.get(source).should('have.length', 1);
     cy.get(join).should('contain.text', 'Missing input');
     cy.get('[data-slot="canvas-relational-tree-output"]').should('exist');
+    assertSurvivorPositions();
   });
 
   it('removes an operand with the keyboard, cancels, applies and returns to its opener', () => {

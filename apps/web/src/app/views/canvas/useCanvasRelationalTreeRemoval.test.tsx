@@ -24,6 +24,7 @@ describe('card removal consent', () => {
         refresh: vi.fn(),
       };
       const start = vi.fn(() => true);
+      const onAccepted = vi.fn();
       const ids = ['left', 'right'];
       let removal!: ReturnType<typeof useCanvasRelationalTreeRemoval>;
       let state!: ReturnType<typeof useCanvasRelationalTreeDraftState>;
@@ -40,9 +41,10 @@ describe('card removal consent', () => {
         return null;
       }
       await act(async () => root.render(<Host enabled />));
-      await act(async () => removal.remove(target));
+      await act(async () => removal.remove(target, onAccepted));
       expect(removal.pending?.target.id).toBe(target);
       expect(start).not.toHaveBeenCalled();
+      expect(onAccepted).not.toHaveBeenCalled();
       expect(state.pendingSources).toEqual([]);
       expect(session.revision).toBe(revision);
       if (outcome === 'read-only') await act(async () => root.render(<Host enabled={false} />));
@@ -52,6 +54,8 @@ describe('card removal consent', () => {
       if (outcome === 'double') await act(async () => removal.confirm());
       const accepted = outcome === 'confirm' || outcome === 'double';
       expect(start).toHaveBeenCalledTimes(accepted ? 1 : 0);
+      expect(onAccepted).toHaveBeenCalledTimes(accepted ? 1 : 0);
+      if (accepted) expect(onAccepted).toHaveBeenCalledWith(target);
       expect(session.revision).toBe(revision);
       expect(session.hasDocument(document)).toBe(true);
       if (accepted) {

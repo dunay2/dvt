@@ -36,6 +36,7 @@ export function useCanvasRelationalTreeRemoval(
     proposal: CanvasCardRemovalProposal;
     revision: number | undefined;
     permission: string | undefined;
+    onAccepted?: (id: string) => void;
   }> | null>(null);
   useEffect(
     () => () => {
@@ -61,11 +62,12 @@ export function useCanvasRelationalTreeRemoval(
     )
       throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
   };
-  const accept = (proposal: CanvasCardRemovalProposal) => {
+  const accept = (proposal: CanvasCardRemovalProposal, onAccepted?: (id: string) => void) => {
     requireWritable();
     if (!sameSnapshot(proposal.snapshot, snapshot()))
       throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
     if (!args.start()) throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.readOnly);
+    onAccepted?.(proposal.target.id);
     state.setJoinDraft(null);
     state.setOperation(null);
     state.slots.resetOperands();
@@ -84,18 +86,20 @@ export function useCanvasRelationalTreeRemoval(
     error,
     cancel,
     clearError: () => setError(null),
-    remove: (id: string) => {
+    remove: (id: string, onAccepted?: (id: string) => void) => {
       cancel();
       setError(null);
       try {
         requireWritable();
         const proposal = prepareCanvasCardRemoval(snapshot(), id);
-        if (proposal.dependents.length === 0 && !proposal.disconnectsOutput) accept(proposal);
+        if (proposal.dependents.length === 0 && !proposal.disconnectsOutput)
+          accept(proposal, onAccepted);
         else {
           consent.current = {
             proposal,
             revision: analysis?.revision,
             permission: analysis?.permissionIdentity,
+            onAccepted,
           };
           setPending(proposal);
         }
@@ -113,7 +117,7 @@ export function useCanvasRelationalTreeRemoval(
           current.permission !== analysis?.permissionIdentity
         )
           throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
-        accept(current.proposal);
+        accept(current.proposal, current.onAccepted);
       } catch (failure) {
         report(failure);
       }
