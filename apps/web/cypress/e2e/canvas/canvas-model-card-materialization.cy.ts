@@ -205,7 +205,26 @@ describe('Model card materialization', () => {
         cy.get(frameSelector).invoke('css', 'background-image').should('not.equal', before);
       });
     cy.get(searchSelector).type('customer');
-    cy.get(tableSelector).find('[data-column-id="name"]').click();
+    cy.get(tableSelector)
+      .find('[data-column-id="name"]')
+      .click()
+      .should('have.attr', 'data-sort-priority', '1');
+    cy.get(tableSelector)
+      .find('[data-column-id="country"]')
+      .click()
+      .should('have.attr', 'data-sort-priority', '2');
+    cy.get(tableSelector).find('button[aria-label="Filter email"]').click();
+    cy.get('input[aria-label="Filter email"]').type('customer-1@');
+    cy.get(tableSelector).find('tbody tr').should('have.length', 1);
+    cy.get(tableSelector)
+      .find('button[aria-label="Filter email"]')
+      .should('have.attr', 'data-filter-priority', '1');
+    cy.get(tableSelector)
+      .find('[data-column-id="name"]')
+      .should('have.attr', 'data-sort', 'ascending');
+    cy.get('input[aria-label="Filter email"]').clear();
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.get(tableSelector).find('tbody tr').should('have.length', 20);
     cy.get(frameSelector)
       .scrollTo(0, 48)
       .should(($frame) => {

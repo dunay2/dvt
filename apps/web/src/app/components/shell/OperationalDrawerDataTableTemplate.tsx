@@ -8,6 +8,7 @@
 import { AlignJustify, Copy, Info, Search, WrapText } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Input } from '../ui/input';
+import { OperationalDrawerDataColumnHeader } from './OperationalDrawerDataColumnHeader';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import styles from './OperationalDrawerDataTable.module.css';
@@ -96,31 +97,7 @@ export function OperationalDrawerDataTableTemplate({
                 #
               </th>
               {model.headers.map((header) => (
-                <th
-                  key={header.id}
-                  scope="col"
-                  aria-sort={header.sort}
-                  data-drop-edge={header.movement.edge}
-                >
-                  <div className={styles.heading}>
-                    <button
-                      type="button"
-                      data-column-id={header.id}
-                      data-sort={header.sort}
-                      title={`${header.id} · ${copy.columnHint}`}
-                      aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
-                      {...header.movement.events}
-                      onClick={header.toggleSort}
-                    >
-                      {header.id}
-                    </button>
-                    {header.type == null ? null : (
-                      <span className={styles.type} title={header.type}>
-                        {header.type}
-                      </span>
-                    )}
-                  </div>
-                </th>
+                <OperationalDrawerDataColumnHeader key={header.id} header={header} copy={copy} />
               ))}
             </tr>
           </thead>
@@ -155,7 +132,7 @@ export function OperationalDrawerDataTableTemplate({
             ))}
           </tbody>
         </table>
-        {model.rows.length === 0 && model.search !== '' ? (
+        {model.rows.length === 0 && model.hasFilters ? (
           <p className={styles.empty}>{copy.noMatches}</p>
         ) : null}
       </div>

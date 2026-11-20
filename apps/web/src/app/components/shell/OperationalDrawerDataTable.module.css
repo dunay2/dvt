@@ -175,25 +175,57 @@
   min-width: 120px;
   padding-inline: 8px;
 }
-.heading button {
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
   max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   text-align: left;
   height: var(--grid-header-height);
   padding: 0;
   font-size: 12px;
   cursor: grab;
 }
-.heading button[data-sort='ascending']::after {
-  content: ' ↑';
+.columnName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heading svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.sort[data-sort='none'] svg,
+.filter {
+  color: var(--text-subtle);
+}
+.sort:not([data-sort='none']) svg,
+.filter[data-active='true'] {
   color: var(--focus-ring);
 }
-.heading button[data-sort='descending']::after {
-  content: ' ↓';
+.heading sup {
   color: var(--focus-ring);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-left: auto;
+  width: 24px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.filter:hover,
+.filter[data-state='open'] {
+  background: var(--surface-selected);
+  color: var(--text-strong);
 }
 .type {
   max-width: 120px;

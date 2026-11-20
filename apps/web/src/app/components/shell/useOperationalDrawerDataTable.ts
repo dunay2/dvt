@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type ColumnFiltersState,
   type SortingState,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
@@ -29,6 +30,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
   const { columns, rows, nullValueLabel } = input;
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [comfortable, setComfortable] = useState(false);
   const [wrap, setWrap] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('#191a1c');
@@ -53,7 +55,8 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
   const table = useReactTable({
     columns: tableColumns,
     data: tableData,
-    enableMultiSort: false,
+    isMultiSortEvent: () => true,
+    sortDescFirst: false,
     autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -61,7 +64,8 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     globalFilterFn: 'includesString',
     getColumnCanGlobalFilter: () => true,
     onSortingChange: setSorting,
-    state: { sorting, columnOrder: columnMovement.order, globalFilter: search },
+    onColumnFiltersChange: setColumnFilters,
+    state: { sorting, columnFilters, columnOrder: columnMovement.order, globalFilter: search },
   });
   const visibleRows = table.getRowModel().rows;
   const selectedCell = visibleRows
@@ -84,6 +88,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     nullValueLabel,
     search,
     setSearch,
+    hasFilters: search !== '' || columnFilters.length > 0,
     comfortable,
     setComfortable,
     wrap,
@@ -104,6 +109,10 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
             ? ('descending' as const)
             : ('none' as const),
       toggleSort: header.column.getToggleSortingHandler(),
+      sortPriority: header.column.getSortIndex() + 1,
+      filter: String(header.column.getFilterValue() ?? ''),
+      filterPriority: columnFilters.findIndex(({ id }) => id === header.column.id) + 1,
+      setFilter: (value: string) => header.column.setFilterValue(value),
       movement: columnMovement.bind(header.column.id),
     })),
     rows: visibleRows.map((row, index) => ({

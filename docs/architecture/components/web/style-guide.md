@@ -573,6 +573,14 @@ presentation belongs to the existing drawer layout concern. Changing it keeps
 the same bounded sample and does not call a provider. Preserve opaque sticky
 headers and the application focus and selection tokens.
 
+Show the sort direction on every sortable header, including the neutral
+state. Give each column a separate filter control with a visible active state.
+Combine column filters with the global loaded-row search and keep the column
+filters associated with their column IDs when the user reorders headers.
+Retain the first sort when another header adds a tie-breaker. Show the
+priorities on sorted columns and retain them while filtering. Number active
+filters in the order they were applied.
+
 The action is hidden at rest and revealed only while its card/action area is
 hovered or contains keyboard-visible focus. A mouse-selected card does not pin
 the action open. Keep the button mounted and its space reserved: showing it
