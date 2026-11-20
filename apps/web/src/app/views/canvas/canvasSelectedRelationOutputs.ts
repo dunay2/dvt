@@ -139,6 +139,7 @@ export async function changeSelectedRelationOutputs(
   return commitSelectedRelation(session, {
     ...request,
     intent: 'edit',
+    pruneForwardedOutputs: removedIds.size > 0,
     replacement: { relation, binding: target.binding, fields },
   });
 }

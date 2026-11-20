@@ -7,7 +7,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import { clone } from '@bufbuild/protobuf';
-import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  RelSchema,
+  SortField_SortDirection,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   cloneLocalRelation,
   deriveSubstraitSchemas,
@@ -358,4 +361,82 @@ describe('canonical relation output editing', () => {
     expect(await session.query(session.rootId)).toEqual(before);
     expect(before.fields).toEqual(snapshot.fields);
   });
+
+  it.each([false, true])(
+    'excludes a duplicate JOIN output only when its consumers pass it through (sort dependency: %s)',
+    async (sortsByRemovedField) => {
+      const { session, root: join } = selectedUnaryScenario();
+      const joinId = join.binding.relationId;
+      await applySelectedRelationSortFetch(session, {
+        relationId: joinId,
+        expectedRevision: session.revision,
+        intent: 'insert',
+        operation: 'fetch',
+        count: 5n,
+      });
+      const intermediateId = session.rootId;
+      const intermediate = await session.query(intermediateId);
+      const sortKey = intermediate.bindings.find(({ displayName }) => displayName === 'order_id')!;
+      await applySelectedRelationSortFetch(session, {
+        relationId: intermediateId,
+        expectedRevision: session.revision,
+        intent: 'insert',
+        ...(sortsByRemovedField
+          ? {
+              operation: 'sort',
+              keys: [
+                { fieldId: sortKey.fieldId, direction: SortField_SortDirection.ASC_NULLS_LAST },
+              ],
+            }
+          : { operation: 'fetch', count: 3n }),
+      });
+      const projected = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [{ slot: 0 }],
+      });
+      session.receive({
+        ...projected,
+        sidecar: {
+          ...projected.sidecar,
+          fields: projected.sidecar.fields.map((field) =>
+            field.relationId === joinId && field.displayName === 'order_id'
+              ? { ...field, displayName: 'name' }
+              : field
+          ),
+        },
+      });
+      const target = session.locate(joinId, session.revision);
+      const selected = relationOutputSlots(
+        target,
+        await Promise.all(target.inputs.map((id) => session.query(id)))
+      ).filter((slot) => slot.output != null);
+      const duplicates = selected.filter((slot) => slot.name === 'name');
+      expect(duplicates).toHaveLength(2);
+      const kept = selected.filter((slot) => slot !== duplicates[1]);
+      const revision = session.revision;
+      const finalOutput = (await session.query(null)).bindings;
+      const removal = changeSelectedRelationOutputs(session, {
+        relationId: joinId,
+        expectedRevision: revision,
+        outputs: kept.map(({ slot, name }) => ({ slot, alias: name })),
+      });
+
+      if (sortsByRemovedField) {
+        await expect(removal).rejects.toThrow(/consumer still uses/);
+        expect(session.revision).toBe(revision);
+        expect((await session.query(intermediateId)).bindings).toEqual(intermediate.bindings);
+      } else {
+        await removal;
+        expect((await session.query(joinId)).bindings.map((field) => field.fieldId)).toEqual(
+          kept.map((slot) => slot.output!.fieldId)
+        );
+        expect((await session.query(intermediateId)).bindings).toEqual(
+          intermediate.bindings.filter((field) => field !== sortKey)
+        );
+      }
+      expect((await session.query(null)).bindings).toEqual(finalOutput);
+      session.dispose();
+    }
+  );
 });

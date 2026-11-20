@@ -80,6 +80,13 @@ Apply saves the working copy through `SaveWorkspaceGraphDraft`. Cancel restores
 the original type. Read-only cards and incomplete JOINs keep a passive icon.
 Keyboard focus on the type control is independent of card selection and drag.
 
+In JOIN Output, exclusion targets the selected field identity. An imported JOIN
+can expose two fields with the same alias. Removing one may prune its forwarded
+copies from intermediate operations and rebase their input ordinals in the same
+semantic edit. Preserve the surviving field IDs and the final Model output.
+Reject the edit atomically if an expression still references the removed field,
+a set operation needs the input schema, or the removal changes the final output.
+
 - A valid focused alias followed by pointer Close causes no PUT. Reopening is
   passive and SQL is enabled.
 - Closing after an acknowledged alias preserves that accepted change.
