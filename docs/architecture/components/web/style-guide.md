@@ -61,8 +61,8 @@ technical identifiers. Provider marks are allowed only for an identified provide
 Native scrollbars use the shared base theme and its muted text color. Horizontal
 and vertical tracks are thin. Fine-pointer devices reveal the thumb on hover or
 visible keyboard focus, with stable layout. Touch and forced-color modes keep
-their visible affordance. The shared ScrollArea follows this pattern for its
-own thumb when content overflows.
+their visible affordance. The shared ScrollArea uses the same thin thumb and
+color with its existing visibility behavior.
 
 ## Canvas personalisation
 

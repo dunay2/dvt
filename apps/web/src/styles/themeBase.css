@@ -16,11 +16,6 @@
     :where(:not(:hover, :focus-visible, :focus-within:has(:focus-visible))) {
       scrollbar-color: transparent transparent;
     }
-
-    :where(:not(:hover, :focus-within:has(:focus-visible)))
-      > :where([data-slot='scroll-area-scrollbar']) {
-      visibility: hidden;
-    }
   }
 
   html.dark {
