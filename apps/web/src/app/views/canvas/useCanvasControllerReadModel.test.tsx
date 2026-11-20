@@ -40,7 +40,7 @@ describe('Canvas read model presentation and permissions', () => {
       await mounted.rerender({ ...belowMaximum, atMaximumZoom: true });
       const change = readProjectedNodeData(mounted.readState())?.onColumnDisclosureChange;
       expect(typeof change).toBe('function');
-      await act(() => {
+      act(() => {
         (change as (id: string, expanded: boolean) => void)(testNode.id, false);
       });
       expect(readDisclosure()).toEqual([false, true]);
