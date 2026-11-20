@@ -128,7 +128,9 @@ describe('CanvasGraphFilterControl', () => {
       action === 'trigger'
         ? trigger
         : getByRole(dialog, 'button', { name: 'Cerrar filtros del grafo' });
-    act(() => fireEvent.click(dismiss));
+    act(() => {
+      fireEvent.click(dismiss);
+    });
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(document.querySelector('[data-slot="canvas-graph-filter-control"]')).toBeNull();
     expect(onOpenChange).toHaveBeenNthCalledWith(1, true);
