@@ -218,9 +218,9 @@ describe('OperationalDrawerDataTable', () => {
     expect(visibleRows()).toEqual([['needle']]);
   });
 
-  it('localizes controls and feedback without changing the sample', () => {
+  it('localizes controls and feedback without changing the sample', async () => {
     renderTable();
-    act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
+    await act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
     expect(
       getByRole(container, 'searchbox', { name: 'Buscar en las filas cargadas' })
     ).toBeTruthy();
@@ -228,45 +228,45 @@ describe('OperationalDrawerDataTable', () => {
     const swatch = getByLabelText<HTMLInputElement>(container, 'Color de fondo de Datos');
     const grid = getByRole(container, 'region', { name: 'Sample' });
     expect(swatch.value).toBe('#191a1c');
-    act(() => fireEvent.input(swatch, { target: { value: '#284560' } }));
+    await act(() => fireEvent.input(swatch, { target: { value: '#284560' } }));
     expect(grid.style.getPropertyValue('--grid-primary')).toBe('#284560');
     expect(visibleRows()[0]).toEqual(['1', 'beta']);
   });
 
-  it('combines one column filter with loaded-row search and clears the column independently', () => {
+  it('combines one column filter with loaded-row search and clears the column independently', async () => {
     renderTable();
     const funnel = getByRole(container, 'button', { name: 'Filter customer' });
-    act(() => fireEvent.click(funnel));
+    await act(() => fireEvent.click(funnel));
     const columnFilter = getByRole(document.body, 'searchbox', { name: 'Filter customer' });
     const search = getByRole(container, 'searchbox', { name: 'Search loaded rows' });
 
-    act(() => fireEvent.change(columnFilter, { target: { value: 'alpha' } }));
+    await act(() => fireEvent.change(columnFilter, { target: { value: 'alpha' } }));
     expect(visibleRows()).toEqual([
       ['2', 'alpha'],
       ['3', 'alpha'],
     ]);
     expect(funnel.getAttribute('data-active')).toBe('true');
 
-    act(() => fireEvent.change(search, { target: { value: 'beta' } }));
+    await act(() => fireEvent.change(search, { target: { value: 'beta' } }));
     expect(visibleRows()).toEqual([]);
-    act(() => fireEvent.change(columnFilter, { target: { value: '' } }));
+    await act(() => fireEvent.change(columnFilter, { target: { value: '' } }));
     expect(visibleRows()).toEqual([['1', 'beta']]);
     expect(funnel.getAttribute('data-active')).toBe('false');
 
-    act(() => fireEvent.change(search, { target: { value: '' } }));
-    act(() => fireEvent.change(columnFilter, { target: { value: 'alpha' } }));
-    act(() => fireEvent.click(funnel));
+    await act(() => fireEvent.change(search, { target: { value: '' } }));
+    await act(() => fireEvent.change(columnFilter, { target: { value: 'alpha' } }));
+    await act(() => fireEvent.click(funnel));
     const secondFunnel = getByRole(container, 'button', { name: 'Filter id' });
-    act(() => fireEvent.click(secondFunnel));
+    await act(() => fireEvent.click(secondFunnel));
     const secondFilter = getByRole(document.body, 'searchbox', { name: 'Filter id' });
-    act(() => fireEvent.change(secondFilter, { target: { value: '2' } }));
+    await act(() => fireEvent.change(secondFilter, { target: { value: '2' } }));
     expect(visibleRows()).toEqual([['2', 'alpha']]);
     expect(funnel.querySelector('sup')?.textContent).toBe('1');
     expect(secondFunnel.querySelector('sup')?.textContent).toBe('2');
 
-    act(() => fireEvent.click(secondFunnel));
-    act(() => fireEvent.click(funnel));
-    act(() =>
+    await act(() => fireEvent.click(secondFunnel));
+    await act(() => fireEvent.click(funnel));
+    await act(() =>
       fireEvent.change(getByRole(document.body, 'searchbox', { name: 'Filter customer' }), {
         target: { value: '' },
       })
@@ -275,23 +275,23 @@ describe('OperationalDrawerDataTable', () => {
     expect(secondFunnel.querySelector('sup')?.textContent).toBe('1');
   });
 
-  it('keeps the primary sort when adding a tie-breaker and filtering the ordered rows', () => {
+  it('keeps the primary sort when adding a tie-breaker and filtering the ordered rows', async () => {
     renderTable();
     const customer = getByRole(container, 'button', { name: 'customer' });
     const id = getByRole(container, 'button', { name: 'id' });
-    act(() => fireEvent.click(customer));
-    act(() => fireEvent.click(id));
-    act(() => fireEvent.click(id));
+    await act(() => fireEvent.click(customer));
+    await act(() => fireEvent.click(id));
+    await act(() => fireEvent.click(id));
     expect(visibleRows().map(([value]) => value)).toEqual(['3', '2', '1', '4']);
     expect(customer.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
     expect(customer.querySelector('sup')?.textContent).toBe('1');
     expect(id.querySelector('sup')?.textContent).toBe('2');
 
-    act(() => fireEvent.click(getByRole(container, 'button', { name: 'Filter customer' })));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'Filter customer' })));
     const filter = getByRole(document.body, 'searchbox', { name: 'Filter customer' });
-    act(() => fireEvent.change(filter, { target: { value: 'alpha' } }));
+    await act(() => fireEvent.change(filter, { target: { value: 'alpha' } }));
     expect(visibleRows().map(([value]) => value)).toEqual(['3', '2']);
-    act(() => fireEvent.change(filter, { target: { value: '' } }));
+    await act(() => fireEvent.change(filter, { target: { value: '' } }));
     expect(visibleRows().map(([value]) => value)).toEqual(['3', '2', '1', '4']);
   });
 });
