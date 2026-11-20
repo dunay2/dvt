@@ -64,6 +64,49 @@ function buildAuthoringDraft(
   };
 }
 
+function buildSourceToTransformFixture() {
+  const canonicalNodes = [
+    {
+      id: 'source_node',
+      name: 'Orders source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    },
+    {
+      id: 'transform_node',
+      name: 'Orders transform',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    },
+  ] satisfies CanonicalNode[];
+  const canonicalEdges = [
+    {
+      id: 'edge_source_node_transform_node',
+      sourceId: 'source_node',
+      targetId: 'transform_node',
+      relation: 'lineage',
+    },
+  ] satisfies CanonicalEdge[];
+  const persistedDraft = buildCanvasAuthoringDraft({
+    canvas: { kind: 'transformation', title: 'Main canvas' },
+    nodeIds: canonicalNodes.map((node) => node.id),
+    nodePositions: {
+      source_node: { x: 0, y: 0 },
+      transform_node: { x: 100, y: 0 },
+    },
+    visibleEdges: canonicalEdges,
+    canonicalNodes,
+    canonicalEdges,
+  });
+  return { canonicalNodes, canonicalEdges, persistedDraft };
+}
+
 describe('canvasDraftSession', () => {
   it('bootstraps to the canonical snapshot when no remote draft exists', () => {
     const session = canvasDraftSession.machine.bootstrap({
@@ -488,25 +531,14 @@ describe('canvasDraftSession', () => {
   });
 
   it('projects the reloaded persisted edge as the same Input and Output relationship', () => {
-    const persistedDraft = buildAuthoringDraft({
-      canvas: {
-        kind: 'transformation',
-        title: 'Main canvas',
-      },
-      nodeIds: ['source_node', 'transform_node'],
-      nodePositions: {
-        source_node: { x: 0, y: 0 },
-        transform_node: { x: 100, y: 0 },
-      },
-      edges: [{ sourceId: 'source_node', targetId: 'transform_node' }],
-    });
+    const { canonicalNodes, canonicalEdges, persistedDraft } = buildSourceToTransformFixture();
     const initialSession = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         revision: 'rev-edge-1',
         draft: persistedDraft,
       }),
-      canonicalNodeIds: ['source_node', 'transform_node'],
-      canonicalEdges: [{ sourceId: 'source_node', targetId: 'transform_node' }],
+      canonicalNodeIds: canonicalNodes.map((node) => node.id),
+      canonicalEdges,
     });
 
     const reloadedSession = canvasDraftSession.machine.reloadFromRemote(
@@ -527,8 +559,8 @@ describe('canvasDraftSession', () => {
     });
     const sourceNode = projection.canonicalNodesById.get('source_node');
     const transformNode = projection.canonicalNodesById.get('transform_node');
-    expect(sourceNode).toBeDefined();
-    expect(transformNode).toBeDefined();
+    expect(sourceNode?.kind).toBe('dvt:source');
+    expect(transformNode?.kind).toBe('dvt:transform');
     const presentationCopy = buildCanvasNodePresentationCopy(resolveCanvasViewCopy('en'), 'en');
     const sourceInputsOutputs = buildNodePropertiesReadModel({
       node: sourceNode!,
@@ -559,7 +591,7 @@ describe('canvasDraftSession', () => {
         id: 'output:edge_source_node_transform_node',
         cells: {
           direction: 'Output',
-          node: 'transform_node',
+          node: 'Orders transform',
           nodeId: 'transform_node',
           relation: 'lineage',
         },
@@ -570,7 +602,7 @@ describe('canvasDraftSession', () => {
         id: 'input:edge_source_node_transform_node',
         cells: {
           direction: 'Input',
-          node: 'source_node',
+          node: 'Orders source',
           nodeId: 'source_node',
           relation: 'lineage',
         },
@@ -579,45 +611,7 @@ describe('canvasDraftSession', () => {
   });
 
   it('keeps a removed edge absent from persistence, reload, and Inputs/Outputs', async () => {
-    const canonicalNodes = [
-      {
-        id: 'source_node',
-        name: 'Orders source',
-        pluginId: 'dvt',
-        kind: 'dvt:source',
-        role: 'input',
-        status: 'idle',
-        tags: [],
-      },
-      {
-        id: 'transform_node',
-        name: 'Orders transform',
-        pluginId: 'dvt',
-        kind: 'dvt:transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-      },
-    ] satisfies CanonicalNode[];
-    const canonicalEdges = [
-      {
-        id: 'edge_source_node_transform_node',
-        sourceId: 'source_node',
-        targetId: 'transform_node',
-        relation: 'lineage',
-      },
-    ] satisfies CanonicalEdge[];
-    const persistedDraft = buildCanvasAuthoringDraft({
-      canvas: { kind: 'transformation', title: 'Main canvas' },
-      nodeIds: canonicalNodes.map((node) => node.id),
-      nodePositions: {
-        source_node: { x: 0, y: 0 },
-        transform_node: { x: 100, y: 0 },
-      },
-      visibleEdges: canonicalEdges,
-      canonicalNodes,
-      canonicalEdges,
-    });
+    const { canonicalNodes, canonicalEdges, persistedDraft } = buildSourceToTransformFixture();
     const initialSession = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         revision: 'rev-before-removal',
