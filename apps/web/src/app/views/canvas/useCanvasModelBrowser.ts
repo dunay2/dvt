@@ -6,6 +6,7 @@
  * @version 1.1.0
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type {
@@ -28,6 +29,7 @@ import { resolveCanvasExplorerCopy } from './explorer/canvasExplorerCopy';
 import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
 import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
 import { readCanvasModelNavigationPreference } from './canvasModelNavigationPreference';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export function useCanvasModelBrowser({
   canvasId,
@@ -107,6 +109,10 @@ export function useCanvasModelBrowser({
         else model.open(target.nodeId, view);
         return true;
       }
+      if (view === 'semantic') {
+        toast.info(resolveCanvasSemanticEditorCopy(language).semanticEditorUnavailable);
+        return false;
+      }
       showCanvas();
       model.setActive(false);
       return onInspect(request, preferredTab ?? (view === 'sql' ? 'code' : null));
@@ -115,6 +121,7 @@ export function useCanvasModelBrowser({
       owner,
       canvasId,
       mode,
+      language,
       model.active,
       nodes,
       model.modelIds,
@@ -136,6 +143,7 @@ export function useCanvasModelBrowser({
       setPendingContext(null);
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'expand' });
       const request = resolveCanvasModelViewEntry({
+        view,
         nodes,
         catalogue,
         modelIds: model.modelIds,

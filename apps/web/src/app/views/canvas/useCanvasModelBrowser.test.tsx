@@ -172,6 +172,28 @@ it('inspects an explicitly selected Source even when a Model was remembered', ()
   expect(inspect).toHaveBeenCalledExactlyOnceWith(resource, 'code');
 });
 
+it('opens the retained semantic Model from a Source inspection and keeps it on an ineligible row', async () => {
+  const resource = { kind: 'canonical-node', nodeId: source.id } as const;
+  render();
+  act(() => model.open(second.id));
+  act(() => model.setActive(false));
+  render({ target: resource });
+
+  browse('semantic');
+  expect(model.active).toBe(true);
+  expect(model.selected?.id).toBe(second.id);
+  showCanvas.mockClear();
+
+  await act(async () => {
+    expect(browser.onSelect(resource)).toBe(false);
+  });
+  expect(browser.mode).toBe('semantic');
+  expect(model.active).toBe(true);
+  expect(model.selected?.id).toBe(second.id);
+  expect(showCanvas).not.toHaveBeenCalled();
+  expect(inspect).not.toHaveBeenCalled();
+});
+
 it('ignores unavailable catalog callbacks and waits for a new rail click when ready', () => {
   render();
   const stale = store.getState().modelBrowser!;

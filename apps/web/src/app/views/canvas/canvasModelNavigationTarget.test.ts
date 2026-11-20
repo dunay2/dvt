@@ -21,6 +21,7 @@ it('admits only matching catalog definitions as the first Model in a filtered Ex
   const matched = { ...definition, id: 'filtered', tags: ['finance'] };
   const nodes = [first, second, definition, matched];
   const input = {
+    view: 'semantic' as const,
     nodes,
     catalogue: projectCanvasExplorerModels(nodes),
     modelIds: new Set(nodes.map((node) => node.id)),

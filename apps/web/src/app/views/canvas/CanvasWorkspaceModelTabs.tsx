@@ -16,11 +16,13 @@ export function CanvasWorkspaceModelTabs({
   tab,
   modelTabs,
   codeTab,
+  onShowCanvas,
 }: Readonly<{
   canvasTitle: string;
   tab?: CanvasModelWorkspaceTabContribution;
   modelTabs?: CanvasModelTabListContribution['tabs'];
   codeTab?: CanvasWorkspaceMenuContribution['codeTab'];
+  onShowCanvas?: () => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
@@ -32,10 +34,12 @@ export function CanvasWorkspaceModelTabs({
       kind: 'canvas' as const,
       ...canvasWorkspaceTabs.canvas,
       label: canvasTitle,
-      select: () => {
-        codeTab?.onCanvas();
-        tab?.onCanvas();
-      },
+      select:
+        onShowCanvas ??
+        (() => {
+          codeTab?.onCanvas();
+          tab?.onCanvas();
+        }),
     },
     ...(codeTab == null
       ? []

@@ -207,6 +207,7 @@ export function CanvasWorkspaceMenuControls({
 export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
   const modelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
   const modelTabList = useCanvasWorkspaceMenuContributionStore((state) => state.modelTabList);
+  const modelBrowser = useCanvasWorkspaceMenuContributionStore((state) => state.modelBrowser);
   const codeTab = useCanvasWorkspaceMenuContributionStore((state) => state.contribution?.codeTab);
   const activeCanvas = useCanvasWorkspaceMenuContributionStore(
     (state) => state.contribution?.activeCanvas ?? null
@@ -253,6 +254,9 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
         tab={activeCanvas != null && modelTab?.canvasId === activeCanvas.id ? modelTab : undefined}
         modelTabs={modelTabList?.canvasId === activeCanvas?.id ? modelTabList?.tabs : undefined}
         codeTab={codeTab}
+        onShowCanvas={
+          modelBrowser?.canvasId === activeCanvas?.id ? modelBrowser?.onCanvas : undefined
+        }
       />
     </div>
   );

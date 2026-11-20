@@ -83,11 +83,18 @@ surface on the same gesture. Reuse an eligible current Model or restore the
 last accepted Model for this workspace and Canvas. If neither is available,
 use the first eligible visible entry in Explorer order, honoring its search.
 An empty or unavailable catalog keeps its existing posture. The Explorer remains
-available for choosing another entry. An explicit row click keeps the selected
-resource's own inspection, Code or Model-open behavior. Accepting Model B
-updates an earlier inspection of A in the same scope. Returning from another
-route therefore reopens B. A later explicit inspection of A, a Source or a
-file takes precedence on the next shortcut and uses that resource's capability.
+available for choosing another entry. In Semantic view, an eligible Model row
+opens or activates its editor tab through the existing guarded selection. A
+Source or file-only row reports that it has no semantic editor and keeps the
+current surface. The Semantic shortcut uses a selected semantic-capable Model
+or the remembered or first eligible Model when the current inspection is
+ineligible. Canvas navigation from either the rail or workspace tab exits
+Model browsing. Canvas and SQL continue to route supported resource inspection
+through the existing owner.
+
+Accepting Model B updates an earlier inspection of A in the same scope.
+Returning from another route therefore reopens B. A later explicit inspection
+has priority on the next shortcut when the resource supports the chosen view.
 
 The browser tab remembers one scoped Model identity across route changes and
 reloads. Revalidate it against the current catalog at entry. An unavailable
