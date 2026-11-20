@@ -194,7 +194,7 @@ export function NodePropertiesTabs({
           className={cn(
             'flex h-auto shrink-0 justify-start gap-x-3 rounded-none bg-transparent p-0',
             surface === 'workbench'
-              ? 'min-w-0 flex-1 flex-nowrap overflow-x-auto'
+              ? inspectorVisualClasses.contextPanelWorkbenchTabScroll
               : 'w-full flex-wrap'
           )}
         >

@@ -31,7 +31,11 @@ import {
   openWorkbenchModel,
   revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
-import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
+import {
+  hoverWorkbenchCard,
+  moveWorkbenchCard,
+  panWorkbenchViewport,
+} from '../../support/relationalWorkbench/pointer';
 import { verifyRetainedProjectCodeBrowsing } from '../../support/relationalWorkbench/projectCodeBrowsing';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
@@ -363,6 +367,21 @@ describe('Workbench viewport', () => {
       assertWidth(380);
       dragTo(260);
       assertWidth(260);
+      const tabs = `${inspector} [role="tablist"]`;
+      const transparent = 'rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)';
+      hoverWorkbenchCard(`${graph} .react-flow__controls-fitview`);
+      cy.get(tabs)
+        .should('have.css', 'scrollbar-width', 'thin')
+        .and('have.css', 'scrollbar-color', transparent)
+        .should(($tabs) => expect($tabs[0]!.scrollWidth).to.be.greaterThan($tabs[0]!.clientWidth));
+      hoverWorkbenchCard(tabs);
+      cy.get(tabs).should('not.have.css', 'scrollbar-color', transparent);
+      hoverWorkbenchCard(`${graph} .react-flow__controls-fitview`);
+      cy.get(tabs).should('have.css', 'scrollbar-color', transparent);
+      cy.get(`${tabs} [role="tab"]`).first().focus();
+      cy.press(Cypress.Keyboard.Keys.RIGHT);
+      cy.get(tabs).should('not.have.css', 'scrollbar-color', transparent);
+
       cy.get(handle).focus();
       assertResizeHandlePresentation(handle, 'horizontal');
       cy.press(Cypress.Keyboard.Keys.ENTER);
