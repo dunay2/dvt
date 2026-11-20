@@ -74,6 +74,7 @@ function CodeModelCommandSession(
   const language = useApplicationLanguageStore((state) => state.language);
   const compileButton = useRef<HTMLButtonElement>(null);
   const executeButton = useRef<HTMLButtonElement>(null);
+  const parametersButton = useRef<HTMLButtonElement>(null);
   const modelName =
     props.project.nodes.find((node) => node.uniqueId === props.modelId)?.name ?? props.modelId;
   return (
@@ -82,6 +83,7 @@ function CodeModelCommandSession(
         {...execution}
         compileRef={compileButton}
         executeRef={executeButton}
+        parametersRef={parametersButton}
         language={language}
         modelName={modelName}
         synchronized={props.synchronized}
@@ -96,11 +98,15 @@ function CodeModelCommandSession(
           overrides={execution.overrides}
           busy={execution.phase !== 'idle'}
           onCancel={execution.cancel}
-          onEdit={execution.invalidate}
           onConfirm={execution.confirm}
-          returnFocus={() =>
-            (execution.dialog === 'compile' ? compileButton : executeButton).current?.focus()
-          }
+          returnFocus={() => {
+            const triggers = {
+              compile: compileButton,
+              execute: executeButton,
+              parameters: parametersButton,
+            };
+            if (execution.dialog) triggers[execution.dialog].current?.focus();
+          }}
         />
       )}
     </>

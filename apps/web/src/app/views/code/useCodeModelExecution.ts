@@ -48,8 +48,8 @@ export function useCodeModelExecution({
   const [accepted, setAccepted] = useState<CanvasPreviewAttempt | null>(null);
   const [phase, setPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
   const [runId, setRunId] = useState<string>();
-  const [dialog, setDialog] = useState<Command | null>(null);
-  const [overrides, setOverrides] = useState<RunParameterOverride[]>([]);
+  const [dialog, setDialog] = useState<Command | 'parameters' | null>(null);
+  const [overrides, setOverrides] = useState<RunParameterOverride[]>();
   const generation = useRef(0);
   const busy = useRef(false);
   useLayoutEffect(
@@ -167,12 +167,15 @@ export function useCodeModelExecution({
   }
   async function request(command: Command) {
     if (busy.current || !(command === 'execute' ? canExecute : canCompile)) return;
-    if (parameterized) setDialog(command);
-    else await submit(command, []);
+    if (parameterized && overrides === undefined) setDialog(command);
+    else await submit(command, overrides ?? []);
   }
   return {
     compile: () => request('compile'),
     execute: () => request('execute'),
+    configureParameters: () => {
+      if (parameterized && canCompile && !busy.current) setDialog('parameters');
+    },
     canCompile,
     canExecute,
     phase,
@@ -190,14 +193,15 @@ export function useCodeModelExecution({
         : presentPlanRunReadiness(readiness).summary,
     parameters: model.parameters,
     environmentId: scope.environmentId,
-    overrides,
+    overrides: overrides ?? [],
     dialog,
     cancel,
-    invalidate: () => setAccepted(null),
     confirm: async (values: RunParameterOverride[]) => {
       if (!dialog || busy.current) return;
       setOverrides(values);
-      await submit(dialog, values);
+      if (dialog !== 'parameters') return submit(dialog, values);
+      if (JSON.stringify(values) !== JSON.stringify(overrides)) setAccepted(null);
+      setDialog(null);
     },
   };
 }

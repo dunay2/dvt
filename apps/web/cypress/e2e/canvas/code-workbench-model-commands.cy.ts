@@ -140,6 +140,7 @@ describe('Canvas Project Code accepted compilation before model execution', () =
     visitWithE2eWorkspaceSession('/canvas');
     cy.get('[data-slot="shell-project-code-command"]').click();
     const run = '[data-slot="workspace-file-code-editor"] [data-slot="code-execute-model"]';
+    const parameters = '[data-slot="code-configure-model-parameters"]';
     cy.get(run).should('be.enabled').click();
     cy.get('[role="dialog"]')
       .should('be.visible')
@@ -153,11 +154,20 @@ describe('Canvas Project Code accepted compilation before model execution', () =
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
     });
-    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get(parameters).click();
     cy.get('[role="dialog"] [role="switch"][aria-label$=" country"]').click();
     cy.get('select[name="country"]').select('FR');
     cy.screenshot('code-parameterized-model-review');
     cy.get('[role="dialog"] button[type="submit"]').click();
+    cy.get(parameters).should('be.focused');
+    cy.then(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+    cy.get(parameters).click();
+    cy.get('select[name="country"]').should('have.value', 'FR').select('ES');
+    cy.get('[role="dialog"]').contains('button', 'Cancel').click();
+    cy.get(run).click();
     waitForE2eApiCall('/runs/start', 'POST');
     cy.get('a[href="/runs/run-with-country"]').should('be.visible');
     cy.then(() => {

@@ -29,11 +29,19 @@ flowchart LR
 ## Decision proposed for the Code editor
 
 The selected model declares its business parameters in
-`config.meta.dvt.run_parameters` in the admitted dbt project. Code presents the
-declarations in one dialog reached from Compile or Run. Compile prepares the
-plan. Run with parameters compiles the confirmed selection and starts only
-after it receives the matching acceptance receipt. The dialog sends only
-requested overrides. The API
+`config.meta.dvt.run_parameters` in the admitted dbt project. For a model with
+parameters, Code offers a Parameters button in the command bar. It opens the
+typed form and saves the chosen values for the current editor session.
+Compile and Run open this same form on first use if values have not yet been
+confirmed. Once confirmed, either command uses those values directly. The user
+can reopen Parameters to change them. Cancelling the form preserves the
+previous choices. Saving a changed set invalidates the accepted compilation.
+The toolbar leaves the SQL visible and keeps declaration guidance in the
+project documentation.
+
+Compile prepares the plan. Run with parameters compiles the confirmed selection
+and starts only after it receives the matching acceptance receipt. The form
+sends only requested overrides. The API
 loads the declaration for the exact model and accepted project revision using
 the effective tenant, project, environment and target. Client labels, types,
 defaults and scopes convey no authority. Unsupported declarations or overrides
@@ -43,8 +51,13 @@ keep their existing compile and run behavior.
 ```mermaid
 flowchart LR
   Model[Approved scoped dbt model] --> Resolve[Resolve typed parameter set]
-  Buttons[Compile or Run] --> Form[One parameter dialog]
-  Form --> Preview[PreviewPlan]
+  Parameters[Parameters] --> Form[One parameter dialog]
+  Buttons[Compile or Run] --> Values{Values confirmed for this session?}
+  Values -->|No| Form
+  Form -->|Apply values| Confirmed[Confirmed values]
+  Confirmed -->|Next command| Values
+  Form -->|Confirm Compile or Run| Preview[PreviewPlan]
+  Values -->|Yes| Preview
   Preview --> Resolve
   Resolve --> Compile[dbt compile with resolved vars]
   Compile --> Plan[Immutable plan and scoped execution context]
