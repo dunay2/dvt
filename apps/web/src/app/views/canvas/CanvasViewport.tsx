@@ -42,6 +42,7 @@ import type {
   CanvasExplorerProjectWorkspace,
 } from './explorer/CanvasExplorer.types';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
+import { InspectorRelationshipFocusContext } from '../../components/inspector/inspectorRelationshipFocusContext';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
   useCanvasContextMenuPresenter,
@@ -381,24 +382,25 @@ function CanvasViewportWithPresenter({
     graphSearchPresentation.nodes,
     props.nodesWithImpact
   );
-  const miniMapFocusRef = useRef({
+  const viewportFocusRef = useRef({
     nodes: renderedNodes,
     selectNode: canSelectNodes,
     port: graphSearchActivationPort,
   });
   useLayoutEffect(() => {
-    miniMapFocusRef.current = {
+    viewportFocusRef.current = {
       nodes: renderedNodes,
       selectNode: canSelectNodes,
       port: graphSearchActivationPort,
     };
   }, [canSelectNodes, graphSearchActivationPort, renderedNodes]);
   // XYFlow retains the first callback; read the latest committed focus inputs.
+  const focusRenderedNode = useCallback((nodeId: string) => {
+    focusCanvasViewportNode({ nodeId, ...viewportFocusRef.current });
+  }, []);
   const handleMiniMapNodeClick = useCallback<NonNullable<MiniMapProps<Node>['onNodeClick']>>(
-    (_event, node) => {
-      focusCanvasViewportNode({ nodeId: node.id, ...miniMapFocusRef.current });
-    },
-    []
+    (_event, node) => focusRenderedNode(node.id),
+    [focusRenderedNode]
   );
 
   useEffect(() => {
@@ -536,7 +538,9 @@ function CanvasViewportWithPresenter({
           : undefined
       }
     >
-      {props.wrapInspector?.(surface) ?? surface}
+      <InspectorRelationshipFocusContext.Provider value={focusRenderedNode}>
+        {props.wrapInspector?.(surface) ?? surface}
+      </InspectorRelationshipFocusContext.Provider>
     </CanvasGraphExplorer>
   );
 }

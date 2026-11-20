@@ -1,6 +1,8 @@
 /** Shared property cells, rendered as an Inspector table or workbench records. */
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { cn } from '../ui/utils';
+import { InspectorRelationshipFocusContext } from './inspectorRelationshipFocusContext';
 import metadataStyles from './InspectorMetadata.module.css';
 import type { NodePropertySection, NodePropertyTableRow } from './nodePropertiesContracts';
 import {
@@ -51,10 +53,13 @@ function RelationshipRecord({
 }: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
   Readonly<{ row: NodePropertyTableRow }>): JSX.Element {
   const nodeName = row.cells.node?.trim();
-  const displayName = nodeName && nodeName !== row.cells.nodeId?.trim() ? row.cells.node : '';
-  return (
-    <li data-slot="node-property-relationship-record" className={styles.records.relationshipCard}>
-      <div
+  const nodeId = row.cells.nodeId?.trim();
+  const displayName = nodeName && nodeName !== nodeId ? row.cells.node : '';
+  const focusNode = useContext(InspectorRelationshipFocusContext);
+  const activate = displayName && nodeId && focusNode ? () => focusNode(nodeId) : undefined;
+  const content = (
+    <>
+      <span
         data-slot="node-property-relationship-summary"
         className={styles.records.relationshipSummary}
       >
@@ -89,11 +94,11 @@ function RelationshipRecord({
             renderTableCell={renderTableCell}
           />
         </span>
-      </div>
+      </span>
       {row.cells.connection?.trim() ? (
-        <p
+        <span
           data-slot="node-property-relationship-connection"
-          className={styles.records.relationshipConnection}
+          className={cn('block', styles.records.relationshipConnection)}
         >
           <PropertyCell
             section={section}
@@ -101,8 +106,32 @@ function RelationshipRecord({
             columnKey="connection"
             renderTableCell={renderTableCell}
           />
-        </p>
+        </span>
       ) : null}
+    </>
+  );
+  return (
+    <li
+      data-slot="node-property-relationship-record"
+      className={activate == null ? styles.records.relationshipCard : undefined}
+    >
+      {activate == null ? (
+        content
+      ) : (
+        <button
+          type="button"
+          className={cn(
+            styles.records.relationshipCard,
+            'block w-full cursor-pointer text-left hover:bg-(--surface-selected) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring)'
+          )}
+          onDoubleClick={activate}
+          onClick={(event) => {
+            if (event.detail === 0) activate();
+          }}
+        >
+          {content}
+        </button>
+      )}
     </li>
   );
 }

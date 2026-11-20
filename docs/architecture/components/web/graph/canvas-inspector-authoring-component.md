@@ -120,6 +120,12 @@ boundary, while explicit-section and shared gesture-cancellation tests retain
 their existing responsibility.
 [All-card entry rationale](https://github.com/dunay2/dvt/issues/3765#issuecomment-6729714310).
 
+The model workbench's Inputs / Outputs records use the connected endpoint ID
+to request `FocusCanvasGraphNode` on a double click or keyboard activation.
+The current Canvas viewport admits the rendered node, centers it and selects
+it when selection is allowed. A single pointer click or an unavailable
+endpoint leaves the graph unchanged.
+
 A background double click belongs to the owning canvas's existing Add menu. It
 does not inspect a node or open Model editing. Shared boundary admission excludes
 cards, edges, ports, controls, inspectors and nested canvases; the existing node
