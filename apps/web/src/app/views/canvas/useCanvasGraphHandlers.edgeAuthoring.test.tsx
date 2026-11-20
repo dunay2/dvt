@@ -331,7 +331,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(nextDraftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'sink-node' },
     ]);
-    expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.dependencyAddedMessage);
+    expect(toastState.success).toHaveBeenCalledWith(
+      `${canvasViewCopy.dependencyAddedMessage} [source-node]`
+    );
 
     harness.cleanup();
   });
@@ -470,7 +472,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       canonicalNodes: [
         {
           id: 'warehouse-source',
-          name: 'warehouse-source',
+          name: 'client',
           pluginId: 'dvt.warehouse-source',
           kind: 'dvt:source',
           role: 'input',
@@ -491,7 +493,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         {
           id: 'warehouse-source',
           data: {
-            name: 'warehouse-source',
+            name: 'client',
             pluginKind: 'dvt:source',
             role: 'input',
             status: 'idle',
@@ -522,7 +524,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(toastState.error).not.toHaveBeenCalled();
-    expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.dependencyAddedMessage);
+    expect(toastState.success).toHaveBeenCalledWith(
+      `${canvasViewCopy.dependencyAddedMessage} [client]`
+    );
 
     harness.cleanup();
   });

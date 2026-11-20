@@ -70,9 +70,11 @@ function notifyRejectedConnection(
 }
 
 function useCanvasConnectionCreationHandler({
+  canonicalNodesById,
   edgeCommandRunner,
   policy,
 }: {
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   edgeCommandRunner: CanvasEdgeCommandRunner;
   policy: CanvasEdgeAuthoringPolicy;
 }) {
@@ -90,12 +92,14 @@ function useCanvasConnectionCreationHandler({
           connection,
           onNoop: notifyRejectedConnection,
           onCreated: () => {
-            toast.success(canvasViewCopy.dependencyAddedMessage);
+            const dependencyName = canonicalNodesById.get(connection.source ?? '')?.name.trim();
+            const message = canvasViewCopy.dependencyAddedMessage;
+            toast.success(dependencyName ? `${message} [${dependencyName}]` : message);
           },
         })
         .catch(() => toast.error(canvasViewCopy.dependencyCreationFailedMessage));
     },
-    [canEditEdges, edgeCommandRunner]
+    [canEditEdges, canonicalNodesById, edgeCommandRunner]
   );
 }
 
@@ -150,6 +154,7 @@ export function useCanvasEdgeAuthoringHandlers(
   );
 
   const createNodeConnection = useCanvasConnectionCreationHandler({
+    canonicalNodesById: state.canonicalNodesById,
     edgeCommandRunner,
     policy,
   });
