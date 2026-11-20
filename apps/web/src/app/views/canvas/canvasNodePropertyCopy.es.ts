@@ -1,5 +1,9 @@
 /** Spanish copy for node property sections. */
 export const nodePropertyCopyEs = {
+  sourceOutputs: {
+    label: 'Salidas',
+    emptyState: 'Este origen no tiene conexiones salientes en el Canvas.',
+  },
   sectionLabels: {
     general: 'Resumen',
     columns: 'Columnas',

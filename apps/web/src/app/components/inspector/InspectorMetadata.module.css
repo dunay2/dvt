@@ -50,10 +50,6 @@
 .facts[data-layout='inspector'] {
   grid-template-columns: minmax(calc(var(--spacing) * 23), 0.42fr) minmax(0, 1fr);
 }
-.facts[data-layout='relationship'] {
-  grid-template-columns: minmax(calc(var(--spacing) * 24), 0.3fr) minmax(0, 1fr);
-  row-gap: calc(var(--spacing) * 4);
-}
 .facts[data-layout='compact'] {
   grid-template-columns: minmax(0, calc(var(--spacing) * 24)) minmax(0, 1fr);
   column-gap: calc(var(--spacing) * 3);

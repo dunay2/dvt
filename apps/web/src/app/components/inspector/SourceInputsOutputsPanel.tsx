@@ -1,13 +1,8 @@
-/** Compose the Source relationship template from its interaction model. */
+/** Render the Source's outgoing Canvas relationships. */
 import { GripVertical } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Badge } from '../ui/badge';
 import { cn } from '../ui/utils';
-import {
-  inspectorRelationshipClasses as styles,
-  inspectorVisualClasses,
-} from './inspectorVisualTokens';
-import { SourceRelationshipDetail } from './SourceRelationshipDetail';
+import { inspectorRelationshipClasses as styles } from './inspectorVisualTokens';
 import {
   useSourceRelationships,
   type SourceRelationshipsArgs,
@@ -15,14 +10,14 @@ import {
 } from './useSourceRelationships';
 
 function RelationshipRow({ row }: Readonly<{ row: SourceRelationshipRowModel }>): JSX.Element {
-  const { relationship, selected, dropPlacement, control } = row;
+  const { relationship, dropPlacement, control } = row;
   return (
-    <button
+    <li
       {...control}
       data-slot="source-relationship-row"
       data-relationship-id={relationship.id}
       data-drop-placement={dropPlacement}
-      className={cn(styles.row, selected ? styles.selected : styles.unselected)}
+      className={cn(styles.row, control != null && styles.sortable)}
     >
       {dropPlacement == null ? null : (
         <span
@@ -31,21 +26,16 @@ function RelationshipRow({ row }: Readonly<{ row: SourceRelationshipRowModel }>)
           className={cn(styles.drop, styles.placement[dropPlacement])}
         />
       )}
-      {control.draggable ? (
+      {control == null ? null : (
         <GripVertical
           data-slot="source-relationship-drag-handle"
           aria-hidden="true"
           className={styles.handle}
         />
-      ) : null}
-      <span aria-hidden="true" className={styles.direction}>
-        {relationship.direction === 'input' ? '←' : '→'}
-      </span>
+      )}
       <span className={styles.name}>{relationship.relatedNodeName}</span>
-      <Badge variant="secondary" className={styles.badge}>
-        {relationship.relation}
-      </Badge>
-    </button>
+      <span className={styles.relation}>{relationship.relation}</span>
+    </li>
   );
 }
 
@@ -56,57 +46,28 @@ export function SourceInputsOutputsPanel({
 }: SourceRelationshipsArgs &
   Readonly<{ beforeBody?: ReactNode; afterBody?: ReactNode }>): JSX.Element {
   const model = useSourceRelationships(args);
-  const { copy } = model;
   return (
     <div data-slot="canvas-source-inputs-outputs" className={styles.root}>
       {beforeBody}
-      <div className={styles.layout}>
-        <section className={styles.master}>
-          <div className={styles.header}>
-            <h3 className={styles.title}>{copy.canvasConnections}</h3>
-            <span className={styles.count}>
-              {model.count} {copy.total}
-            </span>
-          </div>
-          {model.canReorder ? (
-            <p id={model.reorderHintId} className={styles.accessible}>
-              {copy.reorderHint}
-            </p>
-          ) : null}
-          <div
-            role="listbox"
-            aria-label={copy.listLabel}
-            aria-describedby={model.canReorder ? model.reorderHintId : undefined}
-            className={styles.groups}
-          >
-            {model.groups.map((group) => (
-              <div
-                key={group.id}
-                role="group"
-                aria-label={`${group.label} ${group.rows.length}`}
-                className={styles.group}
-              >
-                <h4 className={styles.groupTitle}>
-                  {group.label} {group.rows.length}
-                </h4>
-                {group.rows.length === 0 ? (
-                  <p className={inspectorVisualClasses.inspectorSubtle}>{group.empty}</p>
-                ) : (
-                  <div className={styles.rows}>
-                    {group.rows.map((row) => (
-                      <RelationshipRow key={row.relationship.id} row={row} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className={styles.accessible} role="status" aria-live="polite">
-            {model.reorderStatus}
-          </p>
-        </section>
-        <SourceRelationshipDetail nodeName={args.node.name} selected={model.selected} copy={copy} />
-      </div>
+      {model.canReorder ? (
+        <p id={model.reorderHintId} className={styles.accessible}>
+          {model.reorderHint}
+        </p>
+      ) : null}
+      {model.rows.length > 0 ? (
+        <ul aria-label={args.section.label} className={styles.rows}>
+          {model.rows.map((row) => (
+            <RelationshipRow key={row.relationship.id} row={row} />
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.empty}>{args.section.emptyState}</p>
+      )}
+      {model.canReorder ? (
+        <p className={styles.accessible} role="status">
+          {model.reorderStatus}
+        </p>
+      ) : null}
       {afterBody}
     </div>
   );

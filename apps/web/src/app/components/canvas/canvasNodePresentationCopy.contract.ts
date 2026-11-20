@@ -18,6 +18,7 @@ export type CanvasNodePresentationCopy = Readonly<{
   locale?: string;
   sectionLabels?: Readonly<Record<string, string>>;
   sectionEmptyStates?: Readonly<Record<string, string>>;
+  sourceOutputs?: Readonly<{ label: string; emptyState: string }>;
   rowLabels?: Readonly<Record<string, string>>;
   columnLabels?: Readonly<Record<string, string>>;
   valueLabels?: Readonly<Record<string, string>>;
@@ -50,6 +51,10 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     (value.locale == null || typeof value.locale === 'string') &&
     (value.sectionLabels == null || isRecord(value.sectionLabels)) &&
     (value.sectionEmptyStates == null || isRecord(value.sectionEmptyStates)) &&
+    (value.sourceOutputs == null ||
+      (isRecord(value.sourceOutputs) &&
+        typeof value.sourceOutputs.label === 'string' &&
+        typeof value.sourceOutputs.emptyState === 'string')) &&
     (value.rowLabels == null || isRecord(value.rowLabels)) &&
     (value.columnLabels == null || isRecord(value.columnLabels)) &&
     (value.valueLabels == null || isRecord(value.valueLabels))

@@ -412,10 +412,10 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(tabsList).not.toBeNull();
     expect(tabsList?.querySelectorAll('svg')).toHaveLength(0);
 
-    for (const label of ['Overview', 'Columns', 'Inputs / Outputs']) {
+    for (const label of ['Overview', 'Columns', 'Outputs']) {
       expect(tabsList?.textContent).toContain(label);
     }
-    for (const rejectedLabel of ['General', 'Tests', 'More', 'Code', 'Indexes']) {
+    for (const rejectedLabel of ['General', 'Inputs', 'Tests', 'More', 'Code', 'Indexes']) {
       expect(tabsList?.textContent).not.toContain(rejectedLabel);
     }
     expect(container.textContent).toContain('PostgreSQL');
@@ -546,7 +546,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     });
   });
 
-  it('shows Source column metadata and Canvas graph IO from the node read model', async () => {
+  it('shows Source column metadata and outgoing Canvas relationships', async () => {
     await renderPanel(root, 'columns');
 
     expect(container.textContent).toContain('order_id');
@@ -559,8 +559,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('Primary key');
 
     await renderPanel(root, 'inputs-outputs');
-    expect(container.textContent).toContain('Output');
-    expect(container.textContent).toContain('Orders Model');
+    const outputs = container.querySelector('ul[aria-label="Outputs"]');
+    expect(outputs?.textContent).toContain('Orders Model');
+    expect(outputs?.textContent).toContain('lineage');
     expect(container.textContent).not.toContain('not_null_orders_order_id');
   });
 

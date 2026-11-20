@@ -36,11 +36,9 @@ describe('card and Inspector responsibility boundaries', () => {
   it('shares property facts and cell rendering across explicit presentation variants', () => {
     const section = source('../../components/inspector/NodePropertySectionView.tsx');
     const table = source('../../components/inspector/NodePropertyTable.tsx');
-    const detail = source('../../components/inspector/SourceRelationshipDetail.tsx');
     expect(section).toContain('NodePropertyFacts');
-    expect(detail).toContain('NodePropertyFacts');
     expect(section).toContain('NodePropertyTable');
-    for (const content of [section, table, detail]) {
+    for (const content of [section, table]) {
       expect(content).not.toMatch(/className="|\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);
       expect(content).not.toMatch(/useStore|useState|useEffect|runDraftSessionCommand/);
     }

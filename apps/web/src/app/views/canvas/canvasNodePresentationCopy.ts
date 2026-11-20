@@ -1,17 +1,17 @@
 /** Owned concern: adapt route-localized Canvas copy into the node-presentation DTO. */
 import type { CanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
+import { resolveCopyLanguage } from '../../copyLanguage';
 import { nodePropertyCopyEn } from './canvasNodePropertyCopy.en';
 import { nodePropertyCopyEs } from './canvasNodePropertyCopy.es';
 import type { CanvasViewCopy } from './canvasCopy.types';
+
+const nodePropertyCopyByLanguage = { en: nodePropertyCopyEn, es: nodePropertyCopyEs };
 
 export function buildCanvasNodePresentationCopy(
   copy: CanvasViewCopy,
   locale = 'en'
 ): CanvasNodePresentationCopy {
-  const normalizedLocale = locale.trim().toLowerCase();
-  const nodePropertyCopy = normalizedLocale.startsWith('es')
-    ? nodePropertyCopyEs
-    : nodePropertyCopyEn;
+  const nodePropertyCopy = nodePropertyCopyByLanguage[resolveCopyLanguage(locale)];
 
   return {
     columnsLabel: copy.nodePresentationColumnsLabel,
@@ -31,6 +31,7 @@ export function buildCanvasNodePresentationCopy(
     locale,
     sectionLabels: nodePropertyCopy.sectionLabels,
     sectionEmptyStates: nodePropertyCopy.sectionEmptyStates,
+    sourceOutputs: nodePropertyCopy.sourceOutputs,
     rowLabels: nodePropertyCopy.rowLabels,
     columnLabels: nodePropertyCopy.columnLabels,
     valueLabels: nodePropertyCopy.valueLabels,

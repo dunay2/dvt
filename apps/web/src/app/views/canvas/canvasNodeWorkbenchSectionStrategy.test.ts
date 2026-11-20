@@ -44,7 +44,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     ).toEqual(['general', 'columns', 'tests', 'inputs-outputs']);
   });
 
-  it('hard-cuts Source to Overview, Columns and Inputs / Outputs in that order', () => {
+  it('limits Source to Overview, Columns and Outputs in that order', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
       nodeKind: 'dvt:source',
       canEditNode: true,

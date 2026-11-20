@@ -253,7 +253,7 @@ describe('nodePropertiesReadModel', () => {
     expect(model.sections.map((section) => section.label)).toEqual([
       'Resumen',
       'Columnas',
-      'Entradas y salidas',
+      'Salidas',
       'Pruebas',
       'Claves',
       'Índices',
@@ -288,6 +288,9 @@ describe('nodePropertiesReadModel', () => {
       nodeId: 'ID del nodo',
       relation: 'Relación',
     });
+    expect(sectionById(model, 'inputs-outputs').emptyState).toBe(
+      'Este origen no tiene conexiones salientes en el Canvas.'
+    );
   });
 
   it('projects source metadata into table-modeler sections', () => {
@@ -310,10 +313,10 @@ describe('nodePropertiesReadModel', () => {
       expect.arrayContaining(['rows', 'size'])
     );
     expectRows(sectionById(model, 'summary'), {
-      'Upstream nodes': '0',
       'Downstream nodes': 'Clean Orders',
       Tags: 'source, raw',
     });
+    expect(sectionById(model, 'summary').rows.map(({ id }) => id)).not.toContain('upstream-nodes');
 
     expectTableCells(sectionById(model, 'columns'), 'order_id', {
       name: 'order_id',

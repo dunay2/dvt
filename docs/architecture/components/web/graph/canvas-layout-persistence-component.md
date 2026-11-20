@@ -356,6 +356,12 @@ flowchart LR
 
 ### Source Inspector list order
 
+The Source Inspector projects outgoing Canvas relationships in the **Outputs**
+section. Each row identifies the connected node and the relation. The Source's
+physical origin remains in its resource metadata. A single output is displayed
+as a read-only row. Multiple outputs can be reordered in an editable, hydrated
+layout through the existing Inspector ordering control.
+
 ```mermaid
 stateDiagram-v2
   [*] --> CanonicalOrder
@@ -366,7 +372,7 @@ stateDiagram-v2
   Reconcile --> Ready: order already clean
   PersistCleanOrder --> Ready
   Ready --> PersistMovedOrder: pointer drop or Alt+Arrow
-  PersistMovedOrder --> Ready: keep moved row selected and focused
+  PersistMovedOrder --> Ready: keep moved row focused
 ```
 
 ## Consumers

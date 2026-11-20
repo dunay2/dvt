@@ -19,6 +19,7 @@ import { NodePropertySectionView } from './NodePropertySectionView';
 import type { NodePropertyTableCellRenderContext } from './NodePropertyTable';
 import { SourceColumnsPanel } from './SourceColumnsPanel';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
+import { isInspectorSource } from './nodePropertyTopologyRows';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesContracts';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
@@ -88,18 +89,6 @@ function renderTabBadge(section: NodePropertySection): JSX.Element | null {
   ) : null;
 }
 
-function isApprovedWarehouseSourceSection(
-  node: CanonicalNode,
-  section: NodePropertySection,
-  sectionId: 'columns' | 'inputs-outputs'
-): boolean {
-  return (
-    node.kind === 'dvt:source' &&
-    node.pluginId === 'dvt.warehouse-source' &&
-    section.id === sectionId
-  );
-}
-
 export function NodePropertiesTabs({
   model,
   node,
@@ -134,11 +123,9 @@ export function NodePropertiesTabs({
   ) {
     setSourceColumnDetail(null);
   }
+  const hasSourceColumns = node.kind === 'dvt:source' && node.pluginId === 'dvt.warehouse-source';
   const detailColumnName =
-    node.kind === 'dvt:source' &&
-    node.pluginId === 'dvt.warehouse-source' &&
-    activeTab === 'columns' &&
-    sourceColumnDetail?.nodeId === node.id
+    hasSourceColumns && activeTab === 'columns' && sourceColumnDetail?.nodeId === node.id
       ? sourceColumnDetail.name
       : null;
   const slots =
@@ -270,12 +257,8 @@ export function NodePropertiesTabs({
         const beforeBody =
           sectionBeforeChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null);
         const afterBody = sectionAfterChildren?.[section.id];
-        const sourceColumns = isApprovedWarehouseSourceSection(node, section, 'columns');
-        const sourceInputsOutputs = isApprovedWarehouseSourceSection(
-          node,
-          section,
-          'inputs-outputs'
-        );
+        const sourceColumns = hasSourceColumns && section.id === 'columns';
+        const sourceOutputs = isInspectorSource(node) && section.id === 'inputs-outputs';
 
         return (
           <TabsContent
@@ -302,8 +285,9 @@ export function NodePropertiesTabs({
                 workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
                 transferColumns={sourceTransferColumns}
               />
-            ) : sourceInputsOutputs ? (
+            ) : sourceOutputs ? (
               <SourceInputsOutputsPanel
+                key={node.id}
                 node={node}
                 section={section}
                 beforeBody={beforeBody}

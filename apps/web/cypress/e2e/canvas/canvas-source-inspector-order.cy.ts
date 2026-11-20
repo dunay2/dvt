@@ -324,6 +324,17 @@ describe('Canvas Source Inspector ordering', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     openSourceSection('inputs-outputs');
+    cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').should(
+      'contain.text',
+      'Outputs'
+    );
+    cy.get('[data-slot="canvas-source-inputs-outputs"]').within(() => {
+      cy.get('ul[aria-label="Outputs"] > li').should('have.length', 2);
+      cy.get('[data-slot="source-relationship-row"]').each(($row) => {
+        expect($row[0]!.scrollWidth).to.be.at.most($row[0]!.clientWidth + 1);
+      });
+      cy.contains('Inputs').should('not.exist');
+    });
     cy.get('[data-relationship-id="output:edge-source-model-secondary"]')
       .focus()
       .trigger('keydown', { key: 'ArrowUp', altKey: true });
@@ -331,9 +342,7 @@ describe('Canvas Source Inspector ordering', () => {
       'output:edge-source-model-secondary',
       'output:edge-source-model',
     ]);
-    cy.get('[data-relationship-id="output:edge-source-model-secondary"]')
-      .should('be.focused')
-      .and('have.attr', 'aria-selected', 'true');
+    cy.get('[data-relationship-id="output:edge-source-model-secondary"]').should('be.focused');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);

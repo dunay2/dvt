@@ -21,7 +21,11 @@ import {
   buildForeignKeyRows,
   buildConstraintRows,
 } from './nodePropertyConstraintRows';
-import { buildInputsOutputsRows, buildSummaryRows } from './nodePropertyTopologyRows';
+import {
+  buildInputsOutputsRows,
+  buildSummaryRows,
+  isInspectorSource,
+} from './nodePropertyTopologyRows';
 import { buildSinkRows, buildGeneralRows, buildCommentRows } from './nodePropertyGeneralRows';
 import {
   presentNodePropertySection,
@@ -51,6 +55,10 @@ export function buildNodePropertiesReadModel({
                 ? truth.columns.visible
                 : truth.columns.inherited
             );
+  const topology = presentNodePropertySection(
+    { id: 'inputs-outputs', tableRows: buildInputsOutputsRows(node, nodes, edges) },
+    copy
+  );
 
   return {
     nodeId: node.id,
@@ -69,10 +77,17 @@ export function buildNodePropertiesReadModel({
         },
         copy
       ),
-      presentNodePropertySection(
-        { id: 'inputs-outputs', tableRows: buildInputsOutputsRows(node, nodes, edges) },
-        copy
-      ),
+      isInspectorSource(node)
+        ? {
+            ...topology,
+            label: copy?.sourceOutputs?.label ?? 'Outputs',
+            emptyState:
+              topology.tableRows.length === 0
+                ? (copy?.sourceOutputs?.emptyState ??
+                  'This source has no outgoing connections in the Canvas.')
+                : undefined,
+          }
+        : topology,
       presentNodePropertySection(
         { id: 'tests', tableRows: buildDbtTestRows({ node, metadata, nodes, edges }) },
         copy
