@@ -94,6 +94,14 @@
   display: none;
 }
 
+.drawerSeparator {
+  block-size: 2px;
+}
+
+.drawerSeparator:is(:hover, [data-resize-handle-state='drag']) {
+  background-color: var(--focus-ring);
+}
+
 .skipLink {
   position: absolute;
   width: 1px;

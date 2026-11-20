@@ -12,6 +12,7 @@ import { getE2eApiCalls, installE2eApiFetchStub, stubE2eJsonApi } from '../../su
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
@@ -568,6 +569,26 @@ describe('Shell layout contract', () => {
 
     const handle = '#app-shell-bottom-drawer-resize-handle';
     const drawer = '#app-shell-bottom-drawer-panel';
+    const outlet = '[data-slot="app-shell-outlet"]';
+    hoverWorkbenchCard(outlet);
+    cy.get(handle).then(($separator) => {
+      const separator = $separator[0]!;
+      const bounds = separator.getBoundingClientRect();
+      const idleColor = $separator.css('background-color');
+      expect($separator.children()).to.have.length(0);
+      expect(bounds.width).to.equal(separator.parentElement!.getBoundingClientRect().width);
+
+      hoverWorkbenchCard(handle);
+      cy.get(handle).should(($hovered) => {
+        expect($hovered[0]!.matches(':hover'), 'native pointer over the separator').to.be.true;
+        expect($hovered.css('background-color')).not.to.equal(idleColor);
+        expect($hovered[0]!.getBoundingClientRect().height).to.equal(bounds.height);
+      });
+
+      hoverWorkbenchCard(outlet);
+      cy.get(handle).should('have.css', 'background-color', idleColor);
+    });
+
     const dragDrawerTo = (percentage: number): void => {
       cy.window().then((window) => {
         const element = window.document.querySelector<HTMLElement>(handle)!;
@@ -618,7 +639,7 @@ describe('Shell layout contract', () => {
       const saveCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       dragDrawerTo(95);
       cy.get(drawer).should('have.attr', 'data-panel-size', '90.0');
-      cy.get(handle).find('svg').should('be.visible');
+      cy.get(handle).should('be.visible');
       cy.get(expressionTab).should('have.attr', 'aria-selected', 'true');
       dragDrawerTo(35);
       cy.get(drawer).should(($drawer) => {
