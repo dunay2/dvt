@@ -12,7 +12,7 @@ planning_type: architecture
 
 This guide defines the local component that persists route-local Canvas layout
 observations and presentation preferences: viewport position, node coordinates,
-Source Inspector list order, grid visibility, grid color, and snap-to-grid
+card metric visibility, Source Inspector list order, grid visibility, grid color, and snap-to-grid
 behavior. It does not own authoritative graph draft state.
 
 This distinction matters because Canvas has two truths:
@@ -47,6 +47,36 @@ Canonical local C&Q catalog:
   `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - Fowler mailbox:
   [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
+
+## Card metric visibility
+
+Source Properties provides an **Appearance** tab for each placed card. Rows and
+Size are separate switches and start hidden. Tags, Columns, Qualified name,
+Data types and Nullability preserve their default display. A color swatch
+sets a neutral accent and a reset returns the placement to its defaults.
+The diagram presents the existing Source facts, following the visibility
+patterns in [DBeaver's diagram guide](https://dbeaver.com/docs/dbeaver/How-to-use-Diagrams/#control-visibility-and-appearance).
+
+The layout key and placed id identify preferences. Preferences never initiate
+a query or edit external metadata. The card honors the Source's existing
+column access policy before rendering any label or connection. Accent colors
+remain distinct from selection, provider, health and validation cues.
+
+```mermaid
+flowchart LR
+  Before[Placement metric preference] --> Layout[Canvas layout projection]
+  Appearance[Source Appearance controls] -->|PersistCanvasLayout| Layout
+  Layout -->|GetCanvasLayout| Card[Placed Source presentation]
+  Facts[Admitted Source facts] --> Card
+```
+
+Other card measurements are hidden on first use. In Properties, the Overview switch
+shows or hides the operational rail on one placed card. The layout preference
+survives reloads and is scoped by tenant, project, environment, adapter, Canvas,
+project root and placement id. Two placements of the same model can therefore
+display different details. The switch also works on read-only file projections.
+It renders the existing measurement evidence without querying the warehouse or
+saving the semantic model.
 
 ## Viewport input policy
 

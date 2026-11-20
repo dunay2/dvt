@@ -60,6 +60,7 @@ export type CanvasShellLayout = {
   canOpenSourceImport: boolean;
   canMoveNodes?: boolean;
   referencePlacementScope?: string;
+  filePlacementLayoutKey?: string;
   canSelectNodes?: boolean;
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;

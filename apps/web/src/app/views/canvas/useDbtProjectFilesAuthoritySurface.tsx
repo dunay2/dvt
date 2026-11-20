@@ -217,6 +217,7 @@ export function useDbtProjectFilesAuthoritySurface({
       canOpenSourceImport: true,
       canMoveNodes: true,
       referencePlacementScope: controller.referencePlacementScope,
+      filePlacementLayoutKey: controller.layoutKey,
       canSelectNodes: true,
       surfaceStrategy: dbtCanvasSurfaceStrategy,
       contextualWorkbench,

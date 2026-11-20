@@ -446,7 +446,7 @@ describe('DBT runtime contributions', () => {
     expect(toggleNodeSelection).not.toHaveBeenCalled();
   });
 
-  it('keeps Rows and Size visible when a model has not been calculated', async () => {
+  it('shows the uncalculated Rows and Size when the card has opted in', async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -468,7 +468,7 @@ describe('DBT runtime contributions', () => {
             sharedSourceModelGraphNodeCardStrategy,
             dbtGraphNodeCardStrategy,
           ]}
-          data={{}}
+          data={{ showOperationalMetrics: true }}
         />
       );
     });

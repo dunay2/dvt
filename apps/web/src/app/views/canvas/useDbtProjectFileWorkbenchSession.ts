@@ -2,10 +2,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasInspectorResource } from '../../stores/canvasInspectorTarget';
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
 import type { SqlContextWorkbenchHandle, SqlContextWorkbenchProps } from './SqlContextWorkbench';
 
 type InspectorTab = Parameters<NonNullable<DbtNodeData['onInspectNode']>>[1];
+type InspectorNode = string | Extract<CanvasInspectorResource, { kind: 'canonical-node' }>;
 type SessionOwner = Readonly<{ key: string }>;
 type ProjectCodeSession = Readonly<{
   owner: SessionOwner;
@@ -41,7 +43,7 @@ export function useDbtProjectFileWorkbenchSession({
 }: Readonly<{
   ownerKey: string;
   nodesById: ReadonlyMap<string, CanonicalNode>;
-  setInspectorNode: (nodeId: string, preferredTabId: InspectorTab) => void | boolean;
+  setInspectorNode: (node: InspectorNode, preferredTabId: InspectorTab) => void | boolean;
   showInspectorPanel: () => void;
   hideInspectorPanel: () => void;
 }>) {
@@ -109,8 +111,8 @@ export function useDbtProjectFileWorkbenchSession({
   );
 
   const openNodeWorkbench = useCallback(
-    async (nodeId: string, preferredTabId?: InspectorTab): Promise<boolean> => {
-      const handoff = beginHandoff(nodeId);
+    async (node: InspectorNode, preferredTabId?: InspectorTab): Promise<boolean> => {
+      const handoff = beginHandoff(typeof node === 'string' ? node : node.nodeId);
       if (
         handoff == null ||
         !(await flushCapturedEditors(
@@ -120,7 +122,7 @@ export function useDbtProjectFileWorkbenchSession({
         !handoff.isCurrent()
       )
         return false;
-      if (latest.current.setInspectorNode(nodeId, preferredTabId ?? 'general') === false)
+      if (latest.current.setInspectorNode(node, preferredTabId ?? 'general') === false)
         return false;
       closeProjectCode(handoff.isCurrent);
       latest.current.showInspectorPanel();

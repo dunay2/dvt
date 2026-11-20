@@ -14,12 +14,15 @@ import {
 } from './graphCardVisualTokens';
 import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
 import { GraphNodeCardTitle } from './GraphNodeCardTitle';
+import { isRuntimeSummaryMetric } from './graphNodeCardReadModel';
 import { ModelIdentitySelect } from '../../components/inspector/ModelIdentitySelect';
 
 export function GraphNodeCardView({
   materializationControl,
   columnSection,
   cardModel,
+  showOperationalMetrics = false,
+  sourceCardAppearance,
   tags,
   icon: Icon,
   modelIdentity,
@@ -45,12 +48,26 @@ export function GraphNodeCardView({
       (metric) => metric.id === 'code' && metric.detail?.includes(backingPath) === true
     );
   const visibleSubtitle =
+    sourceCardAppearance?.qualifiedName !== false &&
     cardModel.subtitle != null &&
     (cardModel.subtitle !== cardModel.path || !pathIsRepresentedByCodeMetric)
       ? cardModel.subtitle
       : null;
-  const headerMetrics = cardModel.metrics.filter((metric) => metric.placement === 'header');
-  const bodyMetrics = cardModel.metrics.filter((metric) => metric.placement !== 'header');
+  const summary = showOperationalMetrics
+    ? cardModel.metrics
+    : cardModel.metrics.filter((metric) => !isRuntimeSummaryMetric(metric));
+  const headerMetrics = summary.filter((metric) => metric.placement === 'header');
+  const bodyMetrics = summary.filter((metric) => metric.placement !== 'header');
+  const operationalMetrics =
+    sourceCardAppearance == null
+      ? showOperationalMetrics
+        ? cardModel.operationalMetrics
+        : []
+      : cardModel.operationalMetrics.filter(
+          ({ id }) =>
+            (id === 'rows' && sourceCardAppearance.rows) ||
+            (id === 'size' && sourceCardAppearance.size)
+        );
   const { borderColor: overlayBorderColor, ...cardOverlayStyle } = overlayStyle ?? {};
   const hasCardOverlayStyle = Object.keys(cardOverlayStyle).length > 0;
 
@@ -63,10 +80,21 @@ export function GraphNodeCardView({
         graphNodeHealthBorderClasses[cardModel.health.tone],
         selected && graphNodeCardSurfaceClasses.selected,
         hovered && !selected && graphNodeCardSurfaceClasses.hovered,
-        dimmed && graphNodeCardSurfaceClasses.dimmed
+        dimmed && graphNodeCardSurfaceClasses.dimmed,
+        sourceCardAppearance?.types === false && '[&_[data-slot=graph-node-column-type]]:hidden',
+        sourceCardAppearance?.nullability === false &&
+          '[&_[data-slot=graph-node-column-nullability]]:hidden'
       )}
       {...(hasCardOverlayStyle ? { style: cardOverlayStyle } : {})}
     >
+      {sourceCardAppearance?.color != null && (
+        <div
+          data-slot="source-card-accent"
+          aria-hidden="true"
+          className="pointer-events-none h-[3px] shrink-0"
+          style={{ backgroundColor: sourceCardAppearance.color }}
+        />
+      )}
       <div className={graphNodeCardLayoutClasses.body}>
         <div data-slot="graph-node-card-header" className={graphNodeCardLayoutClasses.header}>
           <div className={graphNodeCardLayoutClasses.titleRow}>
@@ -120,27 +148,30 @@ export function GraphNodeCardView({
           <div className={graphNodeCardLayoutClasses.path}>{visibleSubtitle}</div>
         )}
 
-        <GraphNodeTagList
-          tags={tags}
-          tone={cardModel.accentTone}
-          onSelectTag={onSelectTag}
-          getSelectTagLabel={getSelectTagLabel}
-        />
+        {sourceCardAppearance?.tags !== false && (
+          <GraphNodeTagList
+            tags={tags}
+            tone={cardModel.accentTone}
+            onSelectTag={onSelectTag}
+            getSelectTagLabel={getSelectTagLabel}
+          />
+        )}
 
-        {columnSection == null ? null : <GraphNodeColumnViews {...columnSection} />}
+        {columnSection == null || sourceCardAppearance?.columns === false ? null : (
+          <GraphNodeColumnViews {...columnSection} />
+        )}
       </div>
 
-      {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
-        <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
-      ) : (
-        <GraphNodeOperationalRail
-          metrics={cardModel.operationalMetrics}
-          ariaLabel={interactiveOperationalDetail.ariaLabel}
-          onOpen={(anchorElement) =>
-            onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
-          }
-        />
-      )}
+      {operationalMetrics.length > 0 &&
+        (interactiveOperationalDetail && onOpenOperationalDetails ? (
+          <GraphNodeOperationalRail
+            metrics={operationalMetrics}
+            ariaLabel={interactiveOperationalDetail.ariaLabel}
+            onOpen={(anchor) => onOpenOperationalDetails(interactiveOperationalDetail, anchor)}
+          />
+        ) : (
+          <GraphNodeOperationalRail metrics={operationalMetrics} />
+        ))}
       {overlayBorderColor != null && (
         <span
           aria-hidden="true"

@@ -8,6 +8,7 @@ import { Database } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { resolveSourceCardAppearance } from '../../types/sourceCardAppearance';
 import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { sharedSourceModelGraphNodeCardStrategy } from './sharedSourceModelGraphNodeCardStrategy';
 import { GraphNodeCardView } from './GraphNodeCardView';
@@ -43,41 +44,61 @@ const BASE_PROPS = {
 describe('GraphNodeCardView', () => {
   let container: HTMLDivElement;
   let root: Root;
-  let previousActEnvironment: boolean | undefined;
-  let previousResizeObserver: typeof ResizeObserver | undefined;
-
   beforeEach(() => {
-    const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
-    previousActEnvironment = globalObject.IS_REACT_ACT_ENVIRONMENT;
-    globalObject.IS_REACT_ACT_ENVIRONMENT = true;
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
-    previousResizeObserver = globalThis.ResizeObserver;
-    globalThis.ResizeObserver = class implements ResizeObserver {
-      disconnect(): void {}
-      observe(): void {}
-      unobserve(): void {}
-    };
+    vi.stubGlobal(
+      'ResizeObserver',
+      class implements ResizeObserver {
+        disconnect(): void {}
+        observe(): void {}
+        unobserve(): void {}
+      }
+    );
   });
 
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
-    if (previousActEnvironment === undefined) {
-      Reflect.deleteProperty(globalObject, 'IS_REACT_ACT_ENVIRONMENT');
-    } else {
-      globalObject.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
-    }
     document
       .querySelectorAll('[data-slot="tooltip-content"]')
       .forEach((element) => element.remove());
-    if (previousResizeObserver === undefined) {
-      Reflect.deleteProperty(globalThis, 'ResizeObserver');
-    } else {
-      globalThis.ResizeObserver = previousResizeObserver;
-    }
+    vi.unstubAllGlobals();
+  });
+
+  it('uses only the selected Source details and paints the accent independently of health', () => {
+    act(() =>
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            operationalMetrics: [
+              { id: 'rows', label: 'Rows', value: '125' },
+              { id: 'size', label: 'Size', value: '8 KB' },
+            ],
+          }}
+          sourceCardAppearance={resolveSourceCardAppearance({
+            rows: true,
+            qualifiedName: false,
+            tags: false,
+            color: '#7799aa',
+          })}
+          tags={[{ value: 'raw', label: 'Raw' }]}
+        />
+      )
+    );
+    expect(container.textContent).toContain('Rows125');
+    expect(container.textContent).not.toContain('Size');
+    expect(container.textContent).not.toContain('analytics');
+    expect(container.textContent).not.toContain('Raw');
+    const accent = container.querySelector<HTMLElement>('[data-slot="source-card-accent"]');
+    expect(accent?.style.backgroundColor).toBe('rgb(119, 153, 170)');
+    expect(container.querySelector('[data-slot="graph-node-card"]')?.className).toContain(
+      graphNodeHealthBorderClasses.neutral
+    );
   });
 
   it.each([false, true])(
@@ -331,6 +352,7 @@ describe('GraphNodeCardView', () => {
       root.render(
         <GraphNodeCardView
           {...BASE_PROPS}
+          showOperationalMetrics
           cardModel={{
             title: 'Postgres · public',
             technicalName: 'src_public_orders',
@@ -688,6 +710,24 @@ describe('GraphNodeCardView', () => {
     expect(overlay?.getAttribute('aria-hidden')).toBe('true');
   });
 
+  it('renders the card without its available measurements by default', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            metrics: [{ id: 'duration', label: 'Duration', value: '4.2s' }],
+            operationalMetrics: [{ id: 'rows', label: 'Rows', value: '27' }],
+          }}
+        />
+      );
+    });
+    expect(container.querySelector('[data-slot="graph-node-operational-rail"]')).toBeNull();
+    expect(container.textContent).not.toContain('4.2s');
+    expect(container.querySelector('[data-slot="graph-node-card-title"]')).not.toBeNull();
+  });
+
   it('opens operational details from the rail without bubbling to the node card', () => {
     const onOpenOperationalDetails = vi.fn();
     const onCardClick = vi.fn();
@@ -697,6 +737,7 @@ describe('GraphNodeCardView', () => {
         <div onClick={onCardClick}>
           <GraphNodeCardView
             {...BASE_PROPS}
+            showOperationalMetrics
             cardModel={{
               ...BASE_PROPS.cardModel,
               operationalMetrics: [
@@ -750,6 +791,7 @@ describe('GraphNodeCardView', () => {
         <div onClick={onCardClick}>
           <GraphNodeCardView
             {...BASE_PROPS}
+            showOperationalMetrics
             cardModel={{
               ...BASE_PROPS.cardModel,
               operationalMetrics: [{ id: 'rows', label: 'Rows', value: '3' }],

@@ -193,15 +193,13 @@ export function useDbtProjectFilesAuthorityController(
           request.binding.authority.projectRoot !== authorityBinding.authority.projectRoot)
       )
         return false;
-      const nodeId =
-        typeof request === 'string'
-          ? request
-          : request.kind === 'canonical-node'
-            ? request.nodeId
-            : request.uniqueId;
+      const node =
+        typeof request === 'object' && request.kind === 'dbt-file-model'
+          ? request.uniqueId
+          : request;
       const capturedOwner = owner;
       return openNodeWorkbench(
-        nodeId,
+        node,
         preferredTabId as Parameters<typeof openNodeWorkbench>[1]
       ).catch(() => {
         if (currentOwner.current === capturedOwner)
@@ -341,7 +339,12 @@ export function useDbtProjectFilesAuthorityController(
           selectedForExecution: selectedNodeIds.includes(resourceId),
           onInspectNode: (_nodeId, preferredTabId) => {
             // The shared adapter catches current-owner failures and cancels abandoned handoffs.
-            void inspectCatalogueResource(resourceId, preferredTabId);
+            void inspectCatalogueResource(
+              isInstance
+                ? { kind: 'canonical-node', nodeId: resourceId, placementId: node.id }
+                : resourceId,
+              preferredTabId
+            );
           },
           canOpenNodeCode: node.data.path != null,
           onColumnDisclosureChange: disclosure.onColumnDisclosureChange,

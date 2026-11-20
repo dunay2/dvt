@@ -1,9 +1,13 @@
-/** Owned concern: identify one scoped Inspector resource without graph placement or execution identity. */
+/**
+ * Owned concern: identify the scoped resource whose properties the Inspector displays.
+ * A placement ID addresses local presentation settings for that instance.
+ * Model authoring and execution use the authoritative resource ID.
+ */
 import type { DbtProjectFilesAuthorityBinding } from '../ports/dbtProjectGraph';
 import type { WorkspaceScope } from '../ports/sessionContext';
 
 export type CanvasInspectorResource =
-  | Readonly<{ kind: 'canonical-node'; nodeId: string }>
+  | Readonly<{ kind: 'canonical-node'; nodeId: string; placementId?: string }>
   | Readonly<{
       kind: 'dbt-file-model';
       binding: DbtProjectFilesAuthorityBinding;

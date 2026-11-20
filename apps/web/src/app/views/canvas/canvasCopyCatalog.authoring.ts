@@ -1,6 +1,7 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyByKey = {
+  showCardMetricsLabel: 'Show metrics on card',
   relationalModelCopyDropLabel: 'Add an independent copy to',
   relationalModelCopyAddLabel: 'Add working copy',
   relationalModelCopyUnavailableMessage:

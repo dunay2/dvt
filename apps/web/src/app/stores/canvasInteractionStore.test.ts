@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useCanvasInteractionStore } from './canvasInteractionStore';
 import type { CanvasInspectorTarget } from './canvasInspectorTarget';
+import type { SourceCardAppearance } from '../types/sourceCardAppearance';
 
 const CANVAS_INTERACTION_STORAGE_KEY = 'dvt-web-canvas-interaction';
 const WORKSPACE_KEY = 'tenant-a::project-a::dev';
@@ -15,6 +16,39 @@ const canonicalTarget = (nodeId: string): CanvasInspectorTarget => ({
 });
 
 describe('useCanvasInteractionStore', () => {
+  it('hydrates independent Source appearance and resets one placement to defaults', async () => {
+    const { setSourceCardAppearance } = useCanvasInteractionStore.getState();
+    setSourceCardAppearance('canvas-a', 'one', { rows: true, color: '#7799AA' });
+    setSourceCardAppearance('canvas-a', 'two', { size: true });
+    await useCanvasInteractionStore.persist.rehydrate();
+    const appearance = (): Record<string, SourceCardAppearance> | undefined =>
+      useCanvasInteractionStore.getState().canvasLayouts['canvas-a']?.sourceCardAppearanceByNode;
+    expect(appearance()?.one).toMatchObject({ rows: true, size: false, color: '#7799aa' });
+    expect(appearance()?.two).toMatchObject({ rows: false, size: true, color: null });
+    setSourceCardAppearance('canvas-a', 'one', null);
+    expect(appearance()?.one).toBeUndefined();
+    expect(appearance()?.two?.size).toBe(true);
+  });
+
+  it('retains only explicitly visible card ids for the matching canvas', async () => {
+    localStorage.clear();
+    useCanvasInteractionStore.setState({ canvasLayouts: {} });
+    const { setCanvasCardMetricsVisible } = useCanvasInteractionStore.getState();
+    const read = (key: string): readonly string[] | undefined =>
+      useCanvasInteractionStore.getState().canvasLayouts[key]?.visibleMetricNodeIds;
+    setCanvasCardMetricsVisible('canvas-a', 'one', true);
+    setCanvasCardMetricsVisible('canvas-a', 'two', true);
+    setCanvasCardMetricsVisible('canvas-b', 'one', true);
+    setCanvasCardMetricsVisible('canvas-a', 'one', false);
+    await useCanvasInteractionStore.persist.rehydrate();
+    expect(read('canvas-a')).toEqual(['two']);
+    expect(read('canvas-b')).toEqual(['one']);
+    const before = useCanvasInteractionStore.getState();
+    setCanvasCardMetricsVisible('unseen', 'one', false);
+    setCanvasCardMetricsVisible('canvas-b', 'one', true);
+    expect(useCanvasInteractionStore.getState()).toBe(before);
+  });
+
   it('retains an explicit empty layout once so legacy positions cannot return', () => {
     const command = useCanvasInteractionStore.getState().setCanvasNodePositions;
     command(WORKSPACE_KEY, {});
@@ -43,6 +77,10 @@ describe('useCanvasInteractionStore', () => {
     commands.setCanvasViewport(WORKSPACE_KEY, { x: 20, y: 40, zoom: 0.8 });
     commands.setCanvasNodePositions(WORKSPACE_KEY, { first: { x: 130, y: 190 } });
     commands.toggleFrozenCanvasNode(WORKSPACE_KEY, 'first');
+    commands.setCanvasCardMetricsVisible('adapter-a', 'first', true, WORKSPACE_KEY);
+    commands.setCanvasCardMetricsVisible('adapter-b', 'first', true, WORKSPACE_KEY);
+    commands.setCanvasCardMetricsVisible('adapter-a', 'second', true, WORKSPACE_KEY);
+    commands.setCanvasCardMetricsVisible('other-canvas', 'first', true, 'another-layout');
     commands.setCanvasInspectorListOrder(WORKSPACE_KEY, 'model.orders', 'columns', ['amount']);
     await useCanvasInteractionStore.persist.rehydrate();
     let layout = useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]!;
@@ -56,6 +94,10 @@ describe('useCanvasInteractionStore', () => {
     expect(layout.resourceInstances).toEqual([{ id: 'second', resourceId: 'model.orders' }]);
     expect(layout.nodePositions).toEqual({ second: { x: 220, y: 280 } });
     expect(layout.frozenNodeIds).toEqual([]);
+    const layouts = useCanvasInteractionStore.getState().canvasLayouts;
+    expect(layouts['adapter-a']?.visibleMetricNodeIds).toEqual(['second']);
+    expect(layouts['adapter-b']?.visibleMetricNodeIds).toEqual([]);
+    expect(layouts['other-canvas']?.visibleMetricNodeIds).toEqual(['first']);
     expect(layout.viewport).toEqual({ x: 20, y: 40, zoom: 0.8 });
     expect(layout.inspectorListOrdersByNode).toEqual({ 'model.orders': { columns: ['amount'] } });
     const before = useCanvasInteractionStore.getState();

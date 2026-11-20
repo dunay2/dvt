@@ -5,6 +5,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { isRecord } from '../types/canonicalGuards';
 import { areCanvasPositionsEqual, type CanvasPosition } from '../types/canvasPositions';
 import type { CanvasInspectorTarget } from './canvasInspectorTarget';
+import {
+  DEFAULT_SOURCE_CARD_APPEARANCE,
+  resolveSourceCardAppearance,
+  type SourceCardAppearance,
+} from '../types/sourceCardAppearance';
 
 import {
   createCanvasExecutionSelectionIntent,
@@ -26,6 +31,9 @@ type WorkspaceCanvasLayout = {
   viewport: CanvasViewportState | null;
   nodePositions: Record<string, CanvasPosition>;
   frozenNodeIds?: string[];
+  visibleMetricNodeIds?: string[];
+  sourceCardAppearanceByNode?: Record<string, SourceCardAppearance>;
+  filePlacementLayoutKey?: string;
   inspectorListOrdersByNode?: Record<string, CanvasInspectorListOrders>;
   resourceInstances?: CanvasResourceInstance[];
 };
@@ -74,6 +82,18 @@ interface CanvasInteractionState {
   ) => void;
   removeCanvasResourceInstance: (workspaceKey: string, instanceId: string) => void;
   toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
+  setCanvasCardMetricsVisible: (
+    layoutKey: string,
+    nodeId: string,
+    visible: boolean,
+    filePlacementLayoutKey?: string
+  ) => void;
+  setSourceCardAppearance: (
+    layoutKey: string,
+    placementId: string,
+    patch: Partial<SourceCardAppearance> | null,
+    filePlacementLayoutKey?: string
+  ) => void;
   setCanvasInspectorListOrder: (
     workspaceKey: string,
     nodeId: string,
@@ -213,6 +233,47 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             },
           };
         }),
+      setCanvasCardMetricsVisible: (layoutKey, nodeId, visible, filePlacementLayoutKey) =>
+        set((state) => {
+          const layout = state.canvasLayouts[layoutKey];
+          const ids = layout?.visibleMetricNodeIds ?? [];
+          if (ids.includes(nodeId) === visible) return state;
+          return {
+            canvasLayouts: {
+              ...state.canvasLayouts,
+              [layoutKey]: buildWorkspaceCanvasLayout(layout, {
+                visibleMetricNodeIds: visible
+                  ? [...ids, nodeId]
+                  : ids.filter((id) => id !== nodeId),
+                ...(filePlacementLayoutKey == null ? {} : { filePlacementLayoutKey }),
+              }),
+            },
+          };
+        }),
+      setSourceCardAppearance: (layoutKey, placementId, patch, filePlacementLayoutKey) =>
+        set((state) => {
+          const layout = state.canvasLayouts[layoutKey];
+          const previous = layout?.sourceCardAppearanceByNode ?? {};
+          const appearance = resolveSourceCardAppearance(
+            patch == null ? undefined : { ...previous[placementId], ...patch }
+          );
+          const equals = (other: SourceCardAppearance): boolean =>
+            (Object.keys(appearance) as (keyof SourceCardAppearance)[]).every(
+              (key) => appearance[key] === other[key]
+            );
+          if (equals(resolveSourceCardAppearance(previous[placementId]))) return state;
+          const next = { ...previous, [placementId]: appearance };
+          if (equals(DEFAULT_SOURCE_CARD_APPEARANCE)) delete next[placementId];
+          return {
+            canvasLayouts: {
+              ...state.canvasLayouts,
+              [layoutKey]: buildWorkspaceCanvasLayout(layout, {
+                sourceCardAppearanceByNode: Object.keys(next).length === 0 ? undefined : next,
+                ...(filePlacementLayoutKey == null ? {} : { filePlacementLayoutKey }),
+              }),
+            },
+          };
+        }),
       setCanvasInspectorListOrder: (workspaceKey, nodeId, listId, orderedIds) =>
         set((state) => {
           const currentLayout = state.canvasLayouts[workspaceKey];
@@ -264,10 +325,27 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
           if (!current?.resourceInstances?.some((entry) => entry.id === instanceId)) return state;
           const nodePositions = { ...current.nodePositions };
           delete nodePositions[instanceId];
+          const layouts = { ...state.canvasLayouts };
+          for (const [key, layout] of Object.entries(layouts)) {
+            if (key !== workspaceKey && layout.filePlacementLayoutKey !== workspaceKey) continue;
+            if (
+              !layout.visibleMetricNodeIds?.includes(instanceId) &&
+              !Object.hasOwn(layout.sourceCardAppearanceByNode ?? {}, instanceId)
+            )
+              continue;
+            const sourceAppearance = { ...layout.sourceCardAppearanceByNode };
+            delete sourceAppearance[instanceId];
+            layouts[key] = {
+              ...layout,
+              visibleMetricNodeIds: layout.visibleMetricNodeIds?.filter((id) => id !== instanceId),
+              sourceCardAppearanceByNode:
+                Object.keys(sourceAppearance).length === 0 ? undefined : sourceAppearance,
+            };
+          }
           return {
             canvasLayouts: {
-              ...state.canvasLayouts,
-              [workspaceKey]: buildWorkspaceCanvasLayout(current, {
+              ...layouts,
+              [workspaceKey]: buildWorkspaceCanvasLayout(layouts[workspaceKey], {
                 nodePositions,
                 resourceInstances: current.resourceInstances.filter(
                   (entry) => entry.id !== instanceId

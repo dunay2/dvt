@@ -51,6 +51,8 @@ export interface DbtNodeData extends Record<string, unknown> {
   /** Plugin-projected overlay decoration. */
   overlayDecoration?: MergedNodeDecoration | null;
   showColumns?: boolean;
+  showOperationalMetrics?: boolean;
+  sourceCardAppearance?: import('../../types/sourceCardAppearance').SourceCardAppearance;
   columns?: GraphNodeColumn[];
   tags?: string[];
   displayTags?: Array<{ value: string; label: string }>;

@@ -25,6 +25,7 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { buildCanvasInspectorCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
 import { projectCanvasShellNodes } from './canvasShellNodeProjection';
+import { useCanvasCardPresentation } from './useCanvasCardPresentation';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpressionInspection';
 import { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
@@ -110,9 +111,22 @@ export default function CanvasShell({
     canvasTransformDataSampleQuery,
     prepareModelPreview,
   });
+  const {
+    visibleMetricNodeIds,
+    sourceAppearanceByNode,
+    contribution: cardAppearance,
+  } = useCanvasCardPresentation(
+    panels,
+    graph.nodesWithImpact,
+    copy.showCardMetricsLabel,
+    workspaceCommands?.projectRoot,
+    layout.filePlacementLayoutKey
+  );
   const nodes = useMemo(
     () =>
       projectCanvasShellNodes(graph.nodesWithImpact, {
+        visibleMetricNodeIds,
+        sourceAppearanceByNode,
         modelIds: model.modelIds,
         openModel,
         inspectOutput: outputInspection.open,
@@ -122,6 +136,8 @@ export default function CanvasShell({
       }),
     [
       graph.nodesWithImpact,
+      visibleMetricNodeIds,
+      sourceAppearanceByNode,
       model.modelIds,
       openModel,
       outputInspection.open,
@@ -141,8 +157,14 @@ export default function CanvasShell({
     [inspectorNode, inspectorWorkbenchContributions, graph.nodesWithImpact]
   );
   const presentedPanels = useMemo(
-    () => ({ ...panels, inspectorWorkbenchContributions: inspectorContributions }),
-    [panels, inspectorContributions]
+    () => ({
+      ...panels,
+      inspectorWorkbenchContributions:
+        cardAppearance == null
+          ? inspectorContributions
+          : [...inspectorContributions, cardAppearance],
+    }),
+    [panels, inspectorContributions, cardAppearance]
   );
 
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);

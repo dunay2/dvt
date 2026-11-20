@@ -65,6 +65,24 @@ type CanvasDraftStatusCopyKey = keyof Pick<
   'draftSyncedLabel' | 'draftSavedLabel' | 'draftSaveFailedLabel'
 >;
 
+// Browser read-only scenarios start from the persisted graph representation.
+function prepareSavedDbtDraft(draft: ReturnType<typeof stubStatefulCanvasDraftAuthoring>): void {
+  const graph = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
+  Object.assign(
+    draft,
+    normalizeProjectCanvasDraft(
+      buildCanonicalCanvasDraft({
+        canvas: draft.canvas,
+        nodeIds: draft.nodeIds,
+        nodePositions: draft.nodePositions,
+        visibleEdges: draft.edges,
+        canonicalNodes: graph.canonicalNodes,
+        canonicalEdges: graph.canonicalEdges,
+      })
+    )
+  );
+}
+
 function assertNoSeriousAccessibilityViolations(context: string): void {
   cy.get(context).should('be.visible');
   cy.injectAxe();
@@ -369,7 +387,9 @@ describe('Canvas ready node authoring', () => {
     cy.get(code).click();
     cy.get(code).should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    openNodeProperties('dvt-transform-1');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"] [data-slot="graph-node-card-title"]')
+      .should('be.visible')
+      .click();
     cy.get(overview).should('have.attr', 'aria-selected', 'true');
   });
 
@@ -792,20 +812,7 @@ describe('Canvas ready node authoring', () => {
       authoringGenerated: true,
       longNodeNames: true,
     });
-    const graph = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
-    Object.assign(
-      draft,
-      normalizeProjectCanvasDraft(
-        buildCanonicalCanvasDraft({
-          canvas: draft.canvas,
-          nodeIds: draft.nodeIds,
-          nodePositions: draft.nodePositions,
-          visibleEdges: draft.edges,
-          canonicalNodes: graph.canonicalNodes,
-          canonicalEdges: graph.canonicalEdges,
-        })
-      )
-    );
+    prepareSavedDbtDraft(draft);
 
     visitReadyCanvas();
 
@@ -929,17 +936,52 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('roundtrips dbt properties while generated SQL remains read-only', () => {
-    stubStatefulCanvasDraftAuthoring({
+    const draft = stubStatefulCanvasDraftAuthoring({
       dbtGraph: true,
       authoringGenerated: true,
       title: 'dbt properties roundtrip',
     });
+    prepareSavedDbtDraft(draft);
 
     visitReadyCanvas();
 
     cy.get('.react-flow__node[data-id="raw_orders"]')
       .should('contain.text', 'source')
       .and('not.contain.text', 'dbt:source')
+      .find('[data-slot="graph-node-operational-rail"]')
+      .should('not.exist');
+    openNodeProperties('raw_orders');
+    cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+    const rows = '[data-slot="source-card-appearance-rows"]';
+    const size = '[data-slot="source-card-appearance-size"]';
+    const rail =
+      '.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-operational-rail"]';
+    cy.get(rows).should('have.attr', 'aria-checked', 'false').focus();
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get(rows).should('have.attr', 'aria-checked', 'true').click();
+    cy.get(rail).should('not.exist');
+    cy.get(rows).click();
+    cy.get(rail).should('contain.text', 'Rows').and('not.contain.text', 'Size');
+    cy.get(size).should('have.attr', 'aria-checked', 'false').click();
+    cy.get('[data-slot="source-card-appearance-columns"]').click();
+    cy.get('.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-column-toggle"]').should(
+      'not.exist'
+    );
+    cy.get('[data-slot="source-card-appearance-columns"]').click();
+    cy.get('.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-column-toggle"]').should(
+      'exist'
+    );
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+        'card preferences stay local'
+      ).to.have.length(0)
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get(
+      '.react-flow__node[data-id="orders_model"] [data-slot="graph-node-operational-rail"]'
+    ).should('not.exist');
+    cy.get('.react-flow__node[data-id="raw_orders"]')
       .find('[data-slot="graph-node-operational-rail"]')
       .should('contain.text', 'Rows')
       .and('contain.text', '18.2k')
