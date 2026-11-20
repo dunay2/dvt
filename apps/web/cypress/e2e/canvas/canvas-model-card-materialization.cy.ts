@@ -194,21 +194,23 @@ describe('Model card materialization', () => {
       const view = cell.ownerDocument.defaultView!;
       const key = new view.KeyboardEvent('keydown', {
         key: 'ArrowRight',
-        shiftKey: true,
+        ctrlKey: true,
         bubbles: true,
         cancelable: true,
       });
       expect(cell.dispatchEvent(key), 'selection consumes the arrow').to.be.false;
     });
     cy.get(tableSelector).find(selectedValue).should('have.length', 2);
-    cy.get(tableSelector).find('tbody tr').eq(1).find('td button').eq(1).click({ shiftKey: true });
-    cy.get(tableSelector).find(selectedValue).should('have.length', 4);
+    cy.get(tableSelector).find('tbody tr').first().find('td button').eq(1).click({ ctrlKey: true });
+    cy.get(tableSelector).find('tbody tr').eq(1).find('td button').eq(1).click({ ctrlKey: true });
+    cy.get(tableSelector).find(selectedValue).should('have.length', 2);
     cy.window().then((window) => {
       const expected = Array.from(window.document.querySelectorAll(`${tableSelector} tbody tr`))
         .slice(0, 2)
-        .map((row) =>
-          Array.from(row.querySelectorAll(selectedValue), (cell) => cell.textContent).join('\t')
-        )
+        .map((row, index) => {
+          const value = row.querySelector(selectedValue)?.textContent;
+          return index === 0 ? `${value}\t` : `\t${value}`;
+        })
         .join('\n');
       const writeText = cy.stub(window.navigator.clipboard, 'writeText').resolves();
       cy.focused().then(($cell) => {

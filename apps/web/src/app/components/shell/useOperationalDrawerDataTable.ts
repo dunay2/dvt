@@ -104,7 +104,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
         id: cell.id,
         value: cell.getValue<string | undefined>(),
         selected: selection.contains({ row: index, column }),
-        select: (extend: boolean) => selection.select({ row: index, column }, extend),
+        select: (toggle: boolean) => selection.select({ row: index, column }, toggle),
       })),
     })),
   };

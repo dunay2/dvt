@@ -185,7 +185,7 @@ describe('OperationalDrawerDataTable', () => {
     expect((copy as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('extends and copies a rectangle, then keeps only the active cell when sorted', async () => {
+  it('uses Ctrl to extend a rectangle and toggle separate cells without copying the gaps', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });
     renderTable();
@@ -198,28 +198,31 @@ describe('OperationalDrawerDataTable', () => {
         container.querySelectorAll('td[data-selected="true"]'),
         (item) => item.textContent
       );
-    const key = async (
-      name: string,
-      options: { shiftKey?: boolean; ctrlKey?: boolean }
-    ): Promise<void> => {
-      await act(async () => fireEvent.keyDown(document.activeElement!, { key: name, ...options }));
+    const control = async (name: string): Promise<void> => {
+      await act(async () =>
+        fireEvent.keyDown(document.activeElement!, { key: name, ctrlKey: true })
+      );
     };
 
     act(() => {
       cell(0, 0).focus();
       fireEvent.click(cell(0, 0));
     });
-    await key('ArrowRight', { shiftKey: true });
-    await key('ArrowDown', { shiftKey: true });
+    await control('ArrowRight');
+    await control('ArrowDown');
     expect(document.activeElement).toBe(cell(1, 1));
     expect(selected()).toEqual(['1', 'beta', '2', 'alpha']);
-    await key('c', { ctrlKey: true });
+    await control('c');
     expect(writeText).toHaveBeenLastCalledWith('1\tbeta\n2\talpha');
     expect(getByRole(container, 'status').textContent).toBe('Range copied');
 
-    await act(() => fireEvent.click(cell(3, 1), { shiftKey: true }));
+    await act(() => fireEvent.click(cell(0, 0)));
+    await act(() => fireEvent.click(cell(1, 0), { ctrlKey: true }));
+    await act(() => fireEvent.click(cell(1, 0), { ctrlKey: true }));
+    await act(() => fireEvent.click(cell(3, 1), { ctrlKey: true }));
+    expect(selected()).toEqual(['1', 'NULL']);
     await act(async () => fireEvent.click(getByRole(container, 'button', { name: 'Copy range' })));
-    expect(writeText).toHaveBeenLastCalledWith('1\tbeta\n2\talpha\n3\talpha\n4\tNULL');
+    expect(writeText).toHaveBeenLastCalledWith('1\t\n\t\n\t\n\tNULL');
     await act(() => fireEvent.click(getByRole(container, 'button', { name: 'customer' })));
     expect(selected()).toEqual(['NULL']);
   });

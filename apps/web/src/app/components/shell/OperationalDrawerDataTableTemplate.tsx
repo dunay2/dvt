@@ -21,11 +21,10 @@ function handleCellKey(
 ) {
   const target = event.target;
   if (event.altKey || !(target instanceof HTMLButtonElement)) return;
-  if (event.ctrlKey || event.metaKey) {
-    if (!event.shiftKey && event.key.toLowerCase() === 'c' && selection.canCopy) {
-      event.preventDefault();
-      void selection.copy();
-    }
+  const control = event.ctrlKey || event.metaKey;
+  if (control && !event.shiftKey && event.key.toLowerCase() === 'c' && selection.canCopy) {
+    event.preventDefault();
+    void selection.copy();
     return;
   }
   const cell = target.closest('td');
@@ -34,7 +33,7 @@ function handleCellKey(
   const next = selection.move(
     { row: row.sectionRowIndex, column: cell.cellIndex - 1 },
     event.key,
-    event.shiftKey
+    control
   );
   if (next == null) return;
   event.preventDefault();
@@ -147,7 +146,7 @@ export function OperationalDrawerDataTableTemplate({
                       type="button"
                       data-slot="bottom-operational-data-value"
                       className={styles.cell}
-                      onClick={(event) => cell.select(event.shiftKey)}
+                      onClick={(event) => cell.select(event.ctrlKey || event.metaKey)}
                       aria-pressed={cell.selected}
                       aria-label={
                         cell.value === '' ? copy.emptyText : (cell.value ?? model.nullValueLabel)
