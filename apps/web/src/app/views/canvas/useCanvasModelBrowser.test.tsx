@@ -276,7 +276,7 @@ it('opens the existing occurrence or waits for an explicit context choice withou
   expect(model.selected?.id).toBe(instance.id);
   expect(model.initialView).toBe('sql');
   const other = { ...instance, id: 'other-placement', name: 'Other Model block' };
-  act(() => model.close());
+  act(() => model.close(instance.id, true));
   render({ nodes: [first, instance, other] });
   await act(() => browser.onSelect(first.id));
   expect(model.selected).toBeNull();

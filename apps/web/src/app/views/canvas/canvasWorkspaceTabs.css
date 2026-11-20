@@ -1,8 +1,9 @@
 /** Owned concern: Canvas, Code and Model workspace navigation appearance. */
 .canvas-workspace-model-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, max-content) max-content);
+  grid-template-columns: repeat(var(--canvas-workspace-tab-count), minmax(7rem, 1fr));
   min-width: 0;
+  width: max-content;
   max-width: 100%;
   overflow-x: auto;
   align-items: center;
@@ -25,29 +26,24 @@
   line-height: var(--text-ui-line-height);
 }
 
-.canvas-workspace-model-tabs .workspace-navigation-tab[role='tab'],
-.canvas-workspace-model-tab-close {
+.canvas-workspace-model-tabs .workspace-navigation-tab[data-closable] {
+  padding-inline-end: 2rem;
+}
+
+.canvas-workspace-model-close-controls {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
   grid-row: 1;
+  align-items: center;
+  pointer-events: none;
 }
 
-.canvas-workspace-model-tabs [data-slot='canvas-workspace-tab'] {
-  grid-column: 1;
-}
-
-.canvas-workspace-model-tabs [data-slot='canvas-code-main-tab'] {
-  grid-column: 3;
-}
-
-.canvas-workspace-model-tabs [data-slot='canvas-code-tab-close'] {
-  grid-column: 4;
-}
-
-.canvas-workspace-model-tabs [data-slot='canvas-model-main-tab'] {
-  grid-column: 5;
-}
-
-.canvas-workspace-model-tabs [data-slot='canvas-model-tab-close'] {
-  grid-column: 6;
+.canvas-workspace-model-close-controls > div {
+  display: flex;
+  justify-content: end;
+  min-width: 0;
+  padding-inline-end: 0.375rem;
 }
 
 .canvas-workspace-model-tab-icon {
@@ -57,13 +53,15 @@
 }
 
 .canvas-workspace-model-tab-label {
-  max-width: 16rem;
+  max-width: 12rem;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .canvas-workspace-model-tab-close {
+  pointer-events: auto;
   padding: 0.25rem;
   border-radius: 0.25rem;
   color: var(--text-muted);

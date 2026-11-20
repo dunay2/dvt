@@ -66,6 +66,7 @@ export type CanvasShellLayout = {
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurface?: React.ReactNode;
   centerSurfaceVisible?: boolean;
+  modelWorkspace?: Readonly<{ currentId: string | null; openIds: readonly string[] }>;
   readOnlyBanner?: React.ReactNode;
 };
 

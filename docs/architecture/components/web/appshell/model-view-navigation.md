@@ -118,8 +118,32 @@ changes reset that presentation and reject obsolete callbacks. Keep only the
 current scoped state, without a growing map of past projects. Opening a Model
 or receiving its file projection must not clear the current filter.
 
+`ListCanvasWorkbenchTabs` projects the open Model tabs in insertion order from
+the current Canvas selection session. The tab identity is the authorized Model
+context within the Canvas. Canvas and Code do not count against the limit of six
+Model tabs. A seventh distinct Model leaves selection and tabs unchanged and
+reports that a tab must be closed. An open Model is always selectable at capacity.
+Switching workspace, environment, Canvas or project root discards the tab list.
+
+```mermaid
+flowchart LR
+  Selection[Scoped Model selection] --> Tabs[ListCanvasWorkbenchTabs]
+  Gesture[Open, select or close] --> Command[SelectCanvasWorkbenchTab]
+  Command --> Admission{Current scope and capacity}
+  Admission -->|Admitted| Guard[Existing Model leave decision when replacing or closing]
+  Guard -->|Continue| Selection
+  Admission -->|Capacity| Notice[Close a Model tab to continue]
+```
+
 `SelectCanvasWorkbenchTab` delegates protected replacement to the current Model
-session. A fresh session receives its initial view atomically; selecting the same
+session. A visible Model owns the existing editor and its leave decision while
+other open tabs retain identity and last view. Switching to Canvas or Code can
+hide the current editor without replacing it. Closing an inactive tab removes
+only that tab. Closing the current editor returns to Canvas if there is no
+remaining Model and otherwise selects its nearest remaining neighbour when the
+editor was visible. Draft refusal never adds or removes a tab.
+
+A fresh session receives its initial view atomically; selecting the same
 session reuses its published view callback. Semantic view collapses SQL and SQL
 expands its retained logical editor. Shell receives presentation mode and callbacks
 only, without owning SQL text, semantic drafts or authorization.
@@ -131,6 +155,10 @@ Presentation switching retains the SQL buffer, current Model and lower data
 results. It never implicitly compiles, executes, applies, saves or discards.
 Expanding SQL may prepare the existing protected logical-input context. SQL
 generation, validation, row execution and Model Apply remain explicit actions.
+
+The shared tab list divides the available shell width among tabs, truncates
+long labels with their full titles available, and scrolls horizontally beneath
+the minimum usable width. Each Model tab has a distinct tab and panel identity.
 
 ## Physical responsibilities
 

@@ -4,7 +4,8 @@ import type { ReactNode } from 'react';
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
 import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
-import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
+import { canvasModelWorkspaceTabIds, canvasWorkspaceTabs } from './canvasWorkspaceTabs';
+import type { CanvasShellLayout } from './canvasShell.types';
 import type { CanvasNativeNodeEntryCapture } from './useCanvasNativeNodeEntry';
 
 const canvasShellMainPanelFrameClassNames = {
@@ -22,6 +23,7 @@ const canvasShellMainPanelFrameClassNames = {
 export function CanvasShellWorkspaceSurfaces({
   viewport,
   editor,
+  modelWorkspace,
   editorVisible,
   hasWorkspaceTabs,
   code,
@@ -29,6 +31,7 @@ export function CanvasShellWorkspaceSurfaces({
 }: Readonly<{
   viewport: ReactNode;
   editor: ReactNode;
+  modelWorkspace?: CanvasShellLayout['modelWorkspace'];
   editorVisible: boolean;
   hasWorkspaceTabs: boolean;
   code?: ReactNode;
@@ -47,15 +50,20 @@ export function CanvasShellWorkspaceSurfaces({
             { kind: 'model', content: editor, visible: modelVisible },
             { kind: 'code', content: code, visible: codeVisible },
           ] as const
-        ).map(({ kind, content, visible }) =>
-          content == null ? null : (
+        ).map(({ kind, content, visible }) => {
+          if (content == null) return null;
+          const { tabId, panelId } =
+            kind === 'model' && modelWorkspace?.currentId != null
+              ? canvasModelWorkspaceTabIds(modelWorkspace.currentId)
+              : canvasWorkspaceTabs[kind];
+          return (
             <div
               key={kind}
               {...(hasWorkspaceTabs
                 ? {
-                    id: canvasWorkspaceTabs[kind].panelId,
+                    id: panelId,
                     role: 'tabpanel',
-                    'aria-labelledby': canvasWorkspaceTabs[kind].tabId,
+                    'aria-labelledby': tabId,
                     tabIndex: 0,
                   }
                 : {})}
@@ -68,8 +76,15 @@ export function CanvasShellWorkspaceSurfaces({
             >
               {content}
             </div>
-          )
-        )}
+          );
+        })}
+        {hasWorkspaceTabs &&
+          modelWorkspace?.openIds
+            .filter((id) => id !== modelWorkspace.currentId)
+            .map((id) => {
+              const { tabId, panelId } = canvasModelWorkspaceTabIds(id);
+              return <div key={id} id={panelId} role="tabpanel" aria-labelledby={tabId} hidden />;
+            })}
       </div>
     </div>
   );

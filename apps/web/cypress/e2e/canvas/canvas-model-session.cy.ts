@@ -67,6 +67,12 @@ describe('model-session', () => {
     assertModel('dvt-transform-1', 'Transform 1');
     cy.get(row('orphan-transform-1')).click();
     assertModel('orphan-transform-1', 'Orphan transform');
+    const modelTabs = '[data-slot="canvas-model-main-tab"]';
+    cy.get(modelTabs).should('have.length', 2);
+    cy.contains(modelTabs, 'Transform 1').click();
+    assertModel('dvt-transform-1', 'Transform 1');
+    cy.contains(modelTabs, 'Orphan transform').click();
+    assertModel('orphan-transform-1', 'Orphan transform');
     cy.get('[data-slot="left-navigation-link"][href="/admin"]').click();
     cy.location('pathname').should('eq', '/admin');
     cy.get(canvas).click();

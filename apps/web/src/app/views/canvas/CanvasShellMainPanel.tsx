@@ -268,6 +268,7 @@ function CanvasShellMainSurface({
         modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
       }
       editor={modelWorkspaceOpen ? layout.centerSurface : null}
+      modelWorkspace={layout.modelWorkspace}
       editorVisible={workspaceTask == null && layout.centerSurfaceVisible === true}
       hasWorkspaceTabs={panels.activeCanvas != null || projectFiles?.panel != null}
       code={

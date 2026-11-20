@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 import { Download, Upload, PanelsTopLeft } from 'lucide-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
   DropdownMenuItem,
@@ -206,11 +206,31 @@ export function CanvasWorkspaceMenuControls({
 
 export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
   const modelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
+  const modelTabList = useCanvasWorkspaceMenuContributionStore((state) => state.modelTabList);
   const codeTab = useCanvasWorkspaceMenuContributionStore((state) => state.contribution?.codeTab);
   const activeCanvas = useCanvasWorkspaceMenuContributionStore(
     (state) => state.contribution?.activeCanvas ?? null
   );
   useApplicationLanguageStore((state) => state.language);
+  const identity = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const strip = identity.current?.querySelector('.canvas-workspace-model-tabs');
+    if (strip == null) return;
+    const revealSelected = () => {
+      const selected = strip.querySelector('[role="tab"][aria-selected="true"]');
+      if (selected == null) return;
+      const frame = strip.getBoundingClientRect();
+      const tab = selected.getBoundingClientRect();
+      const offset =
+        tab.left < frame.left ? tab.left - frame.left : Math.max(0, tab.right - frame.right);
+      if (offset !== 0) strip.scrollLeft += offset;
+    };
+    revealSelected();
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(revealSelected);
+    observer?.observe(strip);
+    return () => observer?.disconnect();
+  }, [codeTab?.active, modelTab?.nodeId, modelTab?.active, modelTabList]);
 
   if (activeCanvas == null && codeTab == null) {
     return null;
@@ -218,6 +238,7 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
 
   return (
     <div
+      ref={identity}
       data-slot="shell-active-canvas-identity"
       data-canvas-id={activeCanvas?.id}
       data-kind={activeCanvas?.kind}
@@ -230,6 +251,7 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       <CanvasWorkspaceModelTabs
         canvasTitle={activeCanvas?.title ?? canvasViewCopy.canvasContextMenuCanvasGroupLabel}
         tab={activeCanvas != null && modelTab?.canvasId === activeCanvas.id ? modelTab : undefined}
+        modelTabs={modelTabList?.canvasId === activeCanvas?.id ? modelTabList?.tabs : undefined}
         codeTab={codeTab}
       />
     </div>
