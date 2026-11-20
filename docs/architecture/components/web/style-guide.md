@@ -565,7 +565,11 @@ The Data drawer identifies the sampled node, shows bounded row and column counts
 and keeps headers, types, NULLs, sorting and truncation legible. These are
 read-only presentation details, not new query or authoring rails.
 
-Keep a column's type beside its name in a compact header. Align the sample
+Show the column name and sorting affordance in the compact header. Reveal the
+data type in a tooltip on pointer hover or keyboard focus. The toolbar's eye
+opens the current sample's column list, where each eye toggles one column and
+its cells. Keep hidden columns available in that list and preserve their sort,
+filter, and order. Hiding columns is local to the open grid. Align the sample
 controls at the right of the toolbar, with one accessible background swatch.
 Derive a restrained second tone from the selected color and limit the range
 against graphite so the grid stays readable with light colors. This view-local

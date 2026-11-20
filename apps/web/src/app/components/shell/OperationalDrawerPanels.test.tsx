@@ -161,9 +161,7 @@ describe('OperationalDrawerPanels', () => {
     expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
       '2 columns'
     );
-    expect(
-      container.querySelector('[data-slot="bottom-operational-data-table"]')?.textContent
-    ).toContain('integer');
+    expect(container.querySelector('thead')?.textContent).not.toContain('integer');
 
     const table = getByRole(container, 'table', { name: 'Sample from orders' });
     expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
@@ -332,7 +330,7 @@ describe('OperationalDrawerPanels', () => {
       '1 columns'
     );
     expect(container.querySelector('thead')?.textContent).toContain('order_id');
-    expect(container.querySelector('thead')?.textContent).toContain('integer');
+    expect(container.querySelector('thead')?.textContent).not.toContain('integer');
     expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
     expect(container.textContent).not.toContain('Could not read customers.');
   });

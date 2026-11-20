@@ -5,9 +5,11 @@
  * @consequence No query, clipboard or table-state policy is owned by markup.
  * @version 1.0.0
  */
-import { AlignJustify, Copy, Info, Search, WrapText } from 'lucide-react';
+import { AlignJustify, Copy, Eye, EyeOff, Info, Search, WrapText } from 'lucide-react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { OperationalDrawerDataColumnHeader } from './OperationalDrawerDataColumnHeader';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
@@ -57,6 +59,8 @@ export function OperationalDrawerDataTableTemplate({
 }>): JSX.Element {
   const { selection } = model;
   const copyLabel = selection.isRange ? copy.copyRange : copy.copy;
+  const VisibilityIcon = model.columnVisibility.some(({ visible }) => !visible) ? EyeOff : Eye;
+  const allColumnsHidden = model.columnVisibility.length > 0 && model.headers.length === 0;
   return (
     <section
       className={styles.grid}
@@ -84,6 +88,39 @@ export function OperationalDrawerDataTableTemplate({
         </span>
         <div className={styles.actions}>
           {toolbarActions}
+          {model.columnVisibility.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" title={copy.columns} aria-label={copy.columns}>
+                  <VisibilityIcon aria-hidden="true" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                aria-label={copy.columns}
+                className={styles.visibilityList}
+              >
+                {model.columnVisibility.map((column) => {
+                  const Icon = column.visible ? Eye : EyeOff;
+                  return (
+                    <Button
+                      key={column.id}
+                      variant="ghost"
+                      size="sm"
+                      className={styles.visibilityItem}
+                      aria-label={copy.showColumn.replace('{column}', () => column.id)}
+                      aria-pressed={column.visible}
+                      title={column.id}
+                      onClick={column.toggle}
+                    >
+                      <Icon aria-hidden="true" />
+                      <span>{column.id}</span>
+                    </Button>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          )}
           <button
             type="button"
             title={model.comfortable ? copy.compact : copy.comfortable}
@@ -122,7 +159,11 @@ export function OperationalDrawerDataTableTemplate({
         </div>
       </div>
       <div data-slot="bottom-operational-data-table-frame" className={styles.frame}>
-        <table data-slot="bottom-operational-data-table" className={styles.table}>
+        <table
+          data-slot="bottom-operational-data-table"
+          className={styles.table}
+          hidden={allColumnsHidden}
+        >
           <caption className={styles.srOnly}>{model.caption}</caption>
           <thead>
             <tr>
@@ -165,7 +206,8 @@ export function OperationalDrawerDataTableTemplate({
             ))}
           </tbody>
         </table>
-        {model.rows.length === 0 && model.hasFilters ? (
+        {allColumnsHidden && <p className={styles.empty}>{copy.allColumnsHidden}</p>}
+        {!allColumnsHidden && model.rows.length === 0 && model.hasFilters ? (
           <p className={styles.empty}>{copy.noMatches}</p>
         ) : null}
       </div>

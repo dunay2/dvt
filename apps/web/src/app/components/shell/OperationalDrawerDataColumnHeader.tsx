@@ -2,6 +2,7 @@
 import { ArrowDown, ArrowDownUp, ArrowUp, Filter } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import styles from './OperationalDrawerDataTable.module.css';
@@ -16,6 +17,12 @@ export function OperationalDrawerDataColumnHeader({
   const SortIndicator =
     header.sort === 'ascending' ? ArrowUp : header.sort === 'descending' ? ArrowDown : ArrowDownUp;
   const filterLabel = copy.filterColumn.replace('{column}', header.id);
+  const columnHint =
+    header.sortPriority === 0
+      ? copy.columnHint
+      : copy.sortPriority
+          .replace('{priority}', String(header.sortPriority))
+          .replace('{direction}', copy[header.sort === 'descending' ? 'descending' : 'ascending']);
   return (
     <th
       scope="col"
@@ -23,36 +30,30 @@ export function OperationalDrawerDataColumnHeader({
       data-drop-edge={header.movement.edge}
     >
       <div className={styles.heading}>
-        <button
-          type="button"
-          className={styles.sort}
-          data-column-id={header.id}
-          data-sort={header.sort}
-          data-sort-priority={header.sortPriority || undefined}
-          title={`${header.id} · ${copy.columnHint}`}
-          aria-description={
-            header.sortPriority === 0
-              ? undefined
-              : copy.sortPriority
-                  .replace('{priority}', String(header.sortPriority))
-                  .replace(
-                    '{direction}',
-                    copy[header.sort === 'descending' ? 'descending' : 'ascending']
-                  )
-          }
-          aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
-          {...header.movement.events}
-          onClick={header.toggleSort}
-        >
-          <span className={styles.columnName}>{header.id}</span>
-          <SortIndicator aria-hidden="true" />
-          {header.sortPriority > 0 && <sup aria-hidden="true">{header.sortPriority}</sup>}
-        </button>
-        {header.type && (
-          <span className={styles.type} title={header.type}>
-            {header.type}
-          </span>
-        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={styles.sort}
+              data-column-id={header.id}
+              data-sort={header.sort}
+              data-sort-priority={header.sortPriority || undefined}
+              aria-description={columnHint}
+              aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
+              {...header.movement.events}
+              onClick={header.toggleSort}
+            >
+              <span className={styles.columnName}>{header.id}</span>
+              <SortIndicator aria-hidden="true" />
+              {header.sortPriority > 0 && <sup aria-hidden="true">{header.sortPriority}</sup>}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {header.type
+              ? `${header.id} · ${copy.columnType.replace('{type}', header.type)}`
+              : header.id}
+          </TooltipContent>
+        </Tooltip>
         <Popover>
           <PopoverTrigger asChild>
             <button

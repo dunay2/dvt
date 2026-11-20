@@ -187,6 +187,37 @@ describe('Model card materialization', () => {
     const tableSelector = '[data-slot="bottom-operational-data-table"]';
     const frameSelector = '[data-slot="bottom-operational-data-table-frame"]';
     cy.get(tableSelector).find('tbody tr').should('have.length', 20);
+    const nameHeader = `${tableSelector} [data-column-id="name"]`;
+    cy.get(nameHeader).closest('th').should('have.text', 'name');
+    cy.get(nameHeader).trigger('pointermove', {
+      eventConstructor: 'PointerEvent',
+      pointerType: 'mouse',
+    });
+    cy.contains('[data-slot="tooltip-content"]', 'name · Type: string').should('be.visible');
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.contains('[data-slot="tooltip-content"]', 'name · Type: string').should('not.exist');
+    cy.get(nameHeader).focus();
+    cy.contains('[data-slot="tooltip-content"]', 'name · Type: string').should('be.visible');
+
+    const columnPicker =
+      '[data-slot="data-grid-toolbar"] button[aria-label="Show or hide columns"]';
+    cy.get(columnPicker).click();
+    cy.get('[role="dialog"][aria-label="Show or hide columns"]').within(() => {
+      cy.get('button[aria-label="Show email"]').should('have.attr', 'aria-pressed', 'true').click();
+      cy.get('button[aria-label="Show email"]').should('have.attr', 'aria-pressed', 'false');
+    });
+    cy.get(tableSelector).find('[data-column-id="email"]').should('not.exist');
+    cy.get(tableSelector).find('tbody tr').first().find('td').should('have.length', 2);
+    cy.screenshot('data-grid-column-visibility');
+    cy.get('button[aria-label="Show email"]').click();
+    cy.press(Cypress.Keyboard.Keys.ESC);
+    cy.focused().should('match', columnPicker);
+    cy.get(tableSelector).find('tbody tr').first().find('td').should('have.length', 3);
+    cy.wrap(null).should(() => {
+      expect(
+        getE2eApiCalls(/\/transforms\/transform-customers\/data-sample$/, 'GET')
+      ).to.have.length(1);
+    });
     const selectedValue = 'td[data-selected="true"] button';
     cy.get(tableSelector).find('tbody tr').first().find('td button').first().click();
     cy.focused().then(($cell) => {

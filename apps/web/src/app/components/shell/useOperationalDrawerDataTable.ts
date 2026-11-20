@@ -13,6 +13,7 @@ import {
   type ColumnDef,
   type ColumnFiltersState,
   type SortingState,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useOperationalDrawerDataColumns } from './useOperationalDrawerDataColumns';
@@ -30,6 +31,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState('');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [comfortable, setComfortable] = useState(false);
   const [wrap, setWrap] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('#191a1c');
@@ -59,14 +61,19 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     getColumnCanGlobalFilter: () => true,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    state: { sorting, columnFilters, columnOrder: columnMovement.order, globalFilter: search },
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      columnOrder: columnMovement.order,
+      globalFilter: search,
+    },
   });
   const visibleRows = table.getRowModel().rows;
-  const selection = useOperationalDrawerDataSelection(
-    visibleRows,
-    columnMovement.order,
-    nullValueLabel
-  );
+  const displayedColumns = table.getVisibleLeafColumns();
+  const displayedOrder = displayedColumns.map(({ id }) => id);
+  const selection = useOperationalDrawerDataSelection(visibleRows, displayedOrder, nullValueLabel);
   return {
     caption: input.caption,
     nullValueLabel,
@@ -81,21 +88,26 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     setBackgroundColor,
     total: rows.length,
     selection,
-    headers: table.getFlatHeaders().map((header) => ({
-      id: header.column.id,
-      type: columns.find((column) => column.name === header.column.id)?.type,
+    columnVisibility: table.getAllLeafColumns().map((column) => ({
+      id: column.id,
+      visible: column.getIsVisible(),
+      toggle: () => column.toggleVisibility(),
+    })),
+    headers: displayedColumns.map((column) => ({
+      id: column.id,
+      type: columns.find(({ name }) => name === column.id)?.type,
       sort:
-        header.column.getIsSorted() === 'asc'
+        column.getIsSorted() === 'asc'
           ? ('ascending' as const)
-          : header.column.getIsSorted() === 'desc'
+          : column.getIsSorted() === 'desc'
             ? ('descending' as const)
             : ('none' as const),
-      toggleSort: header.column.getToggleSortingHandler(),
-      sortPriority: header.column.getSortIndex() + 1,
-      filter: String(header.column.getFilterValue() ?? ''),
-      filterPriority: columnFilters.findIndex(({ id }) => id === header.column.id) + 1,
-      setFilter: (value: string) => header.column.setFilterValue(value),
-      movement: columnMovement.bind(header.column.id),
+      toggleSort: column.getToggleSortingHandler(),
+      sortPriority: column.getSortIndex() + 1,
+      filter: String(column.getFilterValue() ?? ''),
+      filterPriority: columnFilters.findIndex(({ id }) => id === column.id) + 1,
+      setFilter: (value: string) => column.setFilterValue(value),
+      movement: columnMovement.bind(column.id, displayedOrder),
     })),
     rows: visibleRows.map((row, index) => ({
       id: row.id,

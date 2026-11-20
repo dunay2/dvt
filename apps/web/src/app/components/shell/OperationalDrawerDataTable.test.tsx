@@ -336,4 +336,32 @@ describe('OperationalDrawerDataTable', () => {
     await act(() => fireEvent.change(filter, { target: { value: '' } }));
     expect(visibleRows().map(([value]) => value)).toEqual(['3', '2', '1', '4']);
   });
+
+  it('hides columns with their cells and restores their position and active sort', async () => {
+    renderTable();
+    const customer = getByRole(container, 'button', { name: 'customer' });
+    await act(() => fireEvent.click(customer));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'beta' })));
+    const columns = getByRole(container, 'button', { name: 'Show or hide columns' });
+    await act(() => fireEvent.click(columns));
+    const dialog = getByRole(document.body, 'dialog', { name: 'Show or hide columns' });
+    const toggle = getByRole(dialog, 'button', { name: 'Show customer' });
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    await act(() => fireEvent.click(toggle));
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(customer.isConnected).toBe(false);
+    expect(visibleRows()).toEqual([['2'], ['3'], ['1'], ['4']]);
+    expect(getByRole(container, 'button', { name: 'Copy cell' })).toHaveProperty('disabled', true);
+
+    const toggleId = getByRole(dialog, 'button', { name: 'Show id' });
+    await act(() => fireEvent.click(toggleId));
+    expect(container.textContent).toContain('All columns are hidden');
+    await act(() => fireEvent.click(toggleId));
+    await act(() => fireEvent.click(toggle));
+    expect(visibleRows()[0]).toEqual(['2', 'alpha']);
+    expect(getByRole(container, 'button', { name: 'customer' }).closest('th')).toHaveProperty(
+      'ariaSort',
+      'ascending'
+    );
+  });
 });

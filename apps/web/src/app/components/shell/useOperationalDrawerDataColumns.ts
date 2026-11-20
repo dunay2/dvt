@@ -33,7 +33,10 @@ export function useOperationalDrawerDataColumns(columns: readonly { name: string
     dragged.current = null;
     setTarget(null);
   };
-  const bind = (id: string): { edge?: Edge; events: ButtonHTMLAttributes<HTMLButtonElement> } => ({
+  const bind = (
+    id: string,
+    visibleOrder: readonly string[]
+  ): { edge?: Edge; events: ButtonHTMLAttributes<HTMLButtonElement> } => ({
     edge: target?.id === id ? target.edge : undefined,
     events: {
       draggable: true,
@@ -58,7 +61,7 @@ export function useOperationalDrawerDataColumns(columns: readonly { name: string
         if (!event.altKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
         event.preventDefault();
         const left = event.key === 'ArrowLeft';
-        const destination = order[order.indexOf(id) + (left ? -1 : 1)];
+        const destination = visibleOrder[visibleOrder.indexOf(id) + (left ? -1 : 1)];
         if (destination != null) move(id, destination, left ? 'before' : 'after');
       },
     },
