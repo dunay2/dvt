@@ -64,18 +64,31 @@ export function CanvasGraphFilterControl({
 
         <PopoverContent
           data-slot="canvas-graph-filter-control"
+          aria-label={copy.canvasGraphFilterTitle}
           align="end"
           sideOffset={8}
           className={styles.content}
         >
-          <header>
-            <h2 className={styles.title}>{copy.canvasGraphFilterTitle}</h2>
-            <p className={styles.matchSummary} aria-live="polite">
-              {formatCanvasCopyTemplate(copy.canvasGraphFilterMatchSummaryTemplate, {
-                matching: String(model.matchCount),
-                total: String(model.totalCount),
-              })}
-            </p>
+          <header className={styles.header}>
+            <div>
+              <h2 className={styles.title}>{copy.canvasGraphFilterTitle}</h2>
+              <p className={styles.matchSummary} aria-live="polite">
+                {formatCanvasCopyTemplate(copy.canvasGraphFilterMatchSummaryTemplate, {
+                  matching: String(model.matchCount),
+                  total: String(model.totalCount),
+                })}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={styles.iconButton}
+              aria-label={copy.canvasGraphFilterCloseLabel}
+              onClick={() => binding.setOpen(false)}
+            >
+              <X aria-hidden="true" />
+            </Button>
           </header>
 
           <FilterChoiceGroup
@@ -161,7 +174,7 @@ export function CanvasGraphFilterControl({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className={styles.removeButton}
+                    className={styles.iconButton}
                     aria-label={formatCanvasCopyTemplate(
                       copy.canvasGraphFilterRemoveLabelTemplate,
                       {

@@ -93,7 +93,7 @@ describe('CanvasGraphFilterControl', () => {
     expect(onAddPredicate).toHaveBeenCalledTimes(1);
   });
 
-  it('opens and closes from the same trigger', () => {
+  it.each(['trigger', 'close button'])('opens and dismisses using the %s', (action) => {
     const onOpenChange = vi.fn();
     function Harness(): JSX.Element {
       const [open, setOpen] = useState(false);
@@ -123,9 +123,12 @@ describe('CanvasGraphFilterControl', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(document.body.textContent).toContain('Filtros del grafo');
 
-    act(() => {
-      fireEvent.click(trigger);
-    });
+    const dialog = getByRole(document.body, 'dialog', { name: 'Filtros del grafo' });
+    const dismiss =
+      action === 'trigger'
+        ? trigger
+        : getByRole(dialog, 'button', { name: 'Cerrar filtros del grafo' });
+    act(() => fireEvent.click(dismiss));
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(document.querySelector('[data-slot="canvas-graph-filter-control"]')).toBeNull();
     expect(onOpenChange).toHaveBeenNthCalledWith(1, true);

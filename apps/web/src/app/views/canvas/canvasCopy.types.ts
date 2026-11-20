@@ -102,6 +102,7 @@ export type CanvasViewCopy = {
   readonly canvasGraphSearchCloseLabel: string;
   readonly canvasGraphFilterLabel: string;
   readonly canvasGraphFilterTitle: string;
+  readonly canvasGraphFilterCloseLabel: string;
   readonly canvasGraphFilterMatchSummaryTemplate: string;
   readonly canvasGraphFilterCompositionLabel: string;
   readonly canvasGraphFilterAndLabel: string;

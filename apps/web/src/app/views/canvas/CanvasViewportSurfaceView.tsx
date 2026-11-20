@@ -135,6 +135,7 @@ function CanvasViewportReactFlowSurface({
   onImpactFocusNodeChange,
   onMiniMapNodeClick,
   graphSearchController,
+  onCloseGraphFilter,
   copy,
 }: Omit<
   CanvasViewportSurfaceViewProps,
@@ -143,11 +144,12 @@ function CanvasViewportReactFlowSurface({
   | 'contextMenuLabel'
   | 'nodeHealthPopoverModel'
   | 'graphFilterController'
->): JSX.Element {
+> & { onCloseGraphFilter: () => void }): JSX.Element {
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
   const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
   const backgroundAdd = useCanvasBackgroundAddMenuGesture();
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
+    onCloseGraphFilter();
     onCloseNodeHealthPopover();
     onImpactFocusNodeChange?.(null);
     contextMenuPresenter.handlePaneClick(event);
@@ -304,6 +306,7 @@ export function CanvasViewportSurfaceView({
           contextMenuPresenter={contextMenuPresenter}
           contextSurfaceLabel={contextSurfaceLabel}
           onCloseNodeHealthPopover={onCloseNodeHealthPopover}
+          onCloseGraphFilter={() => graphFilterController.setOpen(false)}
           graphSearchController={graphSearchController}
           copy={copy}
         />

@@ -148,6 +148,17 @@ describe('Canvas graph search and filtering live protected runtime', () => {
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '1 / 2');
 
+    cy.get(
+      'button[aria-label="Close graph filters"], button[aria-label="Cerrar filtros del grafo"]'
+    ).click();
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
+    cy.get('.react-flow__node').should('have.length', 2);
+    openGraphFilters();
+    cy.get('[data-testid="canvas-viewport"]').find('.react-flow__pane').click(90, 420);
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
+    cy.get('.react-flow__node').should('have.length', 2);
+    openGraphFilters();
+
     cy.get('[data-slot="canvas-graph-filter-control"]')
       .find(
         'button[aria-label="Clear graph filters"], button[aria-label="Limpiar filtros del grafo"]'
