@@ -69,6 +69,28 @@ message, not the same global summary for every row. A Preview rejection belongs
 to the exact draft signature that produced it and expires when that identity
 changes, including when no PlanRef was accepted.
 
+For the protected DVT materialization rejection, `PreviewPlan` evaluates the
+single terminal Transform selected by the confirmed Canvas graph. The Canvas
+keeps that model's identity and display name on the rejected presentation
+outcome. The typed cause identifies this specific failure before the message
+names the selected model. Other failures can have a different subject and do
+not receive a guessed model. `ObservePlanRunReadiness` consumes the same
+subject and retires it with the rejected draft signature.
+
+```mermaid
+flowchart LR
+  Graph[Confirmed Canvas graph] --> Scope[Single requested terminal model]
+  Scope --> Preview[Existing PreviewPlan command]
+  Preview --> Cause[Typed publication rejection]
+  Cause --> Message[Localized correction and affected model]
+  Scope --> Message
+  Message --> Readiness[Existing readiness summary]
+  Message --> Dialog[Preview dialog and technical disclosure]
+```
+
+The dialog presents the correction once and keeps the code and cause
+available through a disclosure. No API request or response contract changes.
+
 Autosave scheduling follows semantic draft identity and revision. Equivalent
 projection objects from unrelated renders must not postpone an authorized save
 indefinitely. Genuine edits restart the bounded debounce; a sent save still

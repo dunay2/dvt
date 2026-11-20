@@ -297,16 +297,16 @@ describe('Protected model save and readiness', () => {
         DVT_REJECTIONS.runDispositionUnsupported.cause
       );
     });
-    cy.get('[data-testid="plan-preview-modal"]').should(
-      'contain.text',
-      'This result type can be saved'
-    );
+    cy.get('[data-testid="plan-preview-modal"]').within(() => {
+      cy.get('[data-slot="plan-preview-affected-model"]').should('have.text', 'Transform 1');
+      cy.contains('In Properties, set Materialization to Table').should('be.visible');
+    });
     cy.get('[data-testid="plan-preview-modal"]')
       .contains('button', /^(Close|Cerrar)$/)
       .click();
     changeAndReadSavedType('ephemeral');
     cy.get('[data-slot="bottom-operational-drawer"]')
-      .should('not.contain.text', 'This result type can be saved')
+      .should('not.contain.text', 'The current materialization blocks execution')
       .and('not.contain.text', 'Authorization denied');
     visitSavedModel('ephemeral');
     changeAndReadSavedType('table');

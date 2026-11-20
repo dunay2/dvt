@@ -2,6 +2,7 @@
  * Owned concern: orchestrate Canvas plan-preview persistence before run start
  * without creating authoritative runtime execution identity.
  */
+import { DVT_REJECTIONS } from '@dvt/contracts';
 import type { IPlansPort, PlanPreviewOutcome } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
@@ -151,7 +152,17 @@ export async function executeCanvasPlanAction({
       return {
         ok: true,
         draftSignature: dvtProjection.draftSignature,
-        previewOutcome: attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
+        previewOutcome:
+          previewOutcome.kind === 'selection-rejected' &&
+          previewOutcome.rejection.cause === DVT_REJECTIONS.runDispositionUnsupported.cause
+            ? {
+                ...previewOutcome,
+                affectedModel: {
+                  nodeId: dvtProjection.selectedRoot.id,
+                  name: dvtProjection.selectedRoot.name,
+                },
+              }
+            : attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
         writtenArtifactPaths: [],
       };
     }

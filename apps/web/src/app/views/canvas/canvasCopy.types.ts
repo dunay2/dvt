@@ -286,7 +286,9 @@ export type CanvasViewCopy = {
   readonly planPreviewExportJsonAction: string;
   readonly planPreviewStartRunAction: string;
   readonly planPreviewSelectionRejectedTitle: string;
-  readonly planPreviewSelectionRejectedDescription: string;
+  readonly planPreviewAffectedModelLabel: string;
+  readonly planPreviewAffectedModelMessageTemplate: string;
+  readonly planPreviewTechnicalDetailsLabel: string;
   readonly planPreviewPlanInvalidTitle: string;
   readonly planPreviewPlanInvalidDescription: string;
   readonly planPreviewUnknownCodeMessage: string;

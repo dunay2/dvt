@@ -361,11 +361,15 @@ describe('DVT terminal Transform Preview and Run live', () => {
     });
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
       .should('be.visible')
-      .and(
-        'contain.text',
-        'This result type can be saved, but execution currently supports a table result or an ephemeral model connected to one table Sink.'
-      )
-      .and('not.contain.text', DVT_REJECTIONS.runDispositionUnsupported.reason);
+      .and('not.contain.text', DVT_REJECTIONS.runDispositionUnsupported.reason)
+      .within(() => {
+        cy.get('[data-slot="plan-preview-affected-model"]').should('have.text', 'Transform 1');
+        cy.contains('In Properties, set Materialization to Table').should('be.visible');
+        cy.get('details').should('not.have.attr', 'open');
+        cy.contains('summary', 'Technical details').click();
+        cy.get('details').should('have.attr', 'open');
+        cy.contains(DVT_REJECTIONS.runDispositionUnsupported.cause).should('be.visible');
+      });
     cy.get('[data-slot="plan-preview-start-run"]').should('not.exist');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     cy.then(() => {

@@ -6,6 +6,7 @@ import {
 } from '../../stores/applicationLanguageStore';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
 import type { CanvasRunStartFailure } from './canvasExecutionActions.types';
 import type {
   CanvasExecutableGraphFailure,
@@ -101,6 +102,14 @@ export function presentPlanRunReadiness(
   const copy = resolveCanvasViewCopy(locale);
   const previewMessage = resolvePreviewReadinessMessage(evaluation.previewState, copy);
   const source = evaluation.diagnostic;
+  const rejection = source?.kind === 'preview' ? source.diagnostic : null;
+  const rejectionMessage =
+    rejection == null
+      ? null
+      : (resolveDvtOperationalRejectionCopy(
+          rejection.cause,
+          normalizeApplicationLanguage(locale) ?? getApplicationLanguage()
+        ) ?? rejection.reason);
   const diagnostic =
     source?.kind === 'graph'
       ? {
@@ -111,12 +120,12 @@ export function presentPlanRunReadiness(
         ? {
             blocker: source.blocker,
             message:
-              resolveDvtOperationalRejectionCopy(
-                source.diagnostic?.cause,
-                normalizeApplicationLanguage(locale) ?? getApplicationLanguage()
-              ) ??
-              source.diagnostic?.reason ??
-              resolvePlanRunBlockerMessage(source.blocker, copy),
+              rejectionMessage != null && rejection?.affectedModel != null
+                ? formatCanvasCopyTemplate(copy.planPreviewAffectedModelMessageTemplate, {
+                    name: rejection.affectedModel.name,
+                    message: rejectionMessage,
+                  })
+                : (rejectionMessage ?? resolvePlanRunBlockerMessage(source.blocker, copy)),
           }
         : evaluation.previewState !== 'ready'
           ? { blocker: 'plan_integrity' as const, message: previewMessage }

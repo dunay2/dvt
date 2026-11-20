@@ -19,9 +19,15 @@ export type PlanPreviewInput = PlanPreviewRequest;
 
 export type PreviewedPlanViewModel = PlanViewModel & { readonly planRef: PlanRef };
 
+export type PreviewAffectedModel = Readonly<{ nodeId: string; name: string }>;
+
 export type PlanPreviewOutcome =
   | Readonly<{ kind: 'accepted'; plan: PreviewedPlanViewModel }>
-  | Readonly<{ kind: 'selection-rejected'; rejection: PlanPreviewSelectionRejection }>
+  | Readonly<{
+      kind: 'selection-rejected';
+      rejection: PlanPreviewSelectionRejection;
+      affectedModel?: PreviewAffectedModel;
+    }>
   | Readonly<{
       kind: 'plan-invalid';
       plan: PreviewedPlanViewModel;

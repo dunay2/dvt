@@ -9,13 +9,14 @@ import { EXECUTABILITY_REJECTION_CODES } from '@dvt/contracts';
 import { AlertTriangle, Clock, Download, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import type { PlanPreviewOutcome } from '../ports/plans';
+import type { PlanPreviewOutcome, PreviewAffectedModel } from '../ports/plans';
 import { resolveDvtOperationalRejectionCopy } from '../services/api/dvtOperationalRejectionCopy';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import type { PlanPreviewSelectionIntentViewModel, PlanViewModel } from '../types/plans';
 import { projectDbtExecutionTargetBinding } from './dbtExecutionTargetBinding';
 
 import { PlanExecutionDecisionView } from './PlanExecutionDecisionView';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
@@ -94,7 +95,8 @@ export type PlanPreviewModalMessages = Readonly<{
   planPreviewExportJsonAction: string;
   planPreviewStartRunAction: string;
   planPreviewSelectionRejectedTitle: string;
-  planPreviewSelectionRejectedDescription: string;
+  planPreviewAffectedModelLabel: string;
+  planPreviewTechnicalDetailsLabel: string;
   planPreviewPlanInvalidTitle: string;
   planPreviewPlanInvalidDescription: string;
   planPreviewUnknownCodeMessage: string;
@@ -188,42 +190,63 @@ type PlanPreviewRejectionDetails = Readonly<{
   cause?: string;
   reason: string;
   knownCode: boolean;
+  affectedModel?: PreviewAffectedModel;
 }>;
 
 function PlanPreviewRejectionPanel({
   details,
   messages,
+  describeDialog = false,
 }: Readonly<{
   details: PlanPreviewRejectionDetails;
   messages: PlanPreviewModalMessages;
+  describeDialog?: boolean;
 }>) {
   const language = useApplicationLanguageStore((state) => state.language);
   const safeReason = details.knownCode
     ? (resolveDvtOperationalRejectionCopy(details.cause, language) ?? details.reason)
     : messages.planPreviewUnknownCodeMessage;
   const safeCause = details.knownCode ? details.cause : undefined;
+  const description = (
+    <AlertDescription className="min-w-0 [overflow-wrap:anywhere]">{safeReason}</AlertDescription>
+  );
 
   return (
     <section
       aria-label={messages.planPreviewReasonLabel}
       data-testid="plan-preview-rejection"
-      className="min-w-0 rounded-lg border border-amber-400/50 bg-amber-400/10 p-4"
+      className="min-w-0 space-y-3"
     >
-      <div className="grid min-w-0 gap-3 md:grid-cols-2">
-        <PlanPreviewField label={messages.planPreviewCodeLabel} long>
-          {details.code}
-        </PlanPreviewField>
-        {safeCause ? (
-          <PlanPreviewField label={messages.planPreviewCauseLabel} long>
-            {safeCause}
-          </PlanPreviewField>
+      <Alert>
+        {details.affectedModel ? (
+          <AlertTitle className="min-w-0 line-clamp-none [overflow-wrap:anywhere]">
+            <span className="block text-xs text-muted-foreground">
+              {messages.planPreviewAffectedModelLabel}
+            </span>
+            <span data-slot="plan-preview-affected-model">{details.affectedModel.name}</span>
+          </AlertTitle>
         ) : null}
-        <div className="md:col-span-2">
-          <PlanPreviewField label={messages.planPreviewReasonLabel} long>
-            {safeReason}
+        {describeDialog ? (
+          <DialogDescription asChild>{description}</DialogDescription>
+        ) : (
+          description
+        )}
+      </Alert>
+      <details className="min-w-0 rounded-md border border-(--border-subtle) bg-(--surface-panel)">
+        <summary className="cursor-pointer rounded-md px-3 py-2 text-sm text-muted-foreground focus-visible:outline-2 focus-visible:outline-(--focus-ring)">
+          {messages.planPreviewTechnicalDetailsLabel}
+        </summary>
+        <div className="grid min-w-0 gap-3 px-3 pb-3 md:grid-cols-2">
+          <PlanPreviewField label={messages.planPreviewCodeLabel} long>
+            {details.code}
           </PlanPreviewField>
+          {safeCause ? (
+            <PlanPreviewField label={messages.planPreviewCauseLabel} long>
+              {safeCause}
+            </PlanPreviewField>
+          ) : null}
         </div>
-      </div>
+      </details>
     </section>
   );
 }
@@ -265,13 +288,11 @@ function SelectionRejectedPlanPreviewModal({
   onClose,
   outcome,
   messages,
-  startRunMessage,
 }: Readonly<{
   open: boolean;
   onClose: () => void;
   outcome: Extract<PlanPreviewOutcome, { kind: 'selection-rejected' }>;
   messages: PlanPreviewModalMessages;
-  startRunMessage?: string;
 }>) {
   return (
     <Dialog
@@ -290,27 +311,21 @@ function SelectionRejectedPlanPreviewModal({
             <AlertTriangle className="size-5" aria-hidden="true" />
             {messages.planPreviewSelectionRejectedTitle}
           </DialogTitle>
-          <DialogDescription className="text-slate-200">
-            {messages.planPreviewSelectionRejectedDescription}
-          </DialogDescription>
         </DialogHeader>
         <div
           data-slot="plan-preview-scroll-region"
           className="min-w-0 max-h-[70vh] space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6 sm:py-5"
         >
-          {startRunMessage ? (
-            <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
-              {startRunMessage}
-            </div>
-          ) : null}
           <PlanPreviewRejectionPanel
             details={{
               code: outcome.rejection.code,
               cause: outcome.rejection.cause,
               reason: outcome.rejection.reason,
               knownCode: outcome.rejection.code === 'REJECTED',
+              affectedModel: outcome.affectedModel,
             }}
             messages={messages}
+            describeDialog
           />
         </div>
         <DialogFooter className="border-t border-slate-800 bg-slate-950/95 px-4 py-4 sm:px-6">
@@ -338,7 +353,6 @@ export function PlanPreviewModal({
         onClose={onClose}
         outcome={outcome}
         messages={messages}
-        startRunMessage={startRunMessage}
       />
     );
   }

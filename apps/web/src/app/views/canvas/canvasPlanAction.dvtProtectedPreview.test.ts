@@ -197,6 +197,49 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     expect(request).not.toHaveProperty('graphSource');
   });
 
+  it.each([DVT_REJECTIONS.runDispositionUnsupported, DVT_REJECTIONS.previewTargetProjectionFailed])(
+    'attributes only the terminal materialization rejection to the confirmed model',
+    async (rejection) => {
+      const confirmed = { ...transform, name: 'Confirmed sales model' };
+      const previewPlan = vi.fn<IPlansPort['previewPlan']>().mockResolvedValue({
+        kind: 'selection-rejected',
+        rejection,
+      });
+      const result = await executeCanvasPlanAction({
+        graphDraftCanvasId: 'canvas-main',
+        canPlan: true,
+        canonicalNodes: [source, transform],
+        canonicalEdges: [lineage],
+        execution: strategy,
+        plansService: { previewPlan },
+        selectionIntent: { mode: 'workspace', nodeIds: [] },
+        sessionContext: sessionContext(),
+        workspaceNodeIds: [source.id, transform.id],
+        flushDraftForExecution: async () => ({
+          ok: true,
+          canonicalNodes: [source, confirmed],
+          canonicalEdges: [lineage],
+          workspaceNodeIds: [source.id, confirmed.id],
+        }),
+      });
+
+      expect(result).toMatchObject({
+        ok: true,
+        previewOutcome: { kind: 'selection-rejected', rejection },
+      });
+      if (!result.ok) throw Error('Preview did not return its rejection');
+      const expected =
+        rejection === DVT_REJECTIONS.runDispositionUnsupported
+          ? { nodeId: confirmed.id, name: confirmed.name }
+          : undefined;
+      expect(result.previewOutcome).toEqual({
+        kind: 'selection-rejected',
+        rejection,
+        ...(expected == null ? {} : { affectedModel: expected }),
+      });
+    }
+  );
+
   it('rejects a non-terminal Transform before calling Preview', async () => {
     const previewPlan = vi.fn<IPlansPort['previewPlan']>();
     const result = await executeCanvasPlanAction({
@@ -304,11 +347,12 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       latestPreviewOutcome: {
         kind: 'selection-rejected',
         rejection: DVT_REJECTIONS.runDispositionUnsupported,
+        affectedModel: { nodeId: transform.id, name: transform.name },
       },
     });
     expect(state.isPreviewOutcomeStale).toBe(true);
     const presentation = presentPlanRunReadiness(state.planRunReadiness, 'en');
-    expect(presentation.diagnostic?.message).not.toContain('Do not configure both');
+    expect(presentation.diagnostic?.message).not.toContain(transform.name);
     expect(presentation.summary).toBe('Preview required before running.');
     expect(state.planRunReadiness.status).toBe('blocked');
   });
@@ -317,12 +361,12 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     [
       'en-US',
       DVT_REJECTIONS.runDispositionUnsupported.cause,
-      'This result type can be saved, but execution currently supports a table result or an ephemeral model connected to one table Sink.',
+      'Model “Orders projection”. The current materialization blocks execution. In Properties, set Materialization to Table and configure its destination. To use Ephemeral, connect the model to a table destination.',
     ],
     [
       'es-ES',
       DVT_REJECTIONS.runDispositionUnsupported.cause,
-      'Este tipo de resultado se puede guardar; la ejecución admite actualmente un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla.',
+      'Modelo «Orders projection». La materialización actual impide ejecutar. En Propiedades, cambia Materialización a Tabla y configura el destino. Si usas Efímero, conecta el modelo a un destino de tipo tabla.',
     ],
     [
       'es',
@@ -331,6 +375,10 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     ],
     ['en', 'non_dvt_rejection', DVT_REJECTIONS.runDispositionUnsupported.reason],
   ])('projects the %s readiness summary for %s', (applicationLanguage, cause, expected) => {
+    const affectedModel =
+      cause === DVT_REJECTIONS.runDispositionUnsupported.cause
+        ? { nodeId: transform.id, name: transform.name }
+        : undefined;
     const rejection = {
       code: DVT_REJECTIONS.runDispositionUnsupported.code,
       cause,
@@ -349,7 +397,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       runAdmission: { allowed: true },
       currentPlan: null,
       lastPlannedDraftSignature: null,
-      latestPreviewOutcome: { kind: 'selection-rejected', rejection },
+      latestPreviewOutcome: { kind: 'selection-rejected', rejection, affectedModel },
     });
 
     Object.freeze(rejection);

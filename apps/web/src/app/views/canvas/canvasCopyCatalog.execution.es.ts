@@ -96,8 +96,10 @@ export const canvasViewExecutionCopyEs = {
   planPreviewWarehouseLabel: 'Almacén',
   planPreviewExportJsonAction: 'Exportar JSON',
   planPreviewStartRunAction: 'Iniciar ejecución',
-  planPreviewSelectionRejectedTitle: 'Vista previa de ejecución rechazada',
-  planPreviewSelectionRejectedDescription: 'La selección de ejecución actual no ha sido admitida.',
+  planPreviewSelectionRejectedTitle: 'No se pudo crear la vista previa de ejecución',
+  planPreviewAffectedModelLabel: 'Modelo afectado',
+  planPreviewAffectedModelMessageTemplate: 'Modelo «{name}». {message}',
+  planPreviewTechnicalDetailsLabel: 'Detalles técnicos',
   planPreviewPlanInvalidTitle: 'Vista previa de ejecución no ejecutable',
   planPreviewPlanInvalidDescription:
     'La vista previa persistida no ha superado la validación del motor de ejecución.',

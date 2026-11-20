@@ -13,8 +13,6 @@ import {
   useApplicationLanguageStore,
 } from '../stores/applicationLanguageStore';
 
-const MESSAGES = resolveCanvasViewCopy('en');
-
 describe('PlanPreviewModal rejected outcomes', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -46,17 +44,20 @@ describe('PlanPreviewModal rejected outcomes', () => {
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   });
 
-  async function renderOutcome(outcome: PlanPreviewOutcome): Promise<void> {
+  async function renderOutcome(
+    outcome: PlanPreviewOutcome,
+    startRunMessage = 'Preview blocked'
+  ): Promise<void> {
     await act(async () => {
       root.render(
         <PlanPreviewModal
           open={true}
           onClose={vi.fn()}
           outcome={outcome}
-          messages={MESSAGES}
+          messages={resolveCanvasViewCopy(getApplicationLanguage())}
           plan={outcome.kind === 'plan-invalid' ? outcome.plan : null}
           startRunDisabled={true}
-          startRunMessage="Preview blocked"
+          startRunMessage={startRunMessage}
           onStartRun={vi.fn()}
         />
       );
@@ -76,13 +77,51 @@ describe('PlanPreviewModal rejected outcomes', () => {
     const modal = document.querySelector('[data-testid="plan-preview-modal"]');
     const text = modal?.textContent ?? '';
 
-    expect(text).toContain('Execution Preview rejected');
+    expect(text).toContain('Could not create the execution preview');
     expect(text).toContain('Select at least one executable resource.');
     expect(text).toContain('selection.empty');
     expect(text).not.toContain('Execution Preview identity');
     expect(text).not.toContain(mockExecutionPlan.planId);
     expect(text).not.toContain('Execution steps');
     expect(text).not.toContain('Start Run');
+    expect(modal?.querySelector('[data-slot="plan-preview-affected-model"]')).toBeNull();
+  });
+
+  it('names the affected model and shows the Spanish correction once', async () => {
+    const previous = getApplicationLanguage();
+    const message =
+      'La materialización actual impide ejecutar. En Propiedades, cambia Materialización a Tabla y configura el destino. Si usas Efímero, conecta el modelo a un destino de tipo tabla.';
+    try {
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
+      await renderOutcome(
+        {
+          kind: 'selection-rejected',
+          rejection: {
+            code: 'REJECTED',
+            cause: 'dvt_run_disposition_unsupported',
+            reason: 'internal planner detail',
+          },
+          affectedModel: { nodeId: 'orders', name: 'Ventas por cliente' },
+        },
+        message
+      );
+      const dialog = document.querySelector('[data-testid="plan-preview-modal"]');
+      const descriptionId = dialog?.getAttribute('aria-describedby');
+      const disclosure = dialog?.querySelector('details');
+      expect(dialog?.textContent).toContain('No se pudo crear la vista previa de ejecución');
+      expect(dialog?.textContent).toContain('Modelo afectado');
+      expect(dialog?.querySelector('[data-slot="plan-preview-affected-model"]')?.textContent).toBe(
+        'Ventas por cliente'
+      );
+      expect(dialog?.textContent?.split(message)).toHaveLength(2);
+      expect(dialog?.textContent).not.toContain('internal planner detail');
+      expect(document.getElementById(descriptionId ?? '')?.textContent).toBe(message);
+      expect(disclosure?.open).toBe(false);
+      expect(disclosure?.querySelector('summary')?.textContent).toBe('Detalles técnicos');
+      expect(disclosure?.textContent).toContain('dvt_run_disposition_unsupported');
+    } finally {
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage(previous));
+    }
   });
 
   it('localizes DVT rejection causes and updates an open Preview when language changes', async () => {

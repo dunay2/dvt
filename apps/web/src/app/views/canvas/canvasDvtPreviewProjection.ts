@@ -22,6 +22,7 @@ export type ProtectedDvtPreviewProjection =
   | {
       readonly ok: true;
       readonly selection: ExecutionSelection;
+      readonly selectedRoot: Readonly<Pick<CanonicalNode, 'id' | 'name'>>;
       readonly selectionMode: 'explicit';
       readonly requestedRootNodeIds: readonly string[];
       readonly derivedDependencyNodeIds: readonly string[];
@@ -224,6 +225,7 @@ export function buildProtectedDvtPreviewProjection(args: {
   return {
     ok: true,
     selection,
+    selectedRoot: { id: closure.root.id, name: closure.root.name },
     selectionMode: 'explicit',
     requestedRootNodeIds: [closure.root.id],
     derivedDependencyNodeIds: dependencies,

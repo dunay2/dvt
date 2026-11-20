@@ -91,8 +91,10 @@ export const canvasViewExecutionCopyByKey = {
   planPreviewWarehouseLabel: 'Warehouse',
   planPreviewExportJsonAction: 'Export JSON',
   planPreviewStartRunAction: 'Start Run',
-  planPreviewSelectionRejectedTitle: 'Execution Preview rejected',
-  planPreviewSelectionRejectedDescription: 'The current execution selection was not admitted.',
+  planPreviewSelectionRejectedTitle: 'Could not create the execution preview',
+  planPreviewAffectedModelLabel: 'Affected model',
+  planPreviewAffectedModelMessageTemplate: 'Model “{name}”. {message}',
+  planPreviewTechnicalDetailsLabel: 'Technical details',
   planPreviewPlanInvalidTitle: 'Execution Preview is not executable',
   planPreviewPlanInvalidDescription:
     'The persisted preview failed runtime executability validation.',
