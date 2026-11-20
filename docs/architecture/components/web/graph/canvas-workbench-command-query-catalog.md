@@ -286,6 +286,12 @@ field identity, connection and saved/output-plan admission remain upstream
 requirements. This decision belongs to the existing API projection caller,
 not to a weaker coverage predicate or another preview rail.
 
+An operation selected for Preview can emit distinct fields with the same
+display name, such as both keys of a Join. PostgreSQL assigns stable aliases
+to repeated result names in that sample and uses them in the sample columns
+and ordering. Field order and identity come from the selected relation.
+Full model publications continue to require unique output names.
+
 Producer composition builds AST and projection metadata first. Internal producer
 bindings carry AST, ordering, output, and source metadata without SQL text. SQL
 serialization occurs once for the requested target at the existing public async
