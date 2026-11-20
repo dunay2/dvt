@@ -1,12 +1,5 @@
 /** Owned concern: apply the measured Explorer bounds and route explicit resize gestures. */
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ImperativePanelHandle } from '../../../components/ui/resizable';
 import { CANVAS_EXPLORER_WIDTH } from '../../../stores/uiLayoutStore';
 
@@ -82,7 +75,9 @@ export function useCanvasExplorerResize({
     },
     handle: {
       onDragging,
-      onKeyDownCapture: (event: KeyboardEvent): void => {
+      onKeyDownCapture: (
+        event: Readonly<Pick<KeyboardEvent, 'key' | 'defaultPrevented'>>
+      ): void => {
         if (!event.defaultPrevented && RESIZE_KEYS.has(event.key)) input.current = 'keyboard';
       },
       onKeyUpCapture: finishKeyboardResize,
