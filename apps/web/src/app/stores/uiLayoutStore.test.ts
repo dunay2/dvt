@@ -161,7 +161,9 @@ describe('useUiLayoutStore', () => {
   });
 
   it.each([
-    [-1, 15],
+    [-1, 22],
+    [0, 22],
+    [8.75, 8.75],
     [100, 40],
     [31.25, 31.25],
     [null, 22],
@@ -188,7 +190,9 @@ describe('useUiLayoutStore', () => {
       // Geometry observations are not open/close commands, including for retained hidden views.
       useUiLayoutStore.setState({ canvasExplorer: { mode, widthPercent: 22 } });
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: -10 });
-      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 15 });
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 22 });
+      useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: 8.75 });
+      expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 8.75 });
       useUiLayoutStore.getState().dispatchCanvasExplorer({ type: 'resize', widthPercent: 100 });
       expect(useUiLayoutStore.getState().canvasExplorer).toEqual({ mode, widthPercent: 40 });
     }
@@ -207,6 +211,8 @@ describe('useUiLayoutStore', () => {
       for (const widthPercent of [
         40,
         100,
+        0,
+        -10,
         Number.NaN,
         Number.POSITIVE_INFINITY,
         Number.NEGATIVE_INFINITY,

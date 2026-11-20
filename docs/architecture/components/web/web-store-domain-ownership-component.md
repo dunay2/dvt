@@ -424,10 +424,12 @@ The modes are `expanded`, `collapsed` (activity rail only), and `closed`.
 | `resize`   | same mode | same mode | same mode |
 
 The existing `dvt-web-ui-layout` storage persists both mode and expanded width.
-Width uses the resizable primitive's percentage unit, default 22%, bounded to
-15–40%. Finite out-of-range input clamps; invalid resize commands leave the
-current state untouched. Hydration validates the stored object; invalid or absent
-width defaults to 22%, invalid mode defaults to expanded. Legacy
+The saved width is a positive percentage, default 22%, capped at 40%. The
+visible minimum is the smaller of 15% of the current panel group and 192 CSS
+pixels. This allows a compact Explorer on wide displays. Invalid resize
+commands leave the current state untouched. Hydration validates the stored
+object; invalid or absent width defaults to 22%, invalid mode defaults to
+expanded. Legacy
 `canvasExplorerVisible: false` migrates to closed when the new object is absent.
 New writes contain only the new object, with no parallel visibility flag.
 
@@ -438,9 +440,13 @@ semantic drafts nor trigger graph fitting. Repeated events do not notify or
 write storage. Collapsed and closed modes retain the last expanded width.
 
 The Explorer controller binds this state to the existing resizable Panel handle.
-Initial resize notifications are observations, not commands. Retained Canvas and
-Model instances synchronize their panel sizes without remounting content; the
-passive template owns no persistence or transition policy.
+Dragging past the minimum into the panel's collapsed range invokes the existing
+collapse transition and retains the last visible width. The separator highlights
+on hover and while dragging. Only a pointer or keyboard resize gesture publishes
+a new preference. Initial resize, viewport changes and retained Canvas or Model
+synchronization project the saved size into the local visible bounds. They keep
+the saved preference and mounted content. The passive template owns no
+persistence or transition policy.
 
 ```mermaid
 stateDiagram-v2

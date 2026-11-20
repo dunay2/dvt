@@ -182,7 +182,11 @@
   height: calc(var(--spacing) * 3.5);
 }
 .resize {
+  inline-size: 2px;
   background: var(--border-subtle);
+}
+.resize:is(:hover, [data-resize-handle-state='drag']) {
+  background: var(--focus-ring);
 }
 .surface {
   position: relative;
