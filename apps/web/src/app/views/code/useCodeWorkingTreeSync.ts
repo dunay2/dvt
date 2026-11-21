@@ -250,6 +250,7 @@ export function useCodeWorkingTreeSync({
   );
 
   return {
+    filePath: state?.filePath,
     value: state?.value ?? '',
     phase: state?.phase ?? ('read_only' as const),
     navigationBlocked: state == null ? false : isCodeWorkingTreeNavigationBlockedPhase(state.phase),
