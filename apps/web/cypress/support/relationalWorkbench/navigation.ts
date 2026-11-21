@@ -160,20 +160,25 @@ export function openWorkbenchProperties(nodeId: string): void {
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
 }
 
-/** Reopen durable state through the public Model close, then require this navigation's fresh GET. */
+/** Close each saved Model through the public tab controls, then require a fresh Canvas GET. */
 export function revisitWorkbenchCanvas(navigate: () => void = visitWorkbenchCanvas): void {
   cy.get('body').then(($body) => {
-    if ($body.find('[data-slot="canvas-model-editor"]').length === 0) return;
-    // A request record precedes its response and the React owner's persistence acknowledgement.
-    cy.get('[data-slot="canvas-model-save-status"]').should(($status) => {
-      const copy = resolveCanvasViewCopy($status[0]!.ownerDocument.documentElement.lang);
-      expect($status.text(), 'the Model has acknowledged durable persistence').to.be.oneOf([
-        copy.draftSavedLabel,
-        copy.draftSyncedLabel,
-      ]);
-    });
-    cy.get('[data-slot="canvas-model-tab-close"]').click();
-    // A genuine unsaved transaction must fail here, never be discarded by the proof adapter.
+    const tabs = $body.find('[data-slot="canvas-model-main-tab"]').toArray();
+    for (const tab of tabs) {
+      const selector = `[id="${tab.id}"]`;
+      cy.get(selector).click().should('have.attr', 'aria-selected', 'true');
+      cy.get('[data-slot="canvas-model-save-status"]:visible').should(($status) => {
+        const copy = resolveCanvasViewCopy($status[0]!.ownerDocument.documentElement.lang);
+        expect($status.text(), 'the Model has acknowledged durable persistence').to.be.oneOf([
+          copy.draftSavedLabel,
+          copy.draftSyncedLabel,
+        ]);
+      });
+      cy.get(selector).focus();
+      cy.press(Cypress.Keyboard.Keys.DELETE);
+      // A genuine unsaved transaction must still block closing this tab.
+      cy.get(selector).should('not.exist');
+    }
     cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
   });
   cy.then(() => {
