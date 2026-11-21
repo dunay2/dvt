@@ -356,17 +356,6 @@ function resolveLiveProofCypressHeaded(sourceEnv = process.env) {
   return true;
 }
 
-function resolveLiveProofWebPort(sourceEnv = process.env) {
-  const configured = readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_WEB_PORT);
-  if (configured === undefined) return DEFAULT_WEB_PORT;
-
-  const port = Number(configured);
-  if (!/^\d+$/u.test(configured) || port < 1 || port > 65535) {
-    throw new Error('DVT_SELECTED_CLOSURE_WEB_PORT must be an integer from 1 to 65535.');
-  }
-  return port;
-}
-
 function resolveLiveProofTemporalWorkerRuntime(sourceEnv = process.env) {
   const runtime =
     readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME) ?? 'available';
@@ -668,7 +657,12 @@ async function runCypress(args, runtime, processHandles, deps = {}) {
 
 async function main() {
   const specPaths = resolveLiveProofSpecPaths();
-  const webPort = resolveLiveProofWebPort();
+  const configuredPort =
+    readNonEmptyEnv(process.env.DVT_SELECTED_CLOSURE_WEB_PORT) ?? String(DEFAULT_WEB_PORT);
+  const webPort = Number(configuredPort);
+  if (!/^\d+$/u.test(configuredPort) || webPort < 1 || webPort > 65535) {
+    throw new Error('DVT_SELECTED_CLOSURE_WEB_PORT must be an integer from 1 to 65535.');
+  }
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
   const cypressHeaded = resolveLiveProofCypressHeaded();
@@ -933,7 +927,6 @@ module.exports = {
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
-  resolveLiveProofWebPort,
   seedSelectedClosureLocalWarehouseProof,
   startLiveProofOutboxWorker,
   runCypress,

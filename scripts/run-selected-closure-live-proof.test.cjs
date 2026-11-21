@@ -7,6 +7,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
 const { mkdtemp, readFile, rm } = require('node:fs/promises');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
@@ -30,7 +31,6 @@ const {
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
-  resolveLiveProofWebPort,
   seedSelectedClosureLocalWarehouseProof,
   startLiveProofOutboxWorker,
   runCypress,
@@ -62,14 +62,19 @@ test('Source provider proof requires explicit lease admission in the existing in
   }
 });
 
-test('selected closure accepts an explicit preview port and rejects invalid values', () => {
-  assert.equal(resolveLiveProofWebPort({}), 4174);
-  assert.equal(resolveLiveProofWebPort({ DVT_SELECTED_CLOSURE_WEB_PORT: '4173' }), 4173);
+test('selected closure rejects invalid preview ports before starting the proof', () => {
   for (const configured of ['0', '65536', '4173.5', '0x104d', 'localhost:4173']) {
-    assert.throws(
-      () => resolveLiveProofWebPort({ DVT_SELECTED_CLOSURE_WEB_PORT: configured }),
-      /DVT_SELECTED_CLOSURE_WEB_PORT must be an integer/
+    const result = spawnSync(
+      process.execPath,
+      [path.join(__dirname, 'run-selected-closure-live-proof.cjs')],
+      {
+        env: { ...process.env, DVT_SELECTED_CLOSURE_WEB_PORT: configured },
+        encoding: 'utf8',
+        timeout: 5_000,
+      }
     );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /DVT_SELECTED_CLOSURE_WEB_PORT must be an integer/);
   }
 });
 
