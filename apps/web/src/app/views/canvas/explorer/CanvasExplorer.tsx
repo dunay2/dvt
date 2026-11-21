@@ -7,19 +7,10 @@
  * @consequence Main and semantic views share interaction without sharing domain commands.
  * @version 1.0.0
  */
-import {
-  useEffect,
-  useId,
-  useRef,
-  type KeyboardEvent,
-  type JSX,
-  type ReactNode,
-  type RefObject,
-} from 'react';
+import { useId, type KeyboardEvent, type JSX, type ReactNode, type RefObject } from 'react';
 import { useShellActivityRail } from '../../../components/shell/ShellActivityRail';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { CANVAS_EXPLORER_WIDTH, useUiLayoutStore } from '../../../stores/uiLayoutStore';
-import type { ImperativePanelHandle } from '../../../components/ui/resizable';
+import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import { CanvasExplorerTemplate } from './CanvasExplorer.templates';
 import type {
   CanvasExplorerActivityRail,
@@ -28,6 +19,7 @@ import type {
   CanvasExplorerProjectWorkspace,
 } from './CanvasExplorer.types';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import { useCanvasExplorerResize } from './useCanvasExplorerResize';
 
 export function CanvasExplorer({
   elements,
@@ -51,14 +43,22 @@ export function CanvasExplorer({
   const dispatch = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const expanded = mode === 'expanded';
   const visible = mode !== 'closed';
-  const panelRef = useRef<ImperativePanelHandle>(null);
   const hasProjectFiles = projectFiles != null;
-  // defaultSize only initializes a panel; retained Canvas/Model panels must also converge.
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (panel != null && panel.getSize() !== widthPercent) panel.resize(widthPercent);
-  }, [widthPercent]);
   const id = useId();
+  const collapse = (): void => {
+    projectFiles?.onCanvas();
+    dispatch({ type: 'collapse' });
+    document
+      .getElementById(shellOwned ? 'shell-canvas-navigation' : `${id}-elements-button`)
+      ?.focus();
+  };
+  const dock = useCanvasExplorerResize({
+    groupId: `${id}-panels`,
+    expanded,
+    widthPercent,
+    onWidthChange: (size) => dispatch({ type: 'resize', widthPercent: size }),
+    onCollapse: collapse,
+  });
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const toggle = (key: CanvasExplorerNavigationAction): void => {
     if (key === 'git') {
@@ -83,18 +83,7 @@ export function CanvasExplorer({
       heading={heading}
       active={visible && expanded ? 'elements' : null}
       visible={visible}
-      dock={{
-        panelRef,
-        widthPercent,
-        minSize: CANVAS_EXPLORER_WIDTH.min,
-        maxSize: CANVAS_EXPLORER_WIDTH.max,
-        onResize: (size, previousSize) => {
-          // Mount observations and hidden panels must not overwrite the saved preference.
-          if (previousSize !== undefined && expanded) {
-            dispatch({ type: 'resize', widthPercent: size });
-          }
-        },
-      }}
+      dock={dock}
       copy={copy}
       rootRef={rootRef}
       workspaceTask={workspaceTask}
@@ -108,13 +97,7 @@ export function CanvasExplorer({
       hasProjectFiles={hasProjectFiles}
       onToggle={toggle}
       onKeyToggle={onKeyToggle}
-      onCollapse={() => {
-        projectFiles?.onCanvas();
-        dispatch({ type: 'collapse' });
-        document
-          .getElementById(shellOwned ? 'shell-canvas-navigation' : `${id}-elements-button`)
-          ?.focus();
-      }}
+      onCollapse={collapse}
       onClose={() => {
         projectFiles?.onCanvas();
         dispatch({ type: 'close' });

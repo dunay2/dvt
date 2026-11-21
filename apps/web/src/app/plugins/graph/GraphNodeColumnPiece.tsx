@@ -112,14 +112,19 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
           <span className={graphNodeColumnClasses.name}>{displayedName}</span>
         )}
         <span className={graphNodeColumnClasses.metadata}>
-          <span className={graphNodeColumnClasses.type}>
+          <span data-slot="graph-node-column-type" className={graphNodeColumnClasses.type}>
             {unavailableInput ? copy.outputStateLabels.unavailable : column.type}
           </span>
           {column.primaryKey === true ? (
             <span className={graphNodeColumnClasses.constraint}>PK</span>
           ) : null}
           {column.nullable === false ? (
-            <span className={graphNodeColumnClasses.constraint}>NN</span>
+            <span
+              data-slot="graph-node-column-nullability"
+              className={graphNodeColumnClasses.constraint}
+            >
+              NN
+            </span>
           ) : null}
           {view != null ? null : (
             <button

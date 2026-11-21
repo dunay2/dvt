@@ -1,6 +1,7 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyEs = {
+  showCardMetricsLabel: 'Mostrar métricas en la tarjeta',
   relationalModelCopyDropLabel: 'Añadir una copia independiente a',
   relationalModelCopyAddLabel: 'Añadir copia de trabajo',
   relationalModelCopyUnavailableMessage:
@@ -111,6 +112,7 @@ export const canvasViewAuthoringCopyEs = {
   reactFlowMinimapLabel: 'Minimapa del lienzo',
   reactFlowHandleLabel: 'Puerto de conexión',
   nodeWorkbenchCloseLabel: 'Cerrar',
+  nodeWorkbenchResizeLabel: 'Cambiar ancho de propiedades',
   nodeWorkbenchCloseFailedMessage: 'No se pudieron cerrar las propiedades. Inténtalo de nuevo.',
   nodeWorkbenchMoreLabel: 'Más',
   sqlContextWorkbenchProjectTitle: 'Código del proyecto',

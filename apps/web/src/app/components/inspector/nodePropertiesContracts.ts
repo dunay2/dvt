@@ -11,6 +11,7 @@ export type NodePropertySectionId =
   | 'general'
   | 'columns'
   | 'inputs-outputs'
+  | 'appearance'
   | 'tests'
   | 'keys'
   | 'indexes'

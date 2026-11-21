@@ -217,6 +217,36 @@ describe('explicit producer/consumer SQL projection', () => {
     expect(render).toHaveBeenCalledWith(result.ast);
   });
 
+  it('keeps both fields of a selected inner join with the same output name', async () => {
+    const producer = compositionalFixture('join');
+    const relationId = producer.sidecar.relations.at(-1)!.relationId;
+    const root = producer.plan.relations[0]!.relType;
+    if (root.case !== 'root') throw new Error('Expected join root');
+    root.value.names = ['country_code', 'country_code'];
+    producer.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(producer.plan).sha256;
+    for (const field of producer.sidecar.fields) {
+      if (field.relationId === relationId) field.displayName = 'country_code';
+    }
+    const before = globalThis.structuredClone(producer);
+    const graph = {
+      targetId: 'producer',
+      sources: new Map([['physical', producer.sidecar.relations[0]!.sourceRef!]]),
+      documents: new Map([['producer', producer]]),
+      edges: [{ sourceId: 'physical', targetId: 'producer' }],
+    };
+
+    const result = await projectSubstraitProducerGraph({ ...graph, relationId });
+    expect(result.projection.outputs.map((field) => field.name)).toEqual([
+      'country_code',
+      'country_code_2',
+    ]);
+    expect(result.sql).toContain('result.c1 AS country_code_2');
+    expect(producer).toEqual(before);
+    await expect(projectSubstraitProducerGraph(graph)).rejects.toThrow(
+      'unique PostgreSQL identifiers'
+    );
+  });
+
   it('preserves a final rendering failure without returning a partial projection', async () => {
     const producer = compositionalFixture('cross');
     const failure = new DvtSubstraitPostgresProjectionError('deparse_failed', 'Renderer failed');

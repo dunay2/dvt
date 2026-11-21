@@ -1,5 +1,8 @@
 /** Owned concern: compact sample-grid geometry, visual hierarchy and accessible states. */
 .grid {
+  --grid-base: color-mix(in srgb, var(--grid-primary) 28%, #0b0c0e);
+  --grid-secondary: color-mix(in srgb, var(--grid-base), white 6%);
+  --grid-header-height: 26px;
   --grid-line: color-mix(in srgb, var(--border-default) 55%, transparent);
   --grid-row-height: 24px;
   display: flex;
@@ -31,7 +34,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 5px 0;
+  padding: 2px 0 4px;
   flex-shrink: 0;
 }
 .search {
@@ -76,8 +79,17 @@
 }
 .actions {
   display: flex;
+  align-items: center;
   gap: 3px;
   margin-left: auto;
+}
+.actions .swatch {
+  width: 28px;
+  height: 28px;
+  border-color: var(--grid-line);
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
 }
 .actions button {
   display: grid;
@@ -91,6 +103,7 @@
   cursor: pointer;
 }
 .actions button:hover,
+.actions button[data-state='open'],
 .actions button[aria-pressed='true'] {
   color: var(--text-strong);
   background: var(--surface-selected);
@@ -103,6 +116,26 @@
 
 .actions button[aria-busy='true'] svg {
   animation: data-sample-refresh 1s linear infinite;
+}
+
+.visibilityList {
+  max-height: min(280px, var(--radix-popover-content-available-height));
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.visibilityList .visibilityItem {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.visibilityItem[aria-pressed='false'] svg {
+  color: var(--text-muted);
+}
+
+.visibilityItem span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes data-sample-refresh {
@@ -122,11 +155,11 @@
 }
 .frame {
   flex: 1;
-  min-height: calc(32px + var(--grid-row-height));
+  min-height: calc(var(--grid-header-height) + 2px + var(--grid-row-height));
   overflow: auto;
   border: 1px solid var(--grid-line);
   border-radius: 4px;
-  background: var(--surface-panel);
+  background: linear-gradient(100deg, var(--grid-base), var(--grid-secondary));
 }
 .table {
   width: max-content;
@@ -141,9 +174,9 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  height: 30px;
+  height: var(--grid-header-height);
   padding: 0;
-  background: var(--surface-elevated);
+  background: var(--grid-secondary);
   color: var(--text-strong);
   font-weight: 500;
   border-bottom: 1px solid var(--border-default);
@@ -159,42 +192,64 @@
 .heading {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 150px;
-  padding-right: 8px;
+  gap: 6px;
+  min-width: 120px;
+  padding-inline: 8px;
 }
-.heading button {
-  flex: 1;
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
   max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   text-align: left;
-  height: 30px;
-  padding: 0 8px;
+  height: var(--grid-header-height);
+  padding: 0;
   font-size: 12px;
   cursor: grab;
 }
-.heading button[data-sort='ascending']::after {
-  content: ' ↑';
-  color: var(--focus-ring);
-}
-.heading button[data-sort='descending']::after {
-  content: ' ↓';
-  color: var(--focus-ring);
-}
-.type {
-  max-width: 120px;
+.columnName {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--text-subtle);
   white-space: nowrap;
 }
+.heading svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.sort[data-sort='none'] svg,
+.filter {
+  color: var(--text-subtle);
+}
+.sort:not([data-sort='none']) svg,
+.filter[data-active='true'] {
+  color: var(--focus-ring);
+}
+.heading sup {
+  color: var(--focus-ring);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-left: auto;
+  width: 24px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.filter:hover,
+.filter[data-state='open'] {
+  background: var(--surface-selected);
+  color: var(--text-strong);
+}
 .table tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--surface-elevated) 45%, var(--surface-panel));
+  background: color-mix(in srgb, var(--grid-base) 50%, transparent);
 }
 .table tbody tr:hover {
   background: var(--surface-hover, var(--surface-selected));
@@ -224,7 +279,7 @@
 .value[data-null='true'] {
   font-size: 10px;
   font-style: italic;
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 .grid[data-wrap='true'] .value {
   white-space: pre-wrap;
@@ -245,12 +300,13 @@
   font-size: 10px;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
-  color: var(--text-subtle);
-  background: var(--surface-shell);
+  color: var(--text-muted);
+  background: var(--grid-base);
   border-bottom: 1px solid var(--grid-line);
 }
 .table thead .rowNumber {
   z-index: 3;
+  background: var(--grid-secondary);
 }
 .table th[data-drop-edge='before'] {
   box-shadow: inset 3px 0 0 var(--focus-ring);

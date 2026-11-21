@@ -559,6 +559,32 @@ The Data drawer identifies the sampled node, shows bounded row and column counts
 and keeps headers, types, NULLs, sorting and truncation legible. These are
 read-only presentation details, not new query or authoring rails.
 
+Show the column name and sorting affordance in the compact header. Reveal the
+data type in a tooltip on pointer hover or keyboard focus. The toolbar's eye
+opens the current sample's column list, where each eye toggles one column and
+its cells. Keep hidden columns available in that list and preserve their sort,
+filter, and order. Hiding columns is local to the open grid. Align the sample
+controls at the right of the toolbar, with one accessible background swatch.
+Derive a restrained second tone from the selected color and limit the range
+against graphite so the grid stays readable with light colors. This view-local
+presentation belongs to the existing drawer layout concern. Changing it keeps
+the same bounded sample and does not call a provider. Preserve opaque sticky
+headers and the application focus and selection tokens.
+
+Show the sort direction on every sortable header, including the neutral
+state. Give each column a separate filter control with a visible active state.
+Combine column filters with the global loaded-row search and keep the column
+filters associated with their column IDs when the user reorders headers.
+Retain the first sort when another header adds a tie-breaker. Show the
+priorities on sorted columns and retain them while filtering. Number active
+filters in the order they were applied.
+
+In the Data drawer, Ctrl-click toggles an individual cell and Ctrl with an
+arrow key extends a rectangle. Copy uses the displayed row and column order
+and produces tab-separated text for multiple cells, leaving gaps blank. If the
+displayed order changes, keep the active cell only if it remains selected and
+visible. Only already loaded and visible cells participate.
+
 The action is hidden at rest and revealed only while its card/action area is
 hovered or contains keyboard-visible focus. A mouse-selected card does not pin
 the action open. Keep the button mounted and its space reserved: showing it

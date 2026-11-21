@@ -14,6 +14,10 @@ import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
 import { resolveGraphNodeTagActionProps } from './GraphNodeTagList';
 import { readGraphNodeMaterializationControl } from './graphNodeMaterializationControl';
 import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import {
+  resolveSourceCardAppearance,
+  type SourceCardAppearance,
+} from '../../types/sourceCardAppearance';
 
 export type {
   GraphNodeCardMetric,
@@ -21,6 +25,13 @@ export type {
   GraphNodeSourceIdentity,
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
+
+// Older plugin projections carry runtime observations among their summary fields.
+const runtimeSummaryIds = new Set(['status', 'last-run', 'duration', 'warnings', 'cost']);
+
+export function isRuntimeSummaryMetric(metric: { readonly id: string }): boolean {
+  return runtimeSummaryIds.has(metric.id);
+}
 
 export function buildGraphNodeCardReadModel(
   node: CanonicalNode,
@@ -85,6 +96,13 @@ export function projectGraphNodeCardViewProps(
 
   return {
     cardModel: buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies),
+    showOperationalMetrics: data.showOperationalMetrics === true,
+    sourceCardAppearance:
+      node.role === 'input'
+        ? resolveSourceCardAppearance(
+            data.sourceCardAppearance as Partial<SourceCardAppearance> | undefined
+          )
+        : undefined,
     materializationControl: readGraphNodeMaterializationControl(data.materializationControl),
     tags,
     columnSection: showColumns

@@ -65,15 +65,17 @@ export function CanvasExplorerTemplate(props: CanvasExplorerTemplateProps): JSX.
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
       {props.shellOwned ? null : activityRail}
-      <ResizablePanelGroup direction="horizontal">
+      <ResizablePanelGroup direction="horizontal" id={props.dock.groupId}>
         <ResizablePanel
           ref={props.dock.panelRef}
           id={`${props.id}-dock`}
           order={1}
-          defaultSize={props.dock.widthPercent}
+          defaultSize={props.dock.size}
           minSize={props.dock.minSize}
           maxSize={props.dock.maxSize}
+          collapsible
           onResize={props.dock.onResize}
+          onCollapse={props.dock.onCollapse}
           className={props.active == null ? styles.hidden : styles.dock}
         >
           <section
@@ -123,15 +125,17 @@ export function CanvasExplorerTemplate(props: CanvasExplorerTemplateProps): JSX.
         </ResizablePanel>
         <ResizableHandle
           aria-label={props.copy.resize}
+          title={props.copy.resize}
           aria-orientation="vertical"
           disabled={props.active == null}
           tabIndex={props.active == null ? -1 : 0}
-          className={props.active == null ? styles.hidden : styles.resize}
+          {...props.dock.handle}
+          className={props.active == null ? styles.hidden : props.dock.handle.className}
         />
         <ResizablePanel
           id={`${props.id}-surface`}
           order={2}
-          defaultSize={100 - props.dock.widthPercent}
+          defaultSize={100 - props.dock.size}
           minSize={40}
           className={styles.surface}
         >

@@ -59,7 +59,11 @@ export async function projectSubstraitProducerGraph(
         projection,
       });
     }
-    const result = projectSubstraitToPostgresAst(document, producers);
+    const result = projectSubstraitToPostgresAst(
+      document,
+      producers,
+      nodeId === args.targetId && args.relationId != null ? 'selected-relation' : 'publication'
+    );
     results.set(nodeId, result);
     return result;
   };

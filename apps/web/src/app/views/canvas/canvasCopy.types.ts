@@ -2,6 +2,7 @@
 export type CanvasDisabledCapability = 'plan_preview' | 'run_start' | 'graph_edits';
 
 export type CanvasViewCopy = {
+  readonly showCardMetricsLabel: string;
   readonly relationalModelCopyDropLabel: string;
   readonly relationalModelCopyUnavailableMessage: string;
   readonly relationalModelCopyAddLabel: string;
@@ -435,6 +436,7 @@ export type CanvasViewCopy = {
   readonly reactFlowMinimapLabel: string;
   readonly reactFlowHandleLabel: string;
   readonly nodeWorkbenchCloseLabel: string;
+  readonly nodeWorkbenchResizeLabel: string;
   readonly nodeWorkbenchCloseFailedMessage: string;
   readonly nodeWorkbenchMoreLabel: string;
   readonly sqlContextWorkbenchProjectTitle: string;

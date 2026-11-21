@@ -87,7 +87,8 @@ export async function projectSubstraitToPostgresSql(
 
 export function projectSubstraitToPostgresAst(
   document: SubstraitDocument,
-  producers: ReadonlyMap<string, ProducerSqlBinding> = new Map()
+  producers: ReadonlyMap<string, ProducerSqlBinding> = new Map(),
+  resultMode: 'publication' | 'selected-relation' = 'publication'
 ): SubstraitPostgresAstProjection {
   const analysis = deriveSubstraitSchemas(document);
   const sources = admitSqlSources(document, analysis, producers);
@@ -110,6 +111,7 @@ export function projectSubstraitToPostgresAst(
     document,
     analysis.index.rootId,
     rendered.get(analysis.index.rootId)!,
-    sources
+    sources,
+    resultMode
   );
 }

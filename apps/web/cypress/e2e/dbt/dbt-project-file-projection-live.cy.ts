@@ -353,6 +353,11 @@ describe('dbt project file projection live vertical', () => {
       .should('be.visible')
       .find('[data-slot="graph-node-column-toggle"]')
       .should('contain.text', 'Columns (2)');
+    openWorkbenchProperties('model.analytics.orders');
+    cy.get('[data-slot="canvas-card-metrics-switch"]')
+      .should('have.attr', 'aria-checked', 'false')
+      .click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
       .find('[data-slot="graph-node-operational-rail"]')
       .within(() => {
@@ -588,11 +593,32 @@ describe('dbt project file projection live vertical', () => {
     cy.get<number>('@definitionCardCount').then((count) => {
       cy.get('.react-flow__node').should('have.length', count + 4);
     });
+    cy.get<ResourcePlacement[]>('@resourceInstances').then((instances) => {
+      const [first, second] = instances.filter(
+        (entry) => entry.resourceId === 'model.analytics.orders'
+      );
+      if (!first || !second) throw new Error('Two placed model references are required.');
+      openWorkbenchProperties(first.id);
+      cy.get('[data-slot="canvas-card-metrics-switch"]').click();
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.get(
+        `.react-flow__node[data-id="${first.id}"] [data-slot="graph-node-operational-rail"]`
+      ).should('exist');
+      cy.get(
+        `.react-flow__node[data-id="${second.id}"] [data-slot="graph-node-operational-rail"]`
+      ).should('not.exist');
+      cy.get(
+        '.react-flow__node[data-id="model.analytics.orders"] [data-slot="graph-node-operational-rail"]'
+      ).should('not.exist');
+    });
     cy.reload();
     cy.get<ResourcePlacement[]>('@resourceInstances').then((instances) => {
       for (const instance of instances)
         cy.get(`.react-flow__node[data-id="${instance.id}"]`, { timeout: 60_000 }).should('exist');
       const instance = instances.find((entry) => entry.resourceId === 'model.analytics.orders')!;
+      cy.get(
+        `.react-flow__node[data-id="${instance.id}"] [data-slot="graph-node-operational-rail"]`
+      ).should('exist');
       cy.get(`.react-flow__node[data-id="${instance.id}"]`)
         .find('[data-slot="graph-node-card-title"]')
         .click();

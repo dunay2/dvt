@@ -17,6 +17,7 @@ import {
   livePostgresDatabaseName,
   placeRegisteredSource,
 } from '../../support/liveWarehouseSourceImport';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 describe('Shared Canvas imported Source identity', () => {
@@ -81,7 +82,16 @@ describe('Shared Canvas imported Source identity', () => {
           position: { x: 220 + index * 370, y: 160 },
         }).then((instanceId) => {
           persistedIds.push(instanceId);
-          cy.get('.react-flow__node[data-id="' + instanceId + '"]')
+          const card = `.react-flow__node[data-id="${instanceId}"]`;
+          const metrics = '[data-slot="graph-node-operational-rail"]';
+          cy.get(card).should('be.visible').find(metrics).should('not.exist');
+          openWorkbenchProperties(instanceId);
+          cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+          cy.get('[data-slot="source-card-appearance-rows"]').click();
+          cy.get('[data-slot="source-card-appearance-size"]').click();
+          cy.get('[data-slot="canvas-node-workbench-close"]').click();
+          cy.get(card)
+            .find(metrics)
             .should('be.visible')
             .and('contain.text', 'Rows')
             .and('contain.text', '3')
@@ -105,7 +115,11 @@ describe('Shared Canvas imported Source identity', () => {
         nodes.filter((node) => workspaceNodeDefinitionId(node) != null).map((node) => node.id)
       ).to.deep.equal(persistedIds);
       for (const id of persistedIds) {
-        cy.get('.react-flow__node[data-id="' + id + '"]', { timeout: 20_000 }).should('be.visible');
+        cy.get(`.react-flow__node[data-id="${id}"]`, { timeout: 20_000 })
+          .should('be.visible')
+          .find('[data-slot="graph-node-operational-rail"]')
+          .should('contain.text', 'Rows')
+          .and('contain.text', 'Size');
       }
     });
   });

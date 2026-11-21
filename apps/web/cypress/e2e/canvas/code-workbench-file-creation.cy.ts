@@ -12,6 +12,48 @@ import { stubCodeWorkbenchBootstrapApis } from '../../support/codeWorkbench/boot
 import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
+it('compiles the current Snowflake task buffer and marks syntax errors before saving', () => {
+  const path = 'operations/tarea.task.sql';
+  const content = 'CREATE TASK tarea AS SELECT 2;';
+  const action = '[data-slot="code-compile-operation"]';
+  const status = '[data-slot="code-operation-compilation-status"]';
+  const editor = '[data-testid="monaco-code-editor"]';
+  stubCodeWorkbenchBootstrapApis();
+  stubE2eJsonApi('GET', '/workspace/files', [{ path, name: 'tarea.task.sql', kind: 'file' }]);
+  stubE2eJsonApi('GET', /\/workspace\/files\/.+/, {
+    path,
+    name: 'tarea.task.sql',
+    language: 'sql',
+    content,
+    contentSha256: sha256HexUtf8(content),
+    lastModified: '2026-11-19T19:00:00Z',
+  });
+  visitWithE2eWorkspaceSession('/canvas', {
+    onBeforeLoad: (window) =>
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'es' }, version: 0 })
+      ),
+  });
+  cy.get('[data-slot="shell-project-code-command"]').click();
+  cy.get(`${editor} .view-lines`).should('contain.text', 'tarea');
+  cy.clock(Date.now(), ['setTimeout', 'clearTimeout']);
+  cy.get(`${editor} textarea.inputarea`).type("{ctrl+end}{enter}P'K", { force: true });
+  cy.get(action).should('contain.text', 'Compilar').click();
+  cy.get(status).should('contain.text', 'Error de sintaxis en la línea 2, columna 1.');
+  cy.get(`${editor} .squiggly-error`).should('exist');
+
+  cy.get(`${editor} textarea.inputarea`).type('{shift+home}{backspace}', { force: true });
+  cy.get(status).should('not.exist');
+  cy.get(action).click();
+  cy.get(status).should('contain.text', 'Sintaxis de Snowflake correcta.');
+  cy.get(`${editor} .squiggly-error`).should('not.exist');
+  cy.then(() => {
+    expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+    expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+  });
+});
+
 it('creates and imports files with compact keyboard-accessible Explorer actions', () => {
   const { file, project } = contextFixture('select 1 as id');
   const files: FileContent[] = [file];
@@ -27,7 +69,6 @@ it('creates and imports files with compact keyboard-accessible Explorer actions'
     expect(accepted, 'only accepted file bytes may be opened').not.to.equal(undefined);
     return { body: accepted };
   });
-  stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
   // The controlled write transport owns this journey; the passive bootstrap is unchanged.
   stubE2eApi('POST', /\/workspace\/files\/.+/, ({ url, body }) => {
     const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));

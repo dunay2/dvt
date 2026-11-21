@@ -12,6 +12,7 @@ import type {
   CanvasInspectorRequest,
 } from '../../stores/canvasInspectorTarget';
 import type { CanvasExplorerItem } from './explorer/canvasExplorerItems';
+import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 import {
   canvasExplorerSearchText,
   normalizeCanvasExplorerQuery,
@@ -23,6 +24,7 @@ export type CanvasModelNavigationTarget =
   | Readonly<{ kind: 'contexts'; contexts: readonly CanvasModelNavigationContext[] }>;
 
 export function resolveCanvasModelViewEntry({
+  view,
   nodes,
   catalogue,
   modelIds,
@@ -33,6 +35,7 @@ export function resolveCanvasModelViewEntry({
   query,
   sourceLabel,
 }: Readonly<{
+  view: CanvasModelView;
   nodes: readonly CanonicalNode[];
   catalogue: readonly CanvasExplorerItem[];
   modelIds: ReadonlySet<string>;
@@ -44,8 +47,13 @@ export function resolveCanvasModelViewEntry({
   sourceLabel: string;
 }>): CanvasInspectorRequest | undefined {
   if (activeEditorId === selectedId && selectedId != null) return selectedId;
-  if (inspected?.kind === 'dbt-file-model') return inspected;
-  if (inspected?.kind === 'canonical-node' && nodes.some((node) => node.id === inspected.nodeId)) {
+  if (view === 'sql' && inspected?.kind === 'dbt-file-model') return inspected;
+  if (
+    inspected?.kind === 'canonical-node' &&
+    (view === 'semantic'
+      ? modelIds.has(inspected.nodeId)
+      : nodes.some((node) => node.id === inspected.nodeId))
+  ) {
     return inspected;
   }
   if (selectedId != null) return selectedId;

@@ -181,9 +181,6 @@
   width: calc(var(--spacing) * 3.5);
   height: calc(var(--spacing) * 3.5);
 }
-.resize {
-  background: var(--border-subtle);
-}
 .surface {
   position: relative;
   display: flex;

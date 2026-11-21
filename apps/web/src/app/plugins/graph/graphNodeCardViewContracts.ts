@@ -15,6 +15,8 @@ import type {
 
 export type GraphNodeCardViewProps = Readonly<{
   cardModel: GraphNodeCardReadModel;
+  showOperationalMetrics?: boolean;
+  sourceCardAppearance?: import('../../types/sourceCardAppearance').SourceCardAppearance;
   materializationControl?: GraphNodeMaterializationControl;
   columnSection: GraphNodeColumnSectionProps | null;
   tags: readonly Readonly<{ value: string; label: string }>[];

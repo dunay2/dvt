@@ -3,6 +3,7 @@ import './canvasWorkspaceTabs.css';
 import { Code2, Table2, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
 
 export function CanvasWorkspaceModelTabsTemplate({
   tabs,
@@ -12,6 +13,7 @@ export function CanvasWorkspaceModelTabsTemplate({
 }: Readonly<{
   tabs: readonly Readonly<{
     key: string;
+    kind: keyof typeof canvasWorkspaceTabs;
     tabId: string;
     panelId: string;
     label: string;
@@ -22,7 +24,12 @@ export function CanvasWorkspaceModelTabsTemplate({
   onSelect: (key: string) => void;
 }>) {
   return (
-    <Tabs value={activeKey} onValueChange={onSelect} className="canvas-workspace-model-tabs">
+    <Tabs
+      value={activeKey}
+      onValueChange={onSelect}
+      className="canvas-workspace-model-tabs"
+      style={{ '--canvas-workspace-tab-count': tabs.length } as React.CSSProperties}
+    >
       <TabsList
         aria-label={copy.workspaceTabs}
         className="workspace-navigation-tabs"
@@ -34,13 +41,14 @@ export function CanvasWorkspaceModelTabsTemplate({
             value={item.key}
             id={item.tabId}
             aria-controls={item.panelId}
-            data-slot={item.tabId}
+            data-slot={canvasWorkspaceTabs[item.kind].tabId}
             title={item.label}
             aria-keyshortcuts={item.close == null ? undefined : 'Delete'}
+            data-closable={item.close != null || undefined}
             className="workspace-navigation-tab"
             onMouseDown={(event) => {
               if (
-                item.key !== 'code' &&
+                item.kind !== 'code' &&
                 item.key === activeKey &&
                 event.button === 0 &&
                 !event.ctrlKey
@@ -48,7 +56,7 @@ export function CanvasWorkspaceModelTabsTemplate({
                 onSelect(item.key);
             }}
             onFocus={() => {
-              if (item.key !== 'code' && item.key === activeKey) onSelect(item.key);
+              if (item.kind !== 'code' && item.key === activeKey) onSelect(item.key);
             }}
             onKeyDown={(event) => {
               if (event.key !== 'Delete' || item.close == null) return;
@@ -57,31 +65,34 @@ export function CanvasWorkspaceModelTabsTemplate({
               item.close.action();
             }}
           >
-            {item.key === 'model' ? (
+            {item.kind === 'model' ? (
               <Table2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
-            ) : item.key === 'code' ? (
+            ) : item.kind === 'code' ? (
               <Code2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
             ) : null}
             <span className="canvas-workspace-model-tab-label">{item.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
-      {tabs.map((item) =>
-        item.close == null ? null : (
-          <button
-            key={item.key}
-            type="button"
-            tabIndex={item.key === 'model' ? 0 : -1}
-            data-slot={`canvas-${item.key}-tab-close`}
-            aria-label={item.close.label}
-            title={item.close.label}
-            className="canvas-workspace-model-tab-close"
-            onClick={item.close.action}
-          >
-            <X aria-hidden="true" />
-          </button>
-        )
-      )}
+      <div className="canvas-workspace-model-close-controls">
+        {tabs.map((item) => (
+          <div key={item.key}>
+            {item.close == null ? null : (
+              <button
+                type="button"
+                tabIndex={item.kind === 'model' ? 0 : -1}
+                data-slot={`canvas-${item.kind}-tab-close`}
+                aria-label={item.close.label}
+                title={item.close.label}
+                className="canvas-workspace-model-tab-close"
+                onClick={item.close.action}
+              >
+                <X aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
     </Tabs>
   );
 }

@@ -130,7 +130,8 @@ describe('CanvasShell architecture', () => {
       import.meta.dirname,
       'CanvasWorkspaceModelTabs.templates.tsx'
     );
-    expect(templateSource).not.toMatch(/\bstyle\s*=/);
+    expect(templateSource.match(/\bstyle\s*=/g)).toHaveLength(1);
+    expect(templateSource).toContain("'--canvas-workspace-tab-count': tabs.length");
     expect(
       [...templateSource.matchAll(/className="([^"]+)"/g)]
         .flatMap(([, names]) => names!.split(/\s+/))

@@ -10,8 +10,11 @@ import type { CanvasShellGraph, CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasSinkRunEvidence } from './canvasSinkRunEvidence';
 import { resolveWorkspaceFilePath } from './canvasWorkspaceFilePath';
 import type { CanvasNodeDataSampleProjection } from './useCanvasNodeDataSample';
+import type { SourceCardAppearance } from '../../types/sourceCardAppearance';
 
 type CanvasShellNodeProjection = Readonly<{
+  visibleMetricNodeIds?: ReadonlySet<string>;
+  sourceAppearanceByNode?: Readonly<Record<string, SourceCardAppearance>>;
   modelIds: ReadonlySet<string>;
   openModel: (nodeId: string) => void;
   inspectOutput: DbtNodeData['onInspectCanvasColumn'];
@@ -59,6 +62,8 @@ export function projectCanvasShellNodes(
       runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
     const projectedData: DbtNodeData = {
       ...data,
+      showOperationalMetrics: projection.visibleMetricNodeIds?.has(node.id) === true,
+      sourceCardAppearance: projection.sourceAppearanceByNode?.[node.id],
       sourceMetricAvailability: sample.sourceMetricAvailability,
       dataActionLabel: sample.canOpen ? projection.previewLabel : undefined,
       canOpenNodeCode,

@@ -32,11 +32,14 @@ it('retains the same viewport and local disclosure state across inspector open, 
         <CanvasShellContextualWorkbenchSplit
           baseSurface={<Viewport />}
           workbench={workbench}
-          inspector={
-            inspectedNode == null ? null : (
-              <aside data-testid="node-inspector">{inspectedNode}</aside>
-            )
-          }
+          wrapInspector={(surface) => (
+            <>
+              {surface}
+              {inspectedNode == null ? null : (
+                <aside data-testid="node-inspector">{inspectedNode}</aside>
+              )}
+            </>
+          )}
         />
       )
     );

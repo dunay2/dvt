@@ -26,6 +26,7 @@ const SOURCE_PRIMARY_SECTION_IDS: readonly NodePropertySectionId[] = [
   'general',
   'columns',
   'inputs-outputs',
+  'appearance',
 ];
 
 export function resolveNodeWorkbenchPrimarySectionIds(
@@ -125,7 +126,7 @@ function resolveSourceSectionModel(
 /**
  * Resolves section capability separately from tab/overflow placement. Code is
  * last when supported for non-Source nodes. Source is intentionally bounded
- * to Overview, Columns and Inputs / Outputs: key/index/constraint facts are
+ * to Overview, Columns, Inputs / Outputs and placed-card Appearance. Key/index/constraint facts are
  * consumed by the Source Columns experience rather than reintroduced through
  * overflow tabs.
  */
@@ -154,6 +155,7 @@ export function resolveCanvasNodeWorkbenchSectionModel(
     if (sectionId !== 'code') appendPrimarySection(sectionId);
   }
   appendPrimarySection('code');
+  appendPrimarySection('appearance');
 
   const primarySectionIdSet = new Set(primarySectionIds);
   const sections = [

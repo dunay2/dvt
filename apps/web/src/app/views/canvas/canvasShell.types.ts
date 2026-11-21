@@ -61,11 +61,13 @@ export type CanvasShellLayout = {
   canOpenSourceImport: boolean;
   canMoveNodes?: boolean;
   referencePlacementScope?: string;
+  filePlacementLayoutKey?: string;
   canSelectNodes?: boolean;
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurface?: React.ReactNode;
   centerSurfaceVisible?: boolean;
+  modelWorkspace?: Readonly<{ currentId: string | null; openIds: readonly string[] }>;
   readOnlyBanner?: React.ReactNode;
 };
 

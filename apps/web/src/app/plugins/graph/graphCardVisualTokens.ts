@@ -1,6 +1,8 @@
 /** Card surface, identity and layout presentation. */
 export const graphNodeCardSurfaceClasses = {
   root: 'group relative w-[24rem] min-w-[24rem] max-w-[24rem] overflow-hidden rounded-md border bg-(--surface-elevated) text-[length:var(--text-body)] leading-(--text-body-line-height) text-(--text-default) shadow-(--elevation-low) transition-[border-color,opacity] focus-within:outline-[length:var(--focus-ring-width)] focus-within:outline-(--focus-ring) focus-within:outline-offset-[var(--focus-ring-offset)]',
+  sourceTint:
+    'bg-[color:color-mix(in_srgb,var(--source-card-color)_30%,var(--surface-elevated))] [--graph-node-rail-surface:color-mix(in_srgb,var(--source-card-color)_16%,var(--surface-panel))] [--text-subtle:var(--text-muted)]',
   selected: 'ring-2 ring-(--primary)',
   hovered: 'ring-1 ring-(--border-strong)',
   dimmed: 'opacity-30',
@@ -11,6 +13,8 @@ export const graphNodeCardSurfaceClasses = {
 export const graphNodeCardLayoutClasses = {
   body: 'px-4 pb-3 pt-3',
   header: 'flex items-start justify-between gap-3',
+  sourceTintedHeader:
+    '-mx-4 -mt-3 px-4 pt-3 pb-[3px] bg-[linear-gradient(105deg,color-mix(in_srgb,var(--source-card-color)_38%,var(--surface-panel)),color-mix(in_srgb,var(--source-card-color)_18%,var(--surface-panel)))]',
   titleRow: 'flex min-w-0 flex-1 items-center gap-2',
   icon: 'shrink-0 opacity-80',
   title:

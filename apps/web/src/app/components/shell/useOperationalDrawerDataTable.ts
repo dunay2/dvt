@@ -11,10 +11,13 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type ColumnFiltersState,
   type SortingState,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useOperationalDrawerDataColumns } from './useOperationalDrawerDataColumns';
+import { useOperationalDrawerDataSelection } from './useOperationalDrawerDataSelection';
 
 type SampleRow = Readonly<{ values: readonly (string | null)[] }>;
 export type OperationalDrawerDataTableInput = Readonly<{
@@ -23,19 +26,15 @@ export type OperationalDrawerDataTableInput = Readonly<{
   nullValueLabel: string;
   rows: readonly SampleRow[];
 }>;
-type Selection = { row: SampleRow; columnId: string };
-
 export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableInput) {
   const { columns, rows, nullValueLabel } = input;
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [comfortable, setComfortable] = useState(false);
   const [wrap, setWrap] = useState(false);
-  const [selection, setSelection] = useState<Selection | null>(null);
-  const [feedback, setFeedback] = useState<{
-    selection: Selection;
-    result: 'copied' | 'copyFailed';
-  } | null>(null);
+  const [backgroundColor, setBackgroundColor] = useState('#191a1c');
   const columnMovement = useOperationalDrawerDataColumns(columns);
   const tableColumns = useMemo<ColumnDef<SampleRow>[]>(
     () =>
@@ -52,7 +51,8 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
   const table = useReactTable({
     columns: tableColumns,
     data: tableData,
-    enableMultiSort: false,
+    isMultiSortEvent: () => true,
+    sortDescFirst: false,
     autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -60,60 +60,63 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     globalFilterFn: 'includesString',
     getColumnCanGlobalFilter: () => true,
     onSortingChange: setSorting,
-    state: { sorting, columnOrder: columnMovement.order, globalFilter: search },
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      columnOrder: columnMovement.order,
+      globalFilter: search,
+    },
   });
   const visibleRows = table.getRowModel().rows;
-  const selectedCell = visibleRows
-    .find((row) => row.original === selection?.row)
-    ?.getVisibleCells()
-    .find((cell) => cell.column.id === selection?.columnId);
-  const copyCell = async () => {
-    if (selection == null || selectedCell == null) return;
-    try {
-      await navigator.clipboard.writeText(
-        selectedCell.getValue<string | undefined>() ?? nullValueLabel
-      );
-      setFeedback({ selection, result: 'copied' });
-    } catch {
-      setFeedback({ selection, result: 'copyFailed' });
-    }
-  };
+  const displayedColumns = table.getVisibleLeafColumns();
+  const displayedOrder = displayedColumns.map(({ id }) => id);
+  const selection = useOperationalDrawerDataSelection(visibleRows, displayedOrder, nullValueLabel);
   return {
     caption: input.caption,
     nullValueLabel,
     search,
     setSearch,
+    hasFilters: search !== '' || columnFilters.length > 0,
     comfortable,
     setComfortable,
     wrap,
     setWrap,
+    backgroundColor,
+    setBackgroundColor,
     total: rows.length,
-    canCopy: selectedCell != null,
-    copyCell,
-    feedback: selectedCell != null && feedback?.selection === selection ? feedback.result : null,
-    headers: table.getFlatHeaders().map((header) => ({
-      id: header.column.id,
-      type: columns.find((column) => column.name === header.column.id)?.type,
+    selection,
+    columnVisibility: table.getAllLeafColumns().map((column) => ({
+      id: column.id,
+      visible: column.getIsVisible(),
+      toggle: () => column.toggleVisibility(),
+    })),
+    headers: displayedColumns.map((column) => ({
+      id: column.id,
+      type: columns.find(({ name }) => name === column.id)?.type,
       sort:
-        header.column.getIsSorted() === 'asc'
+        column.getIsSorted() === 'asc'
           ? ('ascending' as const)
-          : header.column.getIsSorted() === 'desc'
+          : column.getIsSorted() === 'desc'
             ? ('descending' as const)
             : ('none' as const),
-      toggleSort: header.column.getToggleSortingHandler(),
-      movement: columnMovement.bind(header.column.id),
+      toggleSort: column.getToggleSortingHandler(),
+      sortPriority: column.getSortIndex() + 1,
+      filter: String(column.getFilterValue() ?? ''),
+      filterPriority: columnFilters.findIndex(({ id }) => id === column.id) + 1,
+      setFilter: (value: string) => column.setFilterValue(value),
+      movement: columnMovement.bind(column.id, displayedOrder),
     })),
     rows: visibleRows.map((row, index) => ({
       id: row.id,
       number: index + 1,
-      cells: row.getVisibleCells().map((cell) => ({
+      cells: row.getVisibleCells().map((cell, column) => ({
         id: cell.id,
         value: cell.getValue<string | undefined>(),
-        selected: cell.id === selectedCell?.id,
-        select: () => {
-          setSelection({ row: row.original, columnId: cell.column.id });
-          setFeedback(null);
-        },
+        selected: selection.contains({ row: index, column }),
+        select: (toggle: boolean) => selection.select({ row: index, column }, toggle),
       })),
     })),
   };

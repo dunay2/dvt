@@ -316,6 +316,16 @@ export function registerCanvasNodeDataActionsProof(): void {
           saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
         });
         cy.get(card).find('[data-slot="graph-node-card-title"]').click();
+        if (nodeId === 'source-1') {
+          cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+        }
+        cy.get(
+          nodeId === 'source-1'
+            ? '[data-slot="source-card-appearance-rows"]'
+            : '[data-slot="canvas-card-metrics-switch"]'
+        )
+          .should('have.attr', 'aria-checked', 'false')
+          .click();
         cy.get(card).find('[data-slot="graph-node-operational-rail"]').dblclick();
         cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(0));
         if (gesture === 'pointer') hoverWorkbenchCard(card);
@@ -471,10 +481,14 @@ export function registerCanvasNodeDataActionsProof(): void {
         cy.get('[data-slot="data-sample-summary"]')
           .should('contain.text', '0 rows')
           .and('contain.text', '1 columns');
-        cy.get('[data-slot="bottom-operational-data-table"] thead')
-          .should('contain.text', 'customer')
-          .and('contain.text', 'string');
-        cy.get('[data-slot="bottom-operational-data-table"] tbody tr').should('not.exist');
+        const table = '[data-slot="bottom-operational-data-table"]';
+        const customerHeader = `${table} [data-column-id="customer"]`;
+        cy.get(customerHeader).closest('th').should('have.text', 'customer');
+        cy.get(customerHeader).focus();
+        cy.contains('[data-slot="tooltip-content"]', 'customer · Type: string').should(
+          'be.visible'
+        );
+        cy.get(`${table} tbody tr`).should('not.exist');
         cy.get('[data-slot="bottom-operational-drawer-data"]').should(
           'contain.text',
           'returned no rows'
