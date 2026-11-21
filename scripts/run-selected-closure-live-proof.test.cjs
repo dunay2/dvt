@@ -30,6 +30,7 @@ const {
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
+  resolveLiveProofWebPort,
   seedSelectedClosureLocalWarehouseProof,
   startLiveProofOutboxWorker,
   runCypress,
@@ -58,6 +59,17 @@ test('Source provider proof requires explicit lease admission in the existing in
       'test/integration/**/*.test.ts',
       ...(value === undefined ? [] : ['test/integration/sourceLivePreviewPostgres.proof.ts']),
     ]);
+  }
+});
+
+test('selected closure accepts an explicit preview port and rejects invalid values', () => {
+  assert.equal(resolveLiveProofWebPort({}), 4174);
+  assert.equal(resolveLiveProofWebPort({ DVT_SELECTED_CLOSURE_WEB_PORT: '4173' }), 4173);
+  for (const configured of ['0', '65536', '4173.5', '0x104d', 'localhost:4173']) {
+    assert.throws(
+      () => resolveLiveProofWebPort({ DVT_SELECTED_CLOSURE_WEB_PORT: configured }),
+      /DVT_SELECTED_CLOSURE_WEB_PORT must be an integer/
+    );
   }
 });
 

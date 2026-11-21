@@ -481,10 +481,14 @@ export function registerCanvasNodeDataActionsProof(): void {
         cy.get('[data-slot="data-sample-summary"]')
           .should('contain.text', '0 rows')
           .and('contain.text', '1 columns');
-        cy.get('[data-slot="bottom-operational-data-table"] thead')
-          .should('contain.text', 'customer')
-          .and('contain.text', 'string');
-        cy.get('[data-slot="bottom-operational-data-table"] tbody tr').should('not.exist');
+        const table = '[data-slot="bottom-operational-data-table"]';
+        const customerHeader = `${table} [data-column-id="customer"]`;
+        cy.get(customerHeader).closest('th').should('have.text', 'customer');
+        cy.get(customerHeader).focus();
+        cy.contains('[data-slot="tooltip-content"]', 'customer · Type: string').should(
+          'be.visible'
+        );
+        cy.get(`${table} tbody tr`).should('not.exist');
         cy.get('[data-slot="bottom-operational-drawer-data"]').should(
           'contain.text',
           'returned no rows'

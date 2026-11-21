@@ -4,6 +4,7 @@
  * @baseline GH-3594: outbox admission stays enforced against the disposable proof database.
  * @baseline GH-3021: PCV1 external inputs are prepared explicitly inside that claimed lease.
  * @decision Validate the literal spec list before allocation and execute it in one owned runtime.
+ * @decision DVT_SELECTED_CLOSURE_WEB_PORT selects the preview and Cypress endpoint together.
  * @consequence Outbox delivery, readiness and cleanup stay real; incomplete evidence rejects.
  * @version 1.0.0
  */
@@ -355,6 +356,17 @@ function resolveLiveProofCypressHeaded(sourceEnv = process.env) {
   return true;
 }
 
+function resolveLiveProofWebPort(sourceEnv = process.env) {
+  const configured = readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_WEB_PORT);
+  if (configured === undefined) return DEFAULT_WEB_PORT;
+
+  const port = Number(configured);
+  if (!/^\d+$/u.test(configured) || port < 1 || port > 65535) {
+    throw new Error('DVT_SELECTED_CLOSURE_WEB_PORT must be an integer from 1 to 65535.');
+  }
+  return port;
+}
+
 function resolveLiveProofTemporalWorkerRuntime(sourceEnv = process.env) {
   const runtime =
     readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME) ?? 'available';
@@ -656,6 +668,7 @@ async function runCypress(args, runtime, processHandles, deps = {}) {
 
 async function main() {
   const specPaths = resolveLiveProofSpecPaths();
+  const webPort = resolveLiveProofWebPort();
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
   const cypressHeaded = resolveLiveProofCypressHeaded();
@@ -838,7 +851,7 @@ async function main() {
     await startCompiledLiveProofWeb(
       {
         host: WEB_BIND_HOST,
-        port: DEFAULT_WEB_PORT,
+        port: webPort,
         timeout: DEFAULT_READY_TIMEOUT_MS,
         interval: DEFAULT_POLL_INTERVAL_MS,
         environment: buildLiveProofWebEnv({
@@ -877,7 +890,7 @@ async function main() {
     await runCypress(
       {
         apiPort: DEFAULT_API_PORT,
-        webPort: DEFAULT_WEB_PORT,
+        webPort,
         apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
         restrictedApiBearerToken: restrictedPrincipalToken.bearerToken,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
@@ -920,6 +933,7 @@ module.exports = {
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
+  resolveLiveProofWebPort,
   seedSelectedClosureLocalWarehouseProof,
   startLiveProofOutboxWorker,
   runCypress,
