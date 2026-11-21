@@ -4,6 +4,8 @@
  * @decision Keep one owner per reason to change and reuse the existing rails.
  * @consequence Consumers import the real owner without compatibility re-exports.
  */
+import { posix } from 'node:path';
+
 import type { WebCypressCatalogSnapshots } from '../cypress.catalog';
 import { resolveWebCypressChangedPlan, type WebCypressCommand } from '../cypress.changed';
 import {
@@ -102,6 +104,14 @@ export function resolveWebVitestChangedSuitePlan(
     }
 
     if (!webPath) continue;
+
+    if (
+      posix.dirname(webPath) === 'src/app/views/templates/library' &&
+      /\.(?:sql|ya?ml)$/iu.test(webPath)
+    ) {
+      addExactTestPath('unit', 'src/app/views/templates/templatesViewModel.test.ts');
+      continue;
+    }
 
     if (isWebGlobalStylePath(webPath)) {
       WEB_VITEST_PRIMARY_SUITE_NAMES.forEach((suite) => selectedSuites.add(suite));
