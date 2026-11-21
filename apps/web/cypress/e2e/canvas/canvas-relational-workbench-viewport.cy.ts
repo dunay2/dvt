@@ -31,7 +31,11 @@ import {
   openWorkbenchModel,
   revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
-import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
+import {
+  hoverWorkbenchCard,
+  moveWorkbenchCard,
+  panWorkbenchViewport,
+} from '../../support/relationalWorkbench/pointer';
 import { verifyRetainedProjectCodeBrowsing } from '../../support/relationalWorkbench/projectCodeBrowsing';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
@@ -134,29 +138,17 @@ function assertResizeHandlePresentation(
       expect(hitArea.content).not.to.equal('none');
       expect(Number.parseFloat(hitArea.top)).to.be.closeTo(0, 0.1);
       if (direction === 'horizontal') {
-        expect(bounds.width, 'visible vertical divider').to.be.closeTo(1, 0.1);
+        expect(bounds.width, 'visible vertical divider').to.be.closeTo(2, 0.1);
         expect(Number.parseFloat(hitArea.width), 'horizontal pointer target').to.be.closeTo(4, 0.1);
         expect(Number.parseFloat(hitArea.height)).to.be.closeTo(bounds.height, 0.5);
         expect(hitArea.translate).to.match(/^-50%(?: 0px)?$/);
       } else {
-        expect(bounds.height, 'visible horizontal divider').to.be.closeTo(1, 0.1);
+        expect(bounds.height, 'visible horizontal divider').to.be.closeTo(2, 0.1);
         expect(Number.parseFloat(hitArea.height), 'vertical pointer target').to.be.closeTo(4, 0.1);
         expect(Number.parseFloat(hitArea.width)).to.be.closeTo(bounds.width, 0.5);
         expect(Number.parseFloat(hitArea.left)).to.be.closeTo(0, 0.1);
         expect(hitArea.translate).to.equal('0px -50%');
-        const grip = handle.firstElementChild;
-        const icon = grip?.querySelector('svg');
-        if (grip == null || icon == null)
-          throw new Error('Expected the drawer resize grip and icon.');
-        const gripStyle = window.getComputedStyle(grip);
-        expect(gripStyle.rotate).to.equal('90deg');
-        expect(Number.parseFloat(gripStyle.width)).to.be.closeTo(12, 0.1);
-        expect(Number.parseFloat(gripStyle.height)).to.be.closeTo(16, 0.1);
-        expect(grip.getBoundingClientRect().width, 'rotated grip width').to.be.closeTo(16, 0.5);
-        expect(grip.getBoundingClientRect().height, 'rotated grip height').to.be.closeTo(12, 0.5);
-        const iconStyle = window.getComputedStyle(icon);
-        expect(Number.parseFloat(iconStyle.width)).to.be.closeTo(10, 0.1);
-        expect(Number.parseFloat(iconStyle.height)).to.be.closeTo(10, 0.1);
+        expect(handle.children, 'continuous divider').to.have.length(0);
       }
     });
 }
@@ -322,6 +314,91 @@ describe('Workbench viewport', () => {
       openWorkbenchModel();
     }
 
+    it('narrows and folds the Explorer by dragging its right edge to the left', () => {
+      const dock = `${main} [data-panel-id$="-dock"]`;
+      const handle = `${main} [role="separator"][aria-label="Resize explorer"]`;
+      const expectDockPixels = (width: number): void => {
+        cy.get(dock).should(($dock) => {
+          expect($dock[0]!.getBoundingClientRect().width).to.be.closeTo(width, 3);
+        });
+      };
+      const dragTo = (width: number): void => {
+        cy.get(dock).then(($dock) => {
+          moveWorkbenchCard(handle, width - $dock[0]!.getBoundingClientRect().width, 0);
+        });
+      };
+      cy.viewport(2400, 900);
+      dragTo(210);
+      expectDockPixels(210);
+
+      cy.viewport(1280, 720);
+      assertExplorerWidth(main, 15);
+      cy.viewport(2400, 900);
+      expectDockPixels(210);
+
+      dragTo(60);
+      cy.get(dock).should('not.be.visible');
+      cy.get(canvasEntry).should('be.focused').and('have.attr', 'aria-expanded', 'false');
+      cy.get(canvasEntry).click().should('have.attr', 'aria-expanded', 'true');
+      cy.get(dock).should(($dock) => {
+        expect($dock[0]!.getBoundingClientRect().width).to.be.within(189, 213);
+      });
+    });
+
+    it('narrows the right inspector and reopens it at the retained width', () => {
+      const graph = `${main} [data-testid="canvas-viewport"]`;
+      const node = `${graph} .react-flow__node[data-id="join-transform"]`;
+      const title = `${node} [data-slot="graph-node-card-title"]`;
+      const inspector = `${main} [data-slot="canvas-node-workbench-overlay"]`;
+      const handle = `${main} [role="separator"][aria-label="Resize properties"]`;
+      const assertWidth = (width: number): void => {
+        cy.get(inspector).should(($inspector) => {
+          expect($inspector[0]!.getBoundingClientRect().width).to.be.closeTo(width, 3);
+        });
+      };
+      const dragTo = (width: number): void => {
+        cy.get(inspector).then(($inspector) => {
+          moveWorkbenchCard(handle, $inspector[0]!.getBoundingClientRect().width - width, 0);
+        });
+      };
+      cy.viewport(1800, 900);
+      cy.get(`${graph} .react-flow__controls-fitview`).click();
+      cy.get(title).click();
+      assertWidth(380);
+      dragTo(260);
+      assertWidth(260);
+      cy.get(handle).focus();
+      assertResizeHandlePresentation(handle, 'horizontal');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get(inspector).should('not.exist');
+      cy.get(node).should(($node) => {
+        expect($node[0]!.contains($node[0]!.ownerDocument.activeElement)).to.equal(true);
+      });
+
+      cy.get(title).click();
+      assertWidth(260);
+      dragTo(60);
+      cy.get(inspector).should('not.exist');
+      cy.get(title).click();
+      cy.get(inspector).should('be.visible');
+      assertExplorerWidth(main, 22);
+
+      const tabs = `${inspector} [role="tablist"]`;
+      const transparent = 'rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)';
+      hoverWorkbenchCard(`${graph} .react-flow__controls-fitview`);
+      cy.get(tabs)
+        .should('have.css', 'scrollbar-width', 'thin')
+        .and('have.css', 'scrollbar-color', transparent)
+        .should(($tabs) => expect($tabs[0]!.scrollWidth).to.be.greaterThan($tabs[0]!.clientWidth));
+      hoverWorkbenchCard(tabs);
+      cy.get(tabs).should('not.have.css', 'scrollbar-color', transparent);
+      hoverWorkbenchCard(`${graph} .react-flow__controls-fitview`);
+      cy.get(tabs).should('have.css', 'scrollbar-color', transparent);
+      cy.get(`${tabs} [role="tab"]`).first().focus();
+      cy.press(Cypress.Keyboard.Keys.RIGHT);
+      cy.get(tabs).should('not.have.css', 'scrollbar-color', transparent);
+    });
+
     it('keeps zoom, source search and narrow reflow while toggling the rail', () => {
       // Layout gestures must preserve the editor's local search and camera without saving semantics.
       let writesBeforeZoom = 0;
@@ -486,7 +563,7 @@ describe('Workbench viewport', () => {
       cy.then(() => {
         writesBeforeResize = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
-      // The shared primitive also owns the vertical drawer, whose grip and keyboard cue must survive.
+      // The shared primitive also owns the vertical drawer and its keyboard cue.
       revealOperationalDrawer();
       const drawer = '#app-shell-bottom-drawer-panel';
       const drawerHandle = '#app-shell-bottom-drawer-resize-handle';

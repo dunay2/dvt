@@ -4,7 +4,7 @@
  * Corner invariant: the Elements body and the Elements/Git actions remain distinct from catalogue commands.
  */
 import type { DragEvent, KeyboardEvent, ReactNode, RefObject } from 'react';
-import type { ImperativePanelHandle } from '../../../components/ui/resizable';
+import type { useCanvasExplorerResize } from './useCanvasExplorerResize';
 import type {
   CanvasInspectorCommand,
   CanvasInspectorResource,
@@ -56,13 +56,7 @@ export type CanvasExplorerTemplateProps = Readonly<{
   id: string;
   active: 'elements' | null;
   visible: boolean;
-  dock: Readonly<{
-    panelRef: RefObject<ImperativePanelHandle>;
-    widthPercent: number;
-    minSize: number;
-    maxSize: number;
-    onResize: (size: number, previousSize: number | undefined) => void;
-  }>;
+  dock: ReturnType<typeof useCanvasExplorerResize>;
   copy: CanvasExplorerCopy;
   heading?: CanvasExplorerHeading;
   rootRef?: RefObject<HTMLDivElement>;

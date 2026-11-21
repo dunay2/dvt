@@ -316,6 +316,16 @@ export function registerCanvasNodeDataActionsProof(): void {
           saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
         });
         cy.get(card).find('[data-slot="graph-node-card-title"]').click();
+        if (nodeId === 'source-1') {
+          cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+        }
+        cy.get(
+          nodeId === 'source-1'
+            ? '[data-slot="source-card-appearance-rows"]'
+            : '[data-slot="canvas-card-metrics-switch"]'
+        )
+          .should('have.attr', 'aria-checked', 'false')
+          .click();
         cy.get(card).find('[data-slot="graph-node-operational-rail"]').dblclick();
         cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(0));
         if (gesture === 'pointer') hoverWorkbenchCard(card);

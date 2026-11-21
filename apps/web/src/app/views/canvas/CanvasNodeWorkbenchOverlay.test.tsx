@@ -171,6 +171,22 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     card.remove();
   });
 
+  it('reopens the dock at its visible width when guarded collapse is refused', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1000);
+    const onHide = vi.fn(async () => false);
+    renderOverlay(root, { onHide, children: <div>Retained graph</div> });
+    const separator = container.querySelector<HTMLElement>('[aria-label="Resize properties"]')!;
+    const panel = container.querySelector('[data-panel-id$="-properties"]')!;
+    const visibleWidth = panel.getAttribute('data-panel-size');
+    expect(Number(visibleWidth)).toBeGreaterThan(0);
+
+    await act(() => fireEvent.keyDown(separator, { key: 'Enter' }));
+
+    expect(onHide).toHaveBeenCalledOnce();
+    expect(panel.getAttribute('data-panel-size')).toBe(visibleWidth);
+    expect(container.querySelector('[data-testid="node-authoring-input"]')).not.toBeNull();
+  });
+
   it('does not reopen or reposition the panel when the selected source changes', () => {
     renderOverlay(root);
     const inspector = container.querySelector('[data-slot="canvas-node-workbench-overlay"]');

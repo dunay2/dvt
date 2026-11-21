@@ -22,7 +22,7 @@ export function setupSemanticEditorShell(): void {
 }
 
 export async function mountModel(
-  withSecondModel = false,
+  additionalModels: boolean | number = 0,
   overrides: Pick<CanvasShellPropsOverrides, 'layout' | 'workspaceCommands'> = {}
 ): Promise<{
   data: DbtNodeData;
@@ -37,7 +37,11 @@ export async function mountModel(
   const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
   const models = [
     fixture.transform,
-    ...(withSecondModel ? [{ ...fixture.transform, id: 'other-model', name: 'Other model' }] : []),
+    ...Array.from({ length: Number(additionalModels) }, (_, index) => ({
+      ...fixture.transform,
+      id: index === 0 ? 'other-model' : `other-model-${index}`,
+      name: index === 0 ? 'Other model' : `Other model ${index + 1}`,
+    })),
   ];
   await harness.render({
     ...overrides,

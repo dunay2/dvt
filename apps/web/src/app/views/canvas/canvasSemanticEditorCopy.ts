@@ -135,6 +135,8 @@ const en = {
   removeDependents: 'Also remove dependent operations?',
   removeDependentsHint: 'These operations cannot remain valid after this removal:',
   closeEditor: 'Close semantic editor',
+  semanticEditorUnavailable: 'This item has no semantic editor.',
+  modelTabLimit: 'Close a model tab to open another. The limit is {limit}.',
   workspaceTabs: 'Workspace navigation',
   removalDependency:
     'Another operation depends on this card. Review its conditions, grouping or window before removing it.',
@@ -336,6 +338,8 @@ const es: typeof en = {
   removeDependents: '¿Retirar también las operaciones dependientes?',
   removeDependentsHint: 'Estas operaciones no pueden seguir siendo válidas tras la retirada:',
   closeEditor: 'Cerrar editor semántico',
+  semanticEditorUnavailable: 'Este elemento no tiene editor semántico.',
+  modelTabLimit: 'Cierra una pestaña de modelo para abrir otra. El límite es {limit}.',
   workspaceTabs: 'Navegación del espacio de trabajo',
   removalDependency:
     'Otra operación depende de esta tarjeta. Revisa sus condiciones, agrupación o ventana antes de retirarla.',

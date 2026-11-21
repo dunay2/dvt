@@ -3,7 +3,7 @@
  * Reason: inspection and guarded close retain their existing resource and copy owners.
  * Corner invariant: a rejected or stale close cannot move focus or report another owner's failure.
  */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { useOptionalCanvasTransformSqlQueryPort } from '../../services/AppServicesContext';
 import type {
@@ -18,6 +18,7 @@ import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 import { CanvasCatalogFileInspector } from './CanvasCatalogFileInspector';
+import { CanvasInspectorDock } from './CanvasInspectorDock';
 
 export type CanvasNodeWorkbenchOverlayProps = Readonly<{
   layout: Pick<CanvasShellLayout, 'focusMode' | 'inspectorPanelVisible' | 'surfaceStrategy'>;
@@ -38,6 +39,8 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
   onOpenModelEditor?: (nodeId: string) => void;
   currentProjectRoot?: string;
   onHide: CanvasShellChromeCommands['onHideInspector'];
+  children?: ReactNode;
+  hidden?: boolean;
 }>;
 
 export function CanvasNodeWorkbenchOverlay({
@@ -46,15 +49,19 @@ export function CanvasNodeWorkbenchOverlay({
   onOpenModelEditor,
   currentProjectRoot,
   onHide,
+  children,
+  hidden = false,
 }: CanvasNodeWorkbenchOverlayProps): JSX.Element | null {
   const surfaceStrategy = layout.surfaceStrategy;
-  const visible = isCanvasNodeWorkbenchVisible({
-    focusMode: layout.focusMode,
-    inspectorPanelVisible: layout.inspectorPanelVisible,
-    surfaceStrategy,
-    hasInspectorNode:
-      panels.inspectorNode != null || panels.inspectorTarget?.kind === 'dbt-file-model',
-  });
+  const visible =
+    !hidden &&
+    isCanvasNodeWorkbenchVisible({
+      focusMode: layout.focusMode,
+      inspectorPanelVisible: layout.inspectorPanelVisible,
+      surfaceStrategy,
+      hasInspectorNode:
+        panels.inspectorNode != null || panels.inspectorTarget?.kind === 'dbt-file-model',
+    });
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const sqlQuery = useOptionalCanvasTransformSqlQueryPort();
   const workspaceScope = panels.inspectorAuthoring.workspaceScope;
@@ -99,16 +106,17 @@ export function CanvasNodeWorkbenchOverlay({
     }
   }, [panels.inspectorTarget, inspectorNodeId]);
 
-  const hideAndRestoreNodeFocus = useCallback(async (): Promise<void> => {
+  const hideAndRestoreNodeFocus = useCallback(async (): Promise<boolean> => {
     const owner = currentOwner.current;
     const closingFocus = document.activeElement;
     const closingSurface = surfaceRef.current;
     try {
-      if ((await onHide()) === false || !mounted.current || currentOwner.current !== owner) return;
+      if ((await onHide()) === false || !mounted.current || currentOwner.current !== owner)
+        return false;
     } catch {
       if (mounted.current && currentOwner.current === owner)
         toast.error(copy.nodeWorkbenchCloseFailedMessage);
-      return;
+      return false;
     }
     window.requestAnimationFrame(() => {
       if (!mounted.current || currentOwner.current !== owner) return;
@@ -130,68 +138,79 @@ export function CanvasNodeWorkbenchOverlay({
         preventScroll: true,
       });
     });
+    return true;
   }, [inspectorNodeId, onHide, panels.inspectorTarget, copy.nodeWorkbenchCloseFailedMessage]);
   const requestHide = useCallback((): void => {
     // This adapter handles both cancellation and failures before its promise settles.
     void hideAndRestoreNodeFocus();
   }, [hideAndRestoreNodeFocus]);
 
-  if (!visible || surfaceStrategy == null) return null;
-  return (
-    <aside
-      ref={surfaceRef}
-      data-slot="canvas-node-workbench-overlay"
-      aria-label={copy.inspectorEditablePropertiesTitle}
-      className={canvasNodeWorkbenchVisualTokens.inspector}
-      onKeyDown={(event) => {
-        if (event.key !== 'Escape' || event.defaultPrevented) return;
-        event.preventDefault();
-        event.stopPropagation();
-        requestHide();
-      }}
+  const panelProps = {
+    registeredPlugins: panels.registeredPlugins,
+    preferredTabId: panels.inspectorPreferredTabId,
+    preferredTabRequestId: panels.inspectorPreferredTabRequestId,
+    primarySectionIds: surfaceStrategy?.nodeWorkbench.sections,
+    onClose: requestHide,
+  };
+  const inspector =
+    !visible || surfaceStrategy == null ? null : (
+      <aside
+        ref={surfaceRef}
+        data-slot="canvas-node-workbench-overlay"
+        aria-label={copy.inspectorEditablePropertiesTitle}
+        className={canvasNodeWorkbenchVisualTokens.inspector}
+        onKeyDown={(event) => {
+          if (event.key !== 'Escape' || event.defaultPrevented) return;
+          event.preventDefault();
+          event.stopPropagation();
+          requestHide();
+        }}
+      >
+        {panels.inspectorTarget?.kind === 'dbt-file-model' ? (
+          <CanvasCatalogFileInspector
+            target={panels.inspectorTarget}
+            workspaceScope={workspaceScope}
+            currentProjectRoot={currentProjectRoot}
+            visible={visible}
+          >
+            {(inspection) => (
+              <CanvasNodeWorkbenchPanel
+                {...panelProps}
+                node={inspection.node}
+                nodes={inspection.nodes}
+                edges={inspection.edges}
+                activeRunId={null}
+                authoring={{ ...panels.inspectorAuthoring, canEditNode: false }}
+                contributions={inspection.contributions}
+              />
+            )}
+          </CanvasCatalogFileInspector>
+        ) : panels.inspectorNode == null ? null : (
+          <CanvasNodeWorkbenchPanel
+            {...panelProps}
+            node={panels.inspectorNode}
+            nodes={panels.inspectorGraphNodes}
+            edges={panels.inspectorGraphEdges}
+            activeRunId={panels.activeRunId}
+            authoring={panels.inspectorAuthoring}
+            contributions={panels.inspectorWorkbenchContributions}
+            codeProjection={codeProjection}
+            {...(onOpenModelEditor == null
+              ? {}
+              : { onOpenSemanticEditor: () => onOpenModelEditor(panels.inspectorNode!.id) })}
+          />
+        )}
+      </aside>
+    );
+  return children == null ? (
+    inspector
+  ) : (
+    <CanvasInspectorDock
+      inspector={inspector}
+      resizeLabel={copy.nodeWorkbenchResizeLabel}
+      onClose={hideAndRestoreNodeFocus}
     >
-      {panels.inspectorTarget?.kind === 'dbt-file-model' ? (
-        <CanvasCatalogFileInspector
-          target={panels.inspectorTarget}
-          workspaceScope={workspaceScope}
-          currentProjectRoot={currentProjectRoot}
-          visible={visible}
-        >
-          {(inspection) => (
-            <CanvasNodeWorkbenchPanel
-              node={inspection.node}
-              nodes={inspection.nodes}
-              edges={inspection.edges}
-              activeRunId={null}
-              registeredPlugins={panels.registeredPlugins}
-              preferredTabId={panels.inspectorPreferredTabId}
-              preferredTabRequestId={panels.inspectorPreferredTabRequestId}
-              primarySectionIds={surfaceStrategy.nodeWorkbench.sections}
-              onClose={requestHide}
-              authoring={{ ...panels.inspectorAuthoring, canEditNode: false }}
-              contributions={inspection.contributions}
-            />
-          )}
-        </CanvasCatalogFileInspector>
-      ) : panels.inspectorNode == null ? null : (
-        <CanvasNodeWorkbenchPanel
-          node={panels.inspectorNode}
-          nodes={panels.inspectorGraphNodes}
-          edges={panels.inspectorGraphEdges}
-          activeRunId={panels.activeRunId}
-          registeredPlugins={panels.registeredPlugins}
-          preferredTabId={panels.inspectorPreferredTabId}
-          preferredTabRequestId={panels.inspectorPreferredTabRequestId}
-          primarySectionIds={surfaceStrategy.nodeWorkbench.sections}
-          onClose={requestHide}
-          authoring={panels.inspectorAuthoring}
-          contributions={panels.inspectorWorkbenchContributions}
-          codeProjection={codeProjection}
-          {...(onOpenModelEditor == null
-            ? {}
-            : { onOpenSemanticEditor: () => onOpenModelEditor(panels.inspectorNode!.id) })}
-        />
-      )}
-    </aside>
+      {children}
+    </CanvasInspectorDock>
   );
 }

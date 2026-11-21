@@ -1,6 +1,10 @@
 /** Owned concern: resolve workspace-file editability from the active authoring authority. */
 
-export type CodeWorkspaceFileAccess = 'read-only' | 'editable';
+export type CodeWorkspaceFileAccess = 'read-only' | 'editable' | 'operation-sql';
+
+export function isWorkspaceOperationSqlPath(path: string | undefined): boolean {
+  return path !== undefined && /^operations\/(?:[^/]+\/)*[^/]+\.sql$/i.test(path);
+}
 
 export type CodeWorkspaceFileEditPosture =
   | Readonly<{ kind: 'editable' }>
@@ -18,7 +22,10 @@ export function resolveCodeWorkspaceFileEditPosture(args: {
     return { kind: 'authority_unavailable_read_only' };
   }
 
-  if (args.access === 'read-only') {
+  if (
+    args.access === 'read-only' ||
+    (args.access === 'operation-sql' && !isWorkspaceOperationSqlPath(args.selectedPath))
+  ) {
     return { kind: 'workspace_read_only' };
   }
 

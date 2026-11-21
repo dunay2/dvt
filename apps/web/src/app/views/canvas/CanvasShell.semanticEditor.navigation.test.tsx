@@ -5,6 +5,7 @@ import { fireEvent } from '@testing-library/dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { getCanvasShellState } from './CanvasShell.testHarness';
+import { MAX_CANVAS_MODEL_TABS } from './canvasWorkspaceTabs';
 import {
   setupSemanticEditorShell,
   harness,
@@ -154,6 +155,45 @@ describe('Canvas Model draft protection', () => {
     );
     await act(async () => button('Discard changes').click());
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+});
+
+describe('Canvas Model tabs', () => {
+  setupSemanticEditorShell();
+
+  it('retains distinct tabs, refuses overflow and keeps the active editor when closing another', async () => {
+    const { fixture, onApplyNodeDraft } = await mountModel(MAX_CANVAS_MODEL_TABS);
+    const tabs = (): HTMLButtonElement[] => [
+      ...navigation.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]'),
+    ];
+    const active = (): HTMLButtonElement | undefined =>
+      tabs().find((tab) => tab.getAttribute('aria-selected') === 'true');
+    const nodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
+      id: string;
+      data: DbtNodeData;
+    }>;
+    for (const node of nodes) await act(async () => node.data.onOpenNode?.(node.id));
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
+    expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS - 1}`);
+    for (const tab of tabs()) {
+      const panel = document.getElementById(tab.getAttribute('aria-controls')!);
+      expect(panel?.getAttribute('aria-labelledby')).toBe(tab.id);
+    }
+    await act(async () => fireEvent.mouseDown(tabs()[0]!, { button: 0, ctrlKey: false }));
+    expect(active()?.textContent).toBe(fixture.transform.name);
+    await act(async () => nodes[0]!.data.onOpenNode?.(fixture.transform.id));
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
+    const closes = (): NodeListOf<HTMLButtonElement> =>
+      navigation.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]');
+    await act(async () => closes()[1]!.click());
+    expect(active()?.textContent).toBe(fixture.transform.name);
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS - 1);
+    const seventh = nodes.at(-1)!;
+    await act(async () => seventh.data.onOpenNode?.(seventh.id));
+    expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS}`);
+    await act(async () => closes()[MAX_CANVAS_MODEL_TABS - 1]!.click());
+    expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS - 1}`);
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 });

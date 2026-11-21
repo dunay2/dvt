@@ -67,6 +67,12 @@ describe('model-session', () => {
     assertModel('dvt-transform-1', 'Transform 1');
     cy.get(row('orphan-transform-1')).click();
     assertModel('orphan-transform-1', 'Orphan transform');
+    const modelTabs = '[data-slot="canvas-model-main-tab"]';
+    cy.get(modelTabs).should('have.length', 2);
+    cy.contains(modelTabs, 'Transform 1').click();
+    assertModel('dvt-transform-1', 'Transform 1');
+    cy.contains(modelTabs, 'Orphan transform').click();
+    assertModel('orphan-transform-1', 'Orphan transform');
     cy.get('[data-slot="left-navigation-link"][href="/admin"]').click();
     cy.location('pathname').should('eq', '/admin');
     cy.get(canvas).click();
@@ -82,11 +88,18 @@ describe('model-session', () => {
     cy.reload();
     enterSemantic();
     assertModel('orphan-transform-1', 'Orphan transform');
-    cy.get(canvas).click();
     cy.get(row('source-1')).click();
-    enterSemantic();
+    assertModel('orphan-transform-1', 'Orphan transform');
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
+    cy.get('[data-slot="shell-model-semantic-command"]').should(
+      'have.attr',
+      'aria-pressed',
+      'false'
+    );
+    cy.get(row('source-1')).click();
     cy.get(inspector).should('contain.text', 'Source 1');
-    cy.get('[data-slot="canvas-model-editor"]:visible').should('not.exist');
+    enterSemantic();
+    assertModel('orphan-transform-1', 'Orphan transform');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
   it('keeps editing or applies local composition changes before closing the Model', () => {

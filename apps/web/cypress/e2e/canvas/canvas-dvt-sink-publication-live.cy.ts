@@ -74,6 +74,10 @@ describe('Explicit PostgreSQL Sink live', () => {
     cy.get('.react-flow__edge').should('have.length', 3);
     cy.then(() => {
       openWorkbenchProperties(sinkId);
+      cy.get('[data-slot="canvas-card-metrics-switch"]')
+        .should('have.attr', 'aria-checked', 'false')
+        .click()
+        .should('have.attr', 'aria-checked', 'true');
       cy.contains('[role="tab"]', /^Sink$/).click();
       cy.get('select[name="dvt-sink-connection"]').should('have.value', '').select(connectionId);
       cy.get('input[name="dvt-sink-schema"]').clear().type(schema);

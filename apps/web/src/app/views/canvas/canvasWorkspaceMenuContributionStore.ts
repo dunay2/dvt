@@ -46,6 +46,16 @@ export type CanvasModelWorkspaceTabContribution = Readonly<{
   }>;
 }>;
 
+export type CanvasModelTabListContribution = Readonly<{
+  canvasId: string;
+  tabs: readonly Readonly<{
+    nodeId: string;
+    label: string;
+    onSelect: () => void;
+    onClose: () => void;
+  }>[];
+}>;
+
 type CanvasWorkspaceMenuContributionState = {
   modelBrowser: CanvasModelBrowserContribution | null;
   registerModelBrowser: (browser: CanvasModelBrowserContribution) => void;
@@ -53,6 +63,9 @@ type CanvasWorkspaceMenuContributionState = {
   modelTab: CanvasModelWorkspaceTabContribution | null;
   registerModelTab: (tab: CanvasModelWorkspaceTabContribution) => void;
   clearModelTab: (tab: CanvasModelWorkspaceTabContribution) => void;
+  modelTabList: CanvasModelTabListContribution | null;
+  registerModelTabList: (list: CanvasModelTabListContribution) => void;
+  clearModelTabList: (list: CanvasModelTabListContribution) => void;
   contribution: CanvasWorkspaceMenuContribution | null;
   registerCanvasWorkspaceMenuContribution: (contribution: CanvasWorkspaceMenuContribution) => void;
   clearCanvasWorkspaceMenuContribution: (contribution: CanvasWorkspaceMenuContribution) => void;
@@ -68,6 +81,10 @@ export const useCanvasWorkspaceMenuContributionStore = create<CanvasWorkspaceMen
     modelTab: null,
     registerModelTab: (modelTab) => set({ modelTab }),
     clearModelTab: (tab) => set((state) => (state.modelTab === tab ? { modelTab: null } : state)),
+    modelTabList: null,
+    registerModelTabList: (modelTabList) => set({ modelTabList }),
+    clearModelTabList: (list) =>
+      set((state) => (state.modelTabList === list ? { modelTabList: null } : state)),
     registerCanvasWorkspaceMenuContribution: (contribution) => set({ contribution }),
     clearCanvasWorkspaceMenuContribution: (contribution) =>
       set((state) => (state.contribution === contribution ? { contribution: null } : state)),

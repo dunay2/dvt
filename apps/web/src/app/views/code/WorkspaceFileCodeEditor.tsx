@@ -30,6 +30,11 @@ import {
 } from './codeEditorStatusPresentation';
 import { resolveWorkspaceFileEditorPresentation } from './workspaceFileEditorPresentation';
 import { WorkspaceFileCodeEditorView } from './WorkspaceFileCodeEditorView';
+import {
+  OperationSqlCompileAction,
+  OperationSqlCompileFeedback,
+} from './OperationSqlCompileAction';
+import { useOperationSqlCompilation } from './useOperationSqlCompilation';
 
 export type WorkspaceFileCodeEditorHandle = Readonly<{ flush: () => Promise<boolean> }>;
 export type WorkspaceFileCodeEditorProps = WorkspaceFileSessionInput &
@@ -110,12 +115,31 @@ const WorkspaceFileCodeEditorSession = forwardRef<
     context.status === 'checking',
     references.isReanalyzing
   );
+  const versionedFile =
+    presentation.surface.kind === 'file' ? presentation.surface.file : undefined;
+  const operation = useOperationSqlCompilation(
+    posture.kind === 'editable' && versionedFile?.path === workingTree.filePath
+      ? versionedFile?.path
+      : undefined,
+    workingTree.value
+  );
   return (
     <WorkspaceFileCodeEditorView
       path={path}
       className={props.className}
       fillAvailableSpace={fillAvailableSpace}
-      headerActions={props.headerActions}
+      headerActions={
+        <>
+          {operation.available && (
+            <OperationSqlCompileAction
+              copy={copy}
+              result={operation.result}
+              onCompile={operation.compile}
+            />
+          )}
+          {props.headerActions}
+        </>
+      }
       copy={copy}
       surface={presentation.surface}
       navigation={{ blocked: workingTree.navigationBlocked, flush: workingTree.flush }}
@@ -124,6 +148,8 @@ const WorkspaceFileCodeEditorSession = forwardRef<
         value: workingTree.value,
         onChange: changeValue,
         inlineReferences: inspection.inlineReferences,
+        diagnostics:
+          operation.result?.kind === 'invalid' ? operation.result.diagnostics : undefined,
         onInspectReference: inspection.inspect,
       }}
       analysisAction={
@@ -136,7 +162,9 @@ const WorkspaceFileCodeEditorSession = forwardRef<
           : undefined
       }
       executionCommands={
-        context.project !== undefined && acceptedFile !== undefined ? (
+        operation.available ? (
+          <OperationSqlCompileFeedback copy={copy} result={operation.result} />
+        ) : context.project !== undefined && acceptedFile !== undefined ? (
           <CodeModelCommands
             file={acceptedFile}
             project={context.project}

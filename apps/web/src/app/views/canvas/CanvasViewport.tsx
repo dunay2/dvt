@@ -100,7 +100,7 @@ type CanvasViewportProps = {
   readonly workspaceTask?: ReactNode;
   readonly projectFiles?: CanvasExplorerProjectWorkspace;
   readonly activityRail?: CanvasExplorerActivityRail;
-  readonly inspector?: ReactNode;
+  readonly wrapInspector?: (surface: ReactNode) => ReactNode;
 };
 
 type CanvasViewportWithPresenterProps = CanvasViewportProps &
@@ -465,6 +465,42 @@ function CanvasViewportWithPresenter({
     reactFlow,
   });
 
+  const surface = (
+    <CanvasViewportSurfaceView
+      viewportRef={viewportRef}
+      resolvedCanvasPalette={resolvedCanvasPalette}
+      canEditEdges={props.canEditEdges}
+      canDeleteWithKeyboard={
+        (props.canEditEdges || props.referencePlacementScope != null) && !externalSurfaceActive
+      }
+      canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
+      canSelectNodes={canSelectNodes}
+      nodesWithImpact={renderedNodes}
+      edges={graphSearchPresentation.edges}
+      nodeTypes={props.nodeTypes}
+      gridSize={props.gridSize}
+      canvasSnapToGrid={props.canvasSnapToGrid}
+      viewport={props.viewport}
+      onNodesChange={props.onNodesChange}
+      onEdgesChange={props.onEdgesChange}
+      {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
+      {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
+      onViewportChange={props.onViewportChange}
+      onNodeDragStop={props.onNodeDragStop}
+      onDrop={props.onDrop}
+      onDragOver={props.onDragOver}
+      contextMenuPresenter={contextMenuPresenter}
+      contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
+      contextMenuLabel={copy.canvasContextMenuLabel}
+      nodeHealthPopoverModel={nodeHealthPopoverModel}
+      onCloseNodeHealthPopover={closeNodeHealthPopover}
+      onImpactFocusNodeChange={props.onImpactFocusNodeChange}
+      onMiniMapNodeClick={handleMiniMapNodeClick}
+      graphSearchController={graphSearchController}
+      graphFilterController={graphFilterController}
+      copy={copy}
+    />
+  );
   return (
     <CanvasGraphExplorer
       workspaceTask={props.workspaceTask}
@@ -500,41 +536,7 @@ function CanvasViewportWithPresenter({
           : undefined
       }
     >
-      <CanvasViewportSurfaceView
-        viewportRef={viewportRef}
-        resolvedCanvasPalette={resolvedCanvasPalette}
-        canEditEdges={props.canEditEdges}
-        canDeleteWithKeyboard={
-          (props.canEditEdges || props.referencePlacementScope != null) && !externalSurfaceActive
-        }
-        canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
-        canSelectNodes={canSelectNodes}
-        nodesWithImpact={renderedNodes}
-        edges={graphSearchPresentation.edges}
-        nodeTypes={props.nodeTypes}
-        gridSize={props.gridSize}
-        canvasSnapToGrid={props.canvasSnapToGrid}
-        viewport={props.viewport}
-        onNodesChange={props.onNodesChange}
-        onEdgesChange={props.onEdgesChange}
-        {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
-        {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
-        onViewportChange={props.onViewportChange}
-        onNodeDragStop={props.onNodeDragStop}
-        onDrop={props.onDrop}
-        onDragOver={props.onDragOver}
-        contextMenuPresenter={contextMenuPresenter}
-        contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
-        contextMenuLabel={copy.canvasContextMenuLabel}
-        nodeHealthPopoverModel={nodeHealthPopoverModel}
-        onCloseNodeHealthPopover={closeNodeHealthPopover}
-        onImpactFocusNodeChange={props.onImpactFocusNodeChange}
-        onMiniMapNodeClick={handleMiniMapNodeClick}
-        graphSearchController={graphSearchController}
-        graphFilterController={graphFilterController}
-        copy={copy}
-      />
-      {props.inspector}
+      {props.wrapInspector?.(surface) ?? surface}
     </CanvasGraphExplorer>
   );
 }

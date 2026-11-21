@@ -5,11 +5,46 @@
  * @consequence No query, clipboard or table-state policy is owned by markup.
  * @version 1.0.0
  */
-import { AlignJustify, Copy, Info, Search, WrapText } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { AlignJustify, Copy, Eye, EyeOff, Info, Search, WrapText } from 'lucide-react';
+import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { OperationalDrawerDataColumnHeader } from './OperationalDrawerDataColumnHeader';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import styles from './OperationalDrawerDataTable.module.css';
+
+type DataTable = ReturnType<typeof useOperationalDrawerDataTable>;
+
+function handleCellKey(
+  event: KeyboardEvent<HTMLTableSectionElement>,
+  selection: DataTable['selection']
+) {
+  const target = event.target;
+  if (event.altKey || !(target instanceof HTMLButtonElement)) return;
+  const control = event.ctrlKey || event.metaKey;
+  if (control && !event.shiftKey && event.key.toLowerCase() === 'c' && selection.canCopy) {
+    event.preventDefault();
+    void selection.copy();
+    return;
+  }
+  const cell = target.closest('td');
+  const row = cell?.closest('tr');
+  if (cell == null || row == null) return;
+  const next = selection.move(
+    { row: row.sectionRowIndex, column: cell.cellIndex - 1 },
+    event.key,
+    control
+  );
+  if (next == null) return;
+  event.preventDefault();
+  event.currentTarget.rows
+    .item(next.row)
+    ?.cells.item(next.column + 1)
+    ?.querySelector('button')
+    ?.focus();
+}
 
 export function OperationalDrawerDataTableTemplate({
   model,
@@ -17,11 +52,15 @@ export function OperationalDrawerDataTableTemplate({
   toolbarActions,
   footer,
 }: Readonly<{
-  model: ReturnType<typeof useOperationalDrawerDataTable>;
+  model: DataTable;
   copy: OperationalDrawerDataTableCopy;
   toolbarActions?: ReactNode;
   footer?: ReactNode;
 }>): JSX.Element {
+  const { selection } = model;
+  const copyLabel = selection.isRange ? copy.copyRange : copy.copy;
+  const VisibilityIcon = model.columnVisibility.some(({ visible }) => !visible) ? EyeOff : Eye;
+  const allColumnsHidden = model.columnVisibility.length > 0 && model.headers.length === 0;
   return (
     <section
       className={styles.grid}
@@ -29,6 +68,7 @@ export function OperationalDrawerDataTableTemplate({
       data-density={model.comfortable ? 'comfortable' : 'compact'}
       data-wrap={model.wrap}
       aria-label={model.caption}
+      style={{ '--grid-primary': model.backgroundColor } as CSSProperties}
     >
       <div className={styles.toolbar} data-slot="data-grid-toolbar">
         <label className={styles.search}>
@@ -48,6 +88,39 @@ export function OperationalDrawerDataTableTemplate({
         </span>
         <div className={styles.actions}>
           {toolbarActions}
+          {model.columnVisibility.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" title={copy.columns} aria-label={copy.columns}>
+                  <VisibilityIcon aria-hidden="true" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                aria-label={copy.columns}
+                className={styles.visibilityList}
+              >
+                {model.columnVisibility.map((column) => {
+                  const Icon = column.visible ? Eye : EyeOff;
+                  return (
+                    <Button
+                      key={column.id}
+                      variant="ghost"
+                      size="sm"
+                      className={styles.visibilityItem}
+                      aria-label={copy.showColumn.replace('{column}', () => column.id)}
+                      aria-pressed={column.visible}
+                      title={column.id}
+                      onClick={column.toggle}
+                    >
+                      <Icon aria-hidden="true" />
+                      <span>{column.id}</span>
+                    </Button>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          )}
           <button
             type="button"
             title={model.comfortable ? copy.compact : copy.comfortable}
@@ -68,17 +141,29 @@ export function OperationalDrawerDataTableTemplate({
           </button>
           <button
             type="button"
-            title={copy.copy}
-            aria-label={copy.copy}
-            disabled={!model.canCopy}
-            onClick={() => void model.copyCell()}
+            title={copyLabel}
+            aria-label={copyLabel}
+            disabled={!selection.canCopy}
+            onClick={() => void selection.copy()}
           >
             <Copy aria-hidden="true" />
           </button>
+          <Input
+            type="color"
+            className={styles.swatch}
+            aria-label={copy.backgroundColor}
+            title={copy.backgroundColor}
+            value={model.backgroundColor}
+            onChange={(event) => model.setBackgroundColor(event.currentTarget.value)}
+          />
         </div>
       </div>
       <div data-slot="bottom-operational-data-table-frame" className={styles.frame}>
-        <table data-slot="bottom-operational-data-table" className={styles.table}>
+        <table
+          data-slot="bottom-operational-data-table"
+          className={styles.table}
+          hidden={allColumnsHidden}
+        >
           <caption className={styles.srOnly}>{model.caption}</caption>
           <thead>
             <tr>
@@ -86,35 +171,11 @@ export function OperationalDrawerDataTableTemplate({
                 #
               </th>
               {model.headers.map((header) => (
-                <th
-                  key={header.id}
-                  scope="col"
-                  aria-sort={header.sort}
-                  data-drop-edge={header.movement.edge}
-                >
-                  <div className={styles.heading}>
-                    <button
-                      type="button"
-                      data-column-id={header.id}
-                      data-sort={header.sort}
-                      title={`${header.id} · ${copy.columnHint}`}
-                      aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
-                      {...header.movement.events}
-                      onClick={header.toggleSort}
-                    >
-                      {header.id}
-                    </button>
-                    {header.type == null ? null : (
-                      <span className={styles.type} title={header.type}>
-                        {header.type}
-                      </span>
-                    )}
-                  </div>
-                </th>
+                <OperationalDrawerDataColumnHeader key={header.id} header={header} copy={copy} />
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody onKeyDown={(event) => handleCellKey(event, selection)}>
             {model.rows.map((row) => (
               <tr key={row.id}>
                 <th scope="row" className={styles.rowNumber}>
@@ -126,7 +187,7 @@ export function OperationalDrawerDataTableTemplate({
                       type="button"
                       data-slot="bottom-operational-data-value"
                       className={styles.cell}
-                      onClick={cell.select}
+                      onClick={(event) => cell.select(event.ctrlKey || event.metaKey)}
                       aria-pressed={cell.selected}
                       aria-label={
                         cell.value === '' ? copy.emptyText : (cell.value ?? model.nullValueLabel)
@@ -145,12 +206,13 @@ export function OperationalDrawerDataTableTemplate({
             ))}
           </tbody>
         </table>
-        {model.rows.length === 0 && model.search !== '' ? (
+        {allColumnsHidden && <p className={styles.empty}>{copy.allColumnsHidden}</p>}
+        {!allColumnsHidden && model.rows.length === 0 && model.hasFilters ? (
           <p className={styles.empty}>{copy.noMatches}</p>
         ) : null}
       </div>
       <footer className={styles.footer}>
-        <span role="status">{model.feedback == null ? '' : copy[model.feedback]}</span>
+        <span role="status">{selection.feedback == null ? '' : copy[selection.feedback]}</span>
         <div className={styles.footerFacts}>
           {footer}
           <span className={styles.help} tabIndex={0} aria-label={copy.scope} title={copy.scope}>
