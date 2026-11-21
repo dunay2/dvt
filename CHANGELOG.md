@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.24.2 (2026-11-21)
+
+## What's Changed
+* fix(ci): Select the Web render proof for changed template recipes by @dunay2 in https://github.com/dunay2/dvt/pull/3986
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.24.1...v0.24.2
+
 ## 0.24.1 (2026-11-21)
 
 ## What's Changed
