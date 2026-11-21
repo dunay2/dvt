@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.24.3 (2026-11-21)
+
+## What's Changed
+* fix(web): Restore the Canvas side dock after a refused collapse by @dunay2 in https://github.com/dunay2/dvt/pull/3988
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.24.2...v0.24.3
+
 ## 0.24.2 (2026-11-21)
 
 ## What's Changed
