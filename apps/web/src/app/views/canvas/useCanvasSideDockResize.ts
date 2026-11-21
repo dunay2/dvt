@@ -29,7 +29,8 @@ export function useCanvasSideDockResize({
   const [groupWidth, setGroupWidth] = useState(0);
   const minSize =
     groupWidth > 0 ? Math.min(MINIMUM_WIDTH_PERCENT_CAP, (COMPACT_WIDTH_PX / groupWidth) * 100) : 0;
-  const preferredSize = pixels ? (groupWidth > 0 ? (width / groupWidth) * 100 : maxSize) : width;
+  const pixelSize = groupWidth > 0 ? (width / groupWidth) * 100 : maxSize;
+  const preferredSize = pixels ? pixelSize : width;
   const size = Math.min(maxSize, Math.max(minSize, preferredSize));
 
   useLayoutEffect(() => {
@@ -48,14 +49,9 @@ export function useCanvasSideDockResize({
 
   useLayoutEffect(() => {
     const panel = panelRef.current;
-    if (
-      expanded &&
-      input.current == null &&
-      !pendingClose.current &&
-      panel != null &&
-      Math.abs(panel.getSize() - size) > 0.01
-    )
-      panel.resize(size);
+    if (!expanded || pendingClose.current) return;
+    if (input.current != null || panel == null) return;
+    if (Math.abs(panel.getSize() - size) > 0.01) panel.resize(size);
   }, [expanded, size]);
 
   const onDragging = useCallback((dragging: boolean): void => {
@@ -65,34 +61,50 @@ export function useCanvasSideDockResize({
     if (input.current === 'keyboard') input.current = undefined;
   };
 
+  function canCommitGesture(): boolean {
+    return expanded && input.current != null && !pendingClose.current;
+  }
+
+  function commitResize(nextSize: number, previousSize: number | undefined): void {
+    if (!canCommitGesture()) return;
+    if (previousSize === undefined || nextSize <= 0) return;
+    if (!pixels) {
+      onWidthChange(nextSize);
+      return;
+    }
+    if (groupWidth > 0) onWidthChange((nextSize / 100) * groupWidth);
+  }
+
+  async function settleCollapse(panel: ImperativePanelHandle | null): Promise<void> {
+    let accepted: void | boolean;
+    try {
+      accepted = await onCollapse();
+    } catch {
+      accepted = false;
+    }
+    try {
+      if (accepted !== false || panel == null) return;
+      if (panelRef.current === panel) panel.resize(size);
+    } finally {
+      pendingClose.current = false;
+    }
+  }
+
+  function commitCollapse(): void {
+    if (!canCommitGesture()) return;
+    input.current = undefined;
+    pendingClose.current = true;
+    void settleCollapse(panelRef.current);
+  }
+
   return {
     groupId,
     panelRef,
     size,
     minSize,
     maxSize,
-    onResize: (nextSize: number, previousSize: number | undefined): void => {
-      if (
-        !expanded ||
-        input.current == null ||
-        pendingClose.current ||
-        previousSize === undefined ||
-        nextSize <= 0
-      )
-        return;
-      if (!pixels || groupWidth > 0)
-        onWidthChange(pixels ? (nextSize / 100) * groupWidth : nextSize);
-    },
-    onCollapse: (): void => {
-      if (!expanded || input.current == null || pendingClose.current) return;
-      input.current = undefined;
-      pendingClose.current = true;
-      const panel = panelRef.current;
-      void Promise.resolve(onCollapse()).then((accepted) => {
-        if (accepted === false && panel != null && panelRef.current === panel) panel.resize(size);
-        pendingClose.current = false;
-      });
-    },
+    onResize: commitResize,
+    onCollapse: commitCollapse,
     handle: {
       className:
         'w-[2px] bg-(--border-subtle) hover:bg-(--focus-ring) data-[resize-handle-state=drag]:bg-(--focus-ring)',
