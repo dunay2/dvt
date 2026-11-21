@@ -10,6 +10,42 @@ import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
 import { suiteMatchesFile } from './vitestSuites.architecture.support';
 
 describe('web Vitest changed-file routing', () => {
+  describe('Git template recipes', () => {
+    const library = 'src/app/views/templates/library';
+    const renderTest = 'src/app/views/templates/templatesViewModel.test.ts';
+
+    it.each(['sql', 'yaml', 'yml', 'SQL'])(
+      'selects the renderer for a removed or added .%s file',
+      (ext) => {
+        expect(resolveWebVitestChangedSuitePlan([`apps/web/${library}/example.${ext}`])).toEqual(
+          resolveWebVitestChangedSuitePlan([renderTest])
+        );
+      }
+    );
+
+    it('keeps the renderer once across a rename and an independent browser change', () => {
+      const browser = 'apps/web/cypress/e2e/templates/templates-workbench.cy.ts';
+      const oldPath = `${library}/retired.sql`.replaceAll('/', '\\');
+      const outside = 'src/app/views/templates/personal/moved.sql';
+      const expected = resolveWebVitestChangedSuitePlan([renderTest, browser]);
+      expect(resolveWebVitestChangedSuitePlan([oldPath, outside, browser])).toEqual(expected);
+      expect(
+        resolveWebVitestChangedSuitePlan([browser, `${library}/renamed.sql`, oldPath])
+      ).toEqual(expected);
+    });
+
+    it.each([
+      'library/nested/other.sql',
+      'library/sample.sqlite',
+      'library-copy/other.yml',
+      'Library/other.sql',
+    ])('leaves neighboring asset %s outside the recipe rule', (neighbor) => {
+      expect(resolveWebVitestChangedSuitePlan([`src/app/views/templates/${neighbor}`])).toEqual(
+        resolveWebVitestChangedSuitePlan([])
+      );
+    });
+  });
+
   it.each([
     'apps/web/src/app/views/canvas/CanvasShell.tsx',
     'apps/web/src/app/views/Canvas.tsx',
