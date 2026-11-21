@@ -118,7 +118,7 @@ export function AppShellFrame({
                     <>
                       <ResizableHandle
                         id="app-shell-bottom-drawer-resize-handle"
-                        withHandle
+                        className={styles.drawerSeparator}
                         onDragging={drawerResize.onDragging}
                         onKeyDownCapture={drawerResize.onKeyDownCapture}
                         onKeyUpCapture={drawerResize.onKeyUpCapture}

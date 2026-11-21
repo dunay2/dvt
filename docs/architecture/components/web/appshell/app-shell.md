@@ -434,6 +434,9 @@ The Frame resize adapter measures the actual vertical panel group, rather than
 the browser viewport. Pointer dragging and keyboard resize events are the only
 geometry observations that publish a preference. Mount, restoration,
 programmatic resize, container measurement and matching echoes do not write it.
+The operational drawer separator is a continuous stroke across the panel group.
+Hover and active dragging color the full stroke with the shared focus token
+while keeping its height fixed. Keyboard focus uses the shared separator ring.
 The adapter uses the existing imperative Panel handle for a changed height
 request; it does not key the panel by height or own another saved size/visibility
 state. Input, focus and drawer DOM survive resize and unrelated shell renders.
