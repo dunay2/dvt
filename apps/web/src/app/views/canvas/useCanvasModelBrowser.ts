@@ -31,6 +31,17 @@ import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplor
 import { readCanvasModelNavigationPreference } from './canvasModelNavigationPreference';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
+function readCanvasModelTab(canvasId: string | null) {
+  const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
+  return tab?.canvasId === canvasId ? tab : null;
+}
+
+function requestedModelId(request: CanvasInspectorRequest, modelIds: ReadonlySet<string>) {
+  if (typeof request !== 'string' && request.kind !== 'canonical-node') return null;
+  const nodeId = typeof request === 'string' ? request : request.nodeId;
+  return modelIds.has(nodeId) ? nodeId : null;
+}
+
 export function useCanvasModelBrowser({
   canvasId,
   nodes,
@@ -89,19 +100,11 @@ export function useCanvasModelBrowser({
       requestedView?: CanvasModelView
     ) => {
       if (currentOwner.current !== owner) return false;
-      const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
-      const view =
-        requestedView ??
-        (mode != null && model.active && tab?.canvasId === canvasId
-          ? (tab.views?.active ?? mode)
-          : mode);
-      const nodeId =
-        typeof request === 'string'
-          ? request
-          : request.kind === 'canonical-node'
-            ? request.nodeId
-            : null;
-      if (view != null && nodeId != null && model.modelIds.has(nodeId)) {
+      const tab = model.active ? readCanvasModelTab(canvasId) : null;
+      const editorView = tab?.active ? tab.views?.active : undefined;
+      const view = requestedView ?? editorView ?? mode;
+      const nodeId = requestedModelId(request, model.modelIds);
+      if (view != null && nodeId != null) {
         showCanvas();
         const target = resolveCanvasModelNavigationTarget(nodeId, nodes, model.selected?.id);
         if (target.kind === 'contexts')
@@ -134,9 +137,9 @@ export function useCanvasModelBrowser({
   );
   const onBrowse = useCallback(
     (view: CanvasModelView) => {
-      if (canvasId == null || catalogueUnavailable || currentOwner.current !== owner) return;
-      const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
-      const currentTab = tab?.canvasId === canvasId ? tab : null;
+      if (currentOwner.current !== owner) return;
+      if (canvasId == null || catalogueUnavailable) return;
+      const currentTab = readCanvasModelTab(canvasId);
       if (currentTab?.views?.disabled) return;
 
       setChoice({ owner, mode: view });
@@ -185,19 +188,13 @@ export function useCanvasModelBrowser({
     store.registerModelBrowser(browser);
     return () => store.clearModelBrowser(browser);
   }, [canvasId, catalogueUnavailable, mode, onBrowse, onCanvas]);
-  const contexts =
-    pendingContext?.owner === owner
-      ? pendingContext.contexts.filter((item) => model.modelIds.has(item.nodeId))
-      : [];
+  const picker = pendingContext?.owner === owner ? pendingContext : null;
+  const contexts = picker?.contexts.filter((item) => model.modelIds.has(item.nodeId)) ?? [];
   const selectContext = (nodeId: string): void => {
-    if (
-      currentOwner.current !== owner ||
-      pendingContext?.owner !== owner ||
-      !contexts.some((item) => item.nodeId === nodeId)
-    )
-      return;
+    if (picker == null || currentOwner.current !== picker.owner) return;
+    if (!contexts.some((item) => item.nodeId === nodeId)) return;
     setPendingContext(null);
-    model.open(nodeId, pendingContext.view);
+    model.open(nodeId, picker.view);
   };
   return {
     scopeKey: model.scopeKey,
