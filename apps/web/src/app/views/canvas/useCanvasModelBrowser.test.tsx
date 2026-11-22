@@ -263,6 +263,28 @@ it('opens the next Model in the actual active view after its toolbar changes SQL
   expect(model.initialView).toBe('semantic');
 });
 
+it('keeps a directly opened SQL editor in SQL on the next Explorer selection', async () => {
+  render();
+  act(() => model.open(first.id, 'sql'));
+  registerTab({ onClose: (next) => next?.(), views: { ...tabViews, active: 'sql' } });
+  await act(() => browser.onSelect(second.id));
+  expect(model.selected?.id).toBe(second.id);
+  expect(model.initialView).toBe('sql');
+  expect(inspect).not.toHaveBeenCalled();
+});
+
+it.each([{ active: false }, { canvasId: 'other' }])(
+  'keeps the requested SQL mode when a semantic tab is outside the foreground (%o)',
+  async (tab) => {
+    render();
+    browse('sql');
+    registerTab({ onClose: (next) => next?.(), views: tabViews, ...tab });
+    await act(() => browser.onSelect({ kind: 'canonical-node', nodeId: second.id }));
+    expect(model.selected?.id).toBe(second.id);
+    expect(model.initialView).toBe('sql');
+  }
+);
+
 it('rejects obsolete browsing and delayed replacement after a Canvas change', () => {
   render();
   const obsolete = store.getState().modelBrowser!;
@@ -303,6 +325,8 @@ it('opens the existing occurrence or waits for an explicit context choice withou
   await act(() => browser.onSelect(first.id));
   expect(model.selected).toBeNull();
   expect(browser.contexts.map((item) => item.nodeId)).toEqual([instance.id, other.id]);
+  act(() => browser.selectContext(first.id));
+  expect(model.selected).toBeNull();
   act(() => browser.cancelContext());
   expect(model.selected).toBeNull();
   await act(() => browser.onSelect(first.id));

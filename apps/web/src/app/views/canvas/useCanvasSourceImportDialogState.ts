@@ -1,5 +1,6 @@
 /** Owned concern: manage contextual Add Source dialog state for the Canvas shell. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DEFAULT_SOURCE_IMPORT_ENTRY } from '../../components/sourceImportWizard/constants';
 
 import type {
   CanvasShellOpenDataRegistryCommand,
@@ -63,7 +64,7 @@ export function useCanvasSourceImportDialogState(
       return undefined;
     }
 
-    return (next = { intent: 'import-sources' }) => {
+    return (next = DEFAULT_SOURCE_IMPORT_ENTRY) => {
       if (currentOwner.current !== owner) return;
       const nextRequest: CanvasShellDataRegistryRequest =
         next.intent === 'manage-connections' ? { intent: 'manage-connections' } : { ...next };
