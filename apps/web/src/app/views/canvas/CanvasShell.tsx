@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
+import { DEFAULT_SOURCE_IMPORT_ENTRY } from '../../components/sourceImportWizard/constants';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -235,7 +236,7 @@ export default function CanvasShell({
     const open = sourceImportDialog.openCommand;
     return open == null
       ? undefined
-      : (request = { intent: 'import-sources' }) =>
+      : (request = DEFAULT_SOURCE_IMPORT_ENTRY) =>
           open(
             request.intent === 'manage-connections'
               ? request
