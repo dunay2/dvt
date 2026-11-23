@@ -32,6 +32,7 @@ type WorkspaceFileHistoryRouteDeps = WorkspaceFilesAuthorizationDeps &
 
 type HistoryPath = Readonly<{ path: string }>;
 type HistoryQuery = WorkspaceFilesQuery & Readonly<{ before?: string }>;
+const INVALID_HISTORY_PATH_PARTS = new Set(['', '.', '..']);
 
 export function registerWorkspaceFileHistoryRoutes(
   app: FastifyInstance,
@@ -73,6 +74,14 @@ export function registerWorkspaceFileHistoryRoutes(
       }
     }
   );
+  registerWorkspaceFileVersionCommand(app, deps);
+}
+
+function registerWorkspaceFileVersionCommand(
+  app: FastifyInstance,
+  deps: WorkspaceFileHistoryRouteDeps
+): void {
+  const routeOptions = { config: { rateLimit: deps.rateLimit } };
   app.post<{
     Params: HistoryPath;
     Querystring: WorkspaceFilesQuery;
@@ -113,10 +122,7 @@ export function registerWorkspaceFileHistoryRoutes(
 }
 
 function parseHistoryPath(path: string): string {
-  if (
-    path === '' ||
-    path.split(/[\\/]/).some((part) => part === '' || part === '.' || part === '..')
-  ) {
+  if (path.split(/[\\/]/).some((part) => INVALID_HISTORY_PATH_PARTS.has(part))) {
     throw new InvalidWorkspacePathError(path);
   }
   return path;

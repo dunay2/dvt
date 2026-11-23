@@ -178,18 +178,7 @@ export function buildProtectedDvtPreviewProjection(args: {
       workspaceNodeIds.has(edge.targetId) &&
       isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
   );
-  const candidates =
-    args.selectionIntent.mode === 'explicit'
-      ? args.selectionIntent.nodeIds.length === 1
-        ? [nodesById.get(args.selectionIntent.nodeIds[0] ?? '')].filter(
-            (node): node is CanonicalNode => node !== undefined
-          )
-        : []
-      : nodes.filter(
-          (node) =>
-            (node.kind === 'dvt:transform' && node.role === 'transform') ||
-            (node.kind === 'dvt:sink' && node.role === 'output')
-        );
+  const candidates = selectTerminalProjectionCandidates(args.selectionIntent, nodes, nodesById);
   const closures = candidates
     .map((candidate) => {
       try {
@@ -200,20 +189,8 @@ export function buildProtectedDvtPreviewProjection(args: {
     })
     .filter((closure): closure is TerminalProjectionClosure => closure !== null);
 
-  if (closures.length !== 1) {
-    return {
-      ok: false,
-      cause: 'protected_path_required',
-    };
-  }
-
-  const closure = closures[0];
-  if (closure === undefined) {
-    return {
-      ok: false,
-      cause: 'protected_path_required',
-    };
-  }
+  const closure = closures.length === 1 ? closures[0] : undefined;
+  if (closure === undefined) return { ok: false, cause: 'protected_path_required' };
   const selection = parseExecutionSelection({
     mode: 'upstream',
     nodeIds: [closure.root.id],
@@ -232,4 +209,21 @@ export function buildProtectedDvtPreviewProjection(args: {
     scopedNodeIds: [...dependencies, closure.root.id].sort(),
     draftSignature: buildDraftSignature(args.canvasId, closure, selection),
   };
+}
+
+function selectTerminalProjectionCandidates(
+  intent: CanvasExecutionSelectionIntent,
+  nodes: readonly CanonicalNode[],
+  nodesById: ReadonlyMap<string, CanonicalNode>
+): readonly CanonicalNode[] {
+  if (intent.mode === 'explicit') {
+    if (intent.nodeIds.length !== 1) return [];
+    const candidate = nodesById.get(intent.nodeIds[0] ?? '');
+    return candidate === undefined ? [] : [candidate];
+  }
+  return nodes.filter(
+    (node) =>
+      (node.kind === 'dvt:transform' && node.role === 'transform') ||
+      (node.kind === 'dvt:sink' && node.role === 'output')
+  );
 }

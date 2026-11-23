@@ -23,7 +23,10 @@ function readRepoDoc(relativePathFromRepo: string): string {
 function collectProductionSourceFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
     const fullPath = path.join(root, entry.name);
-    if (entry.isDirectory() || (entry.isSymbolicLink() && statSync(fullPath).isDirectory())) {
+    const directory = entry.isSymbolicLink()
+      ? statSync(fullPath).isDirectory()
+      : entry.isDirectory();
+    if (directory) {
       return collectProductionSourceFiles(fullPath);
     }
 

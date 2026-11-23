@@ -33,7 +33,7 @@ import type {
 import { cancellationReceiptCanAffectAvailability } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
-import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
+import { deriveRunReadEvidenceModel, type RunReadEvidenceModel } from './runReadEvidenceModel.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 import { resolveRunRecoveryPlanEvidence } from './runRecoveryPlanAvailability.js';
 import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
@@ -181,20 +181,20 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       enriched: input.enriched,
       snapshotStaleness: snapshotStaleness.value,
       ...(input.providerView === undefined ? {} : { providerView: input.providerView }),
-      ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
-      ...(evidenceModel.provenance === undefined ? {} : { provenance: evidenceModel.provenance }),
-      ...(evidenceModel.modelSelection === undefined
+      ...this.projectReadEvidence(evidenceModel),
+    };
+  }
+
+  private projectReadEvidence(evidence: RunReadEvidenceModel) {
+    return {
+      ...(evidence.executor === undefined ? {} : { executor: evidence.executor }),
+      ...(evidence.provenance === undefined ? {} : { provenance: evidence.provenance }),
+      ...(evidence.modelSelection === undefined ? {} : { modelSelection: evidence.modelSelection }),
+      ...(evidence.materialization === undefined
         ? {}
-        : { modelSelection: evidenceModel.modelSelection }),
-      ...(evidenceModel.materialization === undefined
-        ? {}
-        : { materialization: evidenceModel.materialization }),
-      ...(evidenceModel.publication === undefined
-        ? {}
-        : { publication: evidenceModel.publication }),
-      ...(evidenceModel.diagnostics === undefined
-        ? {}
-        : { diagnostics: evidenceModel.diagnostics }),
+        : { materialization: evidence.materialization }),
+      ...(evidence.publication === undefined ? {} : { publication: evidence.publication }),
+      ...(evidence.diagnostics === undefined ? {} : { diagnostics: evidence.diagnostics }),
     };
   }
 

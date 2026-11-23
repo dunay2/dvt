@@ -8,6 +8,7 @@ import {
   KNOWN_STEP_KINDS,
   PlanPreviewProvenanceSchema,
   type ExecutionPlan,
+  type DbtProjectFilesProvenance,
   type PlanOwnership,
 } from '@dvt/contracts';
 
@@ -31,39 +32,51 @@ export function projectRunModelSelection(
   );
   if (!parsed.success || parsed.data.kind === 'transformation-git-artifacts') return undefined;
   const provenance = parsed.data;
-  const base = {
-    schemaVersion: 'canvas-authoring-authority-binding.v1',
-    canvasId: provenance.canvasId,
-  } as const;
   if (provenance.kind === 'dbt-project-files') {
-    const selected = new Set(provenance.selectedUniqueIds);
-    const modelIds = plan.steps
-      .filter((step) => step.kind === KNOWN_STEP_KINDS.DBT_MODEL && selected.has(step.stepId))
-      .map((step) => step.stepId);
-    return modelIds.length
-      ? {
-          binding: {
-            ...base,
-            authority: { kind: 'dbt-project-files', projectRoot: provenance.projectRoot },
-          },
-          modelIds,
-        }
-      : undefined;
+    return projectDbtRunModels(plan, provenance);
   }
+  return projectDraftRunModels(plan, scope, provenance.canvasId);
+}
+
+function projectDbtRunModels(
+  plan: ExecutionPlan,
+  provenance: DbtProjectFilesProvenance
+): RunModelSelection | undefined {
+  const selected = new Set(provenance.selectedUniqueIds);
+  const modelIds = plan.steps
+    .filter((step) => step.kind === KNOWN_STEP_KINDS.DBT_MODEL && selected.has(step.stepId))
+    .map((step) => step.stepId);
+  if (modelIds.length === 0) return undefined;
+  return {
+    binding: {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: provenance.canvasId,
+      authority: { kind: 'dbt-project-files', projectRoot: provenance.projectRoot },
+    },
+    modelIds,
+  };
+}
+
+function projectDraftRunModels(
+  plan: ExecutionPlan,
+  scope: PlanOwnership,
+  canvasId: string
+): RunModelSelection | undefined {
   const steps = plan.steps.filter(
     (step) => step.kind === KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD
   );
   if (steps.length !== 1) return undefined;
   const workload = DvtOperationalRunWorkloadV1Schema.safeParse(steps[0]?.stepTypeConfig);
-  if (
-    !workload.success ||
-    !sameScope(scope, workload.data.scope) ||
-    workload.data.graph.canvasId !== provenance.canvasId ||
-    workload.data.output.nodeId !== steps[0]?.stepId
-  )
-    return undefined;
+  if (!workload.success) return undefined;
+  if (!sameScope(scope, workload.data.scope)) return undefined;
+  if (workload.data.graph.canvasId !== canvasId) return undefined;
+  if (workload.data.output.nodeId !== steps[0]?.stepId) return undefined;
   return {
-    binding: { ...base, authority: { kind: 'graph-draft' } },
+    binding: {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId,
+      authority: { kind: 'graph-draft' },
+    },
     modelIds: [workload.data.output.nodeId],
   };
 }

@@ -44,9 +44,7 @@ export class LocalWorkspaceFileHistoryRepository
     const { git, ref, workspacePath } = this.address(scope, requestPath);
     const tip = (await git.exists()) ? await git.readRef(ref) : null;
     if (!tip) return [];
-    if (before !== undefined && (!COMMIT_ID.test(before) || !(await git.contains(tip, before)))) {
-      throw new InvalidWorkspacePathError(requestPath);
-    }
+    await this.validateHistoryCursor({ git, tip, before, requestPath });
     const stdout = await git.run([
       'log',
       `--max-count=${this.options.maxEntries ?? 20}`,
@@ -95,35 +93,45 @@ export class LocalWorkspaceFileHistoryRepository
     }
     return sharedLocalWorkspaceFileMutationCoordinator.runExclusive(
       resolveWorkspaceScopeMutationLockKey(this.options.root, scope),
-      async () => {
-        const file = await this.files.getFileContent(scope, input.path);
-        if (file.contentSha256 !== input.expectedContentSha256) return { kind: 'conflict' };
-
-        await git.initialize();
-        const tip = await git.readRef(ref);
-        const blob = (await git.run(['hash-object', '-w', '--stdin'], file.content)).trim();
-        if (tip && (await git.readRef(`${tip}:content`)) === blob) {
-          return { kind: 'committed', commitSha: tip };
-        }
-
-        const tree = (await git.run(['mktree'], `100644 blob ${blob}\tcontent\n`)).trim();
-        const subject = `Save ${path.posix.basename(workspacePath)}`;
-        const commitSha = (
-          await git.run(
-            ['commit-tree', tree, ...(tip ? ['-p', tip] : []), '-m', subject],
-            undefined,
-            input.author
-          )
-        ).trim();
-        try {
-          await git.run(['update-ref', ref, commitSha, tip ?? '0'.repeat(commitSha.length)]);
-        } catch (error) {
-          if ((await git.readRef(ref)) !== tip) return { kind: 'conflict' };
-          throw error;
-        }
-        return { kind: 'committed', commitSha };
-      }
+      () => this.commitLockedFileVersion(scope, input, { git, ref, workspacePath })
     );
+  }
+
+  private async commitLockedFileVersion(
+    scope: WorkspaceStorageScope,
+    input: CommitWorkspaceFileVersionInput,
+    {
+      git,
+      ref,
+      workspacePath,
+    }: { git: LocalWorkspaceFileVersionGit; ref: string; workspacePath: string }
+  ): Promise<WorkspaceFileVersionCommitResult> {
+    const file = await this.files.getFileContent(scope, input.path);
+    if (file.contentSha256 !== input.expectedContentSha256) return { kind: 'conflict' };
+
+    await git.initialize();
+    const tip = await git.readRef(ref);
+    const blob = (await git.run(['hash-object', '-w', '--stdin'], file.content)).trim();
+    if (tip && (await git.readRef(`${tip}:content`)) === blob) {
+      return { kind: 'committed', commitSha: tip };
+    }
+
+    const tree = (await git.run(['mktree'], `100644 blob ${blob}\tcontent\n`)).trim();
+    const subject = `Save ${path.posix.basename(workspacePath)}`;
+    const commitSha = (
+      await git.run(
+        ['commit-tree', tree, ...(tip ? ['-p', tip] : []), '-m', subject],
+        undefined,
+        input.author
+      )
+    ).trim();
+    try {
+      await git.run(['update-ref', ref, commitSha, tip ?? '0'.repeat(commitSha.length)]);
+    } catch (error) {
+      if ((await git.readRef(ref)) !== tip) return { kind: 'conflict' };
+      throw error;
+    }
+    return { kind: 'committed', commitSha };
   }
 
   private address(scope: WorkspaceStorageScope, requestPath: string) {
@@ -137,5 +145,21 @@ export class LocalWorkspaceFileHistoryRepository
     );
     const pathDigest = createHash('sha256').update(workspacePath, 'utf8').digest('hex');
     return { git, ref: `refs/heads/files/${pathDigest}`, workspacePath };
+  }
+
+  private async validateHistoryCursor({
+    git,
+    tip,
+    before,
+    requestPath,
+  }: {
+    git: LocalWorkspaceFileVersionGit;
+    tip: string;
+    before: string | undefined;
+    requestPath: string;
+  }): Promise<void> {
+    if (before === undefined) return;
+    if (!COMMIT_ID.test(before)) throw new InvalidWorkspacePathError(requestPath);
+    if (!(await git.contains(tip, before))) throw new InvalidWorkspacePathError(requestPath);
   }
 }

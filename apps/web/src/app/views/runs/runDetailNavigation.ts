@@ -24,9 +24,16 @@ export function canInspectRunResult(status: UiRunStatus): boolean {
 }
 
 function resolveTab(value: string | null, canInspectResult: boolean): RunDetailTab {
-  if (value === 'models' || value === 'provenance' || value === 'diagnostics') return value;
-  if (value === 'result' && canInspectResult) return value;
-  return 'summary';
+  switch (value) {
+    case 'models':
+    case 'provenance':
+    case 'diagnostics':
+      return value;
+    case 'result':
+      return canInspectResult ? 'result' : 'summary';
+    default:
+      return 'summary';
+  }
 }
 
 export function useRunDetailTabPosition(status: UiRunStatus) {

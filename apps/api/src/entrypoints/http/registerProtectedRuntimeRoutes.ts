@@ -44,7 +44,7 @@ export async function registerProtectedRuntimeRoutes(
   app: FastifyInstance,
   options: RegisterProtectedRuntimeRoutesOptions
 ): Promise<void> {
-  const { env, observability, protectedModule } = options;
+  const { env, protectedModule } = options;
   const dependencies = buildProtectedRuntimeRouteDependencies(options);
   const protectedRateLimit = {
     max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
@@ -70,6 +70,60 @@ export async function registerProtectedRuntimeRoutes(
       })
   );
   registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
+  registerProtectedCanvasRoutes(app, options, dependencies, protectedRateLimit);
+  const dbtRouteGroups = [
+    registerProtectedDbtProjectGraphRouteGroup,
+    registerProtectedDbtSelectedModelAnalysisRouteGroup,
+    registerProtectedDbtDependencyEditRouteGroup,
+    registerProtectedDbtProjectImportRouteGroup,
+    registerProtectedDbtYamlDescriptionEditRouteGroup,
+    registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup,
+    registerProtectedGraphDbtModelCompilationRouteGroup,
+  ];
+  for (const registerGroup of dbtRouteGroups) {
+    registerGroup(app, { env, runtimeAuth: dependencies.runtimeAuth, protectedModule });
+  }
+  registerProtectedWorkspaceDiffChangesRouteGroup(app, {
+    env,
+    runtimeAuth: dependencies.runtimeAuth,
+  });
+  registerProtectedWarehouseSourceImportRouteGroup(app, {
+    env,
+    protectedModule,
+    runtimeAuth: dependencies.runtimeAuth,
+    connectionProbe: dependencies.warehouseConnectionProbe,
+    previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
+    validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
+  });
+  const fileHistory = new LocalWorkspaceFileHistoryRepository({
+    root: protectedModule.workspaceFilesRoot,
+  });
+  registerWorkspaceFileHistoryRoutes(app, {
+    ...dependencies.runtimeAuth,
+    listUseCase: new ListWorkspaceFileHistoryUseCase(fileHistory),
+    versionQuery: fileHistory,
+    versionCommand: fileHistory,
+    rateLimit: protectedRateLimit,
+  });
+  registerProtectedWorkspaceFilesRouteGroup(app, {
+    env,
+    runtimeAuth: dependencies.runtimeAuth,
+    workspaceFilesRoot: protectedModule.workspaceFilesRoot,
+    dbtProjectRootRelocation: protectedModule.dbtProjectRootRelocation,
+    canvasAuthoringAuthorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
+  });
+  registerProtectedRunRoutes(app, env, protectedModule, dependencies);
+  registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
+
+  app.log.info('protected runtime routes registered');
+}
+
+function registerProtectedCanvasRoutes(
+  app: FastifyInstance,
+  { observability, protectedModule }: RegisterProtectedRuntimeRoutesOptions,
+  dependencies: ReturnType<typeof buildProtectedRuntimeRouteDependencies>,
+  protectedRateLimit: { max: number; timeWindow: number }
+): void {
   registerWorkspaceGraphDraftRoutes(app, {
     authenticator: dependencies.runtimeAuth.authenticator,
     capabilityService: protectedModule.workspaceGraphDraftCapabilityService,
@@ -96,75 +150,4 @@ export async function registerProtectedRuntimeRoutes(
     rows: dependencies.previewCanvasTransformRowsUseCase,
     rateLimit: protectedRateLimit,
   });
-  registerProtectedDbtProjectGraphRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedDbtSelectedModelAnalysisRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedDbtDependencyEditRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedDbtProjectImportRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedDbtYamlDescriptionEditRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedGraphDbtModelCompilationRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    protectedModule,
-  });
-  registerProtectedWorkspaceDiffChangesRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-  });
-  registerProtectedWarehouseSourceImportRouteGroup(app, {
-    env,
-    protectedModule,
-    runtimeAuth: dependencies.runtimeAuth,
-    connectionProbe: dependencies.warehouseConnectionProbe,
-    previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
-    validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
-  });
-  const fileHistory = new LocalWorkspaceFileHistoryRepository({
-    root: protectedModule.workspaceFilesRoot,
-  });
-  registerWorkspaceFileHistoryRoutes(app, {
-    ...dependencies.runtimeAuth,
-    listUseCase: new ListWorkspaceFileHistoryUseCase(fileHistory),
-    versionQuery: fileHistory,
-    versionCommand: fileHistory,
-    rateLimit: {
-      max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
-      timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
-    },
-  });
-  registerProtectedWorkspaceFilesRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-    workspaceFilesRoot: protectedModule.workspaceFilesRoot,
-    dbtProjectRootRelocation: protectedModule.dbtProjectRootRelocation,
-    canvasAuthoringAuthorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
-  });
-  registerProtectedRunRoutes(app, env, protectedModule, dependencies);
-  registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
-
-  app.log.info('protected runtime routes registered');
 }

@@ -34,22 +34,22 @@ export function LeftNavigationRail({
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
   const codeTab = contribution?.codeTab;
   const registeredModelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
-  const modelTab =
-    contribution?.activeCanvas?.id === registeredModelTab?.canvasId ? registeredModelTab : null;
+  const activeCanvasId = contribution?.activeCanvas?.id;
+  const modelTab = activeCanvasId === registeredModelTab?.canvasId ? registeredModelTab : null;
   const registeredBrowser = useCanvasWorkspaceMenuContributionStore((state) => state.modelBrowser);
-  const modelBrowser =
-    contribution?.activeCanvas?.id === registeredBrowser?.canvasId ? registeredBrowser : null;
+  const modelBrowser = activeCanvasId === registeredBrowser?.canvasId ? registeredBrowser : null;
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
   const adminItem = items.find((item) => item.to === '/admin');
   const costItem = items.find((item) => item.to === '/cost');
   const routeActiveOverride = operationalView == null ? undefined : false;
-  const canvasActive =
-    operationalView == null &&
-    onCanvasRoute &&
-    codeTab?.active !== true &&
-    modelTab?.active !== true &&
-    modelBrowser?.mode == null;
+  const canvasActive = isCanvasRailForeground({
+    operationalView,
+    onCanvasRoute,
+    codeTab,
+    modelTab,
+    modelBrowser,
+  });
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
     const Icon = item.icon;
     const isCanvas = item.to === '/canvas';
@@ -147,3 +147,27 @@ export function LeftNavigationRail({
 }
 
 export default LeftNavigationRail;
+
+function isCanvasRailForeground({
+  operationalView,
+  onCanvasRoute,
+  codeTab,
+  modelTab,
+  modelBrowser,
+}: {
+  operationalView: ShellOperationalView | null | undefined;
+  onCanvasRoute: boolean;
+  codeTab: NonNullable<
+    ReturnType<typeof useCanvasWorkspaceMenuContributionStore.getState>['contribution']
+  >['codeTab'];
+  modelTab: ReturnType<typeof useCanvasWorkspaceMenuContributionStore.getState>['modelTab'];
+  modelBrowser: ReturnType<typeof useCanvasWorkspaceMenuContributionStore.getState>['modelBrowser'];
+}): boolean {
+  return (
+    operationalView == null &&
+    onCanvasRoute &&
+    codeTab?.active !== true &&
+    modelTab?.active !== true &&
+    modelBrowser?.mode == null
+  );
+}

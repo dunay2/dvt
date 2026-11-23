@@ -116,7 +116,9 @@ function CanvasNameForm({
       className={styles.actionRow}
       onSubmit={(event) => {
         event.preventDefault();
-        if (!parsed.success || !onAdd || busy) return;
+        if (!parsed.success) return;
+        if (!onAdd) return;
+        if (busy) return;
         setBusy(true);
         void onAdd(parsed.data).finally(() => {
           setBusy(false);

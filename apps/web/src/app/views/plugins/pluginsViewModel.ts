@@ -96,18 +96,25 @@ function backendDiagnostic(
   if (backendState === 'not-bound') return copy.unboundDetail;
   if (backendId == null) return undefined;
   if (backendState === 'unknown') return copy.backendUnknownDetail(backendId);
+  const reason = capabilities?.plugins[backendId]?.reason;
   if (backendState === 'unavailable') {
-    return capabilities?.plugins[backendId]?.reason ?? copy.backendUnavailableDetail(backendId);
+    return reason ?? copy.backendUnavailableDetail(backendId);
   }
-  if (backendState === 'available') return capabilities?.plugins[backendId]?.reason;
+  if (backendState === 'available') return reason;
   return undefined;
 }
 
 export function resolvePluginReadiness(
   entry: PluginCatalogReconciliation,
-  capabilities: BackendSnapshot,
-  loading: boolean,
-  error: unknown,
+  {
+    capabilities,
+    loading,
+    error,
+  }: Readonly<{
+    capabilities: BackendSnapshot;
+    loading: boolean;
+    error: unknown;
+  }>,
   copy: PluginsViewCopy
 ) {
   const backendState = resolveBackendState(entry, capabilities, loading, error);

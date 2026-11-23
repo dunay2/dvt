@@ -8,13 +8,11 @@ import { buildDbtProjectFileCanvasPath } from '../canvas/canvasRouteAuthority';
 
 export function projectRunModelLinks(snapshot: RunSnapshot, scope: CanvasInspectorWorkspaceScope) {
   const { tenantId, projectId, environment, modelSelection } = snapshot;
-  if (
-    !tenantId ||
-    !projectId ||
-    !environment ||
-    !modelSelection ||
-    !isCanvasInspectorScopeCurrent({ tenantId, projectId, environmentId: environment }, scope)
-  )
+  if (!tenantId) return [];
+  if (!projectId) return [];
+  if (!environment) return [];
+  if (!modelSelection) return [];
+  if (!isCanvasInspectorScopeCurrent({ tenantId, projectId, environmentId: environment }, scope))
     return [];
   const { binding, modelIds } = modelSelection;
   const base =

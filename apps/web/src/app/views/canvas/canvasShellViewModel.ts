@@ -110,11 +110,17 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     canvasSnapToGrid: store.canvasSnapToGrid,
     viewport: store.persistedViewport,
     frozenNodeIds: store.frozenNodeIds,
-    canEditInspectorNode:
-      runtimePolicy.commands.canEditInspectorNode &&
-      inspectorNode != null &&
-      (inspectorNode.role === 'input' || visibleScope.visibleNodeIds.includes(inspectorNode.id)),
+    canEditInspectorNode: canEditPresentedInspectorNode(args),
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
     applyNodeDraft: args.inspectorCommands.applyNodeDraft,
   };
+}
+
+function canEditPresentedInspectorNode(args: CanvasShellViewModelArgs): boolean {
+  if (!args.graphPolicy.runtimePolicy.commands.canEditInspectorNode) return false;
+  const node = args.readModel.inspectorNode;
+  if (node == null) return false;
+  return (
+    node.role === 'input' || args.authoringRuntime.visibleScope.visibleNodeIds.includes(node.id)
+  );
 }

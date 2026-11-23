@@ -27,6 +27,25 @@ import type {
   CanvasInspectorResource,
 } from '../../../stores/canvasInspectorTarget';
 
+type CanvasGraphExplorerProps = Readonly<{
+  onInspectNode: CanvasInspectorCommand;
+  inspectorTarget?: CanvasInspectorResource | null;
+  catalogueScopeKey?: string;
+  onImport?: () => void;
+  onManageConnections?: () => void;
+  onAddModel?: (opener: HTMLButtonElement) => void;
+  children: ReactNode;
+  workspaceTask?: ReactNode;
+  projectFiles?: CanvasExplorerProjectWorkspace;
+  activityRail?: CanvasExplorerActivityRail;
+  catalogue?: readonly CanonicalNode[];
+  sourceCatalogueCanvasId?: string;
+  canPlaceSource?: boolean;
+  referencePlacementScope?: string;
+  importedSourceIds?: readonly string[];
+  onImportFocusComplete?: () => void;
+}>;
+
 export function CanvasGraphExplorer({
   onInspectNode,
   inspectorTarget,
@@ -44,24 +63,7 @@ export function CanvasGraphExplorer({
   workspaceTask,
   projectFiles,
   activityRail,
-}: Readonly<{
-  onInspectNode: CanvasInspectorCommand;
-  inspectorTarget?: CanvasInspectorResource | null;
-  catalogueScopeKey?: string;
-  onImport?: () => void;
-  onManageConnections?: () => void;
-  onAddModel?: (opener: HTMLButtonElement) => void;
-  children: ReactNode;
-  workspaceTask?: ReactNode;
-  projectFiles?: CanvasExplorerProjectWorkspace;
-  activityRail?: CanvasExplorerActivityRail;
-  catalogue?: readonly CanonicalNode[];
-  sourceCatalogueCanvasId?: string;
-  canPlaceSource?: boolean;
-  referencePlacementScope?: string;
-  importedSourceIds?: readonly string[];
-  onImportFocusComplete?: () => void;
-}>): JSX.Element {
+}: CanvasGraphExplorerProps): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const browser = useCanvasModelBrowserPresentation();
   const inspect = browser?.mode == null ? onInspectNode : browser.onSelect;
@@ -71,19 +73,7 @@ export function CanvasGraphExplorer({
     [catalogue, sourceCatalogueCanvasId]
   );
   const placeableIds = useMemo(
-    () =>
-      new Set(
-        (catalogue ?? [])
-          .filter((node) =>
-            referencePlacementScope != null
-              ? isPlaceableCanvasResource(node)
-              : canPlaceSource &&
-                workspaceNodeDefinitionId(node) == null &&
-                node.metadata?.authority !== 'dbt-project-files' &&
-                (node.role === 'input' || node.kind === 'dvt:transform')
-          )
-          .map((node) => node.id)
-      ),
+    () => projectCanvasExplorerPlaceableIds(catalogue, referencePlacementScope, canPlaceSource),
     [catalogue, canPlaceSource, referencePlacementScope]
   );
   const inspectedCanonicalNode =
@@ -172,5 +162,26 @@ export function CanvasGraphExplorer({
     >
       {children}
     </CanvasExplorer>
+  );
+}
+
+function projectCanvasExplorerPlaceableIds(
+  catalogue: readonly CanonicalNode[] | undefined,
+  referencePlacementScope: string | undefined,
+  canPlaceSource: boolean
+): ReadonlySet<string> {
+  const nodes = catalogue ?? [];
+  if (referencePlacementScope != null)
+    return new Set(nodes.filter(isPlaceableCanvasResource).map((node) => node.id));
+  if (!canPlaceSource) return new Set();
+  return new Set(
+    nodes
+      .filter(
+        (node) =>
+          workspaceNodeDefinitionId(node) == null &&
+          node.metadata?.authority !== 'dbt-project-files' &&
+          (node.role === 'input' || node.kind === 'dvt:transform')
+      )
+      .map((node) => node.id)
   );
 }

@@ -68,7 +68,11 @@ function createCapabilityRows({
 }: PluginCapabilityTableProps): PluginCapabilityRow[] {
   return entries.map((entry) => ({
     entry,
-    ...resolvePluginReadiness(entry, capabilities, capabilitiesLoading, capabilitiesError, copy),
+    ...resolvePluginReadiness(
+      entry,
+      { capabilities: capabilities, loading: capabilitiesLoading, error: capabilitiesError },
+      copy
+    ),
   }));
 }
 
@@ -80,10 +84,7 @@ function filterCapabilityRows(
 ) {
   return rows.filter((row) => {
     const { catalog, backendPluginId, localContribution } = row.entry;
-    const frontendState = row.runtimeShape === 'unbound' ? 'unbound' : row.frontendPresence;
-    // Unbound rows also match the broader "not registered" filter.
-    if (frontend !== 'all' && frontend !== frontendState && frontend !== row.frontendPresence)
-      return false;
+    if (!matchesCapabilityFrontend(row, frontend)) return false;
     if (backend !== 'all' && resolveBackendFilter(row.backendState) !== backend) return false;
     const searchValues = [
       catalog.id,
@@ -171,43 +172,15 @@ export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
       className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]"
     >
       <div className="min-w-0 space-y-3">
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-          <Input
-            data-slot="plugin-catalog-search"
-            type="search"
-            aria-label={copy.searchPlaceholder}
-            placeholder={copy.searchPlaceholder}
-            value={search}
-            onChange={(event) => setSearch(event.currentTarget.value)}
-            className={dense.field}
-          />
-          <select
-            data-slot="plugin-frontend-state-filter"
-            aria-label={copy.frontendFilterLabel}
-            value={frontend}
-            onChange={(event) => setFrontend(event.currentTarget.value)}
-            className={dense.field}
-          >
-            <option value="all">{copy.frontendFilterAll}</option>
-            <option value="registered">{copy.frontendFilterRegistered}</option>
-            <option value="not-registered">{copy.frontendFilterNotRegistered}</option>
-            <option value="unbound">{copy.frontendFilterUnbound}</option>
-          </select>
-          <select
-            data-slot="plugin-backend-state-filter"
-            aria-label={copy.backendFilterLabel}
-            value={backend}
-            onChange={(event) => setBackend(event.currentTarget.value as BackendFilter)}
-            className={dense.field}
-          >
-            <option value="all">{copy.backendFilterAll}</option>
-            <option value="available">{copy.backendFilterAvailable}</option>
-            <option value="blocked">{copy.backendFilterBlocked}</option>
-            <option value="degraded">{copy.backendFilterDegraded}</option>
-            <option value="pending">{copy.backendFilterPending}</option>
-            <option value="not-required">{copy.backendFilterNotRequired}</option>
-          </select>
-        </div>
+        <CapabilityFilterControls
+          copy={copy}
+          search={search}
+          onSearch={setSearch}
+          frontend={frontend}
+          onFrontend={setFrontend}
+          backend={backend}
+          onBackend={setBackend}
+        />
         <div className={cn(routeWorkbenchPanelClassName, 'rounded-md border')}>
           <Table aria-label={copy.title}>
             <TableHeader className="bg-[var(--surface-elevated)]">
@@ -285,6 +258,71 @@ export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
         </div>
       </div>
       {selectedRow ? <PluginCapabilityDetail copy={copy} row={selectedRow} id={detailId} /> : null}
+    </div>
+  );
+}
+
+/** Unbound rows retain the broader not-registered filter membership. */
+function matchesCapabilityFrontend(row: PluginCapabilityRow, frontend: string): boolean {
+  if (frontend === 'all') return true;
+  const state = row.runtimeShape === 'unbound' ? 'unbound' : row.frontendPresence;
+  return frontend === state || frontend === row.frontendPresence;
+}
+
+function CapabilityFilterControls({
+  copy,
+  search,
+  onSearch,
+  frontend,
+  onFrontend,
+  backend,
+  onBackend,
+}: Readonly<{
+  copy: PluginsViewCopy;
+  search: string;
+  onSearch: (value: string) => void;
+  frontend: string;
+  onFrontend: (value: string) => void;
+  backend: BackendFilter;
+  onBackend: (value: BackendFilter) => void;
+}>) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <Input
+        data-slot="plugin-catalog-search"
+        type="search"
+        aria-label={copy.searchPlaceholder}
+        placeholder={copy.searchPlaceholder}
+        value={search}
+        onChange={(event) => onSearch(event.currentTarget.value)}
+        className={dense.field}
+      />
+      <select
+        data-slot="plugin-frontend-state-filter"
+        aria-label={copy.frontendFilterLabel}
+        value={frontend}
+        onChange={(event) => onFrontend(event.currentTarget.value)}
+        className={dense.field}
+      >
+        <option value="all">{copy.frontendFilterAll}</option>
+        <option value="registered">{copy.frontendFilterRegistered}</option>
+        <option value="not-registered">{copy.frontendFilterNotRegistered}</option>
+        <option value="unbound">{copy.frontendFilterUnbound}</option>
+      </select>
+      <select
+        data-slot="plugin-backend-state-filter"
+        aria-label={copy.backendFilterLabel}
+        value={backend}
+        onChange={(event) => onBackend(event.currentTarget.value as BackendFilter)}
+        className={dense.field}
+      >
+        <option value="all">{copy.backendFilterAll}</option>
+        <option value="available">{copy.backendFilterAvailable}</option>
+        <option value="blocked">{copy.backendFilterBlocked}</option>
+        <option value="degraded">{copy.backendFilterDegraded}</option>
+        <option value="pending">{copy.backendFilterPending}</option>
+        <option value="not-required">{copy.backendFilterNotRequired}</option>
+      </select>
     </div>
   );
 }

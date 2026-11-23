@@ -33,10 +33,10 @@ export function buildSummaryRows(
   edges: readonly CanonicalEdge[]
 ): NodePropertyRow[] {
   const rows: NodePropertyRow[] = [];
-  const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+  const nodeNameById = new Map(nodes.map((candidate) => [candidate.id, candidate.name]));
   const downstreamNodes = edges
     .filter((edge) => edge.sourceId === node.id)
-    .map((edge) => nodeById.get(edge.targetId)?.name ?? edge.targetId);
+    .map((edge) => nodeNameById.get(edge.targetId) ?? edge.targetId);
 
   addRow(rows, NODE_PROPERTY_ROW_ID.nodeId, 'Node ID', node.id);
   addRow(rows, NODE_PROPERTY_ROW_ID.kind, 'Kind', node.kind);
@@ -46,26 +46,21 @@ export function buildSummaryRows(
   if (!isInspectorSource(node)) {
     const upstreamNodes = edges
       .filter((edge) => edge.targetId === node.id)
-      .map((edge) => nodeById.get(edge.sourceId)?.name ?? edge.sourceId);
+      .map((edge) => nodeNameById.get(edge.sourceId) ?? edge.sourceId);
     addRow(
       rows,
       NODE_PROPERTY_ROW_ID.upstreamNodes,
       'Upstream nodes',
-      upstreamNodes.length > 0 ? upstreamNodes.join(', ') : '0'
+      formatTopologyNames(upstreamNodes)
     );
   }
   addRow(
     rows,
     NODE_PROPERTY_ROW_ID.downstreamNodes,
     'Downstream nodes',
-    downstreamNodes.length > 0 ? downstreamNodes.join(', ') : '0'
+    formatTopologyNames(downstreamNodes)
   );
-  addRow(
-    rows,
-    NODE_PROPERTY_ROW_ID.tags,
-    'Tags',
-    node.tags.length > 0 ? node.tags.join(', ') : '0'
-  );
+  addRow(rows, NODE_PROPERTY_ROW_ID.tags, 'Tags', formatTopologyNames(node.tags));
   return rows;
 }
 
@@ -74,49 +69,85 @@ export function buildInputsOutputsRows(
   nodes: readonly CanonicalNode[],
   edges: readonly CanonicalEdge[]
 ): readonly NodePropertyTableRow[] {
-  const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+  const nodeNameById = new Map(nodes.map((candidate) => [candidate.id, candidate.name]));
   const rows: NodePropertyTableRow[] = [];
-  const source = isInspectorSource(node);
-  const provenance =
-    node.pluginId === 'dvt' && node.kind === 'dvt:transform'
-      ? resolveDvtConnectionProvenance({ node, nodes, edges })
-      : undefined;
-  const inheritedConnection =
-    provenance?.kind === 'resolved'
-      ? `${provenance.connectionRef.provider} · ${provenance.connectionRef.connectionId}`
-      : undefined;
-
+  const context: TopologyRowContext = {
+    nodeId: node.id,
+    source: isInspectorSource(node),
+    nodeNameById,
+    inheritedConnection: readInheritedConnection({ node, nodes, edges }),
+  };
   for (const edge of edges) {
-    if (!source && edge.targetId === node.id) {
-      const upstreamNode = nodeById.get(edge.sourceId);
-      rows.push({
-        id: `input:${edge.id}`,
-        cells: {
-          direction: 'Input',
-          node: upstreamNode?.name ?? edge.sourceId,
-          nodeId: edge.sourceId,
-          relation: edge.relation,
-          ...(edge.relation === 'lineage' && inheritedConnection != null
-            ? { connection: inheritedConnection }
-            : {}),
-        },
-      });
-    }
-
-    if (edge.sourceId === node.id) {
-      const downstreamNode = nodeById.get(edge.targetId);
-      if (source && (!downstreamNode?.name.trim() || edge.targetId === node.id)) continue;
-      rows.push({
-        id: `output:${edge.id}`,
-        cells: {
-          direction: 'Output',
-          node: downstreamNode?.name ?? edge.targetId,
-          nodeId: edge.targetId,
-          relation: edge.relation,
-        },
-      });
-    }
+    const input = buildInputTopologyRow(edge, context);
+    if (input) rows.push(input);
+    const output = buildOutputTopologyRow(edge, context);
+    if (output) rows.push(output);
   }
-
   return rows;
+}
+
+type TopologyRowContext = Readonly<{
+  nodeId: string;
+  source: boolean;
+  nodeNameById: ReadonlyMap<string, string>;
+  inheritedConnection: string | undefined;
+}>;
+
+function readInheritedConnection({
+  node,
+  nodes,
+  edges,
+}: {
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}): string | undefined {
+  if (node.pluginId !== 'dvt') return undefined;
+  if (node.kind !== 'dvt:transform') return undefined;
+  const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
+  if (provenance.kind !== 'resolved') return undefined;
+  return `${provenance.connectionRef.provider} · ${provenance.connectionRef.connectionId}`;
+}
+
+function buildInputTopologyRow(
+  edge: CanonicalEdge,
+  context: TopologyRowContext
+): NodePropertyTableRow | undefined {
+  if (context.source) return undefined;
+  if (edge.targetId !== context.nodeId) return undefined;
+  const cells: Record<string, string> = {
+    direction: 'Input',
+    node: context.nodeNameById.get(edge.sourceId) ?? edge.sourceId,
+    nodeId: edge.sourceId,
+    relation: edge.relation,
+  };
+  if (edge.relation === 'lineage') {
+    if (context.inheritedConnection != null) cells.connection = context.inheritedConnection;
+  }
+  return { id: `input:${edge.id}`, cells };
+}
+
+function buildOutputTopologyRow(
+  edge: CanonicalEdge,
+  context: TopologyRowContext
+): NodePropertyTableRow | undefined {
+  if (edge.sourceId !== context.nodeId) return undefined;
+  const downstreamName = context.nodeNameById.get(edge.targetId);
+  if (context.source) {
+    if (!downstreamName?.trim()) return undefined;
+    if (edge.targetId === context.nodeId) return undefined;
+  }
+  return {
+    id: `output:${edge.id}`,
+    cells: {
+      direction: 'Output',
+      node: downstreamName ?? edge.targetId,
+      nodeId: edge.targetId,
+      relation: edge.relation,
+    },
+  };
+}
+
+function formatTopologyNames(names: readonly string[]): string {
+  return names.length > 0 ? names.join(', ') : '0';
 }

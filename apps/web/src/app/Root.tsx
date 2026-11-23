@@ -111,15 +111,8 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     setOperationalView(null);
     document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
   }, [location.pathname]);
-  const getRouteBootstrapSnapshot = () => {
-    if (!activeRouteBootstrapRegistration) {
-      throw new RouteBootstrapActiveRegistrationMissingError({
-        locale: bootstrapLocale,
-      });
-    }
-
-    return getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration);
-  };
+  const getRouteBootstrapSnapshot = () =>
+    readRootRouteBootstrapSnapshot(activeRouteBootstrapRegistration, bootstrapLocale);
   const routeBootstrapPresentation = useSyncExternalStore(
     subscribeRouteBootstrapPresentations,
     getRouteBootstrapSnapshot,
@@ -350,4 +343,12 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
 export default function Root() {
   return <RootShell />;
+}
+
+function readRootRouteBootstrapSnapshot(
+  registration: ReturnType<typeof useActiveRouteBootstrapRegistration>,
+  locale: string
+) {
+  if (!registration) throw new RouteBootstrapActiveRegistrationMissingError({ locale });
+  return getPublishedRouteBootstrapPresentation(registration);
 }

@@ -38,8 +38,10 @@ type ModelViewNavigation =
 
 function readCurrentModelView(
   tab: CanvasModelWorkspaceTabContribution | null,
-  browserMode: CanvasModelView | null
+  browserMode: CanvasModelView | null,
+  foreground: boolean
 ): CanvasModelView | null {
+  if (!foreground) return null;
   if (tab?.active) return tab.views?.active ?? null;
   return browserMode;
 }
@@ -58,7 +60,7 @@ function resolveModelViewNavigation({
   const reason = busy ? copy.modelViewBusy : copy.modelViewUnavailable;
   if (!available || browser == null) return { kind: 'blocked', reason, selected: null };
 
-  const selected = foreground ? readCurrentModelView(tab, browser.mode) : null;
+  const selected = readCurrentModelView(tab, browser.mode, foreground);
   if (busy) return { kind: 'blocked', reason, selected };
   return { kind: 'browse', onBrowse: browser.onBrowse, selected };
 }

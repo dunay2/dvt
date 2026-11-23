@@ -131,73 +131,54 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const workspaceScopeSelection =
     overrides.workspaceScopeSelection ?? createWorkspaceScopeSelectionPort();
   const workspacePorts = createWorkspacePorts(apiClient, frontendOperabilitySink);
-  const workspaceGraphSnapshotQuery =
-    overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
-  const workspaceFilesQuery = overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery;
-  const workspaceFileHistoryQuery =
-    overrides.workspaceFileHistoryQuery ?? workspacePorts.workspaceFileHistoryQuery;
-  const workspaceDiffQuery = overrides.workspaceDiffQuery ?? workspacePorts.workspaceDiffQuery;
-  const workspacePluginCatalogQuery =
-    overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery;
-  const workspaceAdminRead = overrides.workspaceAdminRead ?? workspacePorts.workspaceAdminRead;
-  const warehouseSourceImport =
-    overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
-  const warehouseSourceDataSampleQuery =
-    overrides.warehouseSourceDataSampleQuery ?? workspacePorts.warehouseSourceDataSampleQuery;
-  const canvasTransformDataSampleQuery =
-    overrides.canvasTransformDataSampleQuery ??
-    createApiCanvasTransformDataSampleQueryPort(apiClient, frontendOperabilitySink);
-  const canvasTransformSqlQuery =
-    overrides.canvasTransformSqlQuery ??
-    createApiCanvasTransformSqlQueryPort(apiClient, frontendOperabilitySink);
-  const workspaceFileContentCommand =
-    overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand;
-  const graphDbtWorkspaceArtifactPublicationCommand =
-    overrides.graphDbtWorkspaceArtifactPublicationCommand ??
-    createApiGraphDbtWorkspaceArtifactPublicationCommandPort(apiClient);
-  const graphDbtModelCompilationQuery =
-    overrides.graphDbtModelCompilationQuery ??
-    createApiGraphDbtModelCompilationQueryPort(apiClient);
-  const workspaceGraphDraftAuthoringPort =
-    overrides.workspaceGraphDraftAuthoringPort ??
-    createApiWorkspaceGraphDraftAuthoringPort(apiClient);
-  const dbtProjectGraphQueryPort =
-    overrides.dbtProjectGraphQueryPort ?? createApiDbtProjectGraphQueryPort(apiClient);
-  const dbtSelectedModelAnalysisQueryPort =
-    overrides.dbtSelectedModelAnalysisQueryPort ??
-    createApiDbtSelectedModelAnalysisQueryPort(apiClient);
-  const dbtProjectImportPort =
-    overrides.dbtProjectImportPort ?? createApiDbtProjectImportPort(apiClient);
-  const dbtYamlDescriptionEditPort =
-    overrides.dbtYamlDescriptionEditPort ?? createApiDbtYamlDescriptionEditPort(apiClient);
 
   return {
     apiClient,
-    workspaceGraphSnapshotQuery,
-    workspaceFilesQuery,
+    workspaceGraphSnapshotQuery:
+      overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery,
+    workspaceFilesQuery: overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery,
     workspaceFileDirectoryQuery:
       overrides.workspaceFileDirectoryQuery ?? workspacePorts.workspaceFileDirectoryQuery,
-    workspaceFileHistoryQuery,
+    workspaceFileHistoryQuery:
+      overrides.workspaceFileHistoryQuery ?? workspacePorts.workspaceFileHistoryQuery,
     workspaceFileVersionCommand:
       overrides.workspaceFileVersionCommand ?? workspacePorts.workspaceFileVersionCommand,
-    workspaceDiffQuery,
-    workspacePluginCatalogQuery,
-    workspaceAdminRead,
-    warehouseSourceImport,
-    warehouseSourceDataSampleQuery,
-    canvasTransformDataSampleQuery,
-    canvasTransformSqlQuery,
+    workspaceDiffQuery: overrides.workspaceDiffQuery ?? workspacePorts.workspaceDiffQuery,
+    workspacePluginCatalogQuery:
+      overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery,
+    workspaceAdminRead: overrides.workspaceAdminRead ?? workspacePorts.workspaceAdminRead,
+    warehouseSourceImport: overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport,
+    warehouseSourceDataSampleQuery:
+      overrides.warehouseSourceDataSampleQuery ?? workspacePorts.warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery:
+      overrides.canvasTransformDataSampleQuery ??
+      createApiCanvasTransformDataSampleQueryPort(apiClient, frontendOperabilitySink),
+    canvasTransformSqlQuery:
+      overrides.canvasTransformSqlQuery ??
+      createApiCanvasTransformSqlQueryPort(apiClient, frontendOperabilitySink),
     canvasModelSqlQuery:
       overrides.canvasModelSqlQuery ??
       createApiCanvasModelSqlQueryPort(apiClient, frontendOperabilitySink),
-    workspaceFileContentCommand,
-    graphDbtWorkspaceArtifactPublicationCommand,
-    graphDbtModelCompilationQuery,
-    workspaceGraphDraftAuthoringPort,
-    dbtProjectGraphQueryPort,
-    dbtSelectedModelAnalysisQueryPort,
-    dbtProjectImportPort,
-    dbtYamlDescriptionEditPort,
+    workspaceFileContentCommand:
+      overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand:
+      overrides.graphDbtWorkspaceArtifactPublicationCommand ??
+      createApiGraphDbtWorkspaceArtifactPublicationCommandPort(apiClient),
+    graphDbtModelCompilationQuery:
+      overrides.graphDbtModelCompilationQuery ??
+      createApiGraphDbtModelCompilationQueryPort(apiClient),
+    workspaceGraphDraftAuthoringPort:
+      overrides.workspaceGraphDraftAuthoringPort ??
+      createApiWorkspaceGraphDraftAuthoringPort(apiClient),
+    dbtProjectGraphQueryPort:
+      overrides.dbtProjectGraphQueryPort ?? createApiDbtProjectGraphQueryPort(apiClient),
+    dbtSelectedModelAnalysisQueryPort:
+      overrides.dbtSelectedModelAnalysisQueryPort ??
+      createApiDbtSelectedModelAnalysisQueryPort(apiClient),
+    dbtProjectImportPort:
+      overrides.dbtProjectImportPort ?? createApiDbtProjectImportPort(apiClient),
+    dbtYamlDescriptionEditPort:
+      overrides.dbtYamlDescriptionEditPort ?? createApiDbtYamlDescriptionEditPort(apiClient),
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),
     plansService: overrides.plansService ?? createPlansService(apiClient),
     costAttributionSummaryPort:

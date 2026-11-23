@@ -71,6 +71,19 @@ export interface RunReadEvidenceModel {
   };
 }
 
+type RunReadEvidenceDraft = {
+  readonly [Key in keyof RunReadEvidenceModel]?: RunReadEvidenceModel[Key] | undefined;
+};
+
+/** Keep absent evidence absent while type-checking every projected field. */
+function projectDefinedRunEvidence(fields: RunReadEvidenceDraft): RunReadEvidenceModel {
+  const evidence: RunReadEvidenceModel = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) Object.assign(evidence, { [key]: value });
+  }
+  return evidence;
+}
+
 export function deriveRunReadEvidenceModel(args: {
   snapshot: Pick<
     CanonicalRunStatus,
@@ -116,27 +129,27 @@ export function deriveRunReadEvidenceModel(args: {
   const diagnostics = deriveDiagnostics({
     snapshot: args.snapshot,
     currentAttemptEvents,
-    ...(args.planId === undefined ? {} : { planId: args.planId }),
-    ...(args.planRecord === undefined ? {} : { planRecord: args.planRecord }),
-    ...(args.runtimeAdapter === undefined ? {} : { runtimeAdapter: args.runtimeAdapter }),
-    ...(executor === undefined ? {} : { executor }),
-    ...(currentStepId === undefined ? {} : { currentStepId }),
-    ...(failedStepId === undefined ? {} : { failedStepId }),
-    ...(errorReason === undefined ? {} : { errorReason }),
-    ...(materialization === undefined ? {} : { materialization }),
+    planId: args.planId,
+    planRecord: args.planRecord,
+    runtimeAdapter: args.runtimeAdapter,
+    executor,
+    currentStepId,
+    failedStepId,
+    errorReason,
+    materialization,
   });
 
-  return {
-    ...(modelSelection === undefined ? {} : { modelSelection }),
-    ...(executor === undefined ? {} : { executor }),
-    ...(currentStepId === undefined ? {} : { currentStepId }),
-    ...(failedStepId === undefined ? {} : { failedStepId }),
-    ...(errorReason === undefined ? {} : { errorReason }),
-    ...(provenance === undefined ? {} : { provenance }),
-    ...(materialization === undefined ? {} : { materialization }),
-    ...(publication === undefined ? {} : { publication }),
-    ...(diagnostics === undefined ? {} : { diagnostics }),
-  };
+  return projectDefinedRunEvidence({
+    modelSelection,
+    executor,
+    currentStepId,
+    failedStepId,
+    errorReason,
+    provenance,
+    materialization,
+    publication,
+    diagnostics,
+  });
 }
 
 function deriveExecutor(
@@ -333,14 +346,14 @@ function deriveDiagnostics(args: {
     'runId' | 'status' | 'execution' | 'startedAt' | 'completedAt'
   >;
   currentAttemptEvents: ReadonlyArray<EventEnvelope>;
-  planId?: string;
-  planRecord?: PlanRecord;
-  runtimeAdapter?: string;
-  executor?: TransformationExecutor;
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  planId: string | undefined;
+  planRecord: PlanRecord | undefined;
+  runtimeAdapter: string | undefined;
+  executor: TransformationExecutor | undefined;
+  currentStepId: string | undefined;
+  failedStepId: string | undefined;
+  errorReason: string | undefined;
+  materialization: MaterializationEvidence | undefined;
 }): RunReadEvidenceModel['diagnostics'] {
   const runId = readNonBlankString(args.snapshot.runId);
   if (runId === undefined) {

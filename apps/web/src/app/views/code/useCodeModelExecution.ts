@@ -174,7 +174,10 @@ export function useCodeModelExecution({
     compile: () => request('compile'),
     execute: () => request('execute'),
     configureParameters: () => {
-      if (parameterized && canCompile && !busy.current) setDialog('parameters');
+      if (!parameterized) return;
+      if (!canCompile) return;
+      if (busy.current) return;
+      setDialog('parameters');
     },
     canCompile,
     canExecute,

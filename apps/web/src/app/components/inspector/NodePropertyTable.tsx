@@ -52,11 +52,9 @@ function RelationshipRecord({
   renderTableCell,
 }: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
   Readonly<{ row: NodePropertyTableRow }>): JSX.Element {
-  const nodeName = row.cells.node?.trim();
-  const nodeId = row.cells.nodeId?.trim();
-  const displayName = nodeName && nodeName !== nodeId ? row.cells.node : '';
+  const { nodeId, displayName } = readRelationshipTarget(row);
   const focusNode = useContext(InspectorRelationshipFocusContext);
-  const activate = displayName && nodeId && focusNode ? () => focusNode(nodeId) : undefined;
+  const activate = resolveRelationshipActivation(displayName, nodeId, focusNode);
   const content = (
     <>
       <span
@@ -134,6 +132,23 @@ function RelationshipRecord({
       )}
     </li>
   );
+}
+
+function readRelationshipTarget(row: NodePropertyTableRow) {
+  const nodeName = row.cells.node?.trim();
+  const nodeId = row.cells.nodeId?.trim();
+  return { nodeId, displayName: nodeName && nodeName !== nodeId ? row.cells.node : '' };
+}
+
+function resolveRelationshipActivation(
+  displayName: string | undefined,
+  nodeId: string | undefined,
+  focusNode: ((nodeId: string) => void) | null
+) {
+  if (!displayName) return undefined;
+  if (!nodeId) return undefined;
+  if (!focusNode) return undefined;
+  return () => focusNode(nodeId);
 }
 
 function PropertyRecords({

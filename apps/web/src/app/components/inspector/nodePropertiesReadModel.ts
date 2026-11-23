@@ -33,32 +33,14 @@ import {
   buildNodePropertyCodeSection,
 } from './nodePropertySections';
 
-export function buildNodePropertiesReadModel({
-  node,
-  nodes,
-  edges,
-  presentationCopy: copy,
-  presentationTruth: suppliedTruth,
-}: BuildNodePropertiesReadModelArgs): NodePropertiesReadModel {
+export function buildNodePropertiesReadModel(
+  args: BuildNodePropertiesReadModelArgs
+): NodePropertiesReadModel {
+  const { node, nodes, edges, presentationCopy: copy, presentationTruth: suppliedTruth } = args;
   const metadata = asRecord(node.metadata);
   const columns = readColumns(metadata.columns);
   const truth = suppliedTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
-  const columnRows =
-    truth.inputBindings != null
-      ? buildDvtTransformColumnRows(selectCanvasNodeOutputColumns(truth), columns)
-      : node.pluginId === 'dvt' && node.kind === 'dvt:transform'
-        ? buildDvtTransformColumnRows(truth.columns.visible, columns)
-        : truth.columns.visibleProvenance === 'declared'
-          ? buildColumnRows(columns)
-          : buildInheritedColumnRows(
-              truth.columns.visibleProvenance === 'mixed'
-                ? truth.columns.visible
-                : truth.columns.inherited
-            );
-  const topology = presentNodePropertySection(
-    { id: 'inputs-outputs', tableRows: buildInputsOutputsRows(node, nodes, edges) },
-    copy
-  );
+  const columnRows = buildVisibleColumnRows({ node, truth, columns });
 
   return {
     nodeId: node.id,
@@ -77,17 +59,7 @@ export function buildNodePropertiesReadModel({
         },
         copy
       ),
-      isInspectorSource(node)
-        ? {
-            ...topology,
-            label: copy?.sourceOutputs?.label ?? 'Outputs',
-            emptyState:
-              topology.tableRows.length === 0
-                ? (copy?.sourceOutputs?.emptyState ??
-                  'This source has no outgoing connections in the Canvas.')
-                : undefined,
-          }
-        : topology,
+      buildNodeTopologySection(args),
       presentNodePropertySection(
         { id: 'tests', tableRows: buildDbtTestRows({ node, metadata, nodes, edges }) },
         copy
@@ -112,5 +84,46 @@ export function buildNodePropertiesReadModel({
         copy
       ),
     ],
+  };
+}
+
+function buildVisibleColumnRows({
+  node,
+  truth,
+  columns,
+}: {
+  node: BuildNodePropertiesReadModelArgs['node'];
+  truth: ReturnType<typeof buildCanvasNodePresentationTruth>;
+  columns: ReturnType<typeof readColumns>;
+}) {
+  if (truth.inputBindings != null)
+    return buildDvtTransformColumnRows(selectCanvasNodeOutputColumns(truth), columns);
+  if (node.pluginId === 'dvt' && node.kind === 'dvt:transform')
+    return buildDvtTransformColumnRows(truth.columns.visible, columns);
+  if (truth.columns.visibleProvenance === 'declared') return buildColumnRows(columns);
+  return buildInheritedColumnRows(
+    truth.columns.visibleProvenance === 'mixed' ? truth.columns.visible : truth.columns.inherited
+  );
+}
+
+function buildNodeTopologySection({
+  node,
+  nodes,
+  edges,
+  presentationCopy: copy,
+}: BuildNodePropertiesReadModelArgs) {
+  const topology = presentNodePropertySection(
+    { id: 'inputs-outputs', tableRows: buildInputsOutputsRows(node, nodes, edges) },
+    copy
+  );
+  if (!isInspectorSource(node)) return topology;
+  return {
+    ...topology,
+    label: copy?.sourceOutputs?.label ?? 'Outputs',
+    emptyState:
+      topology.tableRows.length === 0
+        ? (copy?.sourceOutputs?.emptyState ??
+          'This source has no outgoing connections in the Canvas.')
+        : undefined,
   };
 }

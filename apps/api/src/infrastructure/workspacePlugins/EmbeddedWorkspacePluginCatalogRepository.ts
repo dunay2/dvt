@@ -30,6 +30,11 @@ export class EmbeddedWorkspacePluginCatalogRepository implements IWorkspacePlugi
 
   public async migrate(): Promise<void> {
     const schema = quoteIdentifier(this.schema);
+    await this.createCatalogStorage(schema);
+    await this.seedBuiltInPlugins(schema);
+  }
+
+  private async createCatalogStorage(schema: string): Promise<void> {
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${schema}.workspace_plugins (
@@ -69,6 +74,9 @@ export class EmbeddedWorkspacePluginCatalogRepository implements IWorkspacePlugi
           plugin_id
         );
     `);
+  }
+
+  private async seedBuiltInPlugins(schema: string): Promise<void> {
     await this.pool.query(`
       INSERT INTO ${schema}.workspace_plugins
         (tenant_id, project_id, environment_id, plugin_id, display_name, version, description,

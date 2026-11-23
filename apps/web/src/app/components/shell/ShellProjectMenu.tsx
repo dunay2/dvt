@@ -47,8 +47,7 @@ export function ShellProjectCodeLink({
       ? state.contribution.onOpenProjectCode
       : undefined
   );
-  const active = onCanvasRoute && tabActive;
-  const disabled = onCanvasRoute && open == null;
+  const presentation = projectCodeLinkPresentation({ onCanvasRoute, foreground, tabActive, open });
 
   function handleCodeLink(event: MouseEvent<HTMLAnchorElement>): void {
     if (!onCanvasRoute || !isDirectShellLinkActivation(event)) return;
@@ -66,12 +65,9 @@ export function ShellProjectCodeLink({
           state={canvasCodeRouteEntryState}
           id="shell-project-code-command"
           data-slot="shell-project-code-command"
-          data-active={foreground && active}
+          {...presentation}
           aria-label={label}
           aria-current={false}
-          aria-expanded={active}
-          aria-controls={active ? 'canvas-code-workspace-surface' : undefined}
-          aria-disabled={disabled || undefined}
           className={cn(navigationStyles.link, navigationStyles.linkInteractive)}
           onClick={handleCodeLink}
         >
@@ -125,4 +121,25 @@ export function ShellProjectMenu({ copy }: Readonly<{ copy: ShellTopBarCopy }>) 
       ) : null}
     </>
   );
+}
+
+function projectCodeLinkPresentation({
+  onCanvasRoute,
+  foreground,
+  tabActive,
+  open,
+}: {
+  onCanvasRoute: boolean;
+  foreground: boolean;
+  tabActive: boolean;
+  open: (() => void) | undefined;
+}) {
+  const active = onCanvasRoute && tabActive;
+  const disabled = onCanvasRoute && open == null;
+  return {
+    'data-active': foreground && active,
+    'aria-expanded': active,
+    'aria-controls': active ? 'canvas-code-workspace-surface' : undefined,
+    'aria-disabled': disabled || undefined,
+  };
 }

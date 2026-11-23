@@ -468,8 +468,8 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="left-navigation-link"]').then(($links) => {
       expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
         '/canvas',
-        '/runs',
         '/templates',
+        '/runs',
         '/plugins',
         '/admin',
       ]);

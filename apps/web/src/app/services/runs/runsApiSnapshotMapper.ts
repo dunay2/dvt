@@ -43,12 +43,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
   }
 
   const executor = parseRunExecutor(candidate.executor);
-  const currentStepId = asString(candidate.currentStepId);
-  const failedStepId = asString(candidate.failedStepId);
-  const errorReason = asString(candidate.errorReason);
-  const materialization = parseMaterializationEvidence(candidate.materialization);
-  const publication = parseDvtPostgresPublicationEvidence(candidate.publication);
-  const selection = modelSelectionSchema.safeParse(candidate.modelSelection);
+
   const durationMs = asFiniteNumber(candidate.durationMs);
   const logicalAttemptId = asFiniteInteger(candidate.logicalAttemptId);
   const tenantId = asString(candidate.tenantId);
@@ -59,19 +54,24 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
   const startedAt = asString(candidate.startedAt);
 
   return {
-    ...(tenantId ? { tenantId } : {}),
-    ...(projectId ? { projectId } : {}),
+    ...projectRunSnapshotIdentity({
+      tenantId,
+      projectId,
+      planVersion,
+      logicalAttemptId,
+      provider,
+      createdAt,
+    }),
+
     runId,
     planId: asString(candidate.planId),
-    ...(planVersion ? { planVersion } : {}),
-    ...(logicalAttemptId === undefined ? {} : { logicalAttemptId }),
-    ...(provider ? { provider } : {}),
+
     status: mapContractStatusToUi(parseContractRunStatus(candidate.status)),
     ...(controls === undefined ? {} : { controls }),
     ...(executor ? { executor } : {}),
     environment: asString(candidate.environmentId) ?? asString(candidate.environment),
     gitSha: asString(candidate.gitSha),
-    ...(createdAt ? { createdAt } : {}),
+
     startedAt,
     completedAt: asString(candidate.completedAt) ?? asString(candidate.endTime),
     durationMs: durationMs !== undefined && durationMs >= 0 ? durationMs : undefined,
@@ -79,12 +79,8 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     message: asString(candidate.message),
     hash: asString(candidate.hash),
     snapshotStaleness: parseSnapshotStaleness(candidate.snapshotStaleness),
-    ...(currentStepId ? { currentStepId } : {}),
-    ...(failedStepId ? { failedStepId } : {}),
-    ...(errorReason ? { errorReason } : {}),
-    ...(materialization ? { materialization } : {}),
-    ...(publication ? { publication } : {}),
-    ...(selection.success ? { modelSelection: selection.data } : {}),
+    ...projectRunSnapshotEvidence(candidate),
+
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
     planSummary: parsePlanExecutionSummary(candidate.planSummary),
@@ -94,19 +90,15 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
 
 export function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
   return {
-    ...(snapshot.tenantId ? { tenantId: snapshot.tenantId } : {}),
-    ...(snapshot.projectId ? { projectId: snapshot.projectId } : {}),
+    ...projectRunSnapshotIdentity(snapshot),
+
     runId: snapshot.runId,
     planId: snapshot.planId,
-    ...(snapshot.planVersion ? { planVersion: snapshot.planVersion } : {}),
-    ...(snapshot.logicalAttemptId === undefined
-      ? {}
-      : { logicalAttemptId: snapshot.logicalAttemptId }),
-    ...(snapshot.provider ? { provider: snapshot.provider } : {}),
+
     status: snapshot.status,
     environment: snapshot.environment,
     gitSha: snapshot.gitSha,
-    ...(snapshot.createdAt ? { createdAt: snapshot.createdAt } : {}),
+
     startedAt: snapshot.startedAt,
     completedAt: snapshot.completedAt,
     durationMs: snapshot.durationMs,
@@ -119,5 +111,43 @@ export function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     ...(snapshot.failedStepId ? { failedStepId: snapshot.failedStepId } : {}),
     ...(snapshot.errorReason ? { errorReason: snapshot.errorReason } : {}),
     ...(snapshot.controls === undefined ? {} : { controls: snapshot.controls }),
+  };
+}
+
+function projectRunSnapshotIdentity({
+  tenantId,
+  projectId,
+  planVersion,
+  logicalAttemptId,
+  provider,
+  createdAt,
+}: Pick<
+  RunSnapshot,
+  'tenantId' | 'projectId' | 'planVersion' | 'logicalAttemptId' | 'provider' | 'createdAt'
+>) {
+  return {
+    ...(tenantId ? { tenantId } : {}),
+    ...(projectId ? { projectId } : {}),
+    ...(planVersion ? { planVersion } : {}),
+    ...(logicalAttemptId === undefined ? {} : { logicalAttemptId }),
+    ...(provider ? { provider } : {}),
+    ...(createdAt ? { createdAt } : {}),
+  };
+}
+
+function projectRunSnapshotEvidence(candidate: Record<string, unknown>) {
+  const currentStepId = asString(candidate.currentStepId);
+  const failedStepId = asString(candidate.failedStepId);
+  const errorReason = asString(candidate.errorReason);
+  const materialization = parseMaterializationEvidence(candidate.materialization);
+  const publication = parseDvtPostgresPublicationEvidence(candidate.publication);
+  const selection = modelSelectionSchema.safeParse(candidate.modelSelection);
+  return {
+    ...(currentStepId ? { currentStepId } : {}),
+    ...(failedStepId ? { failedStepId } : {}),
+    ...(errorReason ? { errorReason } : {}),
+    ...(materialization ? { materialization } : {}),
+    ...(publication ? { publication } : {}),
+    ...(selection.success ? { modelSelection: selection.data } : {}),
   };
 }

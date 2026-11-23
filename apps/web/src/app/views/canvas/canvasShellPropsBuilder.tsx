@@ -183,17 +183,11 @@ function buildCanvasShellChromeCommandsArgs({
 
 function getAddCanvasCommand({ controller, routeViewState }: CanvasShellRouteComposerArgs) {
   const current = routeViewState.canvasDocument;
-  if (
-    !current ||
-    !controller.canAddCanvasDocument ||
-    !routeViewState.effectiveUserPermissions.canEditEdges
-  )
-    return undefined;
-  if (
-    routeViewState.draftAccessPosture.mutationBlocked ||
-    routeViewState.draftSaveStatus === 'saving'
-  )
-    return undefined;
+  if (!current) return undefined;
+  if (!controller.canAddCanvasDocument) return undefined;
+  if (!routeViewState.effectiveUserPermissions.canEditEdges) return undefined;
+  if (routeViewState.draftAccessPosture.mutationBlocked) return undefined;
+  if (routeViewState.draftSaveStatus === 'saving') return undefined;
   return (title: string) =>
     controller.handleCreateCanvasDocument({ kind: current.kind, title, mode: 'create_new' });
 }

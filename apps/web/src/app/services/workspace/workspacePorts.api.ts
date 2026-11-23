@@ -164,13 +164,11 @@ export function createApiWorkspaceFileVersionCommandPort(
 
 function requireFileHistoryScope(expected?: WorkspaceFileVersionScope): WorkspaceFileVersionScope {
   const actual = readWorkspaceFilesScope();
-  if (
-    expected &&
-    (expected.tenantId !== actual.tenantId ||
-      expected.projectId !== actual.projectId ||
-      expected.environmentId !== actual.environmentId)
-  ) {
-    throw new Error('Workspace file version request belongs to a retired scope');
+  if (!expected) return actual;
+  for (const key of ['tenantId', 'projectId', 'environmentId'] as const) {
+    if (expected[key] !== actual[key]) {
+      throw new Error('Workspace file version request belongs to a retired scope');
+    }
   }
   return actual;
 }
