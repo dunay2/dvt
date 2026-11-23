@@ -52,6 +52,8 @@ Vitest 5 also widens `ReturnType<typeof vi.fn>` to include constructors. The
 affected test fixtures use its public callable `Mock` type, with specific async
 signatures where required. This retains their previous callable semantics and
 all existing assertions. The Web config uses the current `ViteUserConfig` export.
+Constructor mocks use constructable functions in place of arrow functions, as
+required by the current runner; resource cleanup and bootstrap assertions remain.
 
 The workspace run exposed a separate duplicate build in the OpenTelemetry test
 script. Its existing pretest helper now prepares `observability` for standalone

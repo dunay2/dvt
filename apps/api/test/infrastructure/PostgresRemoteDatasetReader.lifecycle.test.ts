@@ -29,27 +29,31 @@ const fake = vi.hoisted(() => {
     },
     close,
   };
-  const Cursor = vi.fn(() => native);
-  const Client = vi.fn(() => ({
-    connect,
-    end,
-    on: (_event: string, listener: () => void) => {
-      onError = listener;
-    },
-    removeListener: () => {
-      onError = undefined;
-      events.push('REMOVE_LISTENER');
-    },
-    query: (query: unknown) => {
-      if (query === native) {
-        events.push('OPEN_CURSOR');
-        return native;
-      }
-      if (typeof query !== 'string') return Promise.resolve({ fields: [field], rows: [] });
-      events.push(query);
-      return command(query);
-    },
-  }));
+  const Cursor = vi.fn(function () {
+    return native;
+  });
+  const Client = vi.fn(function () {
+    return {
+      connect,
+      end,
+      on: (_event: string, listener: () => void) => {
+        onError = listener;
+      },
+      removeListener: () => {
+        onError = undefined;
+        events.push('REMOVE_LISTENER');
+      },
+      query: (query: unknown) => {
+        if (query === native) {
+          events.push('OPEN_CURSOR');
+          return native;
+        }
+        if (typeof query !== 'string') return Promise.resolve({ fields: [field], rows: [] });
+        events.push(query);
+        return command(query);
+      },
+    };
+  });
   return {
     events,
     connect,

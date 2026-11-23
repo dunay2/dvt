@@ -14,12 +14,14 @@ const pgMock = vi.hoisted(() => {
     }>
   >();
   const databaseQuery = vi.fn();
-  const Client = vi.fn(() => ({
-    connect,
-    end,
-    query: (sql: string, values?: readonly unknown[]) =>
-      sql === 'select current_database() as database' ? databaseQuery() : query(sql, values),
-  }));
+  const Client = vi.fn(function () {
+    return {
+      connect,
+      end,
+      query: (sql: string, values?: readonly unknown[]) =>
+        sql === 'select current_database() as database' ? databaseQuery() : query(sql, values),
+    };
+  });
 
   return { Client, connect, end, query, databaseQuery };
 });
