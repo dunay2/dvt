@@ -2,6 +2,38 @@
 version: 1
 rootUnit: SYS-DVT
 units:
+  - id: SYS-DBT-DIMENSIONAL-SALES-EXAMPLE
+    name: Dimensional sales dbt example
+    parent: SYS-DVT
+    level: component
+    status: canonical
+    ownedConcern: >-
+      Provide one reproducible PostgreSQL dbt example of equivalent star and snowflake sales facts
+      with retained grain and aggregate tests.
+    owns:
+      - labs/dimensional-sales-demo/**
+    childrenRequired: false
+    dddOwner: DimensionalSalesExample
+    cqRails: ProjectDbtGraphFromFiles;PreviewPlan;StartRun
+    responsibilities:
+      - Maintain the synthetic input, native dbt models and dimensional equivalence assertions.
+    nonGoals:
+      - No production authoring, execution, profiling or connection policy.
+      - No automatic demo initialization.
+    reasonsToChange:
+      - Example dataset, dbt provider compatibility or star/snowflake equivalence changes.
+    publicApi:
+      - dbt build --profiles-dir .
+      - setup_raw.sql guarded to dvt_demo
+    invariants:
+      - Each fact retains one source line and both schemas retain equal units and net amounts.
+    transitions:
+      - Explicit setup and dbt build precede grain and grouped-equivalence assertions.
+    consumers:
+      - Engineers using the existing dbt project import and execution adapters.
+    governance:
+      - labs/dimensional-sales-demo/README.md
+      - https://github.com/dunay2/dvt/issues/3951#issuecomment-7104609423
   - id: SYS-ADAPTERS
     name: Adapter domain
     parent: SYS-DVT
