@@ -50,3 +50,11 @@ Compare CodeScene findings against the same integration base after hook
 formatting. An improved score alone does not establish behavioral acceptance.
 The recorded review removes all introduced or degraded findings while retaining
 the inherited findings and the engine's two unscored authority scripts explicitly.
+
+A combined Model-tab proof can exceed its existing deadline under concurrent
+suite load even when unchanged sequential before/after timings are equivalent.
+Separate its admission, active-editor retention, released-capacity and neighbor
+invariants into focused real-shell scenarios. Keep maximum capacity where the
+invariant depends on it, the original deadline and concurrency, both draft
+protection cases and no-write assertions. Prove the change with concurrent
+Canvas tests and the complete prepush; no failed or interrupted run is a receipt.

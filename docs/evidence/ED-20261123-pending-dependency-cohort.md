@@ -21,6 +21,7 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasRunModelRouteAdmission.ts
   - apps/web/src/app/views/canvas/relational-layout/relationalCardPlacementCommands.ts
   - apps/web/src/app/views/code/workspaceFileEditorContributions.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.semanticEditor.navigation.test.tsx
   - apps/api/src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.ts
 evidence:
   tests:
@@ -141,3 +142,22 @@ callback assertions checked separately. The focused Inspector, removal and
 planning run passes 67 tests; session/presentation passes 27, Inspector fixture
 tests 42 and warehouse probe tests 24. Web's declared typecheck passes. These
 results complement, rather than replace, the final prepush and hosted gates.
+
+The complete runs then exposed one load-sensitive, existing 5-second Model-tab
+test. Unchanged sequential measurements were 4,451 ms before the refactor and
+4,415 ms after; the concurrent full run exceeded the deadline twice. The
+[prospective proof design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7111797637)
+and [focused refinement](https://github.com/dunay2/dvt/issues/3951#issuecomment-7111909227)
+record the response before implementation. Native design
+`GH-3951-MODEL-TAB-INDEPENDENT-PROOFS` retains the existing
+`SelectCanvasWorkbenchTab` owner and admits the existing navigation test path.
+Four focused cases now prove full-capacity admission and reuse, exact active
+editor retention when another tab closes, released capacity, and neighboring
+selection after active closure at capacity. They retain the real shell, Model
+editors, ARIA bindings and no-write assertions. The two draft-protection cases
+remain unchanged. No timeout, retry, worker, isolation or fixture-depth policy
+was changed; the failed attempts remain recorded rather than reused as receipts.
+All 78 tests in the four concurrent Canvas files pass with the normal four
+workers. The two original draft-protection cases are preserved verbatim, and the
+tab proof adds direct active-editor identity assertions. The focused CodeScene
+review reports no findings for the refactored navigation test.

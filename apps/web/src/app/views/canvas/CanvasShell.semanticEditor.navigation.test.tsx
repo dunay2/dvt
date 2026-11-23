@@ -159,21 +159,40 @@ describe('Canvas Model draft protection', () => {
   });
 });
 
+type ModelTabFixture = Awaited<ReturnType<typeof mountModel>> &
+  Readonly<{
+    nodes: readonly { id: string; data: DbtNodeData }[];
+    tabs: () => HTMLButtonElement[];
+    active: () => HTMLButtonElement | undefined;
+    closes: () => NodeListOf<HTMLButtonElement>;
+  }>;
+
+async function mountModelTabs(additionalModels: number): Promise<ModelTabFixture> {
+  const model = await mountModel(additionalModels);
+  const tabs = (): HTMLButtonElement[] => [
+    ...navigation.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]'),
+  ];
+  return {
+    ...model,
+    nodes: getCanvasShellState().canvasViewportProps?.nodesWithImpact as ModelTabFixture['nodes'],
+    tabs,
+    active: () => tabs().find((tab) => tab.getAttribute('aria-selected') === 'true'),
+    closes: () =>
+      navigation.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]'),
+  };
+}
+
+async function openModelTabs(nodes: ModelTabFixture['nodes']): Promise<void> {
+  for (const node of nodes) await act(async () => node.data.onOpenNode?.(node.id));
+}
+
 describe('Canvas Model tabs', () => {
   setupSemanticEditorShell();
 
-  it('retains distinct tabs, refuses overflow and keeps the active editor when closing another', async () => {
-    const { fixture, onApplyNodeDraft } = await mountModel(MAX_CANVAS_MODEL_TABS);
-    const tabs = (): HTMLButtonElement[] => [
-      ...navigation.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]'),
-    ];
-    const active = (): HTMLButtonElement | undefined =>
-      tabs().find((tab) => tab.getAttribute('aria-selected') === 'true');
-    const nodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
-      id: string;
-      data: DbtNodeData;
-    }>;
-    for (const node of nodes) await act(async () => node.data.onOpenNode?.(node.id));
+  it('admits distinct tabs up to capacity and reuses an existing full-capacity tab', async () => {
+    const { fixture, onApplyNodeDraft, tabs, active, nodes } =
+      await mountModelTabs(MAX_CANVAS_MODEL_TABS);
+    await openModelTabs(nodes);
     expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
     expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS - 1}`);
     for (const tab of tabs()) {
@@ -184,16 +203,48 @@ describe('Canvas Model tabs', () => {
     expect(active()?.textContent).toBe(fixture.transform.name);
     await act(async () => nodes[0]!.data.onOpenNode?.(fixture.transform.id));
     expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
-    const closes = (): NodeListOf<HTMLButtonElement> =>
-      navigation.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]');
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+
+  it('keeps the exact active editor when closing another Model tab', async () => {
+    const { fixture, onApplyNodeDraft, tabs, active, nodes, closes } = await mountModelTabs(1);
+    await openModelTabs(nodes);
+    await act(async () => fireEvent.mouseDown(tabs()[0]!, { button: 0, ctrlKey: false }));
+    await act(async () => nodes[0]!.data.onOpenNode?.(fixture.transform.id));
+    expect(tabs()).toHaveLength(2);
+    const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
+    expect(editor).toBeInstanceOf(HTMLElement);
     await act(async () => closes()[1]!.click());
     expect(active()?.textContent).toBe(fixture.transform.name);
+    expect(tabs()).toHaveLength(1);
+    expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+
+  it('admits an extra Model after releasing full tab capacity', async () => {
+    const { onApplyNodeDraft, tabs, active, nodes, closes } =
+      await mountModelTabs(MAX_CANVAS_MODEL_TABS);
+    await openModelTabs(nodes.slice(0, MAX_CANVAS_MODEL_TABS));
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
+    await act(async () => closes()[1]!.click());
+    expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS - 1}`);
     expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS - 1);
     const seventh = nodes.at(-1)!;
     await act(async () => seventh.data.onOpenNode?.(seventh.id));
     expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS}`);
-    await act(async () => closes()[MAX_CANVAS_MODEL_TABS - 1]!.click());
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+
+  it('selects the existing neighbor after closing the active tab at capacity', async () => {
+    const { onApplyNodeDraft, tabs, active, nodes, closes } =
+      await mountModelTabs(MAX_CANVAS_MODEL_TABS);
+    await openModelTabs(nodes.slice(0, MAX_CANVAS_MODEL_TABS));
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS);
     expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS - 1}`);
+    await act(async () => closes()[MAX_CANVAS_MODEL_TABS - 1]!.click());
+    expect(active()?.textContent).toBe(`Other model ${MAX_CANVAS_MODEL_TABS - 2}`);
+    expect(tabs()).toHaveLength(MAX_CANVAS_MODEL_TABS - 1);
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 });
