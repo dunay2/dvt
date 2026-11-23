@@ -181,6 +181,23 @@ function buildCanvasShellChromeCommandsArgs({
   };
 }
 
+function getAddCanvasCommand({ controller, routeViewState }: CanvasShellRouteComposerArgs) {
+  const current = routeViewState.canvasDocument;
+  if (
+    !current ||
+    !controller.canAddCanvasDocument ||
+    !routeViewState.effectiveUserPermissions.canEditEdges
+  )
+    return undefined;
+  if (
+    routeViewState.draftAccessPosture.mutationBlocked ||
+    routeViewState.draftSaveStatus === 'saving'
+  )
+    return undefined;
+  return (title: string) =>
+    controller.handleCreateCanvasDocument({ kind: current.kind, title, mode: 'create_new' });
+}
+
 export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): CanvasShellProps {
   return {
     layout: buildCanvasShellLayout(buildCanvasShellLayoutArgs(args)),
@@ -191,6 +208,7 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
     prepareModelPreview: args.controller.flushDraftForExecution,
     canvasCommands: {
+      onAddCanvas: getAddCanvasCommand(args),
       onSelectCanvas: (canvasId) => {
         void args.controller.handleSelectCanvasDocument(canvasId);
       },

@@ -863,7 +863,11 @@ Those tests must keep proving:
 #### Browser Scenario Boundaries
 
 `canvas-relational-tree-workbench.cy.ts` owns keyboard entry and workspace
-navigation only. The sibling `canvas-relational-workbench-*.cy.ts` specs isolate
+navigation. `canvas-relational-workbench-inspection-layout.cy.ts` exercises
+Properties and camera stability at the initial fit and after zooming out.
+`canvas-relational-workbench-output-code.cy.ts` exercises SQL acquisition and Code
+inspector sizing through the shared Output and Code controls.
+The other `canvas-relational-workbench-*.cy.ts` specs isolate
 viewport behavior, contextual removal, pending JOIN creation, source append,
 predicate editing, chain persistence, CROSS preview and UNION creation.
 `canvas-relational-workbench-append.cy.ts` proves explicit producer-to-port

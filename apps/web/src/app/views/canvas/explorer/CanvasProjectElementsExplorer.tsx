@@ -2,6 +2,7 @@
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { useWorkspaceDbtProjectContext } from '../../code/useWorkspaceDbtProjectContext';
 import { CanvasExplorerList } from './CanvasExplorerList';
+import { CanvasExplorerCatalogPanel } from './CanvasExplorerDocuments';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasProjectElementsInput } from './CanvasExplorer.types';
 import styles from './CanvasExplorer.module.css';
@@ -46,74 +47,76 @@ export function CanvasProjectElementsExplorer({
         })
       : [];
   return (
-    <CanvasExplorerList
-      key={JSON.stringify([
-        catalogueScopeKey,
-        projectRoot,
-        binding?.canvasId,
-        binding?.authority.projectRoot,
-      ])}
-      items={mergeCanvasExplorerModels(items, models)}
-      presentation={presentation}
-      onAddModel={onAddModel}
-      modelAction={modelAction}
-      onImport={onImport}
-      connections={connections}
-      countKnown={!loading && !unavailable}
-      pending={loading}
-      status={
-        creationError || unavailable || loading ? (
-          <>
-            {creationError ? (
-              <p className={styles.empty} role="alert">
-                {copy.modelSchemaUnavailable}
-              </p>
-            ) : null}
-            {unavailable || loading ? (
-              <p className={styles.empty} role={unavailable ? 'alert' : 'status'}>
-                {unavailable ? copy.projectModelsUnavailable : copy.projectModelsLoading}
-              </p>
-            ) : null}
-          </>
-        ) : undefined
-      }
-      onDragStart={(id, event) => {
-        if (currentIds.has(id)) {
-          onDragStart?.(id, event);
-          return;
+    <CanvasExplorerCatalogPanel key={catalogueScopeKey} copy={copy}>
+      <CanvasExplorerList
+        key={JSON.stringify([
+          catalogueScopeKey,
+          projectRoot,
+          binding?.canvasId,
+          binding?.authority.projectRoot,
+        ])}
+        items={mergeCanvasExplorerModels(items, models)}
+        presentation={presentation}
+        onAddModel={onAddModel}
+        modelAction={modelAction}
+        onImport={onImport}
+        connections={connections}
+        countKnown={!loading && !unavailable}
+        pending={loading}
+        status={
+          creationError || unavailable || loading ? (
+            <>
+              {creationError ? (
+                <p className={styles.empty} role="alert">
+                  {copy.modelSchemaUnavailable}
+                </p>
+              ) : null}
+              {unavailable || loading ? (
+                <p className={styles.empty} role={unavailable ? 'alert' : 'status'}>
+                  {unavailable ? copy.projectModelsUnavailable : copy.projectModelsLoading}
+                </p>
+              ) : null}
+            </>
+          ) : undefined
         }
-        const model = models.find((item) => item.id === id);
-        if (model == null) {
-          onDragStart?.(id, event);
-          return;
-        }
-        try {
-          if (!canCreateInstances || projection == null) throw new Error('Unavailable model.');
-          event.dataTransfer.setData(
-            CANONICAL_NODE_DRAG_MIME_TYPE,
-            JSON.stringify(
-              createCanvasDbtModelDefinition(projection, model.definitionIdentity.uniqueId)
-            )
-          );
-          event.dataTransfer.effectAllowed = 'copy';
-          setCreationError(false);
-        } catch {
-          event.preventDefault();
-          setCreationError(true);
-        }
-      }}
-      onSelect={(id) => {
-        if (currentIds.has(id)) {
-          return onInspectNode({ kind: 'canonical-node', nodeId: id });
-        }
-        const model = models.find((item) => item.id === id);
-        if (binding == null || model == null) return;
-        return onInspectNode({
-          kind: 'dbt-file-model',
-          binding,
-          uniqueId: model.definitionIdentity.uniqueId,
-        });
-      }}
-    />
+        onDragStart={(id, event) => {
+          if (currentIds.has(id)) {
+            onDragStart?.(id, event);
+            return;
+          }
+          const model = models.find((item) => item.id === id);
+          if (model == null) {
+            onDragStart?.(id, event);
+            return;
+          }
+          try {
+            if (!canCreateInstances || projection == null) throw new Error('Unavailable model.');
+            event.dataTransfer.setData(
+              CANONICAL_NODE_DRAG_MIME_TYPE,
+              JSON.stringify(
+                createCanvasDbtModelDefinition(projection, model.definitionIdentity.uniqueId)
+              )
+            );
+            event.dataTransfer.effectAllowed = 'copy';
+            setCreationError(false);
+          } catch {
+            event.preventDefault();
+            setCreationError(true);
+          }
+        }}
+        onSelect={(id) => {
+          if (currentIds.has(id)) {
+            return onInspectNode({ kind: 'canonical-node', nodeId: id });
+          }
+          const model = models.find((item) => item.id === id);
+          if (binding == null || model == null) return;
+          return onInspectNode({
+            kind: 'dbt-file-model',
+            binding,
+            uniqueId: model.definitionIdentity.uniqueId,
+          });
+        }}
+      />
+    </CanvasExplorerCatalogPanel>
   );
 }

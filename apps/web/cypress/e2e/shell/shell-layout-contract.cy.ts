@@ -404,23 +404,25 @@ describe('Shell layout contract', () => {
     const modelViewport = `${model} [data-slot="canvas-relational-tree-viewport"], ${model} [data-slot="canvas-relational-tree-draft-viewport"]`;
     cy.get(`${canvas} [data-testid="canvas-viewport"]`).as('retainedCanvas', { type: 'static' });
     assertShellCanvasEntries();
-    cy.get('[data-slot="shell-project-code-command"]').then(($host) => {
-      const hostTop = $host[0]!.getBoundingClientRect().top;
-      const hostBottom = $host[0]!.getBoundingClientRect().bottom;
-      cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').should(($entry) => {
-        expect($entry[0]!.getBoundingClientRect().bottom, 'Canvas precedes Git').to.be.at.most(
-          hostTop
-        );
+    cy.get('[data-slot="left-navigation-nav"] [aria-label]')
+      .filter('a, button')
+      .should(($links) => {
+        const labels = $links.toArray().map((link) => link.getAttribute('aria-label'));
+        expect(labels.map((label) => label?.replace(/\s+\(\d+\)$/, ''))).to.deep.equal([
+          'Canvas',
+          'Semantic view',
+          'SQL',
+          'Templates',
+          'Runs',
+          'Plugins',
+          'Log',
+          'Problems',
+          'Admin',
+        ]);
       });
-      cy.get('[data-slot="left-navigation-link"]:not([href="/canvas"])')
-        .first()
-        .should(($link) => {
-          expect(
-            $link[0]!.getBoundingClientRect().top,
-            'route group follows Git'
-          ).to.be.greaterThan(hostBottom);
-        });
-    });
+    cy.get('[data-slot="left-navigation-nav"] [data-slot="shell-project-code-command"]').should(
+      'not.exist'
+    );
     cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-workspace-path="notes.md"]`).click();

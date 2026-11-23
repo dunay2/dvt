@@ -204,6 +204,7 @@ export function dragWorkbenchSource(
   sourceLabel: string,
   dropOffset?: Readonly<{ x: number; y: number }>
 ): void {
+  setWorkbenchInputsOpen(true);
   cy.window().then((window) => {
     const dataTransfer = new window.DataTransfer();
     cy.contains('[data-slot="canvas-relational-tree-source"]', sourceLabel).trigger('dragstart', {
@@ -224,6 +225,15 @@ export function dragWorkbenchSource(
           .trigger('drop', { dataTransfer, ...position });
       });
   });
+  setWorkbenchInputsOpen(false);
+}
+
+export function setWorkbenchInputsOpen(open: boolean): void {
+  const trigger = '[data-slot="canvas-model-inputs-command"]:visible';
+  cy.get(trigger).then(($trigger) => {
+    if ($trigger.attr('aria-expanded') !== String(open)) cy.wrap($trigger).click();
+  });
+  cy.get(trigger).should('have.attr', 'aria-expanded', String(open));
 }
 
 /** Connect an explicit producer output to one operation Input or the passive terminal. */

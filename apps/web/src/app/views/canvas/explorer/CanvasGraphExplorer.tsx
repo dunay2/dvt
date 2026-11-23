@@ -17,6 +17,7 @@ import type {
   CanvasExplorerProjectWorkspace,
 } from './CanvasExplorer.types';
 import { CanvasExplorerList } from './CanvasExplorerList';
+import { CanvasExplorerCatalogPanel } from './CanvasExplorerDocuments';
 import { projectCanvasExplorerModels } from './canvasExplorerItems';
 import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
@@ -140,16 +141,17 @@ export function CanvasGraphExplorer({
       activityRail={activityRail}
       elements={
         projectFiles?.renderElements == null ? (
-          <CanvasExplorerList
-            key={catalogueScopeKey}
-            items={items}
-            presentation={browser?.cataloguePresentation}
-            onAddModel={onAddModel}
-            onImport={onImport}
-            connections={connections}
-            onSelect={(id) => inspect({ kind: 'canonical-node', nodeId: id })}
-            onDragStart={dragResource}
-          />
+          <CanvasExplorerCatalogPanel key={catalogueScopeKey} copy={copy}>
+            <CanvasExplorerList
+              items={items}
+              presentation={browser?.cataloguePresentation}
+              onAddModel={onAddModel}
+              onImport={onImport}
+              connections={connections}
+              onSelect={(id) => inspect({ kind: 'canonical-node', nodeId: id })}
+              onDragStart={dragResource}
+            />
+          </CanvasExplorerCatalogPanel>
         ) : (
           (enabled) =>
             projectFiles.renderElements?.({

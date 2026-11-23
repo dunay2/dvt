@@ -29,7 +29,6 @@ export function ShellOperationalRail({
           ['problems', copy.operationalDrawerProblems, CircleAlert, problemCount],
         ] as const
       ).map(([id, label, Icon, count]) => {
-        if (id === 'problems' && count == null) return null;
         const hasCount = count != null && count > 0;
         const active = operationalView === id;
         const accessibleLabel = hasCount ? `${label} (${count})` : label;

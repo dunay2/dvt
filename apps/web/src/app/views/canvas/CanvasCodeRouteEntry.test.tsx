@@ -25,6 +25,7 @@ afterEach(async () => {
 async function mountEntry({
   state = { canvasWorkbench: 'code' } as unknown,
   ownerKey = 'canvas:one' as string | null,
+  modelOwnerKey = 'model:one' as string | null,
   blocked = false,
   strict = false,
   onOpen = vi.fn(async () => true),
@@ -40,7 +41,7 @@ async function mountEntry({
     const [owner, setOwner] = useState(ownerKey);
     changeOwner = setOwner;
     observedBlocker = useBlocker(blocked);
-    return <CanvasCodeRouteEntry ownerKey={owner} onOpen={onOpen} />;
+    return <CanvasCodeRouteEntry ownerKey={owner} modelOwnerKey={modelOwnerKey} onOpen={onOpen} />;
   }
   const router = createMemoryRouter([{ path: '/canvas', element: <Route /> }], {
     initialEntries: [
@@ -72,6 +73,19 @@ async function mountEntry({
 }
 
 describe('Canvas Code route entry', () => {
+  it.each(['semantic', 'sql'])(
+    'consumes %s through the active Model catalog owner',
+    async (view) => {
+      const foreign = { returnTo: '/templates' };
+      const mounted = await mountEntry({
+        state: { canvasWorkbench: view, foreign },
+        ownerKey: null,
+      });
+      expect(mounted.onOpen).toHaveBeenCalledExactlyOnceWith(view);
+      expect(mounted.router.state.location.state).toEqual({ foreign });
+    }
+  );
+
   it('consumes only its request after a real Router commit and preserves URL and foreign state', async () => {
     // Replacing only history state must not invalidate the route authority or its auth admission.
     const foreign = { returnTo: '/runs' };

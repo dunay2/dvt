@@ -2,6 +2,7 @@
 import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperationSearch } from '../../support/relationalWorkbench/operationMenu';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
@@ -128,8 +129,10 @@ describe('Compact semantic operation menu', () => {
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
   });
   it('chooses the exact JOIN by search and keyboard, then cancels without persisting it', () => {
+    setWorkbenchInputsOpen(true);
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+    setWorkbenchInputsOpen(false);
     cy.get(trigger).click();
     for (const heading of ['Combine', 'Transform', 'Order and limit']) {
       cy.contains('[cmdk-group-heading]', heading).should('exist');
@@ -156,7 +159,9 @@ describe('Compact semantic operation menu', () => {
       expect(bounds.right).to.be.at.most(820);
     });
     cy.screenshot('compact-operation-menu');
+    setWorkbenchInputsOpen(true);
     cy.get('[data-slot="canvas-relational-tree-source"]').first().click();
+    setWorkbenchInputsOpen(false);
     cy.get('[role="listbox"]').should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();

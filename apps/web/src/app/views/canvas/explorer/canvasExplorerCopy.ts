@@ -38,6 +38,11 @@ const en = {
   collapse: 'Collapse explorer',
   close: 'Close explorer',
   models: 'Models',
+  canvases: 'Canvases',
+  addCanvas: 'Add canvas',
+  canvasName: 'Canvas name',
+  createCanvas: 'Create',
+  cancelCanvas: 'Cancel',
   modelInputs: 'Model inputs',
   chooseModelContext: 'Choose a Model block',
   modelContextDescription:
@@ -79,6 +84,11 @@ const es: typeof en = {
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',
   models: 'Modelos',
+  canvases: 'Canvas',
+  addCanvas: 'Añadir canvas',
+  canvasName: 'Nombre del canvas',
+  createCanvas: 'Crear',
+  cancelCanvas: 'Cancelar',
   modelInputs: 'Entradas del modelo',
   chooseModelContext: 'Elegir un bloque del modelo',
   modelContextDescription:

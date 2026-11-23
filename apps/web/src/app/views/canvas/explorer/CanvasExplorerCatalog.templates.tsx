@@ -227,7 +227,7 @@ export function CanvasExplorerListTemplate({
 }>): JSX.Element {
   const id = useId();
   return (
-    <div className={styles.listPanel}>
+    <>
       {connections}
       <CanvasExplorerSection
         title={copy.models}
@@ -281,6 +281,6 @@ export function CanvasExplorerListTemplate({
           <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>
         ) : null}
       </CanvasExplorerSection>
-    </div>
+    </>
   );
 }

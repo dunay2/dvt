@@ -37,6 +37,7 @@ type CanvasWorkbenchDefaultsDto = {
   activeCanvasId: CanvasController['activeCanvasId'];
   executionEnvironmentOptions: CanvasController['executionEnvironmentOptions'];
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
+  canAddCanvasDocument: CanvasController['canAddCanvasDocument'];
   authorizationPermissions: CanvasController['authorizationPermissions'];
   userPermissions: CanvasController['userPermissions'];
   canvasSurfaceStrategy: CanvasController['canvasSurfaceStrategy'];
@@ -162,6 +163,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     activeCanvasId: 'main-canvas',
     executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
     canCreateCanvasDocument: false,
+    canAddCanvasDocument: false,
     authorizationPermissions: buildDefaultCanvasUserPermissions(),
     userPermissions: buildDefaultCanvasUserPermissions(),
     canvasSurfaceStrategy: dvtCanvasSurfaceStrategy,

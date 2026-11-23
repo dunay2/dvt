@@ -8,6 +8,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { AppServicesProvider } from '../../services/AppServicesContext';
 import CanvasShell from './CanvasShell';
 import { CanvasWorkspaceTopBarIdentity } from './CanvasWorkspaceMenuControls';
 import type { CodeViewProps } from '../CodeView';
@@ -328,6 +330,7 @@ export function createCanvasShellHarness(
       queries: { retry: false },
     },
   });
+  const services = createAppServicesTestOverrides();
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -346,81 +349,54 @@ export function createCanvasShellHarness(
     bottomDrawerVisible: false,
   });
 
+  const renderProps = async (props: CanvasShellProps): Promise<void> => {
+    const useTestRoute = options?.initialEntries != null;
+    const editor = <CanvasShell {...props} />;
+    const routedEditor = options?.strictMode ? (
+      <React.StrictMode>{editor}</React.StrictMode>
+    ) : (
+      editor
+    );
+    await act(async () => {
+      root.render(
+        <AppServicesProvider overrides={services}>
+          <QueryClientProvider client={queryClient}>
+            <ShellActivityRailProvider>
+              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
+                <LeftNavigationRail
+                  navigationModel={{
+                    primaryItems: [
+                      {
+                        to: '/canvas',
+                        label: 'Canvas',
+                        icon: Workflow,
+                        source: 'runtime',
+                        level: 'core',
+                      },
+                    ],
+                    footerItems: [],
+                  }}
+                  copy={resolveShellTopBarCopy('en')}
+                />
+                {useTestRoute ? routedEditor : null}
+              </MemoryRouter>
+              {useTestRoute ? null : editor}
+            </ShellActivityRailProvider>
+          </QueryClientProvider>
+        </AppServicesProvider>
+      );
+    });
+  };
+
   return {
     container,
     navigation,
     render: async (overrides?: CanvasShellPropsOverrides) => {
       const props = buildCanvasShellProps(overrides);
-      await act(async () => {
-        root.render(
-          <QueryClientProvider client={queryClient}>
-            <ShellActivityRailProvider>
-              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
-                <LeftNavigationRail
-                  navigationModel={{
-                    primaryItems: [
-                      {
-                        to: '/canvas',
-                        label: 'Canvas',
-                        icon: Workflow,
-                        source: 'runtime',
-                        level: 'core',
-                      },
-                    ],
-                    footerItems: [],
-                  }}
-                  copy={resolveShellTopBarCopy('en')}
-                />
-                {options?.initialEntries == null ? null : options.strictMode ? (
-                  <React.StrictMode>
-                    <CanvasShell {...props} />
-                  </React.StrictMode>
-                ) : (
-                  <CanvasShell {...props} />
-                )}
-              </MemoryRouter>
-              {options?.initialEntries == null ? <CanvasShell {...props} /> : null}
-            </ShellActivityRailProvider>
-          </QueryClientProvider>
-        );
-      });
+      await renderProps(props);
       return props;
     },
-    renderProps: async (props: CanvasShellProps) => {
-      await act(async () => {
-        root.render(
-          <QueryClientProvider client={queryClient}>
-            <ShellActivityRailProvider>
-              <MemoryRouter initialEntries={options?.initialEntries ?? ['/canvas']}>
-                <LeftNavigationRail
-                  navigationModel={{
-                    primaryItems: [
-                      {
-                        to: '/canvas',
-                        label: 'Canvas',
-                        icon: Workflow,
-                        source: 'runtime',
-                        level: 'core',
-                      },
-                    ],
-                    footerItems: [],
-                  }}
-                  copy={resolveShellTopBarCopy('en')}
-                />
-                {options?.initialEntries == null ? null : options.strictMode ? (
-                  <React.StrictMode>
-                    <CanvasShell {...props} />
-                  </React.StrictMode>
-                ) : (
-                  <CanvasShell {...props} />
-                )}
-              </MemoryRouter>
-              {options?.initialEntries == null ? <CanvasShell {...props} /> : null}
-            </ShellActivityRailProvider>
-          </QueryClientProvider>
-        );
-      });
-    },
+    renderProps,
     unmount: () => {
       act(() => {
         root.unmount();

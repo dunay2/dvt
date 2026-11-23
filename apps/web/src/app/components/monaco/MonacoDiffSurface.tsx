@@ -1,5 +1,6 @@
 /** Owned concern: bind the read-only diff editor and own its worker model lifetime. */
-import { useMonaco, type MonacoDiffEditor } from '@monaco-editor/react';
+import { useMonaco, type Monaco, type MonacoDiffEditor } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 import { useLayoutEffect, useRef } from 'react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
@@ -19,6 +20,16 @@ type MonacoDiffSurfaceProps = Readonly<{
 }>;
 
 configureMonacoLocalWorkers();
+
+function syncDiffText(
+  monaco: Monaco,
+  model: editor.ITextModel,
+  language: string,
+  content: string
+): void {
+  if (model.getLanguageId() !== language) monaco.editor.setModelLanguage(model, language);
+  if (model.getValue() !== content) model.setValue(content);
+}
 
 export default function MonacoDiffSurface({
   ariaLabel,
@@ -57,16 +68,12 @@ export default function MonacoDiffSurface({
   }, [monaco]);
   useLayoutEffect(() => {
     const editor = diff.current;
-    const models = editor?.getModel();
-    if (!monaco || !editor || !models) return;
+    if (!monaco || !editor) return;
+    const models = editor.getModel();
+    if (!models) return;
     editor.updateOptions(createMonacoDiffOptions({ ariaLabel }));
-    for (const [model, content] of [
-      [models.original, original],
-      [models.modified, modified],
-    ] as const) {
-      if (model.getLanguageId() !== language) monaco.editor.setModelLanguage(model, language);
-      if (model.getValue() !== content) model.setValue(content);
-    }
+    syncDiffText(monaco, models.original, language, original);
+    syncDiffText(monaco, models.modified, language, modified);
   }, [ariaLabel, language, modified, monaco, original]);
   return <div ref={host} className={containerClassName} data-testid="monaco-diff-viewer" />;
 }

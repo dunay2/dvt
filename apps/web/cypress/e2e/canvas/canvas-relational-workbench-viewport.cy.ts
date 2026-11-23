@@ -30,6 +30,7 @@ import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
   revealWorkbenchCard,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import {
   hoverWorkbenchCard,
@@ -279,7 +280,7 @@ describe('Workbench viewport', () => {
     const canvasEntry = 'a[data-slot="left-navigation-link"][href="/canvas"]';
     const modelViewport = '[data-slot="canvas-relational-tree-viewport"]';
     const modelZoom = '[data-slot="canvas-relational-tree-zoom"]';
-    const modelSearch = '[data-slot="canvas-relational-tree-sources"] input';
+    const modelSearch = `${model} [data-slot="canvas-explorer-models"] input`;
 
     beforeEach(() => {
       cy.viewport(1280, 720);
@@ -420,6 +421,7 @@ describe('Workbench viewport', () => {
           openWorkbenchModel();
           cy.get(`${main} .react-flow__node`).should('have.length', count);
         });
+      setWorkbenchInputsOpen(true);
       cy.get('[data-slot="canvas-relational-tree-source-list"] > li').each(($row) => {
         const [source, add] = Array.from($row[0]!.querySelectorAll('button'));
         expect(source, 'source control').to.exist;
@@ -434,6 +436,7 @@ describe('Workbench viewport', () => {
       });
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       assertModelCardTypography();
+      setWorkbenchInputsOpen(false);
       // Verify the exact focus token at native scale before exercising fractional graph zoom.
       cy.get(modelZoom).should('have.text', '100%');
       revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
@@ -484,7 +487,7 @@ describe('Workbench viewport', () => {
       cy.get(modelZoom).should(($zoom) => {
         expect($zoom.text(), 'collapsing the rail retains Model zoom').to.equal(zoomBeforeCollapse);
       });
-      cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
+      cy.get(modelSearch).should('not.be.visible');
       verifyCompleteTreeFit(modelViewport);
       cy.screenshot('semantic-editor-sources-collapsed');
       cy.get(canvasEntry).focus();
@@ -498,8 +501,10 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
       assertExplorerWidth(model, 32);
       cy.get(modelSearch).should('have.value', 'customers').clear();
+      setWorkbenchInputsOpen(true);
       cy.get('[data-slot="canvas-relational-tree-sources"]').should('have.length', 1);
       cy.get('[data-slot="canvas-relational-tree-source"]').should('have.length', 2);
+      setWorkbenchInputsOpen(false);
       cy.get(`${model} [data-slot="canvas-explorer-sources-toggle"]`).should('not.exist');
       cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
       // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,

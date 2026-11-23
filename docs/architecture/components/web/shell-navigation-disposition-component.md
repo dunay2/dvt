@@ -33,8 +33,10 @@ route-family reason remains useful for File/Project and identity presentation.
 
 ## Invariants
 
-- The rail presents one Canvas entry, then contextual Git and remaining global
-  destinations, with About below. There is no duplicate Elements rail button.
+- The primary rail presents Canvas, Semantic view, SQL, Templates, Runs, Plugins,
+  Log, Problems and Administration in that order when available. The project Git
+  shortcut sits in the secondary group with the project tools and About. The
+  optional Cost destination uses that group when its capability is available.
 - Root supplies one existing `buildShellRuntimeState` navigation projection.
   There is no route list in Explorer and no parallel permission predicate.
 - Runtime capability filtering and Router/session guards remain authoritative.
@@ -55,7 +57,8 @@ route-family reason remains useful for File/Project and identity presentation.
 - Explicit Focus mode retains its existing chrome suppression and View escape.
 - Boolean shell presence suppresses Explorer's duplicate navigation. Without
   that provider, the existing standalone inline controls remain available.
-- Git belongs to the shell and remains the same control across routes and
+- `ShellProjectCodeLink` owns the secondary Git shortcut inside the shell project
+  tools. The same control is available across routes and
   Canvas/Code/Model. It exists only when the navigation model includes Canvas.
   The former DOM target, portal and active-surface scope are removed.
 - On Canvas, Git invokes the existing published Code callback without Router

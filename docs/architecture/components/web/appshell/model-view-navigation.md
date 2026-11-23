@@ -79,7 +79,8 @@ Visual Apply retains its existing lifecycle while presentation switches without
 unmounting the semantic workspace.
 
 Both shortcuts reveal the project Model list and activate the requested editor
-surface on the same gesture. Reuse an eligible current Model or restore the
+surface on the same gesture. From another route, the existing Canvas workbench
+entry adapter consumes the requested view after Canvas admission. Reuse an eligible current Model or restore the
 last accepted Model for this workspace and Canvas. If neither is available,
 use the first eligible visible entry in Explorer order, honoring its search.
 An empty or unavailable catalog keeps its existing posture. The Explorer remains
@@ -111,11 +112,28 @@ state. Never create an instance or silently choose the first of several contexts
 This distinction is required by the existing SQL query port and shared-definition
 contract; display names do not determine identity.
 
-The registered Model projection, shared search, result counts, Source facet and
-file-publication adapter remain unchanged. Selection never creates an occurrence;
-placement remains a drag operation. The project list remains accessible while a
-Model is open. The Model-local input palette remains reachable through a compact
-Inputs control, with its existing inspection and occurrence actions.
+The project Model list is the default Explorer presentation for every open
+Model editor, including card double-click, the Semantic shortcut and an existing
+Model tab. The shared search, result counts, Source facet and file-publication
+adapter retain the same projection. The Model-local input palette stays available
+through the Inputs control. It keeps its existing inspection and occurrence
+actions for producers already admitted to the Model.
+
+```mermaid
+flowchart LR
+  Entry[Rail, card or tab] --> Session[Selected Model session]
+  Session --> Catalogue[Project Model list]
+  Session --> Inputs[Model inputs]
+  Catalogue -->|Select| Browse[Guarded Model navigation]
+  Catalogue -->|Add working copy or drop| Compose[Existing composition command]
+  Compose --> Draft[Private working definition and local Read]
+```
+
+Selecting a catalogue row creates nothing. Eligible rows expose the explicit
+working-copy action and accept a drop inside the current editor, delegating to
+the existing composition command under ADR-0070. Apply publishes the candidate
+through the existing draft guard. Cancel discards it. File-only and unsupported
+resources retain their established admission.
 
 One presentation owner retains search, Models disclosure and expanded Model
 details across the Canvas and Model views. Both surfaces consume the shared

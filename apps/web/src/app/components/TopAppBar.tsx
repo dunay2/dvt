@@ -46,7 +46,10 @@ export function ShellTopBar({
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy(applicationLanguage);
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
-  const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
+  const showCanvasIdentity =
+    routeHeading == null &&
+    navigationDisposition.reason === 'workbench_route' &&
+    showCanvasWorkspaceIdentity;
   const shellViewControls = resolveShellViewControls(navigationDisposition);
 
   return (
@@ -62,14 +65,13 @@ export function ShellTopBar({
             <AppBrandMark className={styles.appBrandMark} />
           </span>
 
-          {routeHeading != null ? (
+          {routeHeading != null && (
             <div className={styles.routeHeading} data-slot="shell-route-heading">
               <routeHeading.icon aria-hidden="true" className={styles.routeHeadingIcon} />
               <h1 className={styles.routeHeadingTitle}>{routeHeading.title}</h1>
             </div>
-          ) : isWorkbenchShell && showCanvasWorkspaceIdentity ? (
-            <CanvasWorkspaceTopBarIdentity />
-          ) : null}
+          )}
+          {showCanvasIdentity && <CanvasWorkspaceTopBarIdentity />}
           <ShellWorkspaceBreadcrumb copy={copy} />
         </div>
 

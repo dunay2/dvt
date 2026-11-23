@@ -7,6 +7,7 @@ import {
   connectWorkbenchProducer,
   stageWorkbenchUnary,
   visitWorkbenchCanvas,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import {
   workbenchOperation,
@@ -202,7 +203,9 @@ describe('model-session', () => {
         expect(Math.abs(properties.top - tree.top)).to.be.lessThan(2);
       });
     });
+    setWorkbenchInputsOpen(true);
     cy.get('[data-slot="canvas-relational-tree-source"]').should('have.attr', 'draggable', 'false');
+    setWorkbenchInputsOpen(false);
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');

@@ -15,6 +15,7 @@ import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanva
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
+  openWorkbenchModel,
   revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
@@ -63,7 +64,8 @@ describe('Model composition inside the selected Model', () => {
     let copyId = '';
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
-    openModel();
+    openWorkbenchModel();
+    cy.get(row(receiver)).should('be.visible').and('have.attr', 'aria-pressed', 'true');
     dragModel(receiver);
     cy.get(pending).should('have.length', 1);
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
@@ -125,6 +127,22 @@ describe('Model composition inside the selected Model', () => {
       'have.length',
       2
     );
+    openModel(receiver);
+    const editor = '[data-slot="canvas-model-editor"]:visible';
+    const pendingRead = '[data-pending="true"]';
+    cy.get(editor).then(($editor) => {
+      const before = $editor.find(pendingRead).length;
+      dragModel(copyId);
+      cy.get(pending).should('have.length', before + 1);
+      cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+        'have.text',
+        original.name
+      );
+      cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+      cy.get(editor).should(($current) =>
+        expect($current.find(pendingRead)).to.have.length(before)
+      );
+    });
   });
 
   it('offers the same command by keyboard for a Source Model without selecting another Model', () => {

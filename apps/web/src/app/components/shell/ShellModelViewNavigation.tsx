@@ -6,68 +6,139 @@
  * @version 1.0.0
  */
 import { Workflow, SquareCode } from 'lucide-react';
+import { Link } from 'react-router';
 import type {
   CanvasModelWorkspaceTabContribution,
   CanvasModelBrowserContribution,
+  CanvasModelView,
 } from '../../views/canvas/canvasWorkspaceMenuContributionStore';
 import type { ShellTopBarCopy } from './copy';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../ui/utils';
 import styles from '../LeftNavigation.module.css';
 
-export function ShellModelViewNavigation({
-  tab,
-  browser,
-  available,
-  foreground,
-  onActivate,
-  copy,
-}: Readonly<{
+type ModelViewNavigationProps = Readonly<{
   tab: CanvasModelWorkspaceTabContribution | null;
   browser: CanvasModelBrowserContribution | null;
   available: boolean;
+  entryPath?: string;
   foreground: boolean;
   onActivate?: () => void;
   copy: ShellTopBarCopy;
+}>;
+
+type ModelViewNavigation =
+  | { kind: 'route'; path: string }
+  | { kind: 'blocked'; reason: string; selected: CanvasModelView | null }
+  | {
+      kind: 'browse';
+      onBrowse: CanvasModelBrowserContribution['onBrowse'];
+      selected: CanvasModelView | null;
+    };
+
+function readCurrentModelView(
+  tab: CanvasModelWorkspaceTabContribution | null,
+  browserMode: CanvasModelView | null
+): CanvasModelView | null {
+  if (tab?.active) return tab.views?.active ?? null;
+  return browserMode;
+}
+
+function resolveModelViewNavigation({
+  tab,
+  browser,
+  available,
+  entryPath,
+  foreground,
+  copy,
+}: ModelViewNavigationProps): ModelViewNavigation {
+  if (!available && entryPath != null) return { kind: 'route', path: entryPath };
+
+  const busy = tab?.views?.disabled === true;
+  const reason = busy ? copy.modelViewBusy : copy.modelViewUnavailable;
+  if (!available || browser == null) return { kind: 'blocked', reason, selected: null };
+
+  const selected = foreground ? readCurrentModelView(tab, browser.mode) : null;
+  if (busy) return { kind: 'blocked', reason, selected };
+  return { kind: 'browse', onBrowse: browser.onBrowse, selected };
+}
+
+function ModelViewShortcut({
+  id,
+  label,
+  Icon,
+  navigation,
+  onActivate,
+}: Readonly<{
+  id: CanvasModelView;
+  label: string;
+  Icon: typeof Workflow;
+  navigation: ModelViewNavigation;
+  onActivate: ModelViewNavigationProps['onActivate'];
 }>) {
-  const views = tab?.views;
-  const disabled = !available || browser == null || views?.disabled === true;
-  const active = tab?.active ? views?.active : browser?.mode;
+  const attributes = {
+    'data-slot': `shell-model-${id}-command`,
+    'aria-label': label,
+    className: cn(styles.link, styles.linkInteractive),
+  };
+  const caption = (
+    <>
+      <Icon aria-hidden="true" className={styles.icon} />
+      <span className={styles.caption}>{label}</span>
+    </>
+  );
+  const blocked = navigation.kind === 'blocked';
+  const tooltip = blocked ? `${label} · ${navigation.reason}` : label;
+  const selected = navigation.kind !== 'route' && navigation.selected === id;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {navigation.kind === 'route' ? (
+          <Link {...attributes} to={navigation.path} state={{ canvasWorkbench: id }}>
+            {caption}
+          </Link>
+        ) : (
+          <button
+            {...attributes}
+            type="button"
+            data-active={selected}
+            aria-disabled={blocked}
+            aria-pressed={selected}
+            onClick={() => {
+              if (navigation.kind !== 'browse') return;
+              onActivate?.();
+              navigation.onBrowse(id);
+            }}
+          >
+            {caption}
+          </button>
+        )}
+      </TooltipTrigger>
+      <TooltipContent side="right">{tooltip}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+export function ShellModelViewNavigation(props: ModelViewNavigationProps) {
+  const navigation = resolveModelViewNavigation(props);
+  const { copy, onActivate } = props;
   return (
     <>
-      {(
-        [
-          { id: 'semantic', label: copy.semanticView, Icon: Workflow },
-          { id: 'sql', label: copy.modelSqlView, Icon: SquareCode },
-        ] as const
-      ).map(({ id, label, Icon }) => (
-        <Tooltip key={id}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              data-slot={`shell-model-${id}-command`}
-              data-active={available && foreground && browser != null && active === id}
-              aria-label={label}
-              aria-disabled={disabled}
-              aria-pressed={available && foreground && browser != null && active === id}
-              className={cn(styles.link, styles.linkInteractive)}
-              onClick={() => {
-                if (disabled) return;
-                onActivate?.();
-                browser?.onBrowse(id);
-              }}
-            >
-              <Icon aria-hidden="true" className={styles.icon} />
-              <span className={styles.caption}>{label}</span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            {disabled
-              ? `${label} · ${views?.disabled ? copy.modelViewBusy : copy.modelViewUnavailable}`
-              : label}
-          </TooltipContent>
-        </Tooltip>
-      ))}
+      <ModelViewShortcut
+        id="semantic"
+        label={copy.semanticView}
+        Icon={Workflow}
+        navigation={navigation}
+        onActivate={onActivate}
+      />
+      <ModelViewShortcut
+        id="sql"
+        label={copy.modelSqlView}
+        Icon={SquareCode}
+        navigation={navigation}
+        onActivate={onActivate}
+      />
     </>
   );
 }

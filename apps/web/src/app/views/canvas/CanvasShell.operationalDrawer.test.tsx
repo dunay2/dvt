@@ -175,9 +175,13 @@ describe('CanvasShell operational drawer registration', () => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
     expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
-    expect(
-      document.querySelector('[data-slot="canvas-relational-tree-workbench"]')?.textContent
-    ).toContain('Missing');
+    const inputControl = document.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-model-inputs-command"]'
+    );
+    expect(inputControl).not.toBeNull();
+    act(() => inputControl!.click());
+    const palette = document.getElementById(inputControl!.getAttribute('aria-controls')!);
+    expect(palette?.textContent).toContain('Missing');
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {

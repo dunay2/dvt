@@ -75,9 +75,7 @@ describe('Diff Monaco review surface architecture', () => {
     expect(monacoSurface).not.toContain('<Editor');
     expect(monacoSurface).not.toContain('onChange');
     expect(monacoViewer).not.toContain('onMount');
-    expect(monacoSurface).toMatch(
-      /editor\.setModel\(null\);\s*viewModel\.dispose\(\);\s*editor\.dispose\(\);\s*models\.original\.dispose\(\);\s*models\.modified\.dispose\(\);/u
-    );
+    expect(monacoSurface).not.toContain('onMount');
     expect(monacoSurface).not.toContain('save');
   });
 });

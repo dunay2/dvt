@@ -1,12 +1,14 @@
 /** Owned concern: present direct shell destinations and compose the active contextual rail. */
 import { NavLink, useMatch } from 'react-router';
-import { GitFork } from 'lucide-react';
 import type { ShellNavigationItem, ShellNavigationModel } from '../shell/shellNavigationModel';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
-import { canvasCodeRouteEntryState } from '../views/canvas/CanvasCodeRouteEntry';
 import { ShellAbout } from './shell/ShellAbout';
-import { ShellProjectMenu } from './shell/ShellProjectMenu';
+import {
+  isDirectShellLinkActivation,
+  ShellProjectCodeLink,
+  ShellProjectMenu,
+} from './shell/ShellProjectMenu';
 import { ShellModelViewNavigation } from './shell/ShellModelViewNavigation';
 import type { ShellTopBarCopy } from './shell/copy';
 import { ShellOperationalRail } from './shell/ShellOperationalRail';
@@ -39,6 +41,15 @@ export function LeftNavigationRail({
     contribution?.activeCanvas?.id === registeredBrowser?.canvasId ? registeredBrowser : null;
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
+  const adminItem = items.find((item) => item.to === '/admin');
+  const costItem = items.find((item) => item.to === '/cost');
+  const routeActiveOverride = operationalView == null ? undefined : false;
+  const canvasActive =
+    operationalView == null &&
+    onCanvasRoute &&
+    codeTab?.active !== true &&
+    modelTab?.active !== true &&
+    modelBrowser?.mode == null;
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
     const Icon = item.icon;
     const isCanvas = item.to === '/canvas';
@@ -49,31 +60,14 @@ export function LeftNavigationRail({
             to={item.to}
             id={isCanvas ? 'shell-canvas-navigation' : undefined}
             aria-label={item.label}
-            data-active={
-              operationalView != null
-                ? false
-                : isCanvas
-                  ? onCanvasRoute &&
-                    codeTab?.active !== true &&
-                    modelTab?.active !== true &&
-                    modelBrowser?.mode == null
-                  : undefined
-            }
+            data-active={isCanvas ? canvasActive : routeActiveOverride}
             aria-expanded={
               isCanvas && onCanvasRoute ? expanded && codeTab?.active !== true : undefined
             }
             className={cn(styles.link, styles.linkInteractive)}
             data-slot="left-navigation-link"
             onClick={(event) => {
-              if (
-                event.defaultPrevented ||
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              )
-                return;
+              if (!isDirectShellLinkActivation(event)) return;
               onOperationalViewChange?.(null);
               if (!isCanvas || !onCanvasRoute) return;
               event.preventDefault();
@@ -107,68 +101,20 @@ export function LeftNavigationRail({
           >
             {canvasItem == null ? null : renderDestination(canvasItem)}
             {canvasItem == null ? null : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <NavLink
-                    to={canvasItem.to}
-                    state={canvasCodeRouteEntryState}
-                    id="shell-project-code-command"
-                    data-slot="shell-project-code-command"
-                    data-active={
-                      operationalView == null && onCanvasRoute && codeTab?.active === true
-                    }
-                    aria-label={copy.projectCode}
-                    aria-current={false}
-                    aria-expanded={onCanvasRoute && codeTab?.active === true}
-                    aria-controls={
-                      onCanvasRoute && codeTab?.active === true
-                        ? 'canvas-code-workspace-surface'
-                        : undefined
-                    }
-                    aria-disabled={
-                      onCanvasRoute &&
-                      (!contribution?.canOpenProjectCode || contribution.onOpenProjectCode == null)
-                        ? true
-                        : undefined
-                    }
-                    className={cn(styles.link, styles.linkInteractive)}
-                    onClick={(event) => {
-                      if (
-                        !onCanvasRoute ||
-                        event.defaultPrevented ||
-                        event.button !== 0 ||
-                        event.metaKey ||
-                        event.ctrlKey ||
-                        event.shiftKey ||
-                        event.altKey
-                      )
-                        return;
-                      event.preventDefault();
-                      if (contribution?.canOpenProjectCode) {
-                        onOperationalViewChange?.(null);
-                        contribution.onOpenProjectCode?.();
-                      }
-                    }}
-                  >
-                    <GitFork aria-hidden="true" className={styles.icon} />
-                    <span className={styles.caption}>{copy.projectCode}</span>
-                  </NavLink>
-                </TooltipTrigger>
-                <TooltipContent side="right">{copy.projectCode}</TooltipContent>
-              </Tooltip>
-            )}
-            {canvasItem == null ? null : (
               <ShellModelViewNavigation
                 tab={modelTab}
                 browser={modelBrowser}
                 available={onCanvasRoute}
+                entryPath={canvasItem.to}
                 foreground={operationalView == null && codeTab?.active !== true}
                 onActivate={() => onOperationalViewChange?.(null)}
                 copy={copy}
               />
             )}
             <div className={cn(styles.nav, styles.destinations)}>
-              {items.filter((item) => item !== canvasItem).map(renderDestination)}
+              {items
+                .filter((item) => item !== canvasItem && item !== adminItem && item !== costItem)
+                .map(renderDestination)}
             </div>
             {onOperationalViewChange == null ? null : (
               <ShellOperationalRail
@@ -178,9 +124,20 @@ export function LeftNavigationRail({
                 copy={copy}
               />
             )}
+            {adminItem == null ? null : renderDestination(adminItem)}
           </nav>
         </div>
         <div className={styles.footer}>
+          {costItem == null ? null : renderDestination(costItem)}
+          {canvasItem == null ? null : (
+            <ShellProjectCodeLink
+              to={canvasItem.to}
+              label={copy.projectCode}
+              onCanvasRoute={onCanvasRoute}
+              foreground={operationalView == null}
+              onActivate={() => onOperationalViewChange?.(null)}
+            />
+          )}
           <ShellProjectMenu copy={copy} />
           <ShellAbout copy={copy} />
         </div>

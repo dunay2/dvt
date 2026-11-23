@@ -59,6 +59,7 @@ function ScopedExplorer({
         cataloguePresentation,
         catalogue: [],
         mode: 'semantic',
+        onBrowse: vi.fn(),
         onSelect: vi.fn(),
         contexts: [],
         selectContext: vi.fn(),

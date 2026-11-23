@@ -15,6 +15,7 @@ import type { IDbtProjectGraphQueryPort } from '../../../ports/dbtProjectGraph';
 import { queryKeys } from '../../../queries/queryKeys';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasProjectElementsExplorer } from './CanvasProjectElementsExplorer';
+import { CanvasExplorerDocumentsContext } from './CanvasExplorerDocuments';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { canvasDbtModelDefinitionId } from '../canvasDbtModelReference';
 import * as modelReferences from '../canvasDbtModelReference';
@@ -133,6 +134,38 @@ afterEach(async () => {
   await mounted?.cleanup();
   mounted = undefined;
   vi.restoreAllMocks();
+});
+
+it('keeps the worksheet name and keyboard focus while the model catalog resolves', async () => {
+  const doc = { id: 'sales', kind: 'transformation' as const, title: 'Sales' };
+  const workspace = { activeId: doc.id, documents: [doc], onAddCanvas: vi.fn() };
+  let publishFiles!: (files: Awaited<ReturnType<IWorkspaceFilesQueryPort['listFiles']>>) => void;
+  listFiles.mockReturnValueOnce(
+    new Promise((resolve) => {
+      publishFiles = resolve;
+    })
+  );
+  mounted = await withTestQueryClient(
+    <AppServicesProvider overrides={services}>
+      <MemoryRouter>
+        <CanvasExplorerDocumentsContext.Provider value={workspace}>
+          <CanvasProjectElementsExplorer enabled items={[]} onInspectNode={onSelect} />
+        </CanvasExplorerDocumentsContext.Provider>
+      </MemoryRouter>
+    </AppServicesProvider>
+  );
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Add canvas' }));
+  });
+  const field = screen.getByRole<HTMLInputElement>('textbox', { name: 'Canvas name' });
+  act(() => {
+    fireEvent.change(field, { target: { value: 'Forecast' } });
+    publishFiles([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
+  });
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  expect(screen.getByRole('textbox', { name: 'Canvas name' })).toBe(field);
+  expect(document.activeElement).toBe(field);
+  expect(field.value).toBe('Forecast');
 });
 
 it('inspects native and actual file definitions without instance admission, navigation or file writes', async () => {

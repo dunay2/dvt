@@ -16,6 +16,7 @@ import {
   dragWorkbenchSource,
   connectWorkbenchProducer,
   revealWorkbenchCard,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -38,16 +39,19 @@ describe('Workbench pending binary operations', () => {
     const reads = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
     cy.get('[data-slot="canvas-relational-output-input-port"]').should('be.visible');
     cy.get(reads).should('not.exist');
+    setWorkbenchInputsOpen(true);
     dragWorkbenchField(
       '[data-slot="canvas-relational-tree-source"][data-node-id="source-customers"]',
       viewport,
       { x: 130, y: 220 }
     );
     cy.get(reads).should('have.length', 1);
+    setWorkbenchInputsOpen(true);
     cy.get('[data-slot="canvas-relational-tree-source"][data-node-id="source-orders"]')
       .closest('li')
       .find('[data-slot="source-occurrence-add"]')
       .click();
+    setWorkbenchInputsOpen(false);
     cy.get(reads).should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get(reads).should('not.exist');

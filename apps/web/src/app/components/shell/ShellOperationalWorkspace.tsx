@@ -94,7 +94,14 @@ export function ShellOperationalWorkspace({
   const contribution = useOperationalDrawerContributionStore((state) =>
     view === 'problems' ? state.contribution : null
   );
-  const title = view === 'log' ? copy.operationalDrawerLog : copy.operationalDrawerProblems;
+  const isLog = view === 'log';
+  const title = isLog ? copy.operationalDrawerLog : copy.operationalDrawerProblems;
+  const problems =
+    contribution == null ? (
+      <p className={styles.bodyMessage}>{copy.modelViewUnavailable}</p>
+    ) : (
+      <BottomOperationalProblemsPanel contribution={contribution} />
+    );
   return (
     <section
       id="shell-operational-workspace"
@@ -109,11 +116,7 @@ export function ShellOperationalWorkspace({
         </h1>
       </header>
       <div className={styles.content}>
-        {view === 'log' ? (
-          <OperationalLogView title={title} />
-        ) : contribution == null ? null : (
-          <BottomOperationalProblemsPanel contribution={contribution} />
-        )}
+        {isLog ? <OperationalLogView title={title} /> : problems}
       </div>
     </section>
   );

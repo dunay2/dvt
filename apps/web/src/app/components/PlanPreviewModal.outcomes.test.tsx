@@ -2,6 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { screen, within } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
@@ -105,20 +106,22 @@ describe('PlanPreviewModal rejected outcomes', () => {
         },
         message
       );
-      const dialog = document.querySelector('[data-testid="plan-preview-modal"]');
-      const descriptionId = dialog?.getAttribute('aria-describedby');
-      const disclosure = dialog?.querySelector('details');
-      expect(dialog?.textContent).toContain('No se pudo crear la vista previa de ejecución');
-      expect(dialog?.textContent).toContain('Modelo afectado');
-      expect(dialog?.querySelector('[data-slot="plan-preview-affected-model"]')?.textContent).toBe(
-        'Ventas por cliente'
+      const dialog = screen.getByRole('dialog', {
+        name: 'No se pudo crear la vista previa de ejecución',
+        description: message,
+      });
+      const content = within(dialog);
+      const alert = content.getByRole('alert');
+      expect(alert.textContent).toContain('Modelo afectado');
+      expect(within(alert).getByText('Ventas por cliente').dataset.slot).toBe(
+        'plan-preview-affected-model'
       );
-      expect(dialog?.textContent?.split(message)).toHaveLength(2);
-      expect(dialog?.textContent).not.toContain('internal planner detail');
-      expect(document.getElementById(descriptionId ?? '')?.textContent).toBe(message);
-      expect(disclosure?.open).toBe(false);
-      expect(disclosure?.querySelector('summary')?.textContent).toBe('Detalles técnicos');
-      expect(disclosure?.textContent).toContain('dvt_run_disposition_unsupported');
+      expect(content.getAllByText(message)).toHaveLength(1);
+      expect(dialog.textContent).not.toContain('internal planner detail');
+      const disclosure = content.getByRole('group');
+      expect(disclosure.hasAttribute('open')).toBe(false);
+      expect(within(disclosure).getByText('Detalles técnicos').tagName).toBe('SUMMARY');
+      expect(disclosure.textContent).toContain('dvt_run_disposition_unsupported');
     } finally {
       act(() => useApplicationLanguageStore.getState().configureApplicationLanguage(previous));
     }

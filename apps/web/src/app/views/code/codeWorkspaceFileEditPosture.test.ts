@@ -5,6 +5,22 @@ import { resolveCodeWorkspaceFileEditPosture } from './codeWorkspaceFileEditPost
 describe('Code workspace file edit posture', () => {
   const graphOwnedPaths = new Set(['dbt_project.yml', 'models/orders.sql', 'models/schema.yml']);
 
+  it.each([
+    ['operations/tasks/load.sql', 'editable'],
+    ['models/orders.sql', 'workspace_read_only'],
+    ['operations/metadata.yml', 'workspace_read_only'],
+    [undefined, 'workspace_read_only'],
+  ] as const)('limits operation editing for path %s', (selectedPath, kind) => {
+    expect(
+      resolveCodeWorkspaceFileEditPosture({
+        access: 'operation-sql',
+        authority: 'dbt-project-files',
+        selectedPath,
+        graphOwnedPaths,
+      })
+    ).toEqual({ kind });
+  });
+
   it('restricts presentation access without replacing valid file authority', () => {
     expect(
       resolveCodeWorkspaceFileEditPosture({

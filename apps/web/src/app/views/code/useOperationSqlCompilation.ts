@@ -13,13 +13,55 @@ type CompilationAttempt = Readonly<{
   result: OperationSqlCompilation;
 }>;
 
+function checkOperationSyntax(source: string, onResult: (result: OperationSqlCompilation) => void) {
+  let active = true;
+  let worker: Worker | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const stop = () => {
+    if (!active) return;
+    active = false;
+    clearTimeout(timeout);
+    worker?.terminate();
+  };
+  const finish = (result: OperationSqlCompilation) => {
+    if (!active) return;
+    stop();
+    onResult(result);
+  };
+  const fail = () => finish({ kind: 'unavailable' });
+  try {
+    worker = new Worker(new URL('./operationSqlSyntax.worker.ts', import.meta.url), {
+      type: 'module',
+    });
+    worker.onmessage = ({ data }: MessageEvent<OperationSqlSyntaxResult>) => finish(data);
+    worker.onerror = fail;
+    worker.onmessageerror = fail;
+    timeout = setTimeout(fail, 15_000);
+    worker.postMessage(source);
+  } catch {
+    fail();
+  }
+  return stop;
+}
+
+function taskSqlPath(filePath: string | undefined) {
+  if (!isWorkspaceOperationSqlPath(filePath)) return undefined;
+  return filePath?.toLowerCase().endsWith('.task.sql') ? filePath : undefined;
+}
+
+function attemptForBuffer(
+  attempt: CompilationAttempt | undefined,
+  path: string | undefined,
+  source: string
+) {
+  if (attempt?.source !== source) return undefined;
+  return attempt.path === path ? attempt : undefined;
+}
+
 export function useOperationSqlCompilation(filePath: string | undefined, source: string) {
-  const path =
-    isWorkspaceOperationSqlPath(filePath) && filePath?.toLowerCase().endsWith('.task.sql')
-      ? filePath
-      : undefined;
+  const path = taskSqlPath(filePath);
   const [attempt, setAttempt] = useState<CompilationAttempt>();
-  const current = attempt?.path === path && attempt?.source === source ? attempt : undefined;
+  const current = attemptForBuffer(attempt, path, source);
 
   useEffect(() => {
     if (attempt !== current) {
@@ -28,35 +70,7 @@ export function useOperationSqlCompilation(filePath: string | undefined, source:
     }
     if (current?.result.kind !== 'checking') return;
 
-    let active = true;
-    let worker: Worker | undefined;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    const stop = () => {
-      active = false;
-      clearTimeout(timeout);
-      worker?.terminate();
-    };
-    const finish = (result: OperationSqlCompilation) => {
-      if (!active) return;
-      stop();
-      setAttempt({ ...current, result });
-    };
-    const fail = () => finish({ kind: 'unavailable' });
-    try {
-      worker = new Worker(new URL('./operationSqlSyntax.worker.ts', import.meta.url), {
-        type: 'module',
-      });
-      worker.onmessage = ({ data }: MessageEvent<OperationSqlSyntaxResult>) => finish(data);
-      worker.onerror = fail;
-      worker.onmessageerror = fail;
-      timeout = setTimeout(fail, 15_000);
-      worker.postMessage(current.source);
-    } catch {
-      fail();
-    }
-    return () => {
-      if (active) stop();
-    };
+    return checkOperationSyntax(current.source, (result) => setAttempt({ ...current, result }));
   }, [attempt, current]);
 
   return {

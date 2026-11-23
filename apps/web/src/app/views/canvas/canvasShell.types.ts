@@ -174,6 +174,7 @@ export type CanvasShellChromeCommands = {
 };
 
 export type CanvasShellCanvasCommands = {
+  onAddCanvas?: (title: string) => Promise<void>;
   onSelectCanvas?: (canvasId: string) => void;
 };
 

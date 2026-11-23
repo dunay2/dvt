@@ -256,8 +256,18 @@ describe('CanvasShell architecture', () => {
   });
 
   it('keeps contextual source import hosted outside the shell composition state', () => {
-    expect(CANVAS_SHELL_SOURCE).toContain('CanvasSourceImportDialogHost');
-    expect(CANVAS_SHELL_SOURCE).toContain('useCanvasSourceImportDialogState');
+    const sourceImport = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'useCanvasShellSourceImport.tsx'
+    );
+    expect(CANVAS_SHELL_SOURCE).toContain("from './useCanvasShellSourceImport'");
+    for (const dependency of [
+      './CanvasSourceImportDialogHost',
+      './useCanvasSourceImportDialogState',
+    ]) {
+      expect(sourceImport).toContain(`from '${dependency}'`);
+      expect(CANVAS_SHELL_SOURCE).not.toContain(`from '${dependency}'`);
+    }
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       "import SourceImportWizard from '../../components/SourceImportWizard'"
     );

@@ -70,7 +70,7 @@ export function CanvasModelBrowserProvider({
         ...navigation,
         catalog: (composition) => (
           <CanvasProjectElementsExplorer
-            enabled={active && navigation.mode != null}
+            enabled={active && selectedId != null}
             projectRoot={projectRoot}
             items={items.map((item) => ({
               ...item,

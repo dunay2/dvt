@@ -1,4 +1,8 @@
-import type { WizardStep } from './types';
+import type { SourceImportWizardEntry, WizardStep } from './types';
+
+export const DEFAULT_SOURCE_IMPORT_ENTRY: SourceImportWizardEntry = Object.freeze({
+  intent: 'import-sources',
+});
 
 export const WIZARD_STEPS: WizardStep[] = [
   'connection',

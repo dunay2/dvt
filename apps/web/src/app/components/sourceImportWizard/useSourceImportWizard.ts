@@ -15,6 +15,7 @@ import {
   extractHttpErrorReason,
   extractHttpErrorTarget,
 } from '../../services/api/classifyHttpError';
+import { DEFAULT_SOURCE_IMPORT_ENTRY } from './constants';
 import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
 import {
   buildSourceImportCommand,
@@ -66,8 +67,6 @@ interface UseSourceImportWizardParams {
   onClose: () => void;
   entry?: SourceImportWizardEntry;
 }
-
-const DEFAULT_ENTRY: SourceImportWizardEntry = Object.freeze({ intent: 'import-sources' });
 
 const initialState: SourceImportWizardState = {
   currentStep: 'connection',
@@ -126,7 +125,7 @@ export function useSourceImportWizard({
   onComplete,
   onConnectionRenamed,
   onClose,
-  entry = DEFAULT_ENTRY,
+  entry = DEFAULT_SOURCE_IMPORT_ENTRY,
 }: UseSourceImportWizardParams) {
   const { copy } = useSourceImportLocalization();
   const connectionsQuery = useWarehouseConnectionsQuery(warehouseSourceImport, { enabled: open });
@@ -148,7 +147,8 @@ export function useSourceImportWizard({
   const contextKey = JSON.stringify([scopeKey, canvasId]);
   const entryScope = useRef({ entry, contextKey });
   if (entryScope.current.entry !== entry) entryScope.current = { entry, contextKey };
-  const currentEntry = entryScope.current.contextKey === contextKey ? entry : DEFAULT_ENTRY;
+  const currentEntry =
+    entryScope.current.contextKey === contextKey ? entry : DEFAULT_SOURCE_IMPORT_ENTRY;
   const initialWizardState = useMemo(
     () =>
       initializeSourceImportEntry(

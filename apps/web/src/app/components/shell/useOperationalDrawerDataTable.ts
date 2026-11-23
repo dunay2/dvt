@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type Column,
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
@@ -26,15 +27,24 @@ export type OperationalDrawerDataTableInput = Readonly<{
   nullValueLabel: string;
   rows: readonly SampleRow[];
 }>;
-export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableInput) {
-  const { columns, rows, nullValueLabel } = input;
+function useDataGridAppearance() {
+  const [comfortable, setComfortable] = useState(false);
+  const [wrap, setWrap] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState('#191a1c');
+  return { comfortable, setComfortable, wrap, setWrap, backgroundColor, setBackgroundColor };
+}
+
+function accessibleSort(order: ReturnType<Column<SampleRow>['getIsSorted']>) {
+  if (order === 'asc') return 'ascending' as const;
+  if (order === 'desc') return 'descending' as const;
+  return 'none' as const;
+}
+
+function useSampleTable({ columns, rows }: OperationalDrawerDataTableInput) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState('');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [comfortable, setComfortable] = useState(false);
-  const [wrap, setWrap] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState('#191a1c');
   const columnMovement = useOperationalDrawerDataColumns(columns);
   const tableColumns = useMemo<ColumnDef<SampleRow>[]>(
     () =>
@@ -70,6 +80,13 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
       globalFilter: search,
     },
   });
+  return { table, columnFilters, columnMovement, search, setSearch };
+}
+
+export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableInput) {
+  const { columns, rows, nullValueLabel } = input;
+  const { table, columnFilters, columnMovement, search, setSearch } = useSampleTable(input);
+  const appearance = useDataGridAppearance();
   const visibleRows = table.getRowModel().rows;
   const displayedColumns = table.getVisibleLeafColumns();
   const displayedOrder = displayedColumns.map(({ id }) => id);
@@ -80,12 +97,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     search,
     setSearch,
     hasFilters: search !== '' || columnFilters.length > 0,
-    comfortable,
-    setComfortable,
-    wrap,
-    setWrap,
-    backgroundColor,
-    setBackgroundColor,
+    ...appearance,
     total: rows.length,
     selection,
     columnVisibility: table.getAllLeafColumns().map((column) => ({
@@ -96,12 +108,7 @@ export function useOperationalDrawerDataTable(input: OperationalDrawerDataTableI
     headers: displayedColumns.map((column) => ({
       id: column.id,
       type: columns.find(({ name }) => name === column.id)?.type,
-      sort:
-        column.getIsSorted() === 'asc'
-          ? ('ascending' as const)
-          : column.getIsSorted() === 'desc'
-            ? ('descending' as const)
-            : ('none' as const),
+      sort: accessibleSort(column.getIsSorted()),
       toggleSort: column.getToggleSortingHandler(),
       sortPriority: column.getSortIndex() + 1,
       filter: String(column.getFilterValue() ?? ''),

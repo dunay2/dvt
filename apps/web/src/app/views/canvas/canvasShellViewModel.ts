@@ -90,6 +90,7 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     activeCanvasId: resolveActiveProjectCanvasId(routeDraft),
     executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
     canCreateCanvasDocument: canCreateCanvasDocument && routeDraftRecord == null,
+    canAddCanvasDocument: canCreateCanvasDocument && draftReadModel?.record != null,
     authorizationPermissions: store.userPermissions,
     userPermissions: {
       ...store.userPermissions,
