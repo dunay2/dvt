@@ -161,3 +161,15 @@ All 78 tests in the four concurrent Canvas files pass with the normal four
 workers. The two original draft-protection cases are preserved verbatim, and the
 tab proof adds direct active-editor identity assertions. The focused CodeScene
 review reports no findings for the refactored navigation test.
+
+The next complete run showed that constructing the six-Model starting state
+still consumed the released-capacity callback's deadline. The
+[replacement fixture design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7112703295),
+native `GH-3951-MODEL-TAB-FIXTURE-LIFECYCLE`, supersedes the earlier setup choice.
+It follows the existing draft-test lifecycle: a fresh production shell opens six
+real Models sequentially in a `beforeEach` explicitly bounded at 5,000 ms, then
+the unchanged 5,000 ms test callback proves the command. Those are separate
+fixture and command deadlines, rather than the original combined callback
+budget. All six tests and 41 assertions remain; no state is shared across tests,
+seeded directly, mocked differently, reduced or opened in a batch. The revised
+four-file concurrent proof again passes all 78 tests with the normal workers.

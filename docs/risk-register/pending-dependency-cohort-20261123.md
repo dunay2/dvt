@@ -58,3 +58,8 @@ invariants into focused real-shell scenarios. Keep maximum capacity where the
 invariant depends on it, the original deadline and concurrency, both draft
 protection cases and no-write assertions. Prove the change with concurrent
 Canvas tests and the complete prepush; no failed or interrupted run is a receipt.
+Establish full-capacity starting state through actual sequential commands in a
+fresh per-test fixture, following the existing draft-test lifecycle. Bound that
+preparation explicitly at five seconds and retain the separate five-second test
+callback; declare that distinction rather than presenting it as the old combined
+budget. Keep global runner settings, graph depth and every assertion unchanged.
