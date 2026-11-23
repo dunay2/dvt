@@ -27,6 +27,7 @@
 }
 
 .field:focus-visible,
+.destinations a:focus-visible,
 .runLink:focus-visible,
 .sortButton:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring);
@@ -72,6 +73,20 @@
   font-family: var(--font-mono);
   font-size: var(--text-mono);
   line-height: var(--text-mono-line-height);
+}
+
+.destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing) calc(var(--spacing) * 3);
+}
+
+.destinations a {
+  color: var(--text-strong);
+  text-decoration: underline;
+  text-decoration-color: var(--text-subtle);
+  text-underline-offset: calc(var(--spacing) / 2);
+  border-radius: var(--radius-sm);
 }
 
 .runLink {

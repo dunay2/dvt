@@ -183,6 +183,9 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(input.providerView === undefined ? {} : { providerView: input.providerView }),
       ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
       ...(evidenceModel.provenance === undefined ? {} : { provenance: evidenceModel.provenance }),
+      ...(evidenceModel.modelSelection === undefined
+        ? {}
+        : { modelSelection: evidenceModel.modelSelection }),
       ...(evidenceModel.materialization === undefined
         ? {}
         : { materialization: evidenceModel.materialization }),

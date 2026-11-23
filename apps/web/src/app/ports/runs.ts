@@ -4,6 +4,7 @@
  */
 import type {
   CancelRunReceipt,
+  CanvasAuthoringAuthorityBinding,
   DvtPostgresPublicationEvidence,
   ExecutionSelection,
   RecoverRunReceipt,
@@ -154,6 +155,10 @@ export type RunSummaryItem = RunCommonSnapshotFields;
 
 /** Full snapshot DTO with run-detail-specific fields. */
 export type RunSnapshot = RunCommonSnapshotFields & {
+  modelSelection?: Readonly<{
+    binding: CanvasAuthoringAuthorityBinding;
+    modelIds: readonly string[];
+  }>;
   executor?: RunExecutor;
   materialization?: MaterializationEvidence;
   publication?: DvtPostgresPublicationEvidence;

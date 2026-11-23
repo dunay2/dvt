@@ -10,7 +10,10 @@ import {
   type WorkflowSnapshot,
 } from '@dvt/contracts';
 
+import type { RunModelSelection } from '../ports/runtime.js';
+
 import { deriveDvtPostgresPublicationEvidence } from './runDvtPostgresPublicationEvidence.js';
+import { projectRunModelSelection } from './runModelSelection.js';
 
 type TransformationExecutor = 'postgres' | 'dbt';
 
@@ -23,6 +26,7 @@ interface RunGitArtifactRef {
 }
 
 export interface RunReadEvidenceModel {
+  readonly modelSelection?: RunModelSelection;
   readonly executor?: TransformationExecutor;
   readonly currentStepId?: string;
   readonly failedStepId?: string;
@@ -79,7 +83,10 @@ export function deriveRunReadEvidenceModel(args: {
   runtimeAdapter?: string;
 }): RunReadEvidenceModel {
   const currentAttemptEvents = selectLatestLogicalAttemptEvents(args.events ?? []);
-  const planExtra = readPlanObservabilityExtra(args.planRecord);
+  const plan = readRunPlan(args.planRecord);
+  const planExtra = plan?.observability?.extra;
+  const modelSelection =
+    plan && args.planRecord ? projectRunModelSelection(plan, args.planRecord) : undefined;
   const executor = deriveExecutor(currentAttemptEvents, args.snapshot.execution, planExtra);
   const currentStepId = deriveCurrentStepId(
     args.snapshot.status,
@@ -120,6 +127,7 @@ export function deriveRunReadEvidenceModel(args: {
   });
 
   return {
+    ...(modelSelection === undefined ? {} : { modelSelection }),
     ...(executor === undefined ? {} : { executor }),
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
@@ -525,14 +533,14 @@ function parseMaterialization(value: unknown) {
   return parsed.success ? parsed.data : undefined;
 }
 
-function readPlanObservabilityExtra(planRecord?: PlanRecord): Record<string, unknown> | undefined {
+function readRunPlan(planRecord?: PlanRecord) {
   if (!planRecord) {
     return undefined;
   }
 
   try {
     const plan = parseExecutionPlan(JSON.parse(planRecord.canonicalPlanJson));
-    return isRecord(plan.observability?.extra) ? plan.observability.extra : undefined;
+    return plan;
   } catch {
     return undefined;
   }

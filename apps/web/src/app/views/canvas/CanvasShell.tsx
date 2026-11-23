@@ -24,6 +24,7 @@ import { useCanvasModelBrowser } from './useCanvasModelBrowser';
 import { CanvasModelBrowserProvider } from './CanvasModelBrowser';
 import { useCanvasCodeWorkbench } from './useCanvasCodeWorkbench';
 import { CanvasCodeRouteEntry, type CanvasWorkbenchRouteTarget } from './CanvasCodeRouteEntry';
+import { CanvasRunModelRouteEntry } from './CanvasRunModelRouteEntry';
 import { useCanvasOperationDataTab } from './useCanvasOperationDataTab';
 import { useCanvasShellSourceImport } from './useCanvasShellSourceImport';
 import { useCanvasShellGraphPresentation } from './useCanvasShellGraphPresentation';
@@ -207,6 +208,14 @@ export default function CanvasShell({
             catalogueUnavailable ? null : (modelBrowser.scopeKey ?? panels.activeCanvasId)
           }
           onOpen={onWorkbenchEntry}
+        />
+        <CanvasRunModelRouteEntry
+          canvasId={panels.activeCanvasId}
+          state={chromeState.routeState}
+          nodes={panels.inspectorGraphNodes}
+          modelIds={model.modelIds}
+          openModel={openModel}
+          inspect={graphCommands.onInspectNode}
         />
         {layout.surfaceStrategy?.operationalDrawer == null ? null : (
           <CanvasOperationalDrawerContributionRegistrar

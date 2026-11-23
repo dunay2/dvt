@@ -143,6 +143,24 @@ the browser does not maintain competing command contracts.
    and log pointers. Views must not derive `runId`, `planSha`, attempt, adapter,
    error code, or duration from timeline rows when the snapshot omits them.
 
+## Model and result navigation from history
+
+The Run ID opens the existing execution detail. Model and Results links carry
+the selected Run ID into that workspace. Listing Runs stays a single scoped
+summary query; the detail reads are deferred until the user follows a link.
+
+The executed Model identities belong to the plan retained for the Run. A
+workspace destination must resolve that identity in the same tenant, project
+and environment. When a plan contains multiple Models, the user chooses which
+one to inspect. When identity or access is unavailable, the Run remains
+inspectable and navigation explains why the Model cannot be opened. Opening
+the current Model definition does not reconstruct its historical contents.
+
+Results present the evidence recorded for this Run, including materialization
+counts or a verified publication when available. A recorded zero-row write is
+a result in its own right. Missing evidence has its own state. Reading sample
+rows requires the explicit, publication-bound query described below.
+
 ## Publication-Bound Result Sample
 
 The #3021 slice reuses `GetRunSnapshot`, `ListWarehouseConnections`, and

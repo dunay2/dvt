@@ -135,7 +135,10 @@ describe('Runs runtime contract', () => {
     );
   });
 
-  it('renders completed result evidence from the snapshot read model', () => {
+  it('opens the selected completed run result from the filtered table', () => {
+    stubE2eJsonApi('GET', '/runs', {
+      items: [{ runId: 'run_completed', status: 'COMPLETED', environmentId: 'e2e-env' }],
+    });
     stubE2eJsonApi('GET', '/runs/run_completed', {
       runId: 'run_completed',
       planId: 'plan_e2e_1',
@@ -162,15 +165,17 @@ describe('Runs runtime contract', () => {
       nextCursor: null,
     });
 
-    visitWithE2eWorkspaceSession('/runs/run_completed');
+    visitWithE2eWorkspaceSession('/runs?status=completed');
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    cy.get('a[href="/runs/run_completed?tab=result"]').focus();
+    pressNativeKey('Enter');
     expectScopedRunRequest('/runs/run_completed');
     expectScopedRunRequest('/runs/run_completed/events');
 
     cy.window().then((window) => {
       const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
       cy.contains(copy.runTitle('run_completed')).should('be.visible');
-      cy.get('[data-slot="run-result-tab"]').should('be.enabled').click();
+      cy.get('[data-slot="run-result-tab"]').should('have.attr', 'aria-selected', 'true');
       cy.get('[data-slot="run-materialization-card"]').within(() => {
         cy.contains(copy.materializationTitle).should('be.visible');
         cy.contains(copy.executorLabel).should('be.visible');
@@ -179,6 +184,8 @@ describe('Runs runtime contract', () => {
         cy.contains('42').should('be.visible');
       });
     });
+    cy.go('back');
+    cy.get('select[name="run-status-filter"]').should('have.value', 'completed');
   });
 
   it('renders failed result diagnostics from the snapshot read model', () => {

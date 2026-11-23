@@ -25,7 +25,9 @@ import type {
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { RunEventFeedHealthView } from './RunEventFeedHealthView';
-import { RunDvtPostgresPublicationCard } from './RunDvtPostgresPublicationCard';
+import { RunResultPanel } from './RunResultPanel';
+import { RunExecutedModels } from './RunExecutedModels';
+import { useRunDetailTabPosition } from './runDetailNavigation';
 import { useRunStatesCopy } from './runStatesCopy';
 import { isKnownRunField } from './runStatesModel';
 import type { RunControlCommandController } from './useRunControlCommands';
@@ -392,9 +394,11 @@ export function RunWorkspaceStateView({
   runControls,
   publicationRows,
 }: RunWorkspaceStateProps) {
-  const { copy, language } = useRunStatesCopy();
-  const locale = language === 'es' ? 'es-ES' : 'en-US';
+  const { copy, language: locale } = useRunStatesCopy();
   const { snapshot, timeline, detailState } = workspace;
+  const { selectedTab, selectTab, canInspectResult } = useRunDetailTabPosition(snapshot.status);
+  if (selectedTab === 'models') return <RunExecutedModels snapshot={snapshot} />;
+
   const executor = deriveExecutor(workspace);
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
   const planProvenance = snapshot.provenance;
@@ -405,11 +409,15 @@ export function RunWorkspaceStateView({
   );
   const executionProvenance = deriveExecutionProvenance(workspace);
   const materializationEvidence = deriveMaterializationEvidence(workspace);
-  const showResultSection = snapshot.status === 'completed';
 
   return (
     <WorkbenchStateFrame title={copy.runTitle(snapshot.runId)} slotPrefix="runs-state">
-      <Tabs defaultValue="summary" className="mx-auto w-full max-w-4xl" data-slot="run-detail-tabs">
+      <Tabs
+        value={selectedTab}
+        onValueChange={selectTab}
+        className="mx-auto w-full max-w-4xl"
+        data-slot="run-detail-tabs"
+      >
         <div className="overflow-x-auto pb-1">
           <TabsList
             aria-label={copy.runDetailSectionsLabel}
@@ -422,7 +430,7 @@ export function RunWorkspaceStateView({
               value="result"
               data-slot="run-result-tab"
               className={routeWorkbenchTabTriggerClassName}
-              disabled={!showResultSection}
+              disabled={!canInspectResult}
             >
               {copy.runResultTabLabel}
             </TabsTrigger>
@@ -533,54 +541,15 @@ export function RunWorkspaceStateView({
         </TabsContent>
 
         <TabsContent value="result" className="mt-2 space-y-4">
-          {snapshot.publication ? (
-            <RunDvtPostgresPublicationCard evidence={snapshot.publication} locale={locale} />
-          ) : null}
-          {snapshot.publication ? publicationRows : null}
-          {showResultSection && (materializationEvidence || !snapshot.publication) ? (
-            <Card
-              data-slot="run-materialization-card"
-              className="border-slate-700 bg-slate-900 p-5"
-            >
-              <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
-              {materializationEvidence ? (
-                <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-                  <div>
-                    <span className="text-slate-400">{copy.executorLabel}</span>
-                    <div>{materializationEvidence.executor}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">{copy.environmentLabel}</span>
-                    <div>{materializationEvidence.environmentId}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">{copy.sinkTableLabel}</span>
-                    <div className="font-mono">{materializationEvidence.sinkTable}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                    <div>{materializationEvidence.rowsWritten.toLocaleString(locale)}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">{copy.startedLabel}</span>
-                    <div>{new Date(materializationEvidence.startedAt).toLocaleString(locale)}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">{copy.completedLabel}</span>
-                    <div>
-                      {new Date(materializationEvidence.completedAt).toLocaleString(locale)}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">{copy.durationLabel}</span>
-                    <div>{formatDuration(materializationEvidence.durationMs)}</div>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
-              )}
-            </Card>
-          ) : null}
+          <RunResultPanel
+            publication={snapshot.publication}
+            evidence={materializationEvidence}
+            durationLabel={
+              materializationEvidence && formatDuration(materializationEvidence.durationMs)
+            }
+            locale={locale}
+            publicationRows={publicationRows}
+          />
         </TabsContent>
 
         <TabsContent value="provenance" className="mt-2 space-y-4">

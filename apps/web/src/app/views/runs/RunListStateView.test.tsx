@@ -66,12 +66,16 @@ describe('RunListStateView', () => {
     expect(container.querySelector('[data-slot="card"]')).toBeNull();
   });
 
-  it('makes Run ID the only detail-navigation link and keeps Status last', async () => {
-    // The former passive identity and separate View Details column wasted space and link semantics.
+  it('links to the exact run, its model and its completed result, with Status last', async () => {
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/runs']}>
-          <RunListStateView runs={[buildSummary({ runId: 'run_1' })]} />
+          <RunListStateView
+            runs={[
+              buildSummary({ runId: 'run_1', status: 'completed' }),
+              buildSummary({ runId: 'pending/2', status: 'pending' }),
+            ]}
+          />
         </MemoryRouter>
       );
     });
@@ -79,9 +83,22 @@ describe('RunListStateView', () => {
     const link = ui.getByRole<HTMLAnchorElement>('link', { name: 'run_1' });
     expect(link.getAttribute('href')).toBe('/runs/run_1');
     expect(link.tabIndex).toBe(0);
+    const row = within(link.closest('tr')!);
+    expect(row.getByRole('link', { name: /model/i }).getAttribute('href')).toBe(
+      '/runs/run_1?tab=models'
+    );
+    expect(row.getByRole('link', { name: /results/i }).getAttribute('href')).toBe(
+      '/runs/run_1?tab=result'
+    );
+    const pending = within(ui.getByRole('link', { name: 'pending/2' }).closest('tr')!);
+    expect(pending.getByRole('link', { name: /model/i }).getAttribute('href')).toBe(
+      '/runs/pending%2F2?tab=models'
+    );
+    expect(pending.queryByRole('link', { name: /results/i })).toBeNull();
     expect(ui.queryByRole('button', { name: 'View Details' })).toBeNull();
     expect(ui.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Run ID',
+      'Explore',
       'Started',
       'Duration',
       'Environment',
@@ -112,7 +129,10 @@ describe('RunListStateView', () => {
     expect(ui.getByRole('columnheader', { name: 'Run ID' }).getAttribute('aria-sort')).toBe(
       'ascending'
     );
-    expect(ui.getAllByRole('link').map((link) => link.textContent)).toEqual(['run_a', 'run_z']);
+    expect(ui.getAllByRole('link', { name: /^run_/ }).map((link) => link.textContent)).toEqual([
+      'run_a',
+      'run_z',
+    ]);
     await act(async () =>
       fireEvent.change(ui.getByRole('combobox', { name: 'Filter runs by status' }), {
         target: { value: 'failed' },
@@ -153,7 +173,10 @@ describe('RunListStateView', () => {
     try {
       await act(async () => root.render(<RouterProvider router={router} />));
       const ui = within(container);
-      expect(ui.getAllByRole('link').map((link) => link.textContent)).toEqual(['run_a', 'run_z']);
+      expect(ui.getAllByRole('link', { name: /^run_/ }).map((link) => link.textContent)).toEqual([
+        'run_a',
+        'run_z',
+      ]);
       await act(async () => fireEvent.click(ui.getByRole('link', { name: 'run_a' })));
       expect(router.state.location.pathname).toBe('/runs/run_a');
       expect(ui.getByText('Selected run detail')).toBeTruthy();
@@ -166,7 +189,10 @@ describe('RunListStateView', () => {
       expect(ui.getByRole('columnheader', { name: 'Run ID' }).getAttribute('aria-sort')).toBe(
         'ascending'
       );
-      expect(ui.getAllByRole('link').map((link) => link.textContent)).toEqual(['run_a', 'run_z']);
+      expect(ui.getAllByRole('link', { name: /^run_/ }).map((link) => link.textContent)).toEqual([
+        'run_a',
+        'run_z',
+      ]);
     } finally {
       router.dispose();
     }

@@ -2,6 +2,8 @@
  * Owned concern: map raw API snapshot records into presentation DTOs and
  * project snapshot data into summary items for the runs list.
  */
+import { CanvasAuthoringAuthorityBindingSchema } from '@dvt/contracts';
+import { z } from 'zod';
 import type { RunSnapshot, RunSummaryItem } from '../../ports/runs';
 
 import {
@@ -21,6 +23,13 @@ import {
 } from './runsApiDecoders';
 import { parseDvtPostgresPublicationEvidence } from './dvtPostgresPublicationDecoder';
 
+const modelSelectionSchema = z
+  .object({
+    binding: CanvasAuthoringAuthorityBindingSchema,
+    modelIds: z.array(z.string().trim().min(1)).min(1),
+  })
+  .strict();
+
 export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
   if (!record || typeof record !== 'object') {
     return null;
@@ -39,6 +48,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
   const errorReason = asString(candidate.errorReason);
   const materialization = parseMaterializationEvidence(candidate.materialization);
   const publication = parseDvtPostgresPublicationEvidence(candidate.publication);
+  const selection = modelSelectionSchema.safeParse(candidate.modelSelection);
   const durationMs = asFiniteNumber(candidate.durationMs);
   const logicalAttemptId = asFiniteInteger(candidate.logicalAttemptId);
   const tenantId = asString(candidate.tenantId);
@@ -74,6 +84,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     ...(errorReason ? { errorReason } : {}),
     ...(materialization ? { materialization } : {}),
     ...(publication ? { publication } : {}),
+    ...(selection.success ? { modelSelection: selection.data } : {}),
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
     planSummary: parsePlanExecutionSummary(candidate.planSummary),
