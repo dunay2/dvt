@@ -280,20 +280,14 @@ describe('web Vitest suite catalog', () => {
           include: WEB_VITEST_SUITES[suiteName].include,
           exclude: WEB_VITEST_SUITES[suiteName].exclude,
           pool: 'forks',
-          minWorkers: 1,
           maxWorkers: workerCount,
-          poolOptions: {
-            forks: {
-              singleFork: false,
-              isolate: true,
-              minForks: 1,
-              maxForks: workerCount,
-            },
-          },
+          isolate: true,
         });
-        expect(config?.poolOptions?.forks?.execArgv, suiteName).toEqual(
+        expect(config?.execArgv, suiteName).toEqual(
           context === 'local' ? undefined : [WEB_VITEST_CI_NODE_OPTIONS]
         );
+        expect(config, suiteName).not.toHaveProperty('poolOptions');
+        expect(config, suiteName).not.toHaveProperty('minWorkers');
         expect(config?.testTimeout, suiteName).toBeUndefined();
         expect(config?.hookTimeout, suiteName).toBeUndefined();
         expect(config?.retry, suiteName).toBeUndefined();

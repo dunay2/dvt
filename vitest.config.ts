@@ -4,7 +4,6 @@ import type { CoverageV8Options } from 'vitest/node';
 export const engineCoveragePolicy = {
   provider: 'v8',
   reporter: ['text', 'json', 'html', 'lcov'],
-  all: true,
   clean: true,
   thresholds: {
     statements: 65,

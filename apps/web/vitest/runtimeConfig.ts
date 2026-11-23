@@ -47,16 +47,8 @@ function createWebVitestWorkerConfig(): NonNullable<UserConfig['test']> {
   const workerCount = ci ? WEB_VITEST_CI_WORKER_COUNT : WEB_VITEST_LOCAL_WORKER_COUNT;
   return {
     pool: 'forks',
-    minWorkers: 1,
     maxWorkers: workerCount,
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: true,
-        minForks: 1,
-        maxForks: workerCount,
-        ...(ci ? { execArgv: [WEB_VITEST_CI_NODE_OPTIONS] } : {}),
-      },
-    },
+    isolate: true,
+    ...(ci ? { execArgv: [WEB_VITEST_CI_NODE_OPTIONS] } : {}),
   };
 }
