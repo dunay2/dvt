@@ -14,6 +14,7 @@ code_refs:
   - apps/web/vitest/runtimeConfig.ts
   - vitest.config.ts
   - packages/@dvt/adapter-temporal/package.json
+  - packages/@dvt/observability-otel/package.json
   - apps/temporal-worker/package.json
   - .github/workflows/dependency-review.yml
 evidence:
@@ -46,6 +47,17 @@ instead of a removed export, and its config reader uses the current API result.
 All four checks pass, including a real failing low-coverage run and a passing
 covered control. Explicit source inclusion continues to measure unexecuted files;
 the statement/function/line thresholds remain 65 and branch threshold remains 55.
+
+Vitest 5 also widens `ReturnType<typeof vi.fn>` to include constructors. The
+affected test fixtures use its public callable `Mock` type, with specific async
+signatures where required. This retains their previous callable semantics and
+all existing assertions. The Web config uses the current `ViteUserConfig` export.
+
+The workspace run exposed a separate duplicate build in the OpenTelemetry test
+script. Its existing pretest helper now prepares `observability` for standalone
+execution and defers to Turbo when its dependency graph already owns the build.
+All nine adapter tests pass in both entry modes; the three helper contract cases
+also pass. No coordinator, test-selection change or build bypass is introduced.
 
 Temporal packages move together from 1.25.0 to 1.26.0. Tooltip becomes 1.4.1,
 Scroll Area 1.4.0, typescript-eslint 8.73.0 and markdownlint-cli2 0.24.2.
