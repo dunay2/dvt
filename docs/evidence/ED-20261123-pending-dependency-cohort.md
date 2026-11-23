@@ -17,6 +17,11 @@ code_refs:
   - packages/@dvt/observability-otel/package.json
   - apps/temporal-worker/package.json
   - .github/workflows/dependency-review.yml
+  - apps/web/src/app/views/canvas/canvasPlanAction.ts
+  - apps/web/src/app/views/canvas/canvasRunModelRouteAdmission.ts
+  - apps/web/src/app/views/canvas/relational-layout/relationalCardPlacementCommands.ts
+  - apps/web/src/app/views/code/workspaceFileEditorContributions.tsx
+  - apps/api/src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.ts
 evidence:
   tests:
     - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.catalog.architecture.test.ts
@@ -88,3 +93,51 @@ governs the adapter update. The [risk entry](../risk-register/pending-dependency
 defines the retained acceptance requirements. Full prepush and current hosted
 acceptance must be recorded on the integration PR; these focused results do
 not attest that boundary.
+
+## Complexity and execution ownership
+
+The [quality design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7108406865)
+and [physical separation rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7109381331)
+apply ADR-0069 and command/query rail governance. Planning DB designs
+`GH-3951-CODESCENE-REGRESSION-SIMPLIFICATION` and
+`GH-3951-CODESCENE-OWNED-SESSION-SEPARATION` admit the existing component
+families and five new implementation or fixture paths. Helper bindings extend
+existing rails through revision-checked record operations; their authorization,
+negative tests, command/query identities and existing bindings remain intact.
+
+```mermaid
+flowchart LR
+  Route[Existing route or user command] --> Admission[Existing scope and revision admission]
+  Admission --> Owner[Single owning session]
+  Owner --> Projection[Pure presentation or placement projection]
+  Owner --> Port[Existing command or query port]
+  Port --> Result[Observed result and partial-write evidence]
+```
+
+Run-to-Model admission reuses one in-flight command for the same destination.
+Code editor contributions project the accepted session without acquiring another
+file session, store or subscription. Relational placement retains the existing
+state cells, gesture ownership, cancel snapshot and single publication. Plan
+preview separates protected graph projection from generic artifact preparation;
+the owning action still flushes once, publishes and compiles in order, and
+retains written artifact paths when compilation or preview fails. Catalog
+migration keeps its existing lifecycle and SQL statement order.
+
+CodeScene's installed extension engine 1.0.80 reviewed the complete integration
+code diff after hook formatting at `119784d403b6c88f0f24df4f9740a382a05e2c5a`
+against `11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`. The initial candidate
+had 75 introduced or degraded findings across 54 files. The final review
+returned zero introduced or degraded findings, 71 fixed and 44 improved
+findings across 285 reviewed files, with no review failures. Two existing
+Planning DB authority scripts did not receive scores from that engine.
+Inherited unchanged or improved findings remain visible; no CodeScene rule,
+threshold or exclusion was changed.
+
+The eight refactored Cypress specifications retain all 684 assertions and 33
+scenarios. Named phases preserve their native gestures, queue order, controlled
+transport and live-runtime boundaries. The assertion comparison retains full
+`expect` matcher chains and literal `should`/`and` arguments, with nested
+callback assertions checked separately. The focused Inspector, removal and
+planning run passes 67 tests; session/presentation passes 27, Inspector fixture
+tests 42 and warehouse probe tests 24. Web's declared typecheck passes. These
+results complement, rather than replace, the final prepush and hosted gates.

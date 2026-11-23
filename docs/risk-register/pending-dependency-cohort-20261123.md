@@ -40,3 +40,13 @@ The [evidence](../evidence/ED-20261123-pending-dependency-cohort.md) records the
 observed regressions and focused results. If a compatibility failure remains,
 fix it or retain the dependency PR as unintegrated with its exact failure;
 never lower a threshold or bypass a hook to admit the update.
+
+Complexity reduction can accidentally duplicate admission, detach session
+lifetime from its owner, lose partial artifact-write evidence, or weaken browser
+proof. Keep the existing command/query rails and state cells; project passive
+contributions without adding sessions, subscriptions or side-effect handlers.
+Retain negative scope, revision, cancellation and exactly-once assertions.
+Compare CodeScene findings against the same integration base after hook
+formatting. An improved score alone does not establish behavioral acceptance.
+The recorded review removes all introduced or degraded findings while retaining
+the inherited findings and the engine's two unscored authority scripts explicitly.
