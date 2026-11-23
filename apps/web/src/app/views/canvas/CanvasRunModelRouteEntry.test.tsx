@@ -29,11 +29,16 @@ async function open({ project = 'project', inspect = vi.fn(async () => true) } =
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
-  const node = {
+  const node: CanonicalNode = {
     id: 'model.orders',
+    name: 'Orders',
+    pluginId: 'dbt',
+    kind: 'dbt:model',
     role: 'transform',
+    status: 'idle',
+    tags: [],
     metadata: { authority: 'dbt-project-files', resourceType: 'model' },
-  } as CanonicalNode;
+  };
   const openModel = vi.fn();
   const router = createMemoryRouter(
     [

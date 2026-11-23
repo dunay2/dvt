@@ -1,10 +1,10 @@
 import type { ICounter, IObservability } from '@dvt/observability';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
 import { ObservabilityAdmissionTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 
-function createCounterSpy(): { add: ReturnType<typeof vi.fn>; counter: ReturnType<typeof vi.fn> } {
+function createCounterSpy(): { add: Mock; counter: Mock } {
   const add = vi.fn<ICounter['add']>();
   const counter = vi.fn().mockReturnValue({ add });
   return { add, counter };

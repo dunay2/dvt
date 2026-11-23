@@ -1,5 +1,5 @@
 import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '@dvt/engine';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { RunRecoveryUnavailableError } from '../../../src/application/errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
@@ -52,9 +52,13 @@ const storedPlanRef = {
 
 interface TestDependencies {
   readonly engine: {
-    recoverRun: ReturnType<typeof vi.fn>;
+    recoverRun: Mock<() => Promise<unknown>>;
   };
-  readonly stateStore: { getRunMetadataByRunId: ReturnType<typeof vi.fn> };
+  readonly stateStore: {
+    getRunMetadataByRunId: Mock<
+      (tenantId: string, runId: string) => Promise<typeof sourceMetadata | null>
+    >;
+  };
   readonly planStore: { getStoredPlanRef: ReturnType<typeof vi.fn> };
   readonly executionContextReader: { read: ReturnType<typeof vi.fn> };
   readonly executionContextInheritanceWriter: { inherit: ReturnType<typeof vi.fn> };

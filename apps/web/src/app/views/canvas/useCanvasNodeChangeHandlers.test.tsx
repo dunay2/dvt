@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { Edge, Node } from '@xyflow/react';
 
@@ -42,12 +42,12 @@ type NodeChangeHarness = {
   render: () => Promise<void>;
   cleanup: () => void;
   spies: {
-    setNodes: ReturnType<typeof vi.fn>;
-    setEdges: ReturnType<typeof vi.fn>;
-    setDraftSession: ReturnType<typeof vi.fn>;
-    setSelectedNodes: ReturnType<typeof vi.fn>;
-    setInspectorNode: ReturnType<typeof vi.fn>;
-    onLayoutComplete: ReturnType<typeof vi.fn>;
+    setNodes: Mock;
+    setEdges: Mock;
+    setDraftSession: Mock;
+    setSelectedNodes: Mock;
+    setInspectorNode: Mock;
+    onLayoutComplete: Mock;
   };
 };
 
@@ -70,13 +70,13 @@ function renderHookHost({
   edges?: Edge[];
   selectedNodeIds?: string[];
   inspectorNodeId?: string | null;
-  setNodes?: ReturnType<typeof vi.fn>;
-  setEdges?: ReturnType<typeof vi.fn>;
-  setDraftSession?: ReturnType<typeof vi.fn>;
-  setSelectedNodes?: ReturnType<typeof vi.fn>;
-  reconcileSelectionAfterNodeRemoval?: ReturnType<typeof vi.fn>;
-  setInspectorNode?: ReturnType<typeof vi.fn>;
-  onLayoutComplete?: ReturnType<typeof vi.fn>;
+  setNodes?: Mock;
+  setEdges?: Mock;
+  setDraftSession?: Mock;
+  setSelectedNodes?: Mock;
+  reconcileSelectionAfterNodeRemoval?: Mock;
+  setInspectorNode?: Mock;
+  onLayoutComplete?: Mock;
 }): NodeChangeHarness {
   let latest: LatestHook = null;
   const container = document.createElement('div');

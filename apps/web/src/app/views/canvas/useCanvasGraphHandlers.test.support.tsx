@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { toast } from 'sonner';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 import { ReactFlowProvider, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react';
 
@@ -64,9 +64,9 @@ vi.mock('sonner', () => ({
 }));
 
 export const toastState = toast as unknown as {
-  error: ReturnType<typeof vi.fn>;
-  success: ReturnType<typeof vi.fn>;
-  info: ReturnType<typeof vi.fn>;
+  error: Mock;
+  success: Mock;
+  info: Mock;
 };
 
 type LatestHook = ReturnType<typeof useCanvasGraphHandlers> | null;
@@ -116,14 +116,14 @@ type RenderGraphHandlersHookArgs = {
   columnLevelLineageEnabled?: boolean;
   gridSize?: number;
   canvasSnapToGrid?: boolean;
-  setNodes?: ReturnType<typeof vi.fn>;
-  setEdges?: ReturnType<typeof vi.fn>;
-  setDraftSession?: ReturnType<typeof vi.fn>;
-  setSelectedNodes?: ReturnType<typeof vi.fn>;
-  reconcileSelectionAfterNodeRemoval?: ReturnType<typeof vi.fn>;
-  setInspectorNode?: ReturnType<typeof vi.fn>;
-  toggleInspectorPanel?: ReturnType<typeof vi.fn>;
-  onLayoutComplete?: ReturnType<typeof vi.fn>;
+  setNodes?: Mock;
+  setEdges?: Mock;
+  setDraftSession?: Mock;
+  setSelectedNodes?: Mock;
+  reconcileSelectionAfterNodeRemoval?: Mock;
+  setInspectorNode?: Mock;
+  toggleInspectorPanel?: Mock;
+  onLayoutComplete?: Mock;
 };
 
 export function renderGraphHandlersHook({
@@ -160,13 +160,13 @@ export function renderGraphHandlersHook({
   latest: () => LatestHook;
   render: (nextNodes?: Node[]) => Promise<void>;
   cleanup: () => void;
-  setNodes: ReturnType<typeof vi.fn>;
-  setEdges: ReturnType<typeof vi.fn>;
-  setDraftSession: ReturnType<typeof vi.fn>;
-  setSelectedNodes: ReturnType<typeof vi.fn>;
-  setInspectorNode: ReturnType<typeof vi.fn>;
-  toggleInspectorPanel: ReturnType<typeof vi.fn>;
-  onLayoutComplete: ReturnType<typeof vi.fn>;
+  setNodes: Mock;
+  setEdges: Mock;
+  setDraftSession: Mock;
+  setSelectedNodes: Mock;
+  setInspectorNode: Mock;
+  toggleInspectorPanel: Mock;
+  onLayoutComplete: Mock;
 } {
   const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
   let currentNodes = nodes;

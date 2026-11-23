@@ -6,14 +6,14 @@ import type {
   IObservability,
   ITraces,
 } from '@dvt/observability';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { ObservabilityStartRunSlaTelemetry } from '../../../src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import { START_RUN_SLA_METRICS } from '../../../src/infrastructure/telemetry/startRunSlaMetrics.js';
 
 function createHistogramSpy(): {
-  record: ReturnType<typeof vi.fn>;
-  histogram: ReturnType<typeof vi.fn>;
+  record: Mock;
+  histogram: Mock;
 } {
   const record = vi.fn<IHistogram['record']>();
   const histogram = vi.fn().mockReturnValue({ record });

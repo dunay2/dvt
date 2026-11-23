@@ -1,10 +1,10 @@
 import type { IGauge, IObservability } from '@dvt/observability';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
 import { ObservabilityBackpressureCapacityTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 
-function createGaugeSpy(): { set: ReturnType<typeof vi.fn>; gauge: ReturnType<typeof vi.fn> } {
+function createGaugeSpy(): { set: Mock; gauge: Mock } {
   const set = vi.fn<IGauge['set']>();
   const gauge = vi.fn().mockReturnValue({ set });
   return { set, gauge };

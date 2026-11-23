@@ -2,7 +2,7 @@
 /** Source Preview consumes current publication, never stale card/physical columns. */
 import { asIsoUtcString } from '@dvt/contracts';
 import { act } from 'react';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi, type Mock } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasNodeColumnTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { SourceDataSample } from '../../ports/workspace';
@@ -46,7 +46,7 @@ const sample: SourceDataSample = {
 };
 
 let harness: ReturnType<typeof createCanvasShellHarness>;
-let query: ReturnType<typeof vi.fn>;
+let query: Mock;
 beforeEach(() => {
   harness = createCanvasShellHarness();
   query = vi.fn().mockResolvedValue(sample);

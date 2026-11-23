@@ -7,7 +7,7 @@ import {
   type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import {
   AUTHORIZATION_ACTION,
@@ -67,7 +67,7 @@ const targetProjection = {
     sizeBytes: 24,
     encoding: 'utf-8' as const,
   },
-};
+} as const;
 
 function context(): AuthorizedCommandExecutionContext {
   return {
@@ -94,9 +94,9 @@ function context(): AuthorizedCommandExecutionContext {
 }
 
 function dependencies(): {
-  readonly executeWithAuthorizedDraft: ReturnType<typeof vi.fn>;
-  readonly publish: ReturnType<typeof vi.fn>;
-  readonly project: ReturnType<typeof vi.fn>;
+  readonly executeWithAuthorizedDraft: Mock;
+  readonly publish: Mock<ReturnType<typeof publicationHarness>['publisher']['publish']>;
+  readonly project: Mock;
   readonly service: ResolveAuthorizedDvtPreviewSelectionService;
 } {
   const executeWithAuthorizedDraft = vi.fn(async () => ({
@@ -111,7 +111,9 @@ function dependencies(): {
       authorizedDraft: { revision: 'revision-7', draft },
     },
   }));
-  const publish = vi.fn(async () => ({ ok: true, value: targetProjection }));
+  const publish = vi.fn<ReturnType<typeof publicationHarness>['publisher']['publish']>(
+    async () => ({ ok: true, value: targetProjection })
+  );
   const project = vi.fn((): DvtOperationalWorkloadProjectionResult => ({ ok: true, graphSource }));
 
   return {

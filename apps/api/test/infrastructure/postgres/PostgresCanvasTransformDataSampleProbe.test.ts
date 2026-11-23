@@ -1,10 +1,15 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { PostgresCanvasTransformDataSampleProbe } from '../../../src/infrastructure/postgres/PostgresCanvasTransformDataSampleProbe.js';
 
 function harness(rows: readonly Readonly<Record<string, unknown>>[] = [{ order_id: 1 }]): Readonly<{
   probe: PostgresCanvasTransformDataSampleProbe;
-  query: ReturnType<typeof vi.fn>;
+  query: Mock<
+    (sql: string) => Promise<{
+      rows: readonly Readonly<Record<string, unknown>>[];
+      fields: readonly { name: string; dataTypeID: number }[];
+    }>
+  >;
   connect: ReturnType<typeof vi.fn>;
   end: ReturnType<typeof vi.fn>;
   resolveCredential: ReturnType<typeof vi.fn>;

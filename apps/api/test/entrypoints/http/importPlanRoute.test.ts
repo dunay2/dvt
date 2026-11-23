@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { ImportPlanUseCase } from '../../../src/application/services/ImportPlanUseCase.js';
 import { importPlanRoute } from '../../../src/entrypoints/http/importPlanRoute.js';
@@ -19,7 +19,7 @@ const SCOPED_VALID_PLAN_REF = {
 };
 
 type ImportRouteTestDeps = TestAuthDeps & {
-  planResolver: { fetch: ReturnType<typeof vi.fn> };
+  planResolver: { fetch: Mock };
   useCase: Pick<ImportPlanUseCase, 'execute'>;
 };
 

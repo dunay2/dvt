@@ -7,7 +7,7 @@ import {
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import {
   AUTHORIZATION_ACTION,
@@ -89,8 +89,8 @@ function harness(
 ): Readonly<{
   semanticPlanSha256: string;
   relationId: string;
-  executeWithAuthorizedDraft: ReturnType<typeof vi.fn>;
-  previewTransformRows: ReturnType<typeof vi.fn>;
+  executeWithAuthorizedDraft: Mock;
+  previewTransformRows: Mock;
   useCase: PreviewCanvasTransformRowsUseCase;
 }> {
   const draft = {

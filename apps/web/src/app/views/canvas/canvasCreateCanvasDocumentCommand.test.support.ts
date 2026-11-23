@@ -1,5 +1,5 @@
 import type { SetStateAction } from 'react';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { canvasDraftSession } from './canvasDraftSession';
@@ -49,18 +49,18 @@ export function applyStateUpdater<T>(updater: SetStateAction<T>, current: T): T 
 export type BuildCommandArgsResult = {
   args: CanvasCreateCanvasDocumentCommandDto;
   draftRepository: {
-    readGraphDraftState: ReturnType<typeof vi.fn>;
-    readGraphDraft: ReturnType<typeof vi.fn>;
-    saveGraphDraft: ReturnType<typeof vi.fn>;
+    readGraphDraftState: Mock;
+    readGraphDraft: Mock;
+    saveGraphDraft: Mock;
   };
   draftQueryCache: {
-    fetchLatestRemoteDraftState: ReturnType<typeof vi.fn>;
-    fetchLatestRemoteDraft: ReturnType<typeof vi.fn>;
-    refreshWorkspaceFilesAfterSourceRemoval: ReturnType<typeof vi.fn>;
-    replaceRemoteDraftState: ReturnType<typeof vi.fn>;
+    fetchLatestRemoteDraftState: Mock;
+    fetchLatestRemoteDraft: Mock;
+    refreshWorkspaceFilesAfterSourceRemoval: Mock;
+    replaceRemoteDraftState: Mock;
   };
-  setDraftSession: ReturnType<typeof vi.fn>;
-  setDraftSaveStatus: ReturnType<typeof vi.fn>;
+  setDraftSession: Mock;
+  setDraftSaveStatus: Mock;
 };
 
 export type BuildCommandOverrides = Partial<
@@ -133,7 +133,7 @@ export function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCo
   };
 }
 
-export function readBootstrappingSessionUpdate(setDraftSession: ReturnType<typeof vi.fn>) {
+export function readBootstrappingSessionUpdate(setDraftSession: Mock) {
   const sessionUpdater = setDraftSession.mock.calls[0]?.[0] as SetStateAction<
     ReturnType<typeof canvasDraftSession.machine.createBootstrapping>
   >;

@@ -1,5 +1,5 @@
 import type { IPlanner } from '@dvt/contracts';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
 
@@ -8,14 +8,14 @@ import { okAuthDeps, type TestAuthDeps } from './planRouteHttpTestSupport.js';
 export type PreviewRouteTestDeps = TestAuthDeps & {
   planner: Pick<IPlanner, 'buildPlan' | 'deriveExecutableSubgraph'>;
   planStore: {
-    storePlanArtifact: ReturnType<typeof vi.fn>;
-    markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
-    markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
-    getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
-    getPlanRecordByRef: ReturnType<typeof vi.fn>;
+    storePlanArtifact: Mock;
+    markStoredPlanArtifactValid: Mock;
+    markStoredPlanArtifactInvalid: Mock;
+    getStoredPlanValidationRecord: Mock;
+    getPlanRecordByRef: Mock;
   };
-  planValidator: { materializeAndValidatePlan: ReturnType<typeof vi.fn> };
-  previewSelectionResolver: { execute: ReturnType<typeof vi.fn> };
+  planValidator: { materializeAndValidatePlan: Mock };
+  previewSelectionResolver: { execute: Mock };
   useCase: Pick<PreviewPlanUseCase, 'execute'>;
 };
 
@@ -71,8 +71,7 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
   };
   const planValidator = {
     materializeAndValidatePlan: vi.fn(async (input: { planRef: { planId: string } }) => {
-      const buildResult = await (planner.buildPlan as ReturnType<typeof vi.fn>).mock.results.at(-1)
-        ?.value;
+      const buildResult = await (planner.buildPlan as Mock).mock.results.at(-1)?.value;
       return {
         accepted: true as const,
         materialized: {

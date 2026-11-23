@@ -1,6 +1,6 @@
 /** Owned concern: prove Canvas project snapshot import command persistence and rejection semantics. */
 import type { SetStateAction } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { canvasDraftSession } from './canvasDraftSession';
@@ -67,18 +67,18 @@ function applyStateUpdater<T>(updater: SetStateAction<T>, current: T): T {
 type BuildImportArgsResult = {
   args: CanvasImportProjectSnapshotCommandDto;
   draftRepository: {
-    readGraphDraftState: ReturnType<typeof vi.fn>;
-    readGraphDraft: ReturnType<typeof vi.fn>;
-    saveGraphDraft: ReturnType<typeof vi.fn>;
+    readGraphDraftState: Mock;
+    readGraphDraft: Mock;
+    saveGraphDraft: Mock;
   };
   draftQueryCache: {
-    fetchLatestRemoteDraftState: ReturnType<typeof vi.fn>;
-    fetchLatestRemoteDraft: ReturnType<typeof vi.fn>;
-    refreshWorkspaceFilesAfterSourceRemoval: ReturnType<typeof vi.fn>;
-    replaceRemoteDraftState: ReturnType<typeof vi.fn>;
+    fetchLatestRemoteDraftState: Mock;
+    fetchLatestRemoteDraft: Mock;
+    refreshWorkspaceFilesAfterSourceRemoval: Mock;
+    replaceRemoteDraftState: Mock;
   };
-  setDraftSession: ReturnType<typeof vi.fn>;
-  setDraftSaveStatus: ReturnType<typeof vi.fn>;
+  setDraftSession: Mock;
+  setDraftSaveStatus: Mock;
 };
 
 type BuildImportArgsOverrides = Partial<

@@ -2,7 +2,7 @@
 
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
 vi.mock(
@@ -18,7 +18,7 @@ import {
 
 describe('CanvasViewport graph search', () => {
   let harness: ReturnType<typeof createCanvasViewportHarness>;
-  let onNodesChange: ReturnType<typeof vi.fn>;
+  let onNodesChange: Mock;
 
   beforeEach(async () => {
     harness = createCanvasViewportHarness();

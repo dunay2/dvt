@@ -3,7 +3,7 @@
 import React, { act } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -15,16 +15,16 @@ type SourceImportHookHarness = {
   render: () => Promise<void>;
   cleanup: () => void;
   spies: {
-    invalidateInFlightSaveAttempt: ReturnType<typeof vi.fn>;
-    setCurrentPlan: ReturnType<typeof vi.fn>;
-    setDraftSession: ReturnType<typeof vi.fn>;
+    invalidateInFlightSaveAttempt: Mock;
+    setCurrentPlan: Mock;
+    setDraftSession: Mock;
   };
 };
 
 function renderHookHost({
   invalidateInFlightSaveAttempt = vi.fn(),
 }: {
-  invalidateInFlightSaveAttempt?: ReturnType<typeof vi.fn>;
+  invalidateInFlightSaveAttempt?: Mock;
 } = {}): SourceImportHookHarness {
   let latest: LatestHook = null;
   const queryClient = new QueryClient({

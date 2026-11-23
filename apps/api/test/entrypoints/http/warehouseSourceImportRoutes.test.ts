@@ -23,7 +23,7 @@ import {
 } from '@dvt/contracts';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { CanvasAuthoringAuthorityKey } from '../../../src/application/ports/canvasAuthoringAuthority.js';
 import {
@@ -400,17 +400,17 @@ function buildApp(
   } = {}
 ): {
   readonly app: FastifyInstance;
-  readonly authorize: ReturnType<typeof vi.fn>;
+  readonly authorize: Mock;
   readonly draftStore: {
-    readonly read: ReturnType<typeof vi.fn>;
-    readonly save: ReturnType<typeof vi.fn>;
+    readonly read: Mock;
+    readonly save: Mock;
   };
   readonly workspaceFiles: {
-    readonly getFileContent: ReturnType<typeof vi.fn>;
-    readonly saveFileContent: ReturnType<typeof vi.fn>;
-    readonly deleteFileContent: ReturnType<typeof vi.fn>;
+    readonly getFileContent: Mock;
+    readonly saveFileContent: Mock;
+    readonly deleteFileContent: Mock;
   };
-  readonly validateSql: ReturnType<typeof vi.fn>;
+  readonly validateSql: Mock;
   readonly probe: TestWarehouseConnectionProbe;
 } {
   const app = Fastify({ logger: false });

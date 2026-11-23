@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { Node } from '@xyflow/react';
 
@@ -61,8 +61,9 @@ describe('useCanvasGraphHandlers node duplicate', () => {
     await harness.render();
 
     act(() => {
-      (harness.latest() as unknown as { handleDuplicateNode?: (nodeId: string) => void })
-        .handleDuplicateNode?.('source-node');
+      (
+        harness.latest() as unknown as { handleDuplicateNode?: (nodeId: string) => void }
+      ).handleDuplicateNode?.('source-node');
     });
 
     expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
@@ -76,10 +77,10 @@ function renderNodeDuplicateScenario(): {
   harness: GraphHandlersHarness;
   currentNodes: () => Node[];
   canonicalSourceNode: ReturnType<typeof buildCanonicalSourceNode>;
-  setNodes: ReturnType<typeof vi.fn>;
-  setDraftSession: ReturnType<typeof vi.fn>;
-  setSelectedNodes: ReturnType<typeof vi.fn>;
-  setInspectorNode: ReturnType<typeof vi.fn>;
+  setNodes: Mock;
+  setDraftSession: Mock;
+  setSelectedNodes: Mock;
+  setInspectorNode: Mock;
 } {
   const initialNodes = buildInitialNodes();
   const nodeState = createNodeState(initialNodes);
@@ -175,7 +176,7 @@ function buildDuplicateDraftSession(): CanvasDraftSession {
 
 function createNodeState(initialNodes: Node[]): {
   currentNodes: () => Node[];
-  setNodes: ReturnType<typeof vi.fn>;
+  setNodes: Mock;
 } {
   let currentNodes = initialNodes;
   const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
@@ -216,7 +217,7 @@ function expectDuplicateGraphNode(
 }
 
 function expectDuplicateDraftSession(
-  setDraftSession: ReturnType<typeof vi.fn>,
+  setDraftSession: Mock,
   canonicalSourceNode: ReturnType<typeof buildCanonicalSourceNode>
 ): void {
   expect(setDraftSession).toHaveBeenCalledTimes(1);
@@ -241,13 +242,14 @@ function expectDuplicateDraftSession(
     canonicalSourceNode.metadata
   );
   expect(
-    (nextDraftSession.localNodeCatalog?.[DUPLICATE_NODE_ID]?.metadata as
-      | { config?: unknown }
-      | undefined)?.config
+    (
+      nextDraftSession.localNodeCatalog?.[DUPLICATE_NODE_ID]?.metadata as
+        { config?: unknown } | undefined
+    )?.config
   ).not.toBe(canonicalSourceNode.metadata?.config);
 }
 
-function applyDraftSessionUpdate(setDraftSession: ReturnType<typeof vi.fn>): CanvasDraftSession {
+function applyDraftSessionUpdate(setDraftSession: Mock): CanvasDraftSession {
   const updateDraftSession = setDraftSession.mock.calls[0]?.[0] as DraftSessionUpdater;
   expect(updateDraftSession).toEqual(expect.any(Function));
   return updateDraftSession(buildDuplicateDraftSession());
@@ -293,6 +295,5 @@ function findNodeWithMetadata(
   nodeId: string
 ): { data?: { metadata?: { config?: unknown } } } | undefined {
   return nodes.find((node) => node.id === nodeId) as
-    | { data?: { metadata?: { config?: unknown } } }
-    | undefined;
+    { data?: { metadata?: { config?: unknown } } } | undefined;
 }

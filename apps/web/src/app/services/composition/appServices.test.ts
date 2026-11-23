@@ -1,6 +1,6 @@
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { createMockRunsService } from '../../../testing/runsPortDoubles';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import {
@@ -82,9 +82,9 @@ const SINGLE_NODE_AUTHORING_DRAFT = {
 } satisfies WorkspaceGraphAuthoringDraft;
 
 type ApiClientStub = ApiClient & {
-  requestRaw: ReturnType<typeof vi.fn>;
-  getJson: ReturnType<typeof vi.fn>;
-  postJson: ReturnType<typeof vi.fn>;
+  requestRaw: Mock;
+  getJson: Mock;
+  postJson: Mock;
 };
 
 function buildApiClientStub(): ApiClientStub {

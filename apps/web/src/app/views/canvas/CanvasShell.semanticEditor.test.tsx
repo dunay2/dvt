@@ -3,7 +3,7 @@
 import { act } from 'react';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { fireEvent, within } from '@testing-library/dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { buildCanvasShellProps, getCanvasShellState } from './CanvasShell.testHarness';
 import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
@@ -26,7 +26,7 @@ function modelPanels(
   nodes: readonly CanonicalNode[],
   inspectorNode: CanonicalNode | null,
   canMutate: boolean,
-  onApplyNodeDraft: ReturnType<typeof vi.fn>
+  onApplyNodeDraft: Mock
 ): CanvasShellPanels {
   const defaults = buildCanvasShellProps();
   return buildCanvasShellPanels({

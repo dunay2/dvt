@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React, { act, useState } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
@@ -27,7 +27,7 @@ describe('Transform card in the production Workbench', () => {
   setupWorkbenchTest();
 
   describe('editable Transform', () => {
-    let applied: ReturnType<typeof vi.fn>;
+    let applied: Mock;
     let staged: HTMLElement;
     let inputPort: HTMLElement;
     let inspector: Element;

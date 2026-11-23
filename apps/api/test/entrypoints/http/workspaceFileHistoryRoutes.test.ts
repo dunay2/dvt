@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { IWorkspaceFileHistoryRepository } from '../../../src/application/ports/workspaceFileHistory.js';
 import { ListWorkspaceFileHistoryUseCase } from '../../../src/application/services/listWorkspaceFileHistoryUseCase.js';
@@ -28,9 +28,9 @@ describe('workspaceFileHistoryRoutes', () => {
       readonly authenticated?: boolean;
       readonly authorized?: boolean;
       readonly repository?: IWorkspaceFileHistoryRepository;
-      readonly commitFileVersion?: ReturnType<typeof vi.fn>;
+      readonly commitFileVersion?: Mock;
     } = {}
-  ): { readonly app: FastifyInstance; readonly authorize: ReturnType<typeof vi.fn> } {
+  ): { readonly app: FastifyInstance; readonly authorize: Mock } {
     const app = Fastify({ logger: false });
     const repository =
       options.repository ??

@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasEdgeChangeHandlers } from './useCanvasEdgeChangeHandlers';
@@ -30,15 +30,15 @@ function renderHookHost({
   setDraftSession = vi.fn(),
 }: {
   draftSession?: CanvasDraftSession;
-  setEdges?: ReturnType<typeof vi.fn>;
-  setDraftSession?: ReturnType<typeof vi.fn>;
+  setEdges?: Mock;
+  setDraftSession?: Mock;
 }): {
   latest: () => LatestHook;
   render: () => Promise<void>;
   cleanup: () => void;
   spies: {
-    setEdges: ReturnType<typeof vi.fn>;
-    setDraftSession: ReturnType<typeof vi.fn>;
+    setEdges: Mock;
+    setDraftSession: Mock;
   };
 } {
   let latest: LatestHook = null;

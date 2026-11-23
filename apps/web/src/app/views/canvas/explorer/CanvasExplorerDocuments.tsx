@@ -114,15 +114,13 @@ function CanvasNameForm({
     <form
       ref={focusName}
       className={styles.actionRow}
-      onSubmit={async (event) => {
+      onSubmit={(event) => {
         event.preventDefault();
         if (!parsed.success || !onAdd || busy) return;
         setBusy(true);
-        try {
-          await onAdd(parsed.data);
-        } finally {
+        void onAdd(parsed.data).finally(() => {
           setBusy(false);
-        }
+        });
       }}
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
