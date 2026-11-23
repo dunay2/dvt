@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: Datos sintéticos de pedidos de la demo.
+    tables:
+      - name: demo_sales_customers
+      - name: demo_sales_products
+      - name: demo_sales_lines

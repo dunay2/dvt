@@ -1,0 +1,12 @@
+code_inline_demo:
+  target: demo
+  outputs:
+    demo:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: dvt_demo
+      password: "{{ env_var('DVT_DEMO_POSTGRES_PASSWORD') }}"
+      dbname: dvt_demo
+      schema: demo_sales
+      threads: 2
