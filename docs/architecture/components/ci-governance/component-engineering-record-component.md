@@ -122,6 +122,14 @@ candidate still requires its governed fresh DB evidence and integration gates.
 
 ## Atomic source responsibilities
 
+Reference-only rail admission must resolve authority after the proposed local
+overlay. An imported definition with the same feature, type and normalized name
+will be hidden by that write and cannot authorize its own replacement. Another
+exact active documentary definition can still authorize the reference. The
+shared documentary resolver retains its existing eligibility rules; the writer
+supplies the prospective candidate set. Private presentation helpers remain
+with their parent family and delegate existing commands through its ports.
+
 ### Prospective command/query declarations — GH-3945
 
 `RecordFeatureMechanizationRail` distinguishes prospective declarations from
