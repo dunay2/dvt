@@ -318,6 +318,13 @@ flowchart LR
   Workflow["Web Frontend Tests PR"] --> Adapter
 ```
 
+SQL and YAML files directly under `apps/web/src/app/views/templates/library/`
+are inputs to the Templates renderer. A change to any such path selects
+`src/app/views/templates/templatesViewModel.test.ts` in the existing unit batch.
+Git supplies removed paths and both sides of renames, so the rule also covers
+recipes moved out of the library. A mixed change retains each independently
+selected test and browser scenario.
+
 ## Negative Rules
 
 - Do not substitute changed Vitest selection for full primary suites on `main`,

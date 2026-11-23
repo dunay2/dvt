@@ -144,7 +144,6 @@ it('creates and imports files with compact keyboard-accessible Explorer actions'
     expect(accepted, 'only accepted file bytes may be opened').not.to.equal(undefined);
     return { body: accepted };
   });
-  stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
   // The controlled write transport owns this journey; the passive bootstrap is unchanged.
   stubE2eApi('POST', /\/workspace\/files\/.+/, ({ url, body }) => {
     const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));

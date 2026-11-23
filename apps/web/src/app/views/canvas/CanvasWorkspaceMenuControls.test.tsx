@@ -348,6 +348,33 @@ describe('CanvasWorkspaceMenuControls', () => {
     }
   });
 
+  it('observes the workspace tab strip once when it is mounted inside the shell identity', async () => {
+    useCanvasWorkspaceMenuContributionStore.getState().registerCanvasWorkspaceMenuContribution({
+      activeCanvas: { id: 'sales', kind: 'transformation', title: 'Sales' },
+      canExportProjectSnapshot: false,
+      canImportProjectSnapshot: false,
+    });
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe = observe;
+        disconnect = disconnect;
+      }
+    );
+    try {
+      await act(async () => root.render(<CanvasWorkspaceTopBarIdentity />));
+      expect(observe).toHaveBeenCalledExactlyOnceWith(
+        container.querySelector('.canvas-workspace-model-tabs')
+      );
+      await act(async () => root.render(null));
+      expect(disconnect).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each([
     ['en', 'Code'],
     ['es', 'Código'],

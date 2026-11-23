@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.24.3 (2026-11-21)
+
+## What's Changed
+* fix(web): Restore the Canvas side dock after a refused collapse by @dunay2 in https://github.com/dunay2/dvt/pull/3988
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.24.2...v0.24.3
+
+## 0.24.2 (2026-11-21)
+
+## What's Changed
+* fix(ci): Select the Web render proof for changed template recipes by @dunay2 in https://github.com/dunay2/dvt/pull/3986
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.24.1...v0.24.2
+
+## 0.24.1 (2026-11-21)
+
+## What's Changed
+* fix(web): Integrate JOIN output and required workbench changes by @dunay2 in https://github.com/dunay2/dvt/pull/3984
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.24.0...v0.24.1
+
 ## 0.24.0 (2026-11-19)
 
 ## What's Changed

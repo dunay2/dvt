@@ -337,19 +337,19 @@ describe('Canvas calculated-column authoring', () => {
     );
   });
 
-  it('keeps one model workspace while switching between opened cards', () => {
+  it('retains each Model tab and activates its own editor while switching between opened cards', () => {
     resetE2eApiStubs();
     stubCanvas(true);
     cy.viewport(1920, 1080);
     visitCanvas();
     const canvasTab = '[data-slot="canvas-workspace-tab"]';
     const modelTab = '[data-slot="canvas-model-main-tab"]';
-    const editorTab = '[data-slot="canvas-model-main-tab"]';
+    const primaryModel = /^Orders model$/;
+    const secondaryModel = /^Orders model secondary$/;
+    const activeModelEditor = '[data-slot="canvas-model-editor"]:visible';
     openWorkbenchModel('model-orders');
-    cy.get(modelTab)
-      .should('have.attr', 'aria-selected', 'true')
-      .and('contain.text', 'Orders model');
-    cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
+    cy.get(modelTab).should('have.length', 1);
+    cy.contains(modelTab, primaryModel).should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-model-toolbar"]').within(() => {
       cy.get('button[aria-label="Open Model SQL"]').should('have.attr', 'aria-expanded', 'false');
       cy.contains('button', /^Apply$/).should('not.exist');
@@ -359,13 +359,18 @@ describe('Canvas calculated-column authoring', () => {
     cy.get(canvasTab).click().should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
     openWorkbenchModel('model-orders-secondary');
-    cy.get(modelTab)
-      .should('have.attr', 'aria-selected', 'true')
-      .and('contain.text', 'Orders model secondary');
-    cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
+    cy.get(modelTab).should('have.length', 2);
+    cy.contains(modelTab, primaryModel).should('have.attr', 'aria-selected', 'false');
+    cy.contains(modelTab, secondaryModel).should('have.attr', 'aria-selected', 'true');
+    cy.get(activeModelEditor).should(
+      'have.attr',
+      'aria-label',
+      'Orders model secondary · Semantic editor'
+    );
 
     cy.get(canvasTab).click().should('have.attr', 'aria-selected', 'true');
-    cy.get(modelTab).click().should('have.attr', 'aria-selected', 'true');
-    cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
+    cy.contains(modelTab, primaryModel).click().should('have.attr', 'aria-selected', 'true');
+    cy.contains(modelTab, secondaryModel).should('have.attr', 'aria-selected', 'false');
+    cy.get(activeModelEditor).should('have.attr', 'aria-label', 'Orders model · Semantic editor');
   });
 });

@@ -7,6 +7,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
 const { mkdtemp, readFile, rm } = require('node:fs/promises');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
@@ -58,6 +59,22 @@ test('Source provider proof requires explicit lease admission in the existing in
       'test/integration/**/*.test.ts',
       ...(value === undefined ? [] : ['test/integration/sourceLivePreviewPostgres.proof.ts']),
     ]);
+  }
+});
+
+test('selected closure rejects invalid preview ports before starting the proof', () => {
+  for (const configured of ['0', '65536', '4173.5', '0x104d', 'localhost:4173']) {
+    const result = spawnSync(
+      process.execPath,
+      [path.join(__dirname, 'run-selected-closure-live-proof.cjs')],
+      {
+        env: { ...process.env, DVT_SELECTED_CLOSURE_WEB_PORT: configured },
+        encoding: 'utf8',
+        timeout: 5_000,
+      }
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /DVT_SELECTED_CLOSURE_WEB_PORT must be an integer/);
   }
 });
 

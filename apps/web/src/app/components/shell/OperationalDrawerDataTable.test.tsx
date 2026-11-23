@@ -7,7 +7,7 @@
  * @consequence Tests cover settled user behavior without fire-and-forget updates.
  * @version 1.0.0
  */
-import { fireEvent, getByLabelText, getByRole } from '@testing-library/dom';
+import { fireEvent, getByLabelText, getByRole, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -298,6 +298,7 @@ describe('OperationalDrawerDataTable', () => {
     await act(() => fireEvent.change(search, { target: { value: '' } }));
     await act(() => fireEvent.change(columnFilter, { target: { value: 'alpha' } }));
     await act(() => fireEvent.click(funnel));
+    await waitFor(() => expect(document.activeElement).toBe(funnel));
     const secondFunnel = getByRole(container, 'button', { name: 'Filter id' });
     await act(() => fireEvent.click(secondFunnel));
     const secondFilter = getByRole(document.body, 'searchbox', { name: 'Filter id' });
@@ -307,6 +308,7 @@ describe('OperationalDrawerDataTable', () => {
     expect(secondFunnel.querySelector('sup')?.textContent).toBe('2');
 
     await act(() => fireEvent.click(secondFunnel));
+    await waitFor(() => expect(document.activeElement).toBe(secondFunnel));
     await act(() => fireEvent.click(funnel));
     await act(() =>
       fireEvent.change(getByRole(document.body, 'searchbox', { name: 'Filter customer' }), {
