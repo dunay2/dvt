@@ -1,5 +1,6 @@
 /** Passive workspace tab strip: markup, accessibility and semantic class names. */
 import './canvasWorkspaceTabs.css';
+import type { FocusEvent, MouseEvent, Ref } from 'react';
 import { Code2, Table2, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -10,6 +11,9 @@ export function CanvasWorkspaceModelTabsTemplate({
   activeKey,
   copy,
   onSelect,
+  stripRef,
+  onTabFocus,
+  onTabPointerDown,
 }: Readonly<{
   tabs: readonly Readonly<{
     key: string;
@@ -22,76 +26,72 @@ export function CanvasWorkspaceModelTabsTemplate({
   activeKey: string;
   copy: Pick<CanvasSemanticEditorCopy, 'workspaceTabs'>;
   onSelect: (key: string) => void;
+  stripRef: Ref<HTMLDivElement>;
+  onTabFocus: (event: FocusEvent<HTMLButtonElement>, key: string) => void;
+  onTabPointerDown: (event: MouseEvent<HTMLButtonElement>, key: string) => void;
 }>) {
   return (
     <Tabs
+      asChild
       value={activeKey}
       onValueChange={onSelect}
       className="canvas-workspace-model-tabs"
       style={{ '--canvas-workspace-tab-count': tabs.length } as React.CSSProperties}
     >
-      <TabsList
-        aria-label={copy.workspaceTabs}
-        className="workspace-navigation-tabs"
-        data-workbench-navigation=""
-      >
-        {tabs.map((item) => (
-          <TabsTrigger
-            key={item.key}
-            value={item.key}
-            id={item.tabId}
-            aria-controls={item.panelId}
-            data-slot={canvasWorkspaceTabs[item.kind].tabId}
-            title={item.label}
-            aria-keyshortcuts={item.close == null ? undefined : 'Delete'}
-            data-closable={item.close != null || undefined}
-            className="workspace-navigation-tab"
-            onMouseDown={(event) => {
-              if (
-                item.kind !== 'code' &&
-                item.key === activeKey &&
-                event.button === 0 &&
-                !event.ctrlKey
-              )
-                onSelect(item.key);
-            }}
-            onFocus={() => {
-              if (item.kind !== 'code' && item.key === activeKey) onSelect(item.key);
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== 'Delete' || item.close == null) return;
-              event.preventDefault();
-              event.stopPropagation();
-              item.close.action();
-            }}
-          >
-            {item.kind === 'model' ? (
-              <Table2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
-            ) : item.kind === 'code' ? (
-              <Code2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
-            ) : null}
-            <span className="canvas-workspace-model-tab-label">{item.label}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      <div className="canvas-workspace-model-close-controls">
-        {tabs.map((item) => (
-          <div key={item.key}>
-            {item.close == null ? null : (
-              <button
-                type="button"
-                tabIndex={item.kind === 'model' ? 0 : -1}
-                data-slot={`canvas-${item.kind}-tab-close`}
-                aria-label={item.close.label}
-                title={item.close.label}
-                className="canvas-workspace-model-tab-close"
-                onClick={item.close.action}
-              >
-                <X aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        ))}
+      <div ref={stripRef}>
+        <TabsList
+          aria-label={copy.workspaceTabs}
+          className="workspace-navigation-tabs"
+          data-workbench-navigation=""
+        >
+          {tabs.map((item) => (
+            <TabsTrigger
+              key={item.key}
+              value={item.key}
+              id={item.tabId}
+              aria-controls={item.panelId}
+              data-slot={canvasWorkspaceTabs[item.kind].tabId}
+              title={item.label}
+              aria-keyshortcuts={item.close == null ? undefined : 'Delete'}
+              data-closable={item.close != null || undefined}
+              className="workspace-navigation-tab"
+              onMouseDown={(event) => onTabPointerDown(event, item.key)}
+              onFocus={(event) => onTabFocus(event, item.key)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Delete' || item.close == null) return;
+                event.preventDefault();
+                event.stopPropagation();
+                item.close.action();
+              }}
+            >
+              {item.kind === 'model' ? (
+                <Table2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
+              ) : item.kind === 'code' ? (
+                <Code2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
+              ) : null}
+              <span className="canvas-workspace-model-tab-label">{item.label}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <div className="canvas-workspace-model-close-controls">
+          {tabs.map((item) => (
+            <div key={item.key}>
+              {item.close == null ? null : (
+                <button
+                  type="button"
+                  tabIndex={item.kind === 'model' ? 0 : -1}
+                  data-slot={`canvas-${item.kind}-tab-close`}
+                  aria-label={item.close.label}
+                  title={item.close.label}
+                  className="canvas-workspace-model-tab-close"
+                  onClick={item.close.action}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </Tabs>
   );

@@ -210,6 +210,144 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(container.textContent).not.toContain('Import');
   });
 
+  it.each(['canvas', 'model'] as const)(
+    'activates the selected %s tab once when a pointer gesture also moves focus',
+    async (kind) => {
+      const select = vi.fn();
+      await act(async () =>
+        root.render(
+          <CanvasWorkspaceModelTabs
+            canvasTitle="Sales"
+            onShowCanvas={select}
+            tab={{
+              canvasId: 'sales',
+              nodeId: 'model',
+              label: 'Customers',
+              active: kind === 'model',
+              onSelect: select,
+              onCanvas: select,
+              onClose: vi.fn(),
+            }}
+          />
+        )
+      );
+      const tab = container.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')!;
+      await act(async () => {
+        fireEvent.mouseDown(tab, { button: 0, ctrlKey: false });
+        tab.focus();
+      });
+      expect(select).toHaveBeenCalledExactlyOnceWith();
+      select.mockClear();
+      await act(async () => fireEvent.mouseDown(tab, { button: 0, ctrlKey: false }));
+      expect(select).toHaveBeenCalledExactlyOnceWith();
+      select.mockClear();
+      await act(async () => {
+        fireEvent.mouseDown(tab, { button: 2 });
+        fireEvent.mouseDown(tab, { button: 0, ctrlKey: true });
+      });
+      expect(select).not.toHaveBeenCalled();
+    }
+  );
+
+  it('selects each inactive destination once and retains keyboard reentry without repeating Code', async () => {
+    const select = vi.fn();
+    function WorkspaceTabs(): JSX.Element {
+      const [active, setActive] = React.useState('canvas');
+      const activate = (key: string): void => {
+        select(key);
+        setActive(key);
+      };
+      return (
+        <CanvasWorkspaceModelTabs
+          canvasTitle="Sales"
+          onShowCanvas={() => activate('canvas')}
+          codeTab={{
+            active: active === 'code',
+            onSelect: () => activate('code'),
+            onCanvas: vi.fn(),
+          }}
+          tab={{
+            canvasId: 'sales',
+            nodeId: 'model',
+            label: 'Customers',
+            active: active === 'model',
+            onSelect: () => activate('model'),
+            onCanvas: vi.fn(),
+            onClose: vi.fn(),
+          }}
+        />
+      );
+    }
+    await act(async () => root.render(<WorkspaceTabs />));
+    for (const label of ['Customers', 'Code', 'Sales']) {
+      const tab = within(container).getByRole('tab', { name: label });
+      select.mockClear();
+      await act(async () => fireEvent.mouseDown(tab, { button: 0, ctrlKey: false }));
+      await act(async () => tab.focus());
+      expect(select).toHaveBeenCalledTimes(1);
+    }
+    const model = within(container).getByRole('tab', { name: 'Customers' });
+    select.mockClear();
+    await act(async () => model.focus());
+    expect(select).toHaveBeenCalledExactlyOnceWith('model');
+    select.mockClear();
+    await act(async () => {
+      model.blur();
+      model.focus();
+    });
+    expect(select).toHaveBeenCalledExactlyOnceWith('model');
+    const code = within(container).getByRole('tab', { name: 'Code' });
+    await act(async () => fireEvent.mouseDown(code, { button: 0, ctrlKey: false }));
+    select.mockClear();
+    await act(async () => fireEvent.mouseDown(code, { button: 0, ctrlKey: false }));
+    expect(select).not.toHaveBeenCalled();
+  });
+
+  it('reveals the selected tab on entry and resize and releases its observer on exit', async () => {
+    let selectedLeft = 160;
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element
+    ) {
+      const left = this.getAttribute('aria-selected') === 'true' ? selectedLeft : 0;
+      return {
+        left,
+        right: left + 100,
+        top: 0,
+        bottom: 30,
+        width: 100,
+        height: 30,
+        x: left,
+        y: 0,
+        toJSON: () => ({}),
+      };
+    });
+    const disconnect = vi.fn();
+    let resize: (() => void) | undefined;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          resize = callback;
+        }
+        observe = vi.fn();
+        disconnect = disconnect;
+      }
+    );
+    try {
+      await act(async () => root.render(<CanvasWorkspaceModelTabs canvasTitle="Sales" />));
+      const strip = container.querySelector<HTMLDivElement>('.canvas-workspace-model-tabs')!;
+      expect(strip.scrollLeft).toBe(160);
+      selectedLeft = -40;
+      resize?.();
+      expect(strip.scrollLeft).toBe(120);
+      await act(async () => root.render(null));
+      expect(disconnect).toHaveBeenCalledOnce();
+    } finally {
+      rect.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each([
     ['en', 'Code'],
     ['es', 'Código'],

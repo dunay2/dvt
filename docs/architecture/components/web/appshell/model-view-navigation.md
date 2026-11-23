@@ -185,6 +185,14 @@ The shared tab list divides the available shell width among tabs, truncates
 long labels with their full titles available, and scrolls horizontally beneath
 the minimum usable width. Each Model tab has a distinct tab and panel identity.
 
+The workspace tab family owns revealing the selected tab and observing its
+available width. The shell identity supplies context without inspecting child
+DOM. One native pointer activation invokes the selection callback once, including
+when focus enters the selected tab. Keyboard focus and pointer reactivation of
+an already focused tab retain their existing selection behavior. Control-click
+and secondary pointer gestures do not acquire a selection action. This refinement
+uses the existing rails under `GH-3951-WORKSPACE-TAB-ACTIVATION`.
+
 ## Physical responsibilities
 
 | Surface                      | Responsibility                                                      |
