@@ -48,6 +48,7 @@ import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
 import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
 import EdgeProjectionSource from './canvasViewportEdgeProjection.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
+import WorkbenchSurfacesSource from './canvasShellWorkbenchSurfaces.tsx?raw';
 import ModelEditorSource from './CanvasModelEditor.tsx?raw';
 import ModelTemplateSource from './CanvasModelEditor.templates.tsx?raw';
 import ModelToolbarSource from './CanvasModelToolbar.tsx?raw';
@@ -485,7 +486,10 @@ describe('Canvas relational-tree Workbench architecture', () => {
       expect(view).not.toMatch(/\buse(?:State|Effect|Callback|Memo)\s*\(/);
     }
     expect(EdgeProjectionSource).not.toMatch(/Substrait|[Cc]omposition|onActivate/);
-    expect(CanvasShellSource).toContain('<CanvasModelEditor');
+    expect(CanvasShellSource).toContain('buildCanvasModelWorkbenchLayout(');
+    expect(CanvasShellSource).not.toContain('<CanvasModelEditor');
+    expect(WorkbenchSurfacesSource.match(/<CanvasModelEditor\b/g)).toHaveLength(1);
+    expect(WorkbenchSurfacesSource).not.toContain('<CanvasRelationalTreeWorkbench');
     expect(CanvasShellSource).not.toContain('<CanvasRelationalTreeWorkbench');
     expect(CanvasShellSource).not.toContain("selectOperationalDrawerTab('semantic')");
     expect(ModelEditorSource).toContain('<CanvasRelationalTreeWorkbench');

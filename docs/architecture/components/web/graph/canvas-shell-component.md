@@ -50,7 +50,11 @@ Read the component in this order:
 6. `Canvas.tsx`
    route composition that delegates shell contract construction
 7. `CanvasShell.tsx`
-   layout and chrome composition over the grouped contract
+   layout and chrome composition over the grouped contract;
+   `useCanvasShellGraphPresentation.ts` owns card and inspector projection, while
+   `canvasShellWorkbenchSurfaces.tsx` assembles the retained Code and Model surfaces
+   from their existing session owners. The shell delegates these responsibilities
+   without repeating projection policy or constructing a second Model editor.
 8. `CanvasShell.test.tsx`
    behavior proofs for explorer, viewport, and import wiring
 
