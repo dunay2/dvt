@@ -30,6 +30,22 @@ const join = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
 const confirm = '[data-slot="canvas-card-removal-confirm"]';
 const cancel = '[data-slot="canvas-card-removal-cancel"]';
 
+function verifyInlineRemovalCancellation(): void {
+  cy.get(join).rightclick();
+  cy.get(
+    '[data-slot="canvas-relational-remove-left"], [data-slot="canvas-relational-remove-right"]'
+  ).should('not.exist');
+  cy.get('[data-slot="canvas-relational-remove-source"]').click();
+  cy.get('[data-slot="canvas-card-removal-bar"]').should('be.visible');
+  cy.get('[role="dialog"], [role="alertdialog"]').should('not.exist');
+  cy.get(join).should('have.length', 1);
+  cy.get(source).should('have.length', 2);
+  cy.get('[data-removal-impact="true"]').should('have.length.at.least', 1);
+  cy.get(cancel).click();
+  cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+  cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+}
+
 describe('Workbench removal', () => {
   beforeEach(() => stubWorkbenchScenario('saved-join'));
 
@@ -38,20 +54,7 @@ describe('Workbench removal', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
-    cy.get(join).rightclick();
-    cy.get(
-      '[data-slot="canvas-relational-remove-left"], [data-slot="canvas-relational-remove-right"]'
-    ).should('not.exist');
-    cy.get('[data-slot="canvas-relational-remove-source"]').click();
-    cy.get('[data-slot="canvas-card-removal-bar"]').should('be.visible');
-    cy.get('[role="dialog"], [role="alertdialog"]').should('not.exist');
-    cy.get(join).should('have.length', 1);
-    cy.get(source).should('have.length', 2);
-    cy.get('[data-removal-impact="true"]').should('have.length.at.least', 1);
-    cy.get(cancel).click();
-    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
-
+    verifyInlineRemovalCancellation();
     // The surviving read is placed manually while the JOIN and Output are automatic.
     moveWorkbenchCard(`${source}:contains("customers")`, 25, 35);
     const positions = new Map<string, { x: number; y: number }>();

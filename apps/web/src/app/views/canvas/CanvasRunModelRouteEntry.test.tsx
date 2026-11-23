@@ -20,7 +20,11 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-async function open({ project = 'project', inspect = vi.fn(async () => true) } = {}): Promise<{
+async function open({
+  project = 'project',
+  inspect = vi.fn(async () => true),
+  query = new URLSearchParams(),
+} = {}): Promise<{
   router: ReturnType<typeof createMemoryRouter>;
   inspect: Mock<() => Promise<boolean>>;
   openModel: Mock;
@@ -40,6 +44,17 @@ async function open({ project = 'project', inspect = vi.fn(async () => true) } =
     metadata: { authority: 'dbt-project-files', resourceType: 'model' },
   };
   const openModel = vi.fn();
+  const destination = new URLSearchParams({
+    authority: 'dbt-project-files',
+    canvasId: 'analytics',
+    projectRoot: 'dbt',
+    fromRun: 'run-A',
+    model: 'model.orders',
+    tenant: 'tenant',
+    project,
+    environment: 'dev',
+  });
+  query.forEach((value, name) => destination.set(name, value));
   const router = createMemoryRouter(
     [
       {
@@ -58,11 +73,7 @@ async function open({ project = 'project', inspect = vi.fn(async () => true) } =
       { path: '/runs/:runId', element: <p>Retained run</p> },
     ],
     {
-      initialEntries: [
-        '/canvas?authority=dbt-project-files&canvasId=analytics&projectRoot=dbt&fromRun=run-A&model=model.orders&tenant=tenant&project=' +
-          project +
-          '&environment=dev',
-      ],
+      initialEntries: ['/canvas?' + destination.toString()],
     }
   );
   await act(async () =>
@@ -95,4 +106,20 @@ it('rejects a cross-project destination before any model command', async () => {
   expect(mounted.inspect).not.toHaveBeenCalled();
   expect(mounted.openModel).not.toHaveBeenCalled();
   expect(mounted.router.state.location.pathname).toBe('/runs/run-A');
+});
+
+it.each([
+  { parameter: 'tenant', value: 'other' },
+  { parameter: 'environment', value: 'other' },
+  { parameter: 'canvasId', value: 'other' },
+  { parameter: 'model', value: 'missing' },
+  { parameter: 'authority', value: 'graph-draft' },
+])('rejects a mismatched retained destination %j before commands', async ({ parameter, value }) => {
+  const mounted = await open({ query: new URLSearchParams({ [parameter]: value }) });
+  expect(mounted.inspect).not.toHaveBeenCalled();
+  expect(mounted.openModel).not.toHaveBeenCalled();
+  expect(mounted.router.state.location).toMatchObject({
+    pathname: '/runs/run-A',
+    search: '?tab=models&unavailable=1',
+  });
 });

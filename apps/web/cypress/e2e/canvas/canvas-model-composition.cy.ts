@@ -53,6 +53,48 @@ function dragModel(id: string): void {
   });
 }
 
+function assertIndependentModelCopy({
+  originalIds,
+  originalDocument,
+}: Readonly<{
+  originalIds: ReadonlySet<string>;
+  originalDocument: ReturnType<
+    typeof DvtTransformAuthoringAuthorityV1Schema.parse
+  >['semanticDocument'];
+}>): string {
+  const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+  expect(calls, 'one complete composition save').to.have.length(1);
+  const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
+  const copies = saved.nodes.filter((node) => !originalIds.has(node.id));
+  expect(copies, 'the canceled copy was never published').to.have.length(1);
+  const copy = copies[0]!;
+  expect(saved.nodeIds, 'copy is an admitted producer, not a hidden definition').to.include(
+    copy.id
+  );
+  expect(copy.definitionId).to.equal(undefined);
+  expect(copy.path).to.equal(undefined);
+  expect(copy.metadata?.resultTarget).to.equal(undefined);
+  const copied = DvtTransformAuthoringAuthorityV1Schema.parse(
+    copy.metadata?.transformAuthoring
+  ).semanticDocument;
+  expect(copied.semanticPlan).to.deep.equal(originalDocument.semanticPlan);
+  expect(
+    copied.sidecar.relations.every(
+      (binding) =>
+        !originalDocument.sidecar.relations.some(
+          (before) => before.relationId === binding.relationId
+        )
+    )
+  ).to.equal(true);
+  expect(
+    saved.edges.some((edge) => edge.sourceId === copy.id && edge.targetId === receiver)
+  ).to.equal(true);
+  expect(
+    saved.nodes.find((node) => node.id === receiver)?.metadata?.relationalAuthoringDraft
+  ).to.have.property('sources');
+  return copy.id;
+}
+
 describe('Model composition inside the selected Model', () => {
   it('cancels privately, then applies an independent Model copy and reopens its own semantics', () => {
     const initial = stubWorkbenchScenario('saved-join');
@@ -76,37 +118,7 @@ describe('Model composition inside the selected Model', () => {
     cy.screenshot('model-composition-private', { capture: 'viewport' });
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {
-      const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
-      expect(calls, 'one complete composition save').to.have.length(1);
-      const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
-      const copies = saved.nodes.filter((node) => !originalIds.has(node.id));
-      expect(copies, 'the canceled copy was never published').to.have.length(1);
-      const copy = copies[0]!;
-      copyId = copy.id;
-      expect(saved.nodeIds, 'copy is an admitted producer, not a hidden definition').to.include(
-        copy.id
-      );
-      expect(copy.definitionId).to.equal(undefined);
-      expect(copy.path).to.equal(undefined);
-      expect(copy.metadata?.resultTarget).to.equal(undefined);
-      const copied = DvtTransformAuthoringAuthorityV1Schema.parse(
-        copy.metadata?.transformAuthoring
-      ).semanticDocument;
-      expect(copied.semanticPlan).to.deep.equal(originalDocument.semanticPlan);
-      expect(
-        copied.sidecar.relations.every(
-          (binding) =>
-            !originalDocument.sidecar.relations.some(
-              (before) => before.relationId === binding.relationId
-            )
-        )
-      ).to.equal(true);
-      expect(
-        saved.edges.some((edge) => edge.sourceId === copy.id && edge.targetId === receiver)
-      ).to.equal(true);
-      expect(
-        saved.nodes.find((node) => node.id === receiver)?.metadata?.relationalAuthoringDraft
-      ).to.have.property('sources');
+      copyId = assertIndependentModelCopy({ originalIds, originalDocument });
     });
     cy.get('[data-slot="canvas-model-editor"]:visible').should('contain.text', original.name);
     // A fresh page must reinstall the controlled transport, rather than falling through to the live API.

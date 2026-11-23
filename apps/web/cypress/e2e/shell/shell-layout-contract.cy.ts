@@ -190,6 +190,28 @@ function assertNavigationTargetGeometry(): void {
   );
 }
 
+function assertShellDestinationLabels(): void {
+  cy.get('[data-slot="left-navigation-nav"] [aria-label]')
+    .filter('a, button')
+    .should(($links) => {
+      const labels = $links.toArray().map((link) => link.getAttribute('aria-label'));
+      expect(labels.map((label) => label?.replace(/\s+\(\d+\)$/, ''))).to.deep.equal([
+        'Canvas',
+        'Semantic view',
+        'SQL',
+        'Templates',
+        'Runs',
+        'Plugins',
+        'Log',
+        'Problems',
+        'Admin',
+      ]);
+    });
+  cy.get('[data-slot="left-navigation-nav"] [data-slot="shell-project-code-command"]').should(
+    'not.exist'
+  );
+}
+
 describe('Shell layout contract', () => {
   beforeEach(() => {
     cy.viewport(1400, 900);
@@ -404,25 +426,7 @@ describe('Shell layout contract', () => {
     const modelViewport = `${model} [data-slot="canvas-relational-tree-viewport"], ${model} [data-slot="canvas-relational-tree-draft-viewport"]`;
     cy.get(`${canvas} [data-testid="canvas-viewport"]`).as('retainedCanvas', { type: 'static' });
     assertShellCanvasEntries();
-    cy.get('[data-slot="left-navigation-nav"] [aria-label]')
-      .filter('a, button')
-      .should(($links) => {
-        const labels = $links.toArray().map((link) => link.getAttribute('aria-label'));
-        expect(labels.map((label) => label?.replace(/\s+\(\d+\)$/, ''))).to.deep.equal([
-          'Canvas',
-          'Semantic view',
-          'SQL',
-          'Templates',
-          'Runs',
-          'Plugins',
-          'Log',
-          'Problems',
-          'Admin',
-        ]);
-      });
-    cy.get('[data-slot="left-navigation-nav"] [data-slot="shell-project-code-command"]').should(
-      'not.exist'
-    );
+    assertShellDestinationLabels();
     cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-workspace-path="notes.md"]`).click();

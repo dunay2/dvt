@@ -8,6 +8,14 @@ import { useSessionContext } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
+import {
+  admitRunModelOnce,
+  canAdmitRunModelTarget,
+  readRunModelDestinationIdentity,
+  type RunModelAdmissionAttempt,
+} from './canvasRunModelRouteAdmission';
+
+const WAITING_FOR_CANVAS = new Set<CanvasRouteState>(['loading_backend', 'loading_graph']);
 
 type Props = Readonly<{
   canvasId: string | null;
@@ -34,27 +42,22 @@ function ResolveRunModel({
   );
   const { key } = useLocation();
   const navigate = useNavigate();
-  const attempt = useRef<{ key: string; result: Promise<void | boolean> }>();
+  const attempt = useRef<RunModelAdmissionAttempt>();
   useEffect(() => {
-    if (state === 'loading_backend' || state === 'loading_graph') return;
-    const runId = params.get('fromRun');
-    const modelId = params.get('model');
-    if (!runId || !modelId) return;
-    const target = nodes.find((node) => node.id === modelId && node.role === 'transform');
+    if (WAITING_FOR_CANVAS.has(state)) return;
+    const identity = readRunModelDestinationIdentity(params);
+    if (identity === null) return;
+    const { runId, modelId } = identity;
     const file = params.get('authority') === 'dbt-project-files';
-    const inScope =
-      params.get('tenant') === scope.tenantId &&
-      params.get('project') === scope.projectId &&
-      params.get('environment') === scope.environmentId;
-    const admissible =
-      state === 'ready' &&
-      inScope &&
-      params.get('canvasId') === canvasId &&
-      target &&
-      (file
-        ? target.metadata?.authority === 'dbt-project-files' &&
-          target.metadata.resourceType === 'model'
-        : target.metadata?.authority !== 'dbt-project-files');
+    const admissible = canAdmitRunModelTarget({
+      params,
+      canvasId,
+      state,
+      scope,
+      nodes,
+      modelId,
+      file,
+    });
     const unavailable = () =>
       navigate('/runs/' + encodeURIComponent(runId) + '?tab=models&unavailable=1', {
         replace: true,
@@ -69,17 +72,14 @@ function ResolveRunModel({
           void unavailable();
           return;
         }
-        if (attempt.current?.key !== key) {
-          try {
-            const result =
-              !file && modelIds.has(modelId)
-                ? openModel(modelId)
-                : inspect(modelId, file ? 'code' : 'general');
-            attempt.current = { key, result: Promise.resolve(result) };
-          } catch {
-            attempt.current = { key, result: Promise.resolve(false) };
-          }
-        }
+        attempt.current = admitRunModelOnce(attempt.current, {
+          key,
+          file,
+          modelId,
+          modelIds,
+          openModel,
+          inspect,
+        });
         if ((await attempt.current.result) === false && active) void unavailable();
       })
       .catch(() => {

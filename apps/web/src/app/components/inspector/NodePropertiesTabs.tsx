@@ -112,6 +112,8 @@ export function NodePropertiesTabs({
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
+  const sourceOrdering: Partial<NonNullable<NodePropertiesTabsProps['sourceListOrdering']>> =
+    sourceListOrdering ?? {};
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const [sourceColumnDetail, setSourceColumnDetail] = useState<{
     nodeId: string;
@@ -281,8 +283,8 @@ export function NodePropertiesTabs({
                 }
                 beforeBody={beforeBody}
                 afterBody={afterBody}
-                canReorder={sourceListOrdering?.canReorder}
-                workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
+                canReorder={sourceOrdering.canReorder}
+                workspaceLayoutKey={sourceOrdering.workspaceLayoutKey}
                 transferColumns={sourceTransferColumns}
               />
             ) : sourceOutputs ? (
@@ -292,8 +294,8 @@ export function NodePropertiesTabs({
                 section={section}
                 beforeBody={beforeBody}
                 afterBody={afterBody}
-                canReorder={sourceListOrdering?.canReorder}
-                workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
+                canReorder={sourceOrdering.canReorder}
+                workspaceLayoutKey={sourceOrdering.workspaceLayoutKey}
               />
             ) : (
               <NodePropertySectionView

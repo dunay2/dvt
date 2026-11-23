@@ -112,6 +112,106 @@ function dragBefore(movedSelector: string, targetSelector: string): void {
   });
 }
 
+function verifyResponsiveSourceOverview(): void {
+  openSourceSection('general');
+  cy.viewport(1100, 600);
+  cy.get('[data-slot="source-table-comment"]').should(
+    'contain.text',
+    'Sales orders from the warehouse.'
+  );
+  cy.get('[data-slot="canvas-source-overview-external"]').then(($external) => {
+    cy.get('[data-slot="canvas-source-overview-dvt"]').should(($dvt) => {
+      expect($dvt[0]!.getBoundingClientRect().left).to.equal(
+        $external[0]!.getBoundingClientRect().left
+      );
+    });
+  });
+  cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-overview-comments');
+  cy.viewport(1440, 900);
+}
+
+function verifySourceColumnDetailNavigation(): void {
+  cy.get('[data-column-name="amount"]').click();
+  cy.get('[data-slot="canvas-node-workbench-tabs-list"]').should('not.be.visible');
+  cy.get('[data-slot="source-column-detail"] h3')
+    .should('have.text', 'amount')
+    .and('have.css', 'font-size', '16px');
+  cy.get('[data-slot="source-column-detail"] dl').should('have.css', 'font-size', '12px');
+  cy.get('[data-slot="source-column-detail"] [data-slot="source-column-summary"]').should(
+    'not.exist'
+  );
+  cy.get('[data-slot="source-column-detail"] dl dd').should('have.length', 3);
+  cy.get('[data-slot="source-column-detail"]').should(($detail) => {
+    const element = $detail[0]!;
+    expect(element.getBoundingClientRect().height).to.be.at.most(240);
+    const documentation = element
+      .querySelector('[data-slot="source-column-comment"]')!
+      .parentElement!.getBoundingClientRect();
+    const navigation = element.querySelector('nav')!.getBoundingClientRect();
+    expect(navigation.top - documentation.bottom).to.be.within(0, 9);
+  });
+  cy.get('[data-slot="source-column-previous"]').should('be.disabled');
+  cy.get('[data-slot="source-column-next"]').click();
+  cy.get('[data-slot="source-column-detail"] h3').should('have.text', 'order_id');
+  cy.get('[data-slot="source-column-comment"]').should(
+    'contain.text',
+    'External order identifier.'
+  );
+  cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-detail');
+  cy.get('[data-slot="source-columns-back"]').click();
+  cy.get('[data-column-name="order_id"]').should('be.focused');
+  cy.get('[data-slot="source-columns-search"]').type('amount');
+  cy.get('[data-column-name="amount"]').focus().type('{enter}');
+  cy.get('[data-slot="source-column-next"]').should('be.disabled');
+  cy.get('[data-slot="source-columns-back"]').type('{esc}');
+  cy.get('[data-slot="source-columns-search"]').should('have.value', 'amount').clear();
+  cy.get('[data-slot="source-columns-filter"]').select('not-null');
+  cy.get('[data-slot="source-column-row"]').each(($row) =>
+    expect($row.text()).to.contain('Not null')
+  );
+  cy.get('[data-slot="source-columns-filter"]').select('all');
+  cy.get(`[data-column-name="${longColumnName}"]`).click();
+  cy.get('[data-slot="source-column-detail"] h3').should('have.text', longColumnName);
+  cy.get('[data-slot="source-column-detail"] dl dd').first().should('have.text', longColumnType);
+  cy.get('[data-slot="source-column-detail"] h3, [data-slot="source-column-detail"] dd').each(
+    ($fact) => {
+      expect($fact[0]!.scrollWidth).to.be.at.most($fact[0]!.clientWidth + 1);
+      const panel = $fact[0]!
+        .closest('[data-slot="canvas-node-workbench-panel"]')!
+        .getBoundingClientRect();
+      const bounds = $fact[0]!.getBoundingClientRect();
+      expect(bounds.left).to.be.at.least(panel.left);
+      expect(bounds.right).to.be.at.most(panel.right + 1);
+    }
+  );
+  cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-long-detail');
+  cy.get('[data-slot="source-columns-back"]').click();
+}
+
+function reorderSourceOutputsWithKeyboard(): void {
+  openSourceSection('inputs-outputs');
+  cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').should(
+    'contain.text',
+    'Outputs'
+  );
+  cy.get('[data-slot="canvas-source-inputs-outputs"]').within(() => {
+    cy.get('ul[aria-label="Outputs"] > li').should('have.length', 2);
+    cy.get('[data-slot="source-relationship-row"]').each(($row) => {
+      expect($row[0]!.scrollWidth).to.be.at.most($row[0]!.clientWidth + 1);
+    });
+    cy.contains('Inputs').should('not.exist');
+  });
+  cy.get('[data-relationship-id="output:edge-source-model-secondary"]')
+    .focus()
+    .trigger('keydown', { key: 'ArrowUp', altKey: true });
+  expectOrder('[data-slot="source-relationship-row"]', 'relationshipId', [
+    'output:edge-source-model-secondary',
+    'output:edge-source-model',
+  ]);
+  cy.get('[data-relationship-id="output:edge-source-model-secondary"]').should('be.focused');
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+}
+
 describe('Canvas Source Inspector ordering', () => {
   beforeEach(() => {
     stubCanvas();
@@ -255,22 +355,7 @@ describe('Canvas Source Inspector ordering', () => {
     cy.viewport(1440, 900);
     visitCanvas();
 
-    openSourceSection('general');
-    cy.viewport(1100, 600);
-    cy.get('[data-slot="source-table-comment"]').should(
-      'contain.text',
-      'Sales orders from the warehouse.'
-    );
-    cy.get('[data-slot="canvas-source-overview-external"]').then(($external) => {
-      cy.get('[data-slot="canvas-source-overview-dvt"]').should(($dvt) => {
-        expect($dvt[0]!.getBoundingClientRect().left).to.equal(
-          $external[0]!.getBoundingClientRect().left
-        );
-      });
-    });
-    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-overview-comments');
-    cy.viewport(1440, 900);
-
+    verifyResponsiveSourceOverview();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should(($panel) => {
       const panel = $panel[0]!;
@@ -305,85 +390,10 @@ describe('Canvas Source Inspector ordering', () => {
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="source-column-detail"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-columns-list');
-    cy.get('[data-column-name="amount"]').click();
-    cy.get('[data-slot="canvas-node-workbench-tabs-list"]').should('not.be.visible');
-    cy.get('[data-slot="source-column-detail"] h3')
-      .should('have.text', 'amount')
-      .and('have.css', 'font-size', '16px');
-    cy.get('[data-slot="source-column-detail"] dl').should('have.css', 'font-size', '12px');
-    cy.get('[data-slot="source-column-detail"] [data-slot="source-column-summary"]').should(
-      'not.exist'
-    );
-    cy.get('[data-slot="source-column-detail"] dl dd').should('have.length', 3);
-    cy.get('[data-slot="source-column-detail"]').should(($detail) => {
-      const element = $detail[0]!;
-      expect(element.getBoundingClientRect().height).to.be.at.most(240);
-      const documentation = element
-        .querySelector('[data-slot="source-column-comment"]')!
-        .parentElement!.getBoundingClientRect();
-      const navigation = element.querySelector('nav')!.getBoundingClientRect();
-      expect(navigation.top - documentation.bottom).to.be.within(0, 9);
-    });
-    cy.get('[data-slot="source-column-previous"]').should('be.disabled');
-    cy.get('[data-slot="source-column-next"]').click();
-    cy.get('[data-slot="source-column-detail"] h3').should('have.text', 'order_id');
-    cy.get('[data-slot="source-column-comment"]').should(
-      'contain.text',
-      'External order identifier.'
-    );
-    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-detail');
-    cy.get('[data-slot="source-columns-back"]').click();
-    cy.get('[data-column-name="order_id"]').should('be.focused');
-    cy.get('[data-slot="source-columns-search"]').type('amount');
-    cy.get('[data-column-name="amount"]').focus().type('{enter}');
-    cy.get('[data-slot="source-column-next"]').should('be.disabled');
-    cy.get('[data-slot="source-columns-back"]').type('{esc}');
-    cy.get('[data-slot="source-columns-search"]').should('have.value', 'amount').clear();
-    cy.get('[data-slot="source-columns-filter"]').select('not-null');
-    cy.get('[data-slot="source-column-row"]').each(($row) =>
-      expect($row.text()).to.contain('Not null')
-    );
-    cy.get('[data-slot="source-columns-filter"]').select('all');
-    cy.get(`[data-column-name="${longColumnName}"]`).click();
-    cy.get('[data-slot="source-column-detail"] h3').should('have.text', longColumnName);
-    cy.get('[data-slot="source-column-detail"] dl dd').first().should('have.text', longColumnType);
-    cy.get('[data-slot="source-column-detail"] h3, [data-slot="source-column-detail"] dd').each(
-      ($fact) => {
-        expect($fact[0]!.scrollWidth).to.be.at.most($fact[0]!.clientWidth + 1);
-        const panel = $fact[0]!
-          .closest('[data-slot="canvas-node-workbench-panel"]')!
-          .getBoundingClientRect();
-        const bounds = $fact[0]!.getBoundingClientRect();
-        expect(bounds.left).to.be.at.least(panel.left);
-        expect(bounds.right).to.be.at.most(panel.right + 1);
-      }
-    );
-    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-long-detail');
-    cy.get('[data-slot="source-columns-back"]').click();
+    verifySourceColumnDetailNavigation();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    openSourceSection('inputs-outputs');
-    cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').should(
-      'contain.text',
-      'Outputs'
-    );
-    cy.get('[data-slot="canvas-source-inputs-outputs"]').within(() => {
-      cy.get('ul[aria-label="Outputs"] > li').should('have.length', 2);
-      cy.get('[data-slot="source-relationship-row"]').each(($row) => {
-        expect($row[0]!.scrollWidth).to.be.at.most($row[0]!.clientWidth + 1);
-      });
-      cy.contains('Inputs').should('not.exist');
-    });
-    cy.get('[data-relationship-id="output:edge-source-model-secondary"]')
-      .focus()
-      .trigger('keydown', { key: 'ArrowUp', altKey: true });
-    expectOrder('[data-slot="source-relationship-row"]', 'relationshipId', [
-      'output:edge-source-model-secondary',
-      'output:edge-source-model',
-    ]);
-    cy.get('[data-relationship-id="output:edge-source-model-secondary"]').should('be.focused');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
+    reorderSourceOutputsWithKeyboard();
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
     cy.window().then((window) => {
       expect(window.localStorage.getItem('dvt-web-canvas-interaction')).to.contain(

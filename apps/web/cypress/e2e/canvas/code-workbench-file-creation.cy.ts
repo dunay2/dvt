@@ -12,6 +12,59 @@ import { stubCodeWorkbenchBootstrapApis } from '../../support/codeWorkbench/boot
 import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
+function stubOperationVersionHistory(file: FileContent, original: string, revision: string): void {
+  const { path } = file;
+  stubE2eApi('GET', /\/workspace\/file-history\/.+/, ({ url }) => ({
+    body: url.pathname.endsWith(revision)
+      ? { path, commitSha: revision, content: original }
+      : [
+          {
+            path,
+            commitSha: revision,
+            shortSha: revision.slice(0, 7),
+            authorName: 'Ada',
+            authoredAt: file.lastModified,
+            subject: 'Initial version',
+          },
+        ],
+  }));
+  stubE2eApi('POST', /\/workspace\/file-history\/.+/, ({ body }) => {
+    expect(body).to.deep.equal({ expectedContentSha256: file.contentSha256 });
+    return { body: { kind: 'committed', commitSha: 'b'.repeat(40) } };
+  });
+  stubE2eApi('POST', /\/workspace\/files\/.+/, ({ body }) => {
+    expect(body).to.deep.equal({
+      content: original,
+      expectedRevision: { kind: 'content_sha256', value: file.contentSha256 },
+    });
+    file.content = original;
+    file.contentSha256 = sha256HexUtf8(original);
+    return { body: { ...file, kind: 'saved', disposition: 'updated' } };
+  });
+}
+
+function createExplorerFileWithKeyboard(): void {
+  cy.get('button[aria-label="New file"]').should('be.visible').and('be.enabled').focus();
+  cy.press(Cypress.Keyboard.Keys.SPACE);
+  cy.get('[role="dialog"]')
+    .should('be.visible')
+    .within(() => {
+      cy.contains('label', 'File path')
+        .invoke('attr', 'for')
+        .then((id) =>
+          cy
+            .get(`#${CSS.escape(id!)}`)
+            .clear()
+            .type('models/new.sql')
+        );
+      cy.contains('label', 'Initial content')
+        .invoke('attr', 'for')
+        .then((id) => cy.get(`#${CSS.escape(id!)}`).type('select 42 as id'));
+      cy.screenshot('explorer-file-draft');
+      cy.contains('button', 'Create file').click();
+    });
+}
+
 it('compiles the current Snowflake task buffer and marks syntax errors before saving', () => {
   const path = 'operations/tarea.task.sql';
   const content = 'CREATE TASK tarea AS SELECT 2;';
@@ -70,33 +123,7 @@ it('compares and restores a Git version of the selected operation through the Co
   stubCodeWorkbenchBootstrapApis();
   stubE2eJsonApi('GET', '/workspace/files', [{ path, name: file.name, kind: 'file' }]);
   stubE2eApi('GET', /\/workspace\/files\/.+/, () => ({ body: file }));
-  stubE2eApi('GET', /\/workspace\/file-history\/.+/, ({ url }) => ({
-    body: url.pathname.endsWith(revision)
-      ? { path, commitSha: revision, content: original }
-      : [
-          {
-            path,
-            commitSha: revision,
-            shortSha: revision.slice(0, 7),
-            authorName: 'Ada',
-            authoredAt: file.lastModified,
-            subject: 'Initial version',
-          },
-        ],
-  }));
-  stubE2eApi('POST', /\/workspace\/file-history\/.+/, ({ body }) => {
-    expect(body).to.deep.equal({ expectedContentSha256: file.contentSha256 });
-    return { body: { kind: 'committed', commitSha: 'b'.repeat(40) } };
-  });
-  stubE2eApi('POST', /\/workspace\/files\/.+/, ({ body }) => {
-    expect(body).to.deep.equal({
-      content: original,
-      expectedRevision: { kind: 'content_sha256', value: file.contentSha256 },
-    });
-    file.content = original;
-    file.contentSha256 = sha256HexUtf8(original);
-    return { body: { ...file, kind: 'saved', disposition: 'updated' } };
-  });
+  stubOperationVersionHistory(file, original, revision);
   visitWithE2eWorkspaceSession('/canvas', {
     onBeforeLoad: (window) =>
       window.localStorage.setItem(
@@ -187,25 +214,7 @@ it('creates and imports files with compact keyboard-accessible Explorer actions'
     },
   });
   cy.get('[data-slot="shell-project-code-command"]').click();
-  cy.get('button[aria-label="New file"]').should('be.visible').and('be.enabled').focus();
-  cy.press(Cypress.Keyboard.Keys.SPACE);
-  cy.get('[role="dialog"]')
-    .should('be.visible')
-    .within(() => {
-      cy.contains('label', 'File path')
-        .invoke('attr', 'for')
-        .then((id) =>
-          cy
-            .get(`#${CSS.escape(id!)}`)
-            .clear()
-            .type('models/new.sql')
-        );
-      cy.contains('label', 'Initial content')
-        .invoke('attr', 'for')
-        .then((id) => cy.get(`#${CSS.escape(id!)}`).type('select 42 as id'));
-      cy.screenshot('explorer-file-draft');
-      cy.contains('button', 'Create file').click();
-    });
+  createExplorerFileWithKeyboard();
   cy.get('[role="dialog"]').should('not.exist');
   cy.get('button[aria-label="New file"]').should('be.focused');
   cy.then(() => {

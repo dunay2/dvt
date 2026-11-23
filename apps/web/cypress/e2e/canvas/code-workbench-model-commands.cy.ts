@@ -37,6 +37,31 @@ function persistedModelPlan(
   });
 }
 
+function stubParameterizedProject(
+  project: ReturnType<typeof executableContextFixture>['project']
+): void {
+  stubE2eJsonApi('GET', '/workspace/dbt/graph', {
+    ...project,
+    nodes: project.nodes.map((node) =>
+      node.name === 'ventas'
+        ? {
+            ...node,
+            runParameters: [
+              { name: 'cutoff', type: 'date', defaultValue: '2026-01-01' },
+              {
+                name: 'country',
+                type: 'text',
+                choices: ['ES', 'FR'],
+                defaultValue: 'ES',
+                enabledBy: 'with_country',
+              },
+            ],
+          }
+        : node
+    ),
+  });
+}
+
 describe('Canvas Project Code accepted compilation before model execution', () => {
   // Parse/reference inspection must never unlock materialization; only the accepted Preview does.
   it('compiles the open SQL before enabling materialization through its accepted plan', () => {
@@ -109,26 +134,7 @@ describe('Canvas Project Code accepted compilation before model execution', () =
       [file],
       ['workspace:graph-draft:view', 'plan:preview', 'run:start']
     );
-    stubE2eJsonApi('GET', '/workspace/dbt/graph', {
-      ...project,
-      nodes: project.nodes.map((node) =>
-        node.name === 'ventas'
-          ? {
-              ...node,
-              runParameters: [
-                { name: 'cutoff', type: 'date', defaultValue: '2026-01-01' },
-                {
-                  name: 'country',
-                  type: 'text',
-                  choices: ['ES', 'FR'],
-                  defaultValue: 'ES',
-                  enabledBy: 'with_country',
-                },
-              ],
-            }
-          : node
-      ),
-    });
+    stubParameterizedProject(project);
     stubE2eApi('POST', '/plans/preview', ({ body }) => {
       const request = body as { provenance: unknown; parameterOverrides: unknown };
       expect(request.parameterOverrides).to.deep.equal([

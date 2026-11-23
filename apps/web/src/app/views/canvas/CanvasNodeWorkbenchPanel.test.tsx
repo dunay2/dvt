@@ -25,6 +25,7 @@ import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
+  type DvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import * as outputProjection from './canvasDvtSubstraitOutputProjection';
@@ -187,9 +188,14 @@ const DVT_TRANSFORM_NODE: CanonicalNode = {
   },
 };
 
-const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
+function connectedSourceFixture(): DvtSubstraitProjectionSource {
   const source = resolveDvtSubstraitProjectionSource(SOURCE_NODE);
   if (source == null) throw new Error('Expected a connected PostgreSQL source fixture.');
+  return source;
+}
+
+const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
+  const source = connectedSourceFixture();
   return applyDvtSubstraitSemanticDocument(
     DVT_TRANSFORM_NODE,
     encodeDvtSubstraitProjectionDocument(
@@ -203,8 +209,7 @@ const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
 })();
 
 const DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
-  const source = resolveDvtSubstraitProjectionSource(SOURCE_NODE);
-  if (source == null) throw new Error('Expected a connected PostgreSQL source fixture.');
+  const source = connectedSourceFixture();
   const semanticDraft = createDvtSubstraitProjectionDraft({
     source,
     targetNodeId: DVT_TRANSFORM_NODE.id,
@@ -276,12 +281,13 @@ async function renderNodePanel(
     codeProjection?: CanvasNodeWorkbenchPanelProps['codeProjection'];
   }>
 ): Promise<void> {
+  const presentation = graph ?? {};
   await act(async () => {
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
         nodes={
-          graph?.nodes ?? [
+          presentation.nodes ?? [
             SOURCE_NODE,
             MODEL_NODE,
             CONNECTED_TEST_NODE,
@@ -290,7 +296,7 @@ async function renderNodePanel(
           ]
         }
         edges={
-          graph?.edges ?? [
+          presentation.edges ?? [
             ...EDGES,
             {
               id: 'edge-model-test',
@@ -307,16 +313,16 @@ async function renderNodePanel(
           ]
         }
         activeRunId={null}
-        codeProjection={graph?.codeProjection}
+        codeProjection={presentation.codeProjection}
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
         preferredTabRequestId={preferredTabRequestId}
         primarySectionIds={primarySectionIds}
         authoring={authoring}
         onClose={vi.fn()}
-        {...(graph?.onOpenSemanticEditor == null
+        {...(presentation.onOpenSemanticEditor == null
           ? {}
-          : { onOpenSemanticEditor: graph.onOpenSemanticEditor })}
+          : { onOpenSemanticEditor: presentation.onOpenSemanticEditor })}
       />
     );
   });
@@ -560,8 +566,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     await renderPanel(root, 'inputs-outputs');
     const outputs = container.querySelector('ul[aria-label="Outputs"]');
-    expect(outputs?.textContent).toContain('Orders Model');
-    expect(outputs?.textContent).toContain('lineage');
+    const outputText = outputs?.textContent;
+    expect(outputText).toContain('Orders Model');
+    expect(outputText).toContain('lineage');
     expect(container.textContent).not.toContain('not_null_orders_order_id');
   });
 

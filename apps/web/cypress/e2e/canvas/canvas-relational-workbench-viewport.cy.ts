@@ -154,6 +154,75 @@ function assertResizeHandlePresentation(
     });
 }
 
+function verifyModelSourceControlsAndFocus(modelZoom: string): void {
+  setWorkbenchInputsOpen(true);
+  cy.get('[data-slot="canvas-relational-tree-source-list"] > li').each(($row) => {
+    const [source, add] = Array.from($row[0]!.querySelectorAll('button'));
+    expect(source, 'source control').to.exist;
+    expect(add, 'instance control').to.exist;
+    const sourceBounds = source!.getBoundingClientRect();
+    const addBounds = add!.getBoundingClientRect();
+    const addCenter = addBounds.top + addBounds.height / 2;
+    expect(addCenter, 'instance control stays beside its source').to.be.within(
+      sourceBounds.top,
+      sourceBounds.bottom
+    );
+  });
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  assertModelCardTypography();
+  setWorkbenchInputsOpen(false);
+  // Verify the exact focus token at native scale before exercising fractional graph zoom.
+  cy.get(modelZoom).should('have.text', '100%');
+  revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+    .should('be.focused')
+    .and('have.css', 'outline-style', 'solid')
+    .and('have.css', 'outline-width', '2px')
+    .and('have.css', 'outline-offset', '2px');
+}
+
+function verifyNarrowModelReflow(): void {
+  // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,
+  // independently of the graph's own zoom control.
+  cy.viewport(640, 450);
+  cy.get('[data-slot="shell-active-canvas-identity"]').should(($identity) => {
+    const bounds = $identity[0]!.getBoundingClientRect();
+    $identity.find('[role="tab"], [data-slot="canvas-model-tab-close"]').each((_, control) => {
+      const tab = control.getBoundingClientRect();
+      expect(tab.left).to.be.at.least(bounds.left);
+      expect(tab.right).to.be.at.most(bounds.right);
+    });
+  });
+  revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
+    'have.attr',
+    'aria-selected',
+    'true'
+  );
+  cy.get('[data-canvas-inspector="true"]:visible').should(($panel) => {
+    const bounds = $panel[0]!.getBoundingClientRect();
+    expect(bounds.left).to.be.at.least(0);
+    expect(bounds.right).to.be.at.most(640);
+    expect(bounds.bottom).to.be.at.most(450);
+  });
+  cy.get('[data-slot="canvas-relational-collapse"]').should('be.visible').click();
+  revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+    .should('be.focused')
+    .and('have.css', 'outline-style', 'solid')
+    .should(($node) => {
+      // CSS zoom snaps outlines to device pixels; reflow must preserve a visible focus cue.
+      const style = $node[0]!.ownerDocument.defaultView!.getComputedStyle($node[0]!);
+      expect(Number.parseFloat(style.outlineWidth)).to.be.greaterThan(0);
+      expect(Number.parseFloat(style.outlineOffset)).to.be.greaterThan(0);
+    });
+  cy.get('[data-slot="canvas-model-toolbar"]').should(($footer) => {
+    expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
+  });
+  cy.screenshot('semantic-editor-200-percent-equivalent-reflow');
+}
+
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
@@ -421,30 +490,7 @@ describe('Workbench viewport', () => {
           openWorkbenchModel();
           cy.get(`${main} .react-flow__node`).should('have.length', count);
         });
-      setWorkbenchInputsOpen(true);
-      cy.get('[data-slot="canvas-relational-tree-source-list"] > li').each(($row) => {
-        const [source, add] = Array.from($row[0]!.querySelectorAll('button'));
-        expect(source, 'source control').to.exist;
-        expect(add, 'instance control').to.exist;
-        const sourceBounds = source!.getBoundingClientRect();
-        const addBounds = add!.getBoundingClientRect();
-        const addCenter = addBounds.top + addBounds.height / 2;
-        expect(addCenter, 'instance control stays beside its source').to.be.within(
-          sourceBounds.top,
-          sourceBounds.bottom
-        );
-      });
-      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
-      assertModelCardTypography();
-      setWorkbenchInputsOpen(false);
-      // Verify the exact focus token at native scale before exercising fractional graph zoom.
-      cy.get(modelZoom).should('have.text', '100%');
-      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
-      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
-        .should('be.focused')
-        .and('have.css', 'outline-style', 'solid')
-        .and('have.css', 'outline-width', '2px')
-        .and('have.css', 'outline-offset', '2px');
+      verifyModelSourceControlsAndFocus(modelZoom);
       cy.then(() => {
         writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
@@ -507,45 +553,7 @@ describe('Workbench viewport', () => {
       setWorkbenchInputsOpen(false);
       cy.get(`${model} [data-slot="canvas-explorer-sources-toggle"]`).should('not.exist');
       cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
-      // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,
-      // independently of the graph's own zoom control.
-      cy.viewport(640, 450);
-      cy.get('[data-slot="shell-active-canvas-identity"]').should(($identity) => {
-        const bounds = $identity[0]!.getBoundingClientRect();
-        $identity.find('[role="tab"], [data-slot="canvas-model-tab-close"]').each((_, control) => {
-          const tab = control.getBoundingClientRect();
-          expect(tab.left).to.be.at.least(bounds.left);
-          expect(tab.right).to.be.at.most(bounds.right);
-        });
-      });
-      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
-      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
-      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
-        'have.attr',
-        'aria-selected',
-        'true'
-      );
-      cy.get('[data-canvas-inspector="true"]:visible').should(($panel) => {
-        const bounds = $panel[0]!.getBoundingClientRect();
-        expect(bounds.left).to.be.at.least(0);
-        expect(bounds.right).to.be.at.most(640);
-        expect(bounds.bottom).to.be.at.most(450);
-      });
-      cy.get('[data-slot="canvas-relational-collapse"]').should('be.visible').click();
-      revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
-      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
-        .should('be.focused')
-        .and('have.css', 'outline-style', 'solid')
-        .should(($node) => {
-          // CSS zoom snaps outlines to device pixels; reflow must preserve a visible focus cue.
-          const style = $node[0]!.ownerDocument.defaultView!.getComputedStyle($node[0]!);
-          expect(Number.parseFloat(style.outlineWidth)).to.be.greaterThan(0);
-          expect(Number.parseFloat(style.outlineOffset)).to.be.greaterThan(0);
-        });
-      cy.get('[data-slot="canvas-model-toolbar"]').should(($footer) => {
-        expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
-      });
-      cy.screenshot('semantic-editor-200-percent-equivalent-reflow');
+      verifyNarrowModelReflow();
       assertExplorerWidth(model, 32);
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.then(() => {

@@ -90,6 +90,120 @@ function formatPlanActionErrorMessage(error: unknown): string {
     : canvasViewCopy.planUnableToCreateMessage;
 }
 
+type ProtectedDvtPreviewArgs = Pick<
+  CanvasPlanActionArgs,
+  | 'graphDraftCanvasId'
+  | 'canonicalNodes'
+  | 'canonicalEdges'
+  | 'selectionIntent'
+  | 'workspaceNodeIds'
+  | 'plansService'
+  | 'sessionContext'
+> & { execution: Extract<CanvasPlanExecution, { kind: 'dvt_protected_preview' }> };
+
+async function previewProtectedDvtGraph(
+  {
+    graphDraftCanvasId,
+    canonicalNodes,
+    canonicalEdges,
+    selectionIntent,
+    workspaceNodeIds,
+    execution,
+    plansService,
+    sessionContext,
+  }: ProtectedDvtPreviewArgs,
+  fail: (message: string) => CanvasPlanActionResult
+): Promise<CanvasPlanActionResult> {
+  if (graphDraftCanvasId == null) {
+    return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
+  }
+  const dvtProjection = buildProtectedDvtPreviewProjection({
+    canvasId: graphDraftCanvasId,
+    canonicalNodes,
+    canonicalEdges,
+    selectionIntent,
+    workspaceNodeIds,
+  });
+  if (!dvtProjection.ok) {
+    return fail(resolveCanvasExecutionGraphFailureMessage(dvtProjection, canvasViewCopy));
+  }
+  const previewOutcome = await plansService.previewPlan({
+    previewProfile: execution.previewProfile,
+    selection: dvtProjection.selection,
+    context: sessionContext.buildRunContext('preview_context'),
+    provenance: {
+      kind: 'dvt-protected-workspace-graph',
+      canvasId: graphDraftCanvasId,
+    },
+    persist: true,
+  });
+  return {
+    ok: true,
+    draftSignature: dvtProjection.draftSignature,
+    previewOutcome:
+      previewOutcome.kind === 'selection-rejected' &&
+      previewOutcome.rejection.cause === DVT_REJECTIONS.runDispositionUnsupported.cause
+        ? {
+            ...previewOutcome,
+            affectedModel: {
+              nodeId: dvtProjection.selectedRoot.id,
+              name: dvtProjection.selectedRoot.name,
+            },
+          }
+        : attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
+    writtenArtifactPaths: [],
+  };
+}
+
+type GenericGraphPreviewArgs = Readonly<{
+  graphDraftCanvasId: string | null;
+  execution: Extract<CanvasPlanExecution, { kind: 'planner_generic_preview' }>;
+  plannerProjection: Extract<ReturnType<typeof buildCanvasDbtExecutionProjection>, { ok: true }>;
+  writtenArtifactPaths: string[];
+}>;
+
+async function prepareGenericGraphPreview({
+  graphDraftCanvasId,
+  execution,
+  plannerProjection,
+  writtenArtifactPaths,
+}: GenericGraphPreviewArgs): Promise<string | null> {
+  if (graphDraftCanvasId == null) {
+    return canvasViewCopy.planGraphAuthorityRefusedMessage;
+  }
+  if (plannerProjection.kind !== execution.kind) {
+    return canvasViewCopy.canvasExecutionUnavailableMessage;
+  }
+  const artifactProjection = plannerProjection.workspaceArtifacts;
+
+  const publication = await publishGraphDbtWorkspaceArtifacts({
+    canvasId: graphDraftCanvasId,
+    artifacts: artifactProjection.artifacts,
+    workspaceFilesQuery: execution.workspaceFilesQuery,
+    publicationCommand: execution.graphDbtWorkspaceArtifactPublicationCommand,
+  });
+  if (!publication.ok) {
+    if (publication.kind === 'authority_refused') {
+      return canvasViewCopy.planGraphAuthorityRefusedMessage;
+    }
+    return formatCanvasCopyTemplate(canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate, {
+      path: publication.conflictPath,
+    });
+  }
+  writtenArtifactPaths.push(...publication.writtenArtifactPaths);
+
+  const compilation = await execution.graphDbtModelCompilationQuery.compile({
+    canvasId: graphDraftCanvasId,
+    selectors: [...artifactProjection.modelSelectors],
+  });
+  if (compilation.kind !== 'compiled') {
+    return compilation.kind === 'authority_refused'
+      ? canvasViewCopy.planGraphAuthorityRefusedMessage
+      : canvasViewCopy.planGraphDbtCompilationFailedMessage;
+  }
+  return null;
+}
+
 export async function executeCanvasPlanAction({
   graphDraftCanvasId,
   canPlan,
@@ -126,45 +240,19 @@ export async function executeCanvasPlanAction({
       workspaceNodeIds = flushedDraft.workspaceNodeIds;
     }
     if (execution.kind === 'dvt_protected_preview') {
-      if (graphDraftCanvasId == null) {
-        return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
-      }
-      const dvtProjection = buildProtectedDvtPreviewProjection({
-        canvasId: graphDraftCanvasId,
-        canonicalNodes,
-        canonicalEdges,
-        selectionIntent,
-        workspaceNodeIds,
-      });
-      if (!dvtProjection.ok) {
-        return fail(resolveCanvasExecutionGraphFailureMessage(dvtProjection, canvasViewCopy));
-      }
-      const previewOutcome = await plansService.previewPlan({
-        previewProfile: execution.previewProfile,
-        selection: dvtProjection.selection,
-        context: sessionContext.buildRunContext('preview_context'),
-        provenance: {
-          kind: 'dvt-protected-workspace-graph',
-          canvasId: graphDraftCanvasId,
+      return await previewProtectedDvtGraph(
+        {
+          graphDraftCanvasId,
+          canonicalNodes,
+          canonicalEdges,
+          selectionIntent,
+          workspaceNodeIds,
+          execution,
+          plansService,
+          sessionContext,
         },
-        persist: true,
-      });
-      return {
-        ok: true,
-        draftSignature: dvtProjection.draftSignature,
-        previewOutcome:
-          previewOutcome.kind === 'selection-rejected' &&
-          previewOutcome.rejection.cause === DVT_REJECTIONS.runDispositionUnsupported.cause
-            ? {
-                ...previewOutcome,
-                affectedModel: {
-                  nodeId: dvtProjection.selectedRoot.id,
-                  name: dvtProjection.selectedRoot.name,
-                },
-              }
-            : attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
-        writtenArtifactPaths: [],
-      };
+        fail
+      );
     }
 
     const plannerProjection = buildCanvasDbtExecutionProjection({
@@ -179,43 +267,13 @@ export async function executeCanvasPlanAction({
       return fail(resolveCanvasExecutionGraphFailureMessage(plannerProjection, canvasViewCopy));
     }
     if (execution.kind === 'planner_generic_preview') {
-      if (graphDraftCanvasId == null) {
-        return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
-      }
-      if (plannerProjection.kind !== execution.kind) {
-        return fail(canvasViewCopy.canvasExecutionUnavailableMessage);
-      }
-      const artifactProjection = plannerProjection.workspaceArtifacts;
-
-      const publication = await publishGraphDbtWorkspaceArtifacts({
-        canvasId: graphDraftCanvasId,
-        artifacts: artifactProjection.artifacts,
-        workspaceFilesQuery: execution.workspaceFilesQuery,
-        publicationCommand: execution.graphDbtWorkspaceArtifactPublicationCommand,
+      const preparationFailure = await prepareGenericGraphPreview({
+        graphDraftCanvasId,
+        execution,
+        plannerProjection,
+        writtenArtifactPaths,
       });
-      if (!publication.ok) {
-        if (publication.kind === 'authority_refused') {
-          return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
-        }
-        return fail(
-          formatCanvasCopyTemplate(canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate, {
-            path: publication.conflictPath,
-          })
-        );
-      }
-      writtenArtifactPaths.push(...publication.writtenArtifactPaths);
-
-      const compilation = await execution.graphDbtModelCompilationQuery.compile({
-        canvasId: graphDraftCanvasId,
-        selectors: [...artifactProjection.modelSelectors],
-      });
-      if (compilation.kind !== 'compiled') {
-        return fail(
-          compilation.kind === 'authority_refused'
-            ? canvasViewCopy.planGraphAuthorityRefusedMessage
-            : canvasViewCopy.planGraphDbtCompilationFailedMessage
-        );
-      }
+      if (preparationFailure != null) return fail(preparationFailure);
     }
 
     const previewOutcome = await plansService.previewPlan({

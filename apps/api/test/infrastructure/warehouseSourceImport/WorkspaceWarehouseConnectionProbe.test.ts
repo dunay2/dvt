@@ -1,33 +1,7 @@
-import { buildRelationalSourceObjectId, type RelationalSourceObjectLocator } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const pgMock = vi.hoisted(() => {
-  const connect = vi.fn<() => Promise<void>>();
-  const end = vi.fn<() => Promise<void>>();
-  const query = vi.fn<
-    (
-      sql: string,
-      values?: readonly unknown[]
-    ) => Promise<{
-      rows: readonly Record<string, unknown>[];
-      fields?: readonly { name: string; dataTypeID?: number }[];
-    }>
-  >();
-  const databaseQuery = vi.fn();
-  const Client = vi.fn(function () {
-    return {
-      connect,
-      end,
-      query: (sql: string, values?: readonly unknown[]) =>
-        sql === 'select current_database() as database' ? databaseQuery() : query(sql, values),
-    };
-  });
-
-  return { Client, connect, end, query, databaseQuery };
-});
-
-vi.mock('pg', () => ({
-  Client: pgMock.Client,
+vi.mock('pg', async () => ({
+  Client: (await import('./warehouseConnectionProbe.test.fixtures.js')).pgMock.Client,
 }));
 
 import {
@@ -36,35 +10,18 @@ import {
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 
-function expectedRelationIdentity(
-  name: string,
-  relationType: 'table' | 'view' = 'table'
-): Readonly<{
-  objectId: string;
-  displayName: string;
-  locator: RelationalSourceObjectLocator;
-}> {
-  const locator = {
-    kind: 'relation' as const,
-    catalog: 'dvt',
-    schema: 'public',
-    name,
-    relationType,
-  };
-  return {
-    objectId: buildRelationalSourceObjectId(locator),
-    displayName: name,
-    locator,
-  };
-}
+import {
+  pgMock,
+  expectedRelationIdentity,
+  CATALOG_TARGET,
+} from './warehouseConnectionProbe.test.fixtures.js';
 
-const CATALOG_TARGET = {
-  connectionId: 'conn-1',
-  scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
-  type: 'postgres',
-  database: 'dvt',
-  credentialRef: 'postgres:warehouse',
-} as const;
+function createWarehouseProbe(nowIso: string): WorkspaceWarehouseConnectionProbe {
+  return new WorkspaceWarehouseConnectionProbe({
+    credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+    now: () => new Date(nowIso),
+  });
+}
 
 describe('WorkspaceWarehouseConnectionProbe', () => {
   beforeEach(() => {
@@ -84,10 +41,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         { table_catalog: 'dvt', table_schema: 'public', object_count: '8' },
       ],
     });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     const result = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
       kind: 'schema-list',
@@ -110,10 +64,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     async (operation) => {
       pgMock.databaseQuery.mockResolvedValue({ rows: [{ database: 'another_database' }] });
       pgMock.query.mockResolvedValue({ rows: [{ object_count: '0' }] });
-      const probe = new WorkspaceWarehouseConnectionProbe({
-        credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-        now: () => new Date('2026-09-07T12:00:00.000Z'),
-      });
+      const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
       if (operation === 'inspect' || operation === 'test') {
         const result =
@@ -154,10 +105,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         { table_catalog: 'dvt', table_schema: 'public', object_count: '8' },
       ],
     });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
     const firstPage = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
       kind: 'schema-list',
       limit: 1,
@@ -243,10 +191,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         ],
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     const result = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
       kind: 'name-search',
@@ -330,10 +275,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 42 } }] }],
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     await expect(probe.listSourceObjectCatalog(CATALOG_TARGET, request)).resolves.toMatchObject({
       kind: 'object-page',
@@ -355,10 +297,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
 
   it('binds schema pages to the exact catalog and schema', async () => {
     pgMock.query.mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     await expect(
       probe.listSourceObjectCatalog(CATALOG_TARGET, {
@@ -395,10 +334,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         ],
       })
       .mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-08-17T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-08-17T10:00:00.000Z');
 
     await expect(
       probe.previewSourceObjectRows({
@@ -442,10 +378,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         ],
       })
       .mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-08-17T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-08-17T10:00:00.000Z');
 
     await expect(
       probe.previewSourceObjectRows({
@@ -467,10 +400,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-08-17T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-08-17T10:00:00.000Z');
 
     await expect(
       probe.previewSourceObjectRows({
@@ -529,10 +459,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '4096000' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     await expect(
       probe.inspectConnection({
@@ -639,10 +566,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '128' }] })
       .mockResolvedValueOnce({ rows: [{ byte_size: '192' }] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     const result = await probe.inspectConnection({
       type: 'postgres',
@@ -706,10 +630,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '8192' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-07-11T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-07-11T10:00:00.000Z');
 
     const result = await probe.inspectConnection({
       scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
@@ -761,10 +682,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockRejectedValueOnce(new Error('permission denied for function pg_total_relation_size'));
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     const result = await probe.inspectConnection({
       scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
@@ -832,10 +750,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: null }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     await expect(
       probe.inspectConnection({
@@ -919,10 +834,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 128 } }] }],
       });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     await expect(
       probe.inspectConnection({
@@ -994,10 +906,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 10 } }] }],
       });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     await expect(
       probe.inspectConnection({
@@ -1069,10 +978,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-07-10T21:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-07-10T21:00:00.000Z');
 
     const result = await probe.inspectConnection({
       scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
@@ -1099,10 +1005,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
   it('tests connectivity without loading source metrics or scanning source data', async () => {
     pgMock.query.mockResolvedValueOnce({ rows: [{ object_count: '2' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-07-10T21:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-07-10T21:00:00.000Z');
 
     await expect(
       probe.testConnection({
@@ -1160,10 +1063,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [{ byte_size: null }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     await expect(
       probe.inspectConnection({

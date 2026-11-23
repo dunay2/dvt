@@ -130,10 +130,9 @@ function sameSnapshot(
   after: CanvasCardRemovalSnapshot
 ): boolean {
   return (
-    before.document === after.document &&
-    before.sources === after.sources &&
-    before.operations === after.operations &&
-    before.outputRelationId === after.outputRelationId &&
+    (['document', 'sources', 'operations', 'outputRelationId'] as const).every(
+      (key) => before[key] === after[key]
+    ) &&
     before.inputIds.length === after.inputIds.length &&
     before.inputIds.every((id, index) => id === after.inputIds[index])
   );

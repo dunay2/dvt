@@ -12,31 +12,26 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import { createPortal } from 'react-dom';
 import { useSessionContext } from '../../services/AppServicesContext';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './codeViewCopy';
 import { resolveCodeWorkbenchErrorPresentation } from './codeWorkbenchErrorModel';
-import { useCodeInlineReferences, type CodeInlineReferenceState } from './useCodeInlineReferences';
+import { useCodeInlineReferences } from './useCodeInlineReferences';
 import type { CodeInlineReferenceDetail } from './codeInlineReferences';
-import { CodeModelCommands } from './CodeModelCommands';
 import {
   useWorkspaceFileEditorSession,
   type WorkspaceFileSessionInput,
 } from './useWorkspaceFileEditorSession';
 import { useCodeReferenceInspection } from './useCodeReferenceInspection';
-import {
-  resolveCodeEditorStatusCopy,
-  resolveCodeInlineStatusMessage,
-} from './codeEditorStatusPresentation';
+import { resolveCodeInlineStatusMessage } from './codeEditorStatusPresentation';
 import { resolveWorkspaceFileEditorPresentation } from './workspaceFileEditorPresentation';
 import { WorkspaceFileCodeEditorView } from './WorkspaceFileCodeEditorView';
-import { CodeFileVersionHistory } from './CodeFileVersionHistory';
-import {
-  OperationSqlCompileAction,
-  OperationSqlCompileFeedback,
-} from './OperationSqlCompileAction';
 import { useOperationSqlCompilation } from './useOperationSqlCompilation';
+import {
+  projectWorkspaceInlineReferenceState,
+  readOperationSqlFilePath,
+  projectWorkspaceFileEditorContributions,
+} from './workspaceFileEditorContributions';
 
 export type WorkspaceFileCodeEditorHandle = Readonly<{ flush: () => Promise<boolean> }>;
 export type WorkspaceFileCodeEditorProps = WorkspaceFileSessionInput &
@@ -74,18 +69,15 @@ const WorkspaceFileCodeEditorSession = forwardRef<
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = useMemo(() => resolveCodeViewCopy(language), [language]);
   const inlineCopy = useMemo(() => resolveCodeInlineReferenceCopy(language), [language]);
-  const { fileQuery, posture, acceptedFile, context, workingTree, retry, reload } =
-    useWorkspaceFileEditorSession(props);
+  const fileSession = useWorkspaceFileEditorSession(props);
+  const { fileQuery, posture, acceptedFile, context, workingTree } = fileSession;
   const references = useCodeInlineReferences({
     project: context.project,
     file: acceptedFile,
     value: workingTree.value,
     enabled: workingTree.phase === 'synchronized',
   });
-  const inlineState: CodeInlineReferenceState =
-    context.status === 'checking' || context.status === 'unavailable'
-      ? { kind: context.status }
-      : references.state;
+  const inlineState = projectWorkspaceInlineReferenceState(context, references.state);
   const inspection = useCodeReferenceInspection(inlineState, inlineCopy, onInspectReference);
   const changeValue = useCallback(
     (value: string) => {
@@ -118,101 +110,33 @@ const WorkspaceFileCodeEditorSession = forwardRef<
     context.status === 'checking',
     references.isReanalyzing
   );
-  const versionedFile =
-    presentation.surface.kind === 'file' ? presentation.surface.file : undefined;
   const operation = useOperationSqlCompilation(
-    posture.kind === 'editable' && versionedFile?.path === workingTree.filePath
-      ? versionedFile?.path
-      : undefined,
+    readOperationSqlFilePath(posture, presentation.surface, workingTree.filePath),
     workingTree.value
   );
-  const versionHistory =
-    props.fileHistoryHost && posture.kind === 'editable' && versionedFile
-      ? createPortal(
-          <CodeFileVersionHistory
-            key={versionedFile.path}
-            copy={copy}
-            path={versionedFile.path}
-            language={versionedFile.language}
-            value={workingTree.value}
-            synchronized={
-              acceptedFile !== undefined &&
-              workingTree.filePath === versionedFile.path &&
-              workingTree.phase === 'synchronized'
-            }
-            onRestore={changeValue}
-          />,
-          props.fileHistoryHost
-        )
-      : null;
+  const contributions = projectWorkspaceFileEditorContributions({
+    session: fileSession,
+    references,
+    inspection,
+    operation,
+    presentation,
+    copy,
+    inlineCopy,
+    inlineMessage,
+    changeValue,
+    fileHistoryHost: props.fileHistoryHost,
+    headerActions: props.headerActions,
+    onInspectReference,
+  });
   return (
     <WorkspaceFileCodeEditorView
       path={path}
       className={props.className}
       fillAvailableSpace={fillAvailableSpace}
-      headerActions={
-        <>
-          {operation.available && (
-            <OperationSqlCompileAction
-              copy={copy}
-              result={operation.result}
-              onCompile={operation.compile}
-            />
-          )}
-          {props.headerActions}
-          {versionHistory}
-        </>
-      }
       copy={copy}
       surface={presentation.surface}
       navigation={{ blocked: workingTree.navigationBlocked, flush: workingTree.flush }}
-      editor={{
-        posture,
-        value: workingTree.value,
-        onChange: changeValue,
-        inlineReferences: inspection.inlineReferences,
-        diagnostics:
-          operation.result?.kind === 'invalid' ? operation.result.diagnostics : undefined,
-        onInspectReference: inspection.inspect,
-      }}
-      analysisAction={
-        context.status === 'ready' && references.state.kind !== 'inactive'
-          ? {
-              label: inlineCopy.analyzeLabel,
-              enabled: references.canAnalyze,
-              onAnalyze: references.analyze,
-            }
-          : undefined
-      }
-      executionCommands={
-        operation.available ? (
-          <OperationSqlCompileFeedback copy={copy} result={operation.result} />
-        ) : context.project !== undefined && acceptedFile !== undefined ? (
-          <CodeModelCommands
-            file={acceptedFile}
-            project={context.project}
-            synchronized={
-              workingTree.phase === 'synchronized' && workingTree.value === acceptedFile.content
-            }
-          />
-        ) : undefined
-      }
-      message={presentation.inlineMessagePlacement === 'status-band' ? undefined : inlineMessage}
-      status={
-        presentation.statusPhase === undefined
-          ? undefined
-          : {
-              phase: presentation.statusPhase,
-              copy: resolveCodeEditorStatusCopy(copy, posture, inlineMessage),
-              onRetry: () => void retry(),
-              onReload: reload,
-            }
-      }
-      details={
-        onInspectReference == null && inspection.localReference != null
-          ? { reference: inspection.localReference, copy: inlineCopy, onClose: inspection.close }
-          : undefined
-      }
+      {...contributions}
     />
   );
 });

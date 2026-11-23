@@ -110,6 +110,15 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
   return resolveNodeKindRegistration(pluginKind).minimapColor;
 }
 
+type CanvasReactFlowSurfaceProps = Omit<
+  CanvasViewportSurfaceViewProps,
+  | 'viewportRef'
+  | 'resolvedCanvasPalette'
+  | 'contextMenuLabel'
+  | 'nodeHealthPopoverModel'
+  | 'graphFilterController'
+> & { onCloseGraphFilter: () => void };
+
 function CanvasViewportReactFlowSurface({
   canEditEdges,
   canDeleteWithKeyboard,
@@ -137,14 +146,7 @@ function CanvasViewportReactFlowSurface({
   graphSearchController,
   onCloseGraphFilter,
   copy,
-}: Omit<
-  CanvasViewportSurfaceViewProps,
-  | 'viewportRef'
-  | 'resolvedCanvasPalette'
-  | 'contextMenuLabel'
-  | 'nodeHealthPopoverModel'
-  | 'graphFilterController'
-> & { onCloseGraphFilter: () => void }): JSX.Element {
+}: CanvasReactFlowSurfaceProps): JSX.Element {
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
   const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
   const backgroundAdd = useCanvasBackgroundAddMenuGesture();
