@@ -1,5 +1,7 @@
 /** Shared production shell setup for opening and draft-protection behaviors. */
 import { beforeEach, afterEach, vi } from 'vitest';
+import { act } from 'react';
+import { fireEvent, within } from '@testing-library/dom';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import {
@@ -19,6 +21,13 @@ export function setupSemanticEditorShell(): void {
   afterEach(() => {
     harness.unmount();
   });
+}
+
+export async function openModelInputs(): Promise<HTMLElement> {
+  await act(async () => {
+    fireEvent.click(within(harness.container).getByRole('button', { name: 'Model inputs' }));
+  });
+  return within(document.body).getByRole('dialog', { name: 'Model inputs' });
 }
 
 export async function mountModel(

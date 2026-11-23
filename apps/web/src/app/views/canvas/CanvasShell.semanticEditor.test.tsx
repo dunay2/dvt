@@ -20,6 +20,7 @@ import {
   harness,
   navigation,
   mountModel,
+  openModelInputs,
 } from './CanvasShell.semanticEditor.test-support';
 
 function modelPanels(
@@ -133,8 +134,9 @@ describe('Canvas Model inspection', () => {
         editor.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
       ).not.toBeNull();
       expect(editor.textContent).toContain('INNER JOIN');
+      const inputs = await openModelInputs();
       const sources = [
-        ...editor.querySelectorAll<HTMLButtonElement>(
+        ...inputs.querySelectorAll<HTMLButtonElement>(
           '[data-slot="canvas-relational-tree-source"]'
         ),
       ];
@@ -192,8 +194,9 @@ describe('Canvas Model inspection', () => {
       expect(
         editor.querySelector('[data-slot="canvas-relational-tree-inspection"]')
       ).not.toBeNull();
+      const inputs = await openModelInputs();
       const sources = [
-        ...editor.querySelectorAll<HTMLButtonElement>(
+        ...inputs.querySelectorAll<HTMLButtonElement>(
           '[data-slot="canvas-relational-tree-source"]'
         ),
       ];
@@ -332,7 +335,7 @@ describe('Canvas Model inspection', () => {
         name: 'Navigation',
       });
       await act(async () =>
-        fireEvent.click(within(activityRail).getByRole('link', { name: 'Git' }))
+        fireEvent.click(within(harness.container).getByRole('link', { name: 'Git' }))
       );
       await act(async () => data.onOpenNode?.(fixture.transform.id));
       const model = navigation.querySelector<HTMLButtonElement>(
@@ -557,8 +560,9 @@ describe('Canvas Model inspection', () => {
   it('does not enter authoring when selecting an already participating source', async () => {
     const { data, fixture, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
+    const inputs = await openModelInputs();
     await act(async () =>
-      harness.container
+      inputs
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
         .click()
     );

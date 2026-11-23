@@ -520,8 +520,8 @@ describe('app routes', () => {
     expect(container.querySelector('[data-slot="shell-active-surface"]')).toBeNull();
     expect(readLeftNavigationCaptions(container)).toEqual([
       'Canvas',
-      'Runs',
       'Templates',
+      'Runs',
       'Plugins',
       'Admin',
     ]);

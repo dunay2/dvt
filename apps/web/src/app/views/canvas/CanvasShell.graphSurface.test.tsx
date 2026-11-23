@@ -377,9 +377,8 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="project-files-explorer"]')).toBeNull();
     expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
-    const activityRail = container
-      .querySelector('[data-slot="shell-project-code-command"]')!
-      .closest('nav')!;
+    const activityRail = within(container).getByRole('navigation', { name: 'Navigation' });
+    const shellRail = container.querySelector<HTMLElement>('[data-slot="left-navigation-rail"]')!;
     const canvasEntry = within(container).getByRole('link', { name: 'Canvas' });
     expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
     await act(async () => {
@@ -403,11 +402,11 @@ describe('CanvasShell graph base surface', () => {
     expect(within(container).getByRole('navigation', { name: 'Navigation' })).toBe(activityRail);
     expect(within(activityRail).queryByRole('button', { name: 'Sources' })).toBeNull();
     expect(within(container).queryByRole('button', { name: 'Elements' })).toBeNull();
-    expect(within(activityRail).getByRole('link', { name: 'Git' })).not.toBeNull();
+    expect(within(shellRail).getByRole('link', { name: 'Git' })).not.toBeNull();
     expect(canvasEntry.getAttribute('aria-expanded')).toBe('false');
-    expect(
-      within(activityRail).getByRole('link', { name: 'Git' }).getAttribute('aria-expanded')
-    ).toBe('true');
+    expect(within(shellRail).getByRole('link', { name: 'Git' }).getAttribute('aria-expanded')).toBe(
+      'true'
+    );
     expect(container.querySelector('[data-slot="canvas-contextual-workbench-overlay"]')).toBeNull();
     const files = container.querySelector('[data-testid="project-files-explorer"]');
     expect(files).not.toBeNull();
@@ -453,11 +452,11 @@ describe('CanvasShell graph base surface', () => {
       fireEvent.click(canvasEntry);
     });
     expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
-    expect(
-      within(activityRail).getByRole('link', { name: 'Git' }).getAttribute('aria-expanded')
-    ).toBe('false');
+    expect(within(shellRail).getByRole('link', { name: 'Git' }).getAttribute('aria-expanded')).toBe(
+      'false'
+    );
     expect(codeTab?.getAttribute('aria-selected')).toBe('false');
-    await act(async () => fireEvent.click(within(activityRail).getByRole('link', { name: 'Git' })));
+    await act(async () => fireEvent.click(within(shellRail).getByRole('link', { name: 'Git' })));
     expect(within(container).getByRole('navigation', { name: 'Navigation' })).toBe(activityRail);
     expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);

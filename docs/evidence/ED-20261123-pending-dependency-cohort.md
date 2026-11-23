@@ -66,6 +66,21 @@ Scroll Area 1.4.0, typescript-eslint 8.73.0 and markdownlint-cli2 0.24.2.
 The dependency review action remains pinned by commit, now at its 5.0.1 release.
 The lockfile is resolved from these declarations with normal installation hooks.
 
+The complete presentation run exposed a real Escape regression: Tooltip and
+Dialog resolved separate DismissableLayer and FocusScope module instances.
+The root dependency graph now resolves those singleton interaction families to
+1.2.1 and 1.3.1 respectively. The existing closing-animation and focus regression
+passes unchanged. No custom event handler or additional interaction registry is
+introduced. The upstream [DismissableLayer](https://github.com/radix-ui/primitives/blob/main/packages/react/dismissable-layer/CHANGELOG.md)
+and [FocusScope](https://github.com/radix-ui/primitives/blob/main/packages/react/focus-scope/CHANGELOG.md)
+patch notes describe callback type compatibility fixes.
+
+The same run found stale shell integration expectations. The tests now follow
+the documented Templates-before-Runs order, address Git in the shared rail footer,
+and open the Model inputs popover before asserting its exact source count,
+drag admission and absence of authoring writes. The existing product owners,
+negative assertions and focus lifecycle are retained.
+
 The [Vitest migration guides](https://vitest.dev/guide/migration/) and
 [v4 migration requirements](https://v4.vitest.dev/guide/migration.html) govern
 the runner adaptation. The [Temporal release](https://github.com/temporalio/sdk-typescript/releases/tag/v1.26.0)

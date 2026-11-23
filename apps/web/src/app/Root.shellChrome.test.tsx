@@ -151,8 +151,8 @@ describe('RootShell chrome', () => {
       const links = [...rail!.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')];
       expect(links.map((link) => link.getAttribute('href'))).toEqual([
         '/canvas',
-        '/runs',
         '/templates',
+        '/runs',
         '/plugins',
         '/admin',
       ]);
