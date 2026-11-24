@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const { readCurrentPlanningDbSchema } = require('./current-schema.cjs');
@@ -17,6 +18,30 @@ const disconnected = {
     throw new Error('Must not connect');
   },
 };
+
+test('fixed kind CLI rejects injected grammar and stale source before connecting', () => {
+  for (const extra of [[], ['--sql', 'select 1'], ['--expected-schema-sha256', 'c'.repeat(64)]]) {
+    const result = spawnSync(
+      process.execPath,
+      [
+        path.resolve(__dirname, '../planning-db-schema.cjs'),
+        '--revise-component-kind-constraint',
+        '--expected-schema-sha256',
+        'a'.repeat(64),
+        '--expected-constraint-sha256',
+        'b'.repeat(64),
+        ...extra,
+      ],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, DVT_PLANNING_DB_URL: 'postgresql://invalid:1/never_connect' },
+      }
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, extra.length ? /exactly two reviewed digests/ : /schema digest/);
+    assert.doesNotMatch(result.stderr, /ECONN|ENOTFOUND|replaced=true/);
+  }
+});
 
 test('kind CHECK rejects caller SQL/identity, unsupported options and stale schema before connecting', async () => {
   for (const extra of [

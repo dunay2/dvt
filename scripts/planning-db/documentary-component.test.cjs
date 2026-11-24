@@ -1,7 +1,10 @@
 /** Owned concern: documentary nature cannot conceal executable implementation or missing evidence. */
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { evaluateDocumentaryComponent } = require('./documentary-component.cjs');
+const {
+  evaluateDocumentaryComponent,
+  isDocumentaryRailDeclaration,
+} = require('./documentary-component.cjs');
 
 const prose = 'docs/guide.md';
 const risk = 'docs/risk-register/quality/R-20261124-DOCUMENTARY.yaml';
@@ -25,6 +28,88 @@ function fixture(overrides = {}) {
   };
 }
 const codes = (input) => evaluateDocumentaryComponent(input).map((finding) => finding.code);
+
+test('closed historical receipt format stays passive while unknown and executable JSONL rejects', () => {
+  const record = {
+    timestampUtc: '2026-04-01T15:37:24.1230850Z',
+    baseBranch: 'main',
+    branch: 'refactor/actual-change',
+    targetBranchesAnalyzed: 1,
+    supersededCandidates: 0,
+    verifyPrepush: 'passed',
+    durationSeconds: 29.7,
+  };
+  const check = (value) =>
+    codes(
+      fixture({
+        files: [{ path: 'history.jsonl', component_unit: 'DOC' }],
+        documentaryLinks: [{ component_id: 'SEMANTIC', document_path: 'history.jsonl' }],
+        readBytes: () => Buffer.from(typeof value === 'string' ? value : JSON.stringify(value)),
+      })
+    );
+  assert.deepEqual(check(record), []);
+  assert.deepEqual(check({ ...record, verifyPrepush: 'failed' }), []);
+  for (const invalid of [
+    { ...record, script: 'run code' },
+    { ...record, durationSeconds: -1 },
+    { ...record, durationSeconds: '29.7' },
+    { ...record, targetBranchesAnalyzed: 1.5 },
+    { ...record, supersededCandidates: -1 },
+    { ...record, verifyPrepush: 'success' },
+    { ...record, timestampUtc: '2026-02-30T12:00:00Z' },
+    { ...record, timestampUtc: 'tomorrow' },
+    { ...record, branch: 'x\nrun code' },
+    { ...record, baseBranch: '../main' },
+    { ...record, branch: null },
+    [],
+    {},
+    '{invalid',
+  ])
+    assert.ok(check(invalid).includes('invalid_documentary_content'));
+});
+
+test('documentary declaration requires bounded native scope and every current passive manifest alias', () => {
+  const rail = {
+    allowed_implementation_surfaces: ['docs/planning/**'],
+    implementation_refs: [{ path: 'docs/planning/plan.md', sourceKind: 'manifest_symbol' }],
+  };
+  const bytes = () => Buffer.from('# Declared future vocabulary, documentary work only\n');
+  assert.equal(isDocumentaryRailDeclaration(rail, bytes), true);
+  for (const changed of [
+    { ...rail, allowed_implementation_surfaces: [] },
+    { ...rail, allowed_implementation_surfaces: ['docs/**', 'apps/**'] },
+    { ...rail, allowed_implementation_surfaces: ['docs/../apps/**'] },
+    {
+      ...rail,
+      implementation_refs: [{ path: 'docs/planning/plan.md', sourceKind: 'source_code' }],
+    },
+    { ...rail, implementation_refs: ['docs/planning/plan.md'] },
+    {
+      ...rail,
+      implementation_refs: [
+        ...rail.implementation_refs,
+        { path: 'docs/planning/code.ts', sourceKind: 'manifest_symbol' },
+      ],
+    },
+    {
+      ...rail,
+      implementation_refs: [
+        ...rail.implementation_refs,
+        { path: 'docs/planning/config.json', sourceKind: 'manifest_symbol' },
+      ],
+    },
+    { ...rail, implementation_refs: [{ path: 'docs/other.md', sourceKind: 'manifest_symbol' }] },
+  ])
+    assert.equal(isDocumentaryRailDeclaration(changed, bytes), false);
+  assert.equal(
+    isDocumentaryRailDeclaration(rail, () => null),
+    false
+  );
+  assert.equal(
+    isDocumentaryRailDeclaration(rail, () => Buffer.from([255, 0])),
+    false
+  );
+});
 
 test('real passive prose with a current native semantic link qualifies without claiming implementation', () => {
   assert.deepEqual(codes(fixture()), []);

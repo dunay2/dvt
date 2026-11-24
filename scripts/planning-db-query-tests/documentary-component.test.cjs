@@ -1,6 +1,8 @@
 /** Owned concern: native documentary findings use the same selected Git ownership and source evidence. */
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
 const { repository } = require('../lib/feature-mechanization-git-fixture.cjs');
 const {
   createDocumentaryComponentReadModelComponent,
@@ -42,8 +44,7 @@ function client(options = {}) {
             },
           ],
         };
-      if (sql.includes('jsonb_array_elements(rail.implementation_refs)'))
-        return { rows: options.refs || [] };
+      if (sql.includes('rail.allowed_implementation_surfaces')) return { rows: options.refs || [] };
       if (sql.includes('select component_id, source_path, role'))
         return { rows: options.bindings || [] };
       return { rows: [] };
@@ -93,12 +94,81 @@ test('native implementation references and all source bindings stay errors for p
   const read = createDocumentaryComponentReadModelComponent({ gitReader: repo.reader() });
   const rows = await read.readDocumentaryIntegrityRows(
     client({
-      refs: [{ reference: 'guide.md#run' }],
+      refs: [{ implementation_refs: ['guide.md#run'] }],
       bindings: [{ component_id: 'DOC', source_path: 'guide.md', role: 'verifies' }],
     })
   );
   assert.ok(rows.some((row) => row.metadata.code === 'documentary_rail_implementation'));
   assert.ok(rows.some((row) => row.metadata.code === 'documentary_source_binding'));
+});
+
+test('bounded documentary declarations preserve references while product scope and bindings still reject', async (t) => {
+  const repo = repository(t);
+  fs.mkdirSync(path.join(repo.root, 'docs'));
+  repo.write('docs/plan.md', '# Documentary plan declaring future product vocabulary\n');
+  const rail = {
+    rail_id: 'DECLARED-DOC',
+    allowed_implementation_surfaces: ['docs/**'],
+    implementation_refs: [{ path: 'docs/plan.md', sourceKind: 'manifest_symbol' }],
+  };
+  const read = createDocumentaryComponentReadModelComponent({ gitReader: repo.reader() });
+  const options = {
+    owns: ['docs/plan.md'],
+    links: [{ component_id: 'SEMANTIC', document_path: 'docs/plan.md' }],
+    refs: [rail],
+  };
+  assert.deepEqual(await read.readDocumentaryIntegrityRows(client(options)), []);
+  assert.deepEqual(
+    await read.readDocumentaryIntegrityRows(
+      client({
+        ...options,
+        refs: [
+          ...options.refs,
+          {
+            ...rail,
+            implementation_refs: [
+              { path: 'docs/missing-unrelated-history.md', sourceKind: 'manifest_symbol' },
+            ],
+          },
+        ],
+      })
+    ),
+    [],
+    'unrelated historical declarations do not acquire nonexistent selected Git blobs'
+  );
+  const incomplete = await read.readDocumentaryIntegrityRows(
+    client({
+      ...options,
+      refs: [
+        {
+          ...rail,
+          implementation_refs: [
+            ...rail.implementation_refs,
+            { path: 'docs/missing-related-evidence.md', sourceKind: 'manifest_symbol' },
+          ],
+        },
+      ],
+    })
+  );
+  assert.ok(
+    incomplete.some((row) => row.metadata.code === 'documentary_rail_implementation'),
+    'missing evidence in a relevant declaration remains an implementation obligation without crashing acquisition'
+  );
+  assert.equal(rail.implementation_refs[0].sourceKind, 'manifest_symbol');
+  const rows = await read.readDocumentaryIntegrityRows(
+    client({
+      ...options,
+      refs: [{ ...rail, allowed_implementation_surfaces: ['apps/**', 'docs/**'] }],
+    })
+  );
+  assert.ok(rows.some((row) => row.metadata.code === 'documentary_rail_implementation'));
+  const bound = await read.readDocumentaryIntegrityRows(
+    client({
+      ...options,
+      bindings: [{ component_id: 'DOC', source_path: 'docs/plan.md', role: 'verifies' }],
+    })
+  );
+  assert.ok(bound.some((row) => row.metadata.code === 'documentary_source_binding'));
 });
 
 test('an unavailable authority rejects; existing semantic findings are not a documentary exemption', async (t) => {

@@ -5,7 +5,12 @@ const {
 const {
   createCurrentComponentFilesReadModelComponent,
 } = require('./current-component-files-query.cjs');
-const { documentaryKind, evaluateDocumentaryComponent } = require('../documentary-component.cjs');
+const {
+  documentaryKind,
+  evaluateDocumentaryComponent,
+  isDocumentaryRailDeclaration,
+  documentaryRailReferencePaths,
+} = require('../documentary-component.cjs');
 
 async function readDocumentaryAssociations(client, ids, paths) {
   const [bindings, references, links] = await Promise.all([
@@ -16,9 +21,9 @@ async function readDocumentaryAssociations(client, ids, paths) {
       [ids, paths]
     ),
     client.query(
-      `select rail.rail_id, reference.value as reference
-      from planning_query_store.command_query_rail_manifest_query rail
-      cross join lateral jsonb_array_elements(rail.implementation_refs) reference(value)`,
+      `select rail.rail_id, rail.implementation_refs, rail.allowed_implementation_surfaces
+      from planning_query_store.command_query_rail_query rail
+      where lower(rail.rail_status) not in ('retired', 'deprecated')`,
       []
     ),
     client.query(
@@ -33,9 +38,7 @@ async function readDocumentaryAssociations(client, ids, paths) {
   ]);
   return {
     bindings: bindings.rows,
-    implementationRefs: references.rows.map((row) =>
-      typeof row.reference === 'string' ? { path: row.reference } : row.reference
-    ),
+    rails: references.rows,
     documentaryLinks: links.rows,
   };
 }
@@ -86,7 +89,29 @@ function createDocumentaryComponentReadModelComponent(deps = {}) {
       ids,
       files.map((file) => file.path)
     );
-    reader.readSources(files.map((file) => file.path));
+    const ownedPaths = new Set(files.map((file) => file.path));
+    const currentPaths = new Set(snapshot.files.map((file) => file.path));
+    const declarationPaths = new Map(
+      associations.rails.map((rail) => [rail, documentaryRailReferencePaths(rail)])
+    );
+    const relevant = (rail) =>
+      declarationPaths.get(rail).some((filePath) => ownedPaths.has(filePath));
+    const referencePaths = associations.rails
+      .filter(relevant)
+      .flatMap((rail) =>
+        declarationPaths.get(rail).filter((filePath) => currentPaths.has(filePath))
+      );
+    reader.readSources([...new Set([...files.map((file) => file.path), ...referencePaths])]);
+    const implementationRefs = associations.rails.flatMap((rail) =>
+      relevant(rail) &&
+      isDocumentaryRailDeclaration(rail, (filePath) =>
+        currentPaths.has(filePath) ? reader.readSourceBytes(filePath) : null
+      )
+        ? []
+        : (rail.implementation_refs || []).map((reference) =>
+            typeof reference === 'string' ? { path: reference } : reference
+          )
+    );
     return components.flatMap((component) => {
       const unit = snapshot.units.find((unit) => unit.id === component.component_id);
       if (!unit) throw new Error('ARCH-DOCUMENTARY-AUTHORITY-MISSING: ' + component.component_id);
@@ -99,6 +124,7 @@ function createDocumentaryComponentReadModelComponent(deps = {}) {
             file.candidate_component_ids?.includes(component.component_id)
         ),
         ...associations,
+        implementationRefs,
         readBytes: (filePath) => reader.readSourceBytes(filePath),
       }).map((finding) => documentaryFindingRow(component, finding));
     });

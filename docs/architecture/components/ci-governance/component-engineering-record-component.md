@@ -1060,12 +1060,39 @@ configuration, manifests and every unknown form remain implementation artifacts,
 regardless of directory or identifier. Prose code fences are documentary examples
 unless an actual implementation association gives them another role.
 
-Any source-responsibility binding or rail implementation reference involving the
+JSONL can also carry passive historical preflight receipts when every record
+matches the closed seven-field receipt schema: `timestampUtc`, `baseBranch`,
+`branch`, `targetBranchesAnalyzed`, `supersededCandidates`, `verifyPrepush` and
+`durationSeconds`. UTC dates, bounded branch text, nonnegative integer counts,
+`passed`/`failed` results and finite nonnegative duration are mandatory. Unknown
+fields, malformed/missing values and executable/configuration records reject.
+This schema applies by actual bytes, not artifact identity or directory. Preserved
+historical measurements never attest current integration or validation success.
+
+Any source-responsibility binding or current rail implementation reference involving the
 collection rejects documentary admission and appears as an integrity error,
 including a binding to a passive-looking path. Documentation references remain
 documentary evidence. A native semantic document link must resolve to a currently
 owned file; a self-reference, deleted target or absent DB authority cannot satisfy
 it. Missing/ambiguous ownership and unavailable Git/DB evidence remain explicit.
+
+Current rail authority comes from the existing canonical command/query read model.
+Explicitly retired or deprecated declarations retain their native source,
+implementation references and audit history; they do not assert current execution.
+Reference-only manifests do not create parallel implementation authority. Active
+declarations still reject documentary admission, including references to Markdown.
+Lifecycle never exempts executable artifacts or source-responsibility bindings.
+
+A declared command/query vocabulary inside a documentary work manifest is not
+itself executable implementation. A nonempty native allowed scope restricted to
+document sources, exclusively `manifest_symbol` aliases, and validated current
+passive bytes for every referenced artifact establish documentary declaration
+evidence. Preserve its canonical winner, original references and feature status.
+This classification requires the complete reference set and declared scope;
+neither file extension nor a closed plan is sufficient. Any product/executable
+scope, `source_code` assertion, untyped reference, mixed code, unknown artifact or
+missing current bytes retains implementation obligations. Source bindings and
+executable collection ownership reject independently of declaration nature.
 
 This distinction creates no new registry, inventory, command or product query.
 `ReadComponentFiles` owns current source facts; the native component record owns

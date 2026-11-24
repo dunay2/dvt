@@ -1,6 +1,8 @@
 /** Owned concern: prove the fixed kind operation preserves real PostgreSQL authority. */
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
 const { Client } = require('pg');
 const { randomUuidV4, sha256HexUtf8 } = require('@dvt/crypto');
 const { readCurrentPlanningDbSchema } = require('./current-schema.cjs');
@@ -174,7 +176,8 @@ test('native documentary admission and filtered integrity use current source and
     createComponentIntegrityReadModelComponent,
   } = require('./queries/component-integrity-query.cjs');
   const repo = repository(t);
-  repo.write('guide.md', '# Actual guide\n');
+  fs.mkdirSync(path.join(repo.root, 'docs'));
+  repo.write('docs/guide.md', '# Actual guide\n');
   const adminUrl = schema.databaseUrl();
   const name = 'dvt_planning_test_documentary_' + randomUuidV4().replaceAll('-', '');
   assert.match(name, /^dvt_planning_test_documentary_[a-f0-9]+$/u);
@@ -194,7 +197,7 @@ test('native documentary admission and filtered integrity use current source and
       ['a'.repeat(64)]
     );
     for (const row of [
-      governanceFixture('SYS-DOC', ['guide.md', 'script.ts']),
+      governanceFixture('SYS-DOC', ['docs/guide.md', 'script.ts']),
       governanceFixture('SYS-CODE', ['model.ts', 'retired.ts']),
     ]) {
       await client.query(
@@ -259,7 +262,7 @@ test('native documentary admission and filtered integrity use current source and
       '--owner',
       'Test',
       '--repo-path',
-      'guide.md',
+      'docs/guide.md',
       '--public-contract',
       'Passive current guide and native semantic links',
       '--runtime',
@@ -293,7 +296,7 @@ test('native documentary admission and filtered integrity use current source and
         '--component',
         'SYS-CODE',
         '--governance',
-        'guide.md',
+        'docs/guide.md',
         '--expected-revision',
         '0',
         ...provenance,
@@ -337,6 +340,80 @@ test('native documentary admission and filtered integrity use current source and
       (await read({ component: 'SYS-CODE', kind: 'component_evidence_gap' })).length,
       1,
       'executable metadata/evidence obligations remain unchanged'
+    );
+    const refs = [{ path: 'docs/guide.md', name: 'HistoricalDocument' }];
+    await client.query(
+      `insert into planning_query_store.command_query_rails
+        (rail_id,feature_id,mechanization_status,rail_name,normalized_rail_name,rail_type,
+         ddd_owner,source_path,source_content_sha256,raw_rail,raw_manifest,implementation_refs)
+       values ('DOC-RAIL','DOC-FEATURE','implemented','DocumentProof','documentproof','query',
+         'Test','fixture',$1,'{}','{}',$2::jsonb)`,
+      ['a'.repeat(64), JSON.stringify(refs)]
+    );
+    assert.ok(
+      (await read({ component: 'SYS-DOC', kind: 'documentary_component_violation' })).some(
+        (row) => row.metadata.code === 'documentary_rail_implementation'
+      ),
+      'active Markdown implementation assertions remain obligations'
+    );
+    const documentaryRefs = [{ ...refs[0], sourceKind: 'manifest_symbol' }];
+    await client.query(
+      "update planning_query_store.command_query_rails set implementation_refs=$1::jsonb,allowed_implementation_surfaces='[\"docs/**\"]' where rail_id='DOC-RAIL'",
+      [JSON.stringify(documentaryRefs)]
+    );
+    assert.deepEqual(
+      await read({ component: 'SYS-DOC', kind: 'documentary_component_violation' }),
+      [],
+      'a documentary plan can declare vocabulary without implementing the product rail'
+    );
+    assert.equal(
+      (
+        await client.query(
+          "select rail_id from planning_query_store.command_query_rail_query where rail_name='DocumentProof'"
+        )
+      ).rows[0].rail_id,
+      'DOC-RAIL',
+      'documentary classification preserves the canonical declaration identity'
+    );
+    assert.deepEqual(
+      (
+        await client.query(
+          "select implementation_refs from planning_query_store.command_query_rails where rail_id='DOC-RAIL'"
+        )
+      ).rows[0].implementation_refs,
+      documentaryRefs,
+      'documentary aliases and their native provenance remain unchanged'
+    );
+    await client.query(
+      "update planning_query_store.command_query_rails set implementation_refs=$1::jsonb where rail_id='DOC-RAIL'",
+      [JSON.stringify([{ ...refs[0], sourceKind: 'source_code' }])]
+    );
+    assert.ok(
+      (await read({ component: 'SYS-DOC', kind: 'documentary_component_violation' })).some(
+        (row) => row.metadata.code === 'documentary_rail_implementation'
+      ),
+      'Markdown asserted as actual product source remains an implementation obligation'
+    );
+    await client.query(
+      "update planning_query_store.command_query_rails set implementation_refs=$1::jsonb where rail_id='DOC-RAIL'",
+      [JSON.stringify(refs)]
+    );
+    await client.query(
+      "update planning_query_store.command_query_rails set rail_status='retired' where rail_id='DOC-RAIL'"
+    );
+    assert.deepEqual(
+      await read({ component: 'SYS-DOC', kind: 'documentary_component_violation' }),
+      [],
+      'explicitly retired authority is preserved history rather than current implementation'
+    );
+    assert.deepEqual(
+      (
+        await client.query(
+          "select implementation_refs from planning_query_store.command_query_rails where rail_id='DOC-RAIL'"
+        )
+      ).rows[0].implementation_refs,
+      refs,
+      'retirement does not erase native evidence'
     );
     repo.write('script.ts', 'export const executable = true;\n');
     const rows = await read({

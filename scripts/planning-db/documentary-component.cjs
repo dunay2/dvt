@@ -1,6 +1,9 @@
 /** Owned concern: distinguish passive documentary ownership from executable implementation. */
 const yaml = require('js-yaml');
 const path = require('node:path');
+const {
+  FeatureMechanizationSurfaceMatcher,
+} = require('../lib/feature-mechanization-surface-matcher.cjs');
 
 const documentaryKind = 'documentary-collection';
 const riskFields = new Set([
@@ -42,6 +45,7 @@ function documentaryArtifactKind(filePath) {
       '.jpg': 'jpeg',
       '.jpeg': 'jpeg',
       '.ico': 'ico',
+      '.jsonl': 'preflight-receipt',
     }[extension] || null
   );
 }
@@ -89,13 +93,113 @@ function validDocumentaryContent(filePath, kind, bytes) {
       bytes.readUInt16LE(4) > 0
     );
   const text = documentaryText(bytes);
+  if (kind === 'preflight-receipt') return validPreflightReceipts(text);
   return kind !== 'risk' || validRiskRecord(filePath, text);
+}
+
+function validPreflightReceipts(text) {
+  const fields = [
+    'timestampUtc',
+    'baseBranch',
+    'branch',
+    'targetBranchesAnalyzed',
+    'supersededCandidates',
+    'verifyPrepush',
+    'durationSeconds',
+  ];
+  return text
+    .trim()
+    .split(/\r?\n/u)
+    .every((line) => {
+      const row = JSON.parse(line);
+      if (
+        !row ||
+        Array.isArray(row) ||
+        Object.keys(row).length !== fields.length ||
+        !fields.every((field) => Object.hasOwn(row, field))
+      )
+        return false;
+      const stamp = row.timestampUtc;
+      if (
+        typeof stamp !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?Z$/u.test(stamp)
+      )
+        return false;
+      const date = new Date(stamp);
+      if (
+        !Number.isFinite(date.getTime()) ||
+        date.toISOString().slice(0, 19) !== stamp.slice(0, 19)
+      )
+        return false;
+      return (
+        ['baseBranch', 'branch'].every(
+          (field) =>
+            typeof row[field] === 'string' &&
+            row[field].length <= 255 &&
+            /^[A-Za-z0-9][A-Za-z0-9._/-]*$/u.test(row[field]) &&
+            !row[field].includes('..')
+        ) &&
+        ['targetBranchesAnalyzed', 'supersededCandidates'].every(
+          (field) => Number.isSafeInteger(row[field]) && row[field] >= 0
+        ) &&
+        ['passed', 'failed'].includes(row.verifyPrepush) &&
+        typeof row.durationSeconds === 'number' &&
+        Number.isFinite(row.durationSeconds) &&
+        row.durationSeconds >= 0
+      );
+    });
 }
 
 function documentPath(reference) {
   const value =
     typeof reference === 'string' ? reference : reference.path || reference.source_path || '';
   return value.split('#')[0];
+}
+
+function documentaryRailReferencePaths(rail) {
+  const allowed = rail.allowed_implementation_surfaces;
+  const references = rail.implementation_refs;
+  if (
+    !Array.isArray(allowed) ||
+    !allowed.length ||
+    !allowed.every(
+      (surface) =>
+        typeof surface === 'string' &&
+        surface.startsWith('docs/') &&
+        !/[\\\s#]/u.test(surface) &&
+        !surface.split('/').some((part) => part === '..' || part === '.')
+    ) ||
+    !Array.isArray(references) ||
+    !references.length ||
+    !references.every(
+      (reference) =>
+        reference &&
+        typeof reference === 'object' &&
+        reference.sourceKind === 'manifest_symbol' &&
+        typeof reference.path === 'string'
+    )
+  )
+    return [];
+  const paths = references.map(documentPath);
+  return paths.every((filePath) => documentaryArtifactKind(filePath)) ? paths : [];
+}
+
+function isDocumentaryRailDeclaration(rail, readBytes) {
+  const paths = documentaryRailReferencePaths(rail);
+  if (!paths.length) return false;
+  const allowed = rail.allowed_implementation_surfaces;
+  const entry = { manifest: { allowedImplementationSurfaces: allowed } };
+  const matcher = new FeatureMechanizationSurfaceMatcher([entry]);
+  return paths.every((filePath) => {
+    const kind = documentaryArtifactKind(filePath);
+    if (!kind || !matcher.findMostSpecificManifestEntriesAllowingFile(filePath).length)
+      return false;
+    try {
+      return validDocumentaryContent(filePath, kind, readBytes(filePath));
+    } catch {
+      return false;
+    }
+  });
 }
 
 function documentaryAssociationChecks(input, paths, add) {
@@ -195,4 +299,9 @@ function evaluateDocumentaryComponent(input) {
   return findings;
 }
 
-module.exports = { documentaryKind, evaluateDocumentaryComponent };
+module.exports = {
+  documentaryKind,
+  evaluateDocumentaryComponent,
+  isDocumentaryRailDeclaration,
+  documentaryRailReferencePaths,
+};
