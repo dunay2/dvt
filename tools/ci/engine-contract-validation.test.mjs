@@ -264,10 +264,12 @@ test('glossary validation rejects a malformed row rather than silently dropping 
   const corpus = createCorpus(t);
   const glossary = path.join(corpus, 'engine/GlossaryContract.v1.md');
   const source = readFileSync(glossary, 'utf8');
-  writeFileSync(
-    glossary,
-    source.replace('| runSeq | timestamp order defines canonical event order |', '| runSeq | |')
+  const malformed = source.replace(
+    /\|\s*runSeq\s*\|\s*timestamp order defines canonical event order\s*\|/u,
+    '| runSeq | |'
   );
+  assert.notEqual(malformed, source, 'The fixture must remove the actual runSeq policy claim');
+  writeFileSync(glossary, malformed);
   assertRejected(
     runValidator('contracts:glossary:validate', { corpus, mode: 'warn' }),
     /malformed.*policy|invalid.*claim.*row/iu
