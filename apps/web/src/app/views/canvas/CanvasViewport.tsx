@@ -250,7 +250,9 @@ function CanvasViewportWithPresenter({
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const canSelectNodes = props.canSelectNodes ?? props.canEditEdges;
   const graphSearchActivationPort = useMemo(
-    () => ({ fitView: reactFlow.fitView, onNodesChange: props.onNodesChange }),
+    function createSearchActivationPort() {
+      return { fitView: reactFlow.fitView, onNodesChange: props.onNodesChange };
+    },
     [props.onNodesChange, reactFlow.fitView]
   );
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -270,7 +272,9 @@ function CanvasViewportWithPresenter({
     gridVisible: props.canvasGridVisible,
     gridColor: props.canvasGridColor,
   });
-  const closeNodeHealthPopover = useCallback((restoreTriggerFocus = false) => {
+  const closeNodeHealthPopover = useCallback(function closeNodeHealthPopoverCallback(
+    restoreTriggerFocus = false
+  ) {
     dispatchNodeContextSurface({ type: 'close-transient-surface' });
     const trigger = nodeHealthPopoverTriggerRef.current;
     nodeHealthPopoverTriggerRef.current = null;
@@ -280,7 +284,11 @@ function CanvasViewportWithPresenter({
   }, []);
 
   const openNodeHealthPopover = useCallback(
-    (nodeId: string, detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
+    function openNodeHealthPopoverCallback(
+      nodeId: string,
+      detail: GraphNodeOperationalDetail,
+      anchorElement: HTMLElement
+    ) {
       if (nodeContextSurfaceState.externalSurfaceActive) {
         return;
       }
@@ -302,32 +310,38 @@ function CanvasViewportWithPresenter({
     [nodeContextSurfaceState.externalSurfaceActive]
   );
 
-  useEffect(() => {
-    if (externalSurfaceActive) {
-      nodeHealthPopoverTriggerRef.current = null;
-    }
-    dispatchNodeContextSurface({
-      type: 'synchronize-external-surface',
-      active: externalSurfaceActive,
-    });
-  }, [externalSurfaceActive]);
+  useEffect(
+    function synchronizeExternalSurface() {
+      if (externalSurfaceActive) {
+        nodeHealthPopoverTriggerRef.current = null;
+      }
+      dispatchNodeContextSurface({
+        type: 'synchronize-external-surface',
+        active: externalSurfaceActive,
+      });
+    },
+    [externalSurfaceActive]
+  );
 
   const semanticViewportNodes = useCanvasViewportSemanticNodes(props.nodesWithImpact);
   const graphFilterController = useCanvasGraphFilterController({
     nodes: semanticViewportNodes,
   });
   const getTagFilterLabel = useCallback(
-    (tag: string) => formatCanvasCopyTemplate(copy.canvasGraphFilterByTagLabelTemplate, { tag }),
+    function getTagFilterLabelCallback(tag: string) {
+      return formatCanvasCopyTemplate(copy.canvasGraphFilterByTagLabelTemplate, { tag });
+    },
     [copy.canvasGraphFilterByTagLabelTemplate]
   );
   const projectNodeActions = useMemo(
-    () =>
-      createCanvasViewportNodeActionProjector({
+    function projectNodeActionsCallback() {
+      return createCanvasViewportNodeActionProjector({
         closeNodeHealthPopover,
         openNodeHealthPopover,
         filterByTag: graphFilterController.filterByTag,
         getTagFilterLabel,
-      }),
+      });
+    },
     [
       closeNodeHealthPopover,
       getTagFilterLabel,
@@ -336,40 +350,47 @@ function CanvasViewportWithPresenter({
     ]
   );
   const nodesWithViewportActions = useMemo(
-    () => projectNodeActions(semanticViewportNodes),
+    function nodesWithViewportActionsCallback() {
+      return projectNodeActions(semanticViewportNodes);
+    },
     [projectNodeActions, semanticViewportNodes]
   );
   const graphFilterPresentation = useMemo(
-    () =>
-      projectCanvasGraphFilterPresentation({
+    function graphFilterPresentationCallback() {
+      return projectCanvasGraphFilterPresentation({
         nodes: nodesWithViewportActions,
         edges: props.edges,
         result: graphFilterController.result,
-      }),
+      });
+    },
     [graphFilterController.result, nodesWithViewportActions, props.edges]
   );
   const graphFilterMatchingNodeIds = useMemo(
-    () => new Set(graphFilterController.result.matchingNodeIds),
+    function graphFilterMatchingNodeIdsCallback() {
+      return new Set(graphFilterController.result.matchingNodeIds);
+    },
     [graphFilterController.result.matchingNodeIds]
   );
   const graphSearchNodes = useMemo(
-    () =>
-      graphFilterController.result.status === 'idle'
+    function graphSearchNodesCallback() {
+      return graphFilterController.result.status === 'idle'
         ? nodesWithViewportActions
-        : nodesWithViewportActions.filter((node) => graphFilterMatchingNodeIds.has(node.id)),
+        : nodesWithViewportActions.filter((node) => graphFilterMatchingNodeIds.has(node.id));
+    },
     [graphFilterController.result.status, graphFilterMatchingNodeIds, nodesWithViewportActions]
   );
   const graphSearchController = useCanvasGraphSearchController({ nodes: graphSearchNodes });
 
   const graphSearchPresentation = useMemo(
-    () =>
-      projectCanvasGraphSearchPresentation({
+    function graphSearchPresentationCallback() {
+      return projectCanvasGraphSearchPresentation({
         nodes: graphFilterPresentation.nodes,
         edges: graphFilterPresentation.edges,
         status: graphSearchController.model.status,
         matchingNodeIds: graphSearchController.matchingNodeIds,
         activeNodeId: graphSearchController.model.activeNodeId,
-      }),
+      });
+    },
     [
       graphSearchController.matchingNodeIds,
       graphSearchController.model.activeNodeId,
@@ -387,71 +408,78 @@ function CanvasViewportWithPresenter({
     selectNode: canSelectNodes,
     port: graphSearchActivationPort,
   });
-  useLayoutEffect(() => {
-    viewportFocusRef.current = {
-      nodes: renderedNodes,
-      selectNode: canSelectNodes,
-      port: graphSearchActivationPort,
-    };
-  }, [canSelectNodes, graphSearchActivationPort, renderedNodes]);
+  useLayoutEffect(
+    function commitViewportFocus() {
+      viewportFocusRef.current = {
+        nodes: renderedNodes,
+        selectNode: canSelectNodes,
+        port: graphSearchActivationPort,
+      };
+    },
+    [canSelectNodes, graphSearchActivationPort, renderedNodes]
+  );
   // XYFlow retains the first callback; read the latest committed focus inputs.
-  const focusRenderedNode = useCallback((nodeId: string) => {
+  const focusRenderedNode = useCallback(function focusRenderedNodeCallback(nodeId: string) {
     focusCanvasViewportNode({ nodeId, ...viewportFocusRef.current });
   }, []);
   const handleMiniMapNodeClick = useCallback<NonNullable<MiniMapProps<Node>['onNodeClick']>>(
-    (_event, node) => focusRenderedNode(node.id),
+    function handleMiniMapNodeClickCallback(_event, node) {
+      return focusRenderedNode(node.id);
+    },
     [focusRenderedNode]
   );
 
-  useEffect(() => {
-    if (nodeHealthPopoverModel == null) {
-      return;
-    }
+  useEffect(
+    function retainHealthPopoverOwner() {
+      if (nodeHealthPopoverModel == null) {
+        return;
+      }
 
-    const popoverOwnerStillExists = semanticViewportNodes.some(
-      (node) => node.id === nodeHealthPopoverModel.nodeId
-    );
-    if (!popoverOwnerStillExists) {
-      nodeHealthPopoverTriggerRef.current = null;
-      dispatchNodeContextSurface({
-        type: 'remove-node',
-        nodeId: nodeHealthPopoverModel.nodeId,
-      });
-    }
-  }, [nodeHealthPopoverModel, semanticViewportNodes]);
-
-  useEffect(() => {
-    if (nodeHealthPopoverModel == null) {
-      return;
-    }
-
-    const closeOnOutsidePointerDown = (event: PointerEvent): void => {
-      const viewportElement = viewportRef.current;
-      const eventTarget = event.target;
-      const popoverElement = viewportElement?.querySelector(
-        '[data-slot="graph-node-health-popover"]'
+      const popoverOwnerStillExists = semanticViewportNodes.some(
+        (node) => node.id === nodeHealthPopoverModel.nodeId
       );
-      if (
-        popoverElement != null &&
-        eventTarget instanceof globalThis.Node &&
-        !popoverElement.contains(eventTarget)
-      ) {
-        closeNodeHealthPopover(false);
+      if (!popoverOwnerStillExists) {
+        nodeHealthPopoverTriggerRef.current = null;
+        dispatchNodeContextSurface({
+          type: 'remove-node',
+          nodeId: nodeHealthPopoverModel.nodeId,
+        });
       }
-    };
-    const closeOnEscape = (event: KeyboardEvent): void => {
-      if (resolveCanvasKeyboardAction(event) === 'dismiss') {
-        closeNodeHealthPopover(true);
-      }
-    };
+    },
+    [nodeHealthPopoverModel, semanticViewportNodes]
+  );
 
-    document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePointerDown, true);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [closeNodeHealthPopover, nodeHealthPopoverModel]);
+  useEffect(
+    function observeHealthDismissal() {
+      if (nodeHealthPopoverModel == null) {
+        return;
+      }
+
+      const closeOnOutsidePointerDown = (event: PointerEvent): void => {
+        const viewportElement = viewportRef.current;
+        const eventTarget = event.target;
+        const popoverElement = viewportElement?.querySelector(
+          '[data-slot="graph-node-health-popover"]'
+        );
+        if (popoverElement == null) return;
+        if (!(eventTarget instanceof globalThis.Node)) return;
+        if (!popoverElement.contains(eventTarget)) closeNodeHealthPopover(false);
+      };
+      const closeOnEscape = (event: KeyboardEvent): void => {
+        if (resolveCanvasKeyboardAction(event) === 'dismiss') {
+          closeNodeHealthPopover(true);
+        }
+      };
+
+      document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
+      document.addEventListener('keydown', closeOnEscape);
+      return () => {
+        document.removeEventListener('pointerdown', closeOnOutsidePointerDown, true);
+        document.removeEventListener('keydown', closeOnEscape);
+      };
+    },
+    [closeNodeHealthPopover, nodeHealthPopoverModel]
+  );
 
   useCanvasGraphSearchActivation({
     activeNodeId: graphSearchController.model.activeNodeId,

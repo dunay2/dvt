@@ -13,6 +13,7 @@ import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
 import { CanvasExplorer } from './CanvasExplorer';
 import type {
+  CanvasProjectElementsInput,
   CanvasExplorerActivityRail,
   CanvasExplorerProjectWorkspace,
 } from './CanvasExplorer.types';
@@ -67,61 +68,39 @@ export function CanvasGraphExplorer({
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const browser = useCanvasModelBrowserPresentation();
   const inspect = browser?.mode == null ? onInspectNode : browser.onSelect;
+  const cataloguePresentation = browser?.cataloguePresentation;
   const rootRef = useRef<HTMLDivElement>(null);
   const definitions = useMemo(
-    () => projectCanvasExplorerModels(catalogue ?? [], sourceCatalogueCanvasId),
+    function projectExplorerDefinitions() {
+      return projectCanvasExplorerModels(catalogue ?? [], sourceCatalogueCanvasId);
+    },
     [catalogue, sourceCatalogueCanvasId]
   );
   const placeableIds = useMemo(
-    () => projectCanvasExplorerPlaceableIds(catalogue, referencePlacementScope, canPlaceSource),
+    function projectExplorerPlacementAdmission() {
+      return projectCanvasExplorerPlaceableIds(catalogue, referencePlacementScope, canPlaceSource);
+    },
     [catalogue, canPlaceSource, referencePlacementScope]
   );
-  const inspectedCanonicalNode =
-    inspectorTarget?.kind === 'canonical-node'
-      ? catalogue?.find((node) => node.id === inspectorTarget.nodeId)
-      : undefined;
-  const inspectedDefinitionId =
-    inspectorTarget?.kind === 'canonical-node'
-      ? inspectedCanonicalNode == null
-        ? inspectorTarget.nodeId
-        : (workspaceNodeDefinitionId(inspectedCanonicalNode) ?? inspectedCanonicalNode.id)
-      : null;
-  const items = definitions.map((item) => ({
-    ...item,
-    draggable: placeableIds.has(item.id),
-    disabled: typeof onInspectNode !== 'function',
-    selected:
-      inspectorTarget?.kind === 'dbt-file-model'
-        ? item.definitionIdentity?.canvasId === inspectorTarget.binding.canvasId &&
-          item.definitionIdentity.uniqueId === inspectorTarget.uniqueId
-        : item.id === inspectedDefinitionId,
-  }));
+  const inspectedDefinitionId = resolveInspectedDefinitionId(inspectorTarget, catalogue);
+  const items = projectGraphExplorerItems(definitions, {
+    placeableIds,
+    onInspectNode,
+    inspectorTarget,
+    inspectedDefinitionId,
+  });
   const connections = <CanvasWarehouseConnections onManage={onManageConnections} />;
   const draggableIds = new Set(items.filter((item) => item.draggable).map((item) => item.id));
-  const dragResource =
-    draggableIds.size > 0
-      ? (id: string, event: DragEvent<HTMLButtonElement>) => {
-          if (!draggableIds.has(id)) {
-            event.preventDefault();
-            return;
-          }
-          event.dataTransfer.setData(
-            CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
-            JSON.stringify({ id, scopeKey: referencePlacementScope })
-          );
-          event.dataTransfer.effectAllowed = 'copy';
-        }
-      : undefined;
-  useEffect(() => {
-    if (importedSourceIds.length === 0) return;
-    const registered = catalogue?.some((node) => importedSourceIds.includes(node.id));
-    if (!registered) return;
-    const first = Array.from(
-      rootRef.current?.querySelectorAll<HTMLElement>('[data-element-id]') ?? []
-    ).find((element) => element.dataset.elementId === importedSourceIds[0]);
-    first?.scrollIntoView?.({ block: 'nearest' });
-    onImportFocusComplete?.();
-  }, [catalogue, importedSourceIds, onImportFocusComplete]);
+  const dragResource = createGraphExplorerDragHandler(draggableIds, referencePlacementScope);
+  useEffect(
+    function revealImportedSource() {
+      if (importedSourceIds.length === 0) return;
+      const registered = catalogue?.some((node) => importedSourceIds.includes(node.id));
+      if (!registered) return;
+      revealCanvasImportedSource(rootRef.current, importedSourceIds[0], onImportFocusComplete);
+    },
+    [catalogue, importedSourceIds, onImportFocusComplete]
+  );
   return (
     <CanvasExplorer
       rootRef={rootRef}
@@ -129,36 +108,20 @@ export function CanvasGraphExplorer({
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={activityRail}
-      elements={
-        projectFiles?.renderElements == null ? (
-          <CanvasExplorerCatalogPanel key={catalogueScopeKey} copy={copy}>
-            <CanvasExplorerList
-              items={items}
-              presentation={browser?.cataloguePresentation}
-              onAddModel={onAddModel}
-              onImport={onImport}
-              connections={connections}
-              onSelect={(id) => inspect({ kind: 'canonical-node', nodeId: id })}
-              onDragStart={dragResource}
-            />
-          </CanvasExplorerCatalogPanel>
-        ) : (
-          (enabled) =>
-            projectFiles.renderElements?.({
-              enabled,
-              items,
-              canCreateInstances: canPlaceSource && referencePlacementScope == null,
-              onInspectNode: inspect,
-              inspectorTarget,
-              catalogueScopeKey,
-              presentation: browser?.cataloguePresentation,
-              onDragStart: dragResource,
-              onAddModel,
-              onImport,
-              connections,
-            })
-        )
-      }
+      elements={buildCanvasGraphExplorerElements({
+        projectFiles,
+        copy,
+        items,
+        presentation: cataloguePresentation,
+        onAddModel,
+        onImport,
+        connections,
+        onInspectNode: inspect,
+        onDragStart: dragResource,
+        canCreateInstances: canPlaceSource && referencePlacementScope == null,
+        inspectorTarget,
+        catalogueScopeKey,
+      })}
     >
       {children}
     </CanvasExplorer>
@@ -184,4 +147,101 @@ function projectCanvasExplorerPlaceableIds(
       )
       .map((node) => node.id)
   );
+}
+
+function resolveInspectedDefinitionId(
+  inspectorTarget: CanvasInspectorResource | null | undefined,
+  catalogue: readonly CanonicalNode[] | undefined
+): string | null {
+  const inspectedCanonicalNode =
+    inspectorTarget?.kind === 'canonical-node'
+      ? catalogue?.find((node) => node.id === inspectorTarget.nodeId)
+      : undefined;
+  const inspectedDefinitionId =
+    inspectorTarget?.kind === 'canonical-node'
+      ? inspectedCanonicalNode == null
+        ? inspectorTarget.nodeId
+        : (workspaceNodeDefinitionId(inspectedCanonicalNode) ?? inspectedCanonicalNode.id)
+      : null;
+
+  return inspectedDefinitionId;
+}
+
+function projectGraphExplorerItems(
+  definitions: ReturnType<typeof projectCanvasExplorerModels>,
+  {
+    placeableIds,
+    onInspectNode,
+    inspectorTarget,
+    inspectedDefinitionId,
+  }: Pick<CanvasGraphExplorerProps, 'onInspectNode' | 'inspectorTarget'> &
+    Readonly<{ placeableIds: ReadonlySet<string>; inspectedDefinitionId: string | null }>
+) {
+  const items = definitions.map((item) => ({
+    ...item,
+    draggable: placeableIds.has(item.id),
+    disabled: typeof onInspectNode !== 'function',
+    selected:
+      inspectorTarget?.kind === 'dbt-file-model'
+        ? item.definitionIdentity?.canvasId === inspectorTarget.binding.canvasId &&
+          item.definitionIdentity.uniqueId === inspectorTarget.uniqueId
+        : item.id === inspectedDefinitionId,
+  }));
+
+  return items;
+}
+
+function createGraphExplorerDragHandler(
+  draggableIds: ReadonlySet<string>,
+  referencePlacementScope: string | undefined
+) {
+  return draggableIds.size > 0
+    ? (id: string, event: DragEvent<HTMLButtonElement>) => {
+        if (!draggableIds.has(id)) {
+          event.preventDefault();
+          return;
+        }
+        event.dataTransfer.setData(
+          CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+          JSON.stringify({ id, scopeKey: referencePlacementScope })
+        );
+        event.dataTransfer.effectAllowed = 'copy';
+      }
+    : undefined;
+}
+
+function buildCanvasGraphExplorerElements({
+  projectFiles,
+  copy,
+  ...input
+}: Pick<CanvasGraphExplorerProps, 'projectFiles'> &
+  Readonly<{ copy: ReturnType<typeof resolveCanvasExplorerCopy> }> &
+  Omit<CanvasProjectElementsInput, 'enabled'>) {
+  if (projectFiles?.renderElements != null)
+    return (enabled: boolean) => projectFiles.renderElements?.({ enabled, ...input });
+  return (
+    <CanvasExplorerCatalogPanel key={input.catalogueScopeKey} copy={copy}>
+      <CanvasExplorerList
+        items={input.items}
+        presentation={input.presentation}
+        onAddModel={input.onAddModel}
+        onImport={input.onImport}
+        connections={input.connections}
+        onSelect={(id) => input.onInspectNode({ kind: 'canonical-node', nodeId: id })}
+        onDragStart={input.onDragStart}
+      />
+    </CanvasExplorerCatalogPanel>
+  );
+}
+
+function revealCanvasImportedSource(
+  root: HTMLDivElement | null,
+  firstImportedId: string | undefined,
+  onComplete: (() => void) | undefined
+): void {
+  const first = Array.from(root?.querySelectorAll<HTMLElement>('[data-element-id]') ?? []).find(
+    (element) => element.dataset.elementId === firstImportedId
+  );
+  first?.scrollIntoView?.({ block: 'nearest' });
+  onComplete?.();
 }

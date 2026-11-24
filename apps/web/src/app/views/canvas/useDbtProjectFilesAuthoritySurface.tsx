@@ -51,26 +51,11 @@ function DbtProjectAuthorityNotice({
   if (source == null) return null;
 
   const codeOnlyCount = source.capabilities.codeOnlyResourceCount;
-  if (source.freshness === 'fresh' && source.diagnostics.length === 0 && codeOnlyCount === 0) {
+  if (source.freshness === 'fresh' && source.diagnostics.length + codeOnlyCount === 0) {
     return null;
   }
 
-  const title =
-    source.freshness === 'fresh'
-      ? 'Some resources require code'
-      : source.freshness === 'stale-last-valid'
-        ? 'Showing the last valid dbt analysis'
-        : 'dbt project analysis is unavailable';
-  const summary = [
-    codeOnlyCount > 0
-      ? `${codeOnlyCount} resource${codeOnlyCount === 1 ? '' : 's'} can only be changed in Code.`
-      : null,
-    source.diagnostics.length > 0
-      ? `${source.diagnostics.length} diagnostic${source.diagnostics.length === 1 ? '' : 's'} reported.`
-      : null,
-  ]
-    .filter((part): part is string => part != null)
-    .join(' ');
+  const { title, summary } = describeDbtProjectionNotice(source);
 
   return (
     <div
@@ -316,4 +301,28 @@ export function useDbtProjectFilesAuthoritySurface({
   };
 
   return { shellProps, modalHostProps };
+}
+
+function describeDbtProjectionNotice(
+  source: NonNullable<DbtProjectFilesAuthorityController['query']['data']>
+) {
+  const codeOnlyCount = source.capabilities.codeOnlyResourceCount;
+  const title =
+    source.freshness === 'fresh'
+      ? 'Some resources require code'
+      : source.freshness === 'stale-last-valid'
+        ? 'Showing the last valid dbt analysis'
+        : 'dbt project analysis is unavailable';
+  const summary = [
+    codeOnlyCount > 0
+      ? `${codeOnlyCount} resource${codeOnlyCount === 1 ? '' : 's'} can only be changed in Code.`
+      : null,
+    source.diagnostics.length > 0
+      ? `${source.diagnostics.length} diagnostic${source.diagnostics.length === 1 ? '' : 's'} reported.`
+      : null,
+  ]
+    .filter((part): part is string => part != null)
+    .join(' ');
+
+  return { title, summary };
 }

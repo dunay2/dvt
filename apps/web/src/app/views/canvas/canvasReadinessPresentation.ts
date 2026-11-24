@@ -120,7 +120,14 @@ export function presentCanvasRunStartFailure(
       shouldOpenPlanModal: false,
     };
   }
-  switch (evaluation.previewState) {
+  return presentPreviewRunStartFailure(evaluation.previewState, copy);
+}
+
+function presentPreviewRunStartFailure(
+  state: PlanRunPreviewState,
+  copy: CanvasViewCopy
+): Readonly<{ message: string; shouldOpenPlanModal: boolean }> {
+  switch (state) {
     case 'required':
       return { message: copy.runNoPlanMessage, shouldOpenPlanModal: false };
     case 'stale':

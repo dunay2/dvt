@@ -96,14 +96,14 @@ export function useCanvasPlanActionHandler({
       const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScopeSnapshot();
       const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
+        queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileTree(),
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.artifacts(workspaceLayoutKey),
+        queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).artifacts(),
       });
       for (const artifactPath of result.writtenArtifactPaths) {
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, artifactPath),
+          queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileContent(artifactPath),
         });
       }
     }

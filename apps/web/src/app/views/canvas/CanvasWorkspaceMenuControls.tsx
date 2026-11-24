@@ -6,14 +6,7 @@
  * @version 1.0.0
  */
 import { Download, Upload, PanelsTopLeft } from 'lucide-react';
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  type ChangeEvent,
-  type ComponentProps,
-  type MutableRefObject,
-} from 'react';
+import { useEffect, useMemo, useRef, type ChangeEvent } from 'react';
 
 import {
   DropdownMenuItem,
@@ -25,88 +18,17 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '../../components/ui/dropdown-menu';
-import type {
-  CanvasModelBrowserContribution,
-  CanvasModelTabListContribution,
-  CanvasModelWorkspaceTabContribution,
-  CanvasWorkspaceMenuContribution,
-} from './canvasWorkspaceMenuContributionStore';
+import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { canvasViewCopy } from './copy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
 import styles from './CanvasWorkspaceMenuControls.module.css';
 
+import { projectWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionProjection';
+import { projectCanvasWorkspaceTopBar } from './canvasWorkspaceTopBarReadModel';
+
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
-
-function projectCanvasIdentity(
-  activeCanvas: CanvasWorkspaceMenuContribution['activeCanvas']
-): NonNullable<CanvasWorkspaceMenuContribution['activeCanvas']> | null {
-  if (activeCanvas == null) return null;
-  return {
-    id: activeCanvas.id,
-    kind: activeCanvas.kind,
-    title: activeCanvas.title ?? canvasViewCopy.canvasContextMenuCanvasGroupLabel,
-    environmentId: activeCanvas.environmentId,
-    defaultPermission: activeCanvas.defaultPermission,
-  };
-}
-
-function bindWorkspaceMenuCallbacks(
-  props: CanvasWorkspaceMenuContribution,
-  latest: MutableRefObject<CanvasWorkspaceMenuContribution>
-): Pick<
-  CanvasWorkspaceMenuContribution,
-  'onSelectCanvas' | 'onExportProjectSnapshot' | 'onImportProjectSnapshotFile' | 'onOpenProjectCode'
-> {
-  return {
-    onSelectCanvas:
-      props.onSelectCanvas != null
-        ? (canvasId) => latest.current.onSelectCanvas?.(canvasId)
-        : undefined,
-    ...(props.onExportProjectSnapshot != null
-      ? { onExportProjectSnapshot: () => latest.current.onExportProjectSnapshot?.() }
-      : {}),
-    ...(props.onImportProjectSnapshotFile != null
-      ? {
-          onImportProjectSnapshotFile: (file: File) =>
-            latest.current.onImportProjectSnapshotFile?.(file),
-        }
-      : {}),
-    ...(props.onOpenProjectCode != null
-      ? { onOpenProjectCode: () => latest.current.onOpenProjectCode?.() }
-      : {}),
-  };
-}
-
-function projectWorkspaceCodeTab(
-  codeTab: CanvasWorkspaceMenuContribution['codeTab'],
-  latest: MutableRefObject<CanvasWorkspaceMenuContribution>
-): CanvasWorkspaceMenuContribution['codeTab'] {
-  if (codeTab == null) return undefined;
-  return {
-    active: codeTab.active === true,
-    onSelect: () => latest.current.codeTab?.onSelect(),
-    onCanvas: () => latest.current.codeTab?.onCanvas(),
-    ...(codeTab.onClose != null ? { onClose: () => latest.current.codeTab?.onClose?.() } : {}),
-  };
-}
-
-function projectWorkspaceMenuContribution(
-  latest: MutableRefObject<CanvasWorkspaceMenuContribution>
-): CanvasWorkspaceMenuContribution {
-  const props = latest.current;
-  const codeTab = projectWorkspaceCodeTab(props.codeTab, latest);
-  return {
-    activeCanvas: projectCanvasIdentity(props.activeCanvas),
-    canExportProjectSnapshot: props.canExportProjectSnapshot,
-    canvasDocuments: props.canvasDocuments,
-    canImportProjectSnapshot: props.canImportProjectSnapshot,
-    canOpenProjectCode: props.canOpenProjectCode,
-    ...(codeTab == null ? {} : { codeTab }),
-    ...bindWorkspaceMenuCallbacks(props, latest),
-  };
-}
 
 export function CanvasWorkspaceMenuContributionRegistrar(
   props: CanvasWorkspaceMenuContributionRegistrarProps
@@ -265,40 +187,6 @@ function handoffProjectSnapshotFile(
   if (file == null) return;
   onSnapshotFileSelected?.();
   onImportProjectSnapshotFile?.(file);
-}
-
-type CanvasWorkspaceTopBarProjectionInput = Readonly<{
-  activeCanvas: CanvasWorkspaceMenuContribution['activeCanvas'];
-  modelTab: CanvasModelWorkspaceTabContribution | null;
-  modelTabList: CanvasModelTabListContribution | null;
-  modelBrowser: CanvasModelBrowserContribution | null;
-}>;
-
-type CanvasWorkspaceTopBarReadModel = Pick<
-  ComponentProps<typeof CanvasWorkspaceModelTabs>,
-  'canvasTitle' | 'tab' | 'modelTabs' | 'onShowCanvas'
-> &
-  Readonly<{
-    canvasId?: string;
-    canvasKind?: NonNullable<CanvasWorkspaceMenuContribution['activeCanvas']>['kind'];
-  }>;
-
-function projectCanvasWorkspaceTopBar({
-  activeCanvas,
-  modelTab,
-  modelTabList,
-  modelBrowser,
-}: CanvasWorkspaceTopBarProjectionInput): CanvasWorkspaceTopBarReadModel {
-  if (activeCanvas == null)
-    return { canvasTitle: canvasViewCopy.canvasContextMenuCanvasGroupLabel };
-  return {
-    canvasId: activeCanvas.id,
-    canvasKind: activeCanvas.kind,
-    canvasTitle: activeCanvas.title ?? canvasViewCopy.canvasContextMenuCanvasGroupLabel,
-    tab: modelTab?.canvasId === activeCanvas.id ? modelTab : undefined,
-    modelTabs: modelTabList?.canvasId === activeCanvas.id ? modelTabList.tabs : undefined,
-    onShowCanvas: modelBrowser?.canvasId === activeCanvas.id ? modelBrowser.onCanvas : undefined,
-  };
 }
 
 export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {

@@ -5,7 +5,7 @@
  * @consequence Import returns focus to Code; project navigation never authors graph state.
  * @version 1.0.0
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -185,6 +185,27 @@ export default function CanvasShell({
     openProjectCode,
     openDbtProjectImport: onDbtProjectImported == null ? undefined : openDbtProjectImport,
   });
+  const { onAddCanvas, onSelectCanvas } = canvasCommands;
+  const explorerDocuments = useMemo(() => {
+    if (!panels.activeCanvasId) return null;
+    if (workbenchLayout.centerSurfaceVisible === true) return null;
+    if (code.active) return null;
+    if (modelBrowser.mode != null) return null;
+    return {
+      activeId: panels.activeCanvasId,
+      documents: panels.canvasDocuments,
+      onAddCanvas,
+      onSelectCanvas,
+    };
+  }, [
+    panels.activeCanvasId,
+    panels.canvasDocuments,
+    workbenchLayout.centerSurfaceVisible,
+    code.active,
+    modelBrowser.mode,
+    onAddCanvas,
+    onSelectCanvas,
+  ]);
 
   return (
     <CanvasModelBrowserProvider
@@ -234,20 +255,7 @@ export default function CanvasShell({
             operationDataTab={model.selected == null ? undefined : operationData.tab}
           />
         )}
-        <CanvasExplorerDocumentsContext.Provider
-          value={
-            panels.activeCanvasId &&
-            workbenchLayout.centerSurfaceVisible !== true &&
-            !code.active &&
-            modelBrowser.mode == null
-              ? {
-                  activeId: panels.activeCanvasId,
-                  documents: panels.canvasDocuments,
-                  ...canvasCommands,
-                }
-              : null
-          }
-        >
+        <CanvasExplorerDocumentsContext.Provider value={explorerDocuments}>
           <CanvasShellMainPanel
             projectFiles={projectFiles}
             layout={workbenchLayout}

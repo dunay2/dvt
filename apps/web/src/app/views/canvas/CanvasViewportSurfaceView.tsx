@@ -150,38 +150,31 @@ function CanvasViewportReactFlowSurface({
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
   const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
   const backgroundAdd = useCanvasBackgroundAddMenuGesture();
-  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
-    onCloseGraphFilter();
-    onCloseNodeHealthPopover();
-    onImpactFocusNodeChange?.(null);
-    contextMenuPresenter.handlePaneClick(event);
-  };
-  const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
-    _event,
-    node,
-    nodes
-  ) => {
-    contextMenuPresenter.closeContextMenu();
-    onCloseNodeHealthPopover();
-    algebraicDrop.handleNodeDrag(node, nodes);
-  };
-  const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (
-    event,
-    node,
-    nodes
-  ) => {
-    contextMenuPresenter.closeContextMenu();
-    onCloseNodeHealthPopover();
-    algebraicDrop.handleNodeDragStop(node, nodes);
-    onNodeDragStop(event, node, nodes);
-  };
-  const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> = (
-    event,
-    edge
-  ) => {
-    onCloseNodeHealthPopover();
-    contextMenuPresenter.handleEdgeContextMenu(event, edge);
-  };
+  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> =
+    function handlePaneClickHandler(event) {
+      onCloseGraphFilter();
+      onCloseNodeHealthPopover();
+      onImpactFocusNodeChange?.(null);
+      contextMenuPresenter.handlePaneClick(event);
+    };
+  const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> =
+    function handleNodeDragHandler(_event, node, nodes) {
+      contextMenuPresenter.closeContextMenu();
+      onCloseNodeHealthPopover();
+      algebraicDrop.handleNodeDrag(node, nodes);
+    };
+  const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> =
+    function handleNodeDragStopHandler(event, node, nodes) {
+      contextMenuPresenter.closeContextMenu();
+      onCloseNodeHealthPopover();
+      algebraicDrop.handleNodeDragStop(node, nodes);
+      onNodeDragStop(event, node, nodes);
+    };
+  const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> =
+    function handleEdgeContextMenuHandler(event, edge) {
+      onCloseNodeHealthPopover();
+      contextMenuPresenter.handleEdgeContextMenu(event, edge);
+    };
 
   return (
     <div
@@ -193,21 +186,21 @@ function CanvasViewportReactFlowSurface({
       aria-label={contextSurfaceLabel}
       tabIndex={0}
       className={styles.contextSurface}
-      onDoubleClick={(event) => {
+      onDoubleClick={function onDoubleClickHandler(event) {
         if (backgroundAdd.resolveRequest(event) != null)
           contextMenuPresenter.handleViewportDoubleClick(event);
       }}
-      onFocusCapture={(event) => {
+      onFocusCapture={function onFocusCaptureHandler(event) {
         onImpactFocusNodeChange?.(
           event.target instanceof Element
             ? (event.target.closest<HTMLElement>('.react-flow__node')?.dataset.id ?? null)
             : null
         );
       }}
-      onKeyDownCapture={(event) => {
+      onKeyDownCapture={function onKeyDownCaptureHandler(event) {
         activateFocusedCanvasNodeFromKeyboard(event);
       }}
-      onKeyDown={(event) => {
+      onKeyDown={function onKeyDownHandler(event) {
         if (event.defaultPrevented) {
           return;
         }
@@ -243,7 +236,7 @@ function CanvasViewportReactFlowSurface({
         fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
         minZoom={0.35}
         defaultViewport={viewport ?? undefined}
-        onMoveEnd={(event, nextViewport) => {
+        onMoveEnd={function onMoveEndHandler(event, nextViewport) {
           if (event != null) {
             onViewportChange(nextViewport);
           }

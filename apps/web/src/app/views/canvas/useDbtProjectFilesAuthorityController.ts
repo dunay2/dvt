@@ -87,14 +87,11 @@ export function resolveDbtProjectFileSourceImportFocus(
   authorityBinding: DbtProjectFilesAuthorityBinding,
   result: ImportSourcesResult
 ): string[] | null {
-  if (
-    result.outcome.kind !== 'dbt-project-files' ||
-    result.authorityBinding.canvasId !== authorityBinding.canvasId ||
-    result.authorityBinding.authority.kind !== 'dbt-project-files' ||
-    result.authorityBinding.authority.projectRoot !== authorityBinding.authority.projectRoot
-  ) {
+  if (result.outcome.kind !== 'dbt-project-files') return null;
+  if (result.authorityBinding.canvasId !== authorityBinding.canvasId) return null;
+  if (result.authorityBinding.authority.kind !== 'dbt-project-files') return null;
+  if (result.authorityBinding.authority.projectRoot !== authorityBinding.authority.projectRoot)
     return null;
-  }
 
   return [...result.outcome.projectedSourceUniqueIds];
 }
@@ -186,13 +183,7 @@ export function useDbtProjectFilesAuthorityController(
   currentOwner.current = owner;
   const inspectCatalogueResource = useCallback<CanvasInspectorCommand>(
     (request, preferredTabId) => {
-      if (
-        typeof request !== 'string' &&
-        request.kind === 'dbt-file-model' &&
-        (request.binding.canvasId !== authorityBinding.canvasId ||
-          request.binding.authority.projectRoot !== authorityBinding.authority.projectRoot)
-      )
-        return false;
+      if (!hasFileModelAuthority(request, authorityBinding)) return false;
       const node =
         typeof request === 'object' && request.kind === 'dbt-file-model'
           ? request.uniqueId
@@ -498,4 +489,14 @@ export function useDbtProjectFilesAuthorityController(
     },
     canvasCommands: {},
   };
+}
+
+function hasFileModelAuthority(
+  request: Parameters<CanvasInspectorCommand>[0],
+  binding: DbtProjectFilesAuthorityBinding
+): boolean {
+  if (typeof request === 'string') return true;
+  if (request.kind !== 'dbt-file-model') return true;
+  if (request.binding.canvasId !== binding.canvasId) return false;
+  return request.binding.authority.projectRoot === binding.authority.projectRoot;
 }

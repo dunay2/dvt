@@ -80,123 +80,42 @@ function buildReadinessProblems({
   }));
 }
 
-export function buildCanvasOperationalDrawerContribution({
-  activeRunId,
-  canPlan,
-  canPlanGraph,
-  canStartRun,
-  onPreviewExecutionPlan,
-  onStartRun,
-  planRunReadiness,
-  policy,
-  copy = canvasViewCopy,
-  selectionRecovery = null,
-  selectionRecoveryCommands = null,
-  selectionRecoveryMessages = canvasViewCopy,
-  dataSampleTabs = [],
-  semanticBody,
-  operationDataTab,
-}: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
-  const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
-  const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
+export function buildCanvasOperationalDrawerContribution(
+  args: BuildCanvasOperationalDrawerContributionArgs
+): OperationalDrawerContribution {
+  const {
+    activeRunId,
+    canStartRun,
+    onPreviewExecutionPlan,
+    onStartRun,
+    planRunReadiness,
+    policy,
+    copy = canvasViewCopy,
+    selectionRecovery = null,
+    selectionRecoveryCommands = null,
+    selectionRecoveryMessages = canvasViewCopy,
+    dataSampleTabs = [],
+    semanticBody,
+    operationDataTab,
+  } = args;
   const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
     resolvePlanRunReadinessBlockerLabel(blocker, copy);
-  const tabLabels = {
-    preview: copy.operationalDrawerPreviewTab,
-    data: copy.operationalDrawerDataTab,
-    semantic: copy.operationalDrawerSemanticTab,
-  } satisfies Record<OperationalDrawerBuiltInTabId, string>;
-  const readinessBlockers: readonly PlanRunReadinessBlocker[] =
-    planRunReadiness.status === 'ready'
-      ? []
-      : planRunReadiness.blockers.length > 0
-        ? planRunReadiness.blockers
-        : ['plan_integrity'];
-  const readinessProblems = buildReadinessProblems({
-    blockers: readinessBlockers,
-    canPreviewExecutionPlan,
-    planRunReadiness,
-    previewActionLabel: copy.operationalDrawerPreviewAction,
-    labelBlocker,
-    copy,
-    onPreviewExecutionPlan,
-  });
-  const selectionProblem: OperationalDrawerProblem | null = selectionRecoveryBlocked
-    ? {
-        id: 'execution_selection',
-        severity: 'warning',
-        message: selectionRecoveryMessages.selectionRecoveryProblemSummary,
-        detail: selectionRecoveryMessages.selectionRecoveryProblemDetail,
-        action: null,
-      }
-    : null;
-  const problems =
-    selectionProblem == null ? readinessProblems : [...readinessProblems, selectionProblem];
-  const previewStatus =
-    planRunReadiness.status === 'ready' && !selectionRecoveryBlocked ? 'ready' : 'blocked';
-  const previewBlockers = [
-    ...readinessBlockers.map(labelBlocker),
-    ...(selectionRecoveryBlocked ? [selectionRecoveryMessages.selectionRecoveryBlockerLabel] : []),
-  ];
-  const runsStatus = activeRunId != null ? 'active' : canStartRun ? 'ready' : 'blocked';
+  const { canPreviewExecutionPlan, problems, previewStatus, previewBlockers, runsStatus } =
+    buildCanvasDrawerReadiness({ ...args, copy, labelBlocker });
 
   return {
     source: 'canvas',
     title: copy.operationalDrawerTitle,
-    copy: {
-      problemsAriaLabel: copy.operationalDrawerProblemsAriaLabel,
-      noProblemsMessage: copy.operationalDrawerNoProblemsMessage,
-      previewAriaLabel: copy.operationalDrawerPreviewAriaLabel,
-      previewAction: copy.operationalDrawerPreviewAction,
-      previewReadyStatus: copy.operationalDrawerPreviewReadyStatus,
-      previewBlockedStatus: copy.operationalDrawerPreviewBlockedStatus,
-      dataAriaLabel: copy.operationalDrawerDataAriaLabel,
-      dataIdleMessage: copy.operationalDrawerDataIdleMessage,
-      dataLoadingTemplate: copy.operationalDrawerDataLoadingTemplate,
-      dataEmptyTemplate: copy.operationalDrawerDataEmptyTemplate,
-      dataConnectionNotFoundTemplate: copy.operationalDrawerDataConnectionNotFoundTemplate,
-      dataSourceObjectNotFoundTemplate: copy.operationalDrawerDataSourceObjectNotFoundTemplate,
-      dataUnavailableTemplate: copy.operationalDrawerDataUnavailableTemplate,
-      dataUnknownErrorTemplate: copy.operationalDrawerDataUnknownErrorTemplate,
-      dataTruncatedTemplate: copy.operationalDrawerDataTruncatedTemplate,
-      dataCaptionTemplate: copy.operationalDrawerDataCaptionTemplate,
-      dataRowsLabel: copy.operationalDrawerDataRowsLabel,
-      dataColumnsLabel: copy.operationalDrawerDataColumnsLabel,
-      dataNullValue: copy.operationalDrawerDataNullValue,
-      dataRefreshAction: copy.operationalDrawerDataRefreshAction,
-      dataQueriedAtLabel: copy.operationalDrawerDataQueriedAtLabel,
-      dataBoundedLiveTemplate: copy.operationalDrawerDataBoundedLiveTemplate,
-      tabsAriaLabel: copy.operationalDrawerTabsAriaLabel,
-      severity: {
-        info: copy.operationalDrawerInfoSeverity,
-        warning: copy.operationalDrawerWarningSeverity,
-        error: copy.operationalDrawerErrorSeverity,
-      },
-    },
-    tabs: policy.tabs.flatMap<OperationalDrawerTab>((id) =>
-      id === 'data'
-        ? [
-            ...(operationDataTab == null ? [] : [operationDataTab]),
-            ...dataSampleTabs.map((tab) => ({
-              id: tab.id,
-              label: tab.dataSample.status === 'idle' ? tab.id : tab.dataSample.nodeName,
-              count: null,
-              dataSample: tab.dataSample,
-              onRefresh: tab.onRefresh,
-            })),
-          ]
-        : [
-            {
-              id,
-              label: tabLabels[id],
-              ...(id === 'semantic' && semanticBody !== undefined ? { content: semanticBody } : {}),
-              count:
-                id === 'preview' && previewStatus === 'blocked'
-                  ? Math.max(1, previewBlockers.length)
-                  : null,
-            },
-          ]
-    ),
+    copy: buildCanvasOperationalDrawerCopy(copy),
+    tabs: buildCanvasOperationalDrawerTabs({
+      policy,
+      copy,
+      dataSampleTabs,
+      semanticBody,
+      operationDataTab,
+      previewStatus,
+      previewBlockers,
+    }),
     problems: {
       items: problems,
     },
@@ -222,4 +141,148 @@ export function buildCanvasOperationalDrawerContribution({
             },
     },
   };
+}
+
+function buildCanvasDrawerReadiness({
+  activeRunId,
+  canPlan,
+  canPlanGraph,
+  canStartRun,
+  planRunReadiness,
+  copy = canvasViewCopy,
+  selectionRecovery = null,
+  selectionRecoveryMessages = canvasViewCopy,
+  onPreviewExecutionPlan,
+  labelBlocker,
+}: BuildCanvasOperationalDrawerContributionArgs &
+  Readonly<{ labelBlocker: (blocker: PlanRunReadinessBlocker) => string }>) {
+  const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
+  const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
+  const readinessBlockers = resolveDrawerReadinessBlockers(planRunReadiness);
+  const readinessProblems = buildReadinessProblems({
+    blockers: readinessBlockers,
+    canPreviewExecutionPlan,
+    planRunReadiness,
+    previewActionLabel: copy.operationalDrawerPreviewAction,
+    labelBlocker,
+    copy,
+    onPreviewExecutionPlan,
+  });
+  const problems = [...readinessProblems];
+  if (selectionRecoveryBlocked)
+    problems.push({
+      id: 'execution_selection',
+      severity: 'warning',
+      message: selectionRecoveryMessages.selectionRecoveryProblemSummary,
+      detail: selectionRecoveryMessages.selectionRecoveryProblemDetail,
+      action: null,
+    });
+  const previewStatus: OperationalDrawerContribution['preview']['status'] =
+    planRunReadiness.status === 'ready' && !selectionRecoveryBlocked ? 'ready' : 'blocked';
+  const previewBlockers = [
+    ...readinessBlockers.map(labelBlocker),
+    ...(selectionRecoveryBlocked ? [selectionRecoveryMessages.selectionRecoveryBlockerLabel] : []),
+  ];
+  const runsStatus = resolveDrawerRunStatus(activeRunId, canStartRun);
+
+  return { canPreviewExecutionPlan, problems, previewStatus, previewBlockers, runsStatus };
+}
+
+function buildCanvasOperationalDrawerCopy(
+  copy: CanvasViewCopy
+): OperationalDrawerContribution['copy'] {
+  return {
+    problemsAriaLabel: copy.operationalDrawerProblemsAriaLabel,
+    noProblemsMessage: copy.operationalDrawerNoProblemsMessage,
+    previewAriaLabel: copy.operationalDrawerPreviewAriaLabel,
+    previewAction: copy.operationalDrawerPreviewAction,
+    previewReadyStatus: copy.operationalDrawerPreviewReadyStatus,
+    previewBlockedStatus: copy.operationalDrawerPreviewBlockedStatus,
+    dataAriaLabel: copy.operationalDrawerDataAriaLabel,
+    dataIdleMessage: copy.operationalDrawerDataIdleMessage,
+    dataLoadingTemplate: copy.operationalDrawerDataLoadingTemplate,
+    dataEmptyTemplate: copy.operationalDrawerDataEmptyTemplate,
+    dataConnectionNotFoundTemplate: copy.operationalDrawerDataConnectionNotFoundTemplate,
+    dataSourceObjectNotFoundTemplate: copy.operationalDrawerDataSourceObjectNotFoundTemplate,
+    dataUnavailableTemplate: copy.operationalDrawerDataUnavailableTemplate,
+    dataUnknownErrorTemplate: copy.operationalDrawerDataUnknownErrorTemplate,
+    dataTruncatedTemplate: copy.operationalDrawerDataTruncatedTemplate,
+    dataCaptionTemplate: copy.operationalDrawerDataCaptionTemplate,
+    dataRowsLabel: copy.operationalDrawerDataRowsLabel,
+    dataColumnsLabel: copy.operationalDrawerDataColumnsLabel,
+    dataNullValue: copy.operationalDrawerDataNullValue,
+    dataRefreshAction: copy.operationalDrawerDataRefreshAction,
+    dataQueriedAtLabel: copy.operationalDrawerDataQueriedAtLabel,
+    dataBoundedLiveTemplate: copy.operationalDrawerDataBoundedLiveTemplate,
+    tabsAriaLabel: copy.operationalDrawerTabsAriaLabel,
+    severity: {
+      info: copy.operationalDrawerInfoSeverity,
+      warning: copy.operationalDrawerWarningSeverity,
+      error: copy.operationalDrawerErrorSeverity,
+    },
+  };
+}
+
+function buildCanvasOperationalDrawerTabs({
+  policy,
+  copy,
+  dataSampleTabs = [],
+  semanticBody,
+  operationDataTab,
+  previewStatus,
+  previewBlockers,
+}: Pick<
+  BuildCanvasOperationalDrawerContributionArgs,
+  'policy' | 'dataSampleTabs' | 'semanticBody' | 'operationDataTab'
+> &
+  Readonly<{
+    copy: CanvasViewCopy;
+    previewStatus: 'ready' | 'blocked';
+    previewBlockers: readonly string[];
+  }>): readonly OperationalDrawerTab[] {
+  const tabLabels = {
+    preview: copy.operationalDrawerPreviewTab,
+    data: copy.operationalDrawerDataTab,
+    semantic: copy.operationalDrawerSemanticTab,
+  } satisfies Record<OperationalDrawerBuiltInTabId, string>;
+
+  return policy.tabs.flatMap<OperationalDrawerTab>((id) =>
+    id === 'data'
+      ? [
+          ...(operationDataTab == null ? [] : [operationDataTab]),
+          ...dataSampleTabs.map((tab) => ({
+            id: tab.id,
+            label: tab.dataSample.status === 'idle' ? tab.id : tab.dataSample.nodeName,
+            count: null,
+            dataSample: tab.dataSample,
+            onRefresh: tab.onRefresh,
+          })),
+        ]
+      : [
+          {
+            id,
+            label: tabLabels[id],
+            ...(id === 'semantic' && semanticBody !== undefined ? { content: semanticBody } : {}),
+            count:
+              id === 'preview' && previewStatus === 'blocked'
+                ? Math.max(1, previewBlockers.length)
+                : null,
+          },
+        ]
+  );
+}
+
+function resolveDrawerReadinessBlockers(
+  readiness: PlanRunReadinessReadModel
+): readonly PlanRunReadinessBlocker[] {
+  if (readiness.status === 'ready') return [];
+  return readiness.blockers.length > 0 ? readiness.blockers : ['plan_integrity'];
+}
+
+function resolveDrawerRunStatus(
+  activeRunId: string | null,
+  canStartRun: boolean
+): OperationalDrawerContribution['runs']['status'] {
+  if (activeRunId != null) return 'active';
+  return canStartRun ? 'ready' : 'blocked';
 }

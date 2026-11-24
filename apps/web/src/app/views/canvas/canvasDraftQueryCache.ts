@@ -24,7 +24,7 @@ export function createCanvasDraftQueryCache(
   workspaceLayoutKey: string,
   draftRepository: CanvasDraftRepository
 ): CanvasDraftQueryCache {
-  const graphDraftKey = queryKeys.workspace.graphDraft(workspaceLayoutKey);
+  const graphDraftKey = queryKeys.workspace.forLayout(workspaceLayoutKey).graphDraft();
 
   return {
     fetchLatestRemoteDraftState: async () => {
@@ -46,10 +46,10 @@ export function createCanvasDraftQueryCache(
     refreshWorkspaceFilesAfterSourceRemoval: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
+          queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileTree(),
         }),
         queryClient.invalidateQueries({
-          queryKey: queryKeys.workspace.fileContentRoot(workspaceLayoutKey),
+          queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileContentRoot(),
         }),
       ]);
     },

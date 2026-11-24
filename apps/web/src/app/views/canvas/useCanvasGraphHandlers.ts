@@ -4,9 +4,9 @@ import { useCallback } from 'react';
 
 import type {
   CanvasGraphInteractionContracts,
+  CanvasGraphInteractionState,
   CanvasGraphInteractionEffects,
   CanvasGraphInteractionPolicy,
-  CanvasGraphInteractionState,
 } from './canvasGraphHandlerContracts';
 import { canvasGraphHandlerContractBuilders } from './canvasGraphHandlerContractBuilders';
 import type {
@@ -21,67 +21,12 @@ import { useCanvasAlgebraicCompositionHandler } from './useCanvasAlgebraicCompos
 import { useCanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
 import { setCanvasColumnDisclosure } from './useCanvasZoomColumnDisclosure';
 
-export function useCanvasGraphHandlers({
-  graphStrategy,
-  canonicalNodesById,
-  edges,
-  nodes,
-  selectedNodeIds,
-  inspectorNodeId,
-  draftSession,
-  canEditEdges,
-  gridSize = 20,
-  canvasSnapToGrid = false,
-  runtimeCapabilities,
-  allowsCanonicalNode,
-  focusMode,
-  inspectorPanelVisible,
-  columnLevelLineageEnabled,
-  setNodes,
-  setEdges,
-  setDraftSession,
-  runDraftSessionCommand,
-  setSelectedNodes,
-  reconcileSelectionAfterNodeRemoval,
-  setInspectorNode,
-  toggleInspectorPanel,
-  onLayoutComplete,
-}: UseCanvasGraphHandlersParams): UseCanvasGraphHandlersResult {
-  const interactionState: CanvasGraphInteractionState = {
-    canonicalNodesById,
-    draftSession,
-    nodes,
-    edges,
-    selectedNodeIds,
-    inspectorNodeId,
-    focusMode,
-    inspectorPanelVisible,
-  };
-  const interactionEffects: CanvasGraphInteractionEffects = {
-    setNodes,
-    setEdges,
-    setDraftSession,
-    setSelectedNodes,
-    reconcileSelectionAfterNodeRemoval,
-    setInspectorNode,
-    toggleInspectorPanel,
-    onLayoutComplete,
-  };
-  const interactionPolicy: CanvasGraphInteractionPolicy = {
-    graphStrategy,
-    canEditEdges,
-    gridSize,
-    canvasSnapToGrid,
-    runtimeCapabilities,
-    allowsCanonicalNode,
-    columnLevelLineageEnabled,
-  };
-  const interactionContracts: CanvasGraphInteractionContracts = {
-    state: interactionState,
-    effects: interactionEffects,
-    policy: interactionPolicy,
-  };
-
+export function useCanvasGraphHandlers(
+  params: UseCanvasGraphHandlersParams
+): UseCanvasGraphHandlersResult {
+  const { setNodes, runDraftSessionCommand } = params;
+  const interactionContracts = buildCanvasGraphInteractionContracts(params);
+  const { state: interactionState } = interactionContracts;
   const columnCommandRunner = useCanvasColumnAuthoringCommandRunner({
     state: interactionState,
     effects: { runDraftSessionCommand },
@@ -131,4 +76,40 @@ export function useCanvasGraphHandlers({
     resolveCanvasAlgebraicCompositionOperations: algebraicComposition.resolveOperations,
     handleComposeCanvasNodes: algebraicComposition.composeNodes,
   };
+}
+
+function buildCanvasGraphInteractionContracts(
+  p: UseCanvasGraphHandlersParams
+): CanvasGraphInteractionContracts {
+  const { gridSize = 20, canvasSnapToGrid = false } = p;
+  const interactionState: CanvasGraphInteractionState = {
+    canonicalNodesById: p.canonicalNodesById,
+    draftSession: p.draftSession,
+    nodes: p.nodes,
+    edges: p.edges,
+    selectedNodeIds: p.selectedNodeIds,
+    inspectorNodeId: p.inspectorNodeId,
+    focusMode: p.focusMode,
+    inspectorPanelVisible: p.inspectorPanelVisible,
+  };
+  const interactionEffects: CanvasGraphInteractionEffects = {
+    setNodes: p.setNodes,
+    setEdges: p.setEdges,
+    setDraftSession: p.setDraftSession,
+    setSelectedNodes: p.setSelectedNodes,
+    reconcileSelectionAfterNodeRemoval: p.reconcileSelectionAfterNodeRemoval,
+    setInspectorNode: p.setInspectorNode,
+    toggleInspectorPanel: p.toggleInspectorPanel,
+    onLayoutComplete: p.onLayoutComplete,
+  };
+  const interactionPolicy: CanvasGraphInteractionPolicy = {
+    graphStrategy: p.graphStrategy,
+    canEditEdges: p.canEditEdges,
+    gridSize,
+    canvasSnapToGrid,
+    runtimeCapabilities: p.runtimeCapabilities,
+    allowsCanonicalNode: p.allowsCanonicalNode,
+    columnLevelLineageEnabled: p.columnLevelLineageEnabled,
+  };
+  return { state: interactionState, effects: interactionEffects, policy: interactionPolicy };
 }
