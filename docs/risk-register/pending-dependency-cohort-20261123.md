@@ -63,3 +63,37 @@ fresh per-test fixture, following the existing draft-test lifecycle. Bound that
 preparation explicitly at five seconds and retain the separate five-second test
 callback; declare that distinction rather than presenting it as the old combined
 budget. Keep global runner settings, graph depth and every assertion unchanged.
+
+A case-specific response appended after shared first-match setup can leave a
+browser proof observing the wrong list. Let each Runs case register one explicit
+list response through its existing bootstrap helper. Preserve first-match
+transport semantics, production filtering, all scenarios and assertions. Prove
+the corrected journey and the remaining browser obligations, then rerun the
+complete gate; earlier partial successes do not establish readiness.
+
+An initial whole-plan containment limit can interrupt legitimate retained
+evidence before completion. The observed complete scope spans approximately
+140 minutes across disjoint diagnostic phases. Keep the existing executor and
+all selected checks under a finite 180-minute default step and total lifetime;
+retain earlier inherited deadlines, cancellation, cooperative cleanup and forced
+retirement. Do not renew a deadline in nested wrappers or use partial results as
+a receipt. Individual test and fixture deadlines, retries, worker counts and
+coverage thresholds remain independent and unchanged. Validate finite-default
+propagation and the existing short-budget cancellation and cleanup regressions.
+
+A closing context-menu FocusScope can restore its opener after another Popover
+has acquired focus, dismissing that newer surface. Keep handoff in the existing
+shared adapter: call the consumer callback once, preserve cancellation and allow
+native restoration when no meaningful newer target owns focus. Do not introduce
+a selector-dependent workaround, second focus registry, retry or weaker opening
+assertion. Prove modal and non-modal ordering with actual primitives and the
+unchanged native JOIN journey. Retain every existing rail identity, authorization
+rule, source reference and sibling declaration when extending its catalog.
+
+Controlled tab selection can publish duplicate history entries when mousedown
+and focus callbacks observe the same uncommitted URL. Use the Router's existing
+synchronous commit option so the second callback observes the selected tab.
+Preserve automatic activation and meaningful Back/Forward entries without a
+second navigation store. Test both native events in one gesture and permit a
+fresh visit after Back. Browser proof must traverse the actual Diagnostics and
+Summary entries, rather than mask duplication with a numeric history jump.

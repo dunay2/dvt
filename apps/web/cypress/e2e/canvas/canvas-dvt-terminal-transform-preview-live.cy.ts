@@ -44,6 +44,42 @@ function visitEnglishLiveCanvas(): void {
   });
 }
 
+function assertRetainedDvtRunEvidence(
+  runId: string,
+  previewSha: string,
+  publicationToken: string
+): void {
+  cy.go('back');
+  cy.location('pathname').should('equal', `/runs/${runId}`);
+  cy.location('search').should('equal', '?tab=diagnostics');
+  cy.go('back');
+  cy.location('pathname').should('equal', `/runs/${runId}`);
+  cy.location('search').should('equal', '');
+  cy.go('back');
+  cy.location('pathname', { timeout: 20_000 }).should('equal', '/canvas');
+  cy.intercept('GET', `**/runs/${runId}?*`).as('reopenedDvtRunSnapshot');
+  cy.visit(`/runs/${runId}`);
+  cy.wait('@reopenedDvtRunSnapshot', { timeout: 30_000 })
+    .its('response.statusCode')
+    .should('equal', 200);
+  cy.intercept('GET', `**/runs/${runId}?*`).as('reloadedDvtRunSnapshot');
+
+  cy.reload();
+  cy.wait('@reloadedDvtRunSnapshot', { timeout: 30_000 })
+    .its('response.statusCode')
+    .should('equal', 200);
+  cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
+    .should('be.visible')
+    .and('contain.text', 'completed');
+  cy.get('[data-slot="run-result-tab"]').click();
+  cy.get('[data-slot="run-dvt-publication-plan-sha"]').should(($value) => {
+    expect($value.text()).to.equal(previewSha);
+  });
+  cy.get('[data-slot="run-dvt-publication-token"]').should(($value) => {
+    expect($value.text()).to.equal(publicationToken);
+  });
+}
+
 registerCanvasNodeDataActionsProof();
 
 describe('DVT terminal Transform Preview and Run live', () => {
@@ -239,29 +275,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
-      cy.go('back');
-      cy.location('pathname', { timeout: 20_000 }).should('equal', '/canvas');
-      cy.intercept('GET', `**/runs/${runId}?*`).as('reopenedDvtRunSnapshot');
-      cy.visit(`/runs/${runId}`);
-      cy.wait('@reopenedDvtRunSnapshot', { timeout: 30_000 })
-        .its('response.statusCode')
-        .should('equal', 200);
-      cy.intercept('GET', `**/runs/${runId}?*`).as('reloadedDvtRunSnapshot');
-
-      cy.reload();
-      cy.wait('@reloadedDvtRunSnapshot', { timeout: 30_000 })
-        .its('response.statusCode')
-        .should('equal', 200);
-      cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
-        .should('be.visible')
-        .and('contain.text', 'completed');
-      cy.get('[data-slot="run-result-tab"]').click();
-      cy.get('[data-slot="run-dvt-publication-plan-sha"]').should(($value) => {
-        expect($value.text()).to.equal(previewSha);
-      });
-      cy.get('[data-slot="run-dvt-publication-token"]').should(($value) => {
-        expect($value.text()).to.equal(publicationToken);
-      });
+      assertRetainedDvtRunEvidence(runId!, previewSha, publicationToken);
     });
   });
 

@@ -51,7 +51,7 @@ export function useRunDetailTabPosition(status: UiRunStatus) {
     else nextSearch.set('tab', nextTab);
     void navigate(
       { pathname: location.pathname, search: nextSearch.toString(), hash: location.hash },
-      { preventScrollReset: true }
+      { preventScrollReset: true, flushSync: true }
     );
   }
 

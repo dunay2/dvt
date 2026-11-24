@@ -173,3 +173,91 @@ fixture and command deadlines, rather than the original combined callback
 budget. All six tests and 41 assertions remain; no state is shared across tests,
 seeded directly, mocked differently, reduced or opened in a batch. The revised
 four-file concurrent proof again passes all 78 tests with the normal workers.
+
+The next complete prepush passed all 7,896 Web Vitest tests and the first 20
+browser specifications, then exposed a shadowed Runs list fixture. Shared setup
+registered a RUNNING response before the completed-result case appended a
+COMPLETED response. The controlled transport intentionally uses the first match,
+so the completed-status filter correctly produced an empty table. The
+[prospective correction](https://github.com/dunay2/dvt/issues/3951#issuecomment-7114573347)
+keeps existing designs `GH-3974-RUN-MODEL-RESULT-NAVIGATION` and
+`GH-3951-PENDING-DEPENDENCY-COHORT` as owners. Each case supplies one response to
+the existing Runs bootstrap helper before entering the actual browser journey.
+The shared transport, production filters, all four scenarios, assertions,
+keyboard gestures and deadlines remain unchanged. Focused browser diagnostics
+and the later complete prepush must establish the result; the failed run is not
+a readiness receipt.
+
+The corrected Runs fixture passes all four real-browser cases and preserves all
+37 full assertions and scenario names. The remaining controlled shard passes
+20 specifications and 68 tests; unavailable-runtime proof passes its browser
+case and five provider checks. Available-runtime diagnostics execute all 37
+specifications: 88 tests pass and three fail in two specifications. One retains
+the old single-entry Back expectation after Result gained its own URL entry;
+the [prospective history correction](https://github.com/dunay2/dvt/issues/3951#issuecomment-7115378104)
+keeps all publication SHA, token, snapshot and reload assertions and returns
+through both Summary and Result entries. The two Model-input opening failures
+are traced separately; none of these diagnostics attest readiness.
+
+The [bounded-lifetime decision](https://github.com/dunay2/dvt/issues/3951#issuecomment-7116329009)
+is native design `GH-3951-COMPLETE-VALIDATION-LIFETIME`, owned by the existing
+`RunChangedSliceVerification` executor. Disjoint observed phases total about
+140.15 minutes, exceeding its initial 120-minute whole-plan containment limit.
+The diagnostic phases use first and last log writes, rather than claiming a
+single successful performance run. Default step and total containment become
+180 minutes; the earlier inherited absolute deadline, cancellation, 60-second
+cooperative cleanup and 5-second forced retirement remain. Every test and
+browser obligation, individual deadline, retry, worker and coverage rule remains.
+Only complete awaited execution and final checks can authorize a readiness
+stamp. Short-budget cancellation, cleanup and inherited-deadline regressions
+remain required alongside a finite-default propagation proof.
+
+The finite-default regression first failed with exit 124 at the former bound;
+all nine executor tests pass with the new default, including short cancellation,
+owned cleanup and inherited-deadline containment. Individual test deadlines are
+unchanged.
+
+Two isolated native-browser traces show the same Inputs trigger opening before
+a deferred Radix FocusScope cleanup restores the previous card and dismisses
+the newer Popover. The call stack identifies the unmount restoration rather than
+an input remount. Both temporary traces were removed and the navigation helper
+restored to its original byte hash. The
+[focus-handoff rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7116742205)
+and native `GH-3951-CONTEXT-MENU-FOCUS-HANDOFF` keep the existing
+`RenderCanvasContextMenu` query and shared adapter as owners. Its audited catalog
+extension retains all old references, symbols and acceptance cycles plus the
+five sibling rails. The adapter must honor a consumer callback once, retain
+normal opener restoration, and preserve a meaningful newer focus owner in the
+closing content's document. No Canvas selector, focus store, registry or business
+command is added. Modal and non-modal lifetimes, cancellation and native JOIN
+interaction remain required proof.
+
+The [measured history correction](https://github.com/dunay2/dvt/issues/3951#issuecomment-7117407629),
+native `GH-3951-RUN-TAB-ATOMIC-NAVIGATION`, supersedes the earlier two-entry
+assumption. The timeline proof legitimately visits Diagnostics before Result.
+Native traces also show each tab gesture publishing twice, once on mousedown
+and again on focus before the controlled selection commits. The existing
+`GetRunSnapshot` navigation adapter must commit its URL selection synchronously
+through the Router's existing flush adapter. Preserve automatic activation,
+Back/Forward, query, hash and unavailable-result behavior without another store
+or pending-navigation coordinator. The browser proof must traverse Result,
+Diagnostics and Summary explicitly before returning to Canvas, then retain all
+exact Run, publication SHA, token, snapshot and reload checks. Its cohesive
+return/reopen helper is added to the existing reference rail without replacing
+its authority or previous symbols. A real-tab two-event regression must fail
+before the fix; native browser proof and the complete gate remain required.
+
+The real-tab regression first reproduced two Router navigations for one gesture;
+the synchronous commit passes it, Back and a fresh visit. The eleven focused
+Run/shared-UI files pass all 50 tests, and Web's declared typecheck passes. The
+final uninstrumented native run passes all 19 cases in both affected
+specifications: three JOIN interaction cases and sixteen terminal-publication,
+data-action and recovery cases, with no pending or skipped cases. All 37 Runs
+assertions and all 84 original terminal assertions remain; the latter adds four
+explicit history assertions. Its return/reopen extraction reduces the large
+case from 202 to 181 code lines without dropping evidence. Focused CodeScene
+review reports zero introduced or degraded findings. Planning DB integrity has
+zero errors, blockers, vocabulary or source drift; the existing 101 component
+warnings and 26 unresolved references remain, with zero new unresolved
+references. These focused results do not replace the final complete prepush or
+hosted acceptance.

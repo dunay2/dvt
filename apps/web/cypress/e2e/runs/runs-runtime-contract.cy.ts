@@ -8,12 +8,8 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubRunsRouteBootstrapApis(): void {
-  stubE2eJsonApi('GET', '/workspace/context', {
-    defaultWorkspace: E2E_PROJECT_WORKSPACE,
-    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-  });
-  stubE2eJsonApi('GET', '/runs', {
+function stubRunsRouteBootstrapApis(
+  runsBody: unknown = {
     items: [
       {
         runId: 'run_e2e_1',
@@ -23,7 +19,13 @@ function stubRunsRouteBootstrapApis(): void {
         startedAt: '2026-04-07T00:00:00.000Z',
       },
     ],
+  }
+): void {
+  stubE2eJsonApi('GET', '/workspace/context', {
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
   });
+  stubE2eJsonApi('GET', '/runs', runsBody);
 }
 
 function expectScopedRunRequest(path: string): void {
@@ -49,10 +51,10 @@ describe('Runs runtime contract', () => {
         },
       },
     });
-    stubRunsRouteBootstrapApis();
   });
 
   it('sends tenant scope in list, detail, and events requests', () => {
+    stubRunsRouteBootstrapApis();
     stubE2eJsonApi('GET', '/runs/run_e2e_1', {
       runId: 'run_e2e_1',
       planId: 'plan_e2e_1',
@@ -80,6 +82,7 @@ describe('Runs runtime contract', () => {
   });
 
   it('uses one shell heading and keeps the token-based dense table contained beside the persistent rail', () => {
+    stubRunsRouteBootstrapApis();
     cy.viewport(1280, 800);
     visitWithE2eWorkspaceSession('/runs');
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
@@ -136,7 +139,7 @@ describe('Runs runtime contract', () => {
   });
 
   it('opens the selected completed run result from the filtered table', () => {
-    stubE2eJsonApi('GET', '/runs', {
+    stubRunsRouteBootstrapApis({
       items: [{ runId: 'run_completed', status: 'COMPLETED', environmentId: 'e2e-env' }],
     });
     stubE2eJsonApi('GET', '/runs/run_completed', {
@@ -189,6 +192,7 @@ describe('Runs runtime contract', () => {
   });
 
   it('renders failed result diagnostics from the snapshot read model', () => {
+    stubRunsRouteBootstrapApis();
     stubE2eJsonApi('GET', '/runs/run_failed', {
       runId: 'run_failed',
       planId: 'plan_e2e_1',
