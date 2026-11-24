@@ -115,14 +115,14 @@ describe('Completed relational layout persistence', () => {
               .as('producer')
           );
         cy.get('[data-pending-operation="true"]').last().as('filter');
-        connectWorkbenchProducer('@producer', '@filter');
+        connectWorkbenchProducer({ producer: '@producer', consumer: '@filter' });
         cy.get('[data-slot="canvas-relational-operator-form"] input').type('active');
         cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
-        connectWorkbenchProducer(
-          '@filter',
-          '[data-slot="canvas-relational-output-input-port"]',
-          null
-        );
+        connectWorkbenchProducer({
+          producer: '@filter',
+          consumer: '[data-slot="canvas-relational-output-input-port"]',
+          port: null,
+        });
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
         cy.wrap(null).should(() => {
           const writes = semanticWrites('join-transform');

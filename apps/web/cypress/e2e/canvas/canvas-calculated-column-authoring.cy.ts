@@ -114,12 +114,12 @@ function composeProjection(nodeId: string, sourceLabel: string): void {
   cy.get('[data-pending="true"][data-operator="read"]').closest('li').as('producer');
   workbenchOperation('field_transform').click();
   cy.get('[data-pending-operation="true"]').last().as('projection');
-  connectWorkbenchProducer('@producer', '@projection');
-  connectWorkbenchProducer(
-    '@projection',
-    '[data-slot="canvas-relational-output-input-port"]',
-    null
-  );
+  connectWorkbenchProducer({ producer: '@producer', consumer: '@projection' });
+  connectWorkbenchProducer({
+    producer: '@projection',
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
   let before = 0;
   cy.then(() => {
     before = writes().length;
@@ -148,7 +148,15 @@ function addFormula(alias: string, formula: string): void {
   cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
 }
 
-function expectDirectAlias(nodeId: string, alias: string, inputName: string): string {
+function expectDirectAlias({
+  nodeId,
+  alias,
+  inputName,
+}: {
+  nodeId: string;
+  alias: string;
+  inputName: string;
+}): string {
   const { root, outputs, dependencies } = savedModel(nodeId);
   const input = dependencies.input.fields.find((field) => field.displayName === inputName)!;
   const output = outputs.find((field) => field.displayName === alias)!;
@@ -158,8 +166,11 @@ function expectDirectAlias(nodeId: string, alias: string, inputName: string): st
   if (root.relation.relType.case !== 'project')
     throw new Error('Expected the authored projection.');
   expect(root.relation.relType.value.expressions).to.have.length(0);
-  const emit = root.relation.relType.value.common?.emitKind;
-  if (emit?.case !== 'emit') throw new Error('Expected explicit canonical output selection.');
+  expect(root.relation.relType.value.common, 'explicit canonical output selection').not.to.equal(
+    undefined
+  );
+  const emit = root.relation.relType.value.common!.emitKind;
+  if (emit.case !== 'emit') throw new Error('Expected explicit canonical output selection.');
   expect(emit.value.outputMapping[output.outputOrdinal]).to.equal(input.outputOrdinal);
   const fieldId = output.fieldId;
   expect(fieldId).to.match(
@@ -190,6 +201,35 @@ function renameOutput(name: string, alias: string): void {
     );
 }
 
+function assertDownstreamSelection({
+  selector: downstreamNode,
+  readFieldIds,
+}: {
+  selector: string;
+  readFieldIds: () => string[];
+}): void {
+  cy.get(downstreamNode)
+    .contains('[role="tab"]', /^Output /)
+    .click()
+    .should('have.attr', 'aria-selected', 'true');
+  cy.get(downstreamNode)
+    .find('[data-slot="graph-node-column-toggle"]')
+    .then(($toggle) => {
+      if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
+    });
+  cy.get(downstreamNode)
+    .find('[data-slot="graph-node-column-piece"]')
+    .should(($pieces) => {
+      expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal([
+        'order_id',
+        'total',
+      ]);
+      expect([...$pieces].map((piece) => piece.getAttribute('data-field-id'))).to.deep.equal(
+        readFieldIds()
+      );
+    });
+}
+
 describe('Canvas calculated-column authoring', () => {
   beforeEach(() => stubCanvas());
 
@@ -210,7 +250,11 @@ describe('Canvas calculated-column authoring', () => {
     renameOutput('customer', 'customer_alias');
     let fieldId = '';
     cy.then(() => {
-      fieldId = expectDirectAlias('model-orders', 'customer_alias', 'customer');
+      fieldId = expectDirectAlias({
+        nodeId: 'model-orders',
+        alias: 'customer_alias',
+        inputName: 'customer',
+      });
     });
     cy.get(inspector)
       .find('input[aria-label="customer_alias"]')
@@ -250,7 +294,7 @@ describe('Canvas calculated-column authoring', () => {
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     renameOutput('status', 'status_alias');
     cy.then(() => {
-      expectDirectAlias('model-orders', 'status_alias', 'status');
+      expectDirectAlias({ nodeId: 'model-orders', alias: 'status_alias', inputName: 'status' });
       expect(savedModel('model-orders').outputs.map((field) => field.displayName)).not.to.include(
         'status'
       );
@@ -299,29 +343,9 @@ describe('Canvas calculated-column authoring', () => {
         'channel'
       );
     });
-    const assertDownstreamCard = (): void => {
-      cy.get(downstreamNode)
-        .contains('[role="tab"]', /^Output /)
-        .click()
-        .should('have.attr', 'aria-selected', 'true');
-      cy.get(downstreamNode)
-        .find('[data-slot="graph-node-column-toggle"]')
-        .then(($toggle) => {
-          if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
-        });
-      cy.get(downstreamNode)
-        .find('[data-slot="graph-node-column-piece"]')
-        .should(($pieces) => {
-          expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal(
-            ['order_id', 'total']
-          );
-          expect([...$pieces].map((piece) => piece.getAttribute('data-field-id'))).to.deep.equal(
-            downstreamFieldIds
-          );
-        });
-    };
+
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    assertDownstreamCard();
+    assertDownstreamSelection({ selector: downstreamNode, readFieldIds: () => downstreamFieldIds });
     cy.get(upstreamNode)
       .contains('[role="tab"]', /^Output /)
       .click()
@@ -329,7 +353,7 @@ describe('Canvas calculated-column authoring', () => {
     cy.get(upstreamNode).find('button[aria-expanded]').contains('Columns').click();
     cy.get(`${upstreamNode} [data-column-name="channel"]`).should('be.visible');
     revisitWorkbenchCanvas(visitCanvas);
-    assertDownstreamCard();
+    assertDownstreamSelection({ selector: downstreamNode, readFieldIds: () => downstreamFieldIds });
     cy.then(() =>
       expect(savedModel('orphan-transform-1').outputs.map((field) => field.fieldId)).to.deep.equal(
         downstreamFieldIds

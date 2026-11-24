@@ -15,6 +15,56 @@ import {
 } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
+function verifyExpandedCardGeometry(): void {
+  cy.get('[data-slot="canvas-relational-tree-node"]').each(($card) => {
+    cy.wrap($card).as('detailCard');
+    revealWorkbenchCard('@detailCard');
+    cy.wrap($card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
+    cy.wrap($card)
+      .closest('li')
+      .find(
+        '[data-slot="canvas-relational-card-detail"] [data-slot="canvas-relational-expression-node"]'
+      )
+      .should('not.be.empty');
+  });
+  cy.get('[data-operator="fetch"]')
+    .closest('li')
+    .should('contain.text', '73')
+    .and('contain.text', 'OFFSET');
+  cy.get('[data-operator="sort"]')
+    .closest('li')
+    .should('contain.text', 'ORDER BY')
+    .and('contain.text', 'NULLS');
+  revealWorkbenchCard('[data-operator="sort"]');
+  cy.screenshot('relational-card-details');
+  cy.get('[data-slot="canvas-relational-tree-layout"]').then(($layout) => {
+    const layout = $layout[0];
+    if (layout === undefined) throw new Error('Expected the relational tree layout.');
+    const geometry = (): (string | null)[][] =>
+      [
+        ...layout.querySelectorAll(
+          ':scope > ul > li, :scope > svg path, [data-slot="canvas-relational-tree-output"]'
+        ),
+      ].map((element) => [element.getAttribute('style'), element.getAttribute('d')]);
+    const before = geometry();
+    const count = $layout.find('[data-slot="canvas-relational-card-detail"]').length;
+    for (const deltaY of [-800, 500, -150, 200]) {
+      cy.get(
+        '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]'
+      )
+        .should('have.length', 1)
+        .trigger('wheel', {
+          deltaY,
+          eventConstructor: 'WheelEvent',
+        });
+      cy.then(() => expect(geometry()).to.deep.equal(before));
+      cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', count);
+    }
+    cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+    cy.then(() => expect(geometry()).to.deep.equal(before));
+  });
+}
+
 describe('Relational card detail', () => {
   it('expands each local tree explicitly and preserves geometry across zoom and Fit', () => {
     stubWorkbenchScenario('saved-join');
@@ -31,7 +81,7 @@ describe('Relational card detail', () => {
     for (const operation of ['sort', 'fetch']) {
       workbenchOperation(operation).click();
       cy.get('[data-pending-operation="true"]').last().as('operation', { type: 'static' });
-      connectWorkbenchProducer('@producer', '@operation');
+      connectWorkbenchProducer({ producer: '@producer', consumer: '@operation' });
       if (operation === 'fetch')
         cy.contains('[data-slot="canvas-relational-operator-form"] label', 'LIMIT')
           .find('input')
@@ -42,11 +92,11 @@ describe('Relational card detail', () => {
       cy.get('[data-slot="canvas-relational-operator-form"]').should('not.exist');
       cy.get('@operation').as('producer', { type: 'static' });
     }
-    connectWorkbenchProducer(
-      '@producer',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '@producer',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.wrap(null).should(() => {
       const lastWrite = semanticWrites('join-transform').at(-1);
@@ -63,53 +113,7 @@ describe('Relational card detail', () => {
     cy.then(() => {
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    cy.get('[data-slot="canvas-relational-tree-node"]').each(($card) => {
-      cy.wrap($card).as('detailCard');
-      revealWorkbenchCard('@detailCard');
-      cy.wrap($card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
-      cy.wrap($card)
-        .closest('li')
-        .find(
-          '[data-slot="canvas-relational-card-detail"] [data-slot="canvas-relational-expression-node"]'
-        )
-        .should('not.be.empty');
-    });
-    cy.get('[data-operator="fetch"]')
-      .closest('li')
-      .should('contain.text', '73')
-      .and('contain.text', 'OFFSET');
-    cy.get('[data-operator="sort"]')
-      .closest('li')
-      .should('contain.text', 'ORDER BY')
-      .and('contain.text', 'NULLS');
-    revealWorkbenchCard('[data-operator="sort"]');
-    cy.screenshot('relational-card-details');
-    cy.get('[data-slot="canvas-relational-tree-layout"]').then(($layout) => {
-      const layout = $layout[0];
-      if (layout === undefined) throw new Error('Expected the relational tree layout.');
-      const geometry = (): (string | null)[][] =>
-        [
-          ...layout.querySelectorAll(
-            ':scope > ul > li, :scope > svg path, [data-slot="canvas-relational-tree-output"]'
-          ),
-        ].map((element) => [element.getAttribute('style'), element.getAttribute('d')]);
-      const before = geometry();
-      const count = $layout.find('[data-slot="canvas-relational-card-detail"]').length;
-      for (const deltaY of [-800, 500, -150, 200]) {
-        cy.get(
-          '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]'
-        )
-          .should('have.length', 1)
-          .trigger('wheel', {
-            deltaY,
-            eventConstructor: 'WheelEvent',
-          });
-        cy.then(() => expect(geometry()).to.deep.equal(before));
-        cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', count);
-      }
-      cy.get('[data-slot="canvas-relational-tree-fit"]').click();
-      cy.then(() => expect(geometry()).to.deep.equal(before));
-    });
+    verifyExpandedCardGeometry();
     cy.get('[data-slot="canvas-relational-node-expand"]').each(($button) => {
       cy.wrap($button).click();
     });

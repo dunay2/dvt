@@ -77,6 +77,12 @@ export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
   cy.get('#app-loading-screen').should('not.exist');
 }
 
+function isWorkbenchTitleClipped(bounds: DOMRect, frame: DOMRect): boolean {
+  const outsideHorizontalBounds = bounds.left < frame.left || bounds.right > frame.right;
+  const outsideVerticalBounds = bounds.top < frame.top || bounds.bottom > frame.bottom;
+  return outsideHorizontalBounds || outsideVerticalBounds;
+}
+
 /** Reveal a clipped Main Canvas target through public Fit before the existing native gesture. */
 export function openWorkbenchModel(nodeId = 'join-transform'): void {
   const title = `.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`;
@@ -86,12 +92,7 @@ export function openWorkbenchModel(nodeId = 'join-transform'): void {
     if (viewport == null) throw new Error('Expected the Main Canvas Model viewport.');
     const bounds = element.getBoundingClientRect();
     const frame = viewport.getBoundingClientRect();
-    if (
-      bounds.left < frame.left ||
-      bounds.right > frame.right ||
-      bounds.top < frame.top ||
-      bounds.bottom > frame.bottom
-    ) {
+    if (isWorkbenchTitleClipped(bounds, frame)) {
       cy.get('[data-testid="canvas-viewport"] .react-flow__controls-fitview')
         .filter(':visible')
         .click();
@@ -242,11 +243,11 @@ export function setWorkbenchInputsOpen(open: boolean): void {
 }
 
 /** Connect an explicit producer output to one operation Input or the passive terminal. */
-export function connectWorkbenchProducer(
-  producer: string,
-  consumer: string,
-  port: number | null = 0
-): void {
+export function connectWorkbenchProducer({
+  producer,
+  consumer,
+  port = 0,
+}: Readonly<{ producer: string; consumer: string; port?: number | null }>): void {
   cy.window().then((window) => {
     const dataTransfer = new window.DataTransfer();
     cy.get(producer)
@@ -267,11 +268,11 @@ export function connectWorkbenchProducer(
 }
 
 /** Stage a unary operation and explicitly connect its primary input. */
-export function stageWorkbenchUnary(
-  operation: string,
-  producer: string,
-  disconnectOutput = false
-): void {
+export function stageWorkbenchUnary({
+  operation,
+  producer,
+  disconnectOutput = false,
+}: Readonly<{ operation: string; producer: string; disconnectOutput?: boolean }>): void {
   const staged = `[data-pending-operation="true"] [data-operator="${operation}"]`;
   workbenchOperation(operation).should('have.attr', 'aria-disabled', 'false').click();
   cy.get(staged).should('exist').closest('li').as('stagedUnaryTarget');
@@ -283,7 +284,7 @@ export function stageWorkbenchUnary(
     );
   }
   cy.get(producer).last().closest('li').as('stagedUnaryProducer');
-  connectWorkbenchProducer('@stagedUnaryProducer', '@stagedUnaryTarget');
+  connectWorkbenchProducer({ producer: '@stagedUnaryProducer', consumer: '@stagedUnaryTarget' });
   cy.get(staged)
     .closest('li')
     .find('[data-slot="canvas-relational-input-port"]')

@@ -17,6 +17,38 @@ import {
 } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
+function writeJoinPredicateFormula({
+  formSelector: formulaForm,
+  formula,
+}: {
+  formSelector: string;
+  formula: string;
+}): void {
+  cy.get(formulaForm).find('.monaco-editor').click();
+  cy.get(formulaForm)
+    .find('.inputarea')
+    .type('{ctrl+a}')
+    .type(formula, { parseSpecialCharSequences: false, delay: 0 });
+}
+
+function reopenJoinPredicateFormula(formulaForm: string): void {
+  cy.on('window:before:load', installE2eApiFetchStub);
+  cy.reload();
+  cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+    .first()
+    .dblclick(40, 18);
+  cy.get('[data-operator="join"]').click();
+  cy.get('[data-slot="canvas-relational-edit"]').click();
+  cy.get('[data-slot="join-predicate-formula-open"]').click();
+  cy.get(formulaForm)
+    .find('.view-lines')
+    .should('contain.text', 'CONCAT')
+    .and('contain.text', 'L.')
+    .and('contain.text', 'R.');
+  cy.get(formulaForm).contains('button', 'Cancel').click();
+  cy.get(formulaForm).should('not.exist');
+}
+
 describe('join-consumers', () => {
   it('shows the canonical JOIN type without repeating a stale saved code through Apply and reopen', () => {
     const draft = stubWorkbenchScenario('saved-join');
@@ -141,15 +173,9 @@ describe('join-consumers', () => {
     cy.get(formulaForm).contains('button', 'Cancel').click();
     cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
     cy.get('[data-slot="join-condition-formula-edit"]').should('be.enabled').click();
-    const write = (formula: string): void => {
-      cy.get(formulaForm).find('.monaco-editor').click();
-      cy.get(formulaForm)
-        .find('.inputarea')
-        .type('{ctrl+a}')
-        .type(formula, { parseSpecialCharSequences: false, delay: 0 });
-    };
+
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
-    write('1 + 2');
+    writeJoinPredicateFormula({ formSelector: formulaForm, formula: '1 + 2' });
     cy.get(formulaForm).find('button[type="submit"]').should('be.disabled');
     cy.get(formulaForm).find('[role="alert"]').should('contain.text', 'true, false or NULL');
     cy.get(formulaForm)
@@ -160,7 +186,10 @@ describe('join-consumers', () => {
         const right = labels.find((label) => label.startsWith('R.'))!;
         expect(left).to.be.a('string');
         expect(right).to.be.a('string');
-        write(`CONCAT("${left}", "${right}") = 'match'`);
+        writeJoinPredicateFormula({
+          formSelector: formulaForm,
+          formula: `CONCAT("${left}", "${right}") = 'match'`,
+        });
       });
     cy.get(formulaForm).find('button[type="submit"]').should('be.enabled').click();
     cy.get(formulaForm).should('not.exist');
@@ -190,21 +219,7 @@ describe('join-consumers', () => {
       'aria-selected',
       'true'
     );
-    cy.on('window:before:load', installE2eApiFetchStub);
-    cy.reload();
-    cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
-      .first()
-      .dblclick(40, 18);
-    cy.get('[data-operator="join"]').click();
-    cy.get('[data-slot="canvas-relational-edit"]').click();
-    cy.get('[data-slot="join-predicate-formula-open"]').click();
-    cy.get(formulaForm)
-      .find('.view-lines')
-      .should('contain.text', 'CONCAT')
-      .and('contain.text', 'L.')
-      .and('contain.text', 'R.');
-    cy.get(formulaForm).contains('button', 'Cancel').click();
-    cy.get(formulaForm).should('not.exist');
+    reopenJoinPredicateFormula(formulaForm);
   });
 
   it('keeps the selected JOIN editable below grouping and windows, and removes the selected wrapper', () => {
@@ -218,12 +233,20 @@ describe('join-consumers', () => {
     cy.get('[data-slot="canvas-relational-expression-node"]').should('have.length.at.least', 3);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-edit"]').click();
-    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    stageWorkbenchUnary({
+      operation: 'aggregate',
+      producer: '[data-operator="join"]',
+      disconnectOutput: true,
+    });
     cy.get(form).find('button[type="submit"]').click();
-    stageWorkbenchUnary('window', '[data-operator="aggregate"]');
+    stageWorkbenchUnary({ operation: 'window', producer: '[data-operator="aggregate"]' });
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-presentation="window"]').closest('li').as('window');
-    connectWorkbenchProducer('@window', '[data-slot="canvas-relational-output-input-port"]', null);
+    connectWorkbenchProducer({
+      producer: '@window',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-relational-expression-node"][data-kind="field"]:visible')

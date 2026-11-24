@@ -99,18 +99,18 @@ export function composePublicationModel(modelId: string): void {
   cy.contains('[data-operator="read"]', 'customers').closest('li').as('customerProducer');
   workbenchOperation('field_transform').click();
   cy.get('[data-pending-operation="true"]').last().as('customerTransform', { type: 'static' });
-  connectWorkbenchProducer('@customerProducer', '@customerTransform');
+  connectWorkbenchProducer({ producer: '@customerProducer', consumer: '@customerTransform' });
   cy.get(transformInspector).find('[data-slot="canvas-derived-output-trigger"]').click();
   cy.get(derivedForm).find('input[name="alias"]').type('customer_clean');
   writePublicationFormula('TRIM("customer_name")');
   dragWorkbenchSource('orders');
   cy.contains('[data-operator="read"]', 'orders').closest('li').as('orderProducer');
   joinWorkbenchProducers('@customerTransform', '@orderProducer', 'publicationJoin');
-  connectWorkbenchProducer(
-    '@publicationJoin',
-    '[data-slot="canvas-relational-output-input-port"]',
-    null
-  );
+  connectWorkbenchProducer({
+    producer: '@publicationJoin',
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
   cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
   cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -175,7 +175,8 @@ export function waitForPublicationConfig(
       (body as { record: { draft: unknown } }).record.draft
     );
     const config = draft.nodes.find((node) => node.id === nodeId)?.metadata?.config;
-    if (config !== null && typeof config === 'object' && Cypress._.isMatch(config, expected)) {
+    const hasConfig = config !== null && typeof config === 'object';
+    if (hasConfig && Cypress._.isMatch(config, expected)) {
       return cy.wrap(response, { log: false });
     }
     if (attempt >= 40)

@@ -39,7 +39,10 @@ describe('Internal operation card execution', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel();
     dragWorkbenchSource('customers');
-    stageWorkbenchUnary('fetch', '[data-pending="true"][data-operator="read"]');
+    stageWorkbenchUnary({
+      operation: 'fetch',
+      producer: '[data-pending="true"][data-operator="read"]',
+    });
     cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
@@ -116,13 +119,13 @@ describe('Internal operation card execution', () => {
           'not.have.attr',
           'data-connected'
         );
-        connectWorkbenchProducer('@joinInput', '@fetch');
+        connectWorkbenchProducer({ producer: '@joinInput', consumer: '@fetch' });
         cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
-        connectWorkbenchProducer(
-          '@fetch',
-          '[data-slot="canvas-relational-output-input-port"]',
-          null
-        );
+        connectWorkbenchProducer({
+          producer: '@fetch',
+          consumer: '[data-slot="canvas-relational-output-input-port"]',
+          port: null,
+        });
         cy.get('[data-slot="canvas-relational-tree-apply"]').click();
         cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       }

@@ -11,8 +11,8 @@ import { semanticWrites } from './persistence';
 export function joinWorkbenchProducers(left: string, right: string, alias: string): void {
   workbenchOperation('inner_join').click();
   cy.get('[data-pending-operation="true"]').last().as(alias, { type: 'static' });
-  connectWorkbenchProducer(left, '@' + alias, 0);
-  connectWorkbenchProducer(right, '@' + alias, 1);
+  connectWorkbenchProducer({ producer: left, consumer: '@' + alias, port: 0 });
+  connectWorkbenchProducer({ producer: right, consumer: '@' + alias, port: 1 });
   cy.get('[data-slot="canvas-staged-operation-inspector"]')
     .should('contain.text', 'customer_id')
     .and('contain.text', '=');
@@ -38,7 +38,11 @@ export function authorFourSourceChain(): void {
       index
     );
   }
-  connectWorkbenchProducer('@join3', '[data-slot="canvas-relational-output-input-port"]', null);
+  connectWorkbenchProducer({
+    producer: '@join3',
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
   cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
     'have.length',
     4

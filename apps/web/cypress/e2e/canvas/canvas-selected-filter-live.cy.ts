@@ -29,6 +29,111 @@ import {
   visitSemanticCanvas,
 } from '../../support/semanticLive/fixture';
 
+function configureInputOperationForm({
+  operation,
+  source,
+  field,
+  value,
+}: {
+  operation: string;
+  source: string;
+  field: string;
+  value: string;
+}): void {
+  const form = '[data-slot="canvas-relational-operator-form"]';
+  if (operation === 'filter') {
+    cy.get(`${form} select`).first().select(field!);
+    cy.get(`${form} input`).type(value!);
+  } else if (operation === 'sort') {
+    cy.get(`${form} select`)
+      .first()
+      .select(source === 'orders' ? 'order_id' : 'client_id');
+    cy.get(`${form} select`).eq(1).select(String(SortField_SortDirection.DESC_NULLS_LAST));
+  } else {
+    cy.contains(`${form} label`, /^LIMIT$/)
+      .find('input')
+      .clear()
+      .type('1');
+  }
+}
+
+function configureSelectedInputPort({
+  initial,
+  port,
+  source,
+  field,
+  value,
+}: {
+  initial: DvtSubstraitSemanticDocumentV1;
+  port: number;
+  source: string;
+  field: string;
+  value: string;
+}): void {
+  const form = '[data-slot="canvas-relational-operator-form"]';
+  const edgeAction =
+    port === 0 ? 'canvas-relational-edge-action' : 'canvas-relational-pending-edge-action';
+  cy.get(`[data-slot="${edgeAction}"][data-port="${port}"]`)
+    .should('have.length', 1)
+    .focus()
+    .type('{del}');
+  cy.then(() => {
+    const id = initial.sidecar.relations.find(
+      (relation) => relation.sourceRef != null && relation.displayName === source
+    )!.relationId;
+    cy.get(`[data-operator="read"][data-relation-id="${id}"]`).closest('li').as(`input-${port}`);
+  });
+  for (const [operation, producer] of [
+    ['filter', 'input'],
+    ['sort', 'filter'],
+    ['fetch', 'sort'],
+  ]) {
+    workbenchOperation(operation!).click();
+    cy.get(`[data-operator="${operation}"][aria-selected="true"]`)
+      .should('have.length', 1)
+      .invoke('attr', 'data-relation-id')
+      .then((id) => {
+        cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${id}"]`)
+          .closest('li')
+          .as(`${operation}-${port}`);
+        connectWorkbenchProducer({
+          producer: `@${producer}-${port}`,
+          consumer: `@${operation}-${port}`,
+        });
+      });
+    configureInputOperationForm({
+      operation: operation!,
+      source: source!,
+      field: field!,
+      value: value!,
+    });
+    cy.get(`${form} button[type="submit"]`).click();
+  }
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+    .closest('li')
+    .as('join');
+  connectWorkbenchProducer({ producer: `@fetch-${port}`, consumer: '@join', port: port });
+}
+
+function assertSelectedInputComposition(
+  document: DvtSubstraitSemanticDocumentV1,
+  joinId: string
+): void {
+  const indexed = indexSubstraitRelations(decodeDvtSubstraitSemanticDocument(document));
+  if (!indexed.ok) throw indexed.error;
+  const join = [...indexed.index.relations.values()].find(
+    (entry) => entry.relation.relType.case === 'join'
+  )!;
+  expect(join.binding.relationId, 'original LEFT JOIN identity').to.equal(joinId);
+  for (const input of join.inputs) {
+    let relation = indexed.index.relations.get(input)!;
+    for (const operator of ['fetch', 'sort', 'filter', 'read']) {
+      expect(relation.relation.relType.case).to.equal(operator);
+      if (relation.inputs.length > 0) relation = indexed.index.relations.get(relation.inputs[0]!)!;
+    }
+  }
+}
+
 describe('Selected input transformations through real PostgreSQL', () => {
   let initial: DvtSubstraitSemanticDocumentV1;
   beforeEach(function () {
@@ -59,60 +164,11 @@ describe('Selected input transformations through real PostgreSQL', () => {
       })
       .click();
     cy.get('[data-slot="canvas-relational-edit"]').click();
-    const form = '[data-slot="canvas-relational-operator-form"]';
     for (const [port, [source, field, value]] of [
       ['orders', 'client_id', 'C-001'],
       ['client', 'country', 'US'],
     ].entries()) {
-      const edgeAction =
-        port === 0 ? 'canvas-relational-edge-action' : 'canvas-relational-pending-edge-action';
-      cy.get(`[data-slot="${edgeAction}"][data-port="${port}"]`)
-        .should('have.length', 1)
-        .focus()
-        .type('{del}');
-      cy.then(() => {
-        const id = initial.sidecar.relations.find(
-          (relation) => relation.sourceRef != null && relation.displayName === source
-        )!.relationId;
-        cy.get(`[data-operator="read"][data-relation-id="${id}"]`)
-          .closest('li')
-          .as(`input-${port}`);
-      });
-      for (const [operation, producer] of [
-        ['filter', 'input'],
-        ['sort', 'filter'],
-        ['fetch', 'sort'],
-      ]) {
-        workbenchOperation(operation!).click();
-        cy.get(`[data-operator="${operation}"][aria-selected="true"]`)
-          .should('have.length', 1)
-          .invoke('attr', 'data-relation-id')
-          .then((id) => {
-            cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${id}"]`)
-              .closest('li')
-              .as(`${operation}-${port}`);
-            connectWorkbenchProducer(`@${producer}-${port}`, `@${operation}-${port}`);
-          });
-        if (operation === 'filter') {
-          cy.get(`${form} select`).first().select(field!);
-          cy.get(`${form} input`).type(value!);
-        } else if (operation === 'sort') {
-          cy.get(`${form} select`)
-            .first()
-            .select(source === 'orders' ? 'order_id' : 'client_id');
-          cy.get(`${form} select`).eq(1).select(String(SortField_SortDirection.DESC_NULLS_LAST));
-        } else {
-          cy.contains(`${form} label`, /^LIMIT$/)
-            .find('input')
-            .clear()
-            .type('1');
-        }
-        cy.get(`${form} button[type="submit"]`).click();
-      }
-      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
-        .closest('li')
-        .as('join');
-      connectWorkbenchProducer(`@fetch-${port}`, '@join', port);
+      configureSelectedInputPort({ initial, port, source: source!, field: field!, value: value! });
     }
     cy.get('[data-operator="filter"]').should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
@@ -123,20 +179,7 @@ describe('Selected input transformations through real PostgreSQL', () => {
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => readPersistedDocument(initial.semanticPlan.sha256)).then((document) => {
       persisted = document;
-      const indexed = indexSubstraitRelations(decodeDvtSubstraitSemanticDocument(document));
-      if (!indexed.ok) throw indexed.error;
-      const join = [...indexed.index.relations.values()].find(
-        (entry) => entry.relation.relType.case === 'join'
-      )!;
-      expect(join.binding.relationId, 'original LEFT JOIN identity').to.equal(joinId);
-      for (const input of join.inputs) {
-        let relation = indexed.index.relations.get(input)!;
-        for (const operator of ['fetch', 'sort', 'filter', 'read']) {
-          expect(relation.relation.relType.case).to.equal(operator);
-          if (relation.inputs.length > 0)
-            relation = indexed.index.relations.get(relation.inputs[0]!)!;
-        }
-      }
+      assertSelectedInputComposition(document, joinId);
     });
     cy.then(() => expect(samples).to.equal(0));
     cy.get('[data-slot="canvas-model-tab-close"]').click();

@@ -77,7 +77,11 @@ describe('Progressive SQL verticals', () => {
         cy.get('[data-slot="canvas-model-tab-close"]').click();
         visitSemanticCanvas();
         openWorkbenchModel(modelId);
-        stageWorkbenchUnary('aggregate', '[data-operator="project"]', true);
+        stageWorkbenchUnary({
+          operation: 'aggregate',
+          producer: '[data-operator="project"]',
+          disconnectOutput: true,
+        });
         cy.get('[data-slot="canvas-staged-operation-inspector"] form').within(() => {
           cy.contains('label', 'GROUP BY').find('select').select('region');
           cy.contains('label', 'Aggregate function').find('select').select('SUM');
@@ -86,7 +90,7 @@ describe('Progressive SQL verticals', () => {
           cy.get('button[type="submit"]').click();
         });
         cy.get('[data-operator="aggregate"]').click();
-        stageWorkbenchUnary('window', '[data-operator="aggregate"]');
+        stageWorkbenchUnary({ operation: 'window', producer: '[data-operator="aggregate"]' });
         cy.get('[data-slot="canvas-relational-tree-node"][data-presentation="window"]')
           .invoke('attr', 'data-relation-id')
           .should('be.a', 'string')
@@ -97,10 +101,10 @@ describe('Progressive SQL verticals', () => {
           cy.get('button[type="submit"]').click();
         });
         cy.get<string>('@windowRelationId').then((relationId) => {
-          stageWorkbenchUnary(
-            'sort',
-            `[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`
-          );
+          stageWorkbenchUnary({
+            operation: 'sort',
+            producer: `[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`,
+          });
         });
         cy.get('[data-slot="canvas-staged-operation-inspector"] form').within(() => {
           cy.get('select').first().select('revenue');
@@ -108,17 +112,17 @@ describe('Progressive SQL verticals', () => {
           cy.get('button[type="submit"]').click();
         });
         cy.get('[data-operator="sort"]').click();
-        stageWorkbenchUnary('fetch', '[data-operator="sort"]');
+        stageWorkbenchUnary({ operation: 'fetch', producer: '[data-operator="sort"]' });
         cy.contains('[data-slot="canvas-staged-operation-inspector"] label', 'LIMIT')
           .find('input')
           .type('1');
         cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
         cy.get('[data-operator="fetch"]').closest('li').as('fetchOutput');
-        connectWorkbenchProducer(
-          '@fetchOutput',
-          '[data-slot="canvas-relational-output-input-port"]',
-          null
-        );
+        connectWorkbenchProducer({
+          producer: '@fetchOutput',
+          consumer: '[data-slot="canvas-relational-output-input-port"]',
+          port: null,
+        });
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
         cy.get('[data-pending-operation="true"]').should('not.exist');
         cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');

@@ -62,24 +62,28 @@ describe('measure-pipeline', () => {
         cy.get('[data-pending-operation="true"]').as('union');
         for (const port of [0, 1]) {
           cy.get('[data-operator="read"]').eq(port).closest('li').as('input');
-          connectWorkbenchProducer('@input', '@union', port);
+          connectWorkbenchProducer({ producer: '@input', consumer: '@union', port: port });
         }
       }
-      stageWorkbenchUnary('aggregate', `[data-operator="${union ? 'set' : 'join'}"]`, !union);
+      stageWorkbenchUnary({
+        operation: 'aggregate',
+        producer: `[data-operator="${union ? 'set' : 'join'}"]`,
+        disconnectOutput: !union,
+      });
       cy.get(form).find('input').clear().type('customer_count');
       cy.get(form).find('button[type="submit"]').click();
       cy.get('[data-operator="aggregate"]').should('have.length', 1);
-      stageWorkbenchUnary('window', '[data-operator="aggregate"]');
+      stageWorkbenchUnary({ operation: 'window', producer: '[data-operator="aggregate"]' });
       cy.get(form).contains('label', 'ORDER BY').find('select').select('customer_count');
       cy.get(form).find('input').clear().type('ranked_customer');
       cy.get(form).find('button[type="submit"]').click();
       cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
       cy.get('[data-presentation="window"]').closest('li').as('window');
-      connectWorkbenchProducer(
-        '@window',
-        '[data-slot="canvas-relational-output-input-port"]',
-        null
-      );
+      connectWorkbenchProducer({
+        producer: '@window',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       let savedRootId = '';
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() => {
@@ -150,11 +154,11 @@ describe('measure-pipeline', () => {
       visitWorkbenchCanvas();
       openWorkbenchModel(model);
       for (const [position, step] of steps.entries()) {
-        stageWorkbenchUnary(
-          step,
-          position === 0 ? '[data-operator="project"]' : '[data-operator="aggregate"]',
-          position === 0
-        );
+        stageWorkbenchUnary({
+          operation: step,
+          producer: position === 0 ? '[data-operator="project"]' : '[data-operator="aggregate"]',
+          disconnectOutput: position === 0,
+        });
         cy.get(form).within(() => {
           cy.contains('label', step === 'aggregate' ? 'GROUP BY' : 'ORDER BY')
             .find('select')
@@ -173,11 +177,11 @@ describe('measure-pipeline', () => {
       )
         .closest('li')
         .as('measure');
-      connectWorkbenchProducer(
-        '@measure',
-        '[data-slot="canvas-relational-output-input-port"]',
-        null
-      );
+      connectWorkbenchProducer({
+        producer: '@measure',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       let fields: readonly string[];
       let relations: readonly string[];

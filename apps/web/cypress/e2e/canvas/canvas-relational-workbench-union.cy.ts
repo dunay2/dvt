@@ -176,10 +176,14 @@ describe('Workbench UNION', () => {
       cy.then(() => {
         ids.forEach((id, port) => {
           cy.get(relationCard(id)).closest('li').as('producer');
-          connectWorkbenchProducer('@producer', '@union', port);
+          connectWorkbenchProducer({ producer: '@producer', consumer: '@union', port: port });
         });
       });
-      connectWorkbenchProducer('@union', '[data-slot="canvas-relational-output-input-port"]', null);
+      connectWorkbenchProducer({
+        producer: '@union',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       applyUnion();
       cy.then(() => {
         first = savedUnion();
@@ -217,7 +221,7 @@ describe('Workbench UNION', () => {
           .find('[data-slot="canvas-relational-input-port"]')
           .should('have.length', 4);
         cy.get(relationCard(id)).closest('li').as('producer');
-        connectWorkbenchProducer('@producer', '@union', 3);
+        connectWorkbenchProducer({ producer: '@producer', consumer: '@union', port: 3 });
       });
       applyUnion();
       cy.then(() => {

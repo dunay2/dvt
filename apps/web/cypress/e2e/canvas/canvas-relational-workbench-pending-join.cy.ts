@@ -67,8 +67,8 @@ describe('Workbench pending binary operations', () => {
     }
     workbenchOperation('inner_join').click();
     cy.get('[data-pending-operation="true"]').last().as('join', { type: 'static' });
-    connectWorkbenchProducer('@producer0', '@join', 0);
-    connectWorkbenchProducer('@producer1', '@join', 1);
+    connectWorkbenchProducer({ producer: '@producer0', consumer: '@join', port: 0 });
+    connectWorkbenchProducer({ producer: '@producer1', consumer: '@join', port: 1 });
     cy.get('[data-slot="canvas-staged-operation-inspector"]').should('contain.text', 'INNER JOIN');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-pending-operation="true"]').should('not.exist');
@@ -88,9 +88,13 @@ describe('Workbench pending binary operations', () => {
       }
       workbenchOperation('inner_join').click();
       cy.get(join).closest('li').as('join', { type: 'static' });
-      connectWorkbenchProducer('@original0', '@join', 0);
-      connectWorkbenchProducer('@original1', '@join', 1);
-      connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      connectWorkbenchProducer({ producer: '@original0', consumer: '@join', port: 0 });
+      connectWorkbenchProducer({ producer: '@original1', consumer: '@join', port: 1 });
+      connectWorkbenchProducer({
+        producer: '@join',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       cy.get('@original1').find(read).focus().should('be.focused');
       for (let step = 0; step < 4; step++) {
         // The shared adapter proves trusted delivery to this frame before moving the next step.
@@ -102,7 +106,7 @@ describe('Workbench pending binary operations', () => {
       cy.get('[data-slot="canvas-card-removal-confirm"]').click();
       dragWorkbenchSource('orders');
       cy.contains(read, 'orders').closest('li').as('replacement', { type: 'static' });
-      connectWorkbenchProducer('@replacement', '@join', 1);
+      connectWorkbenchProducer({ producer: '@replacement', consumer: '@join', port: 1 });
       cy.get('[data-slot="canvas-staged-operation-reconfigure"]').should('be.enabled');
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() =>
@@ -213,10 +217,10 @@ describe('Workbench pending binary operations', () => {
       .as('producer', { type: 'static' });
     workbenchOperation('field_transform').click();
     cy.get('[data-pending-operation="true"]').last().as('transform', { type: 'static' });
-    connectWorkbenchProducer('@producer', '@transform');
+    connectWorkbenchProducer({ producer: '@producer', consumer: '@transform' });
     workbenchOperation('filter').click();
     cy.get('[data-pending-operation="true"]').last().as('filter', { type: 'static' });
-    connectWorkbenchProducer('@transform', '@filter');
+    connectWorkbenchProducer({ producer: '@transform', consumer: '@filter' });
     cy.get('[data-slot="canvas-relational-operator-form"] input').type('active');
     cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
     cy.get('@filter').find('[data-slot="canvas-relational-tree-node"]').click();
@@ -286,13 +290,13 @@ describe('Workbench pending binary operations', () => {
         cy.get('[data-pending-operation="true"]')
           .last()
           .as('transform' + port, { type: 'static' });
-        connectWorkbenchProducer('@producer' + port, '@transform' + port);
+        connectWorkbenchProducer({ producer: '@producer' + port, consumer: '@transform' + port });
         cy.get('[data-slot="canvas-transform-inspector"]').should('be.visible');
       }
       workbenchOperation(operation).click();
       cy.get('[data-pending-operation="true"]').last().as('binary', { type: 'static' });
-      connectWorkbenchProducer('@transform0', '@binary', 0);
-      connectWorkbenchProducer('@transform1', '@binary', 1);
+      connectWorkbenchProducer({ producer: '@transform0', consumer: '@binary', port: 0 });
+      connectWorkbenchProducer({ producer: '@transform1', consumer: '@binary', port: 1 });
       cy.get('[data-slot="canvas-staged-operation-inspector"]')
         .should('be.visible')
         .find('[data-slot="canvas-operation-output-tab"]')
@@ -300,11 +304,11 @@ describe('Workbench pending binary operations', () => {
       cy.get(
         '[data-slot="canvas-staged-operation-inspector"] [data-slot="relation-output-toggle"]'
       ).should('have.length.greaterThan', 0);
-      connectWorkbenchProducer(
-        '@binary',
-        '[data-slot="canvas-relational-output-input-port"]',
-        null
-      );
+      connectWorkbenchProducer({
+        producer: '@binary',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
       cy.get('[data-pending-operation="true"]').should('not.exist');
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(

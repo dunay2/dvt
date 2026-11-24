@@ -110,14 +110,18 @@ describe('model-session', () => {
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    stageWorkbenchUnary({
+      operation: 'aggregate',
+      producer: '[data-operator="join"]',
+      disconnectOutput: true,
+    });
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-operator="aggregate"]').closest('li').as('aggregate');
-    connectWorkbenchProducer(
-      '@aggregate',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '@aggregate',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -168,14 +172,18 @@ describe('model-session', () => {
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    stageWorkbenchUnary({
+      operation: 'aggregate',
+      producer: '[data-operator="join"]',
+      disconnectOutput: true,
+    });
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-operator="aggregate"]').closest('li').as('aggregate');
-    connectWorkbenchProducer(
-      '@aggregate',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '@aggregate',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();

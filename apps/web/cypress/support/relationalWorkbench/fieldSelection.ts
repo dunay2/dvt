@@ -103,11 +103,11 @@ export function prepareFieldSelection(sourceCount: 2 | 3): void {
       .closest('li')
       .as('shipments', { type: 'static' });
     joinWorkbenchProducers('@existingJoin', '@shipments', 'appendedJoin');
-    connectWorkbenchProducer(
-      '@appendedJoin',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '@appendedJoin',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-operator="read"]').should('have.length', 3);
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     cy.wrap(null, { timeout: 20_000 }).should(() =>

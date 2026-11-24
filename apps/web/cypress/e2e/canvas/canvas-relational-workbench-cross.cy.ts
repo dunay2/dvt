@@ -37,8 +37,16 @@ describe('Workbench cross', () => {
       if (index === 0) continue;
       workbenchOperation('cross_join').click();
       cy.get('[data-pending-operation="true"]').last().as(`cross${index}`, { type: 'static' });
-      connectWorkbenchProducer(index === 1 ? '@source0' : '@cross1', `@cross${index}`, 0);
-      connectWorkbenchProducer(`@source${index}`, `@cross${index}`, 1);
+      connectWorkbenchProducer({
+        producer: index === 1 ? '@source0' : '@cross1',
+        consumer: `@cross${index}`,
+        port: 0,
+      });
+      connectWorkbenchProducer({
+        producer: `@source${index}`,
+        consumer: `@cross${index}`,
+        port: 1,
+      });
     }
     cy.get('[data-slot="canvas-relational-cross-warning"]').should('be.visible');
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('not.exist');
@@ -46,7 +54,11 @@ describe('Workbench cross', () => {
       'have.length',
       2
     );
-    connectWorkbenchProducer('@cross2', '[data-slot="canvas-relational-output-input-port"]', null);
+    connectWorkbenchProducer({
+      producer: '@cross2',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
 
     cy.wrap(null).should(() => {

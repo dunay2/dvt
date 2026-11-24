@@ -85,14 +85,18 @@ describe('Canvas Source filter boundary', () => {
 
     openWorkbenchModel('model-orders');
     dragWorkbenchSource('Orders source');
-    stageWorkbenchUnary('filter', '[data-operator="read"]');
+    stageWorkbenchUnary({ operation: 'filter', producer: '[data-operator="read"]' });
     cy.get(form).within(() => {
       cy.get('select').first().select('customer');
       cy.get('input').type('Ada');
       cy.get('button[type="submit"]').click();
     });
     cy.get('[data-operator="filter"]').closest('li').as('filter');
-    connectWorkbenchProducer('@filter', '[data-slot="canvas-relational-output-input-port"]', null);
+    connectWorkbenchProducer({
+      producer: '@filter',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 

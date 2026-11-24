@@ -45,17 +45,20 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
             'data-connected'
           );
         }
-        connectWorkbenchProducer(index === 0 ? '@producer' : '@unary0', `@unary${index}`);
+        connectWorkbenchProducer({
+          producer: index === 0 ? '@producer' : '@unary0',
+          consumer: `@unary${index}`,
+        });
         const editor = '[data-slot="canvas-staged-operation-inspector"]';
         if (operation === 'fetch')
           cy.contains(`${editor} label`, 'LIMIT').find('input').clear().type('100');
         cy.get(`${editor} button[type="submit"]`).click();
       }
-      connectWorkbenchProducer(
-        '@unary1',
-        '[data-slot="canvas-relational-output-input-port"]',
-        null
-      );
+      connectWorkbenchProducer({
+        producer: '@unary1',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() => expect(semanticWrites('join-transform')).not.to.have.length(0));
       cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');

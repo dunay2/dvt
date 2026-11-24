@@ -34,53 +34,272 @@ function openModel(): void {
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
 }
 
+function observeTrustedFieldDragLifecycle(window: Window, lifecycle: string[]): void {
+  for (const type of ['dragstart', 'pointercancel', 'dragover', 'drop', 'dragend']) {
+    window.document.addEventListener(
+      type,
+      (event) => {
+        if (type !== 'dragover' || !lifecycle.at(-1)?.startsWith('dragover'))
+          lifecycle.push(`${type}:${event.isTrusted}`);
+      },
+      true
+    );
+  }
+}
+
+function dropTransformOutputField({
+  input,
+  onFieldName,
+}: {
+  input: string;
+  onFieldName: (name: string) => void;
+}): void {
+  cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+  cy.get('[data-operator="join"]')
+    .closest('li')
+    .find('[data-field-selection="output"]')
+    .last()
+    .as('connectionField')
+    .then(($field) => {
+      onFieldName($field.attr('title')!);
+      dragWorkbenchField('@connectionField', input);
+    });
+}
+
+function assertReopenedTransformOutput(
+  $row: JQuery<HTMLElement>,
+  { fieldId, fieldName }: { fieldId: string; fieldName: string }
+): void {
+  expect($row[0]!.dataset.fieldId, 'persisted Output identity').to.equal(fieldId);
+  expect($row[0]!.querySelector('span')?.textContent, 'persisted Output name').to.equal(fieldName);
+}
+
+function reopenTransformDependencyAndRejectCycle({
+  form,
+  formulaInput,
+  formulaText,
+  modelId,
+  writes,
+  readState,
+}: {
+  form: string;
+  formulaInput: string;
+  formulaText: string;
+  modelId: string;
+  writes: () => ReturnType<typeof getE2eApiCalls>;
+  readState: () => { before: number; relationId: string; savedBody: unknown };
+}): void {
+  revisitWorkbenchCanvas();
+  openWorkbenchModel(modelId);
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.get(card)
+    .should('have.length', 1)
+    .should(($card) => expect($card.attr('data-relation-id')).to.equal(readState().relationId))
+    .click();
+  editWorkbenchInspector(inspector);
+  cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^B$/)
+    .closest('[data-slot="canvas-derived-output"]')
+    .find('button')
+    .click();
+  cy.get(formulaText).should('contain.text', 'UPPER(A)');
+  cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
+  cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^A$/)
+    .closest('[data-slot="canvas-derived-output"]')
+    .find('button')
+    .click();
+  cy.get(formulaText).should('contain.text', "'updated'");
+  cy.get(formulaInput).type('{selectall}{backspace}', { force: true });
+  cy.get(formulaInput).type('UPPER(B)', { force: true });
+  cy.get(formulaText).should('have.text', 'UPPER(B)');
+  cy.get(form).find('button[type="submit"]').should('be.enabled').click();
+  cy.get(form)
+    .find('[role="alert"]')
+    .should('contain.text', 'cycle')
+    .and('contain.text', 'A')
+    .and('contain.text', 'B');
+  cy.get(form).find('input[name="alias"]').should('have.value', 'A');
+  cy.get(formulaText).should('contain.text', 'UPPER(B)');
+  cy.get(card).should('have.length', 1);
+  cy.then(() => {
+    expect(writes().length, 'cycle rejection does not save').to.equal(readState().before + 3);
+    expect(writes().at(-1)!.body).to.deep.equal(readState().savedBody);
+  });
+  cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
+  cy.get(form).should('not.exist');
+  cy.then(() => {
+    expect(writes().length, 'discarding the rejected draft does not save').to.equal(
+      readState().before + 3
+    );
+    expect(writes().at(-1)!.body).to.deep.equal(readState().savedBody);
+  });
+}
+
+async function assertSavedTransformDependencyDocument(
+  savedBody: unknown,
+  {
+    modelId,
+    relationId,
+    retainedFieldIds,
+    outputIds,
+  }: {
+    modelId: string;
+    relationId: string;
+    retainedFieldIds: string[];
+    outputIds: ReadonlyMap<string, string>;
+  }
+): Promise<void> {
+  const { draft } = WorkspaceGraphDraftSaveRequestSchema.parse(savedBody);
+  const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+    draft.nodes.find((node) => node.id === modelId)?.metadata?.[
+      DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY
+    ]
+  );
+  const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+  const indexed = indexSubstraitRelations(document);
+  if (!indexed.ok) throw indexed.error;
+  expect(indexed.index.rootId).to.equal(relationId);
+  const dependencies = readCanvasTransformDependencyModel(
+    indexed.index.relations.get(relationId)!,
+    (id) => indexed.index.relations.get(id)!
+  );
+  expect(dependencies.definitions).to.have.length(retainedFieldIds.length + 2);
+  expect(dependencies.root.fields.map((field) => field.fieldId)).to.include.members(
+    retainedFieldIds
+  );
+  const a = dependencies.definitions.find((definition) => definition.output?.displayName === 'A')!;
+  const b = dependencies.definitions.find((definition) => definition.output?.displayName === 'B')!;
+  expect(a.output, 'retained A output').not.to.equal(undefined);
+  expect(b.output, 'retained B output').not.to.equal(undefined);
+  expect(a.output!.fieldId).to.equal(outputIds.get('A'));
+  expect(b.output!.fieldId).to.equal(outputIds.get('B'));
+  expect(transformExpressionDependencies(b.expression, b.inputIds)).to.deep.equal([a.id]);
+  const projected = await projectSubstraitToPostgresSql(document);
+  expect(projected.sql).to.include("'updated'").and.not.include("'original'");
+  expect(projected.sql).to.match(/\bupper\s*\(/i);
+}
+
+function editTransformProducerFormula({
+  form,
+  formulaInput,
+  formulaText,
+  writes,
+  readBefore,
+}: {
+  form: string;
+  formulaInput: string;
+  formulaText: string;
+  writes: () => ReturnType<typeof getE2eApiCalls>;
+  readBefore: () => number;
+}): void {
+  cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^A$/)
+    .closest('[data-slot="canvas-derived-output"]')
+    .find('button')
+    .click();
+  cy.get(formulaInput).type('{selectall}{backspace}', { force: true });
+  cy.get(formulaInput).type("'updated'", { force: true });
+  cy.get(formulaText).should('have.text', "'updated'");
+  cy.get(form).find('button[type="submit"]').should('be.enabled').click();
+  cy.get(form).should('not.exist');
+  cy.wrap(null).should(() =>
+    expect(writes().length, 'one direct save for the producer edit').to.equal(readBefore() + 3)
+  );
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+}
+
+function authorDependentTransformFormulas({
+  form,
+  formulaInput,
+  formulaText,
+  writes,
+  readBefore,
+  outputIds,
+}: {
+  form: string;
+  formulaInput: string;
+  formulaText: string;
+  writes: () => ReturnType<typeof getE2eApiCalls>;
+  readBefore: () => number;
+  outputIds: Map<string, string>;
+}): void {
+  for (const [ordinal, [alias, formula]] of (
+    [
+      ['A', "'original'"],
+      ['B', 'UPPER(A)'],
+    ] as const
+  ).entries()) {
+    cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
+    cy.get(form).within(() => {
+      cy.get('input[name="alias"]').type(alias);
+      if (alias === 'B') {
+        cy.get('[data-slot="formula-calculated-fields"]').contains('span', /^A$/).should('exist');
+        cy.get('[data-slot="formula-input-fields"]')
+          .find('span')
+          .should(($names) => {
+            expect([...$names].map((name) => name.textContent)).not.to.include('A');
+          });
+      }
+      // Monaco owns this covered keyboard target; the rendered layer proves the draft.
+      cy.get(formulaInput).type(formula, { force: true });
+      cy.get(formulaText).should('contain.text', formula);
+      cy.get('button[type="submit"]').should('be.enabled').click();
+    });
+    cy.get(form).should('not.exist');
+    cy.wrap(null).should(() =>
+      expect(writes().length, 'one direct save per accepted formula').to.equal(
+        readBefore() + ordinal + 1
+      )
+    );
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, new RegExp(`^${alias}$`))
+      .closest('[data-slot="canvas-derived-output"]')
+      .invoke('attr', 'data-field-id')
+      .then((id) => {
+        outputIds.set(alias, id!);
+      });
+  }
+}
+
+function openEmptyTransformFieldDraft(): void {
+  cy.viewport(1280, 720);
+  stubWorkbenchScenario('saved-join');
+  visitWorkbenchCanvas();
+  openModel();
+  cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+  cy.get('[data-operation="field_transform"]').click();
+  cy.get('[data-operator="join"]')
+    .closest('li')
+    .find('[data-slot="canvas-relational-node-expand"]')
+    .click();
+}
+
 describe('Semantic dataset Transform', () => {
   it('connects exactly one dragged Output field into an empty Transform and keeps it after reopen', () => {
-    cy.viewport(1280, 720);
-    stubWorkbenchScenario('saved-join');
-    visitWorkbenchCanvas();
-    openModel();
-    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
-    cy.get('[data-operation="field_transform"]').click();
-    cy.get('[data-operator="join"]')
-      .closest('li')
-      .find('[data-slot="canvas-relational-node-expand"]')
-      .click();
+    openEmptyTransformFieldDraft();
     const input = '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]';
     let fieldName = '';
     let fieldId = '';
     const lifecycle: string[] = [];
     cy.window().then((window) => {
-      for (const type of ['dragstart', 'pointercancel', 'dragover', 'drop', 'dragend']) {
-        window.document.addEventListener(
-          type,
-          (event) => {
-            if (type !== 'dragover' || !lifecycle.at(-1)?.startsWith('dragover'))
-              lifecycle.push(`${type}:${event.isTrusted}`);
-          },
-          true
-        );
-      }
+      observeTrustedFieldDragLifecycle(window, lifecycle);
     });
-    const dropField = (): void => {
-      cy.get('[data-slot="canvas-relational-tree-fit"]').click();
-      cy.get('[data-operator="join"]')
-        .closest('li')
-        .find('[data-field-selection="output"]')
-        .last()
-        .as('connectionField')
-        .then(($field) => {
-          fieldName = $field.attr('title')!;
-          dragWorkbenchField('@connectionField', input);
-        });
-    };
+
     // A producer already consumed by terminal Output cannot silently acquire fan-out.
-    dropField();
+    dropTransformOutputField({
+      input,
+      onFieldName: (name) => {
+        fieldName = name;
+      },
+    });
     cy.then(() => expect(lifecycle, 'trusted browser drag lifecycle').to.include('drop:true'));
     cy.get('[data-slot="canvas-field-selection-error"]').should('be.visible');
     cy.get(input).should('not.have.attr', 'data-connected');
     cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
-    dropField();
+    dropTransformOutputField({
+      input,
+      onFieldName: (name) => {
+        fieldName = name;
+      },
+    });
     cy.get(input).should('have.attr', 'data-connected', 'true');
     cy.get('[data-slot="canvas-field-selection-error"]').should('not.exist');
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
@@ -95,11 +314,11 @@ describe('Semantic dataset Transform', () => {
       .then(($row) => {
         fieldId = $row[0]!.dataset.fieldId!;
       });
-    connectWorkbenchProducer(
-      '[data-pending-operation="true"]',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '[data-pending-operation="true"]',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     let writes = 0;
     cy.then(() => {
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -117,10 +336,7 @@ describe('Semantic dataset Transform', () => {
       .find('[data-slot="relation-output-field"]')
       .should('have.length', 1)
       .and(($row) => {
-        expect($row[0]!.dataset.fieldId, 'persisted Output identity').to.equal(fieldId);
-        expect($row[0]!.querySelector('span')?.textContent, 'persisted Output name').to.equal(
-          fieldName
-        );
+        assertReopenedTransformOutput($row, { fieldId, fieldName });
       });
     cy.get(inspector).find(included).should('not.exist');
     cy.screenshot('transform-single-field-connection-reopened');
@@ -165,129 +381,38 @@ describe('Semantic dataset Transform', () => {
       .then(($outputs) => {
         retainedFieldIds = [...$outputs].map((output) => output.dataset.fieldId!);
       });
-    for (const [ordinal, [alias, formula]] of (
-      [
-        ['A', "'original'"],
-        ['B', 'UPPER(A)'],
-      ] as const
-    ).entries()) {
-      cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
-      cy.get(form).within(() => {
-        cy.get('input[name="alias"]').type(alias);
-        if (alias === 'B') {
-          cy.get('[data-slot="formula-calculated-fields"]').contains('span', /^A$/).should('exist');
-          cy.get('[data-slot="formula-input-fields"]')
-            .find('span')
-            .should(($names) => {
-              expect([...$names].map((name) => name.textContent)).not.to.include('A');
-            });
-        }
-        // Monaco owns this covered keyboard target; the rendered layer proves the draft.
-        cy.get(formulaInput).type(formula, { force: true });
-        cy.get(formulaText).should('contain.text', formula);
-        cy.get('button[type="submit"]').should('be.enabled').click();
-      });
-      cy.get(form).should('not.exist');
-      cy.wrap(null).should(() =>
-        expect(writes().length, 'one direct save per accepted formula').to.equal(
-          before + ordinal + 1
-        )
-      );
-      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
-      cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, new RegExp(`^${alias}$`))
-        .closest('[data-slot="canvas-derived-output"]')
-        .invoke('attr', 'data-field-id')
-        .then((id) => {
-          outputIds.set(alias, id!);
-        });
-    }
-    cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^A$/)
-      .closest('[data-slot="canvas-derived-output"]')
-      .find('button')
-      .click();
-    cy.get(formulaInput).type('{selectall}{backspace}', { force: true });
-    cy.get(formulaInput).type("'updated'", { force: true });
-    cy.get(formulaText).should('have.text', "'updated'");
-    cy.get(form).find('button[type="submit"]').should('be.enabled').click();
-    cy.get(form).should('not.exist');
-    cy.wrap(null).should(() =>
-      expect(writes().length, 'one direct save for the producer edit').to.equal(before + 3)
-    );
-    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    authorDependentTransformFormulas({
+      form,
+      formulaInput,
+      formulaText,
+      writes,
+      readBefore: () => before,
+      outputIds,
+    });
+    editTransformProducerFormula({
+      form,
+      formulaInput,
+      formulaText,
+      writes,
+      readBefore: () => before,
+    });
     cy.then(async () => {
       expect(writes().length, 'three accepted formula commands').to.equal(before + 3);
       savedBody = writes().at(-1)!.body;
-      const { draft } = WorkspaceGraphDraftSaveRequestSchema.parse(savedBody);
-      const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
-        draft.nodes.find((node) => node.id === modelId)?.metadata?.[
-          DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY
-        ]
-      );
-      const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
-      const indexed = indexSubstraitRelations(document);
-      if (!indexed.ok) throw indexed.error;
-      expect(indexed.index.rootId).to.equal(relationId);
-      const dependencies = readCanvasTransformDependencyModel(
-        indexed.index.relations.get(relationId)!,
-        (id) => indexed.index.relations.get(id)!
-      );
-      expect(dependencies.definitions).to.have.length(retainedFieldIds.length + 2);
-      expect(dependencies.root.fields.map((field) => field.fieldId)).to.include.members(
-        retainedFieldIds
-      );
-      const a = dependencies.definitions.find(
-        (definition) => definition.output?.displayName === 'A'
-      )!;
-      const b = dependencies.definitions.find(
-        (definition) => definition.output?.displayName === 'B'
-      )!;
-      expect(a.output?.fieldId).to.equal(outputIds.get('A'));
-      expect(b.output?.fieldId).to.equal(outputIds.get('B'));
-      expect(transformExpressionDependencies(b.expression, b.inputIds)).to.deep.equal([a.id]);
-      const projected = await projectSubstraitToPostgresSql(document);
-      expect(projected.sql).to.include("'updated'").and.not.include("'original'");
-      expect(projected.sql).to.match(/\bupper\s*\(/i);
+      await assertSavedTransformDependencyDocument(savedBody, {
+        modelId,
+        relationId,
+        retainedFieldIds,
+        outputIds,
+      });
     });
-    revisitWorkbenchCanvas();
-    openWorkbenchModel(modelId);
-    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
-    cy.get(card)
-      .should('have.length', 1)
-      .should(($card) => expect($card.attr('data-relation-id')).to.equal(relationId))
-      .click();
-    editWorkbenchInspector(inspector);
-    cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^B$/)
-      .closest('[data-slot="canvas-derived-output"]')
-      .find('button')
-      .click();
-    cy.get(formulaText).should('contain.text', 'UPPER(A)');
-    cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
-    cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^A$/)
-      .closest('[data-slot="canvas-derived-output"]')
-      .find('button')
-      .click();
-    cy.get(formulaText).should('contain.text', "'updated'");
-    cy.get(formulaInput).type('{selectall}{backspace}', { force: true });
-    cy.get(formulaInput).type('UPPER(B)', { force: true });
-    cy.get(formulaText).should('have.text', 'UPPER(B)');
-    cy.get(form).find('button[type="submit"]').should('be.enabled').click();
-    cy.get(form)
-      .find('[role="alert"]')
-      .should('contain.text', 'cycle')
-      .and('contain.text', 'A')
-      .and('contain.text', 'B');
-    cy.get(form).find('input[name="alias"]').should('have.value', 'A');
-    cy.get(formulaText).should('contain.text', 'UPPER(B)');
-    cy.get(card).should('have.length', 1);
-    cy.then(() => {
-      expect(writes().length, 'cycle rejection does not save').to.equal(before + 3);
-      expect(writes().at(-1)!.body).to.deep.equal(savedBody);
-    });
-    cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
-    cy.get(form).should('not.exist');
-    cy.then(() => {
-      expect(writes().length, 'discarding the rejected draft does not save').to.equal(before + 3);
-      expect(writes().at(-1)!.body).to.deep.equal(savedBody);
+    reopenTransformDependencyAndRejectCycle({
+      form,
+      formulaInput,
+      formulaText,
+      modelId,
+      writes,
+      readState: () => ({ before, relationId, savedBody }),
     });
   });
 });
