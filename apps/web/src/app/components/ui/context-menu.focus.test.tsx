@@ -22,8 +22,12 @@ beforeEach(() => {
   root = createRoot(container);
 });
 afterEach(() => {
-  act(() => root.unmount());
-  act(() => vi.runOnlyPendingTimers());
+  act(() => {
+    root.unmount();
+  });
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
   container.remove();
   vi.useRealTimers();
 });
@@ -59,18 +63,26 @@ function openMenu(
     opener.focus();
     fireEvent.contextMenu(opener, { button: 2, clientX: 8, clientY: 8 });
   });
-  act(() => vi.runOnlyPendingTimers());
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
   return opener;
 }
 
 it.each([false, true])('preserves the newer Popover after menu cleanup with modal=%s', (modal) => {
   const onClose = vi.fn();
   openMenu(modal, onClose);
-  act(() => fireEvent.click(screen.getByRole('menuitem', { name: 'Complete action' })));
-  act(() => fireEvent.click(screen.getByRole('button', { name: 'Inputs' })));
+  act(() => {
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Complete action' }));
+  });
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Inputs' }));
+  });
   const source = screen.getByRole('button', { name: 'Source choice' });
   expect(document.activeElement).toBe(source);
-  act(() => vi.runOnlyPendingTimers());
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
   expect(document.activeElement).toBe(source);
   expect(screen.getByRole('button', { name: 'Inputs' }).getAttribute('aria-expanded')).toBe('true');
   expect(onClose).toHaveBeenCalledOnce();
@@ -81,8 +93,12 @@ it.each([false, true])(
   (modal) => {
     const onClose = vi.fn();
     const opener = openMenu(modal, onClose);
-    act(() => fireEvent.click(screen.getByRole('menuitem', { name: 'Complete action' })));
-    act(() => vi.runOnlyPendingTimers());
+    act(() => {
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Complete action' }));
+    });
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
     expect(document.activeElement).toBe(opener);
     expect(onClose).toHaveBeenCalledOnce();
   }
@@ -91,8 +107,12 @@ it.each([false, true])(
 it('honors consumer cancellation and invokes its callback once', () => {
   const onClose = vi.fn((event: Event) => event.preventDefault());
   openMenu(false, onClose);
-  act(() => fireEvent.click(screen.getByRole('menuitem', { name: 'Complete action' })));
-  act(() => vi.runOnlyPendingTimers());
+  act(() => {
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Complete action' }));
+  });
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
   expect(document.activeElement).toBe(document.body);
   expect(onClose).toHaveBeenCalledOnce();
 });

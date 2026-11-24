@@ -57,13 +57,13 @@ it('publishes one history entry for mousedown and focus, including a fresh visit
   const { router, screen } = await open('?focus=a#run');
   const navigate = vi.spyOn(router, 'navigate');
   const result = screen.getByRole('tab', { name: 'Result' });
-  async function selectResult(): Promise<void> {
-    await act(() => {
+  function selectResult(): void {
+    act(() => {
       fireEvent.mouseDown(result, { button: 0, ctrlKey: false });
       fireEvent.focusIn(result);
     });
   }
-  await selectResult();
+  selectResult();
   expect(navigate).toHaveBeenCalledTimes(1);
   expect(router.state.location).toMatchObject({
     pathname: '/runs/run_A',
@@ -75,7 +75,7 @@ it('publishes one history entry for mousedown and focus, including a fresh visit
   expect(screen.getByRole('tab', { selected: true }).textContent).toBe('Summary');
   expect(router.state.location.search).toBe('?focus=a');
   navigate.mockClear();
-  await selectResult();
+  selectResult();
   expect(navigate).toHaveBeenCalledTimes(1);
   expect(screen.getByRole('tab', { selected: true }).textContent).toBe('Result');
   navigate.mockRestore();
