@@ -31,7 +31,7 @@ export const runDbtCommand: DbtCliCommandRunner = async (dbtBin, args, options) 
 };
 
 const executeDbtProcess: DbtCliCommandRunner = async (dbtBin, args, options) => {
-  const result = await execFileAsync(dbtBin, [...args], {
+  const execution = execFileAsync(dbtBin, [...args], {
     cwd: options.cwd,
     encoding: 'utf8',
     maxBuffer: DBT_CLI_MAX_BUFFER_BYTES,
@@ -39,10 +39,19 @@ const executeDbtProcess: DbtCliCommandRunner = async (dbtBin, args, options) => 
     ...(options.signal === undefined ? {} : { signal: options.signal }),
   });
 
-  return {
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
+  const closed = new Promise<void>((resolve) => {
+    execution.child.once('close', () => resolve());
+  });
+
+  try {
+    const result = await execution;
+    return {
+      stdout: result.stdout,
+      stderr: result.stderr,
+    };
+  } finally {
+    await closed;
+  }
 };
 
 export async function assertDbtCliAvailable(
