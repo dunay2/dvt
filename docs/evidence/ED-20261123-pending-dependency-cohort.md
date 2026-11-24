@@ -95,6 +95,16 @@ once per producer. It retains the browser planning step needed for provider
 preparation. This removes the duplicate, potentially unavailable graph query
 before dependency preparation without adding another CLI mode.
 
+The necessary contract-path repair also exposed excessive complexity in the
+existing CI scope module. Its public ports retain their identity and delegate
+pure manifest comparison and workflow output projection to cohesive modules.
+They introduce no path catalog, process or Git acquisition; the optional
+crypto-input scan remains lazy. A frozen-source comparison preserves all
+12,288 mode/path/package-flag results, including serialized field order, and
+400 valid or malformed manifest comparisons. The 13 existing focused suites
+pass all 184 tests. The three changed scope modules each receive score 10
+in the focused diagnostic; final committed-candidate review remains required.
+
 The local execution comparison uses the unchanged
 `PlanExecutionDecisionView.tsx` product source, with SHA-256
 `b51bd00860e24aedc4de98f05a9ab969a64884da568717c8ae677eefcac1a91c`,
@@ -211,14 +221,45 @@ migration keeps its existing lifecycle and SQL statement order.
 The requested quality boundary now requires score 10 for every numerically
 graded file in the complete integration cut. Removing regressions alone does
 not satisfy that boundary. The original cut contained 71 files below 10.
-The installed extension engine 1.0.80 currently reports 324 numeric scores,
-all 10, across 385 submitted paths: 368 received reviews, 44 reviews were
-ungraded and 17 inputs received no review response. This is a working-tree
-diagnostic against `11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`, before the
-remaining CI and ownership changes and final hook normalization. Final
-acceptance must repeat the complete review on the committed candidate;
-unsupported input is never assigned a fabricated score. No CodeScene rule,
-threshold, exclusion, lint rule or component-warning baseline is relaxed.
+The installed extension engine 1.0.80 reviewed the clean, hook-normalized
+commit `94ad0f508ede97bb11c2e8dfb9c7289a39b90fe0` against
+`11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`. All 506 changed paths were
+submitted: 380 received reviews and all 336 numeric scores equal 10. All
+125 comparable deltas are nonnegative. The other 44 reviews were ungraded
+and 126 inputs received no file review; none is assigned a fabricated score.
+The proof verifies the exact commit and every input hash before and after
+review. The reconciliation branch was advanced only after this proof passed.
+Later source changes require another complete committed-candidate review.
+No CodeScene rule, threshold, exclusion, lint rule or component-warning
+baseline is relaxed.
+
+The first complete post-hook review exposed nine remaining findings that
+the earlier working-tree diagnostic had not cleared. The correction separates
+cohesive test phases, shares actual protected HTTP fixture protocols, gives
+the retained Code-workspace lifecycle its own test registration, and unifies
+the existing preview-field and drawer-token presentation. The three files
+shown in the negative-impact report now each score 10. Cypress assertion and
+scenario preservation, the Canvas test assertions and actual package checks
+remain independent evidence; a quality score does not replace execution.
+
+The subsequent SRP review separates the former 910-line `PlanPreviewModal`
+into a 115-line dialog/action composition and cohesive field, overview,
+rejection, evidence and execution-step modules. A separate message type keeps
+its public type export, and a semantic CSS module owns the presentation rules.
+No additional session, subscription, command or acquisition is introduced.
+The existing two suites retain all 12 cases and 90 assertions; the CSS contract
+passes 14 cases and the actual Web stylesheet build passes. Typed lint and
+Web typecheck also pass.
+
+An isolated Chrome 158 comparison renders the actual component and existing
+deterministic fixture before and after extraction at desktop and mobile sizes,
+including dbt target, invalid plan and Spanish selection rejection. Both runs
+pass all five cases with zero API requests. Across 693 DOM nodes, content,
+ARIA and computed presentation properties match. Tab/Escape, disclosure,
+Start Run and close callbacks match. All five stable screenshots have identical
+PNG bytes and SHA-256 hashes. Raw rectangles sampled during opening animation
+differ by capture instant; those samples are not represented as stable geometry
+proof. The screenshots disable animation consistently in both runs.
 
 The eight refactored Cypress specifications retain all 684 assertions and 33
 scenarios. Named phases preserve their native gestures, queue order, controlled

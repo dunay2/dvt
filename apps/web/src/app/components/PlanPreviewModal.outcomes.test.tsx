@@ -9,6 +9,7 @@ import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanPreviewOutcome } from '../ports/plans';
 import { resolveCanvasViewCopy } from '../views/canvas/copy';
 import { PlanPreviewModal } from './PlanPreviewModal';
+import styles from './planPreview/PlanPreview.module.css';
 import {
   getApplicationLanguage,
   useApplicationLanguageStore,
@@ -165,9 +166,9 @@ describe('PlanPreviewModal rejected outcomes', () => {
     const longValues = modal?.querySelectorAll('[data-testid="plan-preview-long-value"]');
     const reason = longValues?.item((longValues?.length ?? 1) - 1);
 
-    expect(modal?.className).toContain('max-h-[92vh]');
-    expect(diagnosticBody?.className).toContain('overflow-y-auto');
-    expect(reason?.className).toContain('break-all');
+    expect(modal?.className).toContain(styles.dialogNarrow);
+    expect(diagnosticBody?.className).toContain(styles.rejectionScrollRegion);
+    expect(reason?.className).toContain(styles.fieldValueLong);
   });
 
   it('renders an invalid plan with exact identity and a disabled Start Run command', async () => {

@@ -8,6 +8,7 @@ import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../types/plans';
 import { resolveCanvasViewCopy } from '../views/canvas/copy';
 import { PlanPreviewModal } from './PlanPreviewModal';
+import styles from './planPreview/PlanPreview.module.css';
 
 const PLAN_PREVIEW_MESSAGES = resolveCanvasViewCopy('en');
 
@@ -119,7 +120,7 @@ describe('PlanPreviewModal', () => {
 
     const modal = document.querySelector('[data-testid="plan-preview-modal"]');
     expect(modal).toBeTruthy();
-    expect(modal?.className).toContain('sm:max-w-4xl');
+    expect(modal?.className).toContain(styles.dialogWide);
 
     const bodyText = document.body.textContent ?? '';
     expect(bodyText).toContain('Execution Preview identity');
@@ -143,7 +144,9 @@ describe('PlanPreviewModal', () => {
       document.querySelectorAll('[data-testid="plan-preview-long-value"]')
     );
     expect(longValues.length).toBeGreaterThan(0);
-    expect(longValues.every((value) => value.className.includes('break-all'))).toBe(true);
+    expect(longValues.every((value) => value.className.includes(styles.fieldValueLong!))).toBe(
+      true
+    );
     expect(document.querySelector('[data-slot="plan-preview-id"]')?.textContent).toBe(plan.planId);
     expect(document.querySelector('[data-slot="plan-preview-start-run"]')).not.toBeNull();
   });

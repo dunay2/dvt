@@ -49,9 +49,19 @@ contributions without adding sessions, subscriptions or side-effect handlers.
 Retain negative scope, revision, cancellation and exactly-once assertions.
 Compare CodeScene findings against the same integration base after hook
 formatting. An improved score alone does not establish behavioral acceptance.
-The requested final review requires 10 for every numerically graded file in the
-complete cut after hook formatting. Record unsupported or ungraded inputs
+The requested final review requires 10 for every numerically graded file and
+zero negative comparable deltas in the complete cut after hook formatting.
+Record unsupported or ungraded inputs
 explicitly; do not assign them an invented score or exclude a failing file.
+
+Separating Preview responsibilities and extracting CSS must retain the actual
+dialog lifecycle, DOM/ARIA, localized rejection, read-only plan details and
+single Start Run/close dispatch. Keep semantic modules within the existing
+Preview rail. Compare desktop/mobile and negative outcomes in an isolated
+browser using the real component and existing deterministic fixture, with no
+product API or workspace writes. Record computed styles, focus/actions and
+stable screenshots; sampling animation rectangles at different instants is
+not stable geometry evidence.
 
 A dependency-free Vitest plan can omit consumers which become discoverable
 after dependency preparation. Keep conservative Vitest producers until the
