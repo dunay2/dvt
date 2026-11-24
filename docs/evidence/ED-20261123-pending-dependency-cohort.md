@@ -32,6 +32,90 @@ evidence:
 
 # Pending dependency cohort reconciliation
 
+## Dependency impact and CI admission
+
+The [dependency-impact design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7138335463)
+and [measured CI alternatives](https://github.com/dunay2/dvt/issues/3951#issuecomment-7138809625)
+reuse `RunChangedSliceVerification`, `RouteChangedWebVitestSuites` and the
+existing browser selector. They do not introduce a parallel scope catalog.
+The accepted direction keeps the existing detector and producer groups:
+
+```mermaid
+flowchart LR
+  Diff[Complete changed paths] --> Detector[Existing scope detector]
+  Detector --> Browser[Canonical browser-only plan before dependency installation]
+  Browser --> Matrix[Required browser producers and conservative Vitest groups]
+  Matrix --> Setup[Existing package and dependency preparation]
+  Setup --> Witness[Native Vitest dependency witness]
+  Witness --> Partition[Disjoint existing execution groups]
+  Witness --> Conservative[Complete fallback when evidence is unavailable]
+  Partition --> Gates[Unchanged required result aggregation]
+  Conservative --> Gates
+```
+
+The native Vitest graph identifies consumers of changed TypeScript and TSX
+sources, and of CSS modules with a nonempty verified witness. Architecture
+tests remain complete. Global CSS, configuration, missing or deleted paths,
+unknown companions, unavailable evidence and empty witnesses retain complete
+fallback coverage. Browser-only planning never acquires the Vitest graph.
+Exact files are distributed among the existing groups without duplication;
+they are not collected in a single serial producer. Explicit complete local
+validation and required hosted browser proof retain their admission boundary.
+
+The provisional dependency-free plan cannot establish Vitest absence: in the
+measured source-import example it selected two groups before installation,
+while the installed witness selected five. The detector therefore retains
+conservative Vitest producers and only omits browser producers when the
+canonical browser plan proves their absence. Runtime, loader, timeout or
+output uncertainty must preserve the complete browser matrix. Full and
+root-sensitive runs retain the existing complete path.
+
+The historical resize and source-import runs opened 13 empty browser producers.
+Their installation steps consumed respectively 422 and 456 cumulative seconds.
+The initial canonical browser-only discovery took approximately 0.26 and 0.27
+seconds without packages; the implemented detector adapter took approximately
+0.50 seconds in both cases. These are work and startup
+measurements, not a claim that the hosted critical path has already improved.
+The proposed discovery runs inside the existing detector, avoiding another
+serial setup barrier. Hosted elapsed time and queue effects require a new run.
+
+The shared build-cache experiment was rejected: both warm variants already
+hit all five dependency builds and completed in approximately 1.2 seconds.
+The cache correctness change instead binds producer and restore identities to
+the effective Node version and runner architecture. The existing Turbo graph
+already limits an isolated front-end style change to Web and its real build
+dependencies; the new style-scope regression preserves that behavior and the
+broader contracts and lockfile cases. No coverage threshold or required check
+is lowered to obtain these results.
+
+The selector's 21 focused suites pass all 714 tests, its 19 changed source
+files pass typed lint and receive score 10, and its 32 preflight tests pass.
+The workflow now prepares Vitest dependencies and invokes the actual selector
+once per producer. It retains the browser planning step needed for provider
+preparation. This removes the duplicate, potentially unavailable graph query
+before dependency preparation without adding another CLI mode.
+
+The local execution comparison uses the unchanged
+`PlanExecutionDecisionView.tsx` product source, with SHA-256
+`b51bd00860e24aedc4de98f05a9ab969a64884da568717c8ae677eefcac1a91c`,
+and the normal four isolated workers. The coarse plan passed 413 presentation
+files and 2,453 tests in 871.58 seconds. The related plan passed 156 files and
+951 tests in 305.34 seconds, plus 5.57 seconds for selection. Both retain the
+complete architecture obligation: its 140 files and 1,174 tests passed in
+67.94 seconds as the common part of the comparison. The related plan adds
+200 relevant unit tests which the coarse presentation-only plan did not run;
+its 751 presentation tests cover the discovered consumers.
+
+The first alternative attempt coincided with the complete Engine suite and
+exceeded the existing 5,000-ms missing-producer scenario deadline. It is retained
+as a failed attempt. The unchanged scenario then passed alone in 2,364 ms,
+and the complete alternative passed without concurrent heavy test suites.
+No deadline, retry, worker count or scenario was changed. This sequential
+Windows experiment demonstrates local work reduction; it does not isolate
+every cache or background-load effect or establish hosted elapsed time.
+Final committed-tree package checks, prepush and current required hosted
+results remain separate acceptance evidence.
+
 The [admitted design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7104609423)
 reconciles dependency PRs #3992 through #3997 through the existing validation
 and runtime owners. Planning DB design `GH-3951-PENDING-DEPENDENCY-COHORT`
@@ -124,15 +208,17 @@ the owning action still flushes once, publishes and compiles in order, and
 retains written artifact paths when compilation or preview fails. Catalog
 migration keeps its existing lifecycle and SQL statement order.
 
-CodeScene's installed extension engine 1.0.80 reviewed the complete integration
-code diff after hook formatting at `119784d403b6c88f0f24df4f9740a382a05e2c5a`
-against `11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`. The initial candidate
-had 75 introduced or degraded findings across 54 files. The final review
-returned zero introduced or degraded findings, 71 fixed and 44 improved
-findings across 285 reviewed files, with no review failures. Two existing
-Planning DB authority scripts did not receive scores from that engine.
-Inherited unchanged or improved findings remain visible; no CodeScene rule,
-threshold or exclusion was changed.
+The requested quality boundary now requires score 10 for every numerically
+graded file in the complete integration cut. Removing regressions alone does
+not satisfy that boundary. The original cut contained 71 files below 10.
+The installed extension engine 1.0.80 currently reports 324 numeric scores,
+all 10, across 385 submitted paths: 368 received reviews, 44 reviews were
+ungraded and 17 inputs received no review response. This is a working-tree
+diagnostic against `11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`, before the
+remaining CI and ownership changes and final hook normalization. Final
+acceptance must repeat the complete review on the committed candidate;
+unsupported input is never assigned a fabricated score. No CodeScene rule,
+threshold, exclusion, lint rule or component-warning baseline is relaxed.
 
 The eight refactored Cypress specifications retain all 684 assertions and 33
 scenarios. Named phases preserve their native gestures, queue order, controlled

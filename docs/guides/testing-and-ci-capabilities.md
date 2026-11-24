@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-11-13
+last_reviewed: 2026-11-24
 ---
 
 # Testing and CI Capabilities
@@ -77,8 +77,11 @@ Warm-build note:
   `turbo run test` because CI sets `DVT_CI=1`, so package lifecycle hooks skip
   redundant dependency builds and Turbo must own the upstream build graph.
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
-  pnpm store and `node_modules`, so the existing root Turbo `build` path can
-  reuse prior task outputs across CI runs.
+  pnpm store, so the existing root Turbo `build` path can reuse prior task
+  outputs across CI runs. It does not restore `node_modules`. Turbo v3 writer
+  and restore identities include the effective installed Node version and runner
+  architecture, plus OS, workflow, job, variant and configuration hashes. Writer
+  keys remain unique per run and attempt.
 - `CI - Code Quality` and `Test Suite` do not expose `TURBO_TOKEN` or
   `TURBO_TEAM` at workflow scope. Remote Turbo cache credentials are scoped to
   trusted non-PR invocations of the governed Turbo build paths; pull-request
@@ -100,6 +103,43 @@ Warm-build note:
   workspace that exposes `build`, so the Turbo-backed
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
   skips for the current TypeScript package inventory.
+
+## Browser Producer Discovery
+
+The existing scope detector queries the canonical Web CLI with
+`--plan --phase=browser` in an isolated Node process, using its exact
+`process.execPath`. The runtime adapter loads repository-local TypeScript and
+JSON without installing packages. It projects admitted commands through the
+existing Cypress shard selector with the hosted count of six; it does not use
+the three-shard local `all` projection. Only existing source inputs admitted by the canonical impact frontier may narrow
+browser producers. This includes admitted module styles and preserves their
+canonical browser policy. The query retains the canonical complete Git acquisition: no-renames paths plus
+staged, working and untracked facts. Scope name-only facts cannot replace it
+because rename detection can hide a removed browser consumer. Global styles, configuration, mixed or
+unknown inputs retain the complete browser matrix. The six PR Vitest groups build dependencies and call the existing executor once
+afterward; they do not acquire a dependency graph through a pre-build plan.
+Their own installed selector admits zero or exact commands. They remain conservative because
+missing dependency evidence can add consumers after installation. Full, push and
+root-sensitive runs retain all original producers without loading the planner.
+
+Unsupported loader/runtime, discovery deadlines or malformed output retain the
+complete browser matrix with an explicit diagnostic. Unknown paths still face
+canonical admission during execution; discovery cannot convert an error into an
+empty successful plan. The new four/five-second discovery bounds do not change
+browser or test deadlines, provider infrastructure, authorization or gates.
+
+Three strategies were compared before this change: existing producer cache,
+shared build-only restoration, and removal of duplicate dependency builds.
+Shared restoration showed no benefit over an existing warm HIT, while
+`DVT_CI=1` already avoids redundant test dependency builds. The selected
+minimum adds no planner job or installed setup barrier. Integrated Node-only
+browser discovery measured 0.498/0.503 seconds for the recorded resize/source
+import cases; their thirteen unused browser producers accounted for 422/456
+accumulated setup seconds. These are job-seconds and local startup observations,
+not hosted wall-time predictions. Fresh hosted wall/queue evidence remains a CI
+acceptance obligation. Rationale, diagrams and operational receipts are linked
+from [#3951](https://github.com/dunay2/dvt/issues/3951#issuecomment-7139041702)
+and [its conservative runtime clarification](https://github.com/dunay2/dvt/issues/3951#issuecomment-7139157104).
 
 ## CI Tool Timing Evidence
 

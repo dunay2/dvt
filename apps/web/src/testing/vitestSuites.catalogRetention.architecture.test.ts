@@ -10,6 +10,7 @@ import {
 import { main } from '../../scripts/run-vitest-changed-suites';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:child_process')>()),
   execFileSync: vi.fn(),

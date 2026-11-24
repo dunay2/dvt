@@ -25,7 +25,8 @@ Resolve the Vitest family to one version, use the supported configuration and
 retain explicit coverage source inclusion. Prove the worker limits through the
 existing catalog contract and prove both a failing low-coverage example and a
 passing control with the installed runner. Preserve all coverage thresholds,
-test selection, authorization, native proof and required-result fan-in rules.
+authorization, native proof and required-result fan-in rules. Changes to test
+selection require dependency evidence and conservative fallback coverage.
 Resolve the existing Radix DismissableLayer and FocusScope consumers to one
 compatible patch version each. Retain the real animated-tooltip/Dialog Escape
 regression and its focus restoration assertion.
@@ -48,8 +49,25 @@ contributions without adding sessions, subscriptions or side-effect handlers.
 Retain negative scope, revision, cancellation and exactly-once assertions.
 Compare CodeScene findings against the same integration base after hook
 formatting. An improved score alone does not establish behavioral acceptance.
-The recorded review removes all introduced or degraded findings while retaining
-the inherited findings and the engine's two unscored authority scripts explicitly.
+The requested final review requires 10 for every numerically graded file in the
+complete cut after hook formatting. Record unsupported or ungraded inputs
+explicitly; do not assign them an invented score or exclude a failing file.
+
+A dependency-free Vitest plan can omit consumers which become discoverable
+after dependency preparation. Keep conservative Vitest producers until the
+native graph provides a complete witness. CSS modules may narrow only with a
+nonempty verified consumer graph; global CSS, missing evidence, unknown
+companions and configuration preserve complete fallback coverage. Retain all
+architecture tests and distribute selected files without duplicates across
+the existing execution groups. A graph error must never establish test absence.
+
+Avoid empty browser producers only through the existing canonical browser-only
+selector. Runtime incompatibility, timeout, loader failure, invalid output or
+unknown scope must preserve the complete browser matrix; full/root-sensitive
+runs keep their existing path. Do not add a serial dependency installation
+barrier to obtain the matrix. Measure both startup work and actual elapsed
+execution; reduced job counts alone do not prove a faster critical path.
+Keep cache identity bound to the effective Node version and runner architecture.
 
 A combined Model-tab proof can exceed its existing deadline under concurrent
 suite load even when unchanged sequential before/after timings are equivalent.

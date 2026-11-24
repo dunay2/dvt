@@ -16,6 +16,7 @@ import { resolveWebEvidenceEnvironment } from '../../scripts/web-evidence-enviro
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_GOVERNANCE_TEST_PATHS } from '../../vitest/paths';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   spawnSync: vi.fn(() => ({ status: 0 })),

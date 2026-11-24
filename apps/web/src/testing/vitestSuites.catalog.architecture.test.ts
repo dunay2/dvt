@@ -5,6 +5,13 @@
  * @consequence Phased CI keeps the same configuration and full Vitest route.
  * @version 1.0.0
  */
+/**
+ * Owned concern: validate Vitest catalog ownership and CI command wiring.
+ * @baseline GH-3540: the catalog owns suites, not browser execution.
+ * @decision GH-3583: preserve primary commands across separate evidence lifecycles.
+ * @consequence Phased CI keeps the same configuration and full Vitest route.
+ * @version 1.0.0
+ */
 import { promises as fsPromises, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { load } from 'js-yaml';
@@ -152,16 +159,6 @@ describe('web Vitest suite catalog', () => {
     ) as {
       scripts: Record<string, string>;
     };
-    const workflow = readFileSync(
-      resolve(webRoot, '..', '..', '.github/workflows/test.yml'),
-      'utf8'
-    );
-    const ciWorkflow = readFileSync(
-      resolve(webRoot, '..', '..', '.github/workflows/ci.yml'),
-      'utf8'
-    );
-    const ciNodeOptionsLine = `NODE_OPTIONS: ${WEB_VITEST_CI_NODE_OPTIONS}`;
-
     expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
     expect(packageJson.scripts['test:deps']).toBe(
       'node ../../scripts/skip-pretest-if-ci.cjs || node ../../scripts/build-workspace-runtime-deps.cjs @dvt/web --include-package @dvt/planner'
@@ -182,29 +179,6 @@ describe('web Vitest suite catalog', () => {
     );
     expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
-    // test-suite-outcome.test.mjs owns event routing and exactly-once hosted
-    // primary coverage; this catalog guard owns delegates, configs and heap parity.
-    const webJob = (
-      load(workflow) as {
-        jobs: Record<
-          string,
-          {
-            env?: Record<string, string>;
-            steps: Array<{
-              run?: string;
-              env?: Record<string, string>;
-            }>;
-          }
-        >;
-      }
-    ).jobs['web-frontend-tests'];
-    if (!webJob) throw new Error('Missing governed Web test job');
-    expect(webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
-    for (const step of webJob.steps.filter((step) => step.run)) {
-      expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
-    }
-    expect(ciWorkflow).toContain(ciNodeOptionsLine);
-
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
       expect(packageJson.scripts[`test:${suiteName}`]).toBe(
         `pnpm run test:deps && pnpm run test:${suiteName}:run`
@@ -232,6 +206,40 @@ describe('web Vitest suite catalog', () => {
     expect(readFileSync(resolve(webRoot, 'vitest.config.ts'), 'utf8')).toContain(
       "createWebVitestConfig('all')"
     );
+  });
+
+  it('keeps governed CI heap settings aligned with the suite catalog', () => {
+    const workflow = readFileSync(
+      resolve(webRoot, '..', '..', '.github/workflows/test.yml'),
+      'utf8'
+    );
+    const ciWorkflow = readFileSync(
+      resolve(webRoot, '..', '..', '.github/workflows/ci.yml'),
+      'utf8'
+    );
+    const ciNodeOptionsLine = `NODE_OPTIONS: ${WEB_VITEST_CI_NODE_OPTIONS}`;
+    // test-suite-outcome.test.mjs owns event routing and exactly-once hosted
+    // primary coverage; this catalog guard owns delegates, configs and heap parity.
+    const webJob = (
+      load(workflow) as {
+        jobs: Record<
+          string,
+          {
+            env?: Record<string, string>;
+            steps: Array<{
+              run?: string;
+              env?: Record<string, string>;
+            }>;
+          }
+        >;
+      }
+    ).jobs['web-frontend-tests'];
+    if (!webJob) throw new Error('Missing governed Web test job');
+    expect(webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    for (const step of webJob.steps.filter((step) => step.run)) {
+      expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    }
+    expect(ciWorkflow).toContain(ciNodeOptionsLine);
   });
 
   it.each(WEB_VITEST_PRIMARY_SUITE_NAMES)(

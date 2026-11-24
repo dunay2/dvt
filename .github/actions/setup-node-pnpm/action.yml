@@ -20,6 +20,7 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js
+      id: setup_node
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ inputs.node-version }}
@@ -45,12 +46,13 @@ runs:
       with:
         path: .turbo
         key: >-
-          turbo-v2-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{
+          turbo-v3-${{ runner.os }}-${{ runner.arch }}-node-${{
+          steps.setup_node.outputs.node-version }}-${{ github.workflow }}-${{ github.job }}-${{
           inputs.turbo-cache-variant }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json',
           'pnpm-workspace.yaml', 'tsconfig.node-runtime.base.json',
           'tsconfig.package-bundler.base.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
         restore-keys: |
-          turbo-v2-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ inputs.turbo-cache-variant }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json', 'pnpm-workspace.yaml', 'tsconfig.node-runtime.base.json', 'tsconfig.package-bundler.base.json') }}-
+          turbo-v3-${{ runner.os }}-${{ runner.arch }}-node-${{ steps.setup_node.outputs.node-version }}-${{ github.workflow }}-${{ github.job }}-${{ inputs.turbo-cache-variant }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json', 'pnpm-workspace.yaml', 'tsconfig.node-runtime.base.json', 'tsconfig.package-bundler.base.json') }}-
 
     - name: Install dependencies
       shell: bash

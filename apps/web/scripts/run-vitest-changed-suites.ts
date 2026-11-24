@@ -13,6 +13,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WEB_CYPRESS_CATALOG_PATH } from '../cypress.catalog';
 import { selectWebCypressShard, selectWebCypressLocalReadiness } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
+import type { WebVitestChangedCommandPlanEntry } from '../vitest/commands';
+import { composeWebVitestImpactPlan, isWebVitestImpactFrontier } from '../vitest/impact';
 import { WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH } from '../vitest/paths';
 
 import { parseChangedSuiteArgs } from './changed-suite-args';
@@ -21,7 +23,11 @@ import {
   readBrowserCatalogSnapshots,
   readGitComparison,
 } from './changed-suite-git';
-import { selectWebVitestExecutionPartition } from './vitest-execution-partitions';
+import { readWebVitestImpactWitness } from './changed-suite-impact';
+import {
+  selectWebVitestExecutionPartition,
+  describeWebVitestExecutionPartitions,
+} from './vitest-execution-partitions';
 import { resolveWebEvidenceEnvironment } from './web-evidence-environment';
 
 function runCommand(command: string, cwd: string, env = process.env): void {
@@ -96,6 +102,22 @@ function runVitestFilesCommand(config: string, filePaths: readonly string[], cwd
   }
 }
 
+function validateVitestPlanFilters(
+  validation: Readonly<{
+    commands: readonly WebVitestChangedCommandPlanEntry[];
+    cwd: string;
+    required?: boolean;
+  }>
+): void {
+  const { commands, cwd, required = false } = validation;
+  if (!required && commands.length === 0) return;
+  const filters = new Set<string>([WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH]);
+  for (const entry of commands) {
+    if (entry.kind === 'vitest-files') entry.filePaths.forEach((file) => filters.add(file));
+  }
+  validateVitestFileFilters([...filters], cwd);
+}
+
 function shouldRunTestDeps(requiresDependencies: boolean): boolean {
   return process.env.CI === 'true' || requiresDependencies;
 }
@@ -119,12 +141,25 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     const normalized = path.replaceAll('\\', '/').replace(/^\.\//, '');
     return normalized === WEB_CYPRESS_CATALOG_PATH || normalized === 'cypress.catalog.json';
   });
-  const plan = resolveWebVitestChangedSuitePlan(changedFiles, {
+  const baseline = resolveWebVitestChangedSuitePlan(changedFiles, {
     full: args.full,
     catalogSnapshots: catalogChanged
       ? readBrowserCatalogSnapshots(repoRoot, { env: comparison })
       : undefined,
   });
+  if (args.phase !== 'browser')
+    validateVitestPlanFilters({
+      commands: baseline.commandPlan,
+      cwd: webRoot,
+      required: isWebVitestImpactFrontier(changedFiles, args.full),
+    });
+  const plan = composeWebVitestImpactPlan(
+    baseline,
+    changedFiles,
+    args.phase === 'browser'
+      ? null
+      : readWebVitestImpactWitness(changedFiles, { webRoot, full: args.full })
+  );
   for (const path of plan.browserFiles) {
     if (!existsSync(resolve(repoRoot, path))) {
       throw new Error(`Browser evidence requires an existing consumer or helper: ${path}`);
@@ -167,7 +202,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     .filter((entry) => entry !== undefined);
 
   if (args.plan) {
-    process.stdout.write(`${JSON.stringify({ ...plan, vitestCommands, browserCommands })}\n`);
+    const vitestPartitions = describeWebVitestExecutionPartitions(plan.commandPlan);
+    process.stdout.write(
+      `${JSON.stringify({ ...plan, vitestCommands, browserCommands, vitestPartitions })}\n`
+    );
     if (process.env.GITHUB_OUTPUT) {
       appendFileSync(
         process.env.GITHUB_OUTPUT,
@@ -179,13 +217,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
     return;
   }
 
-  if (vitestCommands.length > 0) {
-    const filters = new Set<string>([WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH]);
-    for (const entry of vitestCommands) {
-      if (entry.kind === 'vitest-files') entry.filePaths.forEach((file) => filters.add(file));
-    }
-    validateVitestFileFilters([...filters], webRoot);
-  }
+  validateVitestPlanFilters({ commands: vitestCommands, cwd: webRoot });
 
   if (args.phase === 'push-readiness') {
     process.stdout.write(

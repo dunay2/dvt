@@ -4,9 +4,10 @@
  * @decision Keep one owner per reason to change and reuse the existing rails.
  * @consequence Consumers import the real owner without compatibility re-exports.
  */
-import type { WebVitestFocusSuiteName } from '../vitest.suites';
 
 export const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
+  'src/testing/vitestSuites.impact.architecture.test.ts',
+  'src/testing/vitestSuites.impactAcquisition.architecture.test.ts',
   'src/testing/vitestSuites.exactFilterExecution.architecture.test.ts',
   'src/testing/vitestSuites.testSourceOwnership.architecture.test.ts',
   'src/testing/vitestSuites.executionPartition.architecture.test.ts',
@@ -70,96 +71,34 @@ export function isArchitectureTestPath(filePath: string): boolean {
   return /\.architecture\.test\.(?:ts|tsx)$/.test(filePath);
 }
 
-export function isCanvasFocusPath(filePath: string): boolean {
-  return (
-    filePath === 'src/app/views/Canvas.tsx' ||
-    filePath === 'src/app/views/Canvas.test.support.tsx' ||
-    /^src\/app\/views\/Canvas.*\.(?:test|spec)\.tsx$/.test(filePath) ||
-    filePath.startsWith('src/app/views/canvas/') ||
-    filePath.startsWith('src/app/components/canvas/') ||
-    filePath.startsWith('src/app/components/inspector/')
-  );
-}
-
-export function isMonacoFocusPath(filePath: string): boolean {
-  return (
-    filePath.startsWith('src/app/components/monaco/') ||
-    filePath === 'src/app/views/CodeView.tsx' ||
-    filePath === 'src/app/views/CodeView.test.tsx' ||
-    filePath.startsWith('src/app/views/code/') ||
-    filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx' ||
-    filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx' ||
-    filePath === 'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts' ||
-    filePath === 'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts' ||
-    filePath === 'src/app/components/monaco/monacoBundleIsolation.architecture.test.ts' ||
-    filePath === 'vite.manualChunks.ts' ||
-    filePath === 'vite.config.ts'
-  );
-}
-
-export function isShellSessionFocusPath(filePath: string): boolean {
-  return (
-    filePath.startsWith('src/app/components/shell/') ||
-    filePath === 'src/app/components/TopAppBar.tsx' ||
-    filePath === 'src/app/components/TopAppBar.test.tsx' ||
-    filePath === 'src/app/components/TopAppBar.architecture.test.ts' ||
-    filePath === 'src/app/services/AppServicesContext.tsx' ||
-    filePath.startsWith('src/app/services/session/') ||
-    filePath.startsWith('src/app/services/composition/') ||
-    filePath === 'src/app/services/api/createApiClient.ts' ||
-    filePath === 'src/app/services/api/createApiClient.test.ts' ||
-    filePath === 'src/app/stores/sessionStore.ts' ||
-    filePath === 'src/app/stores/sessionStore.test.ts' ||
-    filePath === 'src/app/ports/workspaceScopeSelection.ts' ||
-    filePath === 'src/testing/appServicesTestDoubles.ts' ||
-    filePath === 'src/testing/runsPortDoubles.ts'
-  );
-}
-
-export function isWorkspaceServicesFocusPath(filePath: string): boolean {
-  return filePath.startsWith('src/app/services/workspace/');
-}
-
-export function resolveCanvasChangedSuite(
-  filePath: string
-): Exclude<WebVitestFocusSuiteName, 'canvas'> {
-  if (isArchitectureTestPath(filePath)) {
-    return 'canvas-architecture';
-  }
-
-  if (filePath.endsWith('.tsx')) {
-    return 'canvas-presentation';
-  }
-
-  return 'canvas-unit';
-}
-
 export function isWebVitestGovernancePath(filePath: string): boolean {
   const normalizedPath = normalizeWebVitestPath(filePath);
 
   return (
+    [
+      'apps/web/cypress.changed.ts',
+      'cypress.changed.ts',
+      'apps/web/scripts/run-vitest-changed-suites.ts',
+      'scripts/run-vitest-changed-suites.ts',
+      'apps/web/scripts/vitest-execution-partitions.ts',
+      'scripts/vitest-execution-partitions.ts',
+      'apps/web/package.json',
+      'package.json',
+      '.github/workflows/test.yml',
+      'docs/architecture/components/web/frontend-test-governance-component.md',
+    ].includes(normalizedPath) ||
     isWebVitestImplementationPath(normalizedPath) ||
-    normalizedPath === 'apps/web/cypress.changed.ts' ||
-    normalizedPath === 'cypress.changed.ts' ||
     /^(?:apps\/web\/)?cypress\.(?:commands|supportCapabilities)\.ts$/.test(normalizedPath) ||
     /^((apps\/web\/)?)cypress\.catalog\.(json|ts)$/.test(normalizedPath) ||
     /^apps\/web\/vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     /^vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
-    normalizedPath === 'apps/web/scripts/run-vitest-changed-suites.ts' ||
-    normalizedPath === 'scripts/run-vitest-changed-suites.ts' ||
-    normalizedPath === 'apps/web/scripts/vitest-execution-partitions.ts' ||
-    normalizedPath === 'scripts/vitest-execution-partitions.ts' ||
-    normalizedPath === 'apps/web/package.json' ||
-    normalizedPath === 'package.json' ||
-    normalizedPath === '.github/workflows/test.yml' ||
-    normalizedPath === 'docs/architecture/components/web/frontend-test-governance-component.md' ||
     normalizedPath ===
       'docs/architecture/components/web/web-vitest-changed-suite-router-component.md'
   );
 }
 
 export function isWebVitestImplementationPath(filePath: string): boolean {
-  return /^(?:apps\/web\/)?(?:vitest\/[^/]+|scripts\/(?:changed-suite-(?:args|git)|web-evidence-environment))\.ts$/.test(
+  return /^(?:apps\/web\/)?(?:vitest\/[^/]+|scripts\/(?:changed-suite-(?:args|git|impact)|web-evidence-environment))\.ts$/.test(
     normalizeWebVitestPath(filePath)
   );
 }

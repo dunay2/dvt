@@ -23,13 +23,17 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 The suite catalog remains in `apps/web/vitest.suites.ts` and contains data and
 types only. The executable owners live under `apps/web/vitest/`:
 
-| Owner               | Reason to change                                          |
-| ------------------- | --------------------------------------------------------- |
-| `runtimeConfig.ts`  | Vitest environments, worker limits and isolation          |
-| `paths.ts`          | Path normalization and governed surface recognition       |
-| `classification.ts` | Primary and focus suite assignment                        |
-| `commands.ts`       | Ordered commands, exact batches and coverage absorption   |
-| `changedPlan.ts`    | Composition of independent Vitest and Cypress obligations |
+| Owner                    | Reason to change                                          |
+| ------------------------ | --------------------------------------------------------- |
+| `runtimeConfig.ts`       | Vitest environments, worker limits and isolation          |
+| `paths.ts`               | Path normalization and governed surface recognition       |
+| `classification.ts`      | Primary and focus suite assignment                        |
+| `focusPaths.ts`          | Existing focus context path recognition                   |
+| `testSourceOwnership.ts` | Canonical declared support paths and owner cohorts        |
+| `impact.ts`              | Transitive consumers composed through existing suites     |
+| `impactWitness.ts`       | Complete dependency witness structure admission           |
+| `commands.ts`            | Ordered commands, exact batches and coverage absorption   |
+| `changedPlan.ts`         | Composition of independent Vitest and Cypress obligations |
 
 Consumers import the actual owner. The catalog does not re-export the relocated
 functions. Commands and config filenames follow the existing suite naming
@@ -196,6 +200,41 @@ contracts.
 
 ## Invariants
 
+### Dependency evidence before execution projection
+
+For an existing Web TypeScript or CSS Module source frontier, the CLI queries the installed
+Vitest dependency resolver before selecting hosted groups. Each changed source
+must have a nonempty, discovered consumer set. The union uses the existing
+primary/focus classification and exact command batches, including consumers in
+other behavioral lanes. Every source change still runs the complete architecture
+suite because filesystem-reading guards need not import the files they inspect.
+
+The private graph adapter executes no tests and creates no second catalog. A
+missing source, empty or failed graph, unknown companion, configuration/native
+infrastructure, global stylesheet or explicit complete plan retains conservative
+planning. Without a complete witness, a source frontier retains all three primary
+suites plus its distinct focus contexts. This also makes pre-install hosted matrix
+discovery conservative when dependency availability changes the graph. Mixed source
+plus documentation/evidence companions retain that fallback; this slice adds no
+companion whitelist. Global CSS cannot use import-only impact: component tests generally
+mount views without importing the global stylesheet. Browser admission and proof
+obligations remain independent. Partitioning follows complete admission and
+selects each exact batch once; plan output exposes nonempty existing groups.
+
+```mermaid
+flowchart LR
+  Frontier[Complete changed frontier] --> Admission[Existing path and browser admission]
+  Admission --> Graph[Installed Vitest transitive consumers]
+  Graph --> Witness{Every source has discovered consumers?}
+  Witness -->|yes| Exact[Existing exact batches and focus contexts]
+  Witness -->|no| Conservative[Existing conservative suites]
+  Admission --> Architecture[Complete filesystem architecture proof]
+  Exact --> Plan[One canonical plan]
+  Conservative --> Plan
+  Architecture --> Plan
+  Plan --> Groups[Existing groups and browser shards]
+```
+
 - The router never changes primary suite ownership.
 - Architecture-governance paths route to `architecture`.
 - Web source edits also require the complete `architecture` primary suite:
@@ -223,7 +262,8 @@ contracts.
 - When a changed source file and its same-stem `*.test.*` or `*.spec.*` file
   both appear in the same diff, the router may run that exact test file instead
   of the broader suite.
-- A source without a directly paired changed test requires its complete suite.
+- Without a complete dependency witness, a source without a directly paired
+  changed test requires its complete suite.
   Unrelated exact tests in that suite cannot cancel this requirement. When a
   complete suite is required, its exact tests are included by that run rather
   than executed again in a separate batch.
@@ -241,7 +281,7 @@ contracts.
 - Monaco, shell-session, and workspace-services retain their own execution
   contexts: their jsdom defaults are not interchangeable with Node primary
   suites. This normalization does not change environments, isolation or workers.
-- Source files without a changed same-stem test keep the existing suite
+- Source files without a complete dependency witness or changed same-stem test keep the existing suite
   fallback, so unpaired source edits do not silently lose coverage.
 - Non-Canvas `.tsx` paths route to `presentation`.
 - Non-Canvas `.ts` paths route to `unit`.

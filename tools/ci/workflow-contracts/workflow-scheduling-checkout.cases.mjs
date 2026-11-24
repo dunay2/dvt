@@ -25,8 +25,16 @@ test('Turbo cache uses a fresh writer key and a stable per-producer restore pref
   assert.equal(cache.if, undefined);
   assert.equal(pnpmCache.with.path, '${{ env.STORE_PATH }}');
 
+  const setupNode = action.runs.steps.find((step) => step.name === 'Setup Node.js');
+  assert.equal(setupNode.id, 'setup_node');
   const key = cache.with.key;
   const restoreKeys = cache.with['restore-keys'];
+  for (const dimension of ['runner.arch', 'steps.setup_node.outputs.node-version']) {
+    assert.ok(key.includes(dimension), `Turbo writer must identify ${dimension}`);
+    assert.ok(restoreKeys.includes(dimension), `Turbo restore must identify ${dimension}`);
+  }
+  assert.doesNotMatch(key, /inputs\.node-version/u);
+  assert.doesNotMatch(restoreKeys, /inputs\.node-version/u);
   for (const identity of [
     'runner.os',
     'github.workflow',
@@ -45,8 +53,8 @@ test('Turbo cache uses a fresh writer key and a stable per-producer restore pref
   const writeSuffix = '${{ github.run_id }}-${{ github.run_attempt }}';
   assert.ok(key.endsWith(writeSuffix));
   assert.equal(key.slice(0, -writeSuffix.length).replaceAll(/\s+/gu, ' '), restoreKeys.trim());
-  assert.match(key, /turbo-v2-/u);
-  assert.match(restoreKeys, /turbo-v2-/u);
+  assert.match(key, /^turbo-v3-/u);
+  assert.match(restoreKeys, /^turbo-v3-/u);
 
   const testWorkflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
   const packageSetup = testWorkflow.jobs['package-tests'].steps.find(

@@ -27,6 +27,7 @@ jobs:
       matrix: ${{ steps.scope.outputs.test_matrix }}
       adapter_temporal: ${{ fromJSON(steps.scope.outputs.test_scope).adapter_temporal }}
       web: ${{ fromJSON(steps.scope.outputs.test_scope).web }}
+      web_browser_matrix: ${{ steps.scope.outputs.web_browser_matrix }}
       root_build_sensitive: ${{ fromJSON(steps.scope.outputs.test_scope).root_build_sensitive }}
       coverage_relevant: ${{ fromJSON(steps.scope.outputs.test_scope).coverage_relevant }}
       postgres_capability_changed:
@@ -138,45 +139,7 @@ jobs:
           needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
           '["unit","architecture","presentation-1","presentation-2","presentation-3"]' ||
           '["unit","architecture","presentation-1","presentation-2","presentation-3","changed"]') }}
-        include:
-          - phase: browser
-            capability: controlled
-            shard: 1
-          - phase: browser
-            capability: controlled
-            shard: 2
-          - phase: browser
-            capability: controlled
-            shard: 3
-          - phase: browser
-            capability: controlled
-            shard: 4
-          - phase: browser
-            capability: controlled
-            shard: 5
-          - phase: browser
-            capability: controlled
-            shard: 6
-          - phase: browser
-            capability: available
-            shard: 1
-          - phase: browser
-            capability: available
-            shard: 2
-          - phase: browser
-            capability: available
-            shard: 3
-          - phase: browser
-            capability: available
-            shard: 4
-          - phase: browser
-            capability: available
-            shard: 5
-          - phase: browser
-            capability: available
-            shard: 6
-          - phase: browser
-            capability: unavailable
+        include: ${{ fromJSON(needs.detect_test_matrix.outputs.web_browser_matrix) }}
     env:
       DVT_CI: '1'
       NODE_OPTIONS: --max-old-space-size=4096
@@ -220,6 +183,7 @@ jobs:
 
       - name: Resolve governed Web evidence plan
         id: web_plan
+        if: matrix.phase == 'browser'
         run: >-
           pnpm test:web:changed --plan --phase=${{ matrix.phase }} ${{ matrix.capability &&
           format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&
@@ -280,10 +244,7 @@ jobs:
 
       - name: Build web dependency graph
         if: >-
-          (matrix.phase == 'vitest' && (github.event_name != 'pull_request' ||
-          needs.detect_test_matrix.outputs.root_build_sensitive == 'true' ||
-          steps.web_plan.outputs.vitest_required == 'true')) ||
-          steps.web_plan.outputs.browser_required == 'true'
+          matrix.phase == 'vitest' || steps.web_plan.outputs.browser_required == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
         env:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
@@ -292,8 +253,7 @@ jobs:
       - name: Run governed Web changed evidence (PR)
         if:
           github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
-          needs.detect_test_matrix.outputs.root_build_sensitive != 'true' && (matrix.phase !=
-          'vitest' || steps.web_plan.outputs.vitest_required == 'true')
+          needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
         run: >-
           pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability &&
           format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&

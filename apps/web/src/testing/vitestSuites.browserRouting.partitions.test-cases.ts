@@ -11,6 +11,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { main } from '../../scripts/run-vitest-changed-suites';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
+import { describeWebVitestExecutionPartitions } from '../../scripts/vitest-execution-partitions';
 import { fixture, spec } from './vitestSuites.browserRouting.fixtures';
 
 export function registerBrowserRoutingPartitions(): void {
@@ -46,6 +47,7 @@ export function registerBrowserRoutingPartitions(): void {
         main(['--plan', ...flags, '--files', fixture]);
         expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toEqual({
           ...plan,
+          vitestPartitions: describeWebVitestExecutionPartitions(plan.commandPlan),
           vitestCommands: flags.includes('--phase=vitest') ? plan.commandPlan : [],
           browserCommands: plan.browserCommands.filter(({ capability }) =>
             capabilities.includes(capability)

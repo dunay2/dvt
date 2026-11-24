@@ -15,6 +15,7 @@ import { parseChangedSuiteArgs } from '../../scripts/changed-suite-args';
 import { main } from '../../scripts/run-vitest-changed-suites';
 import { retired } from './vitestSuites.browserRouting.fixtures';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async () => ({
   ...(await vi.importActual<typeof import('node:child_process')>('node:child_process')),
   spawnSync: vi.fn(() => ({ status: 0 })),

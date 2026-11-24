@@ -61,7 +61,15 @@ function webScenarioContext(event = 'workflow_dispatch', root = false, draft = f
       run_id: 'run',
       run_attempt: '1',
     },
-    needs: { detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } } },
+    needs: {
+      detect_test_matrix: {
+        outputs: {
+          web: 'true',
+          root_build_sensitive: String(root),
+          web_browser_matrix: JSON.stringify(browserMatrix),
+        },
+      },
+    },
     steps: { web_plan: { outputs: { vitest_required: 'true', browser_required: 'true' } } },
     fromJSON: JSON.parse,
     format: (template, value) => template.replace('{0}', value),
@@ -76,7 +84,16 @@ function renderWebCommand(value, context) {
 }
 
 function expandWebMatrix(context) {
-  const { include = [], exclude, ...axes } = workflow.jobs['web-frontend-tests'].strategy.matrix;
+  const {
+    include: configuredInclude = [],
+    exclude,
+    ...axes
+  } = workflow.jobs['web-frontend-tests'].strategy.matrix;
+  const include =
+    typeof configuredInclude === 'string'
+      ? runInNewContext(configuredInclude.slice(3, -2), context)
+      : configuredInclude;
+  assert.ok(Array.isArray(include), 'Browser producers require an admitted array');
   assert.equal(exclude, undefined, 'Web evidence must not be removed through matrix excludes');
   const dimensions = Object.entries(axes);
   const rows = dimensions.reduce(
@@ -98,6 +115,171 @@ function expandWebMatrix(context) {
     else for (const row of matches) Object.assign(row, entry);
   }
   return [...rows, ...added];
+}
+
+function assertWebPhaseScenario(
+  { event, root, full },
+  { plan, executions, primary, dependencies }
+) {
+  const scenario = webScenarioContext(event, root);
+  const primaryExecutions = [];
+  for (const matrix of expandWebMatrix(scenario)) {
+    assertWebPhaseExecution({
+      event,
+      root,
+      full,
+      scenario,
+      matrix,
+      plan,
+      executions,
+      primaryExecutions,
+      dependencies,
+    });
+  }
+  // Native shards replace one complete presentation command; losing or repeating
+  // any third must fail this contract before the expensive hosted run starts.
+  const partitionedPrimary = primary.flatMap((command) =>
+    command === 'pnpm run test:presentation:run'
+      ? [`${command} --shard=1/3`, `${command} --shard=2/3`, `${command} --shard=3/3`]
+      : [command]
+  );
+  assert.deepEqual(primaryExecutions.sort(), full ? partitionedPrimary.sort() : []);
+  assert.equal(
+    new Set(primaryExecutions).size,
+    primaryExecutions.length,
+    'No primary suite or native partition runs twice'
+  );
+}
+
+function assertWebPhaseExecution({
+  event,
+  root,
+  full,
+  scenario,
+  matrix,
+  plan,
+  executions,
+  primaryExecutions,
+  dependencies,
+}) {
+  const { phase, capability, shard } = matrix;
+  const context = { ...scenario, matrix };
+  assert.equal(
+    runInNewContext(plan.if, context),
+    phase === 'browser',
+    'Only browser producers acquire a pre-build plan'
+  );
+  const planned = renderWebCommand(plan.run, context);
+  assertWebPlannedCommand(planned, {
+    phase,
+    capability,
+    shard,
+    full,
+    vitestGroup: matrix.vitest_group,
+  });
+  const selected = executions.filter((step) => !step.if || runInNewContext(step.if, context));
+  assert.equal(
+    selected.length,
+    1,
+    `${event}: root=${root}, phase=${phase}, capability=${capability}`
+  );
+  const [expected] = selected;
+  assert.notEqual(expected['continue-on-error'], true);
+  const executed = renderWebCommand(expected.run, context);
+  if (full && phase === 'vitest') {
+    assertWebPrimaryExecution(executed, { matrix, primaryExecutions, dependencies });
+  } else {
+    assert.deepEqual(
+      executed.split(/\s+/u).sort(),
+      planned
+        .split(/\s+/u)
+        .filter((arg) => arg !== '--plan')
+        .sort()
+    );
+  }
+}
+
+function assertWebPrimaryExecution(executed, { matrix, primaryExecutions, dependencies }) {
+  const commands = executed
+    .replace(/pnpm --filter @dvt\/web (?:run )?/gu, 'pnpm run ')
+    .split(/\s*&&\s*/u);
+  assert.equal(commands.shift(), dependencies, 'Each runner prepares its own dependencies first');
+  const group = matrix.vitest_group;
+  const presentation = group.startsWith('presentation-');
+  const suite = presentation ? 'presentation' : group;
+  const selector = presentation ? ` --shard=${group.slice(-1)}/3` : '';
+  assert.deepEqual(commands, [`pnpm run test:${suite}:run${selector}`]);
+  primaryExecutions.push(...commands);
+}
+
+function assertWebPlannedCommand(planned, { phase, capability, shard, full, vitestGroup }) {
+  assert.equal(
+    planned,
+    `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/6` : ''}${full ? ' --full' : ''}${!full && vitestGroup ? ` --vitest-group=${vitestGroup}` : ''}`
+  );
+}
+
+function assertWebBuildPartition({ web, build, scenario, matrix, full }) {
+  for (const required of ['true', 'false', '', undefined, true]) {
+    assert.equal(
+      runInNewContext(build.if, {
+        ...scenario,
+        matrix,
+        steps: {
+          web_plan: {
+            outputs: {
+              browser_required: matrix.phase === 'browser' ? required : 'false',
+              vitest_required: required,
+            },
+          },
+        },
+      }),
+      matrix.phase === 'vitest' || required === 'true',
+      `${JSON.stringify(matrix)}: ${String(required)}`
+    );
+    if (!full && matrix.phase === 'vitest') {
+      const execution = web.steps.find(
+        (step) => step.name === 'Run governed Web changed evidence (PR)'
+      );
+      assert.equal(
+        runInNewContext(execution.if, {
+          ...scenario,
+          matrix,
+          steps: { web_plan: { outputs: { vitest_required: required } } },
+        }),
+        true,
+        'Each conservative Vitest group delegates selection after its dependency build'
+      );
+    }
+  }
+}
+
+function assertBrowserProvisionRequirement({ step, id, phase, capability, required }) {
+  const providerRequired = capability === 'available' || capability === 'unavailable';
+  assert.equal(
+    runInNewContext(step.if, {
+      matrix: { phase },
+      steps: {
+        web_plan: {
+          outputs: {
+            browser_required: required,
+            provider_required: providerRequired ? required : 'false',
+          },
+        },
+      },
+    }),
+    phase === 'browser' &&
+      required === 'true' &&
+      (id === 'browser_dependencies' || providerRequired),
+    `${id}: ${phase}, ${capability}, ${required}`
+  );
+}
+
+function assertSelectedFailure({ event, lane, result }) {
+  const input = fixture(event, scopeKeys);
+  if (result === undefined) delete input.jobs[lane];
+  else input.jobs[lane].result = result;
+  assert.notEqual(assess(input).length, 0, `${event}: ${lane}: ${result}`);
 }
 
 test('both native browser providers use the admitted platform with the existing Node selection', () => {
@@ -374,63 +556,7 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
     ['push', false, true],
     ['workflow_dispatch', false, true],
   ]) {
-    const scenario = webScenarioContext(event, root);
-    const primaryExecutions = [];
-    for (const matrix of expandWebMatrix(scenario)) {
-      const { phase, capability, shard } = matrix;
-      const context = { ...scenario, matrix };
-      const planned = renderWebCommand(plan.run, context);
-      assert.equal(
-        planned,
-        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/6` : ''}${full ? ' --full' : ''}${!full && matrix.vitest_group ? ` --vitest-group=${matrix.vitest_group}` : ''}`
-      );
-      const selected = executions.filter((step) => !step.if || runInNewContext(step.if, context));
-      assert.equal(
-        selected.length,
-        1,
-        `${event}: root=${root}, phase=${phase}, capability=${capability}`
-      );
-      const [expected] = selected;
-      assert.notEqual(expected['continue-on-error'], true);
-      const executed = renderWebCommand(expected.run, context);
-      if (full && phase === 'vitest') {
-        const commands = executed
-          .replace(/pnpm --filter @dvt\/web (?:run )?/gu, 'pnpm run ')
-          .split(/\s*&&\s*/u);
-        assert.equal(
-          commands.shift(),
-          dependencies,
-          'Each runner prepares its own dependencies first'
-        );
-        const group = matrix.vitest_group;
-        const presentation = group.startsWith('presentation-');
-        const suite = presentation ? 'presentation' : group;
-        const selector = presentation ? ` --shard=${group.slice(-1)}/3` : '';
-        assert.deepEqual(commands, [`pnpm run test:${suite}:run${selector}`]);
-        primaryExecutions.push(...commands);
-      } else {
-        assert.deepEqual(
-          executed.split(/\s+/u).sort(),
-          planned
-            .split(/\s+/u)
-            .filter((arg) => arg !== '--plan')
-            .sort()
-        );
-      }
-    }
-    // Native shards replace one complete presentation command; losing or repeating
-    // any third must fail this contract before the expensive hosted run starts.
-    const partitionedPrimary = primary.flatMap((command) =>
-      command === 'pnpm run test:presentation:run'
-        ? [`${command} --shard=1/3`, `${command} --shard=2/3`, `${command} --shard=3/3`]
-        : [command]
-    );
-    assert.deepEqual(primaryExecutions.sort(), full ? partitionedPrimary.sort() : []);
-    assert.equal(
-      new Set(primaryExecutions).size,
-      primaryExecutions.length,
-      'No primary suite or native partition runs twice'
-    );
+    assertWebPhaseScenario({ event, root, full }, { plan, executions, primary, dependencies });
   }
 });
 
@@ -454,38 +580,7 @@ test('Web builds dependencies for Vitest and nonempty browser partitions only', 
   ]) {
     const scenario = webScenarioContext(event, root);
     for (const matrix of expandWebMatrix(scenario)) {
-      for (const required of ['true', 'false', '', undefined, true]) {
-        assert.equal(
-          runInNewContext(build.if, {
-            ...scenario,
-            matrix,
-            steps: {
-              web_plan: {
-                outputs: {
-                  browser_required: matrix.phase === 'browser' ? required : 'false',
-                  vitest_required: required,
-                },
-              },
-            },
-          }),
-          (matrix.phase === 'vitest' && full) || required === 'true',
-          `${JSON.stringify(matrix)}: ${String(required)}`
-        );
-        if (!full && matrix.phase === 'vitest') {
-          const execution = web.steps.find(
-            (step) => step.name === 'Run governed Web changed evidence (PR)'
-          );
-          assert.equal(
-            runInNewContext(execution.if, {
-              ...scenario,
-              matrix,
-              steps: { web_plan: { outputs: { vitest_required: required } } },
-            }),
-            required === 'true',
-            'An empty group neither builds nor executes a test command'
-          );
-        }
-      }
+      assertWebBuildPartition({ web, build, scenario, matrix, full });
     }
   }
 });
@@ -504,24 +599,7 @@ test('Web provisions only the selected browser capability infrastructure', () =>
     assert.ok(web.steps.indexOf(plan) < web.steps.indexOf(step));
     for (const { phase, capability } of webMatrix) {
       for (const required of ['true', 'false', '', undefined]) {
-        const providerRequired = capability === 'available' || capability === 'unavailable';
-        assert.equal(
-          runInNewContext(step.if, {
-            matrix: { phase },
-            steps: {
-              web_plan: {
-                outputs: {
-                  browser_required: required,
-                  provider_required: providerRequired ? required : 'false',
-                },
-              },
-            },
-          }),
-          phase === 'browser' &&
-            required === 'true' &&
-            (id === 'browser_dependencies' || providerRequired),
-          `${id}: ${phase}, ${capability}, ${required}`
-        );
+        assertBrowserProvisionRequirement({ step, id, phase, capability, required });
       }
     }
     assert.notEqual(step['continue-on-error'], true);
@@ -694,10 +772,7 @@ test('selected missing, skipped, failed and cancelled results always reject', ()
   for (const event of ['pull_request', 'push', 'workflow_dispatch']) {
     for (const lane of ['detect_test_matrix', ...lanes]) {
       for (const result of ['skipped', 'failure', 'cancelled', undefined]) {
-        const input = fixture(event, scopeKeys);
-        if (result === undefined) delete input.jobs[lane];
-        else input.jobs[lane].result = result;
-        assert.notEqual(assess(input).length, 0, `${event}: ${lane}: ${result}`);
+        assertSelectedFailure({ event, lane, result });
       }
     }
   }
@@ -726,4 +801,27 @@ test('out-of-scope unexpected results are rejected, not silently ignored', () =>
   const unclassified = fixture();
   unclassified.jobs['new-unclassified-lane'] = { result: 'success' };
   assert.notEqual(assess(unclassified).length, 0);
+});
+
+test('browser discovery omits empty producers while every conservative PR Vitest group remains', () => {
+  const context = webScenarioContext('pull_request');
+  context.needs.detect_test_matrix.outputs.web_browser_matrix = '[]';
+  const matrix = expandWebMatrix(context);
+  assert.deepEqual(
+    matrix.map((row) => row.vitest_group),
+    [...fullVitestGroups, 'changed']
+  );
+  assert.equal(
+    matrix.some((row) => row.phase === 'browser'),
+    false
+  );
+  context.needs.detect_test_matrix.outputs.web_browser_matrix = JSON.stringify([browserMatrix[0]]);
+  assert.deepEqual(
+    expandWebMatrix(context).filter((row) => row.phase === 'browser'),
+    [browserMatrix[0]]
+  );
+  assert.equal(
+    workflow.jobs.detect_test_matrix.outputs.web_browser_matrix,
+    '${{ steps.scope.outputs.web_browser_matrix }}'
+  );
 });

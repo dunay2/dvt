@@ -4,6 +4,7 @@ import { appendFileSync, existsSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BaseSequencer, createVitest } from 'vitest/node';
 import { main } from '../../scripts/run-vitest-changed-suites';
+import { readWebVitestImpactWitness } from '../../scripts/changed-suite-impact';
 import { parseChangedSuiteArgs } from '../../scripts/changed-suite-args';
 import {
   selectWebVitestExecutionPartition,
@@ -13,6 +14,9 @@ import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
 import { listWebVitestFiles, suiteMatchesFile, webRoot } from './vitestSuites.architecture.support';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({
+  readWebVitestImpactWitness: vi.fn(() => null),
+}));
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   spawnSync: vi.fn(() => ({ status: 0 })),
@@ -89,14 +93,16 @@ describe('complete execution partition coverage', () => {
       config: 'vitest.canvas-presentation.config.ts',
       filePaths: ['src/app/views/canvas/CanvasModelIdentityField.test.tsx'],
     },
-  ] as const)('retains a mixed unknown or exact-file entry once in changed: %j', (entry) => {
+  ] as const)('retains mixed entries exactly once in their existing context: %j', (entry) => {
     const unit = {
       kind: 'shell',
       command: WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-unit'],
     } as const;
     const commands = [unit, entry];
     const before = structuredClone(commands);
-    expect(selectWebVitestExecutionPartition(commands, 'changed')).toEqual([entry]);
+    expect(selectWebVitestExecutionPartition(commands, 'changed')).toEqual(
+      entry.kind === 'vitest-files' ? [] : [entry]
+    );
     expect(
       WEB_VITEST_EXECUTION_GROUPS.flatMap((group) =>
         selectWebVitestExecutionPartition(commands, group)
@@ -144,6 +150,17 @@ describe('complete execution partition coverage', () => {
 });
 
 describe('hosted Vitest execution partition admission', () => {
+  it('does not acquire a Vitest dependency graph for a browser-only producer', () => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    main([
+      '--plan',
+      '--phase=browser',
+      '--files',
+      'src/app/components/PlanExecutionDecisionView.tsx',
+    ]);
+    expect(readWebVitestImpactWitness).not.toHaveBeenCalled();
+    expect(spawnSync).not.toHaveBeenCalled();
+  });
   // PRs must use the existing full-run groups without paying a sequential complete plan per job.
   it.each([
     'unit',
@@ -205,7 +222,7 @@ describe('hosted Vitest execution partition admission', () => {
     {
       group: 'presentation-2',
       files: ['apps/web/src/app/views/canvas/CanvasModelIdentityField.tsx'],
-      command: 'pnpm run test:canvas-presentation:run --shard=2/3',
+      command: 'pnpm run test:presentation:run --shard=2/3',
     },
     {
       group: 'unit',
