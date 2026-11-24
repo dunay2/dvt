@@ -1,6 +1,9 @@
 'use strict';
 
-/** Owned concern: exercise the existing prototype fanout and SSE wire contracts. */
+/**
+ * Owned concern: exercise the existing prototype fanout and SSE wire contracts.
+ * Fastify injection exercises the declared HTTP adapter without opening a service port.
+ */
 const assert = require('node:assert/strict');
 const { createRequire } = require('node:module');
 const { resolve } = require('node:path');
@@ -9,8 +12,11 @@ const Fastify = createRequire(resolve(__dirname, '../../../../apps/api/package.j
 
 function event(runId, seq = 1) {
   return {
-    eventId: '00000000-0000-4000-8000-000000000001', runId, seq,
-    type: 'node.status', ts: '2026-11-24T00:00:00.000Z',
+    eventId: '00000000-0000-4000-8000-000000000001',
+    runId,
+    seq,
+    type: 'node.status',
+    ts: '2026-11-24T00:00:00.000Z',
     payload: { nodeId: 'node-a', status: 'RUNNING', attempt: 1 },
   };
 }
@@ -18,10 +24,12 @@ function event(runId, seq = 1) {
 test('fanout isolates Runs and preserves the original event for every subscriber', async () => {
   const { RunStreamHub } = await import('../src/runStreamHub.ts');
   const hub = new RunStreamHub();
-  const first = [], second = [], foreign = [];
-  hub.subscribe('run-a', value => first.push(value));
-  hub.subscribe('run-a', value => second.push(value));
-  hub.subscribe('run-b', value => foreign.push(value));
+  const first = [],
+    second = [],
+    foreign = [];
+  hub.subscribe('run-a', (value) => first.push(value));
+  hub.subscribe('run-a', (value) => second.push(value));
+  hub.subscribe('run-b', (value) => foreign.push(value));
   const value = event('run-a');
   hub.publish(value);
   assert.deepEqual(first, [value]);
@@ -34,7 +42,7 @@ test('duplicate registration does not duplicate delivery and unsubscribe is idem
   const { RunStreamHub } = await import('../src/runStreamHub.ts');
   const hub = new RunStreamHub();
   const delivered = [];
-  const sink = value => delivered.push(value.seq);
+  const sink = (value) => delivered.push(value.seq);
   const remove = hub.subscribe('run-a', sink);
   hub.subscribe('run-a', sink);
   hub.publish(event('run-a', 1));
@@ -56,8 +64,11 @@ async function captureSse(message) {
     sseSend(reply, message);
     reply.raw.end();
   });
-  try { return await app.inject({ method: 'GET', url: '/' }); }
-  finally { await app.close(); }
+  try {
+    return await app.inject({ method: 'GET', url: '/' });
+  } finally {
+    await app.close();
+  }
 }
 
 test('SSE uses real HTTP streaming headers and preserves replay identity', async () => {
@@ -66,7 +77,10 @@ test('SSE uses real HTTP streaming headers and preserves replay identity', async
   assert.equal(response.headers['content-type'], 'text/event-stream; charset=utf-8');
   assert.equal(response.headers['cache-control'], 'no-cache, no-transform');
   assert.equal(response.headers['x-accel-buffering'], 'no');
-  assert.equal(response.body, `id: 0\nevent: node.status\ndata: ${JSON.stringify(event('run-a'))}\n\n`);
+  assert.equal(
+    response.body,
+    `id: 0\nevent: node.status\ndata: ${JSON.stringify(event('run-a'))}\n\n`
+  );
 });
 
 test('JSON payload line breaks cannot introduce another SSE frame', async () => {
