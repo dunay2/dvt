@@ -1,5 +1,6 @@
+import type { ConnectedSourceRef } from '@dvt/contracts';
+import type { CanvasDraftSession } from './canvasDraftSession';
 // @vitest-environment jsdom
-
 import type { Node } from '@xyflow/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -731,230 +732,325 @@ describe('useCanvasGraphHandlers edge authoring', () => {
   });
 
   it.each([false, true])('preserves calculations on exclusion (%s)', async (withLiteral) => {
-    const { applyDvtSubstraitSemanticDocument } = await vi.importActual<
-      typeof import('./canvasDvtTransformAuthoringAuthority')
-    >('./canvasDvtTransformAuthoringAuthority');
-    const {
-      createDvtSubstraitProjectionDraft,
-      encodeDvtSubstraitProjectionDocument,
-      resolveDvtSubstraitColumnFunctions,
-    } = await vi.importActual<typeof import('./canvasDvtSubstraitProjection')>(
-      './canvasDvtSubstraitProjection'
-    );
-    const source = {
-      ...buildCanonicalNode('source-orders', 'input'),
-      metadata: {
-        schema: 'raw',
-        tableName: 'orders',
-        connectedSourceRef: {
-          schemaVersion: 'connected-source-ref.v1',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            connectionId: 'warehouse-main',
-            provider: 'postgres',
-          },
-          sourceObjectId: 'raw.orders',
-        } as const,
-        columns: [
-          { name: 'order_id', type: 'text' },
-          { name: 'customer', type: 'text' },
-          { name: 'amount', type: 'numeric' },
-        ],
-      },
-    } satisfies CanonicalNode;
-    const projection = createDvtSubstraitProjectionDraft({
-      source: {
-        nodeId: source.id,
-        schema: 'raw',
-        table: 'orders',
-        sourceRef: source.metadata.connectedSourceRef,
-        fields: source.metadata.columns.map((column) => ({
-          name: column.name,
-          dataType: column.type,
-        })),
-      },
-      targetNodeId: 'transform-orders',
-      outputs: source.metadata.columns.map((column) => ({
-        fieldId: `output:${column.name}`,
-        name: column.name,
-        sourceFieldName: column.name,
-      })),
-    });
-    const transform = applyDvtSubstraitSemanticDocument(
-      buildCanonicalNode('transform-orders', 'transform'),
-      encodeDvtSubstraitProjectionDocument(projection)
-    );
-    const draftSession = {
-      ...buildDraftSession(),
-      workingSet: {
-        visibleNodeIds: [source.id, transform.id],
-        visibleEdges: [{ sourceId: source.id, targetId: transform.id }],
-        pendingExplicitNodeIds: [],
-      },
-      localNodeCatalog: { [source.id]: source, [transform.id]: transform },
-    };
-    const setDraftSession = vi.fn();
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
-      canonicalNodes: [source, transform],
-      edges: [
-        {
-          id: 'source-orders->transform-orders',
-          source: source.id,
-          target: transform.id,
-        },
-      ],
-      draftSession,
-      setDraftSession,
-    });
-    await harness.render();
-    const upper = resolveDvtSubstraitColumnFunctions({
-      dataTypes: ['text'],
-      provider: 'postgres',
-    }).find((item) => item.name === 'upper');
-    if (upper == null) throw new Error('Expected admitted upper capability.');
-
-    let functionResult:
-      | Readonly<{ outcome: 'applied'; createdFieldId: string }>
-      | Readonly<{ outcome: 'rejected' }>
-      | undefined;
-    await act(async () => {
-      functionResult = await harness.latest()?.handleAddCanvasCalculatedColumn({
-        nodeId: transform.id,
-        kind: 'scalar-function',
-        inputFieldId: 'output:customer',
-        capabilityId: upper.capabilityId,
-        alias: 'order_customer',
-      });
-    });
-
-    expect(functionResult).toMatchObject({ outcome: 'applied' });
-    expect(setDraftSession).toHaveBeenCalledOnce();
-    const applyFunction = setDraftSession.mock.calls[0]?.[0] as (
-      current: typeof draftSession
-    ) => typeof draftSession;
-    const nextSession = applyFunction(draftSession);
-    const nextNode = nextSession.localNodeCatalog?.[transform.id];
-    if (nextNode == null) throw new Error('Expected updated transform.');
-    const inspection = inspectTransform(nextNode);
-    expect(rootFields(inspection.model.root.fields).slice(0, 3)).toMatchObject([
-      { fieldId: 'output:order_id', displayName: 'order_id' },
-      { fieldId: 'output:customer', displayName: 'customer' },
-      { fieldId: 'output:amount', displayName: 'amount' },
-    ]);
-    const calculation = inspection.model.definitions[0]!;
-    expect(calculation.output?.displayName).toBe('order_customer');
-    expect(
-      describeCanvasTransformDefinitions(inspection.document.plan, inspection.model).get(
-        calculation.id
-      )?.formula
-    ).toBe('UPPER(customer)');
-
-    let calculatedSession = nextSession;
-    if (withLiteral) {
-      setDraftSession.mockClear();
-      await act(async () => {
-        await harness.latest()?.handleAddCanvasCalculatedColumn({
-          nodeId: transform.id,
-          kind: 'string-literal',
-          alias: 'channel',
-          value: 'web',
-        });
-      });
-      expect(setDraftSession).toHaveBeenCalledOnce();
-      const addCalculated = setDraftSession.mock.calls[0]?.[0] as (
-        current: typeof draftSession
-      ) => typeof draftSession;
-      calculatedSession = addCalculated(nextSession);
+    const fixture = await createCalculatedColumnExclusionFixture();
+    try {
+      const nextSession = await applyScalarCalculation(fixture);
+      const calculatedSession = await addLiteralCalculation(fixture, nextSession, withLiteral);
+      const calculation = inspectCalculatedOutputs(
+        calculatedSession,
+        fixture.transform.id,
+        withLiteral
+      );
+      const toggledSession = await excludeCalculatedInput(fixture, calculatedSession, calculation);
+      await reorderCalculatedOutput(fixture, toggledSession, calculation, withLiteral);
+    } finally {
+      fixture.harness.cleanup();
     }
-    const calculatedNode = calculatedSession.localNodeCatalog?.[transform.id];
-    if (calculatedNode == null) throw new Error('Expected calculated output.');
-    const calculatedInspection = inspectTransform(calculatedNode);
-    const calculatedOutputs = rootFields(calculatedInspection.model.root.fields);
-    expect(calculatedOutputs.map((output) => output.displayName)).toEqual([
-      'order_id',
-      'customer',
-      'amount',
-      'order_customer',
-      ...(withLiteral ? ['channel'] : []),
-    ]);
-    const derivedFieldIds = calculatedOutputs.slice(3).map((output) => output.fieldId);
-    const definitions = calculatedInspection.model.definitions.map(
-      ({ id, expression, inputIds }) => [id, expression, inputIds]
-    );
-    if (withLiteral) {
-      const literal = calculatedInspection.model.definitions.find(
-        (definition) => definition.output?.displayName === 'channel'
-      )!;
-      expect(dvtSubstraitExpression.literalValue(literal.expression)).toEqual({
-        dataType: 'string',
-        value: 'web',
-      });
-    }
-    setDraftSession.mockClear();
-    await act(async () => {
-      harness.latest()?.handleToggleCanvasColumnOutput({
-        nodeId: transform.id,
-        columnId: 'output:customer',
-        columnType: 'text',
-        output: false,
-      });
-    });
-    expect(setDraftSession).toHaveBeenCalledOnce();
-    const toggleUpdate = setDraftSession.mock.calls[0]?.[0] as
-      ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
-    if (toggleUpdate == null) throw new Error('Expected serialized output toggle.');
-    const toggledSession = toggleUpdate(calculatedSession);
-    const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
-    if (toggledNode == null) throw new Error('Expected updated transform output selection.');
-    const toggledInspection = inspectTransform(toggledNode);
-    expect(rootFields(toggledInspection.model.root.fields).map((output) => output.fieldId)).toEqual(
-      ['output:order_id', 'output:amount', ...derivedFieldIds]
-    );
-    expect(
-      toggledInspection.model.definitions.map(({ id, expression, inputIds }) => [
-        id,
-        expression,
-        inputIds,
-      ])
-    ).toEqual(definitions);
-
-    setDraftSession.mockClear();
-    await act(async () => {
-      harness.latest()?.handleReorderCanvasColumnOutput({
-        nodeId: transform.id,
-        columnId: 'output:amount',
-        targetColumnId: 'output:order_id',
-        placement: 'before',
-      });
-    });
-    expect(setDraftSession).toHaveBeenCalledOnce();
-    const reorderUpdate = setDraftSession.mock.calls[0]?.[0] as
-      ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
-    if (reorderUpdate == null) throw new Error('Expected serialized output reorder.');
-    const reorderedSession = reorderUpdate(toggledSession);
-    const reorderedNode = reorderedSession.localNodeCatalog?.[transform.id];
-    if (reorderedNode == null) throw new Error('Expected reordered transform outputs.');
-    const reorderedInspection = inspectTransform(reorderedNode);
-    expect(
-      rootFields(reorderedInspection.model.root.fields).map((output) => output.fieldId)
-    ).toEqual(['output:amount', 'output:order_id', ...derivedFieldIds]);
-    expect(
-      reorderedInspection.model.definitions.map(({ id, expression, inputIds }) => [
-        id,
-        expression,
-        inputIds,
-      ])
-    ).toEqual(definitions);
-    const sql = await projectSubstraitToPostgresSql(reorderedInspection.document);
-    expect(sql.sql).toMatch(/\bupper\s*\(/i);
-    expect(sql.projection.outputs.map((output) => output.name)).toEqual([
-      'amount',
-      'order_id',
-      'order_customer',
-      ...(withLiteral ? ['channel'] : []),
-    ]);
-
-    harness.cleanup();
   });
 });
+
+type CalculationSourceNode = CanonicalNode & {
+  metadata: {
+    schema: string;
+    tableName: string;
+    connectedSourceRef: ConnectedSourceRef;
+    columns: readonly { name: string; type: string }[];
+  };
+};
+
+function buildCalculatedColumnSource(): CalculationSourceNode {
+  return {
+    ...buildCanonicalNode('source-orders', 'input'),
+    metadata: {
+      schema: 'raw',
+      tableName: 'orders',
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'raw.orders',
+      } as const,
+      columns: [
+        { name: 'order_id', type: 'text' },
+        { name: 'customer', type: 'text' },
+        { name: 'amount', type: 'numeric' },
+      ],
+    },
+  } satisfies CanonicalNode;
+}
+
+async function createCalculatedColumnExclusionFixture(): Promise<CalculationExclusionFixture> {
+  const { applyDvtSubstraitSemanticDocument } = await vi.importActual<
+    typeof import('./canvasDvtTransformAuthoringAuthority')
+  >('./canvasDvtTransformAuthoringAuthority');
+  const {
+    createDvtSubstraitProjectionDraft,
+    encodeDvtSubstraitProjectionDocument,
+    resolveDvtSubstraitColumnFunctions,
+  } = await vi.importActual<typeof import('./canvasDvtSubstraitProjection')>(
+    './canvasDvtSubstraitProjection'
+  );
+  const source = buildCalculatedColumnSource();
+  const projection = createDvtSubstraitProjectionDraft({
+    source: {
+      nodeId: source.id,
+      schema: 'raw',
+      table: 'orders',
+      sourceRef: source.metadata.connectedSourceRef,
+      fields: source.metadata.columns.map((column) => ({
+        name: column.name,
+        dataType: column.type,
+      })),
+    },
+    targetNodeId: 'transform-orders',
+    outputs: source.metadata.columns.map((column) => ({
+      fieldId: `output:${column.name}`,
+      name: column.name,
+      sourceFieldName: column.name,
+    })),
+  });
+  const transform = applyDvtSubstraitSemanticDocument(
+    buildCanonicalNode('transform-orders', 'transform'),
+    encodeDvtSubstraitProjectionDocument(projection)
+  );
+  const draftSession = {
+    ...buildDraftSession(),
+    workingSet: {
+      visibleNodeIds: [source.id, transform.id],
+      visibleEdges: [{ sourceId: source.id, targetId: transform.id }],
+      pendingExplicitNodeIds: [],
+    },
+    localNodeCatalog: { [source.id]: source, [transform.id]: transform },
+  };
+  const setDraftSession = vi.fn();
+  const harness = renderGraphHandlersHook({
+    canEditEdges: true,
+    canonicalNodes: [source, transform],
+    edges: [
+      {
+        id: 'source-orders->transform-orders',
+        source: source.id,
+        target: transform.id,
+      },
+    ],
+    draftSession,
+    setDraftSession,
+  });
+  await harness.render();
+  return { transform, draftSession, setDraftSession, harness, resolveDvtSubstraitColumnFunctions };
+}
+
+type CalculationExclusionFixture = {
+  transform: CanonicalNode;
+  draftSession: CanvasDraftSession & { localNodeCatalog: Record<string, CanonicalNode> };
+  setDraftSession: ReturnType<typeof vi.fn>;
+  harness: ReturnType<typeof renderGraphHandlersHook>;
+  resolveDvtSubstraitColumnFunctions: (typeof import('./canvasDvtSubstraitProjection'))['resolveDvtSubstraitColumnFunctions'];
+};
+type CalculationSession = CalculationExclusionFixture['draftSession'];
+
+async function applyScalarCalculation(
+  fixture: CalculationExclusionFixture
+): Promise<CalculationSession> {
+  const { transform, draftSession, setDraftSession, harness, resolveDvtSubstraitColumnFunctions } =
+    fixture;
+  const upper = resolveDvtSubstraitColumnFunctions({
+    dataTypes: ['text'],
+    provider: 'postgres',
+  }).find((item) => item.name === 'upper');
+  if (upper == null) throw new Error('Expected admitted upper capability.');
+
+  let functionResult:
+    | Readonly<{ outcome: 'applied'; createdFieldId: string }>
+    | Readonly<{ outcome: 'rejected' }>
+    | undefined;
+  await act(async () => {
+    functionResult = await harness.latest()?.handleAddCanvasCalculatedColumn({
+      nodeId: transform.id,
+      kind: 'scalar-function',
+      inputFieldId: 'output:customer',
+      capabilityId: upper.capabilityId,
+      alias: 'order_customer',
+    });
+  });
+
+  expect(functionResult).toMatchObject({ outcome: 'applied' });
+  expect(setDraftSession).toHaveBeenCalledOnce();
+  const applyFunction = setDraftSession.mock.calls[0]?.[0] as (
+    current: typeof draftSession
+  ) => typeof draftSession;
+  const nextSession = applyFunction(draftSession);
+  const nextNode = nextSession.localNodeCatalog?.[transform.id];
+  if (nextNode == null) throw new Error('Expected updated transform.');
+  expectScalarCalculationProjection(nextNode);
+  return nextSession;
+}
+
+async function addLiteralCalculation(
+  fixture: CalculationExclusionFixture,
+  nextSession: CalculationSession,
+  withLiteral: boolean
+): Promise<CalculationSession> {
+  const { transform, draftSession, setDraftSession, harness } = fixture;
+  let calculatedSession = nextSession;
+  if (withLiteral) {
+    setDraftSession.mockClear();
+    await act(async () => {
+      await harness.latest()?.handleAddCanvasCalculatedColumn({
+        nodeId: transform.id,
+        kind: 'string-literal',
+        alias: 'channel',
+        value: 'web',
+      });
+    });
+    expect(setDraftSession).toHaveBeenCalledOnce();
+    const addCalculated = setDraftSession.mock.calls[0]?.[0] as (
+      current: typeof draftSession
+    ) => typeof draftSession;
+    calculatedSession = addCalculated(nextSession);
+  }
+  return calculatedSession;
+}
+
+type CalculatedOutputProof = {
+  derivedFieldIds: readonly string[];
+  definitions: ReadonlyArray<readonly unknown[]>;
+};
+
+function inspectCalculatedOutputs(
+  calculatedSession: CalculationSession,
+  transformId: string,
+  withLiteral: boolean
+): CalculatedOutputProof {
+  const calculatedNode = calculatedSession.localNodeCatalog?.[transformId];
+  if (calculatedNode == null) throw new Error('Expected calculated output.');
+  const calculatedInspection = inspectTransform(calculatedNode);
+  const calculatedOutputs = rootFields(calculatedInspection.model.root.fields);
+  expect(calculatedOutputs.map((output) => output.displayName)).toEqual([
+    'order_id',
+    'customer',
+    'amount',
+    'order_customer',
+    ...(withLiteral ? ['channel'] : []),
+  ]);
+  const derivedFieldIds = calculatedOutputs.slice(3).map((output) => output.fieldId);
+  const definitions = calculatedInspection.model.definitions.map(({ id, expression, inputIds }) => [
+    id,
+    expression,
+    inputIds,
+  ]);
+  if (withLiteral) {
+    const literal = calculatedInspection.model.definitions.find(
+      (definition) => definition.output?.displayName === 'channel'
+    )!;
+    expect(dvtSubstraitExpression.literalValue(literal.expression)).toEqual({
+      dataType: 'string',
+      value: 'web',
+    });
+  }
+  return { derivedFieldIds, definitions };
+}
+
+async function excludeCalculatedInput(
+  fixture: CalculationExclusionFixture,
+  calculatedSession: CalculationSession,
+  calculation: ReturnType<typeof inspectCalculatedOutputs>
+): Promise<CalculationSession> {
+  const { transform, draftSession, setDraftSession, harness } = fixture;
+  const { derivedFieldIds, definitions } = calculation;
+  setDraftSession.mockClear();
+  await act(async () => {
+    harness.latest()?.handleToggleCanvasColumnOutput({
+      nodeId: transform.id,
+      columnId: 'output:customer',
+      columnType: 'text',
+      output: false,
+    });
+  });
+  expect(setDraftSession).toHaveBeenCalledOnce();
+  const toggleUpdate = setDraftSession.mock.calls[0]?.[0] as
+    ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
+  if (toggleUpdate == null) throw new Error('Expected serialized output toggle.');
+  const toggledSession = toggleUpdate(calculatedSession);
+  const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
+  if (toggledNode == null) throw new Error('Expected updated transform output selection.');
+  const toggledInspection = inspectTransform(toggledNode);
+  expect(rootFields(toggledInspection.model.root.fields).map((output) => output.fieldId)).toEqual([
+    'output:order_id',
+    'output:amount',
+    ...derivedFieldIds,
+  ]);
+  expect(
+    toggledInspection.model.definitions.map(({ id, expression, inputIds }) => [
+      id,
+      expression,
+      inputIds,
+    ])
+  ).toEqual(definitions);
+
+  return toggledSession;
+}
+
+async function reorderCalculatedOutput(
+  fixture: CalculationExclusionFixture,
+  toggledSession: CalculationSession,
+  calculation: ReturnType<typeof inspectCalculatedOutputs>,
+  withLiteral: boolean
+): Promise<void> {
+  const { transform, draftSession, setDraftSession, harness } = fixture;
+  const { derivedFieldIds, definitions } = calculation;
+  setDraftSession.mockClear();
+  await act(async () => {
+    harness.latest()?.handleReorderCanvasColumnOutput({
+      nodeId: transform.id,
+      columnId: 'output:amount',
+      targetColumnId: 'output:order_id',
+      placement: 'before',
+    });
+  });
+  expect(setDraftSession).toHaveBeenCalledOnce();
+  const reorderUpdate = setDraftSession.mock.calls[0]?.[0] as
+    ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
+  if (reorderUpdate == null) throw new Error('Expected serialized output reorder.');
+  const reorderedSession = reorderUpdate(toggledSession);
+  const reorderedNode = reorderedSession.localNodeCatalog?.[transform.id];
+  if (reorderedNode == null) throw new Error('Expected reordered transform outputs.');
+  const reorderedInspection = inspectTransform(reorderedNode);
+  expect(rootFields(reorderedInspection.model.root.fields).map((output) => output.fieldId)).toEqual(
+    ['output:amount', 'output:order_id', ...derivedFieldIds]
+  );
+  expect(
+    reorderedInspection.model.definitions.map(({ id, expression, inputIds }) => [
+      id,
+      expression,
+      inputIds,
+    ])
+  ).toEqual(definitions);
+  const sql = await projectSubstraitToPostgresSql(reorderedInspection.document);
+  expect(sql.sql).toMatch(/\bupper\s*\(/i);
+  expect(sql.projection.outputs.map((output) => output.name)).toEqual([
+    'amount',
+    'order_id',
+    'order_customer',
+    ...(withLiteral ? ['channel'] : []),
+  ]);
+}
+
+function expectScalarCalculationProjection(nextNode: CanonicalNode): void {
+  const inspection = inspectTransform(nextNode);
+  expect(rootFields(inspection.model.root.fields).slice(0, 3)).toMatchObject([
+    { fieldId: 'output:order_id', displayName: 'order_id' },
+    { fieldId: 'output:customer', displayName: 'customer' },
+    { fieldId: 'output:amount', displayName: 'amount' },
+  ]);
+  const calculation = inspection.model.definitions[0]!;
+  expect(calculation.output?.displayName).toBe('order_customer');
+  expect(
+    describeCanvasTransformDefinitions(inspection.document.plan, inspection.model).get(
+      calculation.id
+    )?.formula
+  ).toBe('UPPER(customer)');
+}

@@ -620,7 +620,15 @@ describe('CanvasWorkspaceMenuControls', () => {
   });
 
   it('keeps captured delegates current and retires unavailable commands', async () => {
-    const commands = () => ({ export: vi.fn(), import: vi.fn(), select: vi.fn(), close: vi.fn() });
+    const commands = (): Record<
+      'export' | 'import' | 'select' | 'close',
+      ReturnType<typeof vi.fn<() => void>>
+    > => ({
+      export: vi.fn<() => void>(),
+      import: vi.fn<() => void>(),
+      select: vi.fn<() => void>(),
+      close: vi.fn<() => void>(),
+    });
     const first = commands();
     const latest = commands();
     const base = { canExportProjectSnapshot: true, canImportProjectSnapshot: true };

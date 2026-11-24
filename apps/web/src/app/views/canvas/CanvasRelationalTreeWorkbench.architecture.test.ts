@@ -445,6 +445,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
     expect(combined).not.toContain('encodeDvtSubstrait');
     expect(combined).not.toContain('create(');
+  });
+
+  it('keeps semantic writes in the existing authoring session', () => {
     expect(AuthoringSessionSource).toContain('createCanvasRelationalTreeApplyCommand');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeExistingSeed');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeRemoval');

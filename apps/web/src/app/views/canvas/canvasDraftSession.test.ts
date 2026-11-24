@@ -552,15 +552,7 @@ describe('canvasDraftSession', () => {
         draft: persistedDraft,
       })
     );
-    const reloadedDraft = reloadedSession.baseline.record?.draft;
-    expect(reloadedDraft).toBeDefined();
-    const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(reloadedDraft!);
-    const projection = buildCanvasAuthoringGraphProjection({
-      visibleNodeIds: reloadedSession.workingSet.visibleNodeIds,
-      visibleEdges: reloadedSession.workingSet.visibleEdges,
-      draftSemanticGraph: semanticGraph,
-      localCanonicalNodes: [],
-    });
+    const projection = projectReloadedDraft(reloadedSession);
     const sourceNode = projection.canonicalNodesById.get('source_node');
     const transformNode = projection.canonicalNodesById.get('transform_node');
     expect(sourceNode?.kind).toBe('dvt:source');
@@ -579,72 +571,17 @@ describe('canvasDraftSession', () => {
       presentationCopy,
     }).sections.find((section) => section.id === 'inputs-outputs');
 
-    expect(reloadedSession.workingSet.visibleEdges).toEqual([
-      { sourceId: 'source_node', targetId: 'transform_node' },
-    ]);
-    expect(projection.canonicalEdges).toEqual([
-      {
-        id: 'edge_source_node_transform_node',
-        sourceId: 'source_node',
-        targetId: 'transform_node',
-        relation: 'lineage',
-      },
-    ]);
-    expect(sourceInputsOutputs?.tableRows).toEqual([
-      {
-        id: 'output:edge_source_node_transform_node',
-        cells: {
-          direction: 'Output',
-          node: 'Orders transform',
-          nodeId: 'transform_node',
-          relation: 'lineage',
-        },
-      },
-    ]);
-    expect(transformInputsOutputs?.tableRows).toEqual([
-      {
-        id: 'input:edge_source_node_transform_node',
-        cells: {
-          direction: 'Input',
-          node: 'Orders source',
-          nodeId: 'source_node',
-          relation: 'lineage',
-        },
-      },
-    ]);
+    expectPersistedRelationship(
+      reloadedSession,
+      projection,
+      sourceInputsOutputs,
+      transformInputsOutputs
+    );
   });
 
   it('keeps a removed edge absent from persistence, reload, and Inputs/Outputs', async () => {
-    const { canonicalNodes, canonicalEdges, persistedDraft } = buildSourceToTransformFixture();
-    const initialSession = canvasDraftSession.machine.bootstrap({
-      remoteDraft: buildRemoteDraftRecord({
-        revision: 'rev-before-removal',
-        draft: persistedDraft,
-      }),
-      canonicalNodeIds: canonicalNodes.map((node) => node.id),
-      canonicalEdges,
-    });
-
-    const removedState = canvasGraphLifecycle.edge.applyChanges(
-      {
-        draftSession: initialSession,
-        nodes: canonicalNodes.map((node) => ({
-          id: node.id,
-          data: { name: node.name },
-          position: persistedDraft.nodePositions[node.id]!,
-        })),
-        edges: [
-          {
-            id: canonicalEdges[0]!.id,
-            source: canonicalEdges[0]!.sourceId,
-            target: canonicalEdges[0]!.targetId,
-          },
-        ],
-        selectedNodeIds: [],
-        inspectorNodeId: null,
-      },
-      [{ id: canonicalEdges[0]!.id, type: 'remove' }]
-    );
+    const { canonicalNodes, canonicalEdges, persistedDraft, initialSession, removedState } =
+      buildRemovedEdgeDraftState();
     const persistedAfterRemoval = buildCurrentDraftPayload(
       persistedDraft.nodePositions,
       removedState.draftSession,
@@ -675,15 +612,7 @@ describe('canvasDraftSession', () => {
       savedSession,
       reloadedRemoteRecord!
     );
-    const reloadedDraft = reloadedSession.baseline.record?.draft;
-    expect(reloadedDraft).toBeDefined();
-    const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(reloadedDraft!);
-    const projection = buildCanvasAuthoringGraphProjection({
-      visibleNodeIds: reloadedSession.workingSet.visibleNodeIds,
-      visibleEdges: reloadedSession.workingSet.visibleEdges,
-      draftSemanticGraph: semanticGraph,
-      localCanonicalNodes: [],
-    });
+    const projection = projectReloadedDraft(reloadedSession);
     const presentationCopy = buildCanvasNodePresentationCopy(resolveCanvasViewCopy('en'), 'en');
     const readInputsOutputs = (
       nodeId: string
@@ -864,3 +793,99 @@ describe('canvasDraftSession', () => {
     expect(reloadedSession.localNodeCatalog).toBeUndefined();
   });
 });
+
+function projectReloadedDraft(
+  reloadedSession: ReturnType<typeof canvasDraftSession.machine.bootstrap>
+): ReturnType<typeof buildCanvasAuthoringGraphProjection> {
+  const reloadedDraft = reloadedSession.baseline.record?.draft;
+  expect(reloadedDraft).toBeDefined();
+  const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(reloadedDraft!);
+  return buildCanvasAuthoringGraphProjection({
+    visibleNodeIds: reloadedSession.workingSet.visibleNodeIds,
+    visibleEdges: reloadedSession.workingSet.visibleEdges,
+    draftSemanticGraph: semanticGraph,
+    localCanonicalNodes: [],
+  });
+}
+
+function expectPersistedRelationship(
+  reloadedSession: ReturnType<typeof canvasDraftSession.machine.bootstrap>,
+  projection: ReturnType<typeof projectReloadedDraft>,
+  sourceInputsOutputs:
+    ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] | undefined,
+  transformInputsOutputs:
+    ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] | undefined
+): void {
+  expect(reloadedSession.workingSet.visibleEdges).toEqual([
+    { sourceId: 'source_node', targetId: 'transform_node' },
+  ]);
+  expect(projection.canonicalEdges).toEqual([
+    {
+      id: 'edge_source_node_transform_node',
+      sourceId: 'source_node',
+      targetId: 'transform_node',
+      relation: 'lineage',
+    },
+  ]);
+  expect(sourceInputsOutputs?.tableRows).toEqual([
+    {
+      id: 'output:edge_source_node_transform_node',
+      cells: {
+        direction: 'Output',
+        node: 'Orders transform',
+        nodeId: 'transform_node',
+        relation: 'lineage',
+      },
+    },
+  ]);
+  expect(transformInputsOutputs?.tableRows).toEqual([
+    {
+      id: 'input:edge_source_node_transform_node',
+      cells: {
+        direction: 'Input',
+        node: 'Orders source',
+        nodeId: 'source_node',
+        relation: 'lineage',
+      },
+    },
+  ]);
+}
+
+type RemovedEdgeDraftFixture = ReturnType<typeof buildSourceToTransformFixture> & {
+  initialSession: ReturnType<typeof canvasDraftSession.machine.bootstrap>;
+  removedState: ReturnType<typeof canvasGraphLifecycle.edge.applyChanges>;
+};
+
+function buildRemovedEdgeDraftState(): RemovedEdgeDraftFixture {
+  const { canonicalNodes, canonicalEdges, persistedDraft } = buildSourceToTransformFixture();
+  const initialSession = canvasDraftSession.machine.bootstrap({
+    remoteDraft: buildRemoteDraftRecord({
+      revision: 'rev-before-removal',
+      draft: persistedDraft,
+    }),
+    canonicalNodeIds: canonicalNodes.map((node) => node.id),
+    canonicalEdges,
+  });
+
+  const removedState = canvasGraphLifecycle.edge.applyChanges(
+    {
+      draftSession: initialSession,
+      nodes: canonicalNodes.map((node) => ({
+        id: node.id,
+        data: { name: node.name },
+        position: persistedDraft.nodePositions[node.id]!,
+      })),
+      edges: [
+        {
+          id: canonicalEdges[0]!.id,
+          source: canonicalEdges[0]!.sourceId,
+          target: canonicalEdges[0]!.targetId,
+        },
+      ],
+      selectedNodeIds: [],
+      inspectorNodeId: null,
+    },
+    [{ id: canonicalEdges[0]!.id, type: 'remove' }]
+  );
+  return { canonicalNodes, canonicalEdges, persistedDraft, initialSession, removedState };
+}

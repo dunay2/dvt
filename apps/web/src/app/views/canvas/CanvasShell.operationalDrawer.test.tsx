@@ -1,7 +1,14 @@
+import {
+  type TransformDataSampleResponse,
+  asIsoUtcString,
+  asSha256HexString,
+} from '@dvt/contracts';
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell publishes Canvas operations into the bottom drawer. */
-import { asIsoUtcString } from '@dvt/contracts';
+// @vitest-environment jsdom
+/** Owned concern: prove CanvasShell publishes Canvas operations into the bottom drawer. */
+
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -128,18 +135,7 @@ describe('CanvasShell operational drawer registration', () => {
     });
 
     expect(onInspectNode).not.toHaveBeenCalled();
-    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
-    expect(
-      useOperationalDrawerContributionStore
-        .getState()
-        .contribution?.tabs.some((tab) => tab.id === 'semantic')
-    ).toBe(false);
-    expect(projectedNode?.position).toBe(position);
-    expect(
-      useOperationalDrawerContributionStore
-        .getState()
-        .contribution?.tabs.filter((tab) => tab.id === 'data:operation')
-    ).toEqual([expect.objectContaining({ id: 'data:operation', label: 'Data' })]);
+    expectModelDrawerDisposition(projectedNode, position);
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
@@ -217,70 +213,14 @@ describe('CanvasShell operational drawer registration', () => {
           resolveSample = resolve;
         })
     );
-    const transformSample = {
-      contractVersion: 1 as const,
-      canvasId: 'canvas-test',
-      transformNodeId: fixture.transform.id,
-      draftRevision: 'revision-7',
-      semanticPlanSha256: 'a'.repeat(64),
-      columns: [{ name: 'id', type: 'integer', nullable: false }],
-      rows: [{ values: ['2'] }],
-      limit: 20,
-      truncated: false,
-      provenance: {
-        mode: 'live' as const,
-        sourceRefs: [
-          {
-            schemaVersion: 'connected-source-ref.v1' as const,
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1' as const,
-              connectionId: 'local-postgres-proof',
-              provider: 'postgres',
-            },
-            sourceObjectId: 'relation/dvt/public/orders',
-          },
-        ],
-        queriedAt: asIsoUtcString('2026-09-15T10:00:00.000Z'),
-        limit: 20,
-        navigation: 'bounded-first-page' as const,
-      },
-    };
+    const transformSample = buildLateTransformSample(fixture.transform.id);
     const previewTransformRows = vi.fn().mockResolvedValue(transformSample);
     const onInspectNode = vi.fn();
     await renderShell({
       warehouseSourceDataSampleQuery: { previewSourceObjectRows },
       canvasTransformDataSampleQuery: { previewTransformRows },
       panels: { inspectorGraphNodes: [...fixture.sources, fixture.transform] },
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'source',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Source',
-              status: 'idle',
-              metadata: {
-                connectedSourceRef: {
-                  schemaVersion: 'connected-source-ref.v1',
-                  connectionRef: {
-                    schemaVersion: 'connection-ref.v1',
-                    connectionId: 'postgres',
-                    provider: 'postgres',
-                  },
-                  sourceObjectId: 'relation/dvt/public/orders',
-                },
-              },
-            },
-          },
-          {
-            id: fixture.transform.id,
-            type: 'dbtNode',
-            position: { x: 100, y: 0 },
-            data: { ...fixture.transform, pluginKind: fixture.transform.kind, onInspectNode },
-          },
-        ],
-      },
+      graph: buildLateSampleShellGraph(fixture, onInspectNode),
     });
     const nodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
       data: DbtNodeData;
@@ -293,32 +233,7 @@ describe('CanvasShell operational drawer registration', () => {
       nodes[0]?.data.onOpenSourceDataSample?.('source');
       nodes[1]?.data.onOpenNode?.(fixture.transform.id);
     });
-    const sourceSample: SourceDataSample = {
-      contractVersion: 1,
-      connectionId: 'postgres',
-      objectId: 'relation/dvt/public/orders',
-      columns: [{ name: 'id', type: 'integer', nullable: false }],
-      rows: [{ values: ['1'] }],
-      limit: 20,
-      truncated: false,
-      provenance: {
-        mode: 'live',
-        sourceRefs: [
-          {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'postgres',
-              provider: 'postgres',
-            },
-            sourceObjectId: 'relation/dvt/public/orders',
-          },
-        ],
-        queriedAt: asIsoUtcString('2026-09-14T00:00:00.000Z'),
-        limit: 20,
-        navigation: 'bounded-first-page',
-      },
-    };
+    const sourceSample = buildLateSourceSample();
     await act(async () => {
       resolveSample?.(sourceSample);
       await Promise.resolve();
@@ -345,3 +260,108 @@ describe('CanvasShell operational drawer registration', () => {
     expect(previewSourceObjectRows).toHaveBeenCalledOnce();
   });
 });
+
+function expectModelDrawerDisposition(
+  projectedNode: { position: { x: number; y: number }; data: Record<string, unknown> } | undefined,
+  position: { x: number; y: number }
+): void {
+  expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+  expect(
+    useOperationalDrawerContributionStore
+      .getState()
+      .contribution?.tabs.some((tab) => tab.id === 'semantic')
+  ).toBe(false);
+  expect(projectedNode?.position).toBe(position);
+  expect(
+    useOperationalDrawerContributionStore
+      .getState()
+      .contribution?.tabs.filter((tab) => tab.id === 'data:operation')
+  ).toEqual([expect.objectContaining({ id: 'data:operation', label: 'Data' })]);
+}
+
+function buildLateTransformSample(transformNodeId: string): TransformDataSampleResponse {
+  const source = buildLateSourceSample({
+    connectionId: 'local-postgres-proof',
+    rowValue: '2',
+    queriedAt: '2026-09-15T10:00:00.000Z',
+  });
+  return {
+    contractVersion: 1 as const,
+    canvasId: 'canvas-test',
+    transformNodeId,
+    draftRevision: 'revision-7',
+    semanticPlanSha256: asSha256HexString('a'.repeat(64)),
+    columns: source.columns,
+    rows: source.rows,
+    limit: source.limit,
+    truncated: source.truncated,
+    provenance: source.provenance,
+  };
+}
+
+function buildLateSourceSample(
+  options = { connectionId: 'postgres', rowValue: '1', queriedAt: '2026-09-14T00:00:00.000Z' }
+): SourceDataSample {
+  return {
+    contractVersion: 1,
+    connectionId: options.connectionId,
+    objectId: 'relation/dvt/public/orders',
+    columns: [{ name: 'id', type: 'integer', nullable: false }],
+    rows: [{ values: [options.rowValue] }],
+    limit: 20,
+    truncated: false,
+    provenance: {
+      mode: 'live',
+      sourceRefs: [
+        {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: options.connectionId,
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/orders',
+        },
+      ],
+      queriedAt: asIsoUtcString(options.queriedAt),
+      limit: 20,
+      navigation: 'bounded-first-page',
+    },
+  };
+}
+
+function buildLateSampleShellGraph(
+  fixture: ReturnType<typeof buildSemanticWorkbenchFixture>,
+  onInspectNode: () => void
+): CanvasShellPropsOverrides['graph'] {
+  return {
+    nodesWithImpact: [
+      {
+        id: 'source',
+        type: 'dbtNode',
+        position: { x: 0, y: 0 },
+        data: {
+          name: 'Source',
+          status: 'idle',
+          metadata: {
+            connectedSourceRef: {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                connectionId: 'postgres',
+                provider: 'postgres',
+              },
+              sourceObjectId: 'relation/dvt/public/orders',
+            },
+          },
+        },
+      },
+      {
+        id: fixture.transform.id,
+        type: 'dbtNode',
+        position: { x: 100, y: 0 },
+        data: { ...fixture.transform, pluginKind: fixture.transform.kind, onInspectNode },
+      },
+    ],
+  };
+}

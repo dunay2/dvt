@@ -1,4 +1,4 @@
-import React, { act } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
@@ -63,23 +63,7 @@ vi.mock('@xyflow/react', async () => {
       nodes: T[]
     ) =>
       changes.reduce((currentNodes, change) => {
-        if (change.type === 'remove' && change.id != null) {
-          return currentNodes.filter((node) => node.id !== change.id);
-        }
-
-        if (change.type === 'position' && change.id != null) {
-          return currentNodes.map((node) =>
-            node.id === change.id
-              ? {
-                  ...node,
-                  ...(change.position === undefined ? {} : { position: change.position }),
-                  ...(change.dragging === undefined ? {} : { dragging: change.dragging }),
-                }
-              : node
-          );
-        }
-
-        return currentNodes;
+        return applyCanvasHarnessNodeChange(currentNodes, change);
       }, nodes),
     applyEdgeChanges: <T extends { id: string }>(
       changes: Array<{ id?: string; type?: string }>,
@@ -209,4 +193,33 @@ export function setupCanvasControllerHarness() {
       vi.clearAllMocks();
     },
   };
+}
+
+type HarnessNodeChange = {
+  id?: string;
+  type?: string;
+  position?: { x: number; y: number };
+  dragging?: boolean;
+};
+
+function applyCanvasHarnessNodeChange<
+  T extends { id: string; position?: { x: number; y: number }; dragging?: boolean },
+>(currentNodes: T[], change: HarnessNodeChange): T[] {
+  if (change.type === 'remove' && change.id != null) {
+    return currentNodes.filter((node) => node.id !== change.id);
+  }
+
+  if (change.type === 'position' && change.id != null) {
+    return currentNodes.map((node) =>
+      node.id === change.id
+        ? {
+            ...node,
+            ...(change.position === undefined ? {} : { position: change.position }),
+            ...(change.dragging === undefined ? {} : { dragging: change.dragging }),
+          }
+        : node
+    );
+  }
+
+  return currentNodes;
 }

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
-import React, { act } from 'react';
+import { act } from 'react';
 import { ConnectedSourceRefSchema, type TransformSqlProjectionRequest } from '@dvt/contracts';
 import {
   ExtensionLeafRelSchema,
@@ -594,23 +594,28 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     await renderNodePanel(root, MODEL_NODE, 'inputs-outputs', authoring, 1, undefined, graph);
 
-    const section = container.querySelector(
-      '[data-slot="canvas-node-workbench-inputs-outputs-content"]'
+    const section = requireWorkbenchElement(
+      container.querySelector('[data-slot="canvas-node-workbench-inputs-outputs-content"]'),
+      'section'
     );
-    const summary = section?.querySelector('[data-slot="node-property-relationship-summary"]');
 
-    expect(section?.querySelector('table')).toBeNull();
+    const summary = requireWorkbenchElement(
+      section.querySelector('[data-slot="node-property-relationship-summary"]'),
+      'summary'
+    );
+
+    expect(section.querySelector('table')).toBeNull();
     expect(
-      summary?.querySelector('[data-slot="node-property-relationship-direction"]')?.textContent
+      summary.querySelector('[data-slot="node-property-relationship-direction"]')?.textContent
     ).toBe('Input');
     expect(
-      summary?.querySelector('[data-slot="node-property-relationship-node"]')?.textContent
+      summary.querySelector('[data-slot="node-property-relationship-node"]')?.textContent
     ).toBe(source.name);
     expect(
-      summary?.querySelector('[data-slot="node-property-relationship-relation"]')?.textContent
+      summary.querySelector('[data-slot="node-property-relationship-relation"]')?.textContent
     ).toBe('lineage');
-    expect(section?.textContent).not.toContain(source.id);
-    expect(section?.textContent).not.toContain(graph.edges[0]!.id);
+    expect(section.textContent).not.toContain(source.id);
+    expect(section.textContent).not.toContain(graph.edges[0]!.id);
     expect(graph).toEqual(originalGraph);
     expect(authoring.onApplyNodeDraft).not.toHaveBeenCalled();
   });
@@ -826,23 +831,32 @@ describe('CanvasNodeWorkbenchPanel', () => {
   it('separates external Source authority from DVT-owned metadata without a Summary overflow', async () => {
     await renderPanel(root, 'general');
 
-    const generalSection = container.querySelector(
-      '[data-slot="canvas-node-workbench-general-section"]'
+    const generalSection = requireWorkbenchElement(
+      container.querySelector('[data-slot="canvas-node-workbench-general-section"]'),
+      'generalSection'
     );
-    const external = generalSection?.querySelector('[data-slot="canvas-source-overview-external"]');
-    const dvt = generalSection?.querySelector('[data-slot="canvas-source-overview-dvt"]');
+
+    const external = requireWorkbenchElement(
+      generalSection.querySelector('[data-slot="canvas-source-overview-external"]'),
+      'external'
+    );
+
+    const dvt = requireWorkbenchElement(
+      generalSection.querySelector('[data-slot="canvas-source-overview-dvt"]'),
+      'dvt'
+    );
 
     expect(generalSection).not.toBeNull();
     expect(external).not.toBeNull();
     expect(dvt).not.toBeNull();
-    expect(external?.textContent).toContain('Schema');
-    expect(external?.textContent).toContain('raw');
-    expect(external?.textContent).toContain('orders');
-    expect(dvt?.textContent).toContain('Name');
-    expect(dvt?.textContent).toContain('Tags');
-    expect(dvt?.textContent).toContain('Description');
-    expect(external?.textContent).not.toContain('Node ID');
-    expect(external?.textContent).not.toContain('Plugin');
+    expect(external.textContent).toContain('Schema');
+    expect(external.textContent).toContain('raw');
+    expect(external.textContent).toContain('orders');
+    expect(dvt.textContent).toContain('Name');
+    expect(dvt.textContent).toContain('Tags');
+    expect(dvt.textContent).toContain('Description');
+    expect(external.textContent).not.toContain('Node ID');
+    expect(external.textContent).not.toContain('Plugin');
     expect(container.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).toBeNull();
 
     await renderPanel(root, 'summary');
@@ -891,43 +905,46 @@ describe('CanvasNodeWorkbenchPanel', () => {
       codeProjection: { canvasId: 'canvas-orders', query: { projectTransformSql } },
     });
 
-    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    const outputSelector = codeSection?.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-transform-output-view-selector"]'
-    );
-    const canonicalViewer = codeSection?.querySelector<HTMLElement>(
-      '[data-testid="monaco-code-viewer"]'
+    const codeSection = requireWorkbenchElement(
+      container.querySelector('[data-slot="canvas-node-workbench-code-section"]'),
+      'codeSection'
     );
 
-    expect(outputSelector?.value).toBe('substrait');
+    const outputSelector = requireWorkbenchElement(
+      codeSection.querySelector<HTMLSelectElement>(
+        '[data-slot="dvt-transform-output-view-selector"]'
+      ),
+      'outputSelector'
+    );
+
+    const canonicalViewer = requireWorkbenchElement(
+      codeSection.querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]'),
+      'canonicalViewer'
+    );
+
+    expect(outputSelector.value).toBe('substrait');
     expect(project).not.toHaveBeenCalled();
-    expect(canonicalViewer?.dataset.language).toBe('json');
-    expect(canonicalViewer?.textContent).toContain('dvt-substrait-semantic-document.v1');
+    expect(canonicalViewer.dataset.language).toBe('json');
+    expect(canonicalViewer.textContent).toContain('dvt-substrait-semantic-document.v1');
     expect(
-      Array.from(codeSection?.querySelectorAll('p') ?? [], (paragraph) => paragraph.textContent)
+      Array.from(codeSection.querySelectorAll('p') ?? [], (paragraph) => paragraph.textContent)
     ).not.toEqual(expect.arrayContaining([expect.stringMatching(/Substrait document|SHA-256/)]));
-    expect(codeSection?.textContent).not.toContain('Convert to SQL');
+    expect(codeSection.textContent).not.toContain('Convert to SQL');
 
     await act(async () => {
       fireEvent.change(outputSelector!, { target: { value: 'postgres-sql' } });
       await Promise.resolve();
     });
 
-    await waitFor(() => {
-      const sqlViewer = codeSection?.querySelector<HTMLElement>(
-        '[data-testid="monaco-code-viewer"]'
-      );
-      expect(sqlViewer?.dataset.language).toBe('sql');
-      expect(sqlViewer?.textContent?.trim().length).toBeGreaterThan(0);
-    });
+    await expectAuthorizedSqlViewer(codeSection);
     expect(project).toHaveBeenCalledOnce();
     expect(projectTransformSql).toHaveBeenCalledOnce();
     expect(project.mock.calls[0]![0].transformNode.id).toBe(DVT_SUBSTRAIT_TRANSFORM_NODE.id);
-    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
+    expect(codeSection.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
       (await project.mock.results[0]!.value).sql
     );
     project.mockRestore();
-    expect(outputSelector?.value).toBe('postgres-sql');
+    expect(outputSelector.value).toBe('postgres-sql');
   });
 
   it.each([
@@ -991,60 +1008,30 @@ describe('CanvasNodeWorkbenchPanel', () => {
         );
       await renderSection('columns', 1);
 
-      const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
-      const header = container.querySelector(
-        '[data-slot="canvas-node-workbench-header-actions"]'
-      )?.parentElement;
-      expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
-      expect(panel?.querySelector('[data-slot="dvt-start-substrait-projection"]')).toBeNull();
-      expect(panel?.querySelector('[data-slot="dvt-relation-authoring"]')).toBeNull();
-      expect(panel?.querySelector('[data-slot="canvas-relation-outputs"]')).toBeNull();
-      if (canonical) expect(panel?.textContent).toContain('order_id');
+      const panel = requireWorkbenchElement(
+        container.querySelector('[data-slot="canvas-node-workbench-panel"]'),
+        'panel'
+      );
+
+      const header = requireWorkbenchElement(
+        container.querySelector('[data-slot="canvas-node-workbench-header-actions"]')
+          ?.parentElement,
+        'header'
+      );
+
+      expectModelColumnReadOnlyBoundary(panel, canonical);
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
       await renderSection('general', 2);
-      const actions = panel?.querySelector('[data-slot="canvas-node-workbench-header-actions"]');
-      const openEditor = actions?.querySelector<HTMLButtonElement>(
-        '[data-slot="canvas-open-semantic-editor"]'
-      );
-      expect(openEditor).not.toBeNull();
-      expect(panel?.querySelectorAll('[data-slot="canvas-open-semantic-editor"]')).toHaveLength(1);
-      const general = panel?.querySelector('[data-slot="canvas-node-workbench-general-content"]');
-      expect(general).not.toBeNull();
-      expect(general?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
-      await act(async () => openEditor!.click());
-      expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
-      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      const { actions, openEditor } = await openModelEditingEntry(panel, {
+        onOpenSemanticEditor,
+        onApplyNodeDraft,
+      });
       await renderSection('code', 3);
-      expect(actions?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBe(openEditor);
+      expect(actions.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBe(openEditor);
       expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
-      if (canEditNode) {
-        const code = panel?.querySelector('[data-slot="canvas-node-workbench-code-content"]');
-        expect(code).not.toBeNull();
-        expect(code?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
-      } else {
-        expect(panel?.querySelector('[data-slot="canvas-node-workbench-tab-code"]')).toBeNull();
-        const fallback = panel?.querySelector(
-          '[data-slot="canvas-node-workbench-general-content"]'
-        );
-        expect(fallback).not.toBeNull();
-        expect(fallback?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
-      }
-      expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
-      expect(
-        panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')
-      ).not.toBeNull();
-      expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
-      expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
-        'Model'
-      );
-      const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
-      const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
-      const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
-      expect(tabList?.parentElement).toBe(tabsList);
-      expect(moreTrigger?.parentElement).toBe(tabsList);
-      expect(header?.textContent).toContain('Clean Orders');
-      expect(header?.querySelector('p')).toBeNull();
+      expectModelCodeEntry(panel, canEditNode);
+      expectModelEditingEntryChrome(panel, header);
     }
   );
 
@@ -1097,21 +1084,28 @@ describe('CanvasNodeWorkbenchPanel', () => {
   it('renders one read-only DBT SQL projection in Code', async () => {
     await renderNodePanel(root, MODEL_NODE, 'code');
 
-    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    const sqlViewer = codeSection?.querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]');
+    const codeSection = requireWorkbenchElement(
+      container.querySelector('[data-slot="canvas-node-workbench-code-section"]'),
+      'codeSection'
+    );
+
+    const sqlViewer = requireWorkbenchElement(
+      codeSection.querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]'),
+      'sqlViewer'
+    );
 
     expect(codeSection).not.toBeNull();
-    expect(sqlViewer?.textContent).toContain('origin."order_id" as "order_id"');
-    expect(sqlViewer?.textContent).toContain('origin."discount_code" as "discount_code"');
-    expect(sqlViewer?.textContent).not.toContain('select *');
-    expect(sqlViewer?.textContent).toContain('{{ source(');
-    expect(sqlViewer?.dataset.language).toBe('sql');
-    expect(sqlViewer?.dataset.path).toBe('models/orders_model.sql');
-    expect(codeSection?.querySelector('pre')).toBeNull();
-    expect(codeSection?.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
-    expect(codeSection?.querySelectorAll('[data-testid="monaco-code-viewer"]')).toHaveLength(1);
-    expect(codeSection?.textContent).toContain('read-only projection');
-    expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
+    expect(sqlViewer.textContent).toContain('origin."order_id" as "order_id"');
+    expect(sqlViewer.textContent).toContain('origin."discount_code" as "discount_code"');
+    expect(sqlViewer.textContent).not.toContain('select *');
+    expect(sqlViewer.textContent).toContain('{{ source(');
+    expect(sqlViewer.dataset.language).toBe('sql');
+    expect(sqlViewer.dataset.path).toBe('models/orders_model.sql');
+    expect(codeSection.querySelector('pre')).toBeNull();
+    expect(codeSection.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
+    expect(codeSection.querySelectorAll('[data-testid="monaco-code-viewer"]')).toHaveLength(1);
+    expect(codeSection.textContent).toContain('read-only projection');
+    expect(codeSection.textContent).not.toContain('No properties are recorded for this section.');
   });
 
   it('persists DBT model selections immediately without Apply or Cancel controls', async () => {
@@ -1282,4 +1276,113 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(sinkSection?.querySelector('input[name="dvt-sink-table"]')).not.toBeNull();
     expect(sinkSection?.querySelector('select[name="dvt-sink-write-mode"]')).not.toBeNull();
   });
+
+  function expectModelColumnReadOnlyBoundary(panel: Element, canonical: boolean): void {
+    expect(panel.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
+    expect(panel.querySelector('[data-slot="dvt-start-substrait-projection"]')).toBeNull();
+    expect(panel.querySelector('[data-slot="dvt-relation-authoring"]')).toBeNull();
+    expect(panel.querySelector('[data-slot="canvas-relation-outputs"]')).toBeNull();
+    if (canonical) expect(panel.textContent).toContain('order_id');
+  }
+
+  async function openModelEditingEntry(
+    panel: Element,
+    callbacks: {
+      onOpenSemanticEditor: ReturnType<typeof vi.fn>;
+      onApplyNodeDraft: ReturnType<typeof vi.fn>;
+    }
+  ): Promise<{ actions: Element; openEditor: HTMLButtonElement }> {
+    const { onOpenSemanticEditor, onApplyNodeDraft } = callbacks;
+    const actions = requireWorkbenchElement(
+      panel.querySelector('[data-slot="canvas-node-workbench-header-actions"]'),
+      'actions'
+    );
+
+    const openEditor = requireWorkbenchElement(
+      actions.querySelector<HTMLButtonElement>('[data-slot="canvas-open-semantic-editor"]'),
+      'openEditor'
+    );
+
+    expect(openEditor).not.toBeNull();
+    expect(panel.querySelectorAll('[data-slot="canvas-open-semantic-editor"]')).toHaveLength(1);
+    const general = requireWorkbenchElement(
+      panel.querySelector('[data-slot="canvas-node-workbench-general-content"]'),
+      'general'
+    );
+
+    expect(general).not.toBeNull();
+    expect(general.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+    await act(async () => openEditor!.click());
+    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    return { actions, openEditor };
+  }
+
+  function expectModelCodeEntry(panel: Element, canEditNode: boolean): void {
+    if (canEditNode) {
+      const code = requireWorkbenchElement(
+        panel.querySelector('[data-slot="canvas-node-workbench-code-content"]'),
+        'code'
+      );
+
+      expect(code).not.toBeNull();
+      expect(code.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+    } else {
+      expect(panel.querySelector('[data-slot="canvas-node-workbench-tab-code"]')).toBeNull();
+      const fallback = requireWorkbenchElement(
+        panel.querySelector('[data-slot="canvas-node-workbench-general-content"]'),
+        'fallback'
+      );
+
+      expect(fallback).not.toBeNull();
+      expect(fallback.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+    }
+  }
+
+  function expectModelEditingEntryChrome(panel: Element, header: HTMLElement): void {
+    expect(panel.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
+    expect(panel.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).not.toBeNull();
+    expect(panel.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
+    expect(panel.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
+      'Model'
+    );
+    const tabsList = requireWorkbenchElement(
+      panel.querySelector('[data-slot="canvas-node-workbench-tabs-list"]'),
+      'tabsList'
+    );
+
+    const tabList = requireWorkbenchElement(
+      panel.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]'),
+      'tabList'
+    );
+
+    const moreTrigger = requireWorkbenchElement(
+      panel.querySelector('[data-slot="canvas-node-workbench-more-trigger"]'),
+      'moreTrigger'
+    );
+
+    expect(tabList.parentElement).toBe(tabsList);
+    expect(moreTrigger.parentElement).toBe(tabsList);
+    expect(header.textContent).toContain('Clean Orders');
+    expect(header.querySelector('p')).toBeNull();
+  }
+
+  async function expectAuthorizedSqlViewer(codeSection: Element): Promise<void> {
+    await waitFor(() => {
+      const sqlViewer = codeSection.querySelector<HTMLElement>(
+        '[data-testid="monaco-code-viewer"]'
+      );
+      expect(sqlViewer?.dataset.language).toBe('sql');
+      expect(sqlViewer?.textContent?.trim().length).toBeGreaterThan(0);
+    });
+  }
 });
+
+function requireWorkbenchElement<T extends Element>(
+  element: T | null | undefined,
+  label: string
+): T {
+  expect(element, `Expected ${label} presentation`).not.toBeNull();
+  if (!element) throw new Error(`Expected ${label} presentation`);
+  return element;
+}

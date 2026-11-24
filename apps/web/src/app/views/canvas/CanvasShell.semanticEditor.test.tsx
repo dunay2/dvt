@@ -128,7 +128,10 @@ describe('Canvas Model inspection', () => {
       await act(async () => {
         data.onOpenNode?.();
       });
-      const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]')!;
+      const editor = requireModelShellElement(
+        harness.container.querySelector('[data-slot="canvas-model-editor"]'),
+        'editor'
+      );
       expect(editor.querySelector('[data-slot="canvas-relational-tree-unavailable"]')).toBeNull();
       expect(
         editor.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
@@ -189,7 +192,10 @@ describe('Canvas Model inspection', () => {
       await act(async () => {
         pencil.click();
       });
-      const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]')!;
+      const editor = requireModelShellElement(
+        harness.container.querySelector('[data-slot="canvas-model-editor"]'),
+        'editor'
+      );
       expect(editor).not.toBeNull();
       expect(
         editor.querySelector('[data-slot="canvas-relational-tree-inspection"]')
@@ -209,7 +215,10 @@ describe('Canvas Model inspection', () => {
   it('closes only Code while preserving the retained Model without preview or Apply', async () => {
     const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
-    const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
+    const editor = requireModelShellElement(
+      harness.container.querySelector('[data-slot="canvas-model-editor"]'),
+      'editor'
+    );
     const model = navigation.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-model-main-tab"]'
     )!;
@@ -230,7 +239,7 @@ describe('Canvas Model inspection', () => {
     ).toBeNull();
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).toBe(model);
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
-    expect(editor?.closest('[inert]')).not.toBeNull();
+    expect(editor.closest('[inert]')).not.toBeNull();
     await act(async () => {
       // A real pointer gesture moves focus before the pending Code-close frame can restore Canvas.
       fireEvent.mouseDown(model, { button: 0 });
@@ -239,7 +248,7 @@ describe('Canvas Model inspection', () => {
       fireEvent.click(model, { button: 0 });
     });
     expect(model.getAttribute('aria-selected')).toBe('true');
-    expect(editor?.closest('[inert]')).toBeNull();
+    expect(editor.closest('[inert]')).toBeNull();
     await act(async () =>
       useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.()
     );
@@ -262,9 +271,10 @@ describe('Canvas Model inspection', () => {
     try {
       opener.focus();
       await act(async () => data.onOpenNode?.(fixture.transform.id));
-      const editor = harness.container.querySelector<HTMLElement>(
-        '[data-slot="canvas-model-editor"]'
-      )!;
+      const editor = requireModelShellElement(
+        harness.container.querySelector<HTMLElement>('[data-slot="canvas-model-editor"]'),
+        'editor'
+      );
       const modelTab = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-model-main-tab"]'
       )!;
@@ -284,24 +294,16 @@ describe('Canvas Model inspection', () => {
   it('opens only the model workspace and leaves existing data results in the drawer', async () => {
     const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
-    const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
+    const editor = requireModelShellElement(
+      harness.container.querySelector('[data-slot="canvas-model-editor"]'),
+      'editor'
+    );
     expect(
       useOperationalDrawerContributionStore
         .getState()
         .contribution?.tabs.some((tab) => tab.id.startsWith('sql:'))
     ).toBe(false);
-    const toolbar = harness.container.querySelector('[data-slot="canvas-model-toolbar"]');
-    expect(toolbar?.tagName).toBe('FOOTER');
-    expect(editor?.firstElementChild).not.toBe(toolbar);
-    expect(editor?.lastElementChild).toBe(toolbar);
-    const sqlDisclosure = within(toolbar as HTMLElement).getByRole('button', {
-      name: 'Open Model SQL',
-    });
-    const sqlPanel = harness.container.querySelector('[data-slot="canvas-model-sql"]');
-    expect(sqlDisclosure.getAttribute('aria-expanded')).toBe('false');
-    expect(sqlPanel).not.toBeNull();
-    expect(sqlPanel?.hasAttribute('hidden')).toBe(true);
-    expect(sqlDisclosure.getAttribute('aria-controls')).toBe(sqlPanel?.id);
+    expectModelEditorDrawerIsolation(harness.container, editor);
     expect(
       useOperationalDrawerContributionStore
         .getState()
@@ -319,18 +321,14 @@ describe('Canvas Model inspection', () => {
     });
     try {
       const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
-      const panelFor = (tab: HTMLElement): HTMLElement => {
-        const panel = document.getElementById(tab.getAttribute('aria-controls') ?? '');
-        expect(panel).not.toBeNull();
-        expect(panel?.getAttribute('role')).toBe('tabpanel');
-        expect(panel?.getAttribute('aria-labelledby')).toBe(tab.id);
-        return panel!;
-      };
       const canvas = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-workspace-tab"]'
       )!;
-      const canvasPanel = panelFor(canvas);
-      const viewport = harness.container.querySelector('[data-testid="canvas-viewport"]');
+      const canvasPanel = readWorkbenchPanelForTab(canvas);
+      const viewport = requireModelShellElement(
+        harness.container.querySelector('[data-testid="canvas-viewport"]'),
+        'viewport'
+      );
       const activityRail = within(harness.container).getByRole('navigation', {
         name: 'Navigation',
       });
@@ -341,22 +339,13 @@ describe('Canvas Model inspection', () => {
       const model = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-model-main-tab"]'
       )!;
-      const modelPanel = panelFor(model);
+      const modelPanel = readWorkbenchPanelForTab(model);
       const code = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-code-main-tab"]'
       )!;
       let codePanel: HTMLElement | undefined;
       let codeEditor: Element | null | undefined;
-      const modelClose = navigation.querySelector('[data-slot="canvas-model-tab-close"]');
-      expect(modelClose?.tagName).toBe('BUTTON');
-      expect(modelClose?.closest('[role="tab"]')).toBeNull();
-      expect(modelClose?.getAttribute('tabindex')).toBe('0');
-      expect(modelClose?.closest('[role="tablist"]')).toBeNull();
-      expect(model.getAttribute('aria-keyshortcuts')).toBe('Delete');
-      expect(model.contains(modelClose)).toBe(false);
-      expect(
-        modelPanel.contains(harness.container.querySelector('[data-slot="canvas-model-editor"]'))
-      ).toBe(true);
+      expectModelCloseControl(model, modelPanel, harness.container);
       await act(async () => model.focus());
       for (const [key, target] of [
         ['Home', canvas],
@@ -374,7 +363,7 @@ describe('Canvas Model inspection', () => {
         await act(async () => frames.splice(0).forEach((callback) => callback(0)));
         expect(document.activeElement).toBe(target);
         expect(target.getAttribute('aria-selected')).toBe('true');
-        const activePanel = panelFor(target);
+        const activePanel = readWorkbenchPanelForTab(target);
         expect(activePanel.getAttribute('aria-hidden')).toBe('false');
         expect(activePanel.hasAttribute('inert')).toBe(false);
         const visibleRails = within(harness.container).queryAllByRole('navigation', {
@@ -395,14 +384,14 @@ describe('Canvas Model inspection', () => {
           expect(canvas.getAttribute('aria-selected')).toBe('true');
           expect(modelPanel.getAttribute('aria-hidden')).toBe('true');
           expect(canvasEntry.getAttribute('aria-expanded')).toBe('true');
-          expect(panelFor(model)).toBe(modelPanel);
+          expect(readWorkbenchPanelForTab(model)).toBe(modelPanel);
           await act(async () => {
             fireEvent.mouseDown(model, { button: 0 });
             model.focus();
           });
           expect(model.getAttribute('aria-selected')).toBe('true');
           expect(modelPanel.getAttribute('aria-hidden')).toBe('false');
-          expect(panelFor(model)).toBe(modelPanel);
+          expect(readWorkbenchPanelForTab(model)).toBe(modelPanel);
         }
         if (target === code) {
           codePanel ??= activePanel;
@@ -412,16 +401,12 @@ describe('Canvas Model inspection', () => {
             codeEditor
           );
         }
-        for (const inactive of [canvasPanel, modelPanel, codePanel]) {
-          if (inactive == null || inactive === activePanel) continue;
-          expect(inactive.getAttribute('aria-hidden')).toBe('true');
-          expect(inactive.hasAttribute('inert')).toBe(true);
-        }
+        expectInactiveWorkbenchPanels([canvasPanel, modelPanel, codePanel], activePanel);
       }
       await act(async () =>
         navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
       );
-      expect(panelFor(canvas)).toBe(canvasPanel);
+      expect(readWorkbenchPanelForTab(canvas)).toBe(canvasPanel);
       expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
       expect(document.getElementById(modelPanel.id)).toBeNull();
       expect(previewTransformRows).not.toHaveBeenCalled();
@@ -456,7 +441,10 @@ describe('Canvas Model inspection', () => {
         },
       });
       await act(async () => data.onOpenNode?.(fixture.transform.id));
-      const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
+      const editor = requireModelShellElement(
+        harness.container.querySelector('[data-slot="canvas-model-editor"]'),
+        'editor'
+      );
       const code = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-code-main-tab"]'
       )!;
@@ -471,7 +459,7 @@ describe('Canvas Model inspection', () => {
       expect(target.getAttribute('aria-selected')).toBe('true');
       expect(code.getAttribute('aria-selected')).toBe('false');
       expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
-      expect(editor?.closest('[inert]') != null).toBe(destination === 'Canvas');
+      expect(editor.closest('[inert]') != null).toBe(destination === 'Canvas');
       expect(previewTransformRows).not.toHaveBeenCalled();
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
     }
@@ -488,13 +476,16 @@ describe('Canvas Model inspection', () => {
       0
     );
     expect(previewTransformRows).not.toHaveBeenCalled();
-    const toolbar = harness.container.querySelector('[data-slot="canvas-model-toolbar"]');
-    expect(toolbar?.querySelectorAll('[role="tab"]')).toHaveLength(0);
-    expect(toolbar?.textContent).not.toContain('Semantic editor');
+    const toolbar = requireModelShellElement(
+      harness.container.querySelector('[data-slot="canvas-model-toolbar"]'),
+      'toolbar'
+    );
+    expect(toolbar.querySelectorAll('[role="tab"]')).toHaveLength(0);
+    expect(toolbar.textContent).not.toContain('Semantic editor');
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')?.textContent).toBe(
       fixture.transform.name
     );
-    expect(toolbar?.querySelector('[data-slot="canvas-model-back"]')).toBeNull();
+    expect(toolbar.querySelector('[data-slot="canvas-model-back"]')).toBeNull();
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).not.toBeNull();
     expect(
       harness.container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
@@ -572,3 +563,72 @@ describe('Canvas Model inspection', () => {
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 });
+
+function expectModelEditorDrawerIsolation(container: HTMLElement, editor: Element | null): void {
+  const toolbar = requireModelShellElement(
+    container.querySelector('[data-slot="canvas-model-toolbar"]'),
+    'toolbar'
+  );
+  expect(toolbar.tagName).toBe('FOOTER');
+  expect(editor?.firstElementChild).not.toBe(toolbar);
+  expect(editor?.lastElementChild).toBe(toolbar);
+  const sqlDisclosure = within(toolbar as HTMLElement).getByRole('button', {
+    name: 'Open Model SQL',
+  });
+  const sqlPanel = requireModelShellElement(
+    container.querySelector('[data-slot="canvas-model-sql"]'),
+    'sqlPanel'
+  );
+  expect(sqlDisclosure.getAttribute('aria-expanded')).toBe('false');
+  expect(sqlPanel).not.toBeNull();
+  expect(sqlPanel.hasAttribute('hidden')).toBe(true);
+  expect(sqlDisclosure.getAttribute('aria-controls')).toBe(sqlPanel.id);
+}
+
+function readWorkbenchPanelForTab(tab: HTMLElement): HTMLElement {
+  const panel = document.getElementById(tab.getAttribute('aria-controls') ?? '');
+  expect(panel).not.toBeNull();
+  expect(panel?.getAttribute('role')).toBe('tabpanel');
+  expect(panel?.getAttribute('aria-labelledby')).toBe(tab.id);
+  return panel!;
+}
+
+function expectModelCloseControl(
+  model: HTMLElement,
+  modelPanel: HTMLElement,
+  container: HTMLElement
+): void {
+  const modelClose = requireModelShellElement(
+    navigation.querySelector('[data-slot="canvas-model-tab-close"]'),
+    'modelClose'
+  );
+  expect(modelClose.tagName).toBe('BUTTON');
+  expect(modelClose.closest('[role="tab"]')).toBeNull();
+  expect(modelClose.getAttribute('tabindex')).toBe('0');
+  expect(modelClose.closest('[role="tablist"]')).toBeNull();
+  expect(model.getAttribute('aria-keyshortcuts')).toBe('Delete');
+  expect(model.contains(modelClose)).toBe(false);
+  expect(modelPanel.contains(container.querySelector('[data-slot="canvas-model-editor"]'))).toBe(
+    true
+  );
+}
+
+function expectInactiveWorkbenchPanels(
+  panels: readonly (HTMLElement | undefined)[],
+  activePanel: HTMLElement
+): void {
+  for (const inactive of panels) {
+    if (inactive == null || inactive === activePanel) continue;
+    expect(inactive.getAttribute('aria-hidden')).toBe('true');
+    expect(inactive.hasAttribute('inert')).toBe(true);
+  }
+}
+
+function requireModelShellElement<T extends Element>(
+  element: T | null | undefined,
+  label: string
+): T {
+  expect(element, `Expected ${label} presentation`).not.toBeNull();
+  if (!element) throw new Error(`Expected ${label} presentation`);
+  return element;
+}

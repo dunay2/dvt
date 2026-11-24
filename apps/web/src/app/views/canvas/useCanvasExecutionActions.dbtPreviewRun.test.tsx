@@ -230,7 +230,9 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
       })
     );
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.fileContent('tenant::project::env', 'models/orders_model.sql'),
+      queryKey: queryKeys.workspace
+        .forLayout('tenant::project::env')
+        .fileContent('models/orders_model.sql'),
     });
     expect(harness.text('can-start-run')).toBe('true');
 
@@ -288,13 +290,15 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
       expect.stringContaining('Unsafe backend detail')
     );
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.fileTree('tenant::project::env'),
+      queryKey: queryKeys.workspace.forLayout('tenant::project::env').fileTree(),
     });
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.artifacts('tenant::project::env'),
+      queryKey: queryKeys.workspace.forLayout('tenant::project::env').artifacts(),
     });
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.fileContent('tenant::project::env', 'models/orders_model.sql'),
+      queryKey: queryKeys.workspace
+        .forLayout('tenant::project::env')
+        .fileContent('models/orders_model.sql'),
     });
     expect(invalidate.mock.invocationCallOrder.at(-1)).toBeLessThan(
       vi.mocked(harness.shellFeedback.error).mock.invocationCallOrder[0]!
@@ -334,10 +338,9 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
       const invalidate = vi.spyOn(harness.queryClient, 'invalidateQueries');
       await harness.clickPlan();
       expect(invalidate).toHaveBeenCalledWith({
-        queryKey: queryKeys.workspace.fileContent(
-          'tenant::project::env',
-          'models/orders_model.sql'
-        ),
+        queryKey: queryKeys.workspace
+          .forLayout('tenant::project::env')
+          .fileContent('models/orders_model.sql'),
       });
       expect(harness.shellFeedback.error).toHaveBeenCalledOnce();
       expect(harness.text('current-plan-sha')).toBe('none');

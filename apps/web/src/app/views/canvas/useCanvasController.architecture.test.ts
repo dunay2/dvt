@@ -23,7 +23,7 @@ describe('useCanvasController architecture', () => {
     expect(RUNTIME_SOURCE).toContain('useCanvasAuthoringRuntime');
     expect(PRESENTATION_SOURCE).toContain('useCanvasControllerReadModel');
     expect(CONTROLLER_SOURCE).toContain('buildCanvasControllerViewModel');
-    expect(CONTROLLER_SOURCE).not.toContain('queryKeys.workspace.graphDraft');
+    expect(CONTROLLER_SOURCE).not.toContain('.graphDraft(');
     expect(CONTROLLER_SOURCE).not.toContain('useQuery(');
     expect(CONTROLLER_SOURCE).not.toContain('useQueryClient(');
     expect(CONTROLLER_SOURCE).not.toContain('createCanvasDraftRepository');
