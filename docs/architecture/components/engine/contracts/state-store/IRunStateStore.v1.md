@@ -144,7 +144,7 @@ interface AppendResult {
 - [State Store Contract](./README.md)
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
 - [RunEvents.v1.md](../engine/RunEvents.v1.md)
-- [Contract Versioning Policy](../../VERSIONING.md)
+- [Contract Versioning Policy](../VERSIONING.md)
 
 ---
 

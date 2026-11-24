@@ -26,7 +26,7 @@ test('DBT round-trip capability current schema owns normalized phase evidence an
   );
   assert.match(
     sql,
-    /feature_mechanization_local_rails_mechanization_status_check CHECK \(\(mechanization_status = ANY \(ARRAY\['closed'::text, 'implemented'::text\]\)\)\)/
+    /feature_mechanization_local_rails_mechanization_status_check CHECK \(\(mechanization_status = ANY \(ARRAY\['closed'::text, 'implemented'::text, 'declared'::text\]\)\)\)/
   );
 });
 

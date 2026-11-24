@@ -14,11 +14,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { listMarkdownFiles } = require('./policy-validation-files.cjs');
+const {
+  CONTRACTS_ROOT,
+  listMarkdownFiles,
+  requireContractMarkdownFiles,
+} = require('./policy-validation-files.cjs');
 const { stripInlineCodeFragments } = require('./policy-validation-text.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
-const CONTRACTS_DIR = path.join(ROOT, 'docs', 'architecture', 'engine', 'contracts');
 
 // Modes: "warn" (default) or "error".
 const argv = process.argv.slice(2);
@@ -59,15 +62,8 @@ const LOWERCASE_PATTERN = new RegExp(
   'g'
 );
 
-main();
-
-function main() {
-  if (!fs.existsSync(CONTRACTS_DIR)) {
-    console.log('RFC2119 | contracts directory not found, skipping');
-    process.exit(0);
-  }
-
-  const files = listMarkdownFiles(CONTRACTS_DIR).sort();
+function main(contractsDir = CONTRACTS_ROOT) {
+  const files = requireContractMarkdownFiles(listMarkdownFiles(contractsDir).sort());
   const findings = [];
 
   for (const file of files) {
@@ -172,3 +168,6 @@ function getArgValue(args, flag) {
   if (index === -1) return '';
   return args[index + 1] || '';
 }
+
+if (require.main === module) main();
+module.exports = { main };

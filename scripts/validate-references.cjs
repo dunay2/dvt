@@ -4,7 +4,7 @@
  * Cross-contract reference validator.
  *
  * Scope:
- * - markdown links under docs/architecture/engine/contracts (all .md files)
+ * - markdown links under docs/architecture/components/engine/contracts (all .md files)
  *
  * Checks:
  * 1) Local link targets exist
@@ -18,25 +18,21 @@
 
 const fs = require('fs');
 const path = require('path');
-const { listMarkdownFiles } = require('./policy-validation-files.cjs');
+const {
+  CONTRACTS_ROOT,
+  listMarkdownFiles,
+  requireContractMarkdownFiles,
+} = require('./policy-validation-files.cjs');
 const { stripInlineCodeFragments } = require('./policy-validation-text.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
-const CONTRACTS_DIR = path.join(ROOT, 'docs', 'architecture', 'engine', 'contracts');
 
 const args = process.argv.slice(2);
 const mode = (getArgValue(args, '--mode') || process.env.REFS_MODE || 'warn').toLowerCase();
 const failOnIssues = mode === 'error' || process.env.REFS_FAIL === '1' || hasFlag(args, '--fail');
 
-main();
-
-function main() {
-  if (!fs.existsSync(CONTRACTS_DIR)) {
-    console.log('REFS | contracts directory not found, skipping');
-    process.exit(0);
-  }
-
-  const files = listMarkdownFiles(CONTRACTS_DIR).sort();
+function main(contractsDir = CONTRACTS_ROOT) {
+  const files = requireContractMarkdownFiles(listMarkdownFiles(contractsDir).sort());
   const issues = [];
 
   for (const file of files) {
@@ -213,3 +209,6 @@ function getArgValue(argvList, flag) {
   if (i === -1) return '';
   return argvList[i + 1] || '';
 }
+
+if (require.main === module) main();
+module.exports = { main };

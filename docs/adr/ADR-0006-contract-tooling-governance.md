@@ -7,7 +7,7 @@
 - **Related files**:
   - [`docs/architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/components/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md)
   - [`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`](../architecture/components/engine/contracts/engine/GlossaryContract.v1.md)
-  - [`scripts/validate-contracts.cjs`](../../scripts/validate-contracts.cjs)
+  - [`packages/@dvt/cli/validate-contracts.cjs`](../../packages/@dvt/cli/validate-contracts.cjs)
   - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
 
 ---

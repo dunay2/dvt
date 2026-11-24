@@ -378,7 +378,7 @@ pnpm test:ci-tools
 
 ### `validate-rfc2119.cjs`
 
-Scans contract Markdown under `docs/architecture/engine/contracts/**` for
+Scans contract Markdown under `docs/architecture/components/engine/contracts/**` for
 lowercase RFC 2119 keywords in prose and reports deterministic findings.
 
 Usage:
@@ -389,7 +389,9 @@ pnpm contracts:rfc2119:validate
 
 ### `validate-executable-examples.cjs`
 
-Validates TypeScript code fences embedded in contract Markdown docs.
+Validates TypeScript code fences embedded in the current Engine contract corpus,
+including interface syntax. Missing or empty Markdown and zero TypeScript
+snippets reject; existing documented fragment parsing remains supported.
 
 Usage:
 
@@ -399,8 +401,12 @@ pnpm contracts:examples:validate
 
 ### `validate-glossary-usage.cjs`
 
-Validates canonical glossary usage in contract Markdown and reports prohibited
-synonyms with deterministic `file:line:column` output.
+Checks the current glossary's three explicit literal terminology claims, derived
+from existing status, logical-attempt, and ordering invariants. This limited
+lexical check preserves deterministic findings and prose exclusions; it does not
+ban generic DDD/CQ vocabulary or perform semantic/NLP inference. Missing, empty,
+or malformed policy rejects even in warning mode. Semantic findings retain the
+existing warning/error modes.
 
 Usage:
 
@@ -411,8 +417,9 @@ pnpm validate:glossary
 
 ### `validate-references.cjs`
 
-Validates cross-contract Markdown references, including local target existence
-and version-label alignment.
+Validates cross-contract Markdown references in the current Engine corpus,
+including local target existence and version-label alignment. Missing or empty
+input rejects; semantic finding severity keeps the existing warning/error modes.
 
 Usage:
 
@@ -422,8 +429,10 @@ pnpm contracts:references:validate
 
 ### `validate-idempotency-vectors.cjs`
 
-Validates RunEvents idempotency vectors by recomputing canonical SHA-256
-digests from the documented inputs.
+Validates the current versioned RunEvents idempotency vectors by recomputing
+canonical SHA-256 digests from the documented inputs. Existing required-field,
+attempt, RUN-token, delimiter, and v1/v2 plan-identity guards remain enforced;
+missing or empty artifacts reject.
 
 Usage:
 

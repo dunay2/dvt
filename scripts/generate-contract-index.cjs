@@ -2,13 +2,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { CONTRACTS_ROOT } = require('./policy-validation-files.cjs');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const CONTRACTS_ROOT = path.join(REPO_ROOT, 'docs', 'architecture', 'engine', 'contracts');
-const README_PATH = path.join(CONTRACTS_ROOT, 'README.md');
-
-const START_MARKER = '## 1) Current contracts in repository';
-const END_MARKER = '## 1.1) Historical / reference contracts';
+const START_MARKER = '<!-- contract-index:start -->';
+const END_MARKER = '<!-- contract-index:end -->';
 
 const AREA_BY_DIR = {
   engine: 'engine',
@@ -214,12 +212,12 @@ function shouldIncludeFile(relPath, ext) {
   return false;
 }
 
-function collectContracts() {
-  const files = walkFiles(CONTRACTS_ROOT);
+function collectContracts(contractsRoot = CONTRACTS_ROOT) {
+  const files = walkFiles(contractsRoot);
   const rows = [];
 
   for (const abs of files) {
-    const rel = toPosix(path.relative(CONTRACTS_ROOT, abs));
+    const rel = toPosix(path.relative(contractsRoot, abs));
     const ext = path.extname(rel).toLowerCase();
     if (!shouldIncludeFile(rel, ext)) continue;
 
@@ -255,6 +253,7 @@ function collectContracts() {
     );
   });
 
+  if (rows.length === 0) throw new Error('Contract index corpus has no contract files');
   return rows;
 }
 
@@ -281,12 +280,10 @@ function replaceSection(content, newSection) {
     throw new Error('Could not locate contract index section markers in README.md');
   }
 
-  const before = content.slice(0, start);
+  const before = content.slice(0, start + START_MARKER.length);
   const after = content.slice(end);
 
-  const body = [START_MARKER, '', newSection, '', '---', ''].join('\n');
-
-  return `${before}${body}${after}`;
+  return `${before}\n\n${newSection}\n\n${after}`;
 }
 
 async function formatMarkdownIfPossible(content, filePath) {
@@ -302,18 +299,17 @@ async function formatMarkdownIfPossible(content, filePath) {
   }
 }
 
-async function run() {
-  const rows = collectContracts();
-  const table = renderTable(rows);
-
-  const readme = fs.readFileSync(README_PATH, 'utf8');
-  const nextRaw = replaceSection(readme, table);
-  const next = await formatMarkdownIfPossible(nextRaw, README_PATH);
+async function run({ contractsRoot = CONTRACTS_ROOT } = {}) {
+  const rows = collectContracts(contractsRoot);
+  const readmePath = path.join(contractsRoot, 'README.md');
+  const table = await formatMarkdownIfPossible(renderTable(rows), readmePath);
+  const readme = fs.readFileSync(readmePath, 'utf8');
+  const next = replaceSection(readme, table.trimEnd());
 
   if (next !== readme) {
-    fs.writeFileSync(README_PATH, next, 'utf8');
+    fs.writeFileSync(readmePath, next, 'utf8');
     console.log(
-      `✅ Updated ${toPosix(path.relative(REPO_ROOT, README_PATH))} with ${rows.length} contracts`
+      `✅ Updated ${toPosix(path.relative(REPO_ROOT, readmePath))} with ${rows.length} contracts`
     );
   } else {
     console.log(`✅ No changes. Contract index is up-to-date (${rows.length} contracts)`);
@@ -328,6 +324,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  run,
   collectContracts,
   renderTable,
   normalizeLifecycle,

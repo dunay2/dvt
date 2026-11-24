@@ -63,7 +63,7 @@ These controls are the enforcement backbone.
 ### 5.1 Repository scripts
 
 - Keep and extend validation scripts in:
-  - `scripts/validate-contracts.cjs`
+  - `packages/@dvt/cli/validate-contracts.cjs` through `pnpm validate:contracts`
   - `scripts/run-golden-paths.cjs`
 - Use npm/pnpm scripts as execution entry points (single source for local + CI).
 
@@ -74,14 +74,30 @@ All contract validation MUST be driven by the canonical glossary.
 - `scripts/validate-glossary-usage.cjs` MUST:
   1. Parse `docs/architecture/components/engine/contracts/engine/GlossaryContract.v1.md` and extract canonical terms.
   2. Scan contract `.md` files for canonical term usage.
-  3. Flag term deviations and canonical-field naming drift.
-  4. Validate prohibited synonyms defined in glossary section 10.
+  3. Flag the explicit literal terminology claims declared by the current glossary.
+  4. Read the `Prohibited terminology claims` table and retain its cited status,
+     logical-attempt, and event-ordering invariants as the policy authority.
+
+This is a limited lexical control, not natural-language inference or complete
+semantic validation. The current table replaces the historical generic synonym
+bans; it does not claim equivalent coverage. Generic execution, workflow,
+request, and data vocabulary remains permitted. Existing prose exclusions and
+warning/error modes remain in effect. A missing, empty, or malformed policy or
+contract corpus MUST fail even in warning mode.
 
 - Glossary validation integration:
-  - `npm run validate:glossary`
-  - `npm run validate:contracts` (MUST include glossary validation)
+  - `pnpm contracts:glossary:validate` is the existing warning-mode document query.
+  - `pnpm validate:glossary` is its existing error-mode entrypoint.
+  - `pnpm validate:contracts` remains the canonical `@dvt/cli` runtime-fixture
+    bundle. Its current warning-mode glossary reuse does not attest strict
+    glossary acceptance or the other dedicated document checks.
 
 CI MUST fail if glossary validation reports errors.
+
+The current contracts workflow invokes the runtime-fixture bundle and schema,
+determinism, and golden-path checks. The dedicated document commands retain
+their existing entrypoints and modes; this proposal does not claim additional
+workflow wiring.
 
 ### 5.1.2 Idempotency Vector Validation (P0)
 
@@ -344,7 +360,7 @@ pnpm validate:contracts
 ## 13) References
 
 - `package.json`
-- `scripts/validate-contracts.cjs`
+- `packages/@dvt/cli/validate-contracts.cjs`
 - `.github/workflows/contracts.yml`
 - `docs/architecture/components/engine/contracts/engine/GlossaryContract.v1.md`
 - `docs/architecture/components/engine/contracts/engine/RunEvents.v1.md`

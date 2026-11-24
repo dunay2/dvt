@@ -120,7 +120,7 @@
     "test:planning:db:current-schema": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-current-schema-policy.test.cjs scripts/planning-db/current-mechanization-constraint.test.cjs",
     "test:planning:db:integration": "node --test scripts/planning-db-content.integration.test.cjs scripts/planning-db/current-mechanization-constraint.integration.test.cjs scripts/planning-db/feature-mechanization-declaration.integration.test.cjs",
     "contracts:index:generate": "node scripts/generate-contract-index.cjs",
-    "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- specs/contracts/README.md",
+    "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- docs/architecture/components/engine/contracts/README.md",
     "contracts:rfc2119:validate": "node scripts/validate-rfc2119.cjs",
     "contracts:glossary:validate": "node scripts/validate-glossary-usage.cjs --mode warn",
     "contracts:references:validate": "node scripts/validate-references.cjs",
@@ -212,9 +212,9 @@
     "apps/**/*.{html,css}": [
       "prettier --write"
     ],
-    "specs/contracts/**/*.{md,json}": [
+    "docs/architecture/components/engine/contracts/**/*.{md,json}": [
       "pnpm contracts:index:generate",
-      "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
+      "node -e \"const fs=require('fs');const cp=require('child_process');const p='docs/architecture/components/engine/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "scripts/**/*.{cjs,mjs}": [
       "eslint --fix --config tools/ci/eslint-precommit.config.cjs",

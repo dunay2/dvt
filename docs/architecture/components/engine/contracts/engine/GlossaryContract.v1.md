@@ -144,6 +144,27 @@ remain distinct from provider-native diagnostic strings.
    observation
 5. event ordering authority is `runSeq`, not timestamp order
 
+## Prohibited terminology claims
+
+The glossary validator checks the following literal claims in contract prose.
+Each contradicts an invariant already defined above. This is a limited lexical
+control, not natural-language inference or complete semantic validation. It does
+not prohibit generic words such as execution, workflow, request, or data.
+Existing fenced-code, inline-code, and Markdown-link exclusions still apply.
+
+| Canonical term     | Prohibited claim                              | Existing invariant                                                                                                                        |
+| ------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| CanonicalRunStatus | provider status is canonical lifecycle truth  | [ProviderRunStatusView](#providerrunstatusview) MUST NOT be treated as caller-visible lifecycle truth.                                    |
+| logicalAttemptId   | engineAttemptId drives idempotency            | [Attempt identifiers](#attempt-identifiers) require logicalAttemptId to drive idempotency and prohibit engineAttemptId from affecting it. |
+| runSeq             | timestamp order defines canonical event order | [Contract invariant 5](#contract-invariants) assigns event-ordering authority to runSeq, not timestamp order.                             |
+
+The validator MUST reject a missing, empty, or malformed policy table, including
+in warning mode. The active table replaces the historical generic synonym bans;
+it does not claim equivalent coverage. Semantic review remains responsible for
+claims outside these explicit lexical checks.
+
 ## Change log
+
+- **1.0 (2026-11-24)**: Added limited lexical checks for three existing status, attempt, and event-ordering invariants.
 
 - **1.0 (2026-04-11)**: Rewrote the active glossary line to define the three-model status boundary explicitly.

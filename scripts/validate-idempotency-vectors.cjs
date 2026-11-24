@@ -3,19 +3,13 @@
 const fs = require('fs');
 const path = require('path');
 const { sha256HexUtf8 } = require('@dvt/crypto');
+const { CONTRACTS_ROOT } = require('./policy-validation-files.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
-const ENGINE_CONTRACTS_DIR = path.join(
-  ROOT,
-  'docs',
-  'architecture',
-  'engine',
-  'contracts',
-  'engine'
-);
+const ENGINE_CONTRACTS_DIR = path.join(CONTRACTS_ROOT, 'engine');
 
-function main() {
-  const files = collectVectorFiles(ENGINE_CONTRACTS_DIR);
+function main(contractsDir = ENGINE_CONTRACTS_DIR) {
+  const files = collectVectorFiles(contractsDir);
   if (files.length === 0) {
     console.error('IDEMPOTENCY | no vectors artifact found (*.idempotency_vectors.json)');
     process.exit(1);
@@ -139,4 +133,5 @@ function normalizeRel(fullPath) {
   return path.relative(ROOT, fullPath).replace(/\\/g, '/');
 }
 
-main();
+if (require.main === module) main();
+module.exports = { main };
