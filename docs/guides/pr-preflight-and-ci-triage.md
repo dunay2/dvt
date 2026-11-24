@@ -161,13 +161,19 @@ flowchart LR
   Child -->|never exits| Held[Validation remains held]
 ```
 
-The executor now awaits owned asynchronous processes. Its initial per-step and
-total execution limits are both 120 minutes: the existing pre-push step itself
-invokes a complete nested changed-slice plan, so a short leaf-test limit would
-incorrectly terminate a valid compound step. These are containment limits, not
-performance targets. Nested commands inherit the earlier absolute deadline;
-starting another wrapper cannot renew the budget. Output silence is not used as
-a timeout signal.
+The executor now awaits owned asynchronous processes. Its default per-step and
+total execution limits are both 180 minutes. The complete retained Windows plan
+in #3951 required approximately 140 minutes across disjoint observed phases,
+including all six Web Vitest phases and all 98 browser specifications; the
+initial 120-minute limit could not contain that admitted scope. The existing
+pre-push step itself invokes the complete nested changed-slice plan, so a short
+leaf-test limit would incorrectly terminate a valid compound step. These are
+containment limits, not performance targets or individual test deadlines.
+The [recorded decision](https://github.com/dunay2/dvt/issues/3951#issuecomment-7116329009)
+retains every selected check and the original test, retry, coverage and worker
+policies. Nested commands inherit the earlier absolute deadline; starting
+another wrapper cannot renew the budget. Output silence is not used as a
+timeout signal.
 
 ```mermaid
 flowchart LR

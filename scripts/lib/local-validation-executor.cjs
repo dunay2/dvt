@@ -27,8 +27,8 @@ function validationLimit(value, fallback) {
 }
 
 async function executeCommandPlan(plan, options = {}) {
-  const stepTimeoutMs = validationLimit(options.stepTimeoutMs, 120 * 60_000);
-  const totalTimeoutMs = validationLimit(options.totalTimeoutMs, 120 * 60_000);
+  const stepTimeoutMs = validationLimit(options.stepTimeoutMs, 180 * 60_000);
+  const totalTimeoutMs = validationLimit(options.totalTimeoutMs, 180 * 60_000);
   const cleanupTimeoutMs = validationLimit(options.cleanupTimeoutMs, 60_000);
   const forceTimeoutMs = validationLimit(options.forceTimeoutMs, 5_000);
   const env = { ...(options.env ?? process.env) };
