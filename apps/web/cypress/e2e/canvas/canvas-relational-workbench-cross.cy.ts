@@ -19,6 +19,41 @@ import { stubSavedWorkbenchSample } from '../../support/relationalWorkbench/pers
 import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
+function authorWorkbenchCrossChain(): void {
+  openWorkbenchModel('join-transform');
+  for (const [index, source] of ['customers', 'orders', 'shipments'].entries()) {
+    dragWorkbenchSource(source);
+    cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', source)
+      .closest('li')
+      .as(`source${index}`, { type: 'static' });
+    if (index === 0) continue;
+    workbenchOperation('cross_join').click();
+    cy.get('[data-pending-operation="true"]').last().as(`cross${index}`, { type: 'static' });
+    connectWorkbenchProducer({
+      producer: index === 1 ? '@source0' : '@cross1',
+      consumer: `@cross${index}`,
+      port: 0,
+    });
+    connectWorkbenchProducer({
+      producer: `@source${index}`,
+      consumer: `@cross${index}`,
+      port: 1,
+    });
+  }
+  cy.get('[data-slot="canvas-relational-cross-warning"]').should('be.visible');
+  cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('not.exist');
+  cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="cross"]').should(
+    'have.length',
+    2
+  );
+  connectWorkbenchProducer({
+    producer: '@cross2',
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
+  cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+}
+
 describe('Workbench cross', () => {
   beforeEach(() => {
     stubWorkbenchScenario('pending-chain');
@@ -28,38 +63,7 @@ describe('Workbench cross', () => {
     cy.viewport(1400, 900);
     visitWorkbenchCanvas();
 
-    openWorkbenchModel('join-transform');
-    for (const [index, source] of ['customers', 'orders', 'shipments'].entries()) {
-      dragWorkbenchSource(source);
-      cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', source)
-        .closest('li')
-        .as(`source${index}`, { type: 'static' });
-      if (index === 0) continue;
-      workbenchOperation('cross_join').click();
-      cy.get('[data-pending-operation="true"]').last().as(`cross${index}`, { type: 'static' });
-      connectWorkbenchProducer({
-        producer: index === 1 ? '@source0' : '@cross1',
-        consumer: `@cross${index}`,
-        port: 0,
-      });
-      connectWorkbenchProducer({
-        producer: `@source${index}`,
-        consumer: `@cross${index}`,
-        port: 1,
-      });
-    }
-    cy.get('[data-slot="canvas-relational-cross-warning"]').should('be.visible');
-    cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="cross"]').should(
-      'have.length',
-      2
-    );
-    connectWorkbenchProducer({
-      producer: '@cross2',
-      consumer: '[data-slot="canvas-relational-output-input-port"]',
-      port: null,
-    });
-    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    authorWorkbenchCrossChain();
 
     cy.wrap(null).should(() => {
       const write = semanticWrites('join-transform').at(-1);

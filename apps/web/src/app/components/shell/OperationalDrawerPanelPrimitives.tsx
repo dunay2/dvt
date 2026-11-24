@@ -25,6 +25,11 @@ const operationalDrawerPanelClassNames = {
   dataNotice: 'mb-2 text-xs text-[var(--text-muted)]',
 } as const;
 
+const operationalDrawerInlineTokenVariants = {
+  warning: { element: 'span', className: operationalDrawerPanelClassNames.warningBadge },
+  code: { element: 'code', className: operationalDrawerPanelClassNames.codeToken },
+} as const;
+
 export function OperationalDrawerPanelSurface({
   ariaLabel,
   children,
@@ -66,17 +71,20 @@ export function OperationalDrawerDataNotice({
   return <p className={operationalDrawerPanelClassNames.dataNotice}>{children}</p>;
 }
 
-export function OperationalDrawerWarningBadge({
+export function OperationalDrawerInlineToken({
   children,
   dataSlot,
+  variant,
 }: Readonly<{
   children: ReactNode;
   dataSlot: string;
+  variant: keyof typeof operationalDrawerInlineTokenVariants;
 }>): JSX.Element {
+  const { element: Token, className } = operationalDrawerInlineTokenVariants[variant];
   return (
-    <span data-slot={dataSlot} className={operationalDrawerPanelClassNames.warningBadge}>
+    <Token data-slot={dataSlot} className={className}>
       {children}
-    </span>
+    </Token>
   );
 }
 
@@ -99,9 +107,12 @@ export function OperationalDrawerProblemItem({
 }>): JSX.Element {
   return (
     <li className={operationalDrawerPanelClassNames.problemItem}>
-      <OperationalDrawerWarningBadge dataSlot="bottom-operational-problem-severity">
+      <OperationalDrawerInlineToken
+        variant="warning"
+        dataSlot="bottom-operational-problem-severity"
+      >
         {severityLabel}
-      </OperationalDrawerWarningBadge>
+      </OperationalDrawerInlineToken>
       <span className={operationalDrawerPanelClassNames.problemMessageFrame}>
         <span className={operationalDrawerPanelClassNames.problemMessage}>{message}</span>
         <OperationalDrawerDetailCode>{detail}</OperationalDrawerDetailCode>
@@ -125,16 +136,6 @@ export function OperationalDrawerDetailCode({
     >
       {children}
     </span>
-  );
-}
-
-export function OperationalDrawerCodeToken(
-  props: Readonly<{ children: ReactNode; dataSlot: string }>
-): JSX.Element {
-  return (
-    <code data-slot={props.dataSlot} className={operationalDrawerPanelClassNames.codeToken}>
-      {props.children}
-    </code>
   );
 }
 
@@ -172,9 +173,13 @@ export function OperationalDrawerPreviewSummary({
       {blockers.length > 0 ? (
         <div className={operationalDrawerPanelClassNames.previewBlockers}>
           {blockers.map((blocker) => (
-            <OperationalDrawerCodeToken key={blocker} dataSlot="bottom-operational-preview-blocker">
+            <OperationalDrawerInlineToken
+              key={blocker}
+              variant="code"
+              dataSlot="bottom-operational-preview-blocker"
+            >
               {blocker}
-            </OperationalDrawerCodeToken>
+            </OperationalDrawerInlineToken>
           ))}
         </div>
       ) : null}

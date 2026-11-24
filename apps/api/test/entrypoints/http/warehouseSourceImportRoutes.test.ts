@@ -2,6 +2,7 @@ import { type WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  expectSourceImportRejectedWithoutMutation,
   expectSourceImportRejection,
   expectWarehouseAuthorization,
   placeImportedSourceInstance,
@@ -348,11 +349,7 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('rejects unsupported custom grouping instead of importing with schema semantics', async () => {
-    const { app, draftStore, workspaceFiles } = buildApp();
-
-    const response = await injectWarehouseRequest(app, {
-      method: 'POST',
-      path: `/workspace/sources/import`,
+    await expectSourceImportRejectedWithoutMutation({
       payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
@@ -361,14 +358,10 @@ describe('warehouseSourceImportRoutes', () => {
         addTests: false,
         addFreshness: false,
       }),
+      responseBody: {
+        error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+      },
     });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
-    });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
   });
 
   it('keeps schema-grouped YAML sources and imported node metadata distinct when database names disambiguate nodes', async () => {
@@ -508,13 +501,10 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('rejects malformed existing source YAML before mutating the draft', async () => {
-    const { app, draftStore, workspaceFiles } = buildApp({
-      existingSourceFileContent: 'version: 2\nsources:\n  - name: [',
-    });
-
-    const response = await injectWarehouseRequest(app, {
-      method: 'POST',
-      path: `/workspace/sources/import`,
+    await expectSourceImportRejectedWithoutMutation({
+      fixtureOptions: {
+        existingSourceFileContent: 'version: 2\nsources:\n  - name: [',
+      },
       payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
@@ -523,18 +513,14 @@ describe('warehouseSourceImportRoutes', () => {
         addTests: false,
         addFreshness: false,
       }),
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: {
-        type: 'bad_request',
-        reason: 'invalid_workspace_source_yaml',
-        target: 'workspace_file',
+      responseBody: {
+        error: {
+          type: 'bad_request',
+          reason: 'invalid_workspace_source_yaml',
+          target: 'workspace_file',
+        },
       },
     });
-    expect(draftStore.save).not.toHaveBeenCalled();
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
   });
 
   it('fails closed when the bearer token is missing', async () => {

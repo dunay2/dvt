@@ -790,3 +790,53 @@ export async function expectSourceImportRejection(input: {
 export function expectedWarehouseConnection(name: string): WarehouseConnection {
   return { id: 'warehouse-prod', name, type: 'postgres', database: 'analytics' };
 }
+
+export async function expectProtectedWarehouseConnectionRequest(input: {
+  request: Parameters<typeof injectWarehouseRequest>[1];
+  responseBody: WarehouseConnection | readonly WarehouseConnection[];
+  operation: Parameters<typeof expectWarehouseAuthorization>[1];
+}): Promise<void> {
+  const { app, authorize } = buildApp();
+  const response = await injectWarehouseRequest(app, input.request);
+  expect(response.statusCode).toBe(200);
+  expect(response.json()).toEqual(input.responseBody);
+  expectWarehouseAuthorization(authorize, input.operation);
+}
+
+export async function expectProtectedWarehouseConnectionRename(name: string): Promise<void> {
+  await expectProtectedWarehouseConnectionRequest({
+    request: {
+      method: 'PATCH',
+      path: '/workspace/warehouse/connections/warehouse-prod',
+      payload: { name },
+    },
+    responseBody: expectedWarehouseConnection(name),
+    operation: { kind: 'command', name: 'workspace:source-connection:rename' },
+  });
+}
+
+export async function expectProtectedWarehouseConnectionList(
+  expectedConnections: readonly WarehouseConnection[]
+): Promise<void> {
+  await expectProtectedWarehouseConnectionRequest({
+    request: { method: 'GET', path: '/workspace/warehouse/connections' },
+    responseBody: expectedConnections,
+    operation: { kind: 'query', name: 'workspace:source-import:view' },
+  });
+}
+
+export async function expectSourceImportRejectedWithoutMutation(input: {
+  fixtureOptions?: Parameters<typeof buildApp>[0];
+  payload: Record<string, unknown>;
+  responseBody: unknown;
+}): Promise<void> {
+  const { app, draftStore, workspaceFiles } = buildApp(input.fixtureOptions);
+  await expectSourceImportRejection({
+    app,
+    payload: input.payload,
+    expectedStatus: 400,
+    responseBody: input.responseBody,
+  });
+  expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+  expect(draftStore.save).not.toHaveBeenCalled();
+}

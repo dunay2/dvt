@@ -262,6 +262,9 @@ function preparePendingOccurrenceFixture(): {
     seed.nodes.filter((node) => node.id.startsWith('source-'))
   );
   expect(initialSources).to.have.length(2);
+  cy.viewport(1440, 900);
+  visitWorkbenchCanvas('es');
+  openWorkbenchModel();
   return { initialEdges, initialSources };
 }
 
@@ -278,9 +281,6 @@ describe('Pending Read persistence coverage', () => {
       cy.get(`${read}[data-relation-id="${id}"]`).click();
     };
 
-    cy.viewport(1440, 900);
-    visitWorkbenchCanvas('es');
-    openWorkbenchModel();
     dragPendingOccurrence({
       name: 'customers',
       position: { x: 60, y: 100 },

@@ -9,6 +9,8 @@ import { WorkspaceFileRevisionConflictError } from '../../../src/application/por
 import { WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
 
 import {
+  expectProtectedWarehouseConnectionRename,
+  expectProtectedWarehouseConnectionList,
   expectWarehouseAuthorization,
   injectWarehouseRequest,
   SCOPE_QUERY,
@@ -151,20 +153,7 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('renames a warehouse connection through a dedicated protected command rail', async () => {
-    const { app, authorize } = buildApp();
-
-    const response = await injectWarehouseRequest(app, {
-      method: 'PATCH',
-      path: `/workspace/warehouse/connections/warehouse-prod`,
-      payload: { name: 'Finance warehouse' },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual(expectedWarehouseConnection('Finance warehouse'));
-    expectWarehouseAuthorization(authorize, {
-      kind: 'command',
-      name: 'workspace:source-connection:rename',
-    });
+    await expectProtectedWarehouseConnectionRename('Finance warehouse');
   });
 
   it('returns explicit errors for invalid, duplicate, and unknown connection renames', async () => {
@@ -440,19 +429,9 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('lists warehouse connections through the protected query rail', async () => {
-    const { app, authorize } = buildApp();
-
-    const response = await injectWarehouseRequest(app, {
-      method: 'GET',
-      path: `/workspace/warehouse/connections`,
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual([expectedWarehouseConnection('Production warehouse')]);
-    expectWarehouseAuthorization(authorize, {
-      kind: 'query',
-      name: 'workspace:source-import:view',
-    });
+    await expectProtectedWarehouseConnectionList([
+      expectedWarehouseConnection('Production warehouse'),
+    ]);
   });
 
   it('does not return another workspace scope connection catalog', async () => {

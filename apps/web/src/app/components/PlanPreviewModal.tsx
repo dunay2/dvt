@@ -135,18 +135,23 @@ function PlanPreviewSection({
   title,
   caption,
   children,
-}: Readonly<{
-  title: string;
-  caption?: string;
-  children: ReactNode;
-}>) {
+  fields,
+}: Readonly<
+  {
+    title: string;
+    caption?: string;
+  } & (
+    | { children: ReactNode; fields?: never }
+    | { fields: Parameters<typeof PlanPreviewFieldGrid>[0]['fields']; children?: never }
+  )
+>) {
   return (
     <section className="min-w-0 rounded-lg border border-slate-700/80 bg-slate-900/75 p-3 shadow-sm sm:p-4">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-slate-50">{title}</h3>
         {caption ? <p className="mt-1 text-xs text-slate-400">{caption}</p> : null}
       </div>
-      {children}
+      {fields ? <PlanPreviewFieldGrid fields={fields} /> : children}
     </section>
   );
 }
@@ -427,9 +432,8 @@ function PlanPreviewIdentity({
     <PlanPreviewSection
       title={messages.planPreviewIdentityTitle}
       caption={messages.planPreviewIdentityCaption}
-    >
-      <PlanPreviewFieldGrid fields={buildPlanPreviewIdentityFields(plan, messages)} />
-    </PlanPreviewSection>
+      fields={buildPlanPreviewIdentityFields(plan, messages)}
+    />
   );
 }
 
@@ -495,9 +499,8 @@ function PlanPreviewSummary({
     <PlanPreviewSection
       title={messages.planPreviewSummaryTitle}
       caption={messages.planPreviewSummaryCaption}
-    >
-      <PlanPreviewFieldGrid fields={buildPlanPreviewSummaryFields(summary, messages)} />
-    </PlanPreviewSection>
+      fields={buildPlanPreviewSummaryFields(summary, messages)}
+    />
   );
 }
 

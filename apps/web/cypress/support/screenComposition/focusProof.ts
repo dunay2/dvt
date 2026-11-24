@@ -141,6 +141,21 @@ function assertInspectorFocusReturnsToNodes(): void {
     .should('be.focused');
 }
 
+function assertProjectCodeClosePreservesCanvas(): void {
+  cy.get('[data-slot="canvas-code-main-tab"]').click();
+  cy.get('[data-slot="canvas-code-tab-close"]').should('be.visible').click();
+  cy.get('[data-slot="canvas-code-main-tab"]').should('not.exist');
+  cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.exist');
+  cy.get('[data-slot="canvas-workspace-tab"]')
+    .should('have.attr', 'aria-selected', 'true')
+    .and('be.focused');
+  cy.get<JQuery<HTMLElement>>('@codeLifetimeViewport').then(($original) => {
+    cy.get('[data-testid="canvas-viewport"]').should(($current) => {
+      expect($current[0], 'closing Code preserves the existing Canvas').to.equal($original[0]);
+    });
+  });
+}
+
 function assertProjectFilesRetainCanvas({
   MODEL_PATH,
   MODEL_SQL,
@@ -183,18 +198,7 @@ function assertProjectFilesRetainCanvas({
       .should('not.be.visible')
       .and('have.attr', 'aria-hidden', 'true')
       .and('have.attr', 'inert');
-    cy.get('[data-slot="canvas-code-main-tab"]').click();
-    cy.get('[data-slot="canvas-code-tab-close"]').should('be.visible').click();
-    cy.get('[data-slot="canvas-code-main-tab"]').should('not.exist');
-    cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.exist');
-    cy.get('[data-slot="canvas-workspace-tab"]')
-      .should('have.attr', 'aria-selected', 'true')
-      .and('be.focused');
-    cy.get<JQuery<HTMLElement>>('@codeLifetimeViewport').then(($original) => {
-      cy.get('[data-testid="canvas-viewport"]').should(($current) => {
-        expect($current[0], 'closing Code preserves the existing Canvas').to.equal($original[0]);
-      });
-    });
+    assertProjectCodeClosePreservesCanvas();
     cy.get('[data-slot="shell-project-code-command"]').click();
     cy.get('[data-slot="canvas-code-main-tab"]')
       .should('have.length', 1)

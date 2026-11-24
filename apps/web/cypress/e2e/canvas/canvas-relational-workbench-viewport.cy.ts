@@ -315,6 +315,24 @@ function seedCodeHandoffFiles({
   }
 }
 
+function assertMeasuredWorkbenchFixture(main: string): void {
+  cy.get(`${main} .react-flow__node`).should(($nodes) => {
+    const nodes = $nodes.toArray();
+    expect(
+      nodes.map((node) => node.getAttribute('data-id')),
+      'complete fixture before Fit'
+    ).to.have.members(['source-customers', 'source-orders', 'join-transform']);
+    for (const node of nodes) {
+      expect(
+        node.ownerDocument.defaultView!.getComputedStyle(node).visibility,
+        `measured node ${node.getAttribute('data-id')}`
+      ).to.equal('visible');
+      expect(node.offsetWidth, 'measured width before Fit').to.be.greaterThan(0);
+      expect(node.offsetHeight, 'measured height before Fit').to.be.greaterThan(0);
+    }
+  });
+}
+
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
@@ -336,21 +354,7 @@ describe('Workbench viewport', () => {
     });
     cy.get(pane).should('have.css', 'cursor', 'default');
     cy.get(`${main} .react-flow__controls-interactive`).should('not.exist');
-    cy.get(`${main} .react-flow__node`).should(($nodes) => {
-      const nodes = $nodes.toArray();
-      expect(
-        nodes.map((node) => node.getAttribute('data-id')),
-        'complete fixture before Fit'
-      ).to.have.members(['source-customers', 'source-orders', 'join-transform']);
-      for (const node of nodes) {
-        expect(
-          node.ownerDocument.defaultView!.getComputedStyle(node).visibility,
-          `measured node ${node.getAttribute('data-id')}`
-        ).to.equal('visible');
-        expect(node.offsetWidth, 'measured width before Fit').to.be.greaterThan(0);
-        expect(node.offsetHeight, 'measured height before Fit').to.be.greaterThan(0);
-      }
-    });
+    assertMeasuredWorkbenchFixture(main);
     cy.get(`${main} .react-flow__controls-fitview`).click();
     captureFittedWorkbenchCamera(viewport, (fitted) => {
       camera = fitted;
