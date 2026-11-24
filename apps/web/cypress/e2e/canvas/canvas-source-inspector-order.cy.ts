@@ -212,6 +212,45 @@ function reorderSourceOutputsWithKeyboard(): void {
   cy.get('[data-slot="canvas-node-workbench-close"]').click();
 }
 
+function assertSavedJoinVisualPreference(semantics: unknown): void {
+  cy.wrap(null, { timeout: 20_000 }).should(() => {
+    const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+      { draft: ReturnType<typeof normalizeProjectCanvasDraft> } | undefined;
+    const saved = request?.draft.nodes.find((node) => node.id === 'join-transform');
+    expect(saved?.metadata?.modelIcon).to.equal('join');
+    expect(saved?.metadata?.transformAuthoring).to.deep.equal(semantics);
+  });
+}
+
+function assertSourceOrderPreferencesRestored(): void {
+  cy.visit('/canvas', {
+    onBeforeLoad(window) {
+      installE2eApiFetchStub(window);
+    },
+  });
+  waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  cy.get('.react-flow__node[data-id="source-orders"]').should('be.visible');
+
+  openSourceSection('columns');
+  expectOrder('[data-slot="source-column-row"]', 'columnName', [
+    'amount',
+    'order_id',
+    'customer',
+    'status',
+    'created_at',
+    'region',
+    longColumnName,
+  ]);
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+  openSourceSection('inputs-outputs');
+  expectOrder('[data-slot="source-relationship-row"]', 'relationshipId', [
+    'output:edge-source-model-secondary',
+    'output:edge-source-model',
+  ]);
+  expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+}
+
 describe('Canvas Source Inspector ordering', () => {
   beforeEach(() => {
     stubCanvas();
@@ -268,13 +307,7 @@ describe('Canvas Source Inspector ordering', () => {
     cy.contains('[role="option"]', /^Join$/).click();
     cy.get(`${card} [data-model-icon="join"]`).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
-    cy.wrap(null, { timeout: 20_000 }).should(() => {
-      const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
-        { draft: ReturnType<typeof normalizeProjectCanvasDraft> } | undefined;
-      const saved = request?.draft.nodes.find((node) => node.id === 'join-transform');
-      expect(saved?.metadata?.modelIcon).to.equal('join');
-      expect(saved?.metadata?.transformAuthoring).to.deep.equal(semantics);
-    });
+    assertSavedJoinVisualPreference(semantics);
     cy.get(`${card} [data-slot="canvas-node-shell"]`).rightclick();
     cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
     cy.get('[data-slot="canvas-node-workbench-panel"] [data-model-icon="join"]').should(
@@ -401,31 +434,6 @@ describe('Canvas Source Inspector ordering', () => {
       );
     });
 
-    cy.visit('/canvas', {
-      onBeforeLoad(window) {
-        installE2eApiFetchStub(window);
-      },
-    });
-    waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('.react-flow__node[data-id="source-orders"]').should('be.visible');
-
-    openSourceSection('columns');
-    expectOrder('[data-slot="source-column-row"]', 'columnName', [
-      'amount',
-      'order_id',
-      'customer',
-      'status',
-      'created_at',
-      'region',
-      longColumnName,
-    ]);
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    openSourceSection('inputs-outputs');
-    expectOrder('[data-slot="source-relationship-row"]', 'relationshipId', [
-      'output:edge-source-model-secondary',
-      'output:edge-source-model',
-    ]);
-    expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+    assertSourceOrderPreferencesRestored();
   });
 });

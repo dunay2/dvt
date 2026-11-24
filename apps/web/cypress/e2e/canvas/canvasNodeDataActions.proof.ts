@@ -54,22 +54,23 @@ function proveResizableDataGrid(
     const container = element.closest(host);
     if (container === null) throw new Error('Expected the data-grid host.');
     const panel = container.getBoundingClientRect();
-    const tableFrame = element
-      .closest('[data-slot="bottom-operational-data-table-frame"]')
-      ?.getBoundingClientRect();
+    const tableFrame =
+      element
+        .closest('[data-slot="bottom-operational-data-table-frame"]')
+        ?.getBoundingClientRect() ?? panel;
     const viewport = element.ownerDocument.defaultView!;
     // Scrolling rounds to device pixels; resizable panel bounds retain fractional CSS pixels.
     expect(bounds.top, 'content begins inside panel and viewport').to.be.at.least(
-      Math.max(0, panel.top, tableFrame?.top ?? panel.top) - 1
+      Math.max(0, panel.top, tableFrame.top) - 1
     );
     expect(bounds.bottom, 'content ends inside panel and viewport').to.be.at.most(
-      Math.min(panel.bottom, viewport.innerHeight, tableFrame?.bottom ?? panel.bottom) + 1
+      Math.min(panel.bottom, viewport.innerHeight, tableFrame.bottom) + 1
     );
     expect(bounds.left, 'content starts inside panel and viewport').to.be.at.least(
-      Math.max(0, panel.left, tableFrame?.left ?? panel.left) - 1
+      Math.max(0, panel.left, tableFrame.left) - 1
     );
     expect(bounds.right, 'content finishes inside panel and viewport').to.be.at.most(
-      Math.min(panel.right, viewport.innerWidth, tableFrame?.right ?? panel.right) + 1
+      Math.min(panel.right, viewport.innerWidth, tableFrame.right) + 1
     );
   };
   // The table frame owns row scrolling; compacted shell chrome need not overflow its host.
@@ -127,17 +128,103 @@ function proveResizableDataGrid(
     .trigger('keydown', { key: 'ArrowUp' });
 }
 
+interface NodeDataActionScenario {
+  emptyResults: boolean;
+  sourceReads: number;
+  transformReads: number;
+  sampleRowCount: number;
+}
+
+function stubSourceSampleScenario(state: NodeDataActionScenario): void {
+  stubE2eApi('GET', sourcePath, () => {
+    state.sourceReads += 1;
+    return {
+      body: SourceDataSampleResponseSchema.parse({
+        ...sample,
+        columns: [...sample.columns, { name: 'unpublished', type: 'text', nullable: true }],
+        rows: state.emptyResults
+          ? []
+          : createSampleRows(state.sourceReads === 1 ? 'Ada' : 'Grace', state.sampleRowCount, [
+              'must stay hidden',
+            ]),
+        connectionId: 'local-postgres-proof',
+        objectId: 'relation/dvt/raw/orders',
+        provenance: {
+          mode: 'live',
+          sourceRefs: [
+            {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                connectionId: 'local-postgres-proof',
+                provider: 'postgres',
+              },
+              sourceObjectId: 'relation/dvt/raw/orders',
+            },
+          ],
+          queriedAt:
+            state.sourceReads === 1 ? '2026-09-22T10:00:00.000Z' : '2026-09-22T11:00:00.000Z',
+          limit: sample.limit,
+          navigation: 'bounded-first-page',
+        },
+      }),
+    };
+  });
+}
+
+function stubTransformSampleScenario(state: NodeDataActionScenario): void {
+  stubE2eApi('GET', transformPath, ({ url }) => {
+    state.transformReads += 1;
+    return {
+      body: TransformDataSampleResponseSchema.parse({
+        ...sample,
+        provenance: {
+          mode: 'live' as const,
+          sourceRefs: [
+            {
+              schemaVersion: 'connected-source-ref.v1' as const,
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1' as const,
+                connectionId: 'local-postgres-proof',
+                provider: 'postgres',
+              },
+              sourceObjectId: 'relation/dvt/public/orders',
+            },
+          ],
+          queriedAt: asIsoUtcString(
+            state.transformReads === 1 ? '2026-09-22T10:00:00.000Z' : '2026-09-22T11:00:00.000Z'
+          ),
+          limit: 20,
+          navigation: 'bounded-first-page' as const,
+        },
+        rows: state.emptyResults
+          ? []
+          : createSampleRows(state.transformReads === 1 ? 'Ada' : 'Grace', state.sampleRowCount),
+        canvasId: url.pathname.split('/')[4],
+        transformNodeId: 'dvt-transform-1',
+        draftRevision: 'revision-1',
+        semanticPlanSha256: url.searchParams.get('semanticPlanSha256'),
+        ...(url.searchParams.has('relationId')
+          ? { relationId: url.searchParams.get('relationId') }
+          : {}),
+      }),
+    };
+  });
+}
+
 export function registerCanvasNodeDataActionsProof(): void {
   describe('Canvas explicit data action', () => {
-    let emptyResults = false;
-    let sourceReads = 0;
-    let transformReads = 0;
-    let sampleRowCount = 1;
+    const state: NodeDataActionScenario = {
+      emptyResults: false,
+      sourceReads: 0,
+      transformReads: 0,
+      sampleRowCount: 1,
+    };
     beforeEach(() => {
-      emptyResults = false;
-      sourceReads = 0;
-      transformReads = 0;
-      sampleRowCount = 1;
+      state.emptyResults = false;
+      state.sourceReads = 0;
+      state.transformReads = 0;
+      state.sampleRowCount = 1;
       cy.viewport(1920, 1080);
       stubShellBootstrapApis({
         scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -156,77 +243,8 @@ export function registerCanvasNodeDataActionsProof(): void {
         authoringGenerated: true,
         terminalTransformPreview: true,
       });
-      stubE2eApi('GET', sourcePath, () => {
-        sourceReads += 1;
-        return {
-          body: SourceDataSampleResponseSchema.parse({
-            ...sample,
-            columns: [...sample.columns, { name: 'unpublished', type: 'text', nullable: true }],
-            rows: emptyResults
-              ? []
-              : createSampleRows(sourceReads === 1 ? 'Ada' : 'Grace', sampleRowCount, [
-                  'must stay hidden',
-                ]),
-            connectionId: 'local-postgres-proof',
-            objectId: 'relation/dvt/raw/orders',
-            provenance: {
-              mode: 'live',
-              sourceRefs: [
-                {
-                  schemaVersion: 'connected-source-ref.v1',
-                  connectionRef: {
-                    schemaVersion: 'connection-ref.v1',
-                    connectionId: 'local-postgres-proof',
-                    provider: 'postgres',
-                  },
-                  sourceObjectId: 'relation/dvt/raw/orders',
-                },
-              ],
-              queriedAt:
-                sourceReads === 1 ? '2026-09-22T10:00:00.000Z' : '2026-09-22T11:00:00.000Z',
-              limit: sample.limit,
-              navigation: 'bounded-first-page',
-            },
-          }),
-        };
-      });
-      stubE2eApi('GET', transformPath, ({ url }) => {
-        transformReads += 1;
-        return {
-          body: TransformDataSampleResponseSchema.parse({
-            ...sample,
-            provenance: {
-              mode: 'live' as const,
-              sourceRefs: [
-                {
-                  schemaVersion: 'connected-source-ref.v1' as const,
-                  connectionRef: {
-                    schemaVersion: 'connection-ref.v1' as const,
-                    connectionId: 'local-postgres-proof',
-                    provider: 'postgres',
-                  },
-                  sourceObjectId: 'relation/dvt/public/orders',
-                },
-              ],
-              queriedAt: asIsoUtcString(
-                transformReads === 1 ? '2026-09-22T10:00:00.000Z' : '2026-09-22T11:00:00.000Z'
-              ),
-              limit: 20,
-              navigation: 'bounded-first-page' as const,
-            },
-            rows: emptyResults
-              ? []
-              : createSampleRows(transformReads === 1 ? 'Ada' : 'Grace', sampleRowCount),
-            canvasId: url.pathname.split('/')[4],
-            transformNodeId: 'dvt-transform-1',
-            draftRevision: 'revision-1',
-            semanticPlanSha256: url.searchParams.get('semanticPlanSha256'),
-            ...(url.searchParams.has('relationId')
-              ? { relationId: url.searchParams.get('relationId') }
-              : {}),
-          }),
-        };
-      });
+      stubSourceSampleScenario(state);
+      stubTransformSampleScenario(state);
       visitWithE2eWorkspaceSession('/canvas', {
         onBeforeLoad(window) {
           window.localStorage.setItem(
@@ -408,7 +426,7 @@ export function registerCanvasNodeDataActionsProof(): void {
 
     it('keeps nested Source and Transform LIVE preview actions separate', () => {
       // A full bounded page proves actual scrolling independently of the amount of shell chrome.
-      sampleRowCount = sample.limit;
+      state.sampleRowCount = sample.limit;
       cy.viewport(1200, 600);
       cy.get('.react-flow__controls-fitview').click();
       openWorkbenchModel('dvt-transform-1');
@@ -474,7 +492,7 @@ export function registerCanvasNodeDataActionsProof(): void {
     for (const nodeId of ['source-1', 'dvt-transform-1']) {
       it(`retains typed headers and a summary for empty ${nodeId} results`, () => {
         const path = nodeId === 'source-1' ? sourcePath : transformPath;
-        emptyResults = true;
+        state.emptyResults = true;
         const card = `.react-flow__node[data-id="${nodeId}"]`;
         hoverWorkbenchCard(card);
         cy.get(card).find('[data-slot="canvas-node-execute"]').focus().should('be.enabled').click();

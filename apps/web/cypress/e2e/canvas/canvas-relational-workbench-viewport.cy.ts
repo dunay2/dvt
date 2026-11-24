@@ -223,6 +223,98 @@ function verifyNarrowModelReflow(): void {
   cy.screenshot('semantic-editor-200-percent-equivalent-reflow');
 }
 
+function captureFittedWorkbenchCamera(
+  viewport: string,
+  onCamera: (camera: DOMMatrixReadOnly) => void
+): void {
+  cy.get(viewport).should(($viewport) => {
+    // Fit is queued; the initial zoom already satisfies < 1 and is not its completion signal.
+    const frame = $viewport[0]!.closest('.react-flow__pane')!.getBoundingClientRect();
+    const nodes = Array.from($viewport[0]!.querySelectorAll<HTMLElement>('.react-flow__node'))
+      .filter((node) => node.offsetWidth > 0 && node.offsetHeight > 0)
+      .map((node) => node.getBoundingClientRect());
+    expect(nodes.length, 'measured nodes fitted into the Canvas').to.be.greaterThan(0);
+    const centerX =
+      (Math.min(...nodes.map((node) => node.left)) + Math.max(...nodes.map((node) => node.right))) /
+      2;
+    const centerY =
+      (Math.min(...nodes.map((node) => node.top)) + Math.max(...nodes.map((node) => node.bottom))) /
+      2;
+    expect(centerX, 'Fit centers the graph horizontally').to.be.closeTo(
+      frame.left + frame.width / 2,
+      2
+    );
+    expect(centerY, 'Fit centers the graph vertically').to.be.closeTo(
+      frame.top + frame.height / 2,
+      2
+    );
+    const camera = new DOMMatrixReadOnly($viewport[0]!.style.transform);
+    expect(camera.a).to.be.lessThan(1);
+    onCamera(camera);
+  });
+}
+
+function assertReadOnlyCodeRejectsTyping({
+  code,
+  sourcePath,
+}: {
+  code: string;
+  sourcePath: string;
+}): void {
+  cy.get('[data-slot="shell-project-code-command"]').click();
+  cy.get(`${code} [data-workspace-path="${sourcePath}"]`).click();
+  cy.get(`${code} [data-slot="workspace-file-code-editor"]`)
+    .should('be.visible')
+    .and('have.attr', 'data-file-path', sourcePath);
+  cy.get(`${code} [data-testid="monaco-code-editor"]`).should('not.exist');
+  cy.get(`${code} [data-testid="monaco-code-viewer"] .view-lines`).should(
+    'contain.text',
+    'handoff_loaded'
+  );
+  cy.get(`${code} [data-testid="monaco-code-viewer"] .view-line`).first().click();
+  cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`)
+    .should('have.prop', 'readOnly', true)
+    .and('be.focused');
+  cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`).type('handoff_blocked', {
+    force: true,
+    delay: 0,
+  });
+  cy.get(`${code} .view-lines`).should('not.contain.text', 'handoff_blocked');
+  cy.get(`${code} [data-slot="code-working-tree-status"]`).should(
+    'have.attr',
+    'data-phase',
+    'read_only'
+  );
+}
+
+function seedCodeHandoffFiles({
+  handoffRoot,
+  handoffCanvas,
+  sourcePath,
+  targetPath,
+  hashes,
+}: {
+  handoffRoot: string;
+  handoffCanvas: string;
+  sourcePath: string;
+  targetPath: string;
+  hashes: Record<string, string>;
+}): void {
+  seedLiveWorkspaceFiles({
+    [`${handoffRoot}/dbt_project.yml`]:
+      "name: git_handoff_dbt\nversion: '1.0'\nconfig-version: 2\nprofile: dvt_live_proof\nmodel-paths: ['models']\n",
+    [sourcePath]: 'select 11 as handoff_loaded\n',
+    [targetPath]: 'select 22 as handoff_target\n',
+  }).then(() => adoptLiveDbtProjectFileAuthority(handoffRoot, handoffCanvas));
+  for (const path of [sourcePath, targetPath]) {
+    readLiveWorkspaceFile(path).then(({ status, body }) => {
+      expect(status).to.equal(200);
+      hashes[path] = (body as { contentSha256: string }).contentSha256;
+      expect(hashes[path]).to.match(/^[a-f0-9]{64}$/);
+    });
+  }
+}
+
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
@@ -260,31 +352,8 @@ describe('Workbench viewport', () => {
       }
     });
     cy.get(`${main} .react-flow__controls-fitview`).click();
-    cy.get(viewport).should(($viewport) => {
-      // Fit is queued; the initial zoom already satisfies < 1 and is not its completion signal.
-      const frame = $viewport[0]!.closest('.react-flow__pane')!.getBoundingClientRect();
-      const nodes = Array.from($viewport[0]!.querySelectorAll<HTMLElement>('.react-flow__node'))
-        .filter((node) => node.offsetWidth > 0 && node.offsetHeight > 0)
-        .map((node) => node.getBoundingClientRect());
-      expect(nodes.length, 'measured nodes fitted into the Canvas').to.be.greaterThan(0);
-      const centerX =
-        (Math.min(...nodes.map((node) => node.left)) +
-          Math.max(...nodes.map((node) => node.right))) /
-        2;
-      const centerY =
-        (Math.min(...nodes.map((node) => node.top)) +
-          Math.max(...nodes.map((node) => node.bottom))) /
-        2;
-      expect(centerX, 'Fit centers the graph horizontally').to.be.closeTo(
-        frame.left + frame.width / 2,
-        2
-      );
-      expect(centerY, 'Fit centers the graph vertically').to.be.closeTo(
-        frame.top + frame.height / 2,
-        2
-      );
-      camera = new DOMMatrixReadOnly($viewport[0]!.style.transform);
-      expect(camera.a).to.be.lessThan(1);
+    captureFittedWorkbenchCamera(viewport, (fitted) => {
+      camera = fitted;
     });
     panWorkbenchViewport(pane, 48, 24, () => {
       cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
@@ -382,6 +451,57 @@ describe('Workbench viewport', () => {
     function fitAndOpenModel(): void {
       cy.get(`${main} .react-flow__controls-fitview`).click();
       openWorkbenchModel();
+    }
+
+    function assertCollapsedModelRailKeepsCamera(): void {
+      let zoomBeforeCollapse = '';
+      let expandedViewportWidth = 0;
+      cy.get(modelZoom)
+        .invoke('text')
+        .then((zoom) => {
+          zoomBeforeCollapse = zoom;
+        });
+      cy.get(modelViewport).then(($viewport) => {
+        const viewport = $viewport[0];
+        if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
+        expandedViewportWidth = viewport.clientWidth;
+      });
+      cy.get(`${model} button[aria-label="Collapse explorer"]:visible`).click();
+      cy.get(canvasEntry).should('be.focused').and('have.attr', 'aria-expanded', 'false');
+      cy.get(modelViewport).should(($viewport) => {
+        const viewport = $viewport[0];
+        if (viewport === undefined) throw new Error('Expected the resized relational viewport.');
+        expect(viewport.clientWidth).to.be.greaterThan(expandedViewportWidth);
+      });
+      cy.get(modelZoom).should(($zoom) => {
+        expect($zoom.text(), 'collapsing the rail retains Model zoom').to.equal(zoomBeforeCollapse);
+      });
+      cy.get(modelSearch).should('not.be.visible');
+      verifyCompleteTreeFit(modelViewport);
+      cy.screenshot('semantic-editor-sources-collapsed');
+    }
+
+    function assertSharedDrawerKeyboardResize(): void {
+      let drawerSizeBeforeResize = 0;
+      // The shared primitive also owns the vertical drawer and its keyboard cue.
+      revealOperationalDrawer();
+      const drawer = '#app-shell-bottom-drawer-panel';
+      const drawerHandle = '#app-shell-bottom-drawer-resize-handle';
+      cy.get(drawer).then(($drawer) => {
+        drawerSizeBeforeResize = Number($drawer.attr('data-panel-size'));
+      });
+      cy.get(drawerHandle).focus();
+      cy.press(Cypress.Keyboard.Keys.UP);
+      cy.get(drawer).should(($drawer) => {
+        expect(Number($drawer.attr('data-panel-size'))).to.be.greaterThan(drawerSizeBeforeResize);
+      });
+      assertResizeHandlePresentation(drawerHandle, 'vertical');
+      cy.press(Cypress.Keyboard.Keys.DOWN);
+      cy.get(drawer).should(($drawer) => {
+        expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(drawerSizeBeforeResize, 0.1);
+      });
+      cy.get('[data-slot="bottom-operational-drawer-close"]').click();
+      cy.get(drawerHandle).should('not.exist');
     }
 
     it('narrows and folds the Explorer by dragging its right edge to the left', () => {
@@ -482,8 +602,6 @@ describe('Workbench viewport', () => {
     it('keeps zoom, source search and narrow reflow while toggling the rail', () => {
       // Layout gestures must preserve the editor's local search and camera without saving semantics.
       let writesBeforeZoom = 0;
-      let zoomBeforeCollapse = '';
-      let expandedViewportWidth = 0;
       cy.get(`${main} .react-flow__node`)
         .its('length')
         .then((count) => {
@@ -513,29 +631,7 @@ describe('Workbench viewport', () => {
       cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
       cy.get(modelSearch).type('customers');
       resizeExplorer(model, 'RIGHT', 32);
-      cy.get(modelZoom)
-        .invoke('text')
-        .then((zoom) => {
-          zoomBeforeCollapse = zoom;
-        });
-      cy.get(modelViewport).then(($viewport) => {
-        const viewport = $viewport[0];
-        if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
-        expandedViewportWidth = viewport.clientWidth;
-      });
-      cy.get(`${model} button[aria-label="Collapse explorer"]:visible`).click();
-      cy.get(canvasEntry).should('be.focused').and('have.attr', 'aria-expanded', 'false');
-      cy.get(modelViewport).should(($viewport) => {
-        const viewport = $viewport[0];
-        if (viewport === undefined) throw new Error('Expected the resized relational viewport.');
-        expect(viewport.clientWidth).to.be.greaterThan(expandedViewportWidth);
-      });
-      cy.get(modelZoom).should(($zoom) => {
-        expect($zoom.text(), 'collapsing the rail retains Model zoom').to.equal(zoomBeforeCollapse);
-      });
-      cy.get(modelSearch).should('not.be.visible');
-      verifyCompleteTreeFit(modelViewport);
-      cy.screenshot('semantic-editor-sources-collapsed');
+      assertCollapsedModelRailKeepsCamera();
       cy.get(canvasEntry).focus();
       cy.press(Cypress.Keyboard.Keys.ENTER);
       cy.get(canvasEntry).should('have.attr', 'aria-expanded', 'true').click();
@@ -564,7 +660,6 @@ describe('Workbench viewport', () => {
     it('shares resized width across retained and reopened Canvas and Model surfaces', () => {
       // Both surfaces consume one width preference; switching views must retain their live DOM state.
       let writesBeforeResize = 0;
-      let drawerSizeBeforeResize = 0;
       let retainedMainViewport: HTMLElement | undefined;
       let retainedModelViewport: HTMLElement | undefined;
       let retainedModelZoom = '';
@@ -586,25 +681,7 @@ describe('Workbench viewport', () => {
       cy.then(() => {
         writesBeforeResize = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
-      // The shared primitive also owns the vertical drawer and its keyboard cue.
-      revealOperationalDrawer();
-      const drawer = '#app-shell-bottom-drawer-panel';
-      const drawerHandle = '#app-shell-bottom-drawer-resize-handle';
-      cy.get(drawer).then(($drawer) => {
-        drawerSizeBeforeResize = Number($drawer.attr('data-panel-size'));
-      });
-      cy.get(drawerHandle).focus();
-      cy.press(Cypress.Keyboard.Keys.UP);
-      cy.get(drawer).should(($drawer) => {
-        expect(Number($drawer.attr('data-panel-size'))).to.be.greaterThan(drawerSizeBeforeResize);
-      });
-      assertResizeHandlePresentation(drawerHandle, 'vertical');
-      cy.press(Cypress.Keyboard.Keys.DOWN);
-      cy.get(drawer).should(($drawer) => {
-        expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(drawerSizeBeforeResize, 0.1);
-      });
-      cy.get('[data-slot="bottom-operational-drawer-close"]').click();
-      cy.get(drawerHandle).should('not.exist');
+      assertSharedDrawerKeyboardResize();
       cy.get(modelSearch).type('customers');
       resizeExplorer(model, 'RIGHT', 25);
       cy.get(modelViewport).then(($viewport) => {
@@ -736,19 +813,7 @@ describe('DBT project Git browsing with real file authority', () => {
     let viewport: HTMLElement | undefined;
     let transform: string | null = null;
     resetE2eApiStubs();
-    seedLiveWorkspaceFiles({
-      [`${handoffRoot}/dbt_project.yml`]:
-        "name: git_handoff_dbt\nversion: '1.0'\nconfig-version: 2\nprofile: dvt_live_proof\nmodel-paths: ['models']\n",
-      [sourcePath]: 'select 11 as handoff_loaded\n',
-      [targetPath]: 'select 22 as handoff_target\n',
-    }).then(() => adoptLiveDbtProjectFileAuthority(handoffRoot, handoffCanvas));
-    for (const path of [sourcePath, targetPath]) {
-      readLiveWorkspaceFile(path).then(({ status, body }) => {
-        expect(status).to.equal(200);
-        hashes[path] = (body as { contentSha256: string }).contentSha256;
-        expect(hashes[path]).to.match(/^[a-f0-9]{64}$/);
-      });
-    }
+    seedCodeHandoffFiles({ handoffRoot, handoffCanvas, sourcePath, targetPath, hashes });
     cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('handoffFileWrite');
     cy.viewport(1500, 900);
     visitWithLiveWorkspaceSession(
@@ -762,30 +827,7 @@ describe('DBT project Git browsing with real file authority', () => {
         viewport = $viewport[0]!;
         transform = viewport.getAttribute('style');
       });
-    cy.get('[data-slot="shell-project-code-command"]').click();
-    cy.get(`${code} [data-workspace-path="${sourcePath}"]`).click();
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`)
-      .should('be.visible')
-      .and('have.attr', 'data-file-path', sourcePath);
-    cy.get(`${code} [data-testid="monaco-code-editor"]`).should('not.exist');
-    cy.get(`${code} [data-testid="monaco-code-viewer"] .view-lines`).should(
-      'contain.text',
-      'handoff_loaded'
-    );
-    cy.get(`${code} [data-testid="monaco-code-viewer"] .view-line`).first().click();
-    cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`)
-      .should('have.prop', 'readOnly', true)
-      .and('be.focused');
-    cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`).type(
-      'handoff_blocked',
-      { force: true, delay: 0 }
-    );
-    cy.get(`${code} .view-lines`).should('not.contain.text', 'handoff_blocked');
-    cy.get(`${code} [data-slot="code-working-tree-status"]`).should(
-      'have.attr',
-      'data-phase',
-      'read_only'
-    );
+    assertReadOnlyCodeRejectsTyping({ code, sourcePath });
     cy.get('[data-slot="canvas-workspace-tab"]').click();
     cy.get(`${main} .react-flow__viewport`)
       .should('be.visible')

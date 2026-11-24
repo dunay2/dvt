@@ -212,6 +212,243 @@ function assertShellDestinationLabels(): void {
   );
 }
 
+function assertRailFillsShell(): void {
+  cy.window().then((window) => {
+    const body = window.document.querySelector('[data-slot="app-shell-body"]');
+    const wrapper = window.document.querySelector('[data-slot="app-shell-left-navigation"]');
+    const rail = window.document.querySelector('[data-slot="left-navigation-rail"]');
+    const nav = window.document.querySelector('[data-slot="left-navigation-nav"]');
+    const links = Array.from(
+      window.document.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')
+    );
+
+    expect(body, 'shell body').to.not.equal(null);
+    expect(wrapper, 'rail wrapper').to.not.equal(null);
+    expect(rail, 'left navigation rail').to.not.equal(null);
+    expect(nav, 'left navigation nav').to.not.equal(null);
+    expect(links.length, 'navigation link count').to.be.greaterThan(2);
+
+    const bodyRect = body!.getBoundingClientRect();
+    const wrapperRect = wrapper!.getBoundingClientRect();
+    const railRect = rail!.getBoundingClientRect();
+    const about = window.document.querySelector('[data-slot="shell-about-command"]')!;
+    const aboutRect = about.getBoundingClientRect();
+
+    expect(
+      Math.abs(wrapperRect.height - bodyRect.height),
+      'wrapper stretches to body height'
+    ).to.be.lessThan(2);
+    expect(
+      Math.abs(railRect.height - wrapperRect.height),
+      'rail stretches to wrapper height'
+    ).to.be.lessThan(2);
+    expect(
+      railRect.bottom - aboutRect.bottom,
+      'About stays pinned near the rail bottom'
+    ).to.be.within(0, 12);
+    expect(links.at(-1)!.getBoundingClientRect().bottom).to.be.at.most(aboutRect.top);
+  });
+}
+
+function captureSessionRevalidation(): {
+  assertRetained: () => void;
+  releaseSession: () => void;
+  holdSession: () => void;
+  sessionRequestCount: () => number;
+} {
+  let frame: HTMLElement;
+  let rail: HTMLElement;
+  let canvas: HTMLElement;
+  let git: HTMLElement;
+  let hold = false;
+  let sessionRequests = 0;
+  const releases: Array<() => void> = [];
+  cy.get('[data-slot="app-shell-frame"]').then(($node) => {
+    frame = $node[0]!;
+  });
+  cy.get('[data-slot="left-navigation-rail"]').then(($node) => {
+    rail = $node[0]!;
+  });
+  cy.get('[data-slot="left-navigation-link"][href="/canvas"]').then(($node) => {
+    canvas = $node[0]!;
+  });
+  cy.get('[data-slot="shell-project-code-command"]').then(($node) => {
+    git = $node[0]!;
+  });
+  cy.window().then((window) => {
+    const fetch = window.fetch.bind(window);
+    window.fetch = async (input, init) => {
+      const requestUrl =
+        typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (new URL(requestUrl, window.location.href).pathname === '/session') {
+        sessionRequests += 1;
+        if (hold)
+          await new Promise<void>((resolve) => {
+            releases.push(resolve);
+          });
+      }
+      return fetch(input, init);
+    };
+  });
+  const assertRetained = (): void => {
+    cy.get('[data-slot="app-shell-frame"]').should(($node) => expect($node[0]).to.equal(frame));
+    cy.get('[data-slot="left-navigation-rail"]')
+      .should('be.visible')
+      .and(($node) => expect($node[0]).to.equal(rail));
+    cy.get('[data-slot="left-navigation-link"][href="/canvas"]')
+      .should('be.visible')
+      .and(($node) => expect($node[0]).to.equal(canvas));
+    cy.get('[data-slot="shell-project-code-command"]')
+      .should('be.visible')
+      .and(($node) => expect($node[0]).to.equal(git));
+  };
+  const releaseSession = (): void => {
+    cy.then(() => {
+      hold = false;
+      expect(releases.length, 'a real session request is waiting').to.be.greaterThan(0);
+      releases.splice(0).forEach((release) => release());
+    });
+  };
+  return {
+    assertRetained,
+    releaseSession,
+    holdSession: () => {
+      hold = true;
+    },
+    sessionRequestCount: () => sessionRequests,
+  };
+}
+
+function stubShellRetainedFile(): void {
+  stubE2eJsonApi('GET', '/workspace/files', [{ path: 'notes.md', name: 'notes.md', kind: 'file' }]);
+  stubE2eJsonApi('GET', '/workspace/files/notes.md', {
+    path: 'notes.md',
+    name: 'notes.md',
+    language: 'markdown',
+    content: '# Rail session',
+    contentSha256: 'a'.repeat(64),
+    lastModified: '2026-10-28T00:00:00Z',
+  });
+  stubE2eJsonApi('GET', /^\/workspace\/file-history\/.+/, []);
+}
+
+function assertOperationalDrawerSeparatorAppearance(): void {
+  const handle = '#app-shell-bottom-drawer-resize-handle';
+  const outlet = '[data-slot="app-shell-outlet"]';
+  hoverWorkbenchCard(outlet);
+  cy.get(handle).then(($separator) => {
+    const separator = $separator[0]!;
+    const bounds = separator.getBoundingClientRect();
+    const idleColor = $separator.css('background-color');
+    expect($separator.children()).to.have.length(0);
+    expect(bounds.width).to.equal(separator.parentElement!.getBoundingClientRect().width);
+
+    hoverWorkbenchCard(handle);
+    cy.get(handle).should(($hovered) => {
+      expect($hovered[0]!.matches(':hover'), 'native pointer over the separator').to.be.true;
+      expect($hovered.css('background-color')).not.to.equal(idleColor);
+      expect($hovered[0]!.getBoundingClientRect().height).to.equal(bounds.height);
+    });
+
+    hoverWorkbenchCard(outlet);
+    cy.get(handle).should('have.css', 'background-color', idleColor);
+  });
+}
+
+function dragOperationalDrawerTo(percentage: number): void {
+  const handle = '#app-shell-bottom-drawer-resize-handle';
+  const drawer = '#app-shell-bottom-drawer-panel';
+  cy.window().then((window) => {
+    const element = window.document.querySelector<HTMLElement>(handle)!;
+    const bounds = element.getBoundingClientRect();
+    const group = element.parentElement!.getBoundingClientRect();
+    const clientX = bounds.left + bounds.width / 2;
+    const targetY = group.top + group.height * (1 - percentage / 100);
+    const dispatchPointer = (
+      target: EventTarget,
+      type: string,
+      clientY: number,
+      buttons: number
+    ): void => {
+      target.dispatchEvent(
+        new window.PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: 'mouse',
+          isPrimary: true,
+          clientX,
+          clientY,
+          button: 0,
+          buttons,
+        })
+      );
+    };
+    dispatchPointer(element, 'pointerdown', bounds.top + bounds.height / 2, 1);
+    cy.get(handle).should('have.attr', 'data-resize-handle-state', 'drag');
+    cy.then(() => dispatchPointer(window.document.body, 'pointermove', targetY, 1));
+    cy.get(drawer).should(($drawer) => {
+      expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(Math.min(90, percentage), 1);
+    });
+    cy.then(() => dispatchPointer(window, 'pointerup', targetY, 0));
+  });
+}
+
+function assertResizedDrawerSurvivesReopenAndReload(saveCount: number): void {
+  const drawer = '#app-shell-bottom-drawer-panel';
+  cy.get(drawer).then(($drawer) => {
+    const rememberedHeight = $drawer[0]!.getBoundingClientRect().height;
+    expect(rememberedHeight, 'keyboard resize has a larger saved height').to.be.greaterThan(160);
+    cy.window().should((window) => {
+      const saved = JSON.parse(window.localStorage.getItem('dvt-web-ui-layout')!);
+      expect(
+        saved.state.bottomDrawerHeight,
+        'actual resize reached the layout owner'
+      ).to.be.closeTo(rememberedHeight, 2);
+    });
+    cy.get('[data-slot="bottom-operational-drawer-close"]').click();
+    cy.get(drawer).should('not.exist');
+    revealOperationalDrawer();
+    cy.get(drawer).should(($reopened) => {
+      expect(
+        $reopened[0]!.getBoundingClientRect().height,
+        'close and reveal retain size'
+      ).to.be.closeTo(rememberedHeight, 2);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
+    });
+    // Reload creates a new Window; retain the controlled API transport without reseeding layout.
+    const sessionReads = getE2eApiCalls('/session', 'GET').length;
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    cy.get(drawer).should(($reloaded) => {
+      expect(
+        $reloaded[0]!.getBoundingClientRect().height,
+        'reload retains the resized height'
+      ).to.be.closeTo(rememberedHeight, 2);
+      expect(getE2eApiCalls('/session', 'GET').length).to.be.greaterThan(sessionReads);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
+    });
+  });
+}
+
+function assertPendingModelRouteRejection(modelViewport: string): void {
+  workbenchOperation('filter').scrollIntoView().click();
+  cy.get('[data-pending-operation="true"]').should('exist');
+  // Staging starts the existing draft presentation; a rejected route change must retain that owner.
+  cy.get(modelViewport).as('pendingModel', { type: 'static' });
+  cy.get('[data-slot="left-navigation-link"][href="/admin"]').focus();
+  pressNativeKey('Enter');
+  cy.get('[role="alertdialog"]').should('be.visible');
+  cy.location('pathname').should('eq', '/canvas');
+  cy.contains('[role="alertdialog"] button', 'Keep editing').click();
+  cy.get('[data-pending-operation="true"]').should('exist');
+  cy.get<JQuery<HTMLElement>>('@pendingModel').then(($original) => {
+    cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
+  });
+  cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+  cy.get('[data-pending-operation="true"]').should('not.exist');
+}
+
 describe('Shell layout contract', () => {
   beforeEach(() => {
     cy.viewport(1400, 900);
@@ -226,41 +463,7 @@ describe('Shell layout contract', () => {
       .contains(/^Cost$/)
       .should('be.visible');
 
-    cy.window().then((window) => {
-      const body = window.document.querySelector('[data-slot="app-shell-body"]');
-      const wrapper = window.document.querySelector('[data-slot="app-shell-left-navigation"]');
-      const rail = window.document.querySelector('[data-slot="left-navigation-rail"]');
-      const nav = window.document.querySelector('[data-slot="left-navigation-nav"]');
-      const links = Array.from(
-        window.document.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')
-      );
-
-      expect(body, 'shell body').to.not.equal(null);
-      expect(wrapper, 'rail wrapper').to.not.equal(null);
-      expect(rail, 'left navigation rail').to.not.equal(null);
-      expect(nav, 'left navigation nav').to.not.equal(null);
-      expect(links.length, 'navigation link count').to.be.greaterThan(2);
-
-      const bodyRect = body!.getBoundingClientRect();
-      const wrapperRect = wrapper!.getBoundingClientRect();
-      const railRect = rail!.getBoundingClientRect();
-      const about = window.document.querySelector('[data-slot="shell-about-command"]')!;
-      const aboutRect = about.getBoundingClientRect();
-
-      expect(
-        Math.abs(wrapperRect.height - bodyRect.height),
-        'wrapper stretches to body height'
-      ).to.be.lessThan(2);
-      expect(
-        Math.abs(railRect.height - wrapperRect.height),
-        'rail stretches to wrapper height'
-      ).to.be.lessThan(2);
-      expect(
-        railRect.bottom - aboutRect.bottom,
-        'About stays pinned near the rail bottom'
-      ).to.be.within(0, 12);
-      expect(links.at(-1)!.getBoundingClientRect().bottom).to.be.at.most(aboutRect.top);
-    });
+    assertRailFillsShell();
     assertNavigationTargetGeometry();
     cy.get('[data-slot="canvas-explorer-elements-toggle"]').should('not.exist');
     cy.viewport(640, 400);
@@ -317,62 +520,9 @@ describe('Shell layout contract', () => {
     stubE2eJsonApi('GET', '/workspace/files', []);
     visitShellRouteWithUiLayout('/canvas');
     cy.get('[data-testid="canvas-viewport"]').should('be.visible');
-    let frame: HTMLElement;
-    let rail: HTMLElement;
-    let canvas: HTMLElement;
-    let git: HTMLElement;
-    let hold = false;
-    let sessionRequests = 0;
-    const releases: Array<() => void> = [];
-    cy.get('[data-slot="app-shell-frame"]').then(($node) => {
-      frame = $node[0]!;
-    });
-    cy.get('[data-slot="left-navigation-rail"]').then(($node) => {
-      rail = $node[0]!;
-    });
-    cy.get('[data-slot="left-navigation-link"][href="/canvas"]').then(($node) => {
-      canvas = $node[0]!;
-    });
-    cy.get('[data-slot="shell-project-code-command"]').then(($node) => {
-      git = $node[0]!;
-    });
-    cy.window().then((window) => {
-      const fetch = window.fetch.bind(window);
-      window.fetch = async (input, init) => {
-        const requestUrl =
-          typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-        if (new URL(requestUrl, window.location.href).pathname === '/session') {
-          sessionRequests += 1;
-          if (hold)
-            await new Promise<void>((resolve) => {
-              releases.push(resolve);
-            });
-        }
-        return fetch(input, init);
-      };
-    });
-    const assertRetained = (): void => {
-      cy.get('[data-slot="app-shell-frame"]').should(($node) => expect($node[0]).to.equal(frame));
-      cy.get('[data-slot="left-navigation-rail"]')
-        .should('be.visible')
-        .and(($node) => expect($node[0]).to.equal(rail));
-      cy.get('[data-slot="left-navigation-link"][href="/canvas"]')
-        .should('be.visible')
-        .and(($node) => expect($node[0]).to.equal(canvas));
-      cy.get('[data-slot="shell-project-code-command"]')
-        .should('be.visible')
-        .and(($node) => expect($node[0]).to.equal(git));
-    };
-    const releaseSession = (): void => {
-      cy.then(() => {
-        hold = false;
-        expect(releases.length, 'a real session request is waiting').to.be.greaterThan(0);
-        releases.splice(0).forEach((release) => release());
-      });
-    };
-    cy.then(() => {
-      hold = true;
-    });
+    const { assertRetained, releaseSession, holdSession, sessionRequestCount } =
+      captureSessionRevalidation();
+    cy.then(holdSession);
     cy.get('[data-slot="left-navigation-link"][href="/plugins"]').click();
     cy.location('pathname').should('equal', '/plugins');
     cy.get('[data-slot="app-shell-outlet"]').should('contain.text', 'Checking session...');
@@ -385,9 +535,7 @@ describe('Shell layout contract', () => {
       .contains(/^Plugins$/)
       .should('be.visible');
     assertRetained();
-    cy.then(() => {
-      hold = true;
-    });
+    cy.then(holdSession);
     cy.get('[data-slot="shell-project-code-command"]').focus();
     pressNativeKey('Enter');
     cy.location('pathname').should('equal', '/canvas');
@@ -400,25 +548,17 @@ describe('Shell layout contract', () => {
     cy.window().its('history.state.usr').should('not.have.property', 'canvasWorkbench');
     assertRetained();
     cy.then(() => {
-      expect(sessionRequests, 'consuming state does not revalidate and remount Canvas').to.equal(2);
+      expect(
+        sessionRequestCount(),
+        'consuming state does not revalidate and remount Canvas'
+      ).to.equal(2);
     });
   });
 
   it('keeps shell Canvas and Git entries across retained surfaces and respects pending Model edits', () => {
     // Navigation belongs to the shell, independently of retained Canvas, Code and Model panels.
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
-    stubE2eJsonApi('GET', '/workspace/files', [
-      { path: 'notes.md', name: 'notes.md', kind: 'file' },
-    ]);
-    stubE2eJsonApi('GET', '/workspace/files/notes.md', {
-      path: 'notes.md',
-      name: 'notes.md',
-      language: 'markdown',
-      content: '# Rail session',
-      contentSha256: 'a'.repeat(64),
-      lastModified: '2026-10-28T00:00:00Z',
-    });
-    stubE2eJsonApi('GET', /^\/workspace\/file-history\/.+/, []);
+    stubShellRetainedFile();
     visitShellRouteWithUiLayout('/canvas');
     const canvas = '[data-slot="canvas-workspace-surface"]';
     const code = '[data-slot="canvas-code-workspace-surface"]';
@@ -464,21 +604,7 @@ describe('Shell layout contract', () => {
     cy.get<JQuery<HTMLElement>>('@retainedModel').then(($original) => {
       cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
     });
-    workbenchOperation('filter').scrollIntoView().click();
-    cy.get('[data-pending-operation="true"]').should('exist');
-    // Staging starts the existing draft presentation; a rejected route change must retain that owner.
-    cy.get(modelViewport).as('pendingModel', { type: 'static' });
-    cy.get('[data-slot="left-navigation-link"][href="/admin"]').focus();
-    pressNativeKey('Enter');
-    cy.get('[role="alertdialog"]').should('be.visible');
-    cy.location('pathname').should('eq', '/canvas');
-    cy.contains('[role="alertdialog"] button', 'Keep editing').click();
-    cy.get('[data-pending-operation="true"]').should('exist');
-    cy.get<JQuery<HTMLElement>>('@pendingModel').then(($original) => {
-      cy.get(modelViewport).should(($current) => expect($current[0]).to.equal($original[0]));
-    });
-    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
-    cy.get('[data-pending-operation="true"]').should('not.exist');
+    assertPendingModelRouteRejection(modelViewport);
     cy.get('[data-slot="canvas-workspace-tab"]').click();
     assertShellCanvasEntries();
     cy.get<JQuery<HTMLElement>>('@retainedCanvas').then(($original) => {
@@ -575,65 +701,7 @@ describe('Shell layout contract', () => {
 
     const handle = '#app-shell-bottom-drawer-resize-handle';
     const drawer = '#app-shell-bottom-drawer-panel';
-    const outlet = '[data-slot="app-shell-outlet"]';
-    hoverWorkbenchCard(outlet);
-    cy.get(handle).then(($separator) => {
-      const separator = $separator[0]!;
-      const bounds = separator.getBoundingClientRect();
-      const idleColor = $separator.css('background-color');
-      expect($separator.children()).to.have.length(0);
-      expect(bounds.width).to.equal(separator.parentElement!.getBoundingClientRect().width);
-
-      hoverWorkbenchCard(handle);
-      cy.get(handle).should(($hovered) => {
-        expect($hovered[0]!.matches(':hover'), 'native pointer over the separator').to.be.true;
-        expect($hovered.css('background-color')).not.to.equal(idleColor);
-        expect($hovered[0]!.getBoundingClientRect().height).to.equal(bounds.height);
-      });
-
-      hoverWorkbenchCard(outlet);
-      cy.get(handle).should('have.css', 'background-color', idleColor);
-    });
-
-    const dragDrawerTo = (percentage: number): void => {
-      cy.window().then((window) => {
-        const element = window.document.querySelector<HTMLElement>(handle)!;
-        const bounds = element.getBoundingClientRect();
-        const group = element.parentElement!.getBoundingClientRect();
-        const clientX = bounds.left + bounds.width / 2;
-        const targetY = group.top + group.height * (1 - percentage / 100);
-        const dispatchPointer = (
-          target: EventTarget,
-          type: string,
-          clientY: number,
-          buttons: number
-        ): void => {
-          target.dispatchEvent(
-            new window.PointerEvent(type, {
-              bubbles: true,
-              cancelable: true,
-              pointerId: 1,
-              pointerType: 'mouse',
-              isPrimary: true,
-              clientX,
-              clientY,
-              button: 0,
-              buttons,
-            })
-          );
-        };
-        dispatchPointer(element, 'pointerdown', bounds.top + bounds.height / 2, 1);
-        cy.get(handle).should('have.attr', 'data-resize-handle-state', 'drag');
-        cy.then(() => dispatchPointer(window.document.body, 'pointermove', targetY, 1));
-        cy.get(drawer).should(($drawer) => {
-          expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(
-            Math.min(90, percentage),
-            1
-          );
-        });
-        cy.then(() => dispatchPointer(window, 'pointerup', targetY, 0));
-      });
-    };
+    assertOperationalDrawerSeparatorAppearance();
 
     cy.get(expression).then(($semantic) => {
       const semanticElement = $semantic[0];
@@ -643,11 +711,11 @@ describe('Shell layout contract', () => {
         .attr('data-semantic-node-id');
       expect(selectedExpression, 'selected expression identity').to.be.a('string');
       const saveCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
-      dragDrawerTo(95);
+      dragOperationalDrawerTo(95);
       cy.get(drawer).should('have.attr', 'data-panel-size', '90.0');
       cy.get(handle).should('be.visible');
       cy.get(expressionTab).should('have.attr', 'aria-selected', 'true');
-      dragDrawerTo(35);
+      dragOperationalDrawerTo(35);
       cy.get(drawer).should(($drawer) => {
         expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(35, 1);
       });
@@ -677,41 +745,7 @@ describe('Shell layout contract', () => {
         'aria-selected',
         'true'
       );
-      cy.get(drawer).then(($drawer) => {
-        const rememberedHeight = $drawer[0]!.getBoundingClientRect().height;
-        expect(rememberedHeight, 'keyboard resize has a larger saved height').to.be.greaterThan(
-          160
-        );
-        cy.window().should((window) => {
-          const saved = JSON.parse(window.localStorage.getItem('dvt-web-ui-layout')!);
-          expect(
-            saved.state.bottomDrawerHeight,
-            'actual resize reached the layout owner'
-          ).to.be.closeTo(rememberedHeight, 2);
-        });
-        cy.get('[data-slot="bottom-operational-drawer-close"]').click();
-        cy.get(drawer).should('not.exist');
-        revealOperationalDrawer();
-        cy.get(drawer).should(($reopened) => {
-          expect(
-            $reopened[0]!.getBoundingClientRect().height,
-            'close and reveal retain size'
-          ).to.be.closeTo(rememberedHeight, 2);
-          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
-        });
-        // Reload creates a new Window; retain the controlled API transport without reseeding layout.
-        const sessionReads = getE2eApiCalls('/session', 'GET').length;
-        cy.on('window:before:load', installE2eApiFetchStub);
-        cy.reload();
-        cy.get(drawer).should(($reloaded) => {
-          expect(
-            $reloaded[0]!.getBoundingClientRect().height,
-            'reload retains the resized height'
-          ).to.be.closeTo(rememberedHeight, 2);
-          expect(getE2eApiCalls('/session', 'GET').length).to.be.greaterThan(sessionReads);
-          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
-        });
-      });
+      assertResizedDrawerSurvivesReopenAndReload(saveCount);
     });
   });
 });

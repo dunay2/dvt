@@ -7,6 +7,7 @@
  * @version 1.0.0
  */
 import { DVT_REJECTIONS, KNOWN_STEP_KINDS } from '@dvt/contracts';
+import type { Interception, CyHttpMessages } from 'cypress/types/net-stubbing';
 
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
@@ -44,11 +45,15 @@ function visitEnglishLiveCanvas(): void {
   });
 }
 
-function assertRetainedDvtRunEvidence(
-  runId: string,
-  previewSha: string,
-  publicationToken: string
-): void {
+function assertRetainedDvtRunEvidence({
+  runId,
+  previewSha,
+  publicationToken,
+}: {
+  runId: string;
+  previewSha: string;
+  publicationToken: string;
+}): void {
   cy.go('back');
   cy.location('pathname').should('equal', `/runs/${runId}`);
   cy.location('search').should('equal', '?tab=diagnostics');
@@ -80,7 +85,170 @@ function assertRetainedDvtRunEvidence(
   });
 }
 
+type PreviewAcceptedEnvelope = {
+  readonly plan?: {
+    readonly metadata?: { readonly planId?: string };
+    readonly steps?: ReadonlyArray<{ readonly kind?: string }>;
+  };
+  readonly planRef?: { readonly planId?: string; readonly sha256?: string };
+  readonly persisted?: { readonly canonicalPlanSha256?: string };
+};
+type RunEventResponse = {
+  readonly items?: ReadonlyArray<
+    LiveRunEventIdentity & {
+      readonly eventType?: string;
+      readonly payload?: {
+        readonly resultEvidence?: {
+          readonly evidenceType?: string;
+          readonly plan?: { readonly sha256?: string };
+          readonly target?: { readonly schema?: string; readonly relation?: string };
+          readonly publication?: { readonly token?: string; readonly outcome?: string };
+          readonly rowsWritten?: number;
+        };
+      };
+    }
+  >;
+};
+
+function waitForCompletedDvtRun(runId: string, attempt = 0): Cypress.Chainable<unknown> {
+  return readLiveRunSnapshot(runId).then<unknown>((response) => {
+    expect(response.status).to.equal(200);
+    const status = String((response.body as { status?: unknown }).status ?? '').toLowerCase();
+    if (status === 'completed') return;
+    if (status === 'failed') throw new Error(`Native DVT run ${runId} failed.`);
+    if (attempt >= 60) throw new Error(`Native DVT run ${runId} did not complete.`);
+    return cy.wait(500).then(() => waitForCompletedDvtRun(runId, attempt + 1));
+  });
+}
+
+function assertTerminalSourcePreview(): void {
+  cy.intercept('GET', '**/source-data-sample?*').as('sourceLivePreview');
+  hoverWorkbenchCard('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]');
+  getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').focus().click();
+  cy.wait('@sourceLivePreview').then(({ response }) => {
+    assertTerminalSampleResponse({ response });
+  });
+  assertTerminalLiveFactsAndRefresh('@sourceLivePreview');
+}
+
+function assertTerminalTransformPreview(): void {
+  cy.intercept('GET', '**/transforms/dvt-transform-1/data-sample?*').as('transformLivePreview');
+  hoverWorkbenchCard(
+    '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
+  );
+  getVisibleCanvasNode('dvt-transform-1').find('[data-slot="canvas-node-execute"]').focus().click();
+  cy.wait('@transformLivePreview').then(({ response }) => {
+    assertTerminalSampleResponse({ response });
+    expect(response?.body.provenance.sourceRefs).to.have.length(1);
+    expect(response?.body).not.to.have.property('sampledAt');
+  });
+  assertTerminalLiveFactsAndRefresh('@transformLivePreview');
+}
+
+function assertAcceptedTerminalPreview(): Cypress.Chainable<string> {
+  return cy.wait('@dvtTerminalTransformPreview', { timeout: 30_000 }).then((interception) => {
+    expect(interception.response?.statusCode).to.equal(200);
+    const preview = interception.response?.body as PreviewAcceptedEnvelope;
+    expect(preview.plan).not.to.equal(undefined);
+    expect(preview.planRef).not.to.equal(undefined);
+    const plan = preview.plan!;
+    const planRef = preview.planRef!;
+    expect(
+      plan.steps?.some((step) => step.kind === KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD)
+    ).to.equal(true);
+    expect(planRef.planId).to.equal(plan.metadata?.planId);
+    const previewSha = planRef.sha256 ?? '';
+    expect(previewSha).to.match(/^[a-f0-9]{64}$/);
+    expect(preview.persisted?.canonicalPlanSha256).to.match(/^[a-f0-9]{64}$/);
+    return previewSha;
+  });
+}
+
+function assertPublicationStepEvidence(
+  evidence: NonNullable<
+    NonNullable<RunEventResponse['items']>[number]['payload']
+  >['resultEvidence'],
+  context: { previewSha: string; targetSchema: string; targetRelation: string }
+): string {
+  const { previewSha, targetSchema, targetRelation } = context;
+  expect(evidence, 'completed step publication evidence').not.to.equal(undefined);
+  const publication = evidence!;
+  expect(publication.evidenceType).to.equal('dvt-postgres-publication');
+  expect(publication.plan?.sha256).to.equal(previewSha);
+  expect(publication.target).to.deep.include({
+    schema: targetSchema,
+    relation: targetRelation,
+  });
+  const publicationToken = publication.publication?.token ?? '';
+  expect(publicationToken).to.match(/^[a-f0-9]{64}$/);
+  expect(publication.publication?.outcome).to.be.oneOf([
+    'created',
+    'replaced',
+    'verified-existing',
+  ]);
+  expect(publication.rowsWritten).to.equal(3);
+  return publicationToken;
+}
+
+function assertDvtPublicationEvidence(
+  runId: string,
+  context: { previewSha: string; targetSchema: string; targetRelation: string }
+): Cypress.Chainable<string> {
+  return waitForCompletedDvtRun(runId).then(() => {
+    return readLiveRunEvents(runId).then((response) => {
+      expect(response.status).to.equal(200);
+      const completedStep = (response.body as RunEventResponse).items?.find(
+        (event) => event.eventType === 'StepCompleted'
+      );
+      const publicationToken = assertPublicationStepEvidence(
+        completedStep?.payload?.resultEvidence,
+        context
+      );
+      cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
+        .should('be.visible')
+        .and('contain.text', 'completed');
+      assertAuthoritativeLiveRunTimeline((response.body as RunEventResponse).items ?? []);
+      return cy.wrap(publicationToken);
+    });
+  });
+}
+
 registerCanvasNodeDataActionsProof();
+
+function assertTerminalSampleResponse({ response }: Pick<Interception, 'response'>): void {
+  expect(response, 'actual live terminal response').not.to.equal(undefined);
+  expect(response!.statusCode).to.equal(200);
+  expect(response!.body.provenance).to.deep.include({
+    mode: 'live',
+    limit: 20,
+    navigation: 'bounded-first-page',
+  });
+  expect(response!.body.rows).to.have.length(3);
+}
+
+function assertTerminalLiveFactsAndRefresh(alias: `@${string}`): void {
+  cy.get('[data-slot="live-preview-facts"]')
+    .should('contain.text', 'LIVE')
+    .and('contain.text', 'PostgreSQL');
+  cy.get('[data-slot="data-sample-refresh"]').click();
+  cy.wait(alias).its('response.statusCode').should('equal', 200);
+}
+
+function interceptTerminalPlanPreview(request: CyHttpMessages.IncomingHttpRequest): void {
+  request.alias = 'dvtTerminalTransformPreview';
+  expect(request.body).not.to.have.property('graphSource');
+  expect(request.body.previewProfile).to.equal('planner-generic-v1');
+  expect(request.body.persist).to.equal(true);
+  expect(request.body.provenance).to.deep.include({
+    kind: 'dvt-protected-workspace-graph',
+  });
+  expect(request.body.provenance.canvasId).to.be.a('string').and.not.to.equal('');
+  expect(request.body.selection).to.deep.equal({
+    mode: 'upstream',
+    nodeIds: ['dvt-transform-1'],
+  });
+  request.continue();
+}
 
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
@@ -90,30 +258,6 @@ describe('DVT terminal Transform Preview and Run live', () => {
   });
 
   it('executes the exact PlanRef and reloads its PostgreSQL evidence', () => {
-    type PreviewAcceptedEnvelope = {
-      readonly plan?: {
-        readonly metadata?: { readonly planId?: string };
-        readonly steps?: ReadonlyArray<{ readonly kind?: string }>;
-      };
-      readonly planRef?: { readonly planId?: string; readonly sha256?: string };
-      readonly persisted?: { readonly canonicalPlanSha256?: string };
-    };
-    type RunEventResponse = {
-      readonly items?: ReadonlyArray<
-        LiveRunEventIdentity & {
-          readonly eventType?: string;
-          readonly payload?: {
-            readonly resultEvidence?: {
-              readonly evidenceType?: string;
-              readonly plan?: { readonly sha256?: string };
-              readonly target?: { readonly schema?: string; readonly relation?: string };
-              readonly publication?: { readonly token?: string; readonly outcome?: string };
-              readonly rowsWritten?: number;
-            };
-          };
-        }
-      >;
-    };
     const targetSchemaValue = Cypress.env('postgresTargetSchema');
     if (typeof targetSchemaValue !== 'string' || targetSchemaValue.trim().length === 0) {
       throw new Error('Cypress env postgresTargetSchema is required for the DVT Run proof.');
@@ -122,16 +266,6 @@ describe('DVT terminal Transform Preview and Run live', () => {
     const targetRelation = 'orders_result';
     let previewSha = '';
     let publicationToken = '';
-    const waitForCompletedRun = (runId: string, attempt = 0): Cypress.Chainable<unknown> =>
-      readLiveRunSnapshot(runId).then<unknown>((response) => {
-        expect(response.status).to.equal(200);
-        const status = String((response.body as { status?: unknown }).status ?? '').toLowerCase();
-        if (status === 'completed') return;
-        if (status === 'failed') throw new Error(`Native DVT run ${runId} failed.`);
-        if (attempt >= 60) throw new Error(`Native DVT run ${runId} did not complete.`);
-        return cy.wait(500).then(() => waitForCompletedRun(runId, attempt + 1));
-      });
-
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
@@ -139,81 +273,18 @@ describe('DVT terminal Transform Preview and Run live', () => {
       terminalTransformResultTarget: { schema: targetSchema, relation: targetRelation },
       title: 'DVT terminal Transform Run',
     });
-    cy.intercept('POST', '**/plans/preview', (request) => {
-      request.alias = 'dvtTerminalTransformPreview';
-      expect(request.body).not.to.have.property('graphSource');
-      expect(request.body.previewProfile).to.equal('planner-generic-v1');
-      expect(request.body.persist).to.equal(true);
-      expect(request.body.provenance).to.deep.include({
-        kind: 'dvt-protected-workspace-graph',
-      });
-      expect(request.body.provenance.canvasId).to.be.a('string').and.not.to.equal('');
-      expect(request.body.selection).to.deep.equal({
-        mode: 'upstream',
-        nodeIds: ['dvt-transform-1'],
-      });
-      request.continue();
-    });
+    cy.intercept('POST', '**/plans/preview', interceptTerminalPlanPreview);
 
     visitEnglishLiveCanvas();
     getVisibleCanvasNode('source-1').should('be.visible');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
-    cy.intercept('GET', '**/source-data-sample?*').as('sourceLivePreview');
-    hoverWorkbenchCard('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]');
-    getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').focus().click();
-    cy.wait('@sourceLivePreview').then(({ response }) => {
-      expect(response?.statusCode).to.equal(200);
-      expect(response?.body.provenance).to.deep.include({
-        mode: 'live',
-        limit: 20,
-        navigation: 'bounded-first-page',
-      });
-      expect(response?.body.rows).to.have.length(3);
-    });
-    cy.get('[data-slot="live-preview-facts"]')
-      .should('contain.text', 'LIVE')
-      .and('contain.text', 'PostgreSQL');
-    cy.get('[data-slot="data-sample-refresh"]').click();
-    cy.wait('@sourceLivePreview').its('response.statusCode').should('equal', 200);
-    cy.intercept('GET', '**/transforms/dvt-transform-1/data-sample?*').as('transformLivePreview');
-    hoverWorkbenchCard(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    );
-    getVisibleCanvasNode('dvt-transform-1')
-      .find('[data-slot="canvas-node-execute"]')
-      .focus()
-      .click();
-    cy.wait('@transformLivePreview').then(({ response }) => {
-      expect(response?.statusCode).to.equal(200);
-      expect(response?.body.provenance).to.deep.include({
-        mode: 'live',
-        limit: 20,
-        navigation: 'bounded-first-page',
-      });
-      expect(response?.body.provenance.sourceRefs).to.have.length(1);
-      expect(response?.body.rows).to.have.length(3);
-      expect(response?.body).not.to.have.property('sampledAt');
-    });
-    cy.get('[data-slot="live-preview-facts"]')
-      .should('contain.text', 'LIVE')
-      .and('contain.text', 'PostgreSQL');
-    cy.get('[data-slot="data-sample-refresh"]').click();
-    cy.wait('@transformLivePreview').its('response.statusCode').should('equal', 200);
+    assertTerminalSourcePreview();
+    assertTerminalTransformPreview();
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
 
-    cy.wait('@dvtTerminalTransformPreview', { timeout: 30_000 }).then((interception) => {
-      expect(interception.response?.statusCode).to.equal(200);
-      const preview = interception.response?.body as PreviewAcceptedEnvelope;
-      expect(
-        preview.plan?.steps?.some(
-          (step) => step.kind === KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD
-        )
-      ).to.equal(true);
-      expect(preview.planRef?.planId).to.equal(preview.plan?.metadata?.planId);
-      previewSha = preview.planRef?.sha256 ?? '';
-      expect(previewSha).to.match(/^[a-f0-9]{64}$/);
-      expect(preview.persisted?.canonicalPlanSha256).to.match(/^[a-f0-9]{64}$/);
+    assertAcceptedTerminalPreview().then((sha) => {
+      previewSha = sha;
     });
 
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
@@ -232,32 +303,12 @@ describe('DVT terminal Transform Preview and Run live', () => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
 
-      return waitForCompletedRun(runId!).then(() => {
-        readLiveRunEvents(runId!).then((response) => {
-          expect(response.status).to.equal(200);
-          const completedStep = (response.body as RunEventResponse).items?.find(
-            (event) => event.eventType === 'StepCompleted'
-          );
-          const evidence = completedStep?.payload?.resultEvidence;
-          expect(evidence?.evidenceType).to.equal('dvt-postgres-publication');
-          expect(evidence?.plan?.sha256).to.equal(previewSha);
-          expect(evidence?.target).to.deep.include({
-            schema: targetSchema,
-            relation: targetRelation,
-          });
-          publicationToken = evidence?.publication?.token ?? '';
-          expect(publicationToken).to.match(/^[a-f0-9]{64}$/);
-          expect(evidence?.publication?.outcome).to.be.oneOf([
-            'created',
-            'replaced',
-            'verified-existing',
-          ]);
-          expect(evidence?.rowsWritten).to.equal(3);
-          cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
-            .should('be.visible')
-            .and('contain.text', 'completed');
-          assertAuthoritativeLiveRunTimeline((response.body as RunEventResponse).items ?? []);
-        });
+      return assertDvtPublicationEvidence(runId!, {
+        previewSha,
+        targetSchema,
+        targetRelation,
+      }).then((token) => {
+        publicationToken = token;
       });
     });
 
@@ -275,7 +326,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
-      assertRetainedDvtRunEvidence(runId!, previewSha, publicationToken);
+      assertRetainedDvtRunEvidence({ runId: runId!, previewSha, publicationToken });
     });
   });
 

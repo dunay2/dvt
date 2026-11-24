@@ -156,11 +156,15 @@ it('compares and restores a Git version of the selected operation through the Co
   });
 });
 
-it('creates and imports files with compact keyboard-accessible Explorer actions', () => {
-  const { file, project } = contextFixture('select 1 as id');
+function stubCreateOnlyExplorerFiles({
+  file,
+  project,
+  importedContent,
+}: Pick<ReturnType<typeof contextFixture>, 'file' | 'project'> & {
+  importedContent: string;
+}): string[] {
   const files: FileContent[] = [file];
   const writes: string[] = [];
-  const importedContent = '\uFEFFselect 84 as id';
   stubCodeWorkbenchBootstrapApis();
   stubE2eApi('GET', '/workspace/files', () => ({
     body: files.map(({ path, name }) => ({ path, name, kind: 'file' })),
@@ -205,6 +209,13 @@ it('creates and imports files with compact keyboard-accessible Explorer actions'
     return { body: receipt };
   });
   stubE2eJsonApi('GET', '/workspace/dbt/graph', project);
+  return writes;
+}
+
+it('creates and imports files with compact keyboard-accessible Explorer actions', () => {
+  const { file, project } = contextFixture('select 1 as id');
+  const importedContent = '\uFEFFselect 84 as id';
+  const writes = stubCreateOnlyExplorerFiles({ file, project, importedContent });
   visitWithE2eWorkspaceSession('/canvas', {
     onBeforeLoad(window) {
       window.localStorage.setItem(

@@ -22,6 +22,48 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 
 const SQL_ENDPOINT = '/workspace/graph/canvases/main-canvas/transforms/join-transform/sql';
 
+function restoreUnpublishedRelationalDraft(
+  initialDraft: ReturnType<typeof stubWorkbenchScenario>
+): {
+  model: ReturnType<typeof stubWorkbenchScenario>['nodes'][number];
+  savedAuthoringDraft: ReturnType<typeof createCanvasRelationalAuthoringDraft>;
+} {
+  const model = initialDraft.nodes.find((node) => node.id === 'join-transform');
+  if (model == null) throw new Error('The existing saved-join scenario must contain its Model.');
+  const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+    model.metadata?.transformAuthoring
+  );
+  const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+  const indexed = indexSubstraitRelations(document);
+  if (!indexed.ok) throw indexed.error;
+  const editable = projectCanvasCanonicalGraphEditing(document, [
+    'source-customers',
+    'source-orders',
+  ]);
+  if (editable == null)
+    throw new Error('The existing JOIN fixture must have a lossless authoring projection.');
+  const savedAuthoringDraft = createCanvasRelationalAuthoringDraft({
+    ...editable,
+    outputRelationId: indexed.index.rootId,
+    positions: new Map(),
+  });
+  const metadata: NonNullable<typeof model.metadata> = {
+    ...model.metadata,
+    relationalAuthoringDraft: savedAuthoringDraft,
+  };
+  delete metadata.transformAuthoring;
+  model.metadata = metadata;
+  Object.assign(initialDraft, normalizeProjectCanvasDraft(initialDraft));
+  WorkspaceGraphAuthoringDraftSchema.parse(initialDraft);
+  expect(initialDraft.nodeIds).to.include(model.id);
+  expect(initialDraft.edges.filter((edge) => edge.targetId === model.id)).to.have.length(2);
+  expect(savedAuthoringDraft.sources).to.have.length(2);
+  expect(savedAuthoringDraft.outputRelationId).to.equal(indexed.index.rootId);
+  expect(model.metadata).not.to.have.property('transformAuthoring');
+
+  return { model, savedAuthoringDraft };
+}
+
 describe('Workbench navigation', () => {
   let initialDraft: ReturnType<typeof stubWorkbenchScenario>;
   beforeEach(() => {
@@ -191,38 +233,7 @@ describe('Workbench navigation', () => {
 
   it('opens the saved relational draft directly without a published tree or prior Properties selection', () => {
     // Model editing must resolve its own target; a previous Properties gesture must not be required to hydrate it.
-    const model = initialDraft.nodes.find((node) => node.id === 'join-transform');
-    if (model == null) throw new Error('The existing saved-join scenario must contain its Model.');
-    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
-      model.metadata?.transformAuthoring
-    );
-    const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
-    const indexed = indexSubstraitRelations(document);
-    if (!indexed.ok) throw indexed.error;
-    const editable = projectCanvasCanonicalGraphEditing(document, [
-      'source-customers',
-      'source-orders',
-    ]);
-    if (editable == null)
-      throw new Error('The existing JOIN fixture must have a lossless authoring projection.');
-    const savedAuthoringDraft = createCanvasRelationalAuthoringDraft({
-      ...editable,
-      outputRelationId: indexed.index.rootId,
-      positions: new Map(),
-    });
-    const metadata: NonNullable<typeof model.metadata> = {
-      ...model.metadata,
-      relationalAuthoringDraft: savedAuthoringDraft,
-    };
-    delete metadata.transformAuthoring;
-    model.metadata = metadata;
-    Object.assign(initialDraft, normalizeProjectCanvasDraft(initialDraft));
-    WorkspaceGraphAuthoringDraftSchema.parse(initialDraft);
-    expect(initialDraft.nodeIds).to.include(model.id);
-    expect(initialDraft.edges.filter((edge) => edge.targetId === model.id)).to.have.length(2);
-    expect(savedAuthoringDraft.sources).to.have.length(2);
-    expect(savedAuthoringDraft.outputRelationId).to.equal(indexed.index.rootId);
-    expect(model.metadata).not.to.have.property('transformAuthoring');
+    const { model, savedAuthoringDraft } = restoreUnpublishedRelationalDraft(initialDraft);
 
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
