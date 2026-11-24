@@ -1,4 +1,4 @@
-﻿---
+---
 title: '@dvt/engine'
 status: Active
 owner: Architecture / Engine
@@ -15,14 +15,14 @@ this component is wired today.
 
 ## Southbound Port Surface
 
-`@dvt/engine` exposes seven southbound ports as its declared architecture
+`@dvt/engine` exposes six southbound ports as its declared architecture
 surface. Four are wired on the default runtime path, one is optional runtime
-wiring, and two remain intentionally visible as target seams while their
+wiring, and the package-exposed projector remains a target seam while its
 dedicated runtime adoption is still in progress.
 
 This table is the canonical doc-level inventory for engine port membership and
 posture. Deeper architecture pages refine usage and ownership, but they should
-not redefine which ports belong to the seven-port surface.
+not redefine which ports belong to the six-port surface.
 
 | Port                           | Current posture               | Notes                                                                                         |
 | ------------------------------ | ----------------------------- | --------------------------------------------------------------------------------------------- |
@@ -32,10 +32,9 @@ not redefine which ports belong to the seven-port surface.
 | `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes `IStoredPlanArtifactReader` before dispatch               |
 | `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional seam when `runExecutionContextRef` is supplied                                    |
 | `IProjector`                   | `package-exposed target seam` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
-| `IMetricsCollector`            | `source-tree target seam`     | Declared in source; current runtime still injects `IObservability` instead                    |
 
 `IObservability` remains the current telemetry facade in the shipped runtime.
-It is not counted inside the seven-port southbound surface.
+It is not counted inside the six-port southbound surface.
 
 Target note:
 
@@ -118,7 +117,6 @@ flowchart LR
   Ports --> Plan["IPlanIntegrityValidator<br/>(runtime-wired)"]
   Ports --> RunCtx["IRunExecutionContextResolver<br/>(optional runtime wiring)"]
   Ports -.-> Projector["IProjector<br/>(package-exposed target seam)"]
-  Ports -.-> Metrics["IMetricsCollector<br/>(source-tree target seam)"]
   Engine --> Obs["IObservability<br/>(current telemetry facade)"]
 ```
 

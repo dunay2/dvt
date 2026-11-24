@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-19",
+  "generated": "2026-11-24",
   "repo": {
     "sha": "local"
   },
@@ -146,7 +146,6 @@
         "Decision — Provider selection is resolved in the application layer to keep runtime independence",
         "Decision — Reserve a typed core module to evolve internal semantics without exposing implementation",
         "Decision — Tenant access rejections are represented with a typed error and stable code",
-        "Decision — The engine exposes an abstract metrics port for observability without coupling to a specific provider",
         "Decision — The token-bucket rate limiter controls outbox write pressure per tenant in memory",
         "Decorate IProviderAdapter calls at the engine outbound boundary so provider outages fail fast.",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
@@ -332,7 +331,6 @@
         "packages/@dvt/engine/src/domain/IRunCommandService.ts",
         "packages/@dvt/engine/src/domain/IRunSignalService.ts",
         "packages/@dvt/engine/src/index.ts",
-        "packages/@dvt/engine/src/metrics/IMetricsCollector.ts",
         "packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts",
         "packages/@dvt/engine/src/outbox/TokenBucketRateLimiter.ts",
         "packages/@dvt/engine/src/ports/IAuthorizer.ts",

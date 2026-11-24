@@ -1,9 +1,25 @@
-import type { IsoUtcString } from '@dvt/contracts';
+import { asIsoUtcString, type IsoUtcString } from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
-import { SequenceClock, parseIsoUtcToEpochMs, epochMsToIsoUtc } from '../../src/utils/clock';
+import {
+  SequenceClock,
+  parseIsoUtcToEpochMs,
+  epochMsToIsoUtc,
+  type IClock,
+} from '../../src/utils/clock';
 
 describe('SequenceClock', () => {
+  it('keeps interleaved IClock consumers independent at the same strict UTC base', () => {
+    const base = asIsoUtcString('2026-02-12T00:00:00.000Z');
+    const left: IClock = new SequenceClock(base);
+    const right: IClock = new SequenceClock(base);
+    expect(left.nowIsoUtc()).toBe(base);
+    expect(left.nowIsoUtc()).toBe('2026-02-12T00:00:00.001Z');
+    expect(right.nowIsoUtc()).toBe(base);
+    expect(left.nowIsoUtc()).toBe('2026-02-12T00:00:00.002Z');
+    expect(right.nowIsoUtc()).toBe('2026-02-12T00:00:00.001Z');
+  });
+
   it('returns increasing ISO UTC strings deterministically', () => {
     const clock = new SequenceClock('2024-02-29T23:59:59.999Z');
     const t0 = clock.nowIsoUtc();
