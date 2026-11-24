@@ -330,14 +330,22 @@ function parsePostgresTransformSqlValidationResult(
   if (value.status === 'valid') {
     return { status: 'valid' };
   }
-  if (
-    (value.status === 'invalid' || value.status === 'unavailable') &&
-    Array.isArray(value.diagnostics) &&
-    value.diagnostics.every(isPostgresTransformSqlDiagnostic)
-  ) {
-    return { status: value.status, diagnostics: value.diagnostics };
-  }
-  throw new TypeError('PostgreSQL SQL validation response is invalid.');
+  return parsePostgresTransformSqlFailure(value);
+}
+
+function parsePostgresTransformSqlFailure(
+  value: Readonly<Record<string, unknown>>
+): PostgresTransformSqlValidationResult {
+  if (value.status !== 'invalid' && value.status !== 'unavailable')
+    throw new TypeError('PostgreSQL SQL validation response is invalid.');
+  if (!Array.isArray(value.diagnostics))
+    throw new TypeError('PostgreSQL SQL validation response is invalid.');
+  if (!value.diagnostics.every(isPostgresTransformSqlDiagnostic))
+    throw new TypeError('PostgreSQL SQL validation response is invalid.');
+  return {
+    status: value.status,
+    diagnostics: value.diagnostics,
+  };
 }
 
 function isPostgresTransformSqlDiagnostic(value: unknown): value is PostgresTransformSqlDiagnostic {
@@ -400,22 +408,24 @@ export function createApiWarehouseSourceDataSampleQueryPort(
         }
         return parsed.data;
       } catch (error) {
-        if (error instanceof ApiError && isWorkspaceHttpErrorEnvelope(error.responseBody)) {
-          switch (error.responseBody.error.reason) {
-            case 'warehouse_connection_not_found':
-              throw new WarehouseSourceDataSampleQueryError('connection_not_found');
-            case 'source_object_not_found':
-              throw new WarehouseSourceDataSampleQueryError('source_object_not_found');
-            case 'warehouse_source_data_sample_failed':
-              throw new WarehouseSourceDataSampleQueryError('unavailable');
-            case 'warehouse_source_publication_changed':
-              throw new WarehouseSourceDataSampleQueryError('publication_changed');
-          }
-        }
-        throw error;
+        return rethrowSourceDataSampleError(error);
       }
     },
   };
+}
+
+function rethrowSourceDataSampleError(error: unknown): never {
+  if (!(error instanceof ApiError)) throw error;
+  if (!isWorkspaceHttpErrorEnvelope(error.responseBody)) throw error;
+  const reasons = {
+    warehouse_connection_not_found: 'connection_not_found',
+    source_object_not_found: 'source_object_not_found',
+    warehouse_source_data_sample_failed: 'unavailable',
+    warehouse_source_publication_changed: 'publication_changed',
+  } as const;
+  const reason = reasons[error.responseBody.error.reason as keyof typeof reasons];
+  if (reason == null) throw error;
+  throw new WarehouseSourceDataSampleQueryError(reason);
 }
 
 export function createApiWorkspaceFileDirectoryQueryPort(

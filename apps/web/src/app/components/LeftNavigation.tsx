@@ -53,17 +53,23 @@ export function LeftNavigationRail({
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
     const Icon = item.icon;
     const isCanvas = item.to === '/canvas';
+    const destination = resolveCanvasDestinationAttributes({
+      isCanvas,
+      canvasActive,
+      routeActiveOverride,
+      onCanvasRoute,
+      expanded,
+      codeActive: codeTab?.active === true,
+    });
     return (
       <Tooltip key={item.to}>
         <TooltipTrigger asChild>
           <NavLink
             to={item.to}
-            id={isCanvas ? 'shell-canvas-navigation' : undefined}
+            id={destination.id}
             aria-label={item.label}
-            data-active={isCanvas ? canvasActive : routeActiveOverride}
-            aria-expanded={
-              isCanvas && onCanvasRoute ? expanded && codeTab?.active !== true : undefined
-            }
+            data-active={destination.active}
+            aria-expanded={destination.expanded}
             className={cn(styles.link, styles.linkInteractive)}
             data-slot="left-navigation-link"
             onClick={(event) => {
@@ -71,12 +77,13 @@ export function LeftNavigationRail({
               onOperationalViewChange?.(null);
               if (!isCanvas || !onCanvasRoute) return;
               event.preventDefault();
-              if (operationalView != null) return;
-              // Reuse the published owner callback; opening Elements does not close its session.
-              if (modelBrowser?.mode != null) modelBrowser.onCanvas();
-              else if (codeTab?.active === true) codeTab.onCanvas();
-              else if (modelTab?.active === true) modelTab.onCanvas();
-              dispatch({ type: 'expand' });
+              activateCanvasDestination({
+                operationalView,
+                modelBrowser,
+                codeTab,
+                modelTab,
+                dispatch,
+              });
             }}
           >
             <Icon aria-hidden="true" className={styles.icon} />
@@ -147,6 +154,42 @@ export function LeftNavigationRail({
 }
 
 export default LeftNavigationRail;
+
+function resolveCanvasDestinationAttributes(
+  args: Readonly<{
+    isCanvas: boolean;
+    canvasActive: boolean;
+    routeActiveOverride: false | undefined;
+    onCanvasRoute: boolean;
+    expanded: boolean;
+    codeActive: boolean;
+  }>
+) {
+  if (!args.isCanvas)
+    return { id: undefined, active: args.routeActiveOverride, expanded: undefined };
+  return {
+    id: 'shell-canvas-navigation',
+    active: args.canvasActive,
+    expanded: args.onCanvasRoute ? args.expanded && !args.codeActive : undefined,
+  };
+}
+
+function activateCanvasDestination({
+  operationalView,
+  modelBrowser,
+  codeTab,
+  modelTab,
+  dispatch,
+}: Omit<Parameters<typeof isCanvasRailForeground>[0], 'onCanvasRoute'> & {
+  dispatch: ReturnType<typeof useUiLayoutStore.getState>['dispatchCanvasExplorer'];
+}): void {
+  if (operationalView != null) return;
+  // Reuse the published owner callback; opening Elements does not close its session.
+  if (modelBrowser?.mode != null) modelBrowser.onCanvas();
+  else if (codeTab?.active === true) codeTab.onCanvas();
+  else if (modelTab?.active === true) modelTab.onCanvas();
+  dispatch({ type: 'expand' });
+}
 
 function isCanvasRailForeground({
   operationalView,

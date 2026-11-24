@@ -3,6 +3,11 @@
  * Why: each suite protects one presentation contract.
  * Corner: existing negative paths and focus assertions remain intact.
  */
+/**
+ * Owned concern: verify Run readiness help and command admission.
+ * Why: each suite protects one presentation contract.
+ * Corner: existing negative paths and focus assertions remain intact.
+ */
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -26,18 +31,7 @@ describe('Run readiness help and command admission', () => {
     });
 
     const topBar = shell.container.querySelector('[data-slot="shell-top-bar"]');
-    const runStatus = topBar?.querySelector('[data-slot="shell-run-status-indicator"]');
-    const runStatusLabel = topBar?.querySelector('[data-slot="shell-run-status-label"]');
-    const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
-
-    expect(runStatus).not.toBeNull();
-    expect(runStatus?.textContent).not.toContain('Preview required');
-    expect(runStatusLabel).toBeNull();
-    expect(runStatus?.getAttribute('tabindex')).toBe('0');
-    expect(runCommand).not.toBeNull();
-    expect(runCommand?.textContent).toBe('Run');
-    expect(runCommand?.disabled).toBe(true);
-    expect(topBar?.textContent).not.toContain('Plan');
+    const { runStatus, runCommand } = expectBlockedRunPresentation(topBar);
     await act(async () => (runStatus as HTMLElement).focus());
     await waitFor(() =>
       expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Preview required')
@@ -140,3 +134,19 @@ describe('Run readiness help and command admission', () => {
     expect(onStartRun).toHaveBeenCalledTimes(1);
   });
 });
+
+function expectBlockedRunPresentation(topBar: Element | null) {
+  const runStatus = topBar?.querySelector('[data-slot="shell-run-status-indicator"]');
+  const runStatusLabel = topBar?.querySelector('[data-slot="shell-run-status-label"]');
+  const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
+
+  expect(runStatus).not.toBeNull();
+  expect(runStatus?.textContent).not.toContain('Preview required');
+  expect(runStatusLabel).toBeNull();
+  expect(runStatus?.getAttribute('tabindex')).toBe('0');
+  expect(runCommand).not.toBeNull();
+  expect(runCommand?.textContent).toBe('Run');
+  expect(runCommand?.disabled).toBe(true);
+  expect(topBar?.textContent).not.toContain('Plan');
+  return { runStatus, runCommand };
+}

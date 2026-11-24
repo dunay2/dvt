@@ -155,22 +155,22 @@ describe('Code file and workspace revalidation', () => {
           .map((q) => q.queryKey)
       ).toEqual(
         expect.arrayContaining([
-          queryKeys.workspace.dbtProjectGraph(
-            'tenant-a',
-            'project-a',
-            'dev',
-            fixture.project.authorityBinding.canvasId,
-            'inline_code_demo',
-            fixture.file.contentSha256
-          ),
-          queryKeys.workspace.dbtProjectGraph(
-            'tenant-a',
-            'project-b',
-            'dev',
-            fixture.project.authorityBinding.canvasId,
-            'inline_code_demo',
-            fixture.file.contentSha256
-          ),
+          queryKeys.workspace.dbtProjectGraph({
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+            canvasId: fixture.project.authorityBinding.canvasId,
+            projectRoot: 'inline_code_demo',
+            revisionToken: fixture.file.contentSha256,
+          }),
+          queryKeys.workspace.dbtProjectGraph({
+            tenantId: 'tenant-a',
+            projectId: 'project-b',
+            environmentId: 'dev',
+            canvasId: fixture.project.authorityBinding.canvasId,
+            projectRoot: 'inline_code_demo',
+            revisionToken: fixture.file.contentSha256,
+          }),
         ])
       );
     } finally {

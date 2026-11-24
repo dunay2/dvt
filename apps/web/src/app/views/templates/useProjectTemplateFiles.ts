@@ -21,12 +21,7 @@ export function useProjectTemplateFiles(scope: WorkspaceScope) {
   const cache = useQueryClient();
   const pages = useWorkspaceFileDirectoryQueryPort();
   const directory = 'dvt_templates';
-  const key = queryKeys.workspace.directory(
-    scope.tenantId,
-    scope.projectId,
-    scope.environmentId,
-    directory
-  );
+  const key = queryKeys.workspace.directory({ ...scope, directory });
   const listing = useInfiniteQuery({
     queryKey: key,
     initialPageParam: null as string | null,
@@ -52,9 +47,11 @@ export function useProjectTemplateFiles(scope: WorkspaceScope) {
     });
     if (result.path !== path || result.contentSha256 !== sha256HexUtf8(content))
       throw new Error('Unconfirmed workspace file receipt');
-    void cache.invalidateQueries({ queryKey: queryKeys.workspace.fileTree(workspace) });
+    void cache.invalidateQueries({ queryKey: queryKeys.workspace.forLayout(workspace).fileTree() });
     void cache.invalidateQueries({ queryKey: key });
-    void cache.invalidateQueries({ queryKey: queryKeys.workspace.fileContent(workspace, path) });
+    void cache.invalidateQueries({
+      queryKey: queryKeys.workspace.forLayout(workspace).fileContent(path),
+    });
     return result.contentSha256;
   }
   const pagination = {

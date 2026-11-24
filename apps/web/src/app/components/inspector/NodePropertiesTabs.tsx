@@ -89,67 +89,34 @@ function renderTabBadge(section: NodePropertySection): JSX.Element | null {
   ) : null;
 }
 
-export function NodePropertiesTabs({
-  model,
-  node,
-  activeRunId,
-  panels,
-  activeTab,
-  primarySectionIds,
-  persistentSectionIds = [],
-  beforePanels,
-  sectionBeforeChildren,
-  sectionAfterChildren,
-  moreLabel,
-  tagsEditor,
-  fillAvailableHeight = false,
-  slotPrefix,
-  surface = 'inspector',
-  showSectionCountBadge = false,
-  sourceListOrdering,
-  sourceTransferColumns,
-  renderTableCell,
-  onActiveTabChange,
-  onHide,
-}: NodePropertiesTabsProps): JSX.Element {
-  const sourceOrdering: Partial<NonNullable<NodePropertiesTabsProps['sourceListOrdering']>> =
-    sourceListOrdering ?? {};
+export function NodePropertiesTabs(props: NodePropertiesTabsProps): JSX.Element {
+  const {
+    model,
+    node,
+    panels,
+    activeTab,
+    primarySectionIds,
+    slotPrefix,
+    surface = 'inspector',
+    fillAvailableHeight = false,
+    moreLabel,
+    onActiveTabChange,
+  } = props;
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const [sourceColumnDetail, setSourceColumnDetail] = useState<{
     nodeId: string;
     name: string;
   } | null>(null);
-  if (
-    sourceColumnDetail != null &&
-    (sourceColumnDetail.nodeId !== node.id || activeTab !== 'columns')
-  ) {
-    setSourceColumnDetail(null);
-  }
   const hasSourceColumns = node.kind === 'dvt:source' && node.pluginId === 'dvt.warehouse-source';
-  const detailColumnName =
-    hasSourceColumns && activeTab === 'columns' && sourceColumnDetail?.nodeId === node.id
-      ? sourceColumnDetail.name
-      : null;
-  const slots =
-    slotPrefix == null
-      ? {
-          root: 'node-inspector-core-tabs',
-          list: 'node-inspector-core-tabs-list',
-          tabPrefix: 'node-inspector-tab',
-          moreTrigger: 'node-inspector-more-trigger',
-          moreItemPrefix: 'node-inspector-more-item',
-          sectionPrefix: 'node-inspector',
-          code: 'node-inspector-code',
-        }
-      : {
-          root: `${slotPrefix}-tabs`,
-          list: `${slotPrefix}-tabs-list`,
-          tabPrefix: `${slotPrefix}-tab`,
-          moreTrigger: `${slotPrefix}-more-trigger`,
-          moreItemPrefix: `${slotPrefix}-more-item`,
-          sectionPrefix: slotPrefix,
-          code: `${slotPrefix}-code`,
-        };
+  const detail = resolveSourceColumnDetail({
+    detail: sourceColumnDetail,
+    nodeId: node.id,
+    activeTab,
+    hasSourceColumns,
+  });
+  if (detail.reset) setSourceColumnDetail(null);
+  const detailColumnName = detail.columnName;
+  const slots = resolveNodePropertySlots(slotPrefix);
   const primarySections = resolvePrimarySections({
     sections: model.sections,
     primarySectionIds,
@@ -182,136 +149,30 @@ export function NodePropertiesTabs({
         fillAvailableHeight && 'h-full min-h-0'
       )}
     >
-      <div
-        data-slot={slots.list}
-        hidden={detailColumnName != null}
-        className={cn(
-          inspectorVisualClasses.contextPanelFlatTabsList,
-          detailColumnName != null && 'hidden',
-          surface === 'workbench' && 'flex-nowrap overflow-hidden'
-        )}
-      >
-        <TabsList
-          data-slot={`${slots.list}-tablist`}
-          className={cn(
-            'flex h-auto shrink-0 justify-start gap-x-3 rounded-none bg-transparent p-0',
-            surface === 'workbench'
-              ? inspectorVisualClasses.contextPanelWorkbenchTabScroll
-              : 'w-full flex-wrap'
-          )}
-        >
-          {primarySections.map((section) => (
-            <TabsTrigger
-              key={section.id}
-              value={section.id}
-              data-slot={`${slots.tabPrefix}-${section.id}`}
-              className={inspectorVisualClasses.contextPanelFlatTabTrigger}
-            >
-              {section.label}
-              {renderTabBadge(section)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {overflowItems.length > 0 ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                data-slot={slots.moreTrigger}
-                className={cn(
-                  inspectorVisualClasses.contextPanelFlatTabTrigger,
-                  'shrink-0',
-                  activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
-                )}
-              >
-                {activeOverflowItem == null
-                  ? moreLabel
-                  : `${moreLabel}: ${activeOverflowItem.label}`}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="border-slate-700 bg-slate-950 text-slate-50"
-            >
-              {overflowItems.map((item) => (
-                <DropdownMenuItem
-                  key={item.id}
-                  data-slot={`${slots.moreItemPrefix}-${item.id}`}
-                  onSelect={() => onActiveTabChange(item.id)}
-                >
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.count > 0 ? (
-                    <Badge
-                      variant="secondary"
-                      className={inspectorVisualClasses.contextPanelTabBadge}
-                    >
-                      {item.count}
-                    </Badge>
-                  ) : null}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
-      </div>
+      <NodePropertyTabsNavigation
+        slots={slots}
+        detailColumnName={detailColumnName}
+        surface={surface}
+        primarySections={primarySections}
+        overflowItems={overflowItems}
+        activeOverflowItem={activeOverflowItem}
+        moreLabel={moreLabel}
+        onActiveTabChange={onActiveTabChange}
+      />
 
-      {model.sections.map((section) => {
-        const beforeBody =
-          sectionBeforeChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null);
-        const afterBody = sectionAfterChildren?.[section.id];
-        const sourceColumns = hasSourceColumns && section.id === 'columns';
-        const sourceOutputs = isInspectorSource(node) && section.id === 'inputs-outputs';
-
-        return (
-          <TabsContent
-            key={section.id}
-            value={section.id}
-            forceMount={persistentSectionIds.includes(section.id) ? true : undefined}
-            data-slot={`${slots.sectionPrefix}-${section.id}-content`}
-            className={cn(
-              'm-0 data-[state=inactive]:hidden',
-              fillAvailableHeight && section.id === activeTab && 'min-h-0 overflow-hidden'
-            )}
-          >
-            {sourceColumns ? (
-              <SourceColumnsPanel
-                key={node.id}
-                node={node}
-                detailColumnName={detailColumnName}
-                onDetailColumnChange={(name) =>
-                  setSourceColumnDetail(name == null ? null : { nodeId: node.id, name })
-                }
-                beforeBody={beforeBody}
-                afterBody={afterBody}
-                canReorder={sourceOrdering.canReorder}
-                workspaceLayoutKey={sourceOrdering.workspaceLayoutKey}
-                transferColumns={sourceTransferColumns}
-              />
-            ) : sourceOutputs ? (
-              <SourceInputsOutputsPanel
-                key={node.id}
-                node={node}
-                section={section}
-                beforeBody={beforeBody}
-                afterBody={afterBody}
-                canReorder={sourceOrdering.canReorder}
-                workspaceLayoutKey={sourceOrdering.workspaceLayoutKey}
-              />
-            ) : (
-              <NodePropertySectionView
-                section={section}
-                slots={slots}
-                surface={surface}
-                showCountBadge={showSectionCountBadge}
-                fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
-                beforeBody={beforeBody}
-                afterBody={afterBody}
-                renderTableCell={renderTableCell}
-              />
-            )}
-          </TabsContent>
-        );
-      })}
+      {model.sections.map((section) => (
+        <NodePropertyContent
+          key={section.id}
+          {...props}
+          section={section}
+          slots={slots}
+          detailColumnName={detailColumnName}
+          hasSourceColumns={hasSourceColumns}
+          onDetailColumnChange={(name) =>
+            setSourceColumnDetail(name == null ? null : { nodeId: node.id, name })
+          }
+        />
+      ))}
 
       {panels.map((panel) => {
         const PanelComponent = panel.component;
@@ -320,9 +181,9 @@ export function NodePropertiesTabs({
             <PluginContributionBoundary resetKey={`${node.id}:${panel.id}`} fallback={null}>
               <PanelComponent
                 node={node}
-                activeRunId={activeRunId}
-                onClose={onHide}
-                tagsEditor={tagsEditor}
+                activeRunId={props.activeRunId}
+                onClose={props.onHide}
+                tagsEditor={props.tagsEditor}
               />
             </PluginContributionBoundary>
           </TabsContent>
@@ -330,4 +191,257 @@ export function NodePropertiesTabs({
       })}
     </Tabs>
   );
+}
+
+function resolveNodePropertySlots(slotPrefix: string | undefined) {
+  return slotPrefix == null
+    ? {
+        root: 'node-inspector-core-tabs',
+        list: 'node-inspector-core-tabs-list',
+        tabPrefix: 'node-inspector-tab',
+        moreTrigger: 'node-inspector-more-trigger',
+        moreItemPrefix: 'node-inspector-more-item',
+        sectionPrefix: 'node-inspector',
+        code: 'node-inspector-code',
+      }
+    : {
+        root: `${slotPrefix}-tabs`,
+        list: `${slotPrefix}-tabs-list`,
+        tabPrefix: `${slotPrefix}-tab`,
+        moreTrigger: `${slotPrefix}-more-trigger`,
+        moreItemPrefix: `${slotPrefix}-more-item`,
+        sectionPrefix: slotPrefix,
+        code: `${slotPrefix}-code`,
+      };
+}
+
+function NodePropertyTabsNavigation({
+  slots,
+  detailColumnName,
+  surface,
+  primarySections,
+  overflowItems,
+  activeOverflowItem,
+  moreLabel,
+  onActiveTabChange,
+}: Pick<NodePropertiesTabsProps, 'moreLabel' | 'onActiveTabChange'> &
+  Readonly<{
+    slots: ReturnType<typeof resolveNodePropertySlots>;
+    detailColumnName: string | null;
+    surface: 'inspector' | 'workbench';
+    primarySections: readonly NodePropertySection[];
+    overflowItems: readonly { id: string; label: string; count: number }[];
+    activeOverflowItem: { id: string; label: string } | undefined;
+  }>) {
+  return (
+    <div
+      data-slot={slots.list}
+      hidden={detailColumnName != null}
+      className={cn(
+        inspectorVisualClasses.contextPanelFlatTabsList,
+        detailColumnName != null && 'hidden',
+        surface === 'workbench' && 'flex-nowrap overflow-hidden'
+      )}
+    >
+      <TabsList
+        data-slot={`${slots.list}-tablist`}
+        className={cn(
+          'flex h-auto shrink-0 justify-start gap-x-3 rounded-none bg-transparent p-0',
+          surface === 'workbench'
+            ? inspectorVisualClasses.contextPanelWorkbenchTabScroll
+            : 'w-full flex-wrap'
+        )}
+      >
+        {primarySections.map((section) => (
+          <TabsTrigger
+            key={section.id}
+            value={section.id}
+            data-slot={`${slots.tabPrefix}-${section.id}`}
+            className={inspectorVisualClasses.contextPanelFlatTabTrigger}
+          >
+            {section.label}
+            {renderTabBadge(section)}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {overflowItems.length > 0 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              data-slot={slots.moreTrigger}
+              className={cn(
+                inspectorVisualClasses.contextPanelFlatTabTrigger,
+                'shrink-0',
+                activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
+              )}
+            >
+              {activeOverflowItem == null ? moreLabel : `${moreLabel}: ${activeOverflowItem.label}`}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="border-slate-700 bg-slate-950 text-slate-50"
+          >
+            {overflowItems.map((item) => (
+              <DropdownMenuItem
+                key={item.id}
+                data-slot={`${slots.moreItemPrefix}-${item.id}`}
+                onSelect={() => onActiveTabChange(item.id)}
+              >
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                {item.count > 0 ? (
+                  <Badge
+                    variant="secondary"
+                    className={inspectorVisualClasses.contextPanelTabBadge}
+                  >
+                    {item.count}
+                  </Badge>
+                ) : null}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+    </div>
+  );
+}
+
+function NodePropertyContent(
+  props: NodePropertiesTabsProps &
+    Readonly<{
+      section: NodePropertySection;
+      slots: ReturnType<typeof resolveNodePropertySlots>;
+      detailColumnName: string | null;
+      hasSourceColumns: boolean;
+      onDetailColumnChange: (name: string | null) => void;
+    }>
+) {
+  const {
+    section,
+    slots,
+    activeTab,
+    persistentSectionIds = [],
+    sectionBeforeChildren,
+    sectionAfterChildren,
+    beforePanels,
+    fillAvailableHeight = false,
+    detailColumnName,
+    hasSourceColumns,
+    onDetailColumnChange,
+  } = props;
+  const beforeBody =
+    sectionBeforeChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null);
+  const afterBody = sectionAfterChildren?.[section.id];
+  return (
+    <TabsContent
+      key={section.id}
+      value={section.id}
+      forceMount={persistentSectionIds.includes(section.id) ? true : undefined}
+      data-slot={`${slots.sectionPrefix}-${section.id}-content`}
+      className={cn(
+        'm-0 data-[state=inactive]:hidden',
+        fillAvailableHeight && section.id === activeTab && 'min-h-0 overflow-hidden'
+      )}
+    >
+      <NodePropertySectionBody
+        {...props}
+        section={section}
+        slots={slots}
+        beforeBody={beforeBody}
+        afterBody={afterBody}
+        detailColumnName={detailColumnName}
+        onDetailColumnChange={onDetailColumnChange}
+        hasSourceColumns={hasSourceColumns}
+      />
+    </TabsContent>
+  );
+}
+
+function NodePropertySectionBody({
+  section,
+  slots,
+  node,
+  surface = 'inspector',
+  showSectionCountBadge = false,
+  fillAvailableHeight = false,
+  activeTab,
+  renderTableCell,
+  sourceListOrdering,
+  sourceTransferColumns,
+  beforeBody,
+  afterBody,
+  detailColumnName,
+  hasSourceColumns,
+  onDetailColumnChange,
+}: NodePropertiesTabsProps &
+  Readonly<{
+    section: NodePropertySection;
+    slots: ReturnType<typeof resolveNodePropertySlots>;
+    beforeBody: ReactNode;
+    afterBody: ReactNode;
+    detailColumnName: string | null;
+    hasSourceColumns: boolean;
+    onDetailColumnChange: (name: string | null) => void;
+  }>) {
+  const sourceOrdering: Partial<NonNullable<NodePropertiesTabsProps['sourceListOrdering']>> =
+    sourceListOrdering ?? {};
+  const sourceColumns = hasSourceColumns && section.id === 'columns';
+  const sourceOutputs = isInspectorSource(node) && section.id === 'inputs-outputs';
+  return (
+    <>
+      {sourceColumns ? (
+        <SourceColumnsPanel
+          key={node.id}
+          node={node}
+          detailColumnName={detailColumnName}
+          onDetailColumnChange={onDetailColumnChange}
+          beforeBody={beforeBody}
+          afterBody={afterBody}
+          canReorder={sourceOrdering.canReorder}
+          workspaceLayoutKey={sourceOrdering.workspaceLayoutKey}
+          transferColumns={sourceTransferColumns}
+        />
+      ) : sourceOutputs ? (
+        <SourceInputsOutputsPanel
+          key={node.id}
+          node={node}
+          section={section}
+          beforeBody={beforeBody}
+          afterBody={afterBody}
+          canReorder={sourceOrdering.canReorder}
+          workspaceLayoutKey={sourceOrdering.workspaceLayoutKey}
+        />
+      ) : (
+        <NodePropertySectionView
+          section={section}
+          slots={slots}
+          surface={surface}
+          showCountBadge={showSectionCountBadge}
+          fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
+          beforeBody={beforeBody}
+          afterBody={afterBody}
+          renderTableCell={renderTableCell}
+        />
+      )}
+    </>
+  );
+}
+
+function resolveSourceColumnDetail({
+  detail,
+  nodeId,
+  activeTab,
+  hasSourceColumns,
+}: Readonly<{
+  detail: { nodeId: string; name: string } | null;
+  nodeId: string;
+  activeTab: string;
+  hasSourceColumns: boolean;
+}>) {
+  const matches = detail?.nodeId === nodeId && activeTab === 'columns';
+  return {
+    reset: detail != null && !matches,
+    columnName: hasSourceColumns && matches ? detail!.name : null,
+  };
 }

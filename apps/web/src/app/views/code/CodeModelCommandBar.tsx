@@ -31,18 +31,7 @@ export type CodeModelCommandBarProps = Readonly<{
 export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
   const copy = resolveCodeModelCommandCopy(props.language);
   const descriptionId = useId();
-  const status =
-    props.phase === 'compiling'
-      ? copy.compiling
-      : props.phase === 'running'
-        ? copy.running
-        : !props.synchronized
-          ? copy.saveFirst
-          : props.unavailable
-            ? props.blockedReason
-            : props.compiled
-              ? copy.ready
-              : copy.compileFirst;
+  const status = resolveCodeModelCommandStatus(props, copy);
   return (
     <div
       className={styles.bar}
@@ -113,4 +102,15 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
       )}
     </div>
   );
+}
+
+function resolveCodeModelCommandStatus(
+  props: CodeModelCommandBarProps,
+  copy: ReturnType<typeof resolveCodeModelCommandCopy>
+): string {
+  if (props.phase === 'compiling') return copy.compiling;
+  if (props.phase === 'running') return copy.running;
+  if (!props.synchronized) return copy.saveFirst;
+  if (props.unavailable) return props.blockedReason;
+  return props.compiled ? copy.ready : copy.compileFirst;
 }

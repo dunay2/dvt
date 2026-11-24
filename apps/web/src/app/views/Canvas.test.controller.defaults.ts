@@ -240,7 +240,7 @@ export function buildDefaultCanvasControllerState(): CanvasControllerStateDefaul
   };
 }
 
-export function buildDefaultCanvasControllerCallbacks(): Pick<
+type DefaultCanvasControllerCallbacks = Pick<
   CanvasController,
   | 'onNodesChange'
   | 'onEdgesChange'
@@ -283,7 +283,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'reloadLatestDraft'
   | 'setPlanModalOpen'
 > &
-  Pick<CanvasController, 'importedNodeFocusIds'> {
+  Pick<CanvasController, 'importedNodeFocusIds'>;
+
+export function buildDefaultCanvasControllerCallbacks(): DefaultCanvasControllerCallbacks {
   return {
     onNodesChange: vi.fn(),
     onEdgesChange: vi.fn(),

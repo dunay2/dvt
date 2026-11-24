@@ -174,43 +174,14 @@ function PropertyRecords({
               renderTableCell={renderTableCell}
             />
           );
-        const fields =
-          detailKeys.length === 0 ? null : (
-            <dl className={styles.records.details}>
-              {detailKeys.map((key) => (
-                <div key={key} className={metadataStyles.fact}>
-                  <dt className={inspectorVisualClasses.inspectorLabel}>
-                    {columnLabel(section, key)}
-                  </dt>
-                  <dd className={metadataStyles.value}>
-                    <PropertyCell
-                      section={section}
-                      row={row}
-                      columnKey={key}
-                      renderTableCell={renderTableCell}
-                    />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          );
         return (
-          <li key={row.id} data-slot="node-property-column-record">
-            <details
-              data-slot="node-property-column-disclosure"
-              className={styles.records.disclosure}
-            >
-              <summary className={styles.records.trigger}>
-                <ChevronRight
-                  data-slot="node-property-column-disclosure-arrow"
-                  className={styles.records.arrow}
-                  aria-hidden="true"
-                />
-                <span className={styles.records.name}>{row.cells.name || row.id}</span>
-              </summary>
-              {fields}
-            </details>
-          </li>
+          <NodePropertyColumnRecord
+            key={row.id}
+            section={section}
+            row={row}
+            detailKeys={detailKeys}
+            renderTableCell={renderTableCell}
+          />
         );
       })}
     </ul>
@@ -228,6 +199,10 @@ function columnLabel(section: NodePropertySection, key: string): string {
   return section.columnLabels?.[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+function isPropertyRecordsSection(section: NodePropertySection): boolean {
+  return ['columns', 'inputs-outputs'].includes(section.id);
+}
+
 export function NodePropertyTable({
   section,
   surface = 'inspector',
@@ -236,7 +211,7 @@ export function NodePropertyTable({
   const columnKeys = Array.from(
     new Set(section.tableRows.flatMap((row) => Object.keys(row.cells)))
   ).filter((key) => section.id !== 'columns' || key !== 'reference');
-  if (surface === 'workbench' && (section.id === 'columns' || section.id === 'inputs-outputs')) {
+  if (surface === 'workbench' && isPropertyRecordsSection(section)) {
     return (
       <PropertyRecords
         section={section}
@@ -276,5 +251,47 @@ export function NodePropertyTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function NodePropertyColumnRecord({
+  section,
+  row,
+  detailKeys,
+  renderTableCell,
+}: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
+  Readonly<{ row: NodePropertyTableRow; detailKeys: readonly string[] }>): JSX.Element {
+  const fields =
+    detailKeys.length === 0 ? null : (
+      <dl className={styles.records.details}>
+        {detailKeys.map((key) => (
+          <div key={key} className={metadataStyles.fact}>
+            <dt className={inspectorVisualClasses.inspectorLabel}>{columnLabel(section, key)}</dt>
+            <dd className={metadataStyles.value}>
+              <PropertyCell
+                section={section}
+                row={row}
+                columnKey={key}
+                renderTableCell={renderTableCell}
+              />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  return (
+    <li key={row.id} data-slot="node-property-column-record">
+      <details data-slot="node-property-column-disclosure" className={styles.records.disclosure}>
+        <summary className={styles.records.trigger}>
+          <ChevronRight
+            data-slot="node-property-column-disclosure-arrow"
+            className={styles.records.arrow}
+            aria-hidden="true"
+          />
+          <span className={styles.records.name}>{row.cells.name || row.id}</span>
+        </summary>
+        {fields}
+      </details>
+    </li>
   );
 }

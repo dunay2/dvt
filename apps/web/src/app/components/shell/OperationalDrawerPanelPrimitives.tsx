@@ -128,16 +128,12 @@ export function OperationalDrawerDetailCode({
   );
 }
 
-export function OperationalDrawerCodeToken({
-  children,
-  dataSlot,
-}: Readonly<{
-  children: ReactNode;
-  dataSlot: string;
-}>): JSX.Element {
+export function OperationalDrawerCodeToken(
+  props: Readonly<{ children: ReactNode; dataSlot: string }>
+): JSX.Element {
   return (
-    <code data-slot={dataSlot} className={operationalDrawerPanelClassNames.codeToken}>
-      {children}
+    <code data-slot={props.dataSlot} className={operationalDrawerPanelClassNames.codeToken}>
+      {props.children}
     </code>
   );
 }
@@ -211,18 +207,18 @@ export function OperationalDrawerPrimaryAction({
   );
 }
 
-export function OperationalDrawerSecondaryAction({
-  children,
-  disabled = false,
-  onClick,
-}: Readonly<{
-  children: ReactNode;
-  disabled?: boolean;
-  onClick: () => void;
-}>): JSX.Element {
+export function OperationalDrawerSecondaryAction(
+  props: Readonly<{ children: ReactNode; disabled?: boolean; onClick: () => void }>
+): JSX.Element {
   return (
-    <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
-      {children}
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={props.disabled ?? false}
+      onClick={props.onClick}
+    >
+      {props.children}
     </Button>
   );
 }

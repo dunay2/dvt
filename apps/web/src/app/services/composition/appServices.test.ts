@@ -134,39 +134,7 @@ function buildWorkspacePortStubs(): {
       getRoles: vi.fn(async () => []),
       getAuditLog: vi.fn(async () => []),
     },
-    warehouseSourceImport: {
-      listWarehouseConnections: vi.fn(async () => []),
-      listSourceObjectCatalog: vi.fn(async () => ({
-        kind: 'schema-list' as const,
-        schemas: [],
-        truncated: false,
-      })),
-      createWarehouseConnection: vi.fn(async (input) => ({
-        id: 'conn-created',
-        name: input.name,
-        type: input.type,
-        database: input.database,
-      })),
-      renameWarehouseConnection: vi.fn(async (connectionId, input) => ({
-        id: connectionId,
-        name: input.name,
-        type: 'postgres' as const,
-        database: 'analytics',
-      })),
-      testWarehouseConnection: vi.fn(async (connectionId) => ({
-        connectionId,
-        status: 'passed' as const,
-        checkedAt: '2026-06-08T00:00:00.000Z',
-        objectCount: 0,
-      })),
-      validatePostgresTransformSql: vi.fn(async () => ({ status: 'valid' as const })),
-      importSources: vi.fn(async (input) =>
-        buildGraphDraftSourceImportResult({
-          canvasId: input.canvasId,
-          idempotencyKey: input.idempotencyKey,
-        })
-      ),
-    },
+    warehouseSourceImport: buildWarehouseSourceImportStub(),
     workspaceFileContentCommand: {
       saveFileContent: vi.fn(async (input) => ({
         kind: 'saved' as const,
@@ -351,50 +319,12 @@ describe('buildAppServices', () => {
     const capabilitiesPort: CapabilitiesPort = {
       loadCapabilities: vi.fn(),
     };
-    const sessionContext: SessionContextPort = {
-      getWorkspaceScope: () => ({
-        tenantId: 'tenant-1',
-        projectId: 'project-1',
-        environmentId: 'env-1',
-        targetAdapter: 'temporal',
-      }),
-      getWorkspaceScopeSnapshot: () => ({
-        tenantId: 'tenant-1',
-        projectId: 'project-1',
-        environmentId: 'env-1',
-        targetAdapter: 'temporal',
-      }),
-      subscribeWorkspaceScope: () => () => undefined,
-      buildRunContext: (runId) =>
-        makeRunContext(runId, {
-          tenantId: 'tenant-1',
-          projectId: 'project-1',
-          environmentId: 'env-1',
-          targetAdapter: 'temporal',
-        }),
-    };
+    const sessionContext = buildSessionContextStub();
     const shellFeedback: ShellFeedbackPort = {
       success: vi.fn(),
       error: vi.fn(),
     };
-    const workspaceScopeSelection: WorkspaceScopeSelectionPort = {
-      getSelection: () => ({
-        selectedScope: {
-          tenantId: 'tenant-1',
-          projectId: 'project-1',
-          environmentId: 'env-1',
-        },
-        availableScopes: [],
-        targetAdapter: 'temporal',
-        availableTargetAdapters: ['temporal'],
-        status: 'selected',
-      }),
-      selectWorkspaceScope: (selectedScope) => ({
-        status: 'selected',
-        selectedScope,
-      }),
-      subscribeSelection: () => () => undefined,
-    };
+    const workspaceScopeSelection = buildWorkspaceScopeSelectionStub();
 
     const appServices = buildAppServices({
       apiClient,
@@ -510,3 +440,85 @@ describe('buildAppServices', () => {
     await expect(appServices.capabilitiesPort.loadCapabilities()).rejects.toBe(failure);
   });
 });
+
+function buildWarehouseSourceImportStub(): IWarehouseSourceImportPort {
+  return {
+    listWarehouseConnections: vi.fn(async () => []),
+    listSourceObjectCatalog: vi.fn(async () => ({
+      kind: 'schema-list' as const,
+      schemas: [],
+      truncated: false,
+    })),
+    createWarehouseConnection: vi.fn(async (input) => ({
+      id: 'conn-created',
+      name: input.name,
+      type: input.type,
+      database: input.database,
+    })),
+    renameWarehouseConnection: vi.fn(async (connectionId, input) => ({
+      id: connectionId,
+      name: input.name,
+      type: 'postgres' as const,
+      database: 'analytics',
+    })),
+    testWarehouseConnection: vi.fn(async (connectionId) => ({
+      connectionId,
+      status: 'passed' as const,
+      checkedAt: '2026-06-08T00:00:00.000Z',
+      objectCount: 0,
+    })),
+    validatePostgresTransformSql: vi.fn(async () => ({ status: 'valid' as const })),
+    importSources: vi.fn(async (input) =>
+      buildGraphDraftSourceImportResult({
+        canvasId: input.canvasId,
+        idempotencyKey: input.idempotencyKey,
+      })
+    ),
+  };
+}
+
+function buildSessionContextStub(): SessionContextPort {
+  return {
+    getWorkspaceScope: () => ({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      targetAdapter: 'temporal',
+    }),
+    getWorkspaceScopeSnapshot: () => ({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      targetAdapter: 'temporal',
+    }),
+    subscribeWorkspaceScope: () => () => undefined,
+    buildRunContext: (runId) =>
+      makeRunContext(runId, {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+        targetAdapter: 'temporal',
+      }),
+  };
+}
+
+function buildWorkspaceScopeSelectionStub(): WorkspaceScopeSelectionPort {
+  return {
+    getSelection: () => ({
+      selectedScope: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+      },
+      availableScopes: [],
+      targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
+      status: 'selected',
+    }),
+    selectWorkspaceScope: (selectedScope) => ({
+      status: 'selected',
+      selectedScope,
+    }),
+    subscribeSelection: () => () => undefined,
+  };
+}

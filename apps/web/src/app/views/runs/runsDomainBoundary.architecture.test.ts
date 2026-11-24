@@ -2,6 +2,10 @@
  * Owned concern: guard Runs domain boundary semantics, port isolation, CQRS
  * rail separation, owned-concern encapsulation, and documentation traceability.
  */
+/**
+ * Owned concern: guard Runs domain boundary semantics, port isolation, CQRS
+ * rail separation, owned-concern encapsulation, and documentation traceability.
+ */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -23,10 +27,18 @@ function hasOwnedConcernDocblock(source: string): boolean {
 }
 
 describe('Runs domain boundary', () => {
-  it('documents public API, invariants, transitions, and consumers', () => {
-    const componentGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
-    const userStories = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
+  const componentGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
+  const userStories = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
+  const eventTimelineGuide = readRepoFile(
+    'docs/architecture/components/web/runs/component-runs.md'
+  );
+  const eventTimelineStories = readRepoFile(
+    'docs/architecture/components/web/runs/component-runs.md'
+  );
+  const denseTableGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
+  const denseTableStories = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
 
+  it('documents public API, invariants, transitions, and consumers', () => {
     for (const section of [
       '## Public API',
       '## Invariants',
@@ -42,14 +54,9 @@ describe('Runs domain boundary', () => {
     ]) {
       expect(componentGuide).toContain(section);
     }
+  });
 
-    const eventTimelineGuide = readRepoFile(
-      'docs/architecture/components/web/runs/component-runs.md'
-    );
-    const eventTimelineStories = readRepoFile(
-      'docs/architecture/components/web/runs/component-runs.md'
-    );
-
+  it('documents the event timeline boundary', () => {
     for (const section of [
       '## Public API',
       '## Invariants',
@@ -65,12 +72,9 @@ describe('Runs domain boundary', () => {
     ]) {
       expect(eventTimelineGuide).toContain(section);
     }
+  });
 
-    const denseTableGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
-    const denseTableStories = readRepoFile(
-      'docs/architecture/components/web/runs/component-runs.md'
-    );
-
+  it('documents the dense table boundary and its stories', () => {
     for (const section of [
       '## Public API',
       '## Invariants',
@@ -100,7 +104,9 @@ describe('Runs domain boundary', () => {
     ]) {
       expect(denseTableStories).toContain(storyId);
     }
+  });
 
+  it('keeps legacy cards retired across every Runs guide and story', () => {
     for (const legacyPhrase of [
       'RunTimelineEventCard',
       'timeline cards',
@@ -115,7 +121,9 @@ describe('Runs domain boundary', () => {
       expect(denseTableStories).not.toContain(legacyPhrase);
       expect(userStories).not.toContain(legacyPhrase);
     }
+  });
 
+  it('retains the timeline and Runs acceptance stories', () => {
     for (const storyId of [
       'US-F10-01',
       'US-F10-02',

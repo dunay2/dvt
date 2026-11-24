@@ -7,7 +7,7 @@
  */
 import { EXECUTABILITY_REJECTION_CODES } from '@dvt/contracts';
 import { AlertTriangle, Clock, Download, Zap } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import type { PlanPreviewOutcome, PreviewAffectedModel } from '../ports/plans';
 import { resolveDvtOperationalRejectionCopy } from '../services/api/dvtOperationalRejectionCopy';
@@ -203,12 +203,14 @@ function PlanPreviewRejectionPanel({
   describeDialog?: boolean;
 }>) {
   const language = useApplicationLanguageStore((state) => state.language);
-  const safeReason = details.knownCode
-    ? (resolveDvtOperationalRejectionCopy(details.cause, language) ?? details.reason)
-    : messages.planPreviewUnknownCodeMessage;
-  const safeCause = details.knownCode ? details.cause : undefined;
+  const safe = details.knownCode
+    ? {
+        reason: resolveDvtOperationalRejectionCopy(details.cause, language) ?? details.reason,
+        cause: details.cause,
+      }
+    : { reason: messages.planPreviewUnknownCodeMessage, cause: undefined };
   const description = (
-    <AlertDescription className="min-w-0 [overflow-wrap:anywhere]">{safeReason}</AlertDescription>
+    <AlertDescription className="min-w-0 [overflow-wrap:anywhere]">{safe.reason}</AlertDescription>
   );
 
   return (
@@ -240,9 +242,9 @@ function PlanPreviewRejectionPanel({
           <PlanPreviewField label={messages.planPreviewCodeLabel} long>
             {details.code}
           </PlanPreviewField>
-          {safeCause ? (
+          {safe.cause ? (
             <PlanPreviewField label={messages.planPreviewCauseLabel} long>
-              {safeCause}
+              {safe.cause}
             </PlanPreviewField>
           ) : null}
         </div>
@@ -357,27 +359,8 @@ export function PlanPreviewModal({
     );
   }
 
-  const plan =
-    outcome?.kind === 'accepted' || outcome?.kind === 'plan-invalid' ? outcome.plan : providedPlan;
+  const { plan, validation } = resolvePreviewOutcomeDetails({ providedPlan, outcome });
   if (!plan) return null;
-
-  const validation = outcome?.kind === 'plan-invalid' ? outcome.validation : null;
-  const validationCodeKnown =
-    validation != null &&
-    EXECUTABILITY_REJECTION_CODES.includes(
-      validation.code as (typeof EXECUTABILITY_REJECTION_CODES)[number]
-    );
-  const previewSummary = plan.preview?.summary;
-  const persistedPreview = plan.preview?.persisted;
-  const provenance = plan.preview?.provenance;
-  const selectionIntent = plan.preview?.selectionIntent;
-  const dbtExecutionTarget =
-    provenance?.kind === 'dbt-project-files'
-      ? projectDbtExecutionTargetBinding(
-          provenance.executionTarget,
-          messages.planPreviewEnvironmentDefaultValue
-        )
-      : null;
 
   return (
     <Dialog
@@ -408,294 +391,12 @@ export function PlanPreviewModal({
         </DialogHeader>
 
         <div className="min-w-0 max-h-[70vh] overflow-y-auto overflow-x-hidden">
-          <div className="min-w-0 space-y-4 px-4 py-4 sm:px-6 sm:py-5">
-            {startRunMessage ? (
-              <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
-                {startRunMessage}
-              </div>
-            ) : null}
-
-            {validation ? (
-              <PlanPreviewRejectionPanel
-                details={{
-                  code: validation.code,
-                  cause: validation.cause,
-                  reason: validation.reason,
-                  knownCode: validationCodeKnown,
-                }}
-                messages={messages}
-              />
-            ) : null}
-
-            <PlanPreviewSection
-              title={messages.planPreviewIdentityTitle}
-              caption={messages.planPreviewIdentityCaption}
-            >
-              <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                <PlanPreviewField
-                  label={messages.planPreviewIdLabel}
-                  dataSlot="plan-preview-id"
-                  long
-                >
-                  {plan.planId}
-                </PlanPreviewField>
-                <PlanPreviewField label={messages.planPreviewVersionLabel}>
-                  {plan.planVersion}
-                </PlanPreviewField>
-                {plan.planRef ? (
-                  <div className="md:col-span-2">
-                    <PlanPreviewField label={messages.planPreviewRefLabel} long>
-                      {plan.planRef.uri}
-                    </PlanPreviewField>
-                  </div>
-                ) : null}
-                <PlanPreviewField label={messages.planPreviewGeneratedLabel} mono>
-                  {new Date(plan.generatedAt).toLocaleString()}
-                </PlanPreviewField>
-                <PlanPreviewField label={messages.planPreviewEstimatedCostLabel}>
-                  <span
-                    className={
-                      typeof plan.estimatedCost === 'number' ? 'text-green-300' : 'text-slate-300'
-                    }
-                  >
-                    {typeof plan.estimatedCost === 'number' && Number.isFinite(plan.estimatedCost)
-                      ? `$${plan.estimatedCost.toFixed(2)}`
-                      : messages.planPreviewNotEstimatedValue}
-                  </span>
-                </PlanPreviewField>
-              </div>
-            </PlanPreviewSection>
-
-            <PlanPreviewSection
-              title={messages.planPreviewExecutionTargetTitle}
-              caption={messages.planPreviewExecutionTargetCaption}
-            >
-              <div className="grid min-w-0 gap-3 md:grid-cols-3">
-                <PlanPreviewField label={messages.planPreviewExecutorLabel}>
-                  {dbtExecutionTarget?.executor ??
-                    previewSummary?.executor ??
-                    messages.planPreviewNotReportedValue}
-                </PlanPreviewField>
-                <PlanPreviewField label={messages.planPreviewAdapterLabel}>
-                  {dbtExecutionTarget?.adapter ??
-                    (plan.adapter && plan.adapter !== 'unknown'
-                      ? plan.adapter
-                      : messages.planPreviewUnknownValue)}
-                </PlanPreviewField>
-                <PlanPreviewField label={messages.planPreviewTargetLabel}>
-                  <Badge variant="secondary">{dbtExecutionTarget?.target ?? plan.target}</Badge>
-                </PlanPreviewField>
-                {dbtExecutionTarget ? (
-                  <>
-                    <PlanPreviewField label={messages.planPreviewConnectionLabel}>
-                      {dbtExecutionTarget.connection}
-                    </PlanPreviewField>
-                    <PlanPreviewField label={messages.planPreviewResolutionSourceLabel}>
-                      {dbtExecutionTarget.resolution}
-                    </PlanPreviewField>
-                  </>
-                ) : null}
-              </div>
-              {plan.capabilities.length > 0 ? (
-                <div className="mt-4 flex min-w-0 flex-wrap gap-2">
-                  <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-                    <Zap className="size-3.5 text-yellow-300" />
-                    {messages.planPreviewCapabilitiesLabel}
-                  </span>
-                  {plan.capabilities.map((capability) => (
-                    <Badge
-                      key={capability}
-                      variant="outline"
-                      className="border-slate-600 bg-slate-950/50 text-slate-200"
-                    >
-                      {capability}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
-            </PlanPreviewSection>
-
-            {previewSummary ? (
-              <PlanPreviewSection
-                title={messages.planPreviewSummaryTitle}
-                caption={messages.planPreviewSummaryCaption}
-              >
-                <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  <PlanPreviewField label={messages.planPreviewNodesLabel}>
-                    {previewSummary.nodeCount}
-                  </PlanPreviewField>
-                  <PlanPreviewField label={messages.planPreviewStepsLabel}>
-                    {previewSummary.stepCount}
-                  </PlanPreviewField>
-                  <PlanPreviewField label={messages.planPreviewSourceTablesLabel}>
-                    {previewSummary.sourceTables.join(', ') || messages.planPreviewUnavailableValue}
-                  </PlanPreviewField>
-                  <PlanPreviewField label={messages.planPreviewSinkTablesLabel}>
-                    {previewSummary.sinkTables.join(', ') || messages.planPreviewUnavailableValue}
-                  </PlanPreviewField>
-                </div>
-              </PlanPreviewSection>
-            ) : null}
-
-            {persistedPreview ? (
-              <PlanPreviewSection
-                title={messages.planPreviewPersistenceTitle}
-                caption={messages.planPreviewPersistenceCaption}
-              >
-                <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  <PlanPreviewField label={messages.planPreviewRecordLabel} long>
-                    {persistedPreview.planRecordId}
-                  </PlanPreviewField>
-                  <PlanPreviewField label={messages.planPreviewCanonicalShaLabel} long>
-                    {persistedPreview.canonicalPlanSha256}
-                  </PlanPreviewField>
-                </div>
-              </PlanPreviewSection>
-            ) : null}
-
-            {selectionIntent ? (
-              <PlanPreviewSelectionReview selectionIntent={selectionIntent} messages={messages} />
-            ) : null}
-
-            {plan.decisions ? (
-              <PlanExecutionDecisionView
-                decisions={plan.decisions}
-                messages={{
-                  title: messages.planPreviewDecisionsTitle,
-                  caption: messages.planPreviewDecisionsCaption,
-                  subjectLabel: messages.planPreviewDecisionSubjectLabel,
-                  statusLabel: messages.planPreviewDecisionStatusLabel,
-                  reasonLabel: messages.planPreviewDecisionReasonLabel,
-                  includedLabel: messages.planPreviewDecisionIncludedLabel,
-                  excludedLabel: messages.planPreviewDecisionExcludedLabel,
-                  statusRun: messages.planPreviewDecisionRunLabel,
-                  statusSkip: messages.planPreviewDecisionSkipLabel,
-                  statusPartial: messages.planPreviewDecisionPartialLabel,
-                  reasonSelectedRoot: messages.planPreviewDecisionSelectedRootReason,
-                  reasonSelectedClosure: messages.planPreviewDecisionSelectedClosureReason,
-                  reasonOutsideSelectedClosure: messages.planPreviewDecisionOutsideClosureReason,
-                  reasonBoundedSelection: messages.planPreviewDecisionBoundedSelectionReason,
-                }}
-              />
-            ) : null}
-
-            {provenance ? (
-              <PlanPreviewSection
-                title={messages.planPreviewProvenanceTitle}
-                caption={
-                  provenance.kind === 'dbt-project-files'
-                    ? messages.planPreviewDbtProvenanceCaption
-                    : provenance.kind === 'dvt-protected-workspace-graph'
-                      ? messages.planPreviewDvtProvenanceCaption
-                      : messages.planPreviewRepositoryProvenanceCaption
-                }
-              >
-                <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  {provenance.kind === 'dbt-project-files' ? (
-                    <>
-                      <PlanPreviewField label={messages.planPreviewCanvasLabel} long>
-                        {provenance.canvasId}
-                      </PlanPreviewField>
-                      <PlanPreviewField label={messages.planPreviewProjectRootLabel} long>
-                        {provenance.projectRoot}
-                      </PlanPreviewField>
-                      <PlanPreviewField label={messages.planPreviewDbtVersionLabel}>
-                        {provenance.dbtVersion}
-                      </PlanPreviewField>
-                      <PlanPreviewField label={messages.planPreviewProjectRevisionLabel} long>
-                        {provenance.contentSetSha256}
-                      </PlanPreviewField>
-                      <PlanPreviewField label={messages.planPreviewAnalysisRevisionLabel} long>
-                        {provenance.analysisSha256}
-                      </PlanPreviewField>
-                      {!selectionIntent ? (
-                        <PlanPreviewField label={messages.planPreviewSelectedResourcesLabel} long>
-                          {provenance.selectedUniqueIds.join(', ')}
-                        </PlanPreviewField>
-                      ) : null}
-                    </>
-                  ) : provenance.kind === 'dvt-protected-workspace-graph' ? (
-                    <PlanPreviewField label={messages.planPreviewCanvasLabel} long>
-                      {provenance.canvasId}
-                    </PlanPreviewField>
-                  ) : (
-                    <>
-                      {provenance.graphArtifact ? (
-                        <PlanPreviewField label={messages.planPreviewGraphArtifactLabel} long>
-                          {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
-                        </PlanPreviewField>
-                      ) : null}
-                      {provenance.sqlArtifact ? (
-                        <PlanPreviewField label={messages.planPreviewSqlArtifactLabel} long>
-                          {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
-                        </PlanPreviewField>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              </PlanPreviewSection>
-            ) : null}
-
-            <PlanPreviewSection
-              title={messages.planPreviewExecutionStepsTitle}
-              caption={messages.planPreviewExecutionStepsCaption}
-            >
-              <ol className="space-y-3">
-                {plan.steps.map((step, index) => (
-                  <li
-                    key={step.id}
-                    className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 p-3"
-                  >
-                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-slate-400">
-                            {messages.planPreviewStepLabel} {index + 1}
-                          </span>
-                          <span className="font-medium text-slate-50">{step.name}</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {step.type}
-                          </Badge>
-                        </div>
-                        <div className="mt-1 break-all font-mono text-[11px] text-slate-500">
-                          {step.id}
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-300">
-                        {step.nodes.length}{' '}
-                        {step.nodes.length === 1
-                          ? messages.planPreviewNodeSuffix
-                          : messages.planPreviewNodesSuffix}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
-                      {step.policies.timeout ? (
-                        <span className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1">
-                          <Clock className="size-3" />
-                          {messages.planPreviewTimeoutLabel} {step.policies.timeout}s
-                        </span>
-                      ) : null}
-                      {step.policies.retries ? (
-                        <span className="rounded border border-slate-700 px-2 py-1">
-                          {messages.planPreviewRetriesLabel} {step.policies.retries}
-                        </span>
-                      ) : null}
-                      {step.policies.concurrency ? (
-                        <span className="rounded border border-slate-700 px-2 py-1">
-                          {messages.planPreviewConcurrencyLabel} {step.policies.concurrency}
-                        </span>
-                      ) : null}
-                      {step.policies.warehouse ? (
-                        <span className="rounded border border-slate-700 px-2 py-1">
-                          {messages.planPreviewWarehouseLabel} {step.policies.warehouse}
-                        </span>
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </PlanPreviewSection>
-          </div>
+          <PlanPreviewBody
+            plan={plan}
+            messages={messages}
+            validation={validation}
+            startRunMessage={startRunMessage}
+          />
         </div>
 
         <DialogFooter className="min-w-0 border-t border-slate-800 bg-slate-950/95 px-4 py-4 sm:px-6">
@@ -716,4 +417,491 @@ export function PlanPreviewModal({
       </DialogContent>
     </Dialog>
   );
+}
+
+function PlanPreviewIdentity({
+  plan,
+  messages,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }>) {
+  return (
+    <PlanPreviewSection
+      title={messages.planPreviewIdentityTitle}
+      caption={messages.planPreviewIdentityCaption}
+    >
+      <PlanPreviewFieldGrid fields={buildPlanPreviewIdentityFields(plan, messages)} />
+    </PlanPreviewSection>
+  );
+}
+
+function PlanPreviewExecutionTarget({
+  plan,
+  messages,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }>) {
+  const target = projectPlanExecutionTarget(plan, messages);
+  return (
+    <PlanPreviewSection
+      title={messages.planPreviewExecutionTargetTitle}
+      caption={messages.planPreviewExecutionTargetCaption}
+    >
+      <div className="grid min-w-0 gap-3 md:grid-cols-3">
+        <PlanPreviewField label={messages.planPreviewExecutorLabel}>
+          {target.executor}
+        </PlanPreviewField>
+        <PlanPreviewField label={messages.planPreviewAdapterLabel}>
+          {target.adapter}
+        </PlanPreviewField>
+        <PlanPreviewField label={messages.planPreviewTargetLabel}>
+          <Badge variant="secondary">{target.target}</Badge>
+        </PlanPreviewField>
+        {target.details ? (
+          <>
+            <PlanPreviewField label={messages.planPreviewConnectionLabel}>
+              {target.details.connection}
+            </PlanPreviewField>
+            <PlanPreviewField label={messages.planPreviewResolutionSourceLabel}>
+              {target.details.resolution}
+            </PlanPreviewField>
+          </>
+        ) : null}
+      </div>
+      {plan.capabilities.length > 0 ? (
+        <div className="mt-4 flex min-w-0 flex-wrap gap-2">
+          <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+            <Zap className="size-3.5 text-yellow-300" />
+            {messages.planPreviewCapabilitiesLabel}
+          </span>
+          {plan.capabilities.map((capability) => (
+            <Badge
+              key={capability}
+              variant="outline"
+              className="border-slate-600 bg-slate-950/50 text-slate-200"
+            >
+              {capability}
+            </Badge>
+          ))}
+        </div>
+      ) : null}
+    </PlanPreviewSection>
+  );
+}
+
+function PlanPreviewSummary({
+  plan,
+  messages,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }>) {
+  const summary = plan.preview?.summary;
+  if (!summary) return null;
+  return (
+    <PlanPreviewSection
+      title={messages.planPreviewSummaryTitle}
+      caption={messages.planPreviewSummaryCaption}
+    >
+      <PlanPreviewFieldGrid fields={buildPlanPreviewSummaryFields(summary, messages)} />
+    </PlanPreviewSection>
+  );
+}
+
+function PlanPreviewMetadata({
+  plan,
+  messages,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }>) {
+  const { persisted: persistedPreview, selectionIntent } = plan.preview ?? {};
+  return (
+    <>
+      {' '}
+      {persistedPreview ? (
+        <PlanPreviewSection
+          title={messages.planPreviewPersistenceTitle}
+          caption={messages.planPreviewPersistenceCaption}
+        >
+          <div className="grid min-w-0 gap-3 md:grid-cols-2">
+            <PlanPreviewField label={messages.planPreviewRecordLabel} long>
+              {persistedPreview.planRecordId}
+            </PlanPreviewField>
+            <PlanPreviewField label={messages.planPreviewCanonicalShaLabel} long>
+              {persistedPreview.canonicalPlanSha256}
+            </PlanPreviewField>
+          </div>
+        </PlanPreviewSection>
+      ) : null}
+      {selectionIntent ? (
+        <PlanPreviewSelectionReview selectionIntent={selectionIntent} messages={messages} />
+      ) : null}
+      {plan.decisions ? (
+        <PlanExecutionDecisionView
+          decisions={plan.decisions}
+          messages={{
+            title: messages.planPreviewDecisionsTitle,
+            caption: messages.planPreviewDecisionsCaption,
+            subjectLabel: messages.planPreviewDecisionSubjectLabel,
+            statusLabel: messages.planPreviewDecisionStatusLabel,
+            reasonLabel: messages.planPreviewDecisionReasonLabel,
+            includedLabel: messages.planPreviewDecisionIncludedLabel,
+            excludedLabel: messages.planPreviewDecisionExcludedLabel,
+            statusRun: messages.planPreviewDecisionRunLabel,
+            statusSkip: messages.planPreviewDecisionSkipLabel,
+            statusPartial: messages.planPreviewDecisionPartialLabel,
+            reasonSelectedRoot: messages.planPreviewDecisionSelectedRootReason,
+            reasonSelectedClosure: messages.planPreviewDecisionSelectedClosureReason,
+            reasonOutsideSelectedClosure: messages.planPreviewDecisionOutsideClosureReason,
+            reasonBoundedSelection: messages.planPreviewDecisionBoundedSelectionReason,
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function PlanPreviewProvenance({
+  plan,
+  messages,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }>) {
+  const provenance = plan.preview?.provenance;
+  if (!provenance) return null;
+  const captions = {
+    'dbt-project-files': messages.planPreviewDbtProvenanceCaption,
+    'dvt-protected-workspace-graph': messages.planPreviewDvtProvenanceCaption,
+    'transformation-git-artifacts': messages.planPreviewRepositoryProvenanceCaption,
+  };
+  return (
+    <PlanPreviewSection
+      title={messages.planPreviewProvenanceTitle}
+      caption={captions[provenance.kind ?? 'transformation-git-artifacts']}
+    >
+      <PlanPreviewProvenanceFields
+        provenance={provenance}
+        selectionIntent={plan.preview?.selectionIntent}
+        messages={messages}
+      />
+    </PlanPreviewSection>
+  );
+}
+
+function PlanPreviewProvenanceFields({
+  provenance,
+  selectionIntent,
+  messages,
+}: Readonly<{
+  provenance: NonNullable<NonNullable<PlanViewModel['preview']>['provenance']>;
+  selectionIntent: NonNullable<PlanViewModel['preview']>['selectionIntent'];
+  messages: PlanPreviewModalMessages;
+}>) {
+  if (provenance.kind === 'dbt-project-files') {
+    const fields = [
+      { label: messages.planPreviewCanvasLabel, value: provenance.canvasId, long: true },
+      { label: messages.planPreviewProjectRootLabel, value: provenance.projectRoot, long: true },
+      { label: messages.planPreviewDbtVersionLabel, value: provenance.dbtVersion },
+      {
+        label: messages.planPreviewProjectRevisionLabel,
+        value: provenance.contentSetSha256,
+        long: true,
+      },
+      {
+        label: messages.planPreviewAnalysisRevisionLabel,
+        value: provenance.analysisSha256,
+        long: true,
+      },
+      ...(selectionIntent
+        ? []
+        : [
+            {
+              label: messages.planPreviewSelectedResourcesLabel,
+              value: provenance.selectedUniqueIds.join(', '),
+              long: true,
+            },
+          ]),
+    ];
+    return <PlanPreviewFieldGrid fields={fields} />;
+  }
+  if (provenance.kind === 'dvt-protected-workspace-graph')
+    return (
+      <PlanPreviewFieldGrid
+        fields={[
+          { label: messages.planPreviewCanvasLabel, value: provenance.canvasId, long: true },
+        ]}
+      />
+    );
+  const fields = [
+    ...(provenance.graphArtifact
+      ? [
+          {
+            label: messages.planPreviewGraphArtifactLabel,
+            value: (
+              <>
+                {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
+              </>
+            ),
+            long: true,
+          },
+        ]
+      : []),
+    ...(provenance.sqlArtifact
+      ? [
+          {
+            label: messages.planPreviewSqlArtifactLabel,
+            value: (
+              <>
+                {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
+              </>
+            ),
+            long: true,
+          },
+        ]
+      : []),
+  ];
+  return <PlanPreviewFieldGrid fields={fields} />;
+}
+
+function PlanPreviewExecutionSteps({
+  plan,
+  messages,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }>) {
+  return (
+    <PlanPreviewSection
+      title={messages.planPreviewExecutionStepsTitle}
+      caption={messages.planPreviewExecutionStepsCaption}
+    >
+      <ol className="space-y-3">
+        {plan.steps.map((step, index) => (
+          <PlanPreviewStep key={step.id} step={step} index={index} messages={messages} />
+        ))}
+      </ol>
+    </PlanPreviewSection>
+  );
+}
+
+function PlanPreviewStep({
+  step,
+  index,
+  messages,
+}: Readonly<{
+  step: PlanViewModel['steps'][number];
+  index: number;
+  messages: PlanPreviewModalMessages;
+}>) {
+  return (
+    <li className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 p-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-slate-400">
+              {messages.planPreviewStepLabel} {index + 1}
+            </span>
+            <span className="font-medium text-slate-50">{step.name}</span>
+            <Badge variant="secondary" className="text-xs">
+              {step.type}
+            </Badge>
+          </div>
+          <div className="mt-1 break-all font-mono text-[11px] text-slate-500">{step.id}</div>
+        </div>
+        <span className="text-xs text-slate-300">
+          {step.nodes.length}{' '}
+          {step.nodes.length === 1
+            ? messages.planPreviewNodeSuffix
+            : messages.planPreviewNodesSuffix}
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+        {step.policies.timeout ? (
+          <span className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1">
+            <Clock className="size-3" />
+            {messages.planPreviewTimeoutLabel} {step.policies.timeout}s
+          </span>
+        ) : null}
+        {step.policies.retries ? (
+          <span className="rounded border border-slate-700 px-2 py-1">
+            {messages.planPreviewRetriesLabel} {step.policies.retries}
+          </span>
+        ) : null}
+        {step.policies.concurrency ? (
+          <span className="rounded border border-slate-700 px-2 py-1">
+            {messages.planPreviewConcurrencyLabel} {step.policies.concurrency}
+          </span>
+        ) : null}
+        {step.policies.warehouse ? (
+          <span className="rounded border border-slate-700 px-2 py-1">
+            {messages.planPreviewWarehouseLabel} {step.policies.warehouse}
+          </span>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
+function PlanPreviewBody({
+  plan,
+  messages,
+  validation,
+  startRunMessage,
+}: Readonly<{ plan: PlanViewModel; messages: PlanPreviewModalMessages }> &
+  Readonly<{
+    validation: Extract<PlanPreviewOutcome, { kind: 'plan-invalid' }>['validation'] | null;
+    startRunMessage?: string;
+  }>) {
+  const validationCodeKnown =
+    validation != null &&
+    EXECUTABILITY_REJECTION_CODES.includes(
+      validation.code as (typeof EXECUTABILITY_REJECTION_CODES)[number]
+    );
+  return (
+    <div className="min-w-0 space-y-4 px-4 py-4 sm:px-6 sm:py-5">
+      {startRunMessage ? (
+        <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
+          {startRunMessage}
+        </div>
+      ) : null}
+
+      {validation ? (
+        <PlanPreviewRejectionPanel
+          details={{
+            code: validation.code,
+            cause: validation.cause,
+            reason: validation.reason,
+            knownCode: validationCodeKnown,
+          }}
+          messages={messages}
+        />
+      ) : null}
+
+      <PlanPreviewIdentity plan={plan} messages={messages} />
+
+      <PlanPreviewExecutionTarget plan={plan} messages={messages} />
+
+      <PlanPreviewSummary plan={plan} messages={messages} />
+
+      <PlanPreviewMetadata plan={plan} messages={messages} />
+
+      <PlanPreviewProvenance plan={plan} messages={messages} />
+
+      <PlanPreviewExecutionSteps plan={plan} messages={messages} />
+    </div>
+  );
+}
+
+function resolvePreviewOutcomeDetails({
+  providedPlan,
+  outcome,
+}: Pick<PlanPreviewModalProps, 'outcome'> & Readonly<{ providedPlan: PlanViewModel | null }>) {
+  if (outcome?.kind === 'accepted') return { plan: outcome.plan, validation: null };
+  if (outcome?.kind === 'plan-invalid')
+    return { plan: outcome.plan, validation: outcome.validation };
+  return { plan: providedPlan, validation: null };
+}
+
+function projectPlanExecutionTarget(plan: PlanViewModel, messages: PlanPreviewModalMessages) {
+  const { provenance, summary } = plan.preview ?? {};
+  if (provenance?.kind === 'dbt-project-files') {
+    const details = projectDbtExecutionTargetBinding(
+      provenance.executionTarget,
+      messages.planPreviewEnvironmentDefaultValue
+    );
+    return {
+      executor: details.executor,
+      adapter: details.adapter,
+      target: details.target,
+      details,
+    };
+  }
+  return {
+    executor: summary?.executor ?? messages.planPreviewNotReportedValue,
+    adapter:
+      plan.adapter && plan.adapter !== 'unknown' ? plan.adapter : messages.planPreviewUnknownValue,
+    target: plan.target,
+    details: null,
+  };
+}
+
+function PlanPreviewFieldGrid({
+  fields,
+}: Readonly<{
+  fields: readonly Readonly<{
+    label: string;
+    value: ReactNode;
+    dataSlot?: string;
+    long?: boolean;
+    mono?: boolean;
+    fullWidth?: boolean;
+  }>[];
+}>) {
+  return (
+    <div className="grid min-w-0 gap-3 md:grid-cols-2">
+      {fields.map((field) => {
+        const content = (
+          <PlanPreviewField
+            label={field.label}
+            dataSlot={field.dataSlot}
+            long={field.long}
+            mono={field.mono}
+          >
+            {field.value}
+          </PlanPreviewField>
+        );
+        return field.fullWidth ? (
+          <div key={field.label} className="md:col-span-2">
+            {content}
+          </div>
+        ) : (
+          <Fragment key={field.label}>{content}</Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+function buildPlanPreviewIdentityFields(plan: PlanViewModel, messages: PlanPreviewModalMessages) {
+  const cost = formatPlanPreviewEstimate(plan.estimatedCost, messages.planPreviewNotEstimatedValue);
+  return [
+    {
+      label: messages.planPreviewIdLabel,
+      dataSlot: 'plan-preview-id',
+      value: plan.planId,
+      long: true,
+    },
+    { label: messages.planPreviewVersionLabel, value: plan.planVersion },
+    ...(plan.planRef
+      ? [
+          {
+            label: messages.planPreviewRefLabel,
+            value: plan.planRef.uri,
+            long: true,
+            fullWidth: true,
+          },
+        ]
+      : []),
+    {
+      label: messages.planPreviewGeneratedLabel,
+      value: new Date(plan.generatedAt).toLocaleString(),
+      mono: true,
+    },
+    {
+      label: messages.planPreviewEstimatedCostLabel,
+      value: <span className={cost.className}>{cost.label}</span>,
+    },
+  ];
+}
+
+function buildPlanPreviewSummaryFields(
+  summary: NonNullable<NonNullable<PlanViewModel['preview']>['summary']>,
+  messages: PlanPreviewModalMessages
+) {
+  return [
+    { label: messages.planPreviewNodesLabel, value: summary.nodeCount },
+    { label: messages.planPreviewStepsLabel, value: summary.stepCount },
+    {
+      label: messages.planPreviewSourceTablesLabel,
+      value: summary.sourceTables.join(', ') || messages.planPreviewUnavailableValue,
+    },
+    {
+      label: messages.planPreviewSinkTablesLabel,
+      value: summary.sinkTables.join(', ') || messages.planPreviewUnavailableValue,
+    },
+  ];
+}
+
+function formatPlanPreviewEstimate(cost: PlanViewModel['estimatedCost'], notEstimated: string) {
+  if (typeof cost !== 'number') return { className: 'text-slate-300', label: notEstimated };
+  return {
+    className: 'text-green-300',
+    label: Number.isFinite(cost) ? `$${cost.toFixed(2)}` : notEstimated,
+  };
 }

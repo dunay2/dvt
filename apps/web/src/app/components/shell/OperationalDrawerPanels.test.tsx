@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
-
 import { asIsoUtcString } from '@dvt/contracts';
 import { fireEvent, getAllByRole, getByRole } from '@testing-library/dom';
-import React, { act } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -96,97 +95,15 @@ describe('OperationalDrawerPanels', () => {
   it('renders a bounded source sample as an accessible data table', async () => {
     const onRefresh = vi.fn();
     const longPayload = '{"runId":"run_019fc867-d439-7319-995f-4af3457311ba","planId":"5579993a"}';
-    const contribution = buildCanvasOperationalDrawerContribution({
-      tabs: [
-        { id: 'preview', label: 'Preview', count: null },
-        {
-          id: 'data:orders',
-          label: 'orders',
-          count: null,
-          onRefresh,
-          dataSample: {
-            status: 'ready',
-            nodeName: 'orders',
-            sample: {
-              contractVersion: 1,
-              connectionId: 'postgresql-local',
-              objectId: 'relation/dvt/public/orders',
-              columns: [
-                { name: 'order_id', type: 'integer', nullable: false },
-                { name: 'customer', type: 'text', nullable: true },
-              ],
-              rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
-              limit: 20,
-              truncated: true,
-              provenance: {
-                mode: 'live',
-                sourceRefs: [
-                  {
-                    schemaVersion: 'connected-source-ref.v1',
-                    connectionRef: {
-                      schemaVersion: 'connection-ref.v1',
-                      connectionId: 'postgresql-local',
-                      provider: 'postgres',
-                    },
-                    sourceObjectId: 'relation/dvt/public/orders',
-                  },
-                ],
-                queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
-                limit: 20,
-                navigation: 'bounded-first-page',
-              },
-            },
-          },
-        },
-      ],
-    });
+    const contribution = buildReadySourceSampleContribution(onRefresh, longPayload);
 
     await act(async () => {
       root.render(
         <BottomOperationalDrawerBody activeTab="data:orders" contribution={contribution} />
       );
     });
-    expect(
-      container.querySelector('[data-slot="data-sample-summary"]')?.closest('footer')
-    ).not.toBeNull();
-    expect(
-      container
-        .querySelector('[data-slot="data-sample-refresh"]')
-        ?.closest('[data-slot="data-grid-toolbar"]')
-    ).not.toBeNull();
-    expect(container.querySelector('[data-slot="bottom-operational-drawer-data"] h3')).toBeNull();
-    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
-      '2 rows'
-    );
-    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
-      '2 columns'
-    );
-    expect(container.querySelector('thead')?.textContent).not.toContain('integer');
-
-    const table = getByRole(container, 'table', { name: 'Sample from orders' });
-    expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
-    const headers = getAllByRole(table, 'columnheader');
-    expect(headers).toHaveLength(3);
-    expect(getByRole(headers[1]!, 'button', { name: 'order_id' })).toBeTruthy();
-    expect(getByRole(headers[2]!, 'button', { name: 'customer' })).toBeTruthy();
-    const longValue = Array.from(
-      table?.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ??
-        []
-    ).find((value) => value.getAttribute('title') === longPayload);
-    expect(longValue?.textContent).toBe(longPayload);
-    expect(longValue?.getAttribute('title')).toBe(longPayload);
-    expect(longValue?.getAttribute('aria-label')).toBe(longPayload);
-    expect(table?.textContent).toContain('NULL');
-    expect(container.textContent).toContain('Showing 20 rows.');
-    const facts = container.querySelector('[data-slot="live-preview-facts"]');
-    expect(facts?.closest('footer')).not.toBeNull();
-    expect(facts?.textContent).toContain('orders');
-    expect(facts?.textContent).toContain('LIVE');
-    expect(facts?.textContent).toContain('PostgreSQL');
-    expect(facts?.querySelector('details')?.open).toBe(false);
-    expect(facts?.querySelector('summary')?.textContent).not.toContain('postgresql-local');
-    expect(facts?.querySelector('details li')?.textContent).toContain('postgresql-local');
-    expect(facts?.querySelector('time')?.dateTime).toBe('2026-08-17T10:00:00.000Z');
+    const table = expectSourceSampleTable(container, longPayload);
+    expectSourceSampleProvenance(container);
     expect(onRefresh).not.toHaveBeenCalled();
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')?.click()
@@ -430,3 +347,98 @@ describe('OperationalDrawerPanels', () => {
     expect(container.textContent).toBe('');
   });
 });
+
+function buildReadySourceSampleContribution(
+  onRefresh: () => void,
+  longPayload: string
+): OperationalDrawerContribution {
+  return buildCanvasOperationalDrawerContribution({
+    tabs: [
+      { id: 'preview', label: 'Preview', count: null },
+      {
+        id: 'data:orders',
+        label: 'orders',
+        count: null,
+        onRefresh,
+        dataSample: {
+          status: 'ready',
+          nodeName: 'orders',
+          sample: {
+            contractVersion: 1,
+            connectionId: 'postgresql-local',
+            objectId: 'relation/dvt/public/orders',
+            columns: [
+              { name: 'order_id', type: 'integer', nullable: false },
+              { name: 'customer', type: 'text', nullable: true },
+            ],
+            rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
+            limit: 20,
+            truncated: true,
+            provenance: {
+              mode: 'live',
+              sourceRefs: [
+                {
+                  schemaVersion: 'connected-source-ref.v1',
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1',
+                    connectionId: 'postgresql-local',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/dvt/public/orders',
+                },
+              ],
+              queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+              limit: 20,
+              navigation: 'bounded-first-page',
+            },
+          },
+        },
+      },
+    ],
+  });
+}
+
+function expectSourceSampleTable(container: HTMLElement, longPayload: string): HTMLElement {
+  const summary = container.querySelector('[data-slot="data-sample-summary"]');
+  if (!summary) throw new Error('Expected the sample summary');
+  expect(summary.closest('footer')).not.toBeNull();
+  expect(
+    container
+      .querySelector('[data-slot="data-sample-refresh"]')
+      ?.closest('[data-slot="data-grid-toolbar"]')
+  ).not.toBeNull();
+  expect(container.querySelector('[data-slot="bottom-operational-drawer-data"] h3')).toBeNull();
+  expect(summary.textContent).toContain('2 rows');
+  expect(summary.textContent).toContain('2 columns');
+  expect(container.querySelector('thead')?.textContent).not.toContain('integer');
+
+  const table = getByRole(container, 'table', { name: 'Sample from orders' });
+  expect(table.querySelector('caption')?.textContent).toBe('Sample from orders');
+  const headers = getAllByRole(table, 'columnheader');
+  expect(headers).toHaveLength(3);
+  expect(getByRole(headers[1]!, 'button', { name: 'order_id' })).toBeTruthy();
+  expect(getByRole(headers[2]!, 'button', { name: 'customer' })).toBeTruthy();
+  const longValue = Array.from(
+    table.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ?? []
+  ).find((value) => value.getAttribute('title') === longPayload);
+  if (!longValue) throw new Error('Expected the complete long sample value');
+  expect(longValue.textContent).toBe(longPayload);
+  expect(longValue.getAttribute('title')).toBe(longPayload);
+  expect(longValue.getAttribute('aria-label')).toBe(longPayload);
+  expect(table.textContent).toContain('NULL');
+  expect(container.textContent).toContain('Showing 20 rows.');
+  return table;
+}
+
+function expectSourceSampleProvenance(container: HTMLElement): void {
+  const facts = container.querySelector('[data-slot="live-preview-facts"]');
+  if (!facts) throw new Error('Expected the live source sample provenance');
+  expect(facts.closest('footer')).not.toBeNull();
+  expect(facts.textContent).toContain('orders');
+  expect(facts.textContent).toContain('LIVE');
+  expect(facts.textContent).toContain('PostgreSQL');
+  expect(facts.querySelector('details')?.open).toBe(false);
+  expect(facts.querySelector('summary')?.textContent).not.toContain('postgresql-local');
+  expect(facts.querySelector('details li')?.textContent).toContain('postgresql-local');
+  expect(facts.querySelector('time')?.dateTime).toBe('2026-08-17T10:00:00.000Z');
+}

@@ -72,19 +72,83 @@ export function useCodeModelExecution({
       draftBarrier: synchronized ? null : 'saving',
     });
   const readiness = observeCodeFilePlan(model, runAdmission(), accepted);
-  const canCompile =
-    synchronized &&
-    permissions.canPlan &&
-    model.graph.canPlanGraph &&
-    model.parameters !== null &&
-    phase === 'idle';
+  const canCompile = canCompileCodeModel({
+    synchronized,
+    canPlan: permissions.canPlan,
+    model,
+    phase,
+  });
   const parameterized = Boolean(model.parameters?.length);
   const canExecute = parameterized
     ? canCompile && runAdmission().allowed
     : synchronized && phase === 'idle' && readiness.status === 'ready';
 
+  async function compileAttempt(
+    command: Command,
+    values: RunParameterOverride[],
+    verify: () => ReturnType<typeof verifyCodeFilePlanRevision>,
+    current: () => boolean
+  ): Promise<CanvasPreviewAttempt | null> {
+    if (parameterized) setRunId(undefined);
+    setAccepted(null);
+    setPhase('compiling');
+    const result = await compileCodeFilePlan({
+      model,
+      sessionContext,
+      plansService,
+      canPlan: canCompile,
+      overrides: values,
+      verify,
+    });
+    if (!current()) return null;
+    if (!result.ok) {
+      feedback.error(result.message);
+      return null;
+    }
+    const attempt = { draftSignature: result.draftSignature, outcome: result.previewOutcome };
+    setAccepted(attempt);
+    const observed = observeCodeFilePlan(model, runAdmission(), attempt);
+    if (attempt.outcome.kind !== 'accepted') {
+      feedback.error(presentPlanRunReadiness(observed).summary);
+      return null;
+    }
+
+    if (command === 'compile') {
+      feedback.success(canvasViewCopy.planCreatedMessage);
+      setDialog(null);
+      return null;
+    }
+    return attempt;
+  }
+
+  async function runAttempt(
+    attempt: CanvasPreviewAttempt | null,
+    verify: () => ReturnType<typeof verifyCodeFilePlanRevision>,
+    current: () => boolean
+  ): Promise<void> {
+    // Parameterized Preview already re-read the file after receiving this exact plan.
+    if (!parameterized) await verify();
+    if (!current()) return;
+    setPhase('running');
+    setDialog(null);
+    const result = await executeCanvasRunStartAction({
+      observeReadiness: () => observeCodeFilePlan(model, runAdmission(), attempt),
+      runsService,
+      sessionContext,
+    });
+    if (!current()) return;
+    if (!result.ok) {
+      feedback.error(presentCanvasRunStartFailure(result.failure).message);
+      return;
+    }
+    useUiLayoutStore.getState().showBottomDrawer();
+    feedback.success(canvasViewCopy.runStartedMessage);
+    setRunId(result.runId);
+  }
+
   async function submit(command: Command, values: RunParameterOverride[]) {
-    if (busy.current || !(command === 'execute' ? canExecute : canCompile)) return;
+    if (busy.current) return;
+    if (!{ compile: canCompile, execute: canExecute }[command]) return;
     busy.current = true;
     const token = ++generation.current;
     const current = () => token === generation.current;
@@ -100,73 +164,32 @@ export function useCodeModelExecution({
     try {
       let attempt = accepted;
       if (command === 'compile' || parameterized) {
-        if (parameterized) setRunId(undefined);
-        setAccepted(null);
-        setPhase('compiling');
-        const result = await compileCodeFilePlan({
-          model,
-          sessionContext,
-          plansService,
-          canPlan: canCompile,
-          overrides: values,
-          verify,
-        });
-        if (!current()) return;
-        if (!result.ok) {
-          feedback.error(result.message);
-          return;
-        }
-        attempt = { draftSignature: result.draftSignature, outcome: result.previewOutcome };
-        setAccepted(attempt);
-        const observed = observeCodeFilePlan(model, runAdmission(), attempt);
-        if (attempt.outcome.kind !== 'accepted') {
-          feedback.error(presentPlanRunReadiness(observed).summary);
-          return;
-        }
-        if (command === 'compile') {
-          feedback.success(canvasViewCopy.planCreatedMessage);
-          setDialog(null);
-          return;
-        }
+        attempt = await compileAttempt(command, values, verify, current);
+        if (attempt == null) return;
       }
-      // Parameterized Preview already re-read the file after receiving this exact plan.
-      if (!parameterized) await verify();
-      if (!current()) return;
-      setPhase('running');
-      setDialog(null);
-      const result = await executeCanvasRunStartAction({
-        observeReadiness: () => observeCodeFilePlan(model, runAdmission(), attempt),
-        runsService,
-        sessionContext,
-      });
-      if (!current()) return;
-      if (!result.ok) {
-        feedback.error(presentCanvasRunStartFailure(result.failure).message);
-        return;
-      }
-      useUiLayoutStore.getState().showBottomDrawer();
-      feedback.success(canvasViewCopy.runStartedMessage);
-      setRunId(result.runId);
+      await runAttempt(attempt, verify, current);
     } catch (error) {
       if (current()) {
         setAccepted(null);
-        feedback.error(error instanceof Error ? error.message : canvasViewCopy.runFailedMessage);
+        feedback.error(resolveCodeModelCommandError(error));
       }
     } finally {
-      if (current()) {
-        busy.current = false;
-        setPhase('idle');
-      }
+      finishAttempt(current);
     }
+  }
+  function finishAttempt(current?: () => boolean): void {
+    if (current && !current()) return;
+    busy.current = false;
+    setPhase('idle');
   }
   function cancel() {
     generation.current++;
-    busy.current = false;
-    setPhase('idle');
+    finishAttempt();
     setDialog(null);
   }
   async function request(command: Command) {
-    if (busy.current || !(command === 'execute' ? canExecute : canCompile)) return;
+    if (busy.current) return;
+    if (!{ compile: canCompile, execute: canExecute }[command]) return;
     if (parameterized && overrides === undefined) setDialog(command);
     else await submit(command, overrides ?? []);
   }
@@ -207,4 +230,28 @@ export function useCodeModelExecution({
       setDialog(null);
     },
   };
+}
+
+function canCompileCodeModel({
+  synchronized,
+  canPlan,
+  model,
+  phase,
+}: Readonly<{
+  synchronized: boolean;
+  canPlan: boolean;
+  model: ReturnType<typeof prepareCodeFileModel>;
+  phase: string;
+}>): boolean {
+  return (
+    synchronized &&
+    canPlan &&
+    model.graph.canPlanGraph &&
+    model.parameters !== null &&
+    phase === 'idle'
+  );
+}
+
+function resolveCodeModelCommandError(error: unknown): string {
+  return error instanceof Error ? error.message : canvasViewCopy.runFailedMessage;
 }
