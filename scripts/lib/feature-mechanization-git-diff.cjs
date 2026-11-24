@@ -22,6 +22,7 @@ class FeatureMechanizationGitDiffReader {
     this.currentFileSet = null;
     this.blobs = new Map();
     this.sourceContents = new Map();
+    this.sourceBytes = new Map();
   }
 
   resolveComparison() {
@@ -121,6 +122,11 @@ class FeatureMechanizationGitDiffReader {
     return this.sourceContents.get(sourcePath);
   }
 
+  readSourceBytes(sourcePath) {
+    this.readSources([sourcePath]);
+    return Buffer.from(this.sourceBytes.get(sourcePath));
+  }
+
   readSources(sourcePaths) {
     if (!this.currentFiles) this.readCurrentFiles();
     const selected = [...new Set(sourcePaths)];
@@ -128,8 +134,11 @@ class FeatureMechanizationGitDiffReader {
       if (!this.currentFileSet.has(name)) throw new Error('Missing selected Git path: ' + name);
     const pending = selected.filter((name) => !this.sourceContents.has(name));
     if (this.includeWorktree) {
-      for (const name of pending)
-        this.sourceContents.set(name, fs.readFileSync(path.join(this.repoRootPath, name), 'utf8'));
+      for (const name of pending) {
+        const bytes = fs.readFileSync(path.join(this.repoRootPath, name));
+        this.sourceBytes.set(name, bytes);
+        this.sourceContents.set(name, bytes.toString('utf8'));
+      }
       return;
     }
     const acquired = new Map();
@@ -158,7 +167,7 @@ class FeatureMechanizationGitDiffReader {
           output[contentEnd] !== 10
         )
           throw new Error('Git blob evidence is missing, nonblob or incomplete.');
-        acquired.set(blob.path, output.subarray(end + 1, contentEnd).toString('utf8'));
+        acquired.set(blob.path, Buffer.from(output.subarray(end + 1, contentEnd)));
         cursor = contentEnd + 1;
       }
       if (cursor !== output.length) throw new Error('Git blob evidence has trailing data.');
@@ -176,7 +185,10 @@ class FeatureMechanizationGitDiffReader {
       bytes += blob.size;
     }
     flush();
-    for (const [name, content] of acquired) this.sourceContents.set(name, content);
+    for (const [name, bytes] of acquired) {
+      this.sourceBytes.set(name, bytes);
+      this.sourceContents.set(name, bytes.toString('utf8'));
+    }
   }
 
   diffScopes() {

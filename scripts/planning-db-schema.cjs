@@ -19,6 +19,14 @@ const {
 const {
   reviseMechanizationStatusConstraint,
 } = require('./planning-db/current-mechanization-constraint.cjs');
+const {
+  reviseComponentKindConstraint,
+} = require('./planning-db/current-component-kind-constraint.cjs');
+
+const fixedConstraintOperations = new Map([
+  ['--revise-mechanization-status-constraint', reviseMechanizationStatusConstraint],
+  ['--revise-component-kind-constraint', reviseComponentKindConstraint],
+]);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -99,7 +107,7 @@ async function assertPlanningDbCurrentSchemaReady(client) {
 async function main() {
   if (process.argv.length > 2) {
     const args = process.argv.slice(2);
-    if (args[0] === '--revise-mechanization-status-constraint') {
+    if (fixedConstraintOperations.has(args[0])) {
       const flags = new Map();
       for (let index = 1; index < args.length; index += 2) {
         if (
@@ -114,7 +122,7 @@ async function main() {
         throw new Error('Fixed CHECK mode requires exactly two reviewed digests.');
       console.log(
         JSON.stringify(
-          await reviseMechanizationStatusConstraint({
+          await fixedConstraintOperations.get(args[0])({
             expectedSchemaSha256: flags.get('--expected-schema-sha256'),
             expectedConstraintSha256: flags.get('--expected-constraint-sha256'),
           })
@@ -334,6 +342,7 @@ if (require.main === module) {
 
 module.exports = {
   reviseMechanizationStatusConstraint,
+  reviseComponentKindConstraint,
   replaceCurrentPlanningDbViews,
   addCurrentPlanningDbTable,
   applyCurrentPlanningDbSchema,

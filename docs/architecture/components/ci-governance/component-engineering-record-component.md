@@ -1026,3 +1026,66 @@ resolution comparison establishes preservation for the actual extraction diff.
 Do not maintain another test copy of module names, export counts or source line
 limits. Native history and imported raw manifests remain historical; update
 eligible current implementation references through their existing guarded rails.
+
+## Documentary ownership and semantic evidence
+
+`RecordArchitectureComponent` may declare `documentary-collection` for a passive
+document ownership boundary. This is an organizational/documentary nature, not a
+runtime service, aggregate or implementation claim. It still needs its actual
+owned concern, reason to change, public documentary boundary, consumers,
+invariants, a descriptor, native semantic component-to-document associations and
+required maintained documentary tests. Its runtime is exactly `none`; executable
+responsibility promotion and source bindings are inadmissible. Existing evidence
+and missing-authority findings are neither filtered nor given a lower severity.
+
+```mermaid
+flowchart TD
+  Ownership[Current Git files and native ownership] --> Passive[Known passive artifacts]
+  Ownership --> Executable[Code schemas executable configuration or unknown]
+  Passive --> Nature[Explicit documentary-collection authority]
+  Nature --> Links[Native semantic component-to-document links]
+  Nature --> Proof[Real documentary validation evidence]
+  Executable --> Implementation[Existing implementation obligations]
+  Binding[Source binding or rail implementation] --> Implementation
+```
+
+The native record command and existing `component-integrity` query use the same
+predicate over the current selected Git ownership snapshot. Known passive forms
+are Markdown, reStructuredText, plain text, raster PNG/JPEG/ICO assets and bounded
+parsed risk records under `docs/risk-register/**/R-*.yaml`. Risk identity,
+metadata and narrative fields follow the existing documentary forms; unknown
+fields, malformed structures, custom YAML tags and missing evidence fail closed.
+MDX, SVG, HTML, stylesheets, JavaScript/TypeScript, scripts, SQL, schemas,
+configuration, manifests and every unknown form remain implementation artifacts,
+regardless of directory or identifier. Prose code fences are documentary examples
+unless an actual implementation association gives them another role.
+
+Any source-responsibility binding or rail implementation reference involving the
+collection rejects documentary admission and appears as an integrity error,
+including a binding to a passive-looking path. Documentation references remain
+documentary evidence. A native semantic document link must resolve to a currently
+owned file; a self-reference, deleted target or absent DB authority cannot satisfy
+it. Missing/ambiguous ownership and unavailable Git/DB evidence remain explicit.
+
+This distinction creates no new registry, inventory, command or product query.
+`ReadComponentFiles` owns current source facts; the native component record owns
+semantic admission; the existing integrity adapter reports their combination
+with consistent filtering and paging. Executable artifacts must be transferred
+to genuine owners before a collection qualifies. A valid documentary predicate
+does not erase existing metadata/test gaps or attest semantic acceptance.
+
+The internal `readCurrentComponentOwnership` phase supplies the same complete
+current inventory and effective native ownership facts. The full
+`readCurrentComponentFiles` query continues to validate every mandatory source
+association and reference. Documentary admission combines that shared ownership
+phase with all relevant native bindings/rail references and exact passive bytes;
+it does not repeat an unrelated repository-wide AST validation per collection.
+The existing Git reader retains one bounded blob acquisition for both byte and
+UTF-8 consumers. This is fact reuse within existing rails, not a second inventory,
+query intent or reduced implementation acceptance.
+
+Negative acceptance covers each executable/unknown form, malformed risk data,
+source bindings, implementation rails, missing/current native documentary links,
+unavailable evidence and a real executable component's unchanged obligations.
+The separately governed, fixed component-kind CHECK operation requires isolated
+PostgreSQL preservation/CAS/rollback proof before an explicit authority update.

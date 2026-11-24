@@ -48,6 +48,7 @@ const { databaseUrl } = require('../../planning-db-schema.cjs');
 const { assertPlanningDbCurrentSchemaReady } = require('../../planning-db-schema.cjs');
 
 const { randomUuidV4 } = require('@dvt/crypto');
+const { assertDocumentaryComponentRecord } = require('../queries/documentary-component-query.cjs');
 
 const allowedArchitectureComponentKinds = new Set([
   'package',
@@ -59,6 +60,7 @@ const allowedArchitectureComponentKinds = new Set([
   'workflow',
   'dbt-model',
   'api',
+  'documentary-collection',
 ]);
 
 const allowedArchitectureComponentLayers = new Set([
@@ -143,6 +145,17 @@ function validateArchitectureResponsibilityId(value) {
 }
 
 function validateArchitectureComponentRecordCommand(command) {
+  if (
+    command.componentKind === 'documentary-collection' &&
+    (command.runtime !== 'none' ||
+      command.status === 'implemented' ||
+      command.sourceBindings?.length > 0 ||
+      command.responsibilityStatus === 'implemented')
+  ) {
+    throw new Error(
+      'ARCH-DOCUMENTARY-IMPLEMENTATION-FORBIDDEN: documentary nature cannot claim runtime, source associations or executable implementation.'
+    );
+  }
   if (command.sourceBindings !== undefined) {
     requireBindings(command.sourceBindings);
     if (!/^[a-f0-9]{64}$/u.test(command.expectedBindingsHash || ''))
@@ -571,6 +584,7 @@ async function applyArchitectureComponentRecordOperation(command, options = {}) 
       now: options.now || new Date(),
     });
 
+    await assertDocumentaryComponentRecord(client, command, { gitReader: options.gitReader });
     await writePlannedArchitectureComponentRecordOperation(client, planned);
     await client.query('commit');
     return { idempotent: false, ...planned };

@@ -205,6 +205,33 @@ caller, including through a lazy require: CLI startup can expose partial exports
 before `main()` yields. Existing public imports remain direct references to the
 single implementation. A real-process CLI test retains this boundary.
 
+### Explicit documentary component kind constraint revision — GH-3951
+
+The separate [GH-3951 design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7138750650)
+admits one fixed `ApplyCurrentPlanningDbSchema` operation for
+`architecture.component.architecture_component_kind_check`. It adds only
+`documentary-collection` to the existing component-kind domain. This names passive
+document ownership without inventing an executable service or exempting a
+component from authority, evidence or implementation checks.
+
+`--revise-component-kind-constraint` requires the reviewed assembled-schema SHA
+and exact live constraint-definition SHA. It accepts no caller SQL, path, table,
+constraint or replacement domain. The canonical bundle must contain the unique
+active target declaration. Constant DDL replaces only this validated, local CHECK
+on the existing text `kind` column of the ordinary, non-inherited component table.
+The existing schema advisory lock, table lock and transaction protect live CAS,
+replacement, poststate validation and row/object preservation. Unknown previous
+definitions, stale hashes, unsupported options, inheritance, partitioning and
+poststate drift reject atomically. A replay is not another schema transition.
+
+Isolated PostgreSQL proof must establish kind admission, rejection, rollback and
+preservation before an explicit authoritative operation. Queries, imports,
+refreshes and validation do not invoke this mode. It creates no migration chain,
+schema reconciliation, ledger, import or rebuild. The component record and
+current integrity query retain the strict documentary artifact, semantic-link,
+source-association and rail guards specified by the Component Engineering Record
+contract; admitting a kind does not certify a collection.
+
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
 DB-authored architecture and mechanization are read through governed queries;

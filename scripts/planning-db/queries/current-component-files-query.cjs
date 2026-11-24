@@ -193,8 +193,10 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
     return [...rows.values()];
   }
 
-  async function readCurrentComponentFiles(client) {
-    const reader = deps.gitReader || new FeatureMechanizationGitDiffReader();
+  async function readCurrentComponentOwnership(
+    client,
+    reader = deps.gitReader || new FeatureMechanizationGitDiffReader()
+  ) {
     const currentFiles = readGitSourceInventory(reader);
     const result = await client.query(`
       select
@@ -229,6 +231,12 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
           compareText(left.component_unit, right.component_unit) ||
           compareText(left.path, right.path)
       );
+    return { files, units, tree: buildCurrentComponentTree(units, files) };
+  }
+
+  async function readCurrentComponentFiles(client) {
+    const reader = deps.gitReader || new FeatureMechanizationGitDiffReader();
+    const { files, units, tree } = await readCurrentComponentOwnership(client, reader);
     const authority = await readSourceResponsibilityAuthority(client);
     const shape = validateResponsibilityBindings(
       authority.map(({ responsibilityId, componentId, path, symbol, role, testPaths }) => ({
@@ -252,7 +260,7 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
     for (const row of responsibilities)
       if (!descriptions.has(row.responsibilityId))
         descriptions.set(row.responsibilityId, row.description);
-    const paths = new Set(currentFiles);
+    const paths = new Set(files.map((file) => file.path));
     const errors = [];
     const byPath = new Map();
     for (const binding of shape.bindings) {
@@ -291,11 +299,11 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
       units,
       errors,
       bindings: shape.bindings,
-      tree: buildCurrentComponentTree(units, files),
+      tree,
     };
   }
 
-  return { readCurrentComponentFiles, readGitSourceInventory };
+  return { readCurrentComponentFiles, readCurrentComponentOwnership, readGitSourceInventory };
 }
 
 function selectCurrentComponentTreeRows(snapshot, filters = {}) {
