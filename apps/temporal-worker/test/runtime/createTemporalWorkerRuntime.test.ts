@@ -454,7 +454,7 @@ function createEnv(
   };
 }
 
-function buildBaseEnv(): {
+type RuntimeTestEnvironment = {
   NODE_ENV: 'test' | 'production';
   LOG_LEVEL: 'info';
   SERVICE_NAME: string;
@@ -495,7 +495,9 @@ function buildBaseEnv(): {
   DVT_DBT_BUNDLE_FILE_ROOT: string | undefined;
   DVT_CAS_FILE_ROOT: string | undefined;
   DVT_WORKSPACE_FILES_ROOT: string | undefined;
-} {
+};
+
+function buildBaseEnv(): RuntimeTestEnvironment {
   return {
     NODE_ENV: 'test' as const,
     LOG_LEVEL: 'info' as const,

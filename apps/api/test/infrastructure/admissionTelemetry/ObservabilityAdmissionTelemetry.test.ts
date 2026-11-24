@@ -14,28 +14,41 @@ function sortedLabelKeys(labels: Record<string, unknown>): string[] {
   return Object.keys(labels).sort((left, right) => left.localeCompare(right));
 }
 
+type TelemetryFixture = {
+  decisionCounter: ReturnType<typeof createCounterSpy>;
+  rejectionCounter: ReturnType<typeof createCounterSpy>;
+  info: Mock;
+  warn: Mock;
+  telemetry: ObservabilityAdmissionTelemetry;
+};
+
+function createTelemetryFixture(): TelemetryFixture {
+  const decisionCounter = createCounterSpy();
+  const rejectionCounter = createCounterSpy();
+  const info = vi.fn();
+  const warn = vi.fn();
+  const telemetry = new ObservabilityAdmissionTelemetry({
+    observability: {
+      metrics: {
+        counter: vi.fn((name: string) =>
+          name === ADMISSION_TELEMETRY_METRICS.decisionTotal
+            ? decisionCounter.counter()
+            : rejectionCounter.counter()
+        ),
+        histogram: vi.fn(),
+        gauge: vi.fn(),
+      },
+      logs: { debug: vi.fn(), info, warn, error: vi.fn() },
+      traces: { startSpan: vi.fn(), withSpan: vi.fn() },
+      withContext: vi.fn((_, fn) => fn()),
+    } as unknown as IObservability,
+  });
+  return { decisionCounter, rejectionCounter, info, warn, telemetry };
+}
+
 describe('ObservabilityAdmissionTelemetry', () => {
   it('records decision_total and info log for accept', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const info = vi.fn();
-    const warn = vi.fn();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info, warn, error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
-    });
+    const { decisionCounter, rejectionCounter, info, warn, telemetry } = createTelemetryFixture();
 
     await telemetry.record({
       requestId: 'req-1',
@@ -52,26 +65,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
   });
 
   it('records rejection_total and warn log for reject decisions', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const info = vi.fn();
-    const warn = vi.fn();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info, warn, error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
-    });
+    const { decisionCounter, rejectionCounter, info, warn, telemetry } = createTelemetryFixture();
 
     await telemetry.record({
       requestId: 'req-1',
@@ -97,24 +91,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
   });
 
   it('preserves execution-capacity rejection codes in telemetry labels', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
-    });
+    const { rejectionCounter, telemetry } = createTelemetryFixture();
 
     await telemetry.record({
       requestId: 'req-1',
@@ -134,24 +111,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
   });
 
   it('does not include tenantId or runId in metric labels', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
-    });
+    const { decisionCounter, rejectionCounter, telemetry } = createTelemetryFixture();
 
     await telemetry.record({
       requestId: 'req-1',

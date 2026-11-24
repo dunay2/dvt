@@ -1,6 +1,9 @@
 /**
  * Owned concern: orchestrate protected runtime HTTP route-group registration.
  */
+/**
+ * Owned concern: orchestrate protected runtime HTTP route-group registration.
+ */
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 
@@ -53,6 +56,34 @@ export async function registerProtectedRuntimeRoutes(
 
   registerProtectedSessionRoutes(app, env, protectedModule);
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
+  registerProtectedWorkspaceContextRoutes(app, options, protectedRateLimit);
+  registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
+  registerProtectedCanvasRoutes(app, options, dependencies, protectedRateLimit);
+  registerProtectedDbtRoutes(app, options, dependencies);
+  registerProtectedWorkspaceDiffChangesRouteGroup(app, {
+    env,
+    runtimeAuth: dependencies.runtimeAuth,
+  });
+  registerProtectedWarehouseSourceImportRouteGroup(app, {
+    env,
+    protectedModule,
+    runtimeAuth: dependencies.runtimeAuth,
+    connectionProbe: dependencies.warehouseConnectionProbe,
+    previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
+    validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
+  });
+  registerProtectedWorkspaceFileRoutes(app, options, dependencies, protectedRateLimit);
+  registerProtectedRunRoutes(app, env, protectedModule, dependencies);
+  registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
+
+  app.log.info('protected runtime routes registered');
+}
+
+function registerProtectedWorkspaceContextRoutes(
+  app: FastifyInstance,
+  { protectedModule }: RegisterProtectedRuntimeRoutesOptions,
+  protectedRateLimit: { max: number; timeWindow: number }
+): void {
   registerProjectOnboardingRoutes(app, {
     authenticator: protectedModule.authenticator,
     listProjectsUseCase: protectedModule.listProjectsUseCase,
@@ -69,8 +100,13 @@ export async function registerProtectedRuntimeRoutes(
         workspaceContextQuery: protectedModule.workspaceContextQuery,
       })
   );
-  registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
-  registerProtectedCanvasRoutes(app, options, dependencies, protectedRateLimit);
+}
+
+function registerProtectedDbtRoutes(
+  app: FastifyInstance,
+  { env, protectedModule }: RegisterProtectedRuntimeRoutesOptions,
+  dependencies: ReturnType<typeof buildProtectedRuntimeRouteDependencies>
+): void {
   const dbtRouteGroups = [
     registerProtectedDbtProjectGraphRouteGroup,
     registerProtectedDbtSelectedModelAnalysisRouteGroup,
@@ -83,18 +119,14 @@ export async function registerProtectedRuntimeRoutes(
   for (const registerGroup of dbtRouteGroups) {
     registerGroup(app, { env, runtimeAuth: dependencies.runtimeAuth, protectedModule });
   }
-  registerProtectedWorkspaceDiffChangesRouteGroup(app, {
-    env,
-    runtimeAuth: dependencies.runtimeAuth,
-  });
-  registerProtectedWarehouseSourceImportRouteGroup(app, {
-    env,
-    protectedModule,
-    runtimeAuth: dependencies.runtimeAuth,
-    connectionProbe: dependencies.warehouseConnectionProbe,
-    previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
-    validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
-  });
+}
+
+function registerProtectedWorkspaceFileRoutes(
+  app: FastifyInstance,
+  { env, protectedModule }: RegisterProtectedRuntimeRoutesOptions,
+  dependencies: ReturnType<typeof buildProtectedRuntimeRouteDependencies>,
+  protectedRateLimit: { max: number; timeWindow: number }
+): void {
   const fileHistory = new LocalWorkspaceFileHistoryRepository({
     root: protectedModule.workspaceFilesRoot,
   });
@@ -112,10 +144,6 @@ export async function registerProtectedRuntimeRoutes(
     dbtProjectRootRelocation: protectedModule.dbtProjectRootRelocation,
     canvasAuthoringAuthorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
   });
-  registerProtectedRunRoutes(app, env, protectedModule, dependencies);
-  registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
-
-  app.log.info('protected runtime routes registered');
 }
 
 function registerProtectedCanvasRoutes(

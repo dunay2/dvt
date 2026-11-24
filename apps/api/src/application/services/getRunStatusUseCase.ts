@@ -16,8 +16,10 @@ import {
 import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
-import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
-import { toRunCancellationReceiptKey } from '../ports/runCancellationReceiptStore.js';
+import {
+  type IRunCancellationReceiptStore,
+  toRunCancellationReceiptKey,
+} from '../ports/runCancellationReceiptStore.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -125,23 +127,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     const { metadata, snapshot, snapshotStaleness } = input;
     const runReadRef = toRunReadRef(metadata);
     this.recordSnapshotStalenessTelemetry(snapshotStaleness, runReadRef);
-    const workflowSnapshot = await this.readWorkflowSnapshot(runReadRef);
-    const planRecord = await this.readPlanRecord(metadata);
-    const events = this.shouldReadEvidenceEvents(
-      snapshot.status,
-      snapshot.execution,
-      workflowSnapshot
-    )
-      ? await this.readRunEvents(runReadRef)
-      : ([] as const);
-    const evidenceModel = deriveRunReadEvidenceModel({
-      snapshot,
-      workflowSnapshot,
-      events,
-      planId: metadata.planId,
-      runtimeAdapter: metadata.providerRef.provider,
-      ...(planRecord === undefined ? {} : { planRecord }),
-    });
+    const evidenceModel = await this.readEvidence(metadata, snapshot, runReadRef);
     const recoveryPlan = await resolveRunRecoveryPlanEvidence(
       this.planStore,
       this.planIntegrityValidator,
@@ -161,9 +147,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         recoveryPlan.planRef
       ),
       this.startDispatchResolver?.resolve(metadata, snapshot),
-      this.cancellationReceipts !== undefined && cancellationReceiptCanAffectAvailability(snapshot)
-        ? this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(metadata))
-        : false,
+      this.resolveCancellationAccepted(metadata, snapshot),
     ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,
@@ -183,6 +167,43 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(input.providerView === undefined ? {} : { providerView: input.providerView }),
       ...this.projectReadEvidence(evidenceModel),
     };
+  }
+
+  private async readEvidence(
+    metadata: RunMetadata,
+    snapshot: CanonicalRunSnapshot,
+    runReadRef: RunReadRef
+  ): Promise<RunReadEvidenceModel> {
+    const workflowSnapshot = await this.readWorkflowSnapshot(runReadRef);
+    const planRecord = await this.readPlanRecord(metadata);
+    const events = this.shouldReadEvidenceEvents(
+      snapshot.status,
+      snapshot.execution,
+      workflowSnapshot
+    )
+      ? await this.readRunEvents(runReadRef)
+      : ([] as const);
+    return deriveRunReadEvidenceModel({
+      snapshot,
+      workflowSnapshot,
+      events,
+      planId: metadata.planId,
+      runtimeAdapter: metadata.providerRef.provider,
+      ...(planRecord === undefined ? {} : { planRecord }),
+    });
+  }
+
+  private resolveCancellationAccepted(
+    metadata: RunMetadata,
+    snapshot: CanonicalRunSnapshot
+  ): Promise<boolean> | boolean {
+    if (
+      this.cancellationReceipts === undefined ||
+      !cancellationReceiptCanAffectAvailability(snapshot)
+    ) {
+      return false;
+    }
+    return this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(metadata));
   }
 
   private projectReadEvidence(evidence: RunReadEvidenceModel) {

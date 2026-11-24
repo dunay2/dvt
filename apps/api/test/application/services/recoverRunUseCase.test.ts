@@ -111,26 +111,7 @@ function createDependencies(): TestDependencies {
     executionContextRequirementResolver: {
       resolve: vi.fn().mockResolvedValue('required'),
     },
-    startRunIntentStore: {
-      getIntent: vi.fn().mockResolvedValue({
-        tenantId: 'tenant-a',
-        runId: 'run-recovery-1',
-        provider: 'temporal',
-        status: 'RESOLVED',
-        compensation: { kind: 'not_required' },
-        reconciliation: { kind: 'pending' },
-        providerOutcome: {
-          kind: 'started',
-          runRef: {
-            provider: 'temporal',
-            tenantId: 'tenant-a',
-            namespace: 'default',
-            workflowId: 'wf-recovery-1',
-            runId: 'run-recovery-1',
-          },
-        },
-      }),
-    },
+    startRunIntentStore: createStartRunIntentStore(),
     runMaintenanceService: {
       reconcileStartRunIntent: vi.fn().mockResolvedValue({ kind: 'blocked' }),
     },
@@ -138,6 +119,85 @@ function createDependencies(): TestDependencies {
       startRunIntentId: vi.fn().mockReturnValue('intent-recovery-1'),
     },
   };
+}
+
+function createStartRunIntentStore(): TestDependencies['startRunIntentStore'] {
+  return {
+    getIntent: vi.fn().mockResolvedValue({
+      tenantId: 'tenant-a',
+      runId: 'run-recovery-1',
+      provider: 'temporal',
+      status: 'RESOLVED',
+      compensation: { kind: 'not_required' },
+      reconciliation: { kind: 'pending' },
+      providerOutcome: {
+        kind: 'started',
+        runRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-recovery-1',
+          runId: 'run-recovery-1',
+        },
+      },
+    }),
+  };
+}
+
+function configureExistingRecoveryChild(dependencies: TestDependencies, pending = false): void {
+  dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
+    async (_tenantId: string, runId: string) =>
+      runId === 'run-recovery-1'
+        ? {
+            ...sourceMetadata,
+            runId,
+            logicalAttemptId: 2,
+            parentRunId: sourceMetadata.runId,
+            originRunId: sourceMetadata.runId,
+          }
+        : sourceMetadata
+  );
+  if (pending) {
+    dependencies.startRunIntentStore.getIntent.mockResolvedValue({
+      status: 'PENDING',
+      providerOutcome: { kind: 'unknown' },
+      compensation: { kind: 'not_required' },
+      reconciliation: { kind: 'pending' },
+    });
+  }
+}
+
+function expectNoRecoveryDispatch(dependencies: TestDependencies): void {
+  expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+  expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+}
+
+function expectRecoveryEngineInputs(dependencies: TestDependencies): void {
+  expect(dependencies.engine.recoverRun).toHaveBeenCalledWith(
+    'run-source-1',
+    {
+      uri: 'dvt-plan://postgres/plan-a',
+      sha256: 'c'.repeat(64),
+      schemaVersion: 'v1.0',
+      planId: 'plan-a',
+      planVersion: '1.0.0',
+      sizeBytes: 4096,
+    },
+    {
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'env-a',
+      runId: 'run-recovery-1',
+      targetAdapter: 'temporal',
+      runExecutionContextRef: {
+        uri: 'file:///run-contexts/recovery.json',
+        sha256: 'b'.repeat(64),
+        schemaVersion: 'v1.0',
+        planId: 'plan-a',
+        planVersion: '1.0.0',
+      },
+    }
+  );
 }
 
 describe('RecoverRunUseCase', () => {
@@ -188,31 +248,7 @@ describe('RecoverRunUseCase', () => {
         planVersion: '1.0.0',
       },
     });
-    expect(dependencies.engine.recoverRun).toHaveBeenCalledWith(
-      'run-source-1',
-      {
-        uri: 'dvt-plan://postgres/plan-a',
-        sha256: 'c'.repeat(64),
-        schemaVersion: 'v1.0',
-        planId: 'plan-a',
-        planVersion: '1.0.0',
-        sizeBytes: 4096,
-      },
-      {
-        tenantId: 'tenant-a',
-        projectId: 'project-a',
-        environmentId: 'env-a',
-        runId: 'run-recovery-1',
-        targetAdapter: 'temporal',
-        runExecutionContextRef: {
-          uri: 'file:///run-contexts/recovery.json',
-          sha256: 'b'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      }
-    );
+    expectRecoveryEngineInputs(dependencies);
   });
 
   it('rejects recovery when the persisted source plan is unavailable', async () => {
@@ -226,24 +262,12 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toBeInstanceOf(RunRecoveryUnavailableError);
-    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
-    expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+    expectNoRecoveryDispatch(dependencies);
   });
 
   it('returns the original receipt without dispatching a repeated recovery command', async () => {
     const dependencies = createDependencies();
-    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
-      async (_tenantId: string, runId: string) =>
-        runId === 'run-recovery-1'
-          ? {
-              ...sourceMetadata,
-              runId,
-              logicalAttemptId: 2,
-              parentRunId: sourceMetadata.runId,
-              originRunId: sourceMetadata.runId,
-            }
-          : sourceMetadata
-    );
+    configureExistingRecoveryChild(dependencies);
     const useCase = new RecoverRunUseCase(dependencies as never);
 
     await expect(
@@ -257,8 +281,7 @@ describe('RecoverRunUseCase', () => {
       recoveryRunId: 'run-recovery-1',
       accepted: true,
     });
-    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
-    expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+    expectNoRecoveryDispatch(dependencies);
     expect(dependencies.idempotency.startRunIntentId).toHaveBeenCalledWith(
       'tenant-a',
       'run-recovery-1',
@@ -273,18 +296,7 @@ describe('RecoverRunUseCase', () => {
 
   it('only resumes a prepared child when no intent has ever been acquired', async () => {
     const dependencies = createDependencies();
-    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
-      async (_tenantId: string, runId: string) =>
-        runId === 'run-recovery-1'
-          ? {
-              ...sourceMetadata,
-              runId,
-              logicalAttemptId: 2,
-              parentRunId: sourceMetadata.runId,
-              originRunId: sourceMetadata.runId,
-            }
-          : sourceMetadata
-    );
+    configureExistingRecoveryChild(dependencies);
     dependencies.startRunIntentStore.getIntent.mockResolvedValue(null);
     dependencies.runMaintenanceService.reconcileStartRunIntent.mockResolvedValue({
       kind: 'missing',
@@ -310,24 +322,8 @@ describe('RecoverRunUseCase', () => {
 
   it('returns the original receipt when reconciliation confirms a previously dispatched recovery', async () => {
     const dependencies = createDependencies();
-    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
-      async (_tenantId: string, runId: string) =>
-        runId === 'run-recovery-1'
-          ? {
-              ...sourceMetadata,
-              runId,
-              logicalAttemptId: 2,
-              parentRunId: sourceMetadata.runId,
-              originRunId: sourceMetadata.runId,
-            }
-          : sourceMetadata
-    );
-    dependencies.startRunIntentStore.getIntent.mockResolvedValue({
-      status: 'PENDING',
-      providerOutcome: { kind: 'unknown' },
-      compensation: { kind: 'not_required' },
-      reconciliation: { kind: 'pending' },
-    });
+    configureExistingRecoveryChild(dependencies, true);
+
     dependencies.runMaintenanceService.reconcileStartRunIntent.mockResolvedValue({
       kind: 'confirmed',
     });
@@ -350,24 +346,8 @@ describe('RecoverRunUseCase', () => {
     'fails closed when reconciliation is %s',
     async (kind) => {
       const dependencies = createDependencies();
-      dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
-        async (_tenantId: string, runId: string) =>
-          runId === 'run-recovery-1'
-            ? {
-                ...sourceMetadata,
-                runId,
-                logicalAttemptId: 2,
-                parentRunId: sourceMetadata.runId,
-                originRunId: sourceMetadata.runId,
-              }
-            : sourceMetadata
-      );
-      dependencies.startRunIntentStore.getIntent.mockResolvedValue({
-        status: 'PENDING',
-        providerOutcome: { kind: 'unknown' },
-        compensation: { kind: 'not_required' },
-        reconciliation: { kind: 'pending' },
-      });
+      configureExistingRecoveryChild(dependencies, true);
+
       dependencies.runMaintenanceService.reconcileStartRunIntent.mockResolvedValue({
         kind,
       });
@@ -443,8 +423,7 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toMatchObject({ reason: 'source_context_untrusted' });
-    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
-    expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+    expectNoRecoveryDispatch(dependencies);
   });
 
   it('rejects an absent context when the persisted plan requires plugin binding', async () => {

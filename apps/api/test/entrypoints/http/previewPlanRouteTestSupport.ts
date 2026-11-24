@@ -34,9 +34,46 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
     deriveExecutableSubgraph: vi.fn(),
     ...overrides.planner,
   };
+  const planStore = createPreviewPlanStore(overrides.planStore);
+  const planValidator = createPreviewPlanValidator(planner, overrides.planValidator);
+  const previewSelectionResolver = {
+    execute: vi.fn(
+      async (input: {
+        selection: { mode: string; nodeIds: readonly string[] };
+        graphSource: unknown;
+      }) => ({
+        ok: true as const,
+        value: {
+          graphSource: input.graphSource,
+          nodeIds: [...input.selection.nodeIds],
+        },
+      })
+    ),
+    ...overrides.previewSelectionResolver,
+  };
+
+  return {
+    ...okAuthDeps(),
+    ...overrides,
+    planner,
+    planStore,
+    planValidator,
+    previewSelectionResolver,
+    useCase: new PreviewPlanUseCase({
+      planner,
+      planStore,
+      planValidator,
+      previewSelectionResolver: previewSelectionResolver as never,
+    }),
+  };
+}
+
+function createPreviewPlanStore(
+  overrides: PreviewRouteTestOverrides['planStore']
+): PreviewRouteTestDeps['planStore'] {
   let validationState: 'PENDING_VALIDATION' | 'VALID' | 'INVALID' = 'PENDING_VALIDATION';
   let rejectionReport: unknown;
-  const planStore = {
+  return {
     storePlanArtifact: vi.fn(),
     markStoredPlanArtifactValid: vi.fn(async () => {
       validationState = 'VALID';
@@ -67,9 +104,15 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
       updatedAtIso: '2026-05-26T00:00:00.000Z',
       state: 'ACTIVE' as const,
     })),
-    ...overrides.planStore,
+    ...overrides,
   };
-  const planValidator = {
+}
+
+function createPreviewPlanValidator(
+  planner: PreviewRouteTestDeps['planner'],
+  overrides: PreviewRouteTestOverrides['planValidator']
+): PreviewRouteTestDeps['planValidator'] {
+  return {
     materializeAndValidatePlan: vi.fn(async (input: { planRef: { planId: string } }) => {
       const buildResult = await (planner.buildPlan as Mock).mock.results.at(-1)?.value;
       return {
@@ -85,36 +128,6 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
         },
       };
     }),
-    ...overrides.planValidator,
-  };
-  const previewSelectionResolver = {
-    execute: vi.fn(
-      async (input: {
-        selection: { mode: string; nodeIds: readonly string[] };
-        graphSource: unknown;
-      }) => ({
-        ok: true as const,
-        value: {
-          graphSource: input.graphSource,
-          nodeIds: [...input.selection.nodeIds],
-        },
-      })
-    ),
-    ...overrides.previewSelectionResolver,
-  };
-
-  return {
-    ...okAuthDeps(),
     ...overrides,
-    planner,
-    planStore,
-    planValidator,
-    previewSelectionResolver,
-    useCase: new PreviewPlanUseCase({
-      planner,
-      planStore,
-      planValidator,
-      previewSelectionResolver: previewSelectionResolver as never,
-    }),
   };
 }

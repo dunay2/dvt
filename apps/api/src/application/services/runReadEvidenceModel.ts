@@ -489,50 +489,35 @@ function formatDiagnosticPointer(
 function deriveRunningStepFromSnapshot(
   workflowSnapshot: WorkflowSnapshot | null
 ): string | undefined {
-  if (!workflowSnapshot) {
-    return undefined;
-  }
-
-  let candidateStepId: string | undefined;
-  let candidateStartedAt = '';
-
-  for (const [stepId, step] of Object.entries(workflowSnapshot.steps)) {
-    if (step.status !== 'RUNNING') {
-      continue;
-    }
-
-    const startedAt = step.startedAt ?? '';
-    if (candidateStepId === undefined || startedAt > candidateStartedAt) {
-      candidateStepId = stepId;
-      candidateStartedAt = startedAt;
-    }
-  }
-
-  return candidateStepId;
+  return deriveStepFromSnapshot(workflowSnapshot, 'RUNNING', 'startedAt');
 }
 
 function deriveFailedStepFromSnapshot(
   workflowSnapshot: WorkflowSnapshot | null
 ): string | undefined {
+  return deriveStepFromSnapshot(workflowSnapshot, 'FAILED', 'completedAt');
+}
+
+function deriveStepFromSnapshot(
+  workflowSnapshot: WorkflowSnapshot | null,
+  status: 'RUNNING' | 'FAILED',
+  timestamp: 'startedAt' | 'completedAt'
+): string | undefined {
   if (!workflowSnapshot) {
     return undefined;
   }
-
   let candidateStepId: string | undefined;
-  let candidateCompletedAt = '';
-
+  let candidateTimestamp = '';
   for (const [stepId, step] of Object.entries(workflowSnapshot.steps)) {
-    if (step.status !== 'FAILED') {
+    if (step.status !== status) {
       continue;
     }
-
-    const completedAt = step.completedAt ?? '';
-    if (candidateStepId === undefined || completedAt > candidateCompletedAt) {
+    const stepTimestamp = step[timestamp] ?? '';
+    if (candidateStepId === undefined || stepTimestamp > candidateTimestamp) {
       candidateStepId = stepId;
-      candidateCompletedAt = completedAt;
+      candidateTimestamp = stepTimestamp;
     }
   }
-
   return candidateStepId;
 }
 
