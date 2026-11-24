@@ -261,3 +261,35 @@ zero errors, blockers, vocabulary or source drift; the existing 101 component
 warnings and 26 unresolved references remain, with zero new unresolved
 references. These focused results do not replace the final complete prepush or
 hosted acceptance.
+
+The user's follow-up makes the three remaining workspace-menu warnings an
+explicit target. The screenshot's other three files now score 10, while
+`CanvasWorkspaceMenuControls.tsx` scores 8.46 with cyclomatic complexity 25, 20
+and 14 in its registrar, top-bar identity and menu renderer. The
+[prospective closure design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7119149166),
+native `GH-3951-WORKSPACE-MENU-COMPLEXITY-CLOSURE`, retains the existing
+`ResolveCanvasProjectSnapshotActions` and `SelectCanvasWorkbenchTab` owners.
+Separate metadata projection, capability-gated current callback binding,
+optional Code close binding, contribution assembly, scoped top-bar projection
+and the multi-Canvas selection policy. Preserve the same latest-props reference,
+memo dependencies, single registration effect, cleanup identity and subscriptions.
+No props-only wrapper, store, coordinator or business command is added. Audited
+catalog extensions preserve old authorities, symbols, cycles and sibling rails
+and bind each helper to the existing actual behavior proof before implementation.
+Complete prepush attempt 11 passed all 7,902 Web tests and at least 105 native
+browser cases, then was interrupted for this additional warning reduction;
+those results are partial evidence, not a readiness receipt for the final code.
+
+The first extraction passes the 45 actual menu/TopAppBar cases and removes two
+original complex methods, but the engine exposes aggregate module complexity.
+The [physical refinement](https://github.com/dunay2/dvt/issues/3951#issuecomment-7119303620),
+native `GH-3951-WORKSPACE-MENU-OWNED-PROJECTIONS`, admits two sibling modules:
+`canvasWorkspaceMenuContributionProjection.ts` owns snapshot/callback binding;
+`canvasWorkspaceTopBarReadModel.ts` owns active-Canvas identity and scoped tabs.
+Public components retain their subscriptions, ref, memo and registration effect.
+Native file selection retains capture, receiver clearing, owner notification
+and existing import dispatch in the same order. The additional characterization
+requires known callbacks and proves foreign-Canvas exclusion, latest dispatch
+and retirement after capability removal. Physical bindings are declared before
+file creation; superseded prototype bindings are retired with committed history
+through the audited native operation, preserving other evidence and authorities.

@@ -97,3 +97,15 @@ Preserve automatic activation and meaningful Back/Forward entries without a
 second navigation store. Test both native events in one gesture and permit a
 fresh visit after Back. Browser proof must traverse the actual Diagnostics and
 Summary entries, rather than mask duplication with a numeric history jump.
+
+Reducing workspace-menu complexity must retain callback lifetime and Canvas
+scope. Keep one existing latest-props reference, one memoized contribution and
+one identity-safe registration effect. Pure projections may copy metadata and
+bind available commands, but must preserve absent/undefined behavior, current
+callback dispatch and guarded Code close. Foreign-Canvas Model contributions
+must remain excluded, and language, disabled actions and canceled file picker
+behavior must remain intact. Give the selection submenu its real availability
+policy; avoid wrappers that only forward props or create another subscription.
+Require the existing complete behavior suite, meaningful scope/lifecycle
+characterization, canonical typed lint, types and the actual CodeScene report.
+An interrupted earlier candidate cannot authorize the changed final candidate.

@@ -11,6 +11,7 @@ import {
   CanvasWorkspaceMenuControls,
 } from './CanvasWorkspaceMenuControls';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
 import {
@@ -560,5 +561,110 @@ describe('CanvasWorkspaceMenuControls', () => {
     latestContribution?.onOpenProjectCode?.();
     expect(firstCommand).not.toHaveBeenCalled();
     expect(latestCommand).toHaveBeenCalledTimes(1);
+  });
+
+  it('excludes foreign Canvas tabs and commands from the active top-bar context', async () => {
+    const previous = useCanvasWorkspaceMenuContributionStore.getState();
+    const foreignCommand = vi.fn();
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        activeCanvas: { id: 'sales', kind: 'transformation', title: 'Sales' },
+        canExportProjectSnapshot: false,
+        canImportProjectSnapshot: false,
+      },
+      modelTab: {
+        canvasId: 'foreign',
+        nodeId: 'model',
+        label: 'Foreign Model',
+        active: true,
+        onSelect: foreignCommand,
+        onCanvas: foreignCommand,
+        onClose: foreignCommand,
+      },
+      modelTabList: {
+        canvasId: 'foreign',
+        tabs: [
+          {
+            nodeId: 'other',
+            label: 'Foreign saved Model',
+            onSelect: foreignCommand,
+            onClose: foreignCommand,
+          },
+        ],
+      },
+      modelBrowser: {
+        canvasId: 'foreign',
+        mode: 'semantic',
+        onBrowse: foreignCommand,
+        onCanvas: foreignCommand,
+      },
+    });
+    try {
+      await act(async () => root.render(<CanvasWorkspaceTopBarIdentity />));
+      const tabs = within(container).getAllByRole('tab');
+      expect(tabs.map((tab) => tab.textContent)).toEqual(['Sales']);
+      await act(async () => fireEvent.mouseDown(tabs[0]!, { button: 0, ctrlKey: false }));
+      expect(foreignCommand).not.toHaveBeenCalled();
+      expect(
+        container
+          .querySelector('[data-slot="shell-active-canvas-identity"]')
+          ?.getAttribute('data-canvas-id')
+      ).toBe('sales');
+    } finally {
+      useCanvasWorkspaceMenuContributionStore.setState({
+        modelTab: previous.modelTab,
+        modelTabList: previous.modelTabList,
+        modelBrowser: previous.modelBrowser,
+      });
+    }
+  });
+
+  it('keeps captured delegates current and retires unavailable commands', async () => {
+    const commands = () => ({ export: vi.fn(), import: vi.fn(), select: vi.fn(), close: vi.fn() });
+    const first = commands();
+    const latest = commands();
+    const base = { canExportProjectSnapshot: true, canImportProjectSnapshot: true };
+    const render = (value: CanvasWorkspaceMenuContribution): Promise<void> =>
+      act(async () => root.render(<CanvasWorkspaceMenuContributionRegistrar {...value} />));
+    const contribution = (value: ReturnType<typeof commands>): CanvasWorkspaceMenuContribution => ({
+      ...base,
+      onExportProjectSnapshot: value.export,
+      onImportProjectSnapshotFile: value.import,
+      onSelectCanvas: value.select,
+      codeTab: {
+        active: true,
+        onSelect: value.select,
+        onCanvas: value.select,
+        onClose: value.close,
+      },
+    });
+    await render(contribution(first));
+    const captured = useCanvasWorkspaceMenuContributionStore.getState().contribution!;
+    await render(contribution(latest));
+    expect(useCanvasWorkspaceMenuContributionStore.getState().contribution).toBe(captured);
+    const file = new File(['{}'], 'snapshot.json', { type: 'application/json' });
+    captured.onExportProjectSnapshot!();
+    captured.onImportProjectSnapshotFile!(file);
+    captured.onSelectCanvas!('sales');
+    captured.codeTab!.onClose!();
+    expect(latest.export).toHaveBeenCalledExactlyOnceWith();
+    expect(latest.import).toHaveBeenCalledExactlyOnceWith(file);
+    expect(latest.select).toHaveBeenCalledExactlyOnceWith('sales');
+    expect(latest.close).toHaveBeenCalledExactlyOnceWith();
+    for (const callback of Object.values(first)) expect(callback).not.toHaveBeenCalled();
+    await render({
+      ...base,
+      codeTab: { active: true, onSelect: latest.select, onCanvas: latest.select },
+    });
+    const current = useCanvasWorkspaceMenuContributionStore.getState().contribution!;
+    expect(current).not.toHaveProperty('onExportProjectSnapshot');
+    expect(current).not.toHaveProperty('onImportProjectSnapshotFile');
+    expect(current.onSelectCanvas).toBeUndefined();
+    expect(current.codeTab).not.toHaveProperty('onClose');
+    captured.onExportProjectSnapshot!();
+    captured.onImportProjectSnapshotFile!(file);
+    captured.onSelectCanvas!('sales');
+    captured.codeTab!.onClose!();
+    for (const callback of Object.values(latest)) expect(callback).toHaveBeenCalledTimes(1);
   });
 });
