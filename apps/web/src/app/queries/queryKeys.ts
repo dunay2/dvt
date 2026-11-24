@@ -6,6 +6,26 @@
  * from a single location.
  */
 
+import type { WorkspaceScope } from '../ports/sessionContext';
+
+const bindWorkspaceQueryKeys = (workspaceLayoutKey: string) =>
+  ({
+    graphDraft: () => ['workspace', 'graph-draft', workspaceLayoutKey] as const,
+    graphForView: (viewId: string) => ['workspace', 'graph', workspaceLayoutKey, viewId] as const,
+    diffChanges: () => ['workspace', 'diff-changes', workspaceLayoutKey] as const,
+    plugins: () => ['workspace', 'plugins', workspaceLayoutKey] as const,
+    roles: () => ['workspace', 'roles', workspaceLayoutKey] as const,
+    audit: () => ['workspace', 'audit', workspaceLayoutKey] as const,
+    fileTree: () => ['workspace', 'file-tree', workspaceLayoutKey] as const,
+    fileContentRoot: () => ['workspace', 'file-content', workspaceLayoutKey] as const,
+    fileContent: (path: string) => ['workspace', 'file-content', workspaceLayoutKey, path] as const,
+    fileHistory: (
+      path: string,
+      selection: readonly [] | readonly ['pages'] | readonly ['version', string | undefined] = []
+    ) => ['workspace', 'file-history', workspaceLayoutKey, path, ...selection] as const,
+    artifacts: () => ['workspace', 'artifacts', workspaceLayoutKey] as const,
+  }) as const;
+
 export const queryKeys = {
   // -------------------------------------------------------------------------
   // Shell
@@ -19,72 +39,58 @@ export const queryKeys = {
   // Workspace
   // -------------------------------------------------------------------------
   workspace: {
-    warehouseConnections: (tenantId: string, projectId: string, environmentId: string) =>
-      ['workspace', 'warehouse-connections', tenantId, projectId, environmentId] as const,
-    graphDraftRoot: () => ['workspace', 'graph-draft'] as const,
-    graphDraft: (workspaceLayoutKey: string) =>
-      ['workspace', 'graph-draft', workspaceLayoutKey] as const,
-    graphForView: (workspaceLayoutKey: string, viewId: string) =>
-      ['workspace', 'graph', workspaceLayoutKey, viewId] as const,
-    dbtProjectGraph: (
-      tenantId: string,
-      projectId: string,
-      environmentId: string,
-      canvasId: string | undefined,
-      projectRoot: string | undefined,
-      revisionToken?: string
+    warehouseConnections: (
+      scope: Pick<WorkspaceScope, 'tenantId' | 'projectId' | 'environmentId'>
     ) =>
       [
         'workspace',
+        'warehouse-connections',
+        scope.tenantId,
+        scope.projectId,
+        scope.environmentId,
+      ] as const,
+    graphDraftRoot: () => ['workspace', 'graph-draft'] as const,
+    forLayout: bindWorkspaceQueryKeys,
+
+    dbtProjectGraph: (context: DbtProjectQueryContext) =>
+      [
+        'workspace',
         'dbt-project-graph',
-        tenantId,
-        projectId,
-        environmentId,
-        canvasId,
-        projectRoot,
-        revisionToken,
+        context.tenantId,
+        context.projectId,
+        context.environmentId,
+        context.canvasId,
+        context.projectRoot,
+        context.revisionToken,
       ] as const,
     dbtProjectGraphRoot: () => ['workspace', 'dbt-project-graph'] as const,
     dbtSelectedModelAnalysis: (
-      tenantId: string,
-      projectId: string,
-      environmentId: string,
-      canvasId: string | undefined,
-      projectRoot: string | undefined,
-      selectedUniqueId: string | undefined,
-      revisionToken: string | undefined
+      context: DbtProjectQueryContext & Readonly<{ selectedUniqueId: string | undefined }>
     ) =>
       [
         'workspace',
         'dbt-selected-model-analysis',
-        tenantId,
-        projectId,
-        environmentId,
-        canvasId,
-        projectRoot,
-        selectedUniqueId,
-        revisionToken,
+        context.tenantId,
+        context.projectId,
+        context.environmentId,
+        context.canvasId,
+        context.projectRoot,
+        context.selectedUniqueId,
+        context.revisionToken,
       ] as const,
-    diffChanges: (workspaceLayoutKey: string) =>
-      ['workspace', 'diff-changes', workspaceLayoutKey] as const,
-    plugins: (workspaceLayoutKey: string) => ['workspace', 'plugins', workspaceLayoutKey] as const,
-    roles: (workspaceLayoutKey: string) => ['workspace', 'roles', workspaceLayoutKey] as const,
-    audit: (workspaceLayoutKey: string) => ['workspace', 'audit', workspaceLayoutKey] as const,
-    fileTree: (workspaceLayoutKey: string) =>
-      ['workspace', 'file-tree', workspaceLayoutKey] as const,
-    directory: (tenantId: string, projectId: string, environmentId: string, directory: string) =>
-      ['workspace', 'file-directory', tenantId, projectId, environmentId, directory] as const,
-    fileContentRoot: (workspaceLayoutKey: string) =>
-      ['workspace', 'file-content', workspaceLayoutKey] as const,
-    fileContent: (workspaceLayoutKey: string, path: string) =>
-      ['workspace', 'file-content', workspaceLayoutKey, path] as const,
-    fileHistory: (
-      workspaceLayoutKey: string,
-      path: string,
-      selection: readonly [] | readonly ['pages'] | readonly ['version', string | undefined] = []
-    ) => ['workspace', 'file-history', workspaceLayoutKey, path, ...selection] as const,
-    artifacts: (workspaceLayoutKey: string) =>
-      ['workspace', 'artifacts', workspaceLayoutKey] as const,
+
+    directory: (
+      context: Pick<WorkspaceScope, 'tenantId' | 'projectId' | 'environmentId'> &
+        Readonly<{ directory: string }>
+    ) =>
+      [
+        'workspace',
+        'file-directory',
+        context.tenantId,
+        context.projectId,
+        context.environmentId,
+        context.directory,
+      ] as const,
   },
 
   // -------------------------------------------------------------------------
@@ -104,10 +110,39 @@ export const queryKeys = {
   // -------------------------------------------------------------------------
   cost: {
     attributionSummary: (
-      tenantId: string,
-      projectId: string | null,
-      environmentId: string | null,
-      limit: number
-    ) => ['cost', 'attribution-summary', tenantId, projectId, environmentId, limit] as const,
+      context: Readonly<{
+        tenantId: string;
+        projectId: string | null;
+        environmentId: string | null;
+        limit: number;
+      }>
+    ) =>
+      [
+        'cost',
+        'attribution-summary',
+        context.tenantId,
+        context.projectId,
+        context.environmentId,
+        context.limit,
+      ] as const,
   },
 } as const;
+
+export type DbtProjectQueryContext = Readonly<{
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  canvasId: string | undefined;
+  projectRoot: string | undefined;
+  revisionToken?: string;
+}>;
+
+export function hasDbtProjectQueryContext(context: DbtProjectQueryContext): boolean {
+  return [
+    context.tenantId,
+    context.projectId,
+    context.environmentId,
+    context.canvasId,
+    context.projectRoot,
+  ].every((value) => Boolean(value?.trim()));
+}

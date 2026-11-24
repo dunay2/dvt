@@ -184,11 +184,29 @@ describe('selected dbt model analysis query', () => {
       selectedUniqueId,
       'revision-a',
     ] as const;
-    const key = queryKeys.workspace.dbtSelectedModelAnalysis(...original);
+    const key = queryKeys.workspace.dbtSelectedModelAnalysis({
+      tenantId: original[0],
+      projectId: original[1],
+      environmentId: original[2],
+      canvasId: original[3],
+      projectRoot: original[4],
+      selectedUniqueId: original[5],
+      revisionToken: original[6],
+    });
     original.forEach((_, index) => {
       const changed: [string, string, string, string, string, string, string] = [...original];
       changed[index] += '-other';
-      expect(queryKeys.workspace.dbtSelectedModelAnalysis(...changed)).not.toEqual(key);
+      expect(
+        queryKeys.workspace.dbtSelectedModelAnalysis({
+          tenantId: changed[0],
+          projectId: changed[1],
+          environmentId: changed[2],
+          canvasId: changed[3],
+          projectRoot: changed[4],
+          selectedUniqueId: changed[5],
+          revisionToken: changed[6],
+        })
+      ).not.toEqual(key);
     });
   });
 
@@ -275,15 +293,15 @@ describe('selected dbt model analysis query', () => {
           .getAll()
           .map((query) => query.queryKey)
       ).toContainEqual(
-        queryKeys.workspace.dbtSelectedModelAnalysis(
-          'tenant-a',
-          'project-a',
-          'dev',
-          binding.canvasId,
-          'analytics',
-          selectedUniqueId,
-          'same-revision-label'
-        )
+        queryKeys.workspace.dbtSelectedModelAnalysis({
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+          canvasId: binding.canvasId,
+          projectRoot: 'analytics',
+          selectedUniqueId: selectedUniqueId,
+          revisionToken: 'same-revision-label',
+        })
       );
       await act(async () => {
         scope = { ...scopeA, projectId: 'project-b', environmentId: 'stage' };
@@ -296,15 +314,15 @@ describe('selected dbt model analysis query', () => {
         .getAll()
         .map((query) => query.queryKey);
       expect(keys).toContainEqual(
-        queryKeys.workspace.dbtSelectedModelAnalysis(
-          'tenant-a',
-          'project-b',
-          'stage',
-          binding.canvasId,
-          'analytics',
-          selectedUniqueId,
-          'same-revision-label'
-        )
+        queryKeys.workspace.dbtSelectedModelAnalysis({
+          tenantId: 'tenant-a',
+          projectId: 'project-b',
+          environmentId: 'stage',
+          canvasId: binding.canvasId,
+          projectRoot: 'analytics',
+          selectedUniqueId: selectedUniqueId,
+          revisionToken: 'same-revision-label',
+        })
       );
     } finally {
       await mounted.cleanup();

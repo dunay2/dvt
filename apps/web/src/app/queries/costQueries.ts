@@ -17,7 +17,7 @@ export function useCostAttributionSummaryQuery(limit = COST_ATTRIBUTION_SUMMARY_
   );
 
   return useQuery({
-    queryKey: queryKeys.cost.attributionSummary(tenantId, projectId, environmentId, limit),
+    queryKey: queryKeys.cost.attributionSummary({ tenantId, projectId, environmentId, limit }),
     queryFn: () =>
       costAttributionSummaryPort.getCostAttributionSummary({
         tenantId,

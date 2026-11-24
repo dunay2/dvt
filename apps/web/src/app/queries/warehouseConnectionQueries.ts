@@ -21,11 +21,7 @@ function sameScope(left: WarehouseConnectionCatalogScope, right: WarehouseConnec
 }
 
 function connectionKey(scope: WarehouseConnectionCatalogScope) {
-  return queryKeys.workspace.warehouseConnections(
-    scope.tenantId,
-    scope.projectId,
-    scope.environmentId
-  );
+  return queryKeys.workspace.warehouseConnections(scope);
 }
 
 export function createWarehouseConnectionsQueryOptions(

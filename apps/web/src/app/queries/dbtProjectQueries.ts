@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 
 import type { DbtProjectFilesAuthorityBinding } from '../ports/dbtProjectGraph';
 import { useDbtProjectGraphQueryPort, useSessionContext } from '../services/AppServicesContext';
-import { queryKeys } from './queryKeys';
+import { hasDbtProjectQueryContext, queryKeys } from './queryKeys';
 
 export function useDbtProjectGraphQuery(
   authorityBinding: DbtProjectFilesAuthorityBinding | undefined,
@@ -17,26 +17,19 @@ export function useDbtProjectGraphQuery(
     sessionContext.getWorkspaceScopeSnapshot,
     sessionContext.getWorkspaceScopeSnapshot
   );
-  const hasContext = Boolean(
-    scope.tenantId.trim() &&
-    scope.projectId.trim() &&
-    scope.environmentId.trim() &&
-    authorityBinding?.canvasId.trim() &&
-    authorityBinding.authority.projectRoot.trim()
-  );
+  const context = {
+    ...scope,
+    canvasId: authorityBinding?.canvasId,
+    projectRoot: authorityBinding?.authority.projectRoot,
+    revisionToken: options.revisionToken,
+  };
+  const hasContext = hasDbtProjectQueryContext(context);
 
   return useQuery({
     enabled: hasContext && (options.enabled ?? true),
     retry: false,
-    queryKey: queryKeys.workspace.dbtProjectGraph(
-      scope.tenantId,
-      scope.projectId,
-      scope.environmentId,
-      authorityBinding?.canvasId,
-      authorityBinding?.authority.projectRoot,
-      options.revisionToken
-    ),
-    queryFn: () => {
+    queryKey: queryKeys.workspace.dbtProjectGraph(context),
+    queryFn: function loadAcceptedProjectGraph() {
       if (!hasContext || authorityBinding === undefined) {
         throw new Error('ProjectDbtGraphFromFiles requires an accepted file authority binding.');
       }

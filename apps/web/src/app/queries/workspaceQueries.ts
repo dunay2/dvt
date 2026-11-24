@@ -90,7 +90,7 @@ export function useWorkspaceDiffChangesQuery() {
   const workspaceDiffQuery = useWorkspaceDiffQueryPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.diffChanges(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).diffChanges(),
     queryFn: () => workspaceDiffQuery.getDiffChanges(),
   });
 }
@@ -99,7 +99,7 @@ export function useWorkspacePluginCatalogQuery() {
   const workspacePluginCatalogQuery = useWorkspacePluginCatalogQueryPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.plugins(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).plugins(),
     queryFn: () => workspacePluginCatalogQuery.getPlugins(),
   });
 }
@@ -112,7 +112,7 @@ export function useWorkspaceGraphForViewQuery(
   const workspaceGraphSnapshotQuery = useWorkspaceGraphSnapshotQueryPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.graphForView(workspaceLayoutKey, viewId),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).graphForView(viewId),
     queryFn: () => workspaceGraphSnapshotQuery.getGraphSnapshot(),
     enabled: options.enabled ?? true,
     ...(typeof staleTime === 'number' ? { staleTime } : {}),
@@ -123,7 +123,7 @@ export function useWorkspaceFileTreeQuery(options: Readonly<{ enabled?: boolean 
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileTree(),
     queryFn: () => workspaceFilesQuery.listFiles(),
     enabled: options.enabled ?? true,
   });
@@ -134,7 +134,7 @@ export function useWorkspaceFileContentQuery(path: string | undefined) {
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
     enabled: path != null,
-    queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, path ?? ''),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileContent(path ?? ''),
     queryFn: () => workspaceFilesQuery.getFileContent(path ?? ''),
   });
 }
@@ -144,7 +144,7 @@ export function useWorkspaceFileHistoryQuery(path: string | undefined) {
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
     enabled: path != null,
-    queryKey: queryKeys.workspace.fileHistory(workspaceLayoutKey, path ?? ''),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).fileHistory(path ?? ''),
     queryFn: () => workspaceFileHistoryQuery.getFileHistory(path ?? ''),
   });
 }
@@ -152,16 +152,16 @@ export function useWorkspaceFileHistoryQuery(path: string | undefined) {
 export function useWorkspaceFileVersionQueries(path: string, revision: string | undefined) {
   const query = useWorkspaceFileHistoryQueryPort();
   const { scope, layoutKey } = useWorkspaceQueryContext();
-  const key = queryKeys.workspace.fileHistory(layoutKey, path);
+  const key = queryKeys.workspace.forLayout(layoutKey).fileHistory(path);
   const pages = useInfiniteQuery({
-    queryKey: queryKeys.workspace.fileHistory(layoutKey, path, ['pages']),
+    queryKey: queryKeys.workspace.forLayout(layoutKey).fileHistory(path, ['pages']),
     queryFn: ({ pageParam }) => query.getFileHistory(path, pageParam ?? undefined, scope),
     initialPageParam: null as string | null,
     getNextPageParam: (page) => (page.length === 20 ? page.at(-1)?.commitSha : undefined),
   });
   const version = useQuery({
     enabled: revision !== undefined,
-    queryKey: queryKeys.workspace.fileHistory(layoutKey, path, ['version', revision]),
+    queryKey: queryKeys.workspace.forLayout(layoutKey).fileHistory(path, ['version', revision]),
     queryFn: async () => {
       const result = await query.getFileVersionContent(path, revision!, scope);
       if (result.path !== path || result.commitSha !== revision)
@@ -176,7 +176,7 @@ export function useWorkspaceRolesQuery() {
   const workspaceAdminRead = useWorkspaceAdminReadPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.roles(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).roles(),
     queryFn: () => workspaceAdminRead.getRoles(),
   });
 }
@@ -185,7 +185,7 @@ export function useWorkspaceAuditQuery() {
   const workspaceAdminRead = useWorkspaceAdminReadPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.audit(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).audit(),
     queryFn: () => workspaceAdminRead.getAuditLog(),
   });
 }
@@ -194,7 +194,7 @@ export function useWorkspaceArtifactsQuery() {
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery<WorkspaceArtifactMap>({
-    queryKey: queryKeys.workspace.artifacts(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).artifacts(),
     queryFn: () =>
       loadWorkspaceArtifacts(workspaceFilesQuery.listFiles, workspaceFilesQuery.getFileContent),
   });
