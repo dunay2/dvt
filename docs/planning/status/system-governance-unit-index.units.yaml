@@ -1406,6 +1406,7 @@ units:
     status: coverage-required
     owns:
       - packages/@dvt/engine/src/outbox/**
+      - packages/@dvt/engine/test/outbox/**
     childrenRequired: false
     dddOwner: PORT
     cqRails: RT-C02
