@@ -128,7 +128,8 @@ test('real publication fixtures and assembler reads cannot mutate the hook repos
   const before = sentinel.snapshot();
   const parent = { ...process.env };
   const plan = buildVerifyChangedPlan(['scripts/documentation-publication.cjs']).filter(
-    (step) => step.id === 'test-documentation-publication'
+    (step) =>
+      step.command === 'node' && step.args.includes('scripts/documentation-publication.test.cjs')
   );
   assert.equal(plan.length, 1);
   const focusedPlan = plan.map((step) => ({
