@@ -29,6 +29,7 @@ import {
   type SqlScope,
 } from './context.js';
 import { preserveSqlOutputIdentity } from './identity.js';
+import { compileLiteralRow } from './literalRow.js';
 import { prepareRetainedSourceAuthority } from './occurrence.js';
 import { fetchSqlSource, orderSqlSource } from './ordering.js';
 import { sourcePredicate } from './predicates.js';
@@ -57,30 +58,45 @@ const selectFields = new Set([
   'larg',
   'rarg',
 ]);
-function admitSelect(node: PostgresAstNode): PostgresAstNode {
-  if (Object.keys(node).length !== 1 || node['SelectStmt'] == null)
-    return sourceError('unsupported_sql', 'Exactly one SELECT source is required.', node);
-  const select = sqlObject(node['SelectStmt']);
-  if (
-    Object.keys(select).some((key) => !selectFields.has(key)) ||
+function admitSelectClauses(select: PostgresAstNode): void {
+  const rejected = [
+    Object.keys(select).some((key) => !selectFields.has(key)),
     ['distinctClause', 'groupClause', 'windowClause', 'valuesLists', 'lockingClause'].some(
       (key) => sqlList(select[key]).length > 0
-    ) ||
-    ['intoClause', 'havingClause', 'withClause', 'larg', 'rarg'].some(
-      (key) => select[key] != null
-    ) ||
-    select['groupDistinct'] === true ||
-    select['all'] === true ||
-    (select['op'] != null && select['op'] !== 'SETOP_NONE') ||
-    ![undefined, 'LIMIT_OPTION_DEFAULT', 'LIMIT_OPTION_COUNT'].includes(
-      select['limitOption'] as string | undefined
-    )
-  )
-    return sourceError(
+    ),
+    ['intoClause', 'havingClause', 'withClause', 'larg', 'rarg'].some((key) => select[key] != null),
+  ];
+  if (rejected.some(Boolean))
+    sourceError(
       'unsupported_sql',
       'SELECT contains a construct outside the admitted Model source profile.',
       select
     );
+}
+
+function admitSelectModifiers(select: PostgresAstNode): void {
+  const rejected = [
+    select['groupDistinct'] === true,
+    select['all'] === true,
+    select['op'] != null && select['op'] !== 'SETOP_NONE',
+    ![undefined, 'LIMIT_OPTION_DEFAULT', 'LIMIT_OPTION_COUNT'].includes(
+      select['limitOption'] as string | undefined
+    ),
+  ];
+  if (rejected.some(Boolean))
+    sourceError(
+      'unsupported_sql',
+      'SELECT contains a construct outside the admitted Model source profile.',
+      select
+    );
+}
+
+function admitSelect(node: PostgresAstNode): PostgresAstNode {
+  if (Object.keys(node).length !== 1 || node['SelectStmt'] == null)
+    return sourceError('unsupported_sql', 'Exactly one SELECT source is required.', node);
+  const select = sqlObject(node['SelectStmt']);
+  admitSelectClauses(select);
+  admitSelectModifiers(select);
   return select;
 }
 function compileSelect(state: SqlCompilationState, node: PostgresAstNode, depth: number): SqlScope {
@@ -89,8 +105,7 @@ function compileSelect(state: SqlCompilationState, node: PostgresAstNode, depth:
     return sourceError('unsupported_sql', 'SELECT nesting exceeds the source profile.', node);
   const select = admitSelect(node);
   const sources = sqlList(select['fromClause']);
-  if (sources.length === 0)
-    return sourceError('unknown_input', 'SELECT requires a prepared logical Model input.', select);
+  if (sources.length === 0) return compileLiteralRow(state, select, depth);
   const from = (value: unknown): SqlScope =>
     sourceFromSyntax(
       state,

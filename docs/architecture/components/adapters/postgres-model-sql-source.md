@@ -90,6 +90,56 @@ function calls, casts/coercions, correlated/lateral/USING/NATURAL/aliased joins,
 parameters, writes and locking. Unsupported literal/native type meanings must
 be diagnosed, not widened. Syntax validity does not imply representability.
 
+## Worksheet proposals without physical inputs
+
+The [bounded worksheet extension](https://github.com/dunay2/dvt/issues/3951#issuecomment-7171073963),
+admitted as `GH-3951-WORKSHEET-CONSTANT-CANVAS-MODEL`, also accepts a single
+explicitly aliased row of supported integer, Boolean and text literals without
+`FROM`. The reported statement is `SELECT 1 AS comprobacion_editor_sql`.
+Its canonical meaning is a pinned Substrait `Read` with one typed `virtualTable`
+row, using the pinned expressions field. It is a real relational Model, rather
+than an empty placeholder, synthetic physical table or saved raw SQL buffer.
+
+The literal values, aliases and PostgreSQL types must survive compilation,
+canonical SQL projection, preview, confirmation, save and reopen. Reject an
+unsupported literal type or expression instead of widening or coercing it.
+Malformed row count, schema/value mismatch and contradictory dependency facts
+also reject the whole candidate. Unbound physical reads retain their existing
+denial; an empty input list does not authorize a physical-table fallback.
+
+An admitted literal row has no warehouse relation, producer reference or input
+edge. Its selected connection is execution metadata and must be authorized in
+the caller's tenant, project and environment before preview or execution.
+Neither the absence of physical inputs nor a client-supplied connection grants
+access. Keep physical Source provenance absent; do not invent a SourceRef or
+claim a warehouse read to fill a provenance field.
+
+`ProposeWorksheetCanvasModel` and `CompileCanvasModelSql` retain the existing
+proposal/compiler boundary. `ProjectCanvasModelSqlContext` represents the genuine
+zero-input namespace. `PreviewCanvasTransformRows` retains its protected,
+bounded read-only execution path. Confirmation still revalidates context,
+revision and SQL digest before the one `SaveWorkspaceGraphDraft` command.
+Repeated conversion must retain existing revision/idempotency behavior and leave
+no empty or orphaned Model. The dbt file destination keeps its existing contract.
+
+```mermaid
+flowchart LR
+  SQL[Aliased literal SELECT without FROM] --> Proposal[Existing worksheet proposal]
+  Proposal --> Compile[Existing Model SQL compiler]
+  Compile --> Row[One typed Substrait virtual row]
+  Row --> Projection[Canonical PostgreSQL projection]
+  Connection[Authorized selected connection] --> Preview[Existing bounded preview]
+  Projection --> Preview
+  Proposal --> Confirm[Explicit confirmation and currentness guards]
+  Confirm --> Save[One existing graph draft save]
+```
+
+Required proof includes the exact reported statement through the integrated
+worksheet-to-Canvas flow and reopen, a native PostgreSQL value/type oracle,
+alias preservation, repeated conversion, denied connection authority and
+malformed virtual rows. The original physical-input, producer and unsupported
+SQL negatives remain in force.
+
 ## Presentation and currentness
 
 Reuse the shared Monaco surface, visual tokens, resizable panels and existing
