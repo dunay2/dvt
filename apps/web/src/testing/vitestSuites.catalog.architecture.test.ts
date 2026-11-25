@@ -13,9 +13,10 @@
  * @version 1.0.0
  */
 import { promises as fsPromises, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { load } from 'js-yaml';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createVitest } from 'vitest/node';
 
 import { classifyWebVitestFile } from '../../vitest/classification';
 import {
@@ -25,6 +26,7 @@ import {
 } from '../../vitest/runtimeConfig';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
+import { matchesWebVitestSuite } from '../../vitest/coverage';
 import {
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
@@ -55,6 +57,28 @@ afterEach(() => {
 });
 
 describe('web Vitest suite catalog', () => {
+  it.each(['presentation', 'monaco', 'shell-session', 'workspace-services'] as const)(
+    'proves native configured %s discovery equals the coverage inventory',
+    async (suite) => {
+      const context = await createVitest({
+        root: webRoot,
+        config: resolve(webRoot, `vitest.${suite}.config.ts`),
+        watch: false,
+        run: true,
+      });
+      try {
+        const discovered = (await context.globTestSpecifications())
+          .map((spec) => relative(webRoot, spec.moduleId).replaceAll('\\', '/'))
+          .sort();
+        const expected = readWebVitestFiles().filter((file) => matchesWebVitestSuite(suite, file));
+        expect(discovered.length).toBeGreaterThan(0);
+        expect(discovered).toEqual(expected.sort());
+      } finally {
+        await context.close();
+      }
+    }
+  );
+
   it.each(['unit', 'architecture', 'canvas-unit', 'canvas-architecture'] as const)(
     'uses Node by default for the %s suite without changing its file ownership',
     (suiteName) => {

@@ -1,5 +1,8 @@
 /** Owned concern: preserve complete global-style proof and distinct companion environments. */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
 
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
@@ -10,6 +13,22 @@ import {
   WEB_CYPRESS_NATIVE_PLATFORMS,
   WEB_CYPRESS_SPECS,
 } from '../../cypress.catalog';
+import { main } from '../../scripts/run-vitest-changed-suites';
+import { readWebVitestCoverageInventory } from '../../scripts/changed-suite-coverage';
+import { absorbWebVitestCommandPlan } from '../../vitest/commands';
+import { selectUncoveredWebVitestFiles } from '../../vitest/coverage';
+import * as runtimeConfig from '../../vitest/runtimeConfig';
+import { listWebVitestFiles, suiteMatchesFile } from './vitestSuites.architecture.support';
+
+vi.mock('node:fs', async (original) => {
+  const actual = await original<typeof import('node:fs')>();
+  return { ...actual, readdirSync: vi.fn(actual.readdirSync) };
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.clearAllMocks();
+});
 
 const primaryCommands = WEB_VITEST_PRIMARY_SUITE_NAMES.map(
   (suite) => WEB_VITEST_CHANGED_SUITE_COMMANDS[suite]
@@ -30,6 +49,189 @@ const globalFiles = [
 });
 
 describe('global Web styles evidence routing', () => {
+  it.each([
+    ['src/app/views/code/codeViewCopy.ts'],
+    ['src/styles/index.css'],
+    ['src/app/components/PlanExecutionDecisionView.test.tsx'],
+  ])('does not acquire new inventory for the small plan %s', (source) => {
+    const plan = resolveWebVitestChangedSuitePlan([source]);
+    expect(readWebVitestCoverageInventory(plan, process.cwd())).toBeNull();
+    expect(readdirSync).not.toHaveBeenCalled();
+  });
+
+  it('retains the original complete plan when inventory cannot be acquired', () => {
+    const plan = resolveWebVitestChangedSuitePlan([
+      'src/styles/index.css',
+      'src/app/views/code/codeViewCopy.ts',
+    ]);
+    const inventory = readWebVitestCoverageInventory(plan, '/missing-dvt-coverage-root');
+    expect(inventory).toBeNull();
+    expect(absorbWebVitestCommandPlan(plan, inventory)).toBe(plan);
+  });
+
+  it('does not acquire inventory for browser-only admission of an overlapping plan', () => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    main([
+      '--plan',
+      '--phase=browser',
+      '--files',
+      'src/styles/index.css',
+      'src/app/views/code/codeViewCopy.ts',
+    ]);
+    expect(readdirSync).not.toHaveBeenCalled();
+  });
+
+  it('retains unknown command shapes instead of reconstructing a partial plan', () => {
+    const plan = {
+      suites: [],
+      commands: ['custom'],
+      requiresDependencies: true,
+      commandPlan: [{ kind: 'shell' as const, command: 'custom' }],
+    };
+    expect(absorbWebVitestCommandPlan(plan, listWebVitestFiles())).toBe(plan);
+  });
+
+  it('retains complete focus evidence for a source tree containing a real junction', () => {
+    const fixture = mkdtempSync(resolve(tmpdir(), 'dvt-focus-coverage-'));
+    const plan = resolveWebVitestChangedSuitePlan([
+      'src/styles/index.css',
+      'src/app/views/code/codeViewCopy.ts',
+    ]);
+    try {
+      mkdirSync(resolve(fixture, 'src'));
+      mkdirSync(resolve(fixture, 'external'));
+      symlinkSync(resolve(fixture, 'external'), resolve(fixture, 'src/linked'), 'junction');
+      expect(readWebVitestCoverageInventory(plan, fixture)).toBeNull();
+      expect(absorbWebVitestCommandPlan(plan, null)).toBe(plan);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  it.each([null, [], ['../escape.test.tsx'], ['src/a.test.tsx', 'src/a.test.tsx']])(
+    'does not absorb without complete usable evidence: %j',
+    (inventory) => {
+      expect(
+        selectUncoveredWebVitestFiles({
+          suite: 'monaco',
+          completeSuites: new Set(['presentation']),
+          inventory,
+        })
+      ).toBeNull();
+    }
+  );
+
+  it('does not treat exact Presentation tests as a complete primary witness', () => {
+    expect(
+      selectUncoveredWebVitestFiles({
+        suite: 'monaco',
+        completeSuites: new Set(),
+        inventory: listWebVitestFiles(),
+      })
+    ).toBeNull();
+  });
+
+  it('preserves every focus obligation when execution configuration changes', () => {
+    const create = runtimeConfig.createWebVitestConfig;
+    vi.spyOn(runtimeConfig, 'createWebVitestConfig').mockImplementation((suite) => {
+      const config = create(suite);
+      if (suite === 'monaco') config.test!.isolate = false;
+      return config;
+    });
+    expect(
+      selectUncoveredWebVitestFiles({
+        suite: 'monaco',
+        completeSuites: new Set(['presentation']),
+        inventory: listWebVitestFiles(),
+      })
+    ).toBeNull();
+  });
+
+  it.each([
+    { label: 'function', values: [() => 'first', () => 'second'] },
+    { label: 'RegExp', values: [/first/, /second/] },
+    { label: 'Map', values: [new Map([['key', 1]]), new Map([['key', 2]])] },
+    { label: 'undefined property', values: [{ key: undefined }, {}] },
+  ])('retains focus execution for $label configuration divergence', ({ values }) => {
+    const create = runtimeConfig.createWebVitestConfig;
+    vi.spyOn(runtimeConfig, 'createWebVitestConfig').mockImplementation((suite) => {
+      const config = create(suite);
+      config.define = { coverageProbe: values[suite === 'monaco' ? 0 : 1] };
+      return config;
+    });
+    expect(
+      selectUncoveredWebVitestFiles({
+        suite: 'monaco',
+        completeSuites: new Set(['presentation']),
+        inventory: listWebVitestFiles(),
+      })
+    ).toBeNull();
+  });
+
+  it('preserves the exact focus file/config union except identical Presentation executions', () => {
+    const sources = [
+      'src/styles/index.css',
+      'src/app/views/code/codeViewCopy.ts',
+      'src/app/components/shell/appBuildMetadata.ts',
+      'src/app/services/workspace/sourceObjectMetricEvidence.ts',
+    ];
+    const baseline = resolveWebVitestChangedSuitePlan(sources);
+    const files = listWebVitestFiles();
+    const plan = absorbWebVitestCommandPlan(baseline, files);
+    const residual = plan.commandPlan.filter((entry) => entry.kind === 'vitest-files');
+    const expected = ['monaco', 'shell-session'] as const;
+    expect(residual).toEqual(
+      expected.map((suite) => ({
+        kind: 'vitest-files',
+        config: `vitest.${suite}.config.ts`,
+        filePaths: files
+          .filter(
+            (file) => suiteMatchesFile(suite, file) && !suiteMatchesFile('presentation', file)
+          )
+          .sort((left, right) => left.localeCompare(right)),
+      }))
+    );
+    expect(residual.flatMap((entry) => entry.filePaths)).toHaveLength(39);
+    expect(plan.commands).toEqual(
+      expect.arrayContaining([
+        ...primaryCommands,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services'],
+      ])
+    );
+    expect(
+      absorbWebVitestCommandPlan(resolveWebVitestChangedSuitePlan([...sources].reverse()), files)
+    ).toEqual(plan);
+  });
+
+  it.each([
+    {
+      sources: ['src/app/views/code/codeViewCopy.ts'],
+      residual: [{ config: 'vitest.monaco.config.ts', files: 17 }],
+    },
+    {
+      sources: [
+        'src/app/components/shell/appBuildMetadata.ts',
+        'src/app/services/workspace/sourceObjectMetricEvidence.ts',
+      ],
+      residual: [{ config: 'vitest.shell-session.config.ts', files: 22 }],
+    },
+  ])('absorbs only identical Presentation executions for $sources', ({ sources, residual }) => {
+    const output = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    main(['--plan', '--phase=vitest', '--files', 'src/styles/index.css', ...sources]);
+    const plan = JSON.parse(String(output.mock.calls.at(-1)![0]));
+    expect(
+      plan.commandPlan
+        .filter((entry: { kind: string }) => entry.kind === 'vitest-files')
+        .map((entry: { config: string; filePaths: string[] }) => ({
+          config: entry.config,
+          files: entry.filePaths.length,
+        }))
+    ).toEqual(residual);
+    expect(plan.commands).toEqual(expect.arrayContaining(primaryCommands));
+    if (sources.length > 1)
+      expect(plan.commands).toContain(WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services']);
+  });
+
   it.each(globalFiles)(
     'requires complete canonical proof without filesystem presence: %s',
     (file) => {

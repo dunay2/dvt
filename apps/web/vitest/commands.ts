@@ -10,6 +10,8 @@ import {
   type WebVitestChangedSuiteName,
 } from '../vitest.suites';
 
+import { haveEquivalentWebVitestSettings, selectUncoveredWebVitestFiles } from './coverage';
+
 export type WebVitestChangedCommandPlanEntry =
   | Readonly<{ kind: 'shell'; command: string }>
   | Readonly<{ kind: 'vitest-files'; config: string; filePaths: readonly string[] }>;
@@ -63,7 +65,8 @@ function quoteShellArg(value: string): string {
 
 export function composeWebVitestCommandPlan(
   completeSuites: ReadonlySet<WebVitestChangedSuiteName>,
-  exactTests: ReadonlyMap<WebVitestChangedSuiteName, ReadonlySet<string>>
+  exactTests: ReadonlyMap<WebVitestChangedSuiteName, ReadonlySet<string>>,
+  inventory: readonly string[] | null = null
 ): WebVitestCommandPlan {
   const selectedSuites = new Set(completeSuites);
   const exactTestPaths = new Map(exactTests);
@@ -73,6 +76,7 @@ export function composeWebVitestCommandPlan(
     selectedSuites.delete(coveredCanvasSuite);
     exactTestPaths.delete(coveredCanvasSuite);
   }
+  absorbEquivalentWebVitestCoverage({ selectedSuites, exactTestPaths, inventory });
 
   const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter(
     (suiteName) => selectedSuites.has(suiteName) || exactTestPaths.has(suiteName)
@@ -103,4 +107,58 @@ export function composeWebVitestCommandPlan(
     commandPlan,
     requiresDependencies: commandPlan.some((entry) => entry.kind === 'shell'),
   };
+}
+
+function absorbEquivalentWebVitestCoverage(input: {
+  selectedSuites: Set<WebVitestChangedSuiteName>;
+  exactTestPaths: Map<WebVitestChangedSuiteName, ReadonlySet<string>>;
+  inventory: readonly string[] | null;
+}): void {
+  const { selectedSuites, exactTestPaths, inventory } = input;
+  for (const suite of selectedSuites) {
+    const residual = selectUncoveredWebVitestFiles({
+      suite,
+      completeSuites: selectedSuites,
+      inventory,
+    });
+    if (residual === null) continue;
+    selectedSuites.delete(suite);
+    exactTestPaths.delete(suite);
+    if (residual.length > 0) exactTestPaths.set(suite, new Set(residual));
+  }
+}
+
+export function hasCompleteWebVitestPresentationOverlap(plan: WebVitestCommandPlan): boolean {
+  const complete = new Set(
+    plan.commandPlan.filter((entry) => entry.kind === 'shell').map((entry) => entry.command)
+  );
+  return (
+    complete.has(WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation) &&
+    routedSuiteNames.some(
+      (suite) =>
+        suite !== 'presentation' &&
+        complete.has(WEB_VITEST_CHANGED_SUITE_COMMANDS[suite]) &&
+        haveEquivalentWebVitestSettings(suite, 'presentation')
+    )
+  );
+}
+
+export function absorbWebVitestCommandPlan(
+  plan: WebVitestCommandPlan,
+  inventory: readonly string[] | null
+): WebVitestCommandPlan {
+  if (!inventory) return plan;
+  const complete = new Set<WebVitestChangedSuiteName>();
+  const exact = new Map<WebVitestChangedSuiteName, ReadonlySet<string>>();
+  for (const entry of plan.commandPlan) {
+    const suite = routedSuiteNames.find((name) =>
+      entry.kind === 'shell'
+        ? entry.command === WEB_VITEST_CHANGED_SUITE_COMMANDS[name]
+        : entry.config === `vitest.${name}.config.ts`
+    );
+    if (!suite) return plan;
+    if (entry.kind === 'shell') complete.add(suite);
+    else exact.set(suite, new Set(entry.filePaths));
+  }
+  return composeWebVitestCommandPlan(complete, exact, inventory);
 }

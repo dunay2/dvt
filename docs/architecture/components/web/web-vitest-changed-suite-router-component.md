@@ -129,6 +129,14 @@ Unknown browser ownership cannot be hidden by a global stylesheet.
 The existing composer absorbs only equivalent Canvas coverage and exact batches
 inside a complete suite. Monaco, Shell and workspace focus contexts remain when
 selected by companions: their jsdom defaults differ from Node primary suites.
+The execution adapter may narrow those mixed focus commands only when complete
+Presentation coverage is selected and current inventory proves which members
+have identical execution settings. It uses the same catalog and configuration
+builder, retaining the residual files as exact batches under their original
+focus config. Node and package-export-condition variants remain. Unavailable
+inventory or unequal settings retains the original complete focus command.
+This conditional inventory acquisition does not load another dependency graph;
+small changes without complete Presentation and browser-only phases avoid it.
 The readiness projection keeps declared native proof and conservative fallback;
 explicit complete execution and hosted membership remain unchanged.
 

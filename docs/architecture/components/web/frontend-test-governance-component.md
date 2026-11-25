@@ -75,6 +75,14 @@ another suite catalog, runner or command/query rail.
 - Catalog overlap does not require duplicate execution: the changed-suite plan
   absorbs a Canvas focus run only into its complete primary equivalent, with
   file containment and execution-configuration equivalence guarded by tests.
+- After complete admission, the execution adapter can also absorb the
+  Presentation members of mixed focus suites into a complete Presentation run.
+  It acquires the current source-test inventory only for that conjunction and
+  compares every configured execution setting except include/exclude membership.
+  Residual files retain their original focus config through exact batches.
+  Missing or malformed evidence, unreadable inventory, source symlinks or
+  configuration differences preserve the original obligation. Browser-only
+  phases and plans without that conjunction acquire no additional inventory.
 - Feature-owned focus suites may narrow local feedback loops without changing
   primary suite ownership.
 - Architecture tests are excluded from unit and presentation suites.

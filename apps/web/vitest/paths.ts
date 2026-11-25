@@ -98,7 +98,7 @@ export function isWebVitestGovernancePath(filePath: string): boolean {
 }
 
 export function isWebVitestImplementationPath(filePath: string): boolean {
-  return /^(?:apps\/web\/)?(?:vitest\/[^/]+|scripts\/(?:changed-suite-(?:args|git|impact)|web-evidence-environment))\.ts$/.test(
+  return /^(?:apps\/web\/)?(?:vitest\/[^/]+|scripts\/(?:changed-suite-(?:args|git|impact|coverage)|web-evidence-environment))\.ts$/.test(
     normalizeWebVitestPath(filePath)
   );
 }

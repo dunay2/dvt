@@ -13,11 +13,15 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WEB_CYPRESS_CATALOG_PATH } from '../cypress.catalog';
 import { selectWebCypressShard, selectWebCypressLocalReadiness } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest/changedPlan';
-import type { WebVitestChangedCommandPlanEntry } from '../vitest/commands';
+import {
+  absorbWebVitestCommandPlan,
+  type WebVitestChangedCommandPlanEntry,
+} from '../vitest/commands';
 import { composeWebVitestImpactPlan, isWebVitestImpactFrontier } from '../vitest/impact';
 import { WEB_VITEST_TEST_SOURCE_OWNERSHIP_GUARD_PATH } from '../vitest/paths';
 
 import { parseChangedSuiteArgs } from './changed-suite-args';
+import { readWebVitestCoverageInventory } from './changed-suite-coverage';
 import {
   readChangedFiles,
   readBrowserCatalogSnapshots,
@@ -153,13 +157,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       cwd: webRoot,
       required: isWebVitestImpactFrontier(changedFiles, args.full),
     });
-  const plan = composeWebVitestImpactPlan(
+  const impactPlan = composeWebVitestImpactPlan(
     baseline,
     changedFiles,
     args.phase === 'browser'
       ? null
       : readWebVitestImpactWitness(changedFiles, { webRoot, full: args.full })
   );
+  const plan = {
+    ...impactPlan,
+    ...absorbWebVitestCommandPlan(
+      impactPlan,
+      args.phase === 'browser' ? null : readWebVitestCoverageInventory(impactPlan, webRoot)
+    ),
+  };
   for (const path of plan.browserFiles) {
     if (!existsSync(resolve(repoRoot, path))) {
       throw new Error(`Browser evidence requires an existing consumer or helper: ${path}`);
