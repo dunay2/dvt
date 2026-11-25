@@ -97,9 +97,17 @@ function CanvasExplorerModelRow({
   const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
   const formatId = `${id}-${encodeURIComponent(item.id)}-format`;
   const sqlFile = item.definitionFormat === 'sql';
-  const descriptions = [item.isSource ? sourceId : null, sqlFile ? formatId : null]
-    .filter(Boolean)
-    .join(' ');
+  const badges = [
+    { present: item.isSource, id: sourceId, className: styles.property, label: copy.source },
+    { present: sqlFile, id: formatId, className: styles.format, label: copy.sql },
+    {
+      present: item.publicationState === 'draft',
+      id: `${id}-${encodeURIComponent(item.id)}-draft`,
+      className: styles.property,
+      label: copy.unpublishedDefinition,
+    },
+  ].filter((badge) => badge.present);
+  const descriptions = badges.map((badge) => badge.id).join(' ');
   const selected = item.selected === true;
   const description = item.description?.trim();
   return (
@@ -128,18 +136,13 @@ function CanvasExplorerModelRow({
           <span className={styles.itemText}>
             <span className={styles.titleLine} data-slot="canvas-explorer-model-title">
               <span className={styles.name}>{item.label}</span>
-              {item.isSource || sqlFile ? (
+              {badges.length > 0 ? (
                 <span className={styles.facets}>
-                  {item.isSource ? (
-                    <span id={sourceId} className={styles.property}>
-                      {copy.source}
+                  {badges.map((badge) => (
+                    <span key={badge.id} id={badge.id} className={badge.className}>
+                      {badge.label}
                     </span>
-                  ) : null}
-                  {sqlFile ? (
-                    <span id={formatId} className={styles.format}>
-                      {copy.sql}
-                    </span>
-                  ) : null}
+                  ))}
                 </span>
               ) : null}
             </span>

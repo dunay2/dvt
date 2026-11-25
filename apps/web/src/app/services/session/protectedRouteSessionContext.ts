@@ -70,6 +70,8 @@ function projectPermissionsFromSession(session: SessionResponse): UserPermission
     canManageRBAC:
       readServerPermission(session.permissions, 'canManageRBAC') ??
       hasAnyScope(scopes, ['rbac:manage', 'admin:rbac:manage']),
+    canExecuteSql: hasAnyScope(scopes, ['workspace:sql:execute']),
+    canViewSqlHistory: hasAnyScope(scopes, ['workspace:sql-history:view']),
   };
 }
 

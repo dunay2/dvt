@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 import { Workflow, SquareCode } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, NavLink, useMatch } from 'react-router';
 import type {
   CanvasModelWorkspaceTabContribution,
   CanvasModelBrowserContribution,
@@ -16,6 +16,7 @@ import type { ShellTopBarCopy } from './copy';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../ui/utils';
 import styles from '../LeftNavigation.module.css';
+import { isDirectShellLinkActivation } from './ShellProjectMenu';
 
 type ModelViewNavigationProps = Readonly<{
   tab: CanvasModelWorkspaceTabContribution | null;
@@ -42,8 +43,8 @@ function readCurrentModelView(
   foreground: boolean
 ): CanvasModelView | null {
   if (!foreground) return null;
-  if (tab?.active) return tab.views?.active ?? null;
-  return browserMode;
+  const selected = tab?.active ? (tab.views?.active ?? null) : browserMode;
+  return selected === 'sql' ? 'semantic' : selected;
 }
 
 function resolveModelViewNavigation({
@@ -123,6 +124,7 @@ function ModelViewShortcut({
 }
 
 export function ShellModelViewNavigation(props: ModelViewNavigationProps) {
+  const sqlActive = useMatch('/sql/*') != null;
   const navigation = resolveModelViewNavigation(props);
   const { copy, onActivate } = props;
   return (
@@ -134,13 +136,24 @@ export function ShellModelViewNavigation(props: ModelViewNavigationProps) {
         navigation={navigation}
         onActivate={onActivate}
       />
-      <ModelViewShortcut
-        id="sql"
-        label={copy.modelSqlView}
-        Icon={SquareCode}
-        navigation={navigation}
-        onActivate={onActivate}
-      />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <NavLink
+            to="/sql"
+            data-slot="shell-model-sql-command"
+            aria-label={copy.modelSqlView}
+            data-active={sqlActive}
+            className={cn(styles.link, styles.linkInteractive)}
+            onClick={(event) => {
+              if (isDirectShellLinkActivation(event)) onActivate?.();
+            }}
+          >
+            <SquareCode aria-hidden="true" className={styles.icon} />
+            <span className={styles.caption}>{copy.modelSqlView}</span>
+          </NavLink>
+        </TooltipTrigger>
+        <TooltipContent side="right">{copy.modelSqlView}</TooltipContent>
+      </Tooltip>
     </>
   );
 }

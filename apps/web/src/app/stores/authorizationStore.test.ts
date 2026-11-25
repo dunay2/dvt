@@ -19,6 +19,8 @@ describe('useAuthorizationStore', () => {
       canPersistGraphDraft: false,
       canManagePlugins: false,
       canManageRBAC: false,
+      canExecuteSql: false,
+      canViewSqlHistory: false,
     });
     expect(useAuthorizationStore.getState().userPermissions).toEqual(DEFAULT_USER_PERMISSIONS);
   });

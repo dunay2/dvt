@@ -51,7 +51,7 @@ export function selectWebCypressLocalReadiness(
 
 function repositoryPath(path: string): string {
   const normalized = path.replaceAll('\\', '/').replace(/^\.\//, '');
-  return /^(cypress[/.]|vitest\.suites\.ts$|scripts\/run-vitest-changed-suites\.ts$)/.test(
+  return /^(src\/|cypress[/.]|vitest\.suites\.ts$|scripts\/run-vitest-changed-suites\.ts$)/.test(
     normalized
   )
     ? `apps/web/${normalized}`
@@ -59,8 +59,6 @@ function repositoryPath(path: string): string {
 }
 
 function browserCapabilities(path: string): readonly WebCypressCapability[] {
-  const support = SUPPORT_CAPABILITIES[path];
-  if (support) return support;
   const capability = CAPABILITIES.find((key) => WEB_CYPRESS_SPECS[key].includes(path));
   if (capability) return [capability];
   throw new Error(
@@ -131,12 +129,22 @@ export function resolveWebCypressChangedPlan(
       vitestFiles.add('apps/web/src/testing/vitestSuites.browserRouting.architecture.test.ts');
       continue;
     }
-    if (
-      Object.hasOwn(SUPPORT_CAPABILITIES, path) ||
-      path.startsWith('apps/web/cypress/') ||
-      path.startsWith('apps/web/cypress.')
-    ) {
-      requireCapabilities(browserCapabilities(path), path);
+    const coverage = SUPPORT_CAPABILITIES[path];
+    if (coverage && 'controlledSpecs' in coverage) {
+      for (const spec of coverage.controlledSpecs) {
+        if (!WEB_CYPRESS_SPECS.controlled.includes(spec)) {
+          throw new Error(
+            `Controlled browser evidence is not admitted for ${spec} (owner ${path}).`
+          );
+        }
+        requireCapabilities(['controlled'], spec);
+      }
+      requiredFiles.add(path);
+      vitestFiles.add(filePath);
+      continue;
+    }
+    if (coverage || path.startsWith('apps/web/cypress/') || path.startsWith('apps/web/cypress.')) {
+      requireCapabilities(coverage ?? browserCapabilities(path), path);
       requiredFiles.add(path);
       if (
         path.includes('/canvasDraft') ||

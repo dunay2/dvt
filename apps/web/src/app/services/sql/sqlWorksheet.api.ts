@@ -23,11 +23,13 @@ function sqlWorksheetEndpoint(scope: WorkspaceHttpScope, id?: string): string {
 }
 
 async function requestSqlWorksheet<T>(
-  scope: WorkspaceHttpScope,
-  read: () => Promise<T>
+  read: (scope: WorkspaceHttpScope, options: Readonly<{ signal?: AbortSignal }>) => Promise<T>,
+  signal?: AbortSignal
 ): Promise<T> {
+  const scope = readGrantedWorkspaceHttpScope();
+  const options = signal == null ? {} : { signal };
   try {
-    const result = await read();
+    const result = await read(scope, options);
     if (!sameWorkspaceScopeIdentity(scope, readGrantedWorkspaceHttpScope())) {
       throw new SqlWorksheetQueryError('stale');
     }
@@ -57,47 +59,34 @@ function isAbortedSqlTransport(error: unknown): boolean {
 export function createApiSqlWorksheetPort(api: ApiClient): ISqlWorksheetPort {
   return {
     execute(input, signal) {
-      const scope = readGrantedWorkspaceHttpScope();
-      const request = ExecuteWorkspaceSqlRequestSchema.parse(input);
-      return requestSqlWorksheet(scope, async () => {
+      return requestSqlWorksheet(async (scope, options) => {
+        const request = ExecuteWorkspaceSqlRequestSchema.parse(input);
         return readSqlExecutionReceipt(
-          await api.postJson(
-            sqlWorksheetEndpoint(scope),
-            request,
-            signal == null ? {} : { signal }
-          ),
+          await api.postJson(sqlWorksheetEndpoint(scope), request, options),
           request
         );
-      });
+      }, signal);
     },
     listHistory(input, signal) {
-      const scope = readGrantedWorkspaceHttpScope();
-      const request = ListWorkspaceSqlExecutionsRequestSchema.parse(input);
-      const params = new URLSearchParams({ limit: String(request.limit) });
-      if (request.cursor != null) params.set('cursor', request.cursor);
-      if (request.connectionId != null) params.set('connectionId', request.connectionId);
-      return requestSqlWorksheet(scope, async () => {
+      return requestSqlWorksheet(async (scope, options) => {
+        const request = ListWorkspaceSqlExecutionsRequestSchema.parse(input);
+        const params = new URLSearchParams({ limit: String(request.limit) });
+        if (request.cursor != null) params.set('cursor', request.cursor);
+        if (request.connectionId != null) params.set('connectionId', request.connectionId);
         return readSqlHistoryReceipt(
-          await api.getJson(
-            `${sqlWorksheetEndpoint(scope)}&${params}`,
-            signal == null ? {} : { signal }
-          ),
+          await api.getJson(`${sqlWorksheetEndpoint(scope)}&${params}`, options),
           request.connectionId
         );
-      });
+      }, signal);
     },
     getExecution(executionId, signal) {
-      const scope = readGrantedWorkspaceHttpScope();
-      WorkspaceSqlExecutionIdSchema.parse(executionId);
-      return requestSqlWorksheet(scope, async () => {
+      return requestSqlWorksheet(async (scope, options) => {
+        WorkspaceSqlExecutionIdSchema.parse(executionId);
         return readSqlDetailReceipt(
-          await api.getJson(
-            sqlWorksheetEndpoint(scope, executionId),
-            signal == null ? {} : { signal }
-          ),
+          await api.getJson(sqlWorksheetEndpoint(scope, executionId), options),
           executionId
         );
-      });
+      }, signal);
     },
   };
 }

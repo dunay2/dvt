@@ -513,3 +513,13 @@ through the local session, selected the demo PostgreSQL connection and ran
 row. The execution history returned the SQL, selected connection, completion
 status and measured duration. This check added one history entry to the demo
 workspace. Database restore verification preceded the local grant update.
+
+The SQL worksheet owns one controlled browser journey that covers its editor,
+explorer, history, file operations and destination choice. In the changed-file
+plan, an isolated worksheet CSS module selected 61 controlled specs before the
+routing change and one afterwards. The same source reaches Vitest dependency
+selection. A second changed journey runs once, even if also selected directly.
+Shared browser infrastructure and ambiguous catalog changes retain the full
+plan. The affected routing and nightly architecture suites passed 154 tests.
+This measures browser spec selection for a single edit. Hosted duration also
+depends on dependency changes, runner startup and concurrent jobs.

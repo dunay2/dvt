@@ -9,7 +9,47 @@ import {
   type WebCypressCapability,
 } from './cypress.catalog';
 
-export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+const WORKSHEET_CONSUMER = {
+  controlledSpecs: ['apps/web/cypress/e2e/sql/sql-worksheet.cy.ts'],
+} as const;
+
+type BrowserCoverage =
+  readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
+
+export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
+  'apps/web/src/app/views/SqlView.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheet.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheet.module.css': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetToolbar.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetMonaco.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetExplorer.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetResults.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetHistory.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheet.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheetCatalogue.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheetProjectCatalogue.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheetReferences.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheet.types.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetCatalogueQueries.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetCopy.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetState.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetInsertions.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetDbtModels.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetConversion.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetConversion.module.css': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlConversionMessages.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/WorksheetCanvasModelForm.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useWorksheetCanvasModel.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useWorksheetCanvasPublication.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/worksheetCanvasModelMessages.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/worksheetCanvasModelRequest.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/SqlWorksheetFiles.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/SqlWorksheetFiles.module.css': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/sqlWorksheetFileAccess.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/sqlWorksheetFileMessages.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/ports/sqlWorksheet.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/services/sql/sqlWorksheet.api.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/services/sql/sqlWorksheetResponses.ts': WORKSHEET_CONSUMER,
   'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/node/chromiumNetworkDiagnostics.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/node/chromiumNetworkProjection.ts': ['controlled', 'available', 'unavailable'],

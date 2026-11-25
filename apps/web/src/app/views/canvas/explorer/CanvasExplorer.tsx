@@ -29,6 +29,7 @@ export function CanvasExplorer({
   rootRef,
   workspaceTask,
   activityRail,
+  openerId,
 }: Readonly<{
   elements: ReactNode | ((enabled: boolean) => ReactNode);
   heading?: CanvasExplorerHeading;
@@ -37,6 +38,7 @@ export function CanvasExplorer({
   rootRef?: RefObject<HTMLDivElement>;
   workspaceTask?: ReactNode;
   activityRail?: CanvasExplorerActivityRail;
+  openerId?: string;
 }>): JSX.Element {
   const shellOwned = useShellActivityRail();
   const { mode, widthPercent } = useUiLayoutStore((state) => state.canvasExplorer);
@@ -49,7 +51,9 @@ export function CanvasExplorer({
     projectFiles?.onCanvas();
     dispatch({ type: 'collapse' });
     document
-      .getElementById(shellOwned ? 'shell-canvas-navigation' : `${id}-elements-button`)
+      .getElementById(
+        openerId ?? (shellOwned ? 'shell-canvas-navigation' : `${id}-elements-button`)
+      )
       ?.focus();
   };
   const dock = useCanvasExplorerResize({

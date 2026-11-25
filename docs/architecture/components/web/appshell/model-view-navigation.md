@@ -2,7 +2,7 @@
 title: Model View Navigation
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-11-18
+last_reviewed: 2026-11-25
 ---
 
 # Model View Navigation
@@ -40,7 +40,8 @@ flowchart LR
   Gesture[Native gesture] --> Admission[Existing control and drag admission]
   Admission -->|First click| Inspect[InspectCanvasNode immediately]
   Admission -->|Double click| Open[Existing Model open]
-  Rail[Semantic or SQL shortcut] --> Selected{Current eligible Model?}
+  Rail[Semantic view] --> Selected{Current eligible Model?}
+  Activity[SQL activity] --> Worksheet[Independent SQL worksheet]
   Selected -->|Yes| Context[Resolve occurrence context]
   Selected -->|No| Saved{Valid remembered Model?}
   Saved -->|Yes| Context
@@ -49,7 +50,7 @@ flowchart LR
   First -->|No| Browse[Canvas and project Explorer]
   Context --> Tab[Protected Model tab contribution]
   Tab --> Semantic[Retained semantic workspace]
-  Tab --> SQL[Retained logical SQL editor]
+  Tab -->|Open Model SQL| SQL[Retained logical SQL editor]
 ```
 
 No timeout or document-wide pending-click listener is needed. Consumed drag
@@ -70,28 +71,29 @@ fallback. The adapter owns only this native event handoff.
 
 ## Model view shortcuts
 
-The left rail exposes Semantic view and SQL with distinct shared glyphs, localized
-accessible labels/tooltips and common navigation tokens. Exactly one destination
-is active: Canvas, project Code/Git, semantic Model or Model SQL. An unavailable
-Canvas disables the Model shortcuts. An in-progress Apply of a SQL proposal
-retains the existing protected Model replacement decision.
-Visual Apply retains its existing lifecycle while presentation switches without
-unmounting the semantic workspace.
+The SQL activity opens `/sql` for the authorized workspace. It works with an
+empty Canvas and keeps the worksheet destination selected. The editor uses
+the available area beside the collapsible Explorer. Choose a warehouse
+connection in the toolbar. Drag a catalog object or an executable Model into
+the editor to insert its SQL reference. A persisted Model with no published
+SQL definition is identified as a draft in both Explorers. Canvas can open
+that draft for editing.
 
-Both shortcuts reveal the project Model list and activate the requested editor
-surface on the same gesture. From another route, the existing Canvas workbench
-entry adapter consumes the requested view after Canvas admission. Reuse an eligible current Model or restore the
-last accepted Model for this workspace and Canvas. If neither is available,
-use the first eligible visible entry in Explorer order, honoring its search.
-An empty or unavailable catalog keeps its existing posture. The Explorer remains
-available for choosing another entry. In Semantic view, an eligible Model row
-opens or activates its editor tab through the existing guarded selection. A
-Source or file-only row reports that it has no semantic editor and keeps the
-current surface. The Semantic shortcut uses a selected semantic-capable Model
-or the remembered or first eligible Model when the current inspection is
-ineligible. Canvas navigation from either the rail or workspace tab exits
-Model browsing. Canvas and SQL continue to route supported resource inspection
-through the existing owner.
+Executing a query opens its results, timing and execution metadata. Execution
+history can restore the query text. The files and Git control opens saved SQL
+queries and the version history for the current file. **Convert to model**
+requires choosing the active Canvas or a file-authoritative dbt project before
+publication. The [worksheet design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7147963052)
+and [execution contract](../../api/sql-worksheet-component.md) describe these boundaries.
+
+The Semantic view shortcut opens the Model workspace and reveals the project
+Model list. From another route the Canvas workbench entry adapter resumes the
+current eligible Model, the last accepted Model, or the first eligible visible
+result in Explorer order. An empty or unavailable catalog keeps the Explorer
+available. An eligible Model row activates its editor through guarded selection.
+The contextual **Open Model SQL** action opens the retained logical SQL editor
+inside that Model. The Model destination stays selected in both contextual
+views. The Canvas navigation control exits Model browsing.
 
 Accepting Model B updates an earlier inspection of A in the same scope.
 Returning from another route therefore reopens B. A later explicit inspection
@@ -168,9 +170,9 @@ only that tab. Closing the current editor returns to Canvas if there is no
 remaining Model and otherwise selects its nearest remaining neighbour when the
 editor was visible. Draft refusal never adds or removes a tab.
 
-A fresh session receives its initial view atomically; selecting the same
-session reuses its published view callback. Semantic view collapses SQL and SQL
-expands its retained logical editor. Shell receives presentation mode and callbacks
+A fresh Model session receives its initial view atomically. Selecting the same
+session reuses its published view callback. Semantic view collapses the logical
+SQL editor. The contextual Model SQL action expands it. Shell receives presentation mode and callbacks
 only, without owning SQL text, semantic drafts or authorization.
 Focused local alias text remains pending when focus moves to a declared
 workbench navigation control. Navigation and hiding a retained surface cannot
@@ -237,15 +239,15 @@ change is part of this slice.
 - Embedded controls, cancelled/default-prevented clicks and consumed drag clicks
   dispatch neither inspection nor open. Drag retains its existing payload.
 - Catalog activation and double click never create an occurrence.
-- Model shortcuts are unavailable without a current owner; callbacks cannot target
-  an obsolete owner after registration changes.
-- A rail click opens the chosen surface for the current or valid saved Model.
+- Contextual Model actions require a current owner and reject obsolete callbacks.
+  The SQL activity opens the worksheet with an empty Canvas or a selected Model.
+- The Semantic shortcut opens the current or valid saved Model.
   With neither, the first eligible visible result opens. Route return and
   browser reload exercise restoration. A stale or foreign identity cannot
   select another workspace's Model. An ambiguous definition still prompts
   for its occurrence, and cancelled replacement retains the current draft.
   Empty, no-match, loading and error states follow the project catalog.
-- One active destination follows current Model/Code/SQL visibility. Keyboard and
+- One destination stays active in each route and contextual Model view. Keyboard and
   pointer invoke the same callbacks, with visible focus and accessible names.
 - Filter text, result counts and detail disclosure survive Model entry and view
   switching; another workspace or Canvas cannot inherit them.
