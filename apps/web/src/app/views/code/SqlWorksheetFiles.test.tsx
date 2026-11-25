@@ -27,20 +27,22 @@ afterEach(async () => {
   mounted = undefined;
 });
 
-async function mount() {
+type Controls = Record<'open' | 'tree' | 'history' | 'save', ReturnType<typeof vi.fn>> & {
+  read: ReturnType<typeof vi.fn<() => Promise<typeof file>>>;
+  edit: (text: string) => Promise<void>;
+};
+async function mount(): Promise<Controls> {
   const sessionContext = createMockSessionContextPort();
   const scope = sessionContext.getWorkspaceScopeSnapshot();
   const open = vi.fn();
-  const read = vi.fn().mockResolvedValue(file);
-  const save = vi
-    .fn()
-    .mockResolvedValue({
-      kind: 'saved',
-      disposition: 'created',
-      path,
-      contentSha256: digest,
-      lastModified: '',
-    });
+  const read = vi.fn<() => Promise<typeof file>>().mockResolvedValue(file);
+  const save = vi.fn().mockResolvedValue({
+    kind: 'saved',
+    disposition: 'created',
+    path,
+    contentSha256: digest,
+    lastModified: '',
+  });
   const history = vi.fn().mockResolvedValue([]);
   const tree = vi.fn().mockResolvedValue([{ path, name: 'quarter.sql', kind: 'file' }]);
   const overrides = {
@@ -50,20 +52,20 @@ async function mount() {
     workspaceFileContentCommand: { saveFileContent: save },
     workspaceFileHistoryQuery: { getFileHistory: history, getFileVersionContent: vi.fn() },
   };
-  const view = (text: string) => (
+  const view = (text: string): React.JSX.Element => (
     <AppServicesProvider overrides={overrides}>
       <SqlWorksheetFiles sql={text} scope={scope} onSqlChange={open} />
     </AppServicesProvider>
   );
   mounted = await withTestQueryClient(view(sql));
-  const edit = (text: string) => mounted!.render(view(text));
+  const edit = (text: string): Promise<void> => mounted!.render(view(text));
   return { open, read, save, history, tree, edit };
 }
 
-async function openDialog() {
+async function openDialog(): Promise<void> {
   act(() => screen.getByRole('button', { name: 'SQL files and Git' }).click());
   await waitForReactQuery(() => screen.queryByRole('option', { name: path }) != null);
-  act(() => fireEvent.change(screen.getByRole('combobox'), { target: { value: path } }));
+  await act(() => fireEvent.change(screen.getByRole('combobox'), { target: { value: path } }));
 }
 
 it('starts with no file IO and only shows Git history for an explicitly opened file', async () => {
@@ -101,7 +103,7 @@ it('preserves newer editor input when the selected file reply arrives late', asy
 it('saves once under a new name and uses the original digest on subsequent edits', async () => {
   const h = await mount();
   await openDialog();
-  act(() =>
+  await act(() =>
     fireEvent.change(screen.getByLabelText('Save in operations/'), {
       target: { value: 'quarter.sql' },
     })

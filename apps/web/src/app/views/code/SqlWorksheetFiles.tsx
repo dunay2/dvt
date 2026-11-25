@@ -110,7 +110,12 @@ function SavedQueryPicker({
   session,
   replacing,
   onOpen,
-}: Readonly<{ copy: Copy; session: Session; replacing: boolean; onOpen: (path: string) => void }>) {
+}: Readonly<{
+  copy: Copy;
+  session: Session;
+  replacing: boolean;
+  onOpen: (path: string) => Promise<void>;
+}>) {
   const [selected, setSelected] = useState('');
   const tree = useWorkspaceFileTreeQuery();
   const paths = flattenCodeWorkspaceFiles(tree.data ?? [])
@@ -139,7 +144,9 @@ function SavedQueryPicker({
           type="button"
           variant="outline"
           disabled={session.busy || !paths.includes(selected)}
-          onClick={() => onOpen(selected)}
+          onClick={() => {
+            void onOpen(selected);
+          }}
         >
           {replacing ? copy.replace : copy.open}
         </Button>
