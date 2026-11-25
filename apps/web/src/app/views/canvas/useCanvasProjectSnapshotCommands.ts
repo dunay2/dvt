@@ -52,32 +52,16 @@ function downloadSnapshot(exported: ReturnType<typeof canvasProjectSnapshot.expo
   URL.revokeObjectURL(url);
 }
 
-export function useCanvasProjectSnapshotCommands({
-  draftRepository,
+function useExportProjectSnapshotCommand({
   graphDraftQuery,
-  draftQueryCache,
-  canPersistGraphDraft,
-  draftSaveStatus,
   workspaceScope,
-  setDraftSession,
-  setDraftSaveStatus,
-  refs,
-  invalidateInFlightSaveAttempt,
-}: SnapshotCommandInputs): Pick<
-  CanvasDraftLifecycle,
-  | 'canExportProjectSnapshot'
-  | 'canImportProjectSnapshot'
-  | 'handleExportProjectSnapshot'
-  | 'handleImportProjectSnapshotFile'
-> {
-  const { canExportProjectSnapshot, canImportProjectSnapshot } = resolveSnapshotAvailability({
-    graphDraftQuery,
-    canPersistGraphDraft,
-    draftSaveStatus,
-  });
-  const handleExportProjectSnapshot = useCallback<
-    CanvasDraftLifecycle['handleExportProjectSnapshot']
-  >(() => {
+  canExportProjectSnapshot,
+}: Pick<SnapshotCommandInputs, 'graphDraftQuery' | 'workspaceScope'> &
+  Pick<
+    CanvasDraftLifecycle,
+    'canExportProjectSnapshot'
+  >): CanvasDraftLifecycle['handleExportProjectSnapshot'] {
+  return useCallback<CanvasDraftLifecycle['handleExportProjectSnapshot']>(() => {
     const record = graphDraftQuery.data?.record ?? null;
     if (!canExportProjectSnapshot || record == null) {
       toast.error(canvasViewCopy.projectSnapshotExportUnavailableMessage);
@@ -91,9 +75,22 @@ export function useCanvasProjectSnapshotCommands({
       })
     );
   }, [canExportProjectSnapshot, graphDraftQuery.data?.record, workspaceScope]);
-  const handleImportProjectSnapshotFile = useCallback<
-    CanvasDraftLifecycle['handleImportProjectSnapshotFile']
-  >(
+}
+
+function useImportProjectSnapshotCommand({
+  draftRepository,
+  graphDraftQuery,
+  draftQueryCache,
+  setDraftSession,
+  setDraftSaveStatus,
+  refs,
+  invalidateInFlightSaveAttempt,
+  canImportProjectSnapshot,
+}: Omit<
+  CanvasImportProjectSnapshotCommandDto,
+  'file'
+>): CanvasDraftLifecycle['handleImportProjectSnapshotFile'] {
+  return useCallback<CanvasDraftLifecycle['handleImportProjectSnapshotFile']>(
     async (file) => {
       await executeImportProjectSnapshotCommand({
         file,
@@ -118,9 +115,29 @@ export function useCanvasProjectSnapshotCommands({
       setDraftSaveStatus,
     ]
   );
+}
+
+export function useCanvasProjectSnapshotCommands(
+  inputs: SnapshotCommandInputs
+): Pick<
+  CanvasDraftLifecycle,
+  | 'canExportProjectSnapshot'
+  | 'canImportProjectSnapshot'
+  | 'handleExportProjectSnapshot'
+  | 'handleImportProjectSnapshotFile'
+> {
+  const availability = resolveSnapshotAvailability(inputs);
+  const handleExportProjectSnapshot = useExportProjectSnapshotCommand({
+    graphDraftQuery: inputs.graphDraftQuery,
+    workspaceScope: inputs.workspaceScope,
+    canExportProjectSnapshot: availability.canExportProjectSnapshot,
+  });
+  const handleImportProjectSnapshotFile = useImportProjectSnapshotCommand({
+    ...inputs,
+    canImportProjectSnapshot: availability.canImportProjectSnapshot,
+  });
   return {
-    canExportProjectSnapshot,
-    canImportProjectSnapshot,
+    ...availability,
     handleExportProjectSnapshot,
     handleImportProjectSnapshotFile,
   };
