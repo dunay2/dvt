@@ -105,30 +105,7 @@ describe.skipIf(adminUrl === undefined)('independent SQL worksheet native Postgr
     parent = await realpath(tmpdir());
     root = await mkdtemp(path.join(parent, 'dvt-sql-native-'));
     history = new LocalWorkspaceSqlExecutionHistoryRepository({ root });
-    app = Fastify();
-    app.get('/session', (request: FastifyRequest, reply: FastifyReply) =>
-      sessionRoute(request, reply, { authenticator })
-    );
-    registerSqlWorksheetRoutes(app, {
-      authenticator,
-      authorizer: new AuthorizeCommandScopeService(
-        new EmbeddedAccessDecisionService(grants),
-        { record: async () => undefined },
-        () => new Date()
-      ),
-      executeCommand: new ExecuteWorkspaceSqlCommand({
-        catalog: { getConnection: async () => SQL_CONNECTION },
-        executor: new PostgresWorkspaceSqlExecutor({
-          credentialResolver: { resolveCredential: async () => lease?.url ?? null },
-        }),
-        history,
-        now: () => new Date(),
-        elapsedNow: () => performance.now(),
-        nonce: randomUuidV4,
-      }),
-      listQuery: new ListWorkspaceSqlExecutionsQuery(history),
-      getQuery: new GetWorkspaceSqlExecutionQuery(history),
-    });
+    app = createSqlProofApp({ authenticator, grants, history, connectionString: lease.url });
   });
 
   afterAll(async () => {
@@ -224,6 +201,42 @@ describe.skipIf(adminUrl === undefined)('independent SQL worksheet native Postgr
     expect(outcome.result).toBeUndefined();
   });
 });
+
+function createSqlProofApp(
+  input: Readonly<{
+    authenticator: OidcAuthenticator;
+    grants: EmbeddedPrincipalGrantRepository;
+    history: LocalWorkspaceSqlExecutionHistoryRepository;
+    connectionString: string;
+  }>
+): ReturnType<typeof Fastify> {
+  const app = Fastify();
+  const { authenticator, history } = input;
+  app.get('/session', (request: FastifyRequest, reply: FastifyReply) =>
+    sessionRoute(request, reply, { authenticator })
+  );
+  registerSqlWorksheetRoutes(app, {
+    authenticator,
+    authorizer: new AuthorizeCommandScopeService(
+      new EmbeddedAccessDecisionService(input.grants),
+      { record: async () => undefined },
+      () => new Date()
+    ),
+    executeCommand: new ExecuteWorkspaceSqlCommand({
+      catalog: { getConnection: async () => SQL_CONNECTION },
+      executor: new PostgresWorkspaceSqlExecutor({
+        credentialResolver: { resolveCredential: async () => input.connectionString },
+      }),
+      history,
+      now: () => new Date(),
+      elapsedNow: () => performance.now(),
+      nonce: randomUuidV4,
+    }),
+    listQuery: new ListWorkspaceSqlExecutionsQuery(history),
+    getQuery: new GetWorkspaceSqlExecutionQuery(history),
+  });
+  return app;
+}
 
 async function closeProofResources(
   resources: readonly (Readonly<{ close(): Promise<unknown> }> | Pool | undefined)[],

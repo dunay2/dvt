@@ -18,6 +18,10 @@ const NonBlankStringSchema = z.string().trim().min(1);
 const SqlTextSchema = z
   .string()
   .max(WORKSPACE_SQL_MAX_LENGTH)
+  .refine(
+    (sql) => new globalThis.TextEncoder().encode(sql).byteLength <= WORKSPACE_SQL_MAX_LENGTH,
+    'SQL exceeds the UTF-8 byte limit.'
+  )
   .refine((sql) => sql.trim().length > 0, 'SQL is required.');
 const RowLimitSchema = z.number().int().positive().max(WORKSPACE_SQL_MAX_LIMIT);
 const ColumnsSchema = z.array(SourceObjectColumnSchema);

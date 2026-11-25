@@ -14,6 +14,20 @@ function execution(): typeof example {
 }
 
 describe('independent SQL worksheet contract', () => {
+  it('enforces the admitted 64 KiB SQL limit in UTF-8 bytes for multibyte text', () => {
+    const boundary = `select '${'é'.repeat(32_763)}a'`;
+    expect(new globalThis.TextEncoder().encode(boundary).byteLength).toBe(65_536);
+    expect(
+      ExecuteWorkspaceSqlRequestSchema.safeParse({ connectionId: 'warehouse', sql: boundary })
+        .success
+    ).toBe(true);
+    const excess = boundary.replace(/a'$/u, "ab'");
+    expect(new globalThis.TextEncoder().encode(excess).byteLength).toBe(65_537);
+    expect(
+      ExecuteWorkspaceSqlRequestSchema.safeParse({ connectionId: 'warehouse', sql: excess }).success
+    ).toBe(false);
+  });
+
   it('accepts a connection and unsaved SQL without file, Canvas or model authority', () => {
     const sql = '  select 1 as answer;\n';
     expect(ExecuteWorkspaceSqlRequestSchema.parse({ connectionId: 'warehouse', sql })).toEqual({
