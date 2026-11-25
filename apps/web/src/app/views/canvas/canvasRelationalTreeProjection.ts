@@ -50,6 +50,8 @@ export type CanvasRelationalTreeNode = Readonly<{
   relationId: string | null;
   displayName: string | null;
   sourceRef: ConnectedSourceRef | null;
+  /** Display-only coordinates from an already bound named Read; never a producer identity. */
+  physicalSource?: Readonly<{ name: string; qualifiedName: string }>;
   output: Readonly<{ fields: readonly CanvasRelationalTreeField[] }>;
   unavailableFields?: readonly CanvasRelationalTreeField[];
   rowUnavailable?: boolean;

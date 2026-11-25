@@ -6,48 +6,26 @@
  * @version 1.0.0
  */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { sortDirectionLabel } from './semanticWorkbenchRelationMetadata';
 import {
   readSubstraitAuthoringGroup,
   type SubstraitRelationIndex,
   type RelationPublication,
 } from '@dvt/substrait-analysis';
-import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
 
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
 import type {
   CanvasRelationalTreeExpressionRef,
   CanvasRelationalTreeField,
   CanvasRelationalTreeNode,
-  CanvasRelationalTreeOperator,
 } from './canvasRelationalTreeProjection';
 
+import { childInputs } from './canvasRelationalTraversal';
 import {
-  childInputs,
-  relationAnchor,
-  isAdmittedSort,
-  isAdmittedFetch,
-} from './canvasRelationalTraversal';
+  physicalReadPresentation,
+  operator,
+  sortFetchSummary,
+} from './canvasRelationalRelationPresentation';
 import { projectCanvasRelationalProjectStage } from './canvasRelationalProjectStage';
-
-function operator(rel: Rel): CanvasRelationalTreeOperator {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'project':
-    case 'filter':
-    case 'join':
-    case 'cross':
-    case 'set':
-    case 'aggregate':
-      return rel.relType.case;
-    case 'sort':
-      return isAdmittedSort(rel) ? 'sort' : 'unsupported';
-    case 'fetch':
-      return isAdmittedFetch(rel) ? 'fetch' : 'unsupported';
-    default:
-      return 'unsupported';
-  }
-}
 
 export function relationExpressionRefs(rel: Rel): readonly CanvasRelationalTreeExpressionRef[] {
   switch (rel.relType.case) {
@@ -91,31 +69,6 @@ function fieldsForRelation(
     sourceFieldId: field.sourceFieldId ?? null,
     operandFieldIds: field.operandFieldIds ?? [],
   }));
-}
-
-function sortFetchSummary(rel: Rel, index: SubstraitRelationIndex): string | null {
-  if (rel.relType.case === 'fetch') {
-    const literal = (expression: typeof rel.relType.value.countExpr): bigint | null => {
-      const value =
-        expression == null ? null : dvtSubstraitExpressionReader.literalValue(expression);
-      return value?.dataType === 'i64' ? value.value : null;
-    };
-    return `LIMIT ${literal(rel.relType.value.countExpr)?.toString() ?? 'ALL'} · OFFSET ${literal(rel.relType.value.offsetExpr)?.toString() ?? '0'}`;
-  }
-  if (rel.relType.case !== 'sort' || rel.relType.value.input == null) return null;
-  const inputAnchor = relationAnchor(rel.relType.value.input);
-  const inputRelation = inputAnchor == null ? undefined : index.byAnchor.get(inputAnchor);
-  const inputFields = inputRelation == null ? [] : fieldsForRelation(index, inputRelation);
-  return rel.relType.value.sorts
-    .map((field) => {
-      const ordinal = dvtSubstraitExpressionReader.fieldOrdinal(field.expr);
-      const name = ordinal == null ? null : inputFields[ordinal]?.displayName;
-      const value =
-        field.sortKind.case === 'direction' ? sortDirectionLabel(field.sortKind.value) : '';
-      return name == null || value.length === 0 ? null : `${name} ${value}`;
-    })
-    .filter((value): value is string => value != null)
-    .join(' · ');
 }
 
 export function buildCanvasRelationalTreeRelation(
@@ -175,6 +128,7 @@ export function buildCanvasRelationalTreeRelation(
       relationId: id,
       displayName: sortFetchSummary(rel, index) ?? entry.binding.displayName ?? null,
       sourceRef: entry.binding.sourceRef ?? null,
+      ...physicalReadPresentation(entry),
       output: { fields: fields.filter((field) => !unavailable.has(field.fieldId)) },
       unavailableFields: fields.filter((field) => unavailable.has(field.fieldId)),
       rowUnavailable: validity?.rowUnavailable ?? false,

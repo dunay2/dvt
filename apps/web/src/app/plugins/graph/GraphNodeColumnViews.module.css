@@ -1,0 +1,7 @@
+/* Owned concern: name the counted column group without widening its compact direction tabs. */
+.heading {
+  padding-inline: calc(var(--spacing) * 3);
+  color: var(--text-muted);
+  font-size: var(--text-ui-micro);
+  line-height: var(--text-ui-micro-line-height);
+}

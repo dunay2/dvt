@@ -257,6 +257,7 @@ export const canvasViewAuthoringCopyEs = {
   relationalTreeMissingLabel: 'Ausente',
   relationalTreeOutputLabel: 'Salida',
   relationalTreePrimaryInputLabel: 'Entrada principal',
+  relationalTreeConnectedSourceTemplate: 'Fuente conectada: {source}',
   relationalTreePrimarySlotLabel: 'Operando izquierdo',
   relationalTreeProjectOperationLabel: 'PROYECCIÓN',
   relationalTreeFieldTransformationStageLabel: 'Transform',

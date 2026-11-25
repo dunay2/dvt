@@ -12,12 +12,30 @@ import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNo
 import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnSectionProps,
+  GraphNodeColumn,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { graphColumnTransferTarget } from './graphColumnTransfer';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
+import styles from './GraphNodeColumnViews.module.css';
+
+type ColumnView = 'input' | 'output';
+type ColumnViewContentProps = GraphNodeColumnSectionProps &
+  Readonly<{
+    inputColumns: readonly GraphNodeColumn[];
+    view: ColumnView;
+    output: readonly GraphNodeColumn[];
+    status: string | null;
+  }>;
+
+function outputStateLabel(
+  state: GraphNodeColumnSectionProps['outputState'],
+  copy: ReturnType<typeof resolveGraphNodeCardCopy>
+): string | null {
+  return state != null && state !== 'ready' ? copy.outputStateLabels[state] : null;
+}
 
 export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
   const [localView, setView] = useState<'input' | 'output'>('input');
@@ -26,16 +44,7 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
   const view = props.view ?? localView;
   if (props.inputColumns == null) return <GraphNodeColumnSection {...props} />;
   const output = props.columns.filter((column) => column.output !== false);
-  const columns = view === 'input' ? props.inputColumns : output;
-  const viewDirection: GraphNodeColumnPortDirection = view === 'input' ? 'target' : 'source';
-  const portDirections =
-    props.portDirections == null || props.portDirections.includes(viewDirection)
-      ? [viewDirection]
-      : [];
-  const status =
-    props.outputState != null && props.outputState !== 'ready'
-      ? copy.outputStateLabels[props.outputState]
-      : null;
+  const status = outputStateLabel(props.outputState, copy);
   return (
     <Tabs
       value={view}
@@ -52,42 +61,78 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
             onDrop: (event) => event.stopPropagation(),
           })}
     >
-      <TabsList className={graphNodeColumnClasses.viewList} {...canvasNodeEmbeddedControlProps}>
-        <TabsTrigger value="input" className={graphNodeColumnClasses.viewTrigger}>
-          Input ({props.inputColumns.length})
+      <div className={styles.heading} aria-hidden="true">
+        {copy.columnsLabel}
+      </div>
+      <TabsList
+        aria-label={copy.columnsLabel}
+        className={graphNodeColumnClasses.viewList}
+        {...canvasNodeEmbeddedControlProps}
+      >
+        <TabsTrigger
+          value="input"
+          aria-label={`${copy.inputColumnsLabel} (${props.inputColumns.length})`}
+          className={graphNodeColumnClasses.viewTrigger}
+        >
+          {copy.inputLabel} ({props.inputColumns.length})
         </TabsTrigger>
-        <TabsTrigger value="output" className={graphNodeColumnClasses.viewTrigger}>
-          Output ({status ?? output.length})
+        <TabsTrigger
+          value="output"
+          aria-label={`${copy.outputColumnsLabel} (${status ?? output.length})`}
+          className={graphNodeColumnClasses.viewTrigger}
+        >
+          {copy.outputLabel} ({status ?? output.length})
         </TabsTrigger>
       </TabsList>
       <TabsContent value={view}>
-        {view === 'output' && status != null ? (
-          <div
-            role="status"
-            data-slot="graph-node-output-status"
-            data-state={props.outputState}
-            aria-busy={props.outputState === 'pending'}
-            className={graphNodeColumnClasses.outputStatus}
-          >
-            {status}
-          </div>
-        ) : (
-          <GraphNodeColumnSection
-            key={view}
-            {...props}
-            columns={columns}
-            inputColumns={undefined}
-            view={view === 'input' ? 'input' : 'output'}
-            showSourceName={view === 'input'}
-            portDirections={portDirections}
-            onColumnOutputToggle={undefined}
-            onColumnReorder={undefined}
-            onCalculatedColumnAdd={undefined}
-            onStructuredFieldApply={undefined}
-            onAutomap={undefined}
-          />
-        )}
+        <GraphNodeColumnViewContent
+          {...props}
+          inputColumns={props.inputColumns}
+          view={view}
+          output={output}
+          status={status}
+        />
       </TabsContent>
     </Tabs>
+  );
+}
+
+function GraphNodeColumnViewContent({
+  view,
+  status,
+  output,
+  ...props
+}: ColumnViewContentProps): JSX.Element {
+  const columns = view === 'input' ? props.inputColumns : output;
+  const viewDirection: GraphNodeColumnPortDirection = view === 'input' ? 'target' : 'source';
+  const portDirections =
+    props.portDirections == null || props.portDirections.includes(viewDirection)
+      ? [viewDirection]
+      : [];
+  return view === 'output' && status != null ? (
+    <div
+      role="status"
+      data-slot="graph-node-output-status"
+      data-state={props.outputState}
+      aria-busy={props.outputState === 'pending'}
+      className={graphNodeColumnClasses.outputStatus}
+    >
+      {status}
+    </div>
+  ) : (
+    <GraphNodeColumnSection
+      key={view}
+      {...props}
+      columns={columns}
+      inputColumns={undefined}
+      view={view === 'input' ? 'input' : 'output'}
+      showSourceName={view === 'input'}
+      portDirections={portDirections}
+      onColumnOutputToggle={undefined}
+      onColumnReorder={undefined}
+      onCalculatedColumnAdd={undefined}
+      onStructuredFieldApply={undefined}
+      onAutomap={undefined}
+    />
   );
 }

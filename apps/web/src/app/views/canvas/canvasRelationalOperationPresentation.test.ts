@@ -49,6 +49,40 @@ const cases = [
 ] as const;
 
 describe('operation presentation catalog', () => {
+  it.each(['en', 'es'])(
+    'distinguishes an occurrence alias from its connected physical source in %s',
+    (language) => {
+      const document = createSourceJoin({
+        left: occurrenceInput,
+        right: occurrenceInput,
+        targetNodeId: 'model',
+        leftFieldName: 'parent_id',
+        rightFieldName: 'id',
+        joinType: JoinRel_JoinType.INNER,
+      });
+      document.sidecar.relations.find((binding) => binding.sourceRef != null)!.displayName =
+        'places_alias';
+      const indexed = indexSubstraitRelations(document);
+      if (!indexed.ok) throw indexed.error;
+      const read = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'alias' })
+        .children[0]!.node;
+      expect(read).toMatchObject({
+        physicalSource: { name: 'places', qualifiedName: 'public.places' },
+      });
+      const copy = resolveCanvasViewCopy(language);
+      expect(resolveCanvasRelationalNodeCopy(read, copy)).toMatchObject({
+        title: 'places_alias',
+        detail: `${language === 'es' ? 'Fuente conectada' : 'Connected source'}: public.places`,
+      });
+      expect(resolveCanvasRelationalNodeCopy({ ...read, displayName: 'places' }, copy).detail).toBe(
+        ''
+      );
+      expect(
+        resolveCanvasRelationalNodeCopy({ ...read, displayName: 'public.places' }, copy).detail
+      ).toBe('');
+      expect(resolveCanvasRelationalNodeCopy({ ...read, sourceRef: null }, copy).detail).toBe('');
+    }
+  );
   it.each(cases.filter(([, , category]) => category === 'join'))(
     'does not present preserved %s as a second JOIN type',
     (name) => {

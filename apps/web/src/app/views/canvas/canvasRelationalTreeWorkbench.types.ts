@@ -151,6 +151,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'relationalTreeParticipatingLabel'
   | 'relationalTreePendingLabel'
   | 'relationalTreePrimaryInputLabel'
+  | 'relationalTreeConnectedSourceTemplate'
   | 'relationalTreePrimarySlotLabel'
   | 'relationalTreeProjectOperationLabel'
   | 'relationalTreeFieldTransformationStageLabel'
