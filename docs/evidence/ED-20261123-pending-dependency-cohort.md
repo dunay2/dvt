@@ -606,3 +606,29 @@ matched the original publication.
 Before integration, separate disposable restores verified the product backup
 `20261125T192759189Z`. Every table matched its dump, including 232 tables
 with 26,272 rows in `dvt` and 21 tables with 4,853 rows in `dvt_demo`.
+
+### Pointer tracking on the outer Canvas
+
+Chrome 158 ran the same 90-step pointer gesture against the original and
+revised Web bundles. Two warm-up runs were excluded. Twelve measured gestures
+covered 10, 30 and 60 cards in two rounds with the version order reversed.
+The viewport now renders intermediate pointer coordinates locally and forwards
+settled positions to the existing graph owner.
+
+| Cards | Original frame interval, p95 | Revised frame interval, p95 |
+| ----- | ---------------------------: | --------------------------: |
+| 10    |                      30.0 ms |                     10.1 ms |
+| 30    |                      80.1 ms |                     10.1 ms |
+| 60    |                     170.1 ms |                     10.2 ms |
+
+At 30 and 60 cards, median pointer-to-card displacement fell from 4.91 to
+2.70 CSS pixels. At 10 cards it remained 2.70 pixels. All gestures retained
+the final coordinates on reload and caused zero additional graph writes.
+Individual revised frames still reached 90 and 180 ms at 30 and 60 cards.
+The driver waits for Chrome to acknowledge input, so these timings describe
+the measured desktop and gesture.
+
+In the relational editor at 60% and 120% zoom, five pointer moves plus
+release previously projected the same relational document seven times. The
+mounted regression now observes one initial projection across the gesture and
+a second projection when the semantic document actually changes.

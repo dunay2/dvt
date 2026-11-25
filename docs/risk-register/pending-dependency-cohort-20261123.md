@@ -202,3 +202,9 @@ Reopening a model must preserve its graph revision. Compare the stored and
 hydrated forms of plugin kinds and active canvas membership, retaining the
 other canvases and their contents in the comparison. The browser regression
 counts graph writes through confirmation and reopen.
+
+Dragging a selected group can drop individual positions or carry a pending
+coordinate into another graph. Keep selection and keyboard updates immediate,
+discard transient coordinates when a node disappears or the Canvas changes,
+and use the settled gesture to update the existing layout. Check multiple
+card counts, coordinates after reload and graph writes during the gesture.

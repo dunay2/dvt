@@ -81,6 +81,40 @@ display different details. The switch also works on read-only file projections.
 It renders the existing measurement evidence without querying the warehouse or
 saving the semantic model.
 
+## Drag frame boundary
+
+During an exterior card drag, the viewport owns transient geometry for every
+moved selected card. Pointer frames update that local presentation; release
+publishes the final geometry once through the existing settled layout callback.
+Other node changes remain immediate. A Canvas/project scope change, external
+node replacement or removal must not leak or revive a transient position.
+The surface uses the existing catalogue scope identity to delimit that lifetime.
+Moving cards never issues a protected graph save, compilation or execution.
+
+Inside the relational editor, presentation updates must retain stable semantic
+inputs. In particular, an absent staged-operation collection has one stable
+empty identity. Pointer, coordinate and zoom changes alone must not invalidate
+semantic decode/index/projection. Actual document, source, authorization or
+staged-operation changes still invalidate the relevant projection; this is not
+a cache that permits stale semantics.
+
+```mermaid
+flowchart LR
+  Pointer[Pointer frames] --> Geometry[Viewport-local geometry]
+  Geometry --> Render[Cards and edges]
+  Release[Release] --> Settle[One existing settled layout callback]
+  Stable[Unchanged semantic inputs] --> Reuse[Reuse semantic projection]
+  Changed[Changed semantic facts] --> Project[Existing real projection]
+```
+
+The [exterior rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7173316539)
+and [interior rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7173287650)
+require real gesture and projection-call evidence. Tests use the real projector,
+retain semantic invalidation and rendered data, and verify final scoped diagram
+coordinates independently of pan/zoom. Preserve multiselection, immediate
+non-drag changes and all persistence/permission guards. No debounce threshold,
+new operation, store or semantic authority is introduced.
+
 ## Viewport input policy
 
 `SYS-WEB-CANVAS-VIEWPORT` owns the shared `canvasViewportInteraction` policy.
