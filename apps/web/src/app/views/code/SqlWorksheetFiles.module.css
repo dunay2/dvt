@@ -1,0 +1,30 @@
+@layer components {
+  .dialog {
+    max-height: 85dvh;
+    overflow: auto;
+  }
+  .group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.5rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--text-muted);
+  }
+  .select {
+    min-width: 0;
+    height: 2.25rem;
+    background: var(--surface-panel);
+    color: var(--text-strong);
+    border: 1px solid var(--border-default);
+    border-radius: 0.375rem;
+  }
+  @media (max-width: 32rem) {
+    .group {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
