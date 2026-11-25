@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { isSha256HexString } from '../../utils/contractPrimitives.js';
 import { WorkspaceRelativeProjectRootSchema } from '../planner/CanvasAuthoringAuthorityBinding.v1.js';
+import { ExecuteWorkspaceSqlRequestSchema } from '../sql-workspace/SqlWorksheet.v1.js';
 
 export const WorksheetDbtModelRequestSchema = z
   .object({
@@ -10,7 +11,7 @@ export const WorksheetDbtModelRequestSchema = z
     projectRoot: WorkspaceRelativeProjectRootSchema,
     configSha256: z.string().refine(isSha256HexString),
     name: z.string().regex(/^[A-Za-z_][A-Za-z0-9_]{0,126}$/),
-    sql: z.string().min(1).max(65536),
+    sql: ExecuteWorkspaceSqlRequestSchema.shape.sql,
     requestId: z.string().uuid(),
   })
   .strict();

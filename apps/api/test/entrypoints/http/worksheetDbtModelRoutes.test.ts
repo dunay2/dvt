@@ -33,13 +33,11 @@ function fixture(actions = ['workspace:graph-draft:view', 'workspace:files:save'
 } {
   const app = Fastify();
   apps.push(app);
-  const execute = vi
-    .fn()
-    .mockResolvedValue({
-      kind: 'created',
-      path: 'models/weekly.sql',
-      contentSha256: asSha256HexString('f'.repeat(64)),
-    });
+  const execute = vi.fn().mockResolvedValue({
+    kind: 'created',
+    path: 'models/weekly.sql',
+    contentSha256: asSha256HexString('f'.repeat(64)),
+  });
   const grants = new EmbeddedAccessDecisionService({
     load: async () => sqlGrantSnapshot(actions),
     migrate: async () => undefined,
@@ -91,5 +89,12 @@ it.each([['workspace:graph-draft:view'], ['workspace:files:save']])(
 it('rejects an invalid model filename before writing', async () => {
   const f = fixture();
   expect((await f.post({ ...request, name: '../weekly' })).statusCode).toBe(400);
+  expect(f.execute).not.toHaveBeenCalled();
+});
+
+it('enforces the same UTF-8 ceiling as worksheet execution before invoking publication', async () => {
+  const f = fixture();
+  const sql = "select '" + 'é'.repeat(32_768) + "'";
+  expect((await f.post({ ...request, sql })).statusCode).toBe(400);
   expect(f.execute).not.toHaveBeenCalled();
 });
