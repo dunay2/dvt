@@ -27,7 +27,8 @@ vi.mock('node:fs', async () => {
 
 const windowsSpec = 'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts';
 const coarsePointerSpec = 'apps/web/cypress/e2e/shell/canvas-workbench-coarse-pointer.cy.ts';
-const windowsSpecs = [coarsePointerSpec, windowsSpec];
+const worksheetSpec = 'apps/web/cypress/e2e/sql/sql-worksheet.cy.ts';
+const windowsSpecs = [coarsePointerSpec, windowsSpec, worksheetSpec];
 const current = WEB_CYPRESS_CATALOG;
 
 describe('Declared native browser obligations', () => {

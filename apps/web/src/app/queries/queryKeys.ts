@@ -39,6 +39,24 @@ export const queryKeys = {
   // Workspace
   // -------------------------------------------------------------------------
   workspace: {
+    worksheetSchemas: (scopeKey: string, connectionId: string | undefined) =>
+      ['sql-worksheet-schemas', scopeKey, connectionId] as const,
+    worksheetObjects: (
+      scopeKey: string,
+      connectionId: string | undefined,
+      filter: Readonly<{
+        schema: Readonly<{ catalog: string; schema: string }> | null;
+        query: string;
+      }>
+    ) =>
+      [
+        'sql-worksheet-objects',
+        scopeKey,
+        connectionId,
+        filter.schema?.catalog,
+        filter.schema?.schema,
+        filter.query,
+      ] as const,
     warehouseConnections: (
       scope: Pick<WorkspaceScope, 'tenantId' | 'projectId' | 'environmentId'>
     ) =>

@@ -153,7 +153,11 @@ describe('catalog admission at the local execution boundary', () => {
       [catalogPath, 'apps/web/src/app/bootstrap/AuthRouteGate.tsx', changed, added, catalogPath]
     );
     expect(plan.browserCommands.flatMap((entry) => entry.specPaths)).toEqual(
-      catalog.controlled.filter((spec) => [changed, added, ...native].includes(spec))
+      catalog.controlled.filter(
+        (spec) =>
+          [changed, added].includes(spec) ||
+          (native.includes(spec) && spec.startsWith('apps/web/cypress/e2e/shell/'))
+      )
     );
   });
 

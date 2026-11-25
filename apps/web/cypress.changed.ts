@@ -66,128 +66,157 @@ function browserCapabilities(path: string): readonly WebCypressCapability[] {
   );
 }
 
+type BrowserSourceChange = Readonly<{ path: string; filePath: string }>;
+
+function completeBrowserBoundary({ path }: BrowserSourceChange): boolean {
+  return (
+    EXECUTION_BOUNDARIES.includes(path) ||
+    isWebVitestImplementationPath(path) ||
+    isWebGlobalStylePath(path)
+  );
+}
+
+function isNightlyBrowserChange({ path }: BrowserSourceChange): boolean {
+  return (
+    WEB_CYPRESS_NIGHTLY_SPECS.includes(path) || path === '.github/workflows/web-canvas-nightly.yml'
+  );
+}
+
+function requiresFixtureContract({ path }: BrowserSourceChange): boolean {
+  return (
+    ['/canvasDraft', '/liveProtected'].some((name) => path.includes(name)) ||
+    ['/liveCanvasDraftAuthoring.ts', '/relationalWorkbench/scenario.ts'].some((name) =>
+      path.endsWith(name)
+    )
+  );
+}
+
+class BrowserEvidenceSelection {
+  private readonly selected = new Set<WebCypressCapability>();
+  private readonly controlled = new Set<string>();
+  private readonly required = new Set<string>();
+  private readonly vitest = new Set<string>();
+  private readonly retired = new Set<string>();
+  private catalogAdditions?: readonly string[] | null;
+
+  constructor(private readonly catalogSnapshots?: WebCypressCatalogSnapshots) {}
+
+  requireCapabilities(capabilities: readonly WebCypressCapability[], spec?: string): void {
+    for (const capability of capabilities) this.selected.add(capability);
+    if (!capabilities.includes('controlled')) return;
+    const paths =
+      spec && WEB_CYPRESS_SPECS.controlled.includes(spec) ? [spec] : WEB_CYPRESS_SPECS.controlled;
+    for (const path of paths) this.controlled.add(path);
+  }
+
+  private admitCatalog(): void {
+    if (this.catalogAdditions === undefined) {
+      this.catalogAdditions = resolveControlledCatalogAdditions(
+        WEB_CYPRESS_CATALOG,
+        this.catalogSnapshots
+      );
+    }
+    if (this.catalogAdditions === null) this.requireCapabilities(CAPABILITIES);
+    else this.catalogAdditions.forEach((spec) => this.requireCapabilities(['controlled'], spec));
+    this.required.add(WEB_CYPRESS_CATALOG_PATH);
+    WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => this.required.add(spec));
+    this.vitest.add(WEB_CYPRESS_CATALOG_PATH);
+  }
+
+  private admitNightly(): void {
+    WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => this.required.add(spec));
+    this.vitest.add('apps/web/src/testing/vitestSuites.browserNightly.architecture.test.ts');
+  }
+
+  private admitRetired(
+    { path }: BrowserSourceChange,
+    capabilities: readonly WebCypressCapability[]
+  ): void {
+    this.retired.add(path);
+    this.requireCapabilities(capabilities);
+    this.vitest.add('apps/web/src/testing/vitestSuites.browserRouting.architecture.test.ts');
+  }
+
+  private admitBrowserConsumer(change: BrowserSourceChange): void {
+    const { path, filePath } = change;
+    const coverage = SUPPORT_CAPABILITIES[path];
+    this.required.add(path);
+    if (coverage && 'controlledSpecs' in coverage) {
+      this.admitProductConsumers(coverage.controlledSpecs);
+      this.vitest.add(filePath);
+      return;
+    }
+    this.requireCapabilities(coverage ?? browserCapabilities(path), path);
+    if (requiresFixtureContract(change)) FIXTURE_CONTRACTS.forEach((test) => this.vitest.add(test));
+  }
+
+  private admitProductConsumers(specs: readonly string[]): void {
+    for (const spec of specs) {
+      if (!WEB_CYPRESS_SPECS.controlled.includes(spec)) {
+        throw new Error(`Controlled browser evidence is not admitted for ${spec}.`);
+      }
+      this.requireCapabilities(['controlled'], spec);
+    }
+  }
+
+  private admitSession(): void {
+    WEB_CYPRESS_SPECS.controlled
+      .filter((spec) => spec.startsWith('apps/web/cypress/e2e/shell/'))
+      .forEach((spec) => this.requireCapabilities(['controlled'], spec));
+    this.requireCapabilities(['available', 'unavailable']);
+  }
+
+  admit(change: BrowserSourceChange): void {
+    const { path, filePath } = change;
+    if (path === WEB_CYPRESS_CATALOG_PATH) return this.admitCatalog();
+    if (isNightlyBrowserChange(change)) return this.admitNightly();
+    if (completeBrowserBoundary(change)) {
+      this.requireCapabilities(CAPABILITIES);
+      this.vitest.add(filePath);
+      return;
+    }
+    const retired = RETIRED_SPEC_CAPABILITIES[path];
+    if (retired) return this.admitRetired(change, retired);
+    if (Object.hasOwn(SUPPORT_CAPABILITIES, path) || /^apps\/web\/cypress[/.]/.test(path)) {
+      return this.admitBrowserConsumer(change);
+    }
+    if (requiresSessionBrowserEvidence(change)) this.admitSession();
+    this.vitest.add(filePath);
+  }
+
+  result() {
+    const commands = CAPABILITIES.filter((capability) => this.selected.has(capability)).map(
+      (capability) => {
+        const specs =
+          capability === 'controlled'
+            ? WEB_CYPRESS_SPECS.controlled.filter((path) => this.controlled.has(path))
+            : WEB_CYPRESS_SPECS[capability];
+        specs.forEach((path) => this.required.add(path));
+        return buildBrowserCommand(capability, specs);
+      }
+    );
+    return {
+      vitestFiles: [...this.vitest],
+      commands,
+      requiredFiles: [...this.required],
+      retiredFiles: [...this.retired],
+      ...(this.catalogAdditions === undefined ? {} : { catalogAdditions: this.catalogAdditions }),
+    };
+  }
+}
+
 export function resolveWebCypressChangedPlan(
   filePaths: readonly string[],
   full = false,
   catalogSnapshots?: WebCypressCatalogSnapshots
-): {
-  vitestFiles: string[];
-  commands: WebCypressCommand[];
-  requiredFiles: string[];
-  retiredFiles: string[];
-  catalogAdditions?: readonly string[] | null;
-} {
-  const selected = new Set<WebCypressCapability>();
-  const controlledSpecs = new Set<string>();
-  function requireCapabilities(capabilities: readonly WebCypressCapability[], path?: string): void {
-    for (const capability of capabilities) {
-      selected.add(capability);
-      if (capability !== 'controlled') continue;
-      const paths =
-        path && WEB_CYPRESS_SPECS.controlled.includes(path) ? [path] : WEB_CYPRESS_SPECS.controlled;
-      paths.forEach((spec) => controlledSpecs.add(spec));
-    }
-  }
-  if (full) requireCapabilities(CAPABILITIES);
-  const vitestFiles = new Set<string>();
-  const requiredFiles = new Set<string>();
-  const retiredFiles = new Set<string>();
-  let catalogAdditions: readonly string[] | null | undefined;
-  for (const filePath of filePaths) {
-    const path = repositoryPath(filePath);
-    if (path === WEB_CYPRESS_CATALOG_PATH) {
-      if (catalogAdditions === undefined)
-        catalogAdditions = resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, catalogSnapshots);
-      if (catalogAdditions === null) requireCapabilities(CAPABILITIES);
-      else catalogAdditions.forEach((spec) => requireCapabilities(['controlled'], spec));
-      requiredFiles.add(path);
-      WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
-      vitestFiles.add(path);
-      continue;
-    }
-    if (
-      EXECUTION_BOUNDARIES.includes(path) ||
-      isWebVitestImplementationPath(path) ||
-      isWebGlobalStylePath(path)
-    ) {
-      requireCapabilities(CAPABILITIES);
-      vitestFiles.add(filePath);
-      continue;
-    }
-    if (
-      WEB_CYPRESS_NIGHTLY_SPECS.includes(path) ||
-      path === '.github/workflows/web-canvas-nightly.yml'
-    ) {
-      WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
-      vitestFiles.add('apps/web/src/testing/vitestSuites.browserNightly.architecture.test.ts');
-      continue;
-    }
-    const retired = RETIRED_SPEC_CAPABILITIES[path];
-    if (retired) {
-      retiredFiles.add(path);
-      requireCapabilities(retired);
-      vitestFiles.add('apps/web/src/testing/vitestSuites.browserRouting.architecture.test.ts');
-      continue;
-    }
-    const coverage = SUPPORT_CAPABILITIES[path];
-    if (coverage && 'controlledSpecs' in coverage) {
-      for (const spec of coverage.controlledSpecs) {
-        if (!WEB_CYPRESS_SPECS.controlled.includes(spec)) {
-          throw new Error(
-            `Controlled browser evidence is not admitted for ${spec} (owner ${path}).`
-          );
-        }
-        requireCapabilities(['controlled'], spec);
-      }
-      requiredFiles.add(path);
-      vitestFiles.add(filePath);
-      continue;
-    }
-    if (coverage || path.startsWith('apps/web/cypress/') || path.startsWith('apps/web/cypress.')) {
-      requireCapabilities(coverage ?? browserCapabilities(path), path);
-      requiredFiles.add(path);
-      if (
-        path.includes('/canvasDraft') ||
-        path.includes('/liveProtected') ||
-        path.endsWith('/liveCanvasDraftAuthoring.ts') ||
-        path.endsWith('/relationalWorkbench/scenario.ts')
-      ) {
-        FIXTURE_CONTRACTS.forEach((test) => vitestFiles.add(test));
-      }
-      continue;
-    }
-    if (requiresSessionBrowserEvidence(path)) {
-      WEB_CYPRESS_SPECS.controlled
-        .filter((spec) => spec.startsWith('apps/web/cypress/e2e/shell/'))
-        .forEach((spec) => requireCapabilities(['controlled'], spec));
-      requireCapabilities(['available', 'unavailable']);
-    }
-    vitestFiles.add(filePath);
-  }
-  const orderedControlledSpecs = WEB_CYPRESS_SPECS.controlled.filter((path) =>
-    controlledSpecs.has(path)
-  );
-  const capabilities = CAPABILITIES.filter((capability) => selected.has(capability));
-  capabilities.forEach((capability) =>
-    (capability === 'controlled' ? orderedControlledSpecs : WEB_CYPRESS_SPECS[capability]).forEach(
-      (path) => requiredFiles.add(path)
-    )
-  );
-  return {
-    vitestFiles: [...vitestFiles],
-    commands: capabilities.map((capability) =>
-      buildBrowserCommand(
-        capability,
-        capability === 'controlled' ? orderedControlledSpecs : WEB_CYPRESS_SPECS[capability]
-      )
-    ),
-    requiredFiles: [...requiredFiles],
-    retiredFiles: [...retiredFiles],
-    ...(catalogAdditions === undefined ? {} : { catalogAdditions }),
-  };
+) {
+  const selection = new BrowserEvidenceSelection(catalogSnapshots);
+  if (full) selection.requireCapabilities(CAPABILITIES);
+  for (const filePath of filePaths) selection.admit({ path: repositoryPath(filePath), filePath });
+  return selection.result();
 }
 
-function requiresSessionBrowserEvidence(path: string): boolean {
+function requiresSessionBrowserEvidence({ path }: BrowserSourceChange): boolean {
   const source = path.replace(/^apps\/web\//, '');
   if (/\.(?:test|spec)(?:\.|$)|\.testSupport\./.test(source)) return false;
   return (

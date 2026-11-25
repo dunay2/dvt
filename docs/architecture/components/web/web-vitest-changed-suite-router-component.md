@@ -52,6 +52,13 @@ existing command/shard types. `cypress.changed.ts` composes browser obligations
 and exposes the existing public selection contract. Both extracted modules are
 complete execution boundaries; changes to them select all three runtimes.
 
+Exclusive worksheet sources, including their CSS modules, declare the controlled
+SQL worksheet journey in the same registry. The browser planner retains both
+the normalized repository path for browser admission and the caller's original
+path for Vitest dependency analysis. A changed spec and a changed source may
+select the same journey. The planner emits it once in catalog order. Shared
+execution boundaries and an ambiguous catalog still select all required runtimes.
+
 The Code bootstrap is declared as controlled support. The existing architecture
 matrix discovers its actual transitive spec consumers and checks each against
 the single catalog and its real runtime. Unknown helpers still fail admission.

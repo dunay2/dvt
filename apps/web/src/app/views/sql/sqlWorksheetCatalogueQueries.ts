@@ -5,6 +5,7 @@ import type {
   SourceObjectCatalogResponse,
   SourceObjectCatalogSchemaSummary,
 } from '@dvt/contracts';
+import { queryKeys } from '../../queries/queryKeys';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 import { sameWorkspaceScopeIdentity } from '../../services/session/workspaceScopeSelectionPort';
@@ -81,7 +82,7 @@ function catalogueObjectRequest(
 
 export function sqlWorksheetSchemaOptions(discovery: Discovery) {
   return {
-    queryKey: ['sql-worksheet-schemas', discovery.scopeKey, discovery.connectionId],
+    queryKey: queryKeys.workspace.worksheetSchemas(discovery.scopeKey, discovery.connectionId),
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
       discovery.read({
@@ -101,14 +102,11 @@ export function sqlWorksheetObjectOptions(
 ) {
   const searchable = filter.schema != null || filter.query.length > 0;
   return {
-    queryKey: [
-      'sql-worksheet-objects',
+    queryKey: queryKeys.workspace.worksheetObjects(
       discovery.scopeKey,
       discovery.connectionId,
-      filter.schema?.catalog,
-      filter.schema?.schema,
-      filter.query,
-    ],
+      filter
+    ),
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
       discovery.read(catalogueObjectRequest(filter, pageParam)),
