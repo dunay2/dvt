@@ -33,6 +33,22 @@ export type CanvasRelationalTreePlacedEdge = Readonly<{
 }>;
 const DEFAULT_SIZE: CanvasRelationalTreeNodeSize = { width: 224, height: 76 };
 const GAP = 48;
+export const HORIZONTAL_PADDING = 36;
+export const BOTTOM_PADDING = 36;
+
+export function measureCanvasRelationalBounds(
+  cards: readonly (CardPosition & CanvasRelationalTreeNodeSize)[]
+) {
+  const origin = {
+    x: Math.min(0, ...cards.map((card) => card.x - HORIZONTAL_PADDING)),
+    y: Math.min(0, ...cards.map((card) => card.y - BOTTOM_PADDING)),
+  };
+  return {
+    origin,
+    width: Math.max(...cards.map((card) => card.x + card.width)) + HORIZONTAL_PADDING - origin.x,
+    height: Math.max(...cards.map((card) => card.y + card.height)) + BOTTOM_PADDING - origin.y,
+  };
+}
 
 export function measureCanvasRelationalTree(
   root: CanvasRelationalTreeNode,

@@ -1,6 +1,9 @@
 /** Owned concern: calculate deterministic left-to-right geometry for one relational tree. */
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import {
+  HORIZONTAL_PADDING,
+  BOTTOM_PADDING,
+  measureCanvasRelationalBounds,
   measureCanvasRelationalTree,
   type CanvasRelationalTreeNodeSize,
   type CardPosition,
@@ -17,10 +20,8 @@ export type {
 } from './canvasRelationalTreeGeometryMetrics';
 export const CANVAS_RELATIONAL_OUTPUT_POSITION_ID = 'canvas-relational-output';
 const NODE_HEIGHT = 76;
-const HORIZONTAL_PADDING = 36;
 const OUTPUT_GAP = 64;
 const OUTPUT_WIDTH = 156;
-const BOTTOM_PADDING = 36;
 
 export type CanvasRelationalTreeLayout = CanvasRelationalTreeNodeSize &
   Readonly<{
@@ -32,20 +33,6 @@ export type CanvasRelationalTreeLayout = CanvasRelationalTreeNodeSize &
     nodes: readonly CanvasRelationalTreePlacedNode[];
     edges: Readonly<ReturnType<typeof projectCanonicalRelationEdges>>;
   }>;
-
-function measureCanvasRelationalBounds(
-  cards: readonly (CardPosition & CanvasRelationalTreeNodeSize)[]
-) {
-  const origin = {
-    x: Math.min(0, ...cards.map((card) => card.x - HORIZONTAL_PADDING)),
-    y: Math.min(0, ...cards.map((card) => card.y - BOTTOM_PADDING)),
-  };
-  return {
-    origin,
-    width: Math.max(...cards.map((card) => card.x + card.width)) + HORIZONTAL_PADDING - origin.x,
-    height: Math.max(...cards.map((card) => card.y + card.height)) + BOTTOM_PADDING - origin.y,
-  };
-}
 
 export function layoutCanvasRelationalTree(
   root: CanvasRelationalTreeNode | null,

@@ -12,11 +12,7 @@ import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 import type { CanonicalNode } from '../../types/canonical';
 
 import { useCanvasRelationalTreeAnalysis } from './useCanvasRelationalTreeAnalysis';
-import {
-  projectCanvasRelationalTreeCatalogue,
-  projectPendingCanvasRelationalTreeCatalogue,
-  projectCanvasRelationalCatalogueSelection,
-} from './canvasRelationalTreeCatalogue';
+import { useCanvasRelationalTreeCatalogue } from './useCanvasRelationalTreeCatalogue';
 import {
   projectCanvasSourceOccurrencePublication,
   unavailableCanvasRelationIds,
@@ -114,36 +110,17 @@ export function useCanvasRelationalTreeWorkbenchModel(
   const selection = useCanvasRelationalSelection(args.transformNode.id, projection);
   const { selectedLocator, selectTreeNode } = selection;
 
-  const catalogue = useMemo(() => {
-    const base =
-      projection == null
-        ? composition?.state === 'pending' || pendingAuthoring
-          ? projectPendingCanvasRelationalTreeCatalogue(sourceInputRecovery.inputs, args.nodes)
-          : []
-        : projectCanvasRelationalTreeCatalogue({
-            inputs: projection.inputs,
-            nodes: args.nodes,
-            root: projection.root,
-          });
-    return projectCanvasRelationalCatalogueSelection({
-      catalogue: base,
-      authoringAvailable,
-      selectedLocator,
-      pending: session.occurrences.pending,
-      selectedOccurrenceId: session.occurrences.selectedId,
-      operations: session.staged.operations,
-    });
-  }, [
-    args.nodes,
-    composition?.state,
-    sourceInputRecovery.inputs,
-    authoringAvailable,
+  const catalogue = useCanvasRelationalTreeCatalogue({
     projection,
-    session.occurrences.pending,
-    session.occurrences.selectedId,
-    session.staged.operations,
+    composition,
+    pendingAuthoring,
+    inputs: sourceInputRecovery.inputs,
+    nodes: args.nodes,
+    authoringAvailable,
     selectedLocator,
-  ]);
+    occurrences: session.occurrences,
+    operations: session.staged.operations,
+  });
   const unavailableMessage =
     analysis.semantic?.state === 'retained'
       ? args.copy.relationalTreeProducerFieldsUnavailableMessage
