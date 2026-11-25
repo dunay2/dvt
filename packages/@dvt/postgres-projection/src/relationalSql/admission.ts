@@ -1,5 +1,9 @@
 /** Preserve physical scope and profile integrity independently of relation shape. */
-import { PostgresIdentifierV1Schema, type ConnectedSourceRef } from '@dvt/contracts';
+import {
+  isDvtSubstraitLiteralRowPlanV1,
+  PostgresIdentifierV1Schema,
+  type ConnectedSourceRef,
+} from '@dvt/contracts';
 import type { SubstraitDocument, SubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { DvtSubstraitPostgresProjectionError } from '../dvtProjection.js';
@@ -28,6 +32,10 @@ export function admitSqlSources(
     unsupported('A current pinned Substrait document is required.');
   if (document.plan.advancedExtensions != null || document.plan.expectedTypeUrls.length > 0)
     unsupported('Plan extensions are outside the PostgreSQL profile.');
+  if (isDvtSubstraitLiteralRowPlanV1(document.plan, document.sidecar)) {
+    if (producers.size !== 0) unsupported('A literal model cannot consume a producer.');
+    return [];
+  }
   const declarations = document.plan.extensions.flatMap((entry) =>
     entry.mappingType.case === 'extensionFunction' ? [entry.mappingType.value] : []
   );
@@ -48,6 +56,8 @@ export function admitSqlSources(
         unsupported('Only Read relations own physical source bindings.');
       continue;
     }
+    if (entry.relation.relType.value.readType.case === 'virtualTable')
+      unsupported('A virtual table must match the complete literal-row profile.');
     if (entry.binding.producerRef != null) {
       const producer = producers.get(id);
       if (producer == null)
