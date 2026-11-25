@@ -36,6 +36,7 @@ import type { CanvasGraphSearchViewportBinding } from './canvasGraphSearchContro
 import type { CanvasGraphFilterControlBinding } from './canvasGraphFilterControl.binding';
 import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
+import { useCanvasViewportDragFrames } from './useCanvasViewportDragFrames';
 import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
 import styles from './CanvasViewportSurfaceView.module.css';
 import interactionStyles from './canvasViewportInteraction.module.css';
@@ -148,6 +149,7 @@ function CanvasViewportReactFlowSurface({
   copy,
 }: CanvasReactFlowSurfaceProps): JSX.Element {
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
+  const dragFrames = useCanvasViewportDragFrames(algebraicDrop.nodes, onNodesChange);
   const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
   const backgroundAdd = useCanvasBackgroundAddMenuGesture();
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> =
@@ -157,16 +159,16 @@ function CanvasViewportReactFlowSurface({
       onImpactFocusNodeChange?.(null);
       contextMenuPresenter.handlePaneClick(event);
     };
+  const handleNodeDragStart = () => {
+    contextMenuPresenter.closeContextMenu();
+    onCloseNodeHealthPopover();
+  };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> =
     function handleNodeDragHandler(_event, node, nodes) {
-      contextMenuPresenter.closeContextMenu();
-      onCloseNodeHealthPopover();
       algebraicDrop.handleNodeDrag(node, nodes);
     };
   const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> =
     function handleNodeDragStopHandler(event, node, nodes) {
-      contextMenuPresenter.closeContextMenu();
-      onCloseNodeHealthPopover();
       algebraicDrop.handleNodeDragStop(node, nodes);
       onNodeDragStop(event, node, nodes);
     };
@@ -212,13 +214,14 @@ function CanvasViewportReactFlowSurface({
     >
       <ReactFlow
         {...interaction.flow}
-        nodes={algebraicDrop.nodes}
+        nodes={dragFrames.nodes}
         edges={edges}
-        onNodesChange={canMoveNodes ? onNodesChange : undefined}
+        onNodesChange={canMoveNodes ? dragFrames.onNodesChange : undefined}
         onEdgesChange={canEditEdges ? onEdgesChange : undefined}
         onConnect={canEditEdges ? onConnect : undefined}
         onReconnect={canEditEdges ? onReconnect : undefined}
         onPaneClick={handlePaneClick}
+        onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         nodeTypes={nodeTypes}

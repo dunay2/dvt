@@ -498,6 +498,7 @@ function CanvasViewportWithPresenter({
 
   const surface = (
     <CanvasViewportSurfaceView
+      key={JSON.stringify([props.catalogueScopeKey, props.canMoveNodes ?? props.canEditEdges])}
       viewportRef={viewportRef}
       resolvedCanvasPalette={resolvedCanvasPalette}
       canEditEdges={props.canEditEdges}
