@@ -11,7 +11,7 @@ This folder groups engine-specific tooling and engineering aids.
 
 ## Pages
 
-- [Contract tooling proposal](./CONTRACT_TOOLING_PROPOSAL.v1.md)
+- [Contract tooling proposal](./contract-tooling-proposal-v1.md)
 - [Determinism tooling](./determinism-tooling.md)
 
 ## Related pages
