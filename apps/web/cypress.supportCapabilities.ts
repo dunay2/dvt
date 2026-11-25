@@ -21,6 +21,8 @@ type BrowserCoverage =
   readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
 
 export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
+  'apps/web/src/app/plugins/graph/GraphNodeColumnViews.tsx': ['available'],
+  'apps/web/src/app/plugins/graph/GraphNodeColumnViews.module.css': ['available'],
   'apps/web/cypress/support/dbtModelComposition.ts': {
     controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-composition.cy.ts'],
   },

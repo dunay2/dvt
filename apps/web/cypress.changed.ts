@@ -136,9 +136,9 @@ class BrowserEvidenceSelection {
     const { path, filePath } = change;
     const coverage = SUPPORT_CAPABILITIES[path];
     this.required.add(path);
+    if (!path.startsWith('apps/web/cypress/')) this.vitest.add(filePath);
     if (coverage && 'controlledSpecs' in coverage) {
       this.admitProductConsumers(coverage.controlledSpecs);
-      if (!path.startsWith('apps/web/cypress/')) this.vitest.add(filePath);
       return;
     }
     this.requireCapabilities(coverage ?? browserCapabilities(path), path);
