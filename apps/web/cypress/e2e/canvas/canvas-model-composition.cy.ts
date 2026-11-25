@@ -106,7 +106,12 @@ function assertIndependentModelCopy({
 function assertSavedPhysicalOccurrences(
   initial: ReturnType<typeof stubWorkbenchScenario>,
   source: ReturnType<typeof stubWorkbenchScenario>['nodes'][number]
-): Readonly<{ ids: string[]; aliases: string[] }> {
+): Readonly<{
+  ids: string[];
+  aliases: string[];
+  writesBeforeReload: number;
+  ledgerFingerprint: string;
+}> {
   const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
   expect(calls, 'one actual protected composition save').to.have.length(1);
   const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
@@ -135,7 +140,12 @@ function assertSavedPhysicalOccurrences(
   expect(
     ids.every((id) => !before.sidecar.relations.some((read) => read.relationId === id))
   ).to.equal(true);
-  return { ids, aliases };
+  return {
+    ids,
+    aliases,
+    writesBeforeReload: calls.length,
+    ledgerFingerprint: JSON.stringify(calls),
+  };
 }
 
 describe('Model composition inside the selected Model', () => {
@@ -373,11 +383,12 @@ describe('Model composition inside the selected Model', () => {
         ).to.deep.equal([...saved.ids].sort());
         for (const alias of saved.aliases) expect($cards.text()).to.contain(alias);
       });
-    cy.then(() =>
-      expect(
-        getE2eApiCalls('/workspace/graph/draft', 'PUT'),
-        'reload makes no redundant save'
-      ).to.have.length(0)
-    );
+    cy.then(() => {
+      const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+      expect(calls.length - saved.writesBeforeReload, 'reload adds zero draft writes').to.equal(0);
+      expect(JSON.stringify(calls), 'the acknowledged write ledger remains intact').to.equal(
+        saved.ledgerFingerprint
+      );
+    });
   });
 });
