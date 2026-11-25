@@ -1,8 +1,21 @@
 /** Prove SQL authoring through real Monaco, semantic Apply, data drawer and durable reload. */
 import { WorkspaceGraphDraftSaveRequestSchema } from '@dvt/contracts';
 
-import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import { modelSqlSource, stubModelSqlAuthoring } from '../../support/modelSqlAuthoring';
+import {
+  readWorkbenchCardPosition,
+  verifyCompleteTreeFit,
+} from '../../support/relationalWorkbench/geometry';
+import {
+  openWorkbenchModel,
+  revisitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
+import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 const panel = '[data-slot="canvas-model-sql"]';
@@ -23,7 +36,77 @@ describe('Model SQL authoring', () => {
     assertContextualSqlRetainsBuffer(journey.prefix);
     reloadSavedModel(journey.model);
   });
+  it('keeps Model world positions through two SQL generations, close and reload', () => {
+    const journey = { ...stubModelSqlAuthoring(true), writesBefore: 0 };
+    const selectors = [
+      '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
+      '[data-slot="canvas-relational-tree-node"][data-operator="project"]',
+      '[data-slot="canvas-relational-tree-output-open"]',
+    ];
+    const positions = new Map<string, { x: number; y: number }>();
+    selectModel(journey.model);
+    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    for (const selector of selectors) {
+      verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+      moveWorkbenchCard(selector, 30, 45);
+      cy.get(selector).then(($card) =>
+        positions.set(selector, readWorkbenchCardPosition($card[0]))
+      );
+    }
+    regenerateWithoutMoving(journey, positions);
+    regenerateWithoutMoving(journey, positions);
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get(
+      `.react-flow__node[data-id="${journey.model.id}"] [data-slot="canvas-node-shell"]`
+    ).dblclick(40, 18);
+    assertModelWorldPositions(positions);
+    cy.on('window:before:load', installE2eApiFetchStub);
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
+    openWorkbenchModel(journey.model.id);
+    assertModelWorldPositions(positions);
+    cy.screenshot('model-sql-regeneration-layout-retained', { capture: 'viewport' });
+  });
 });
+
+function regenerateWithoutMoving(
+  journey: ModelSqlJourney,
+  positions: ReadonlyMap<string, { x: number; y: number }>
+): void {
+  let previousOperation = '';
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]')
+    .invoke('attr', 'data-relation-id')
+    .then((id) => {
+      previousOperation = id!;
+    });
+  cy.then(() => {
+    journey.writesBefore = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+  });
+  openContextualModelSql();
+  cy.contains(`${panel} button`, 'Generate Model').should('be.enabled').click();
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.wrap(null).should(() =>
+    expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(journey.writesBefore + 1)
+  );
+  cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(($card) =>
+    expect($card.attr('data-relation-id')).not.to.equal(previousOperation)
+  );
+  assertModelWorldPositions(positions);
+}
+
+function assertModelWorldPositions(positions: ReadonlyMap<string, { x: number; y: number }>): void {
+  cy.then(() => {
+    expect(positions.size).to.equal(3);
+    for (const [selector, position] of positions)
+      cy.get(selector).should(($card) => {
+        const current = readWorkbenchCardPosition($card[0]);
+        expect(current.x).to.be.closeTo(position.x, 0.001);
+        expect(current.y).to.be.closeTo(position.y, 0.001);
+      });
+  });
+}
 
 function selectModel(model: ModelSqlJourney['model']): void {
   cy.viewport(1200, 700);

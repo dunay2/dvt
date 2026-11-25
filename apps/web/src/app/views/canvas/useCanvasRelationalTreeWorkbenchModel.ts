@@ -139,15 +139,16 @@ export function useCanvasRelationalTreeWorkbenchModel(
               ? args.copy.relationalTreeInputIdentityUnavailableMessage
               : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
-    if (!session.active && projection != null && item.treeLocator != null)
-      selectTreeNode(item.treeLocator);
+    const locator = projection == null ? null : item.treeLocator;
+    if (!session.active && locator != null) selectTreeNode(locator);
     else if (authoringAvailable && item.sourceNodeId != null)
       session.occurrences.add(item.sourceNodeId);
-    else if (projection != null && item.treeLocator != null) selectTreeNode(item.treeLocator);
+    else if (locator != null) selectTreeNode(locator);
   };
 
   return {
     ...graph,
+    layoutDocument: query.persisted.document,
     modelComposition,
     inputRevision: query.inputRevisionFor(sourceInputRecovery.inputs),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),

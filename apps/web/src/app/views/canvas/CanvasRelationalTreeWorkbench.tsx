@@ -98,6 +98,7 @@ const CanvasRelationalTreeWorkbenchSession = forwardRef<
     >
       <CanvasModelLayoutSession
         layoutKey={layoutKey}
+        document={model.layoutDocument}
         initialPositions={model.session.positions}
         onPositionsChange={model.session.setPositions}
       >

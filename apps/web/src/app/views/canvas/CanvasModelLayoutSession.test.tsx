@@ -11,6 +11,8 @@ import { projectionTarget } from './CanvasRelationalTreeWorkbench.operation-drag
 import { CanvasModelLayoutSession, canvasModelLayoutKey } from './CanvasModelLayoutSession';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 import { CANVAS_RELATIONAL_OUTPUT_POSITION_ID } from './canvasRelationalTreeGeometry';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
   COPY,
   container,
@@ -31,14 +33,14 @@ describe('Model layout persistence through the real Workbench', () => {
   const handle = createRef<CanvasRelationalTreeWorkbenchHandle>();
   const firstKey = 'model-layout-project-a';
   const secondKey = 'model-layout-project-b';
-  const render = async (layoutKey = firstKey): Promise<void> => {
+  const render = async (layoutKey = firstKey, target = transform): Promise<void> => {
     await act(async () =>
       root.render(
         <CanvasRelationalTreeWorkbench
           {...{ layoutKey }}
           ref={handle}
-          transformNode={transform}
-          nodes={[source, transform]}
+          transformNode={target}
+          nodes={[source, target]}
           edges={[edge(source.id)]}
           copy={COPY}
           authoring={authoring}
@@ -61,6 +63,65 @@ describe('Model layout persistence through the real Workbench', () => {
     localStorage.clear();
     authoring.onApplyNodeDraft.mockClear();
     useCanvasInteractionStore.setState({ _hasHydrated: true, canvasLayouts: {} });
+  });
+  it('keeps settled world coordinates through canonical regeneration and scoped store rehydration', async () => {
+    await render();
+    for (const id of Object.keys(positions())) {
+      await act(async () =>
+        container
+          .querySelector<HTMLElement>(`[data-relational-card-id="${id}"]`)!
+          .dispatchEvent(
+            new KeyboardEvent('keydown', {
+              bubbles: true,
+              key: 'ArrowDown',
+              altKey: true,
+              shiftKey: true,
+            })
+          )
+      );
+    }
+    const before = Object.values(positions()).sort((a, b) => a.x - b.x);
+    const regenerated = projectionTarget(source);
+    await render(firstKey, regenerated);
+    expect(Object.values(positions()).sort((a, b) => a.x - b.x)).toEqual(before);
+    expect(authoring.onApplyNodeDraft).not.toHaveBeenCalled();
+    const saved = localStorage.getItem('dvt-web-canvas-interaction')!;
+    await act(async () => root.render(null));
+    useCanvasInteractionStore.setState({ canvasLayouts: {} });
+    localStorage.setItem('dvt-web-canvas-interaction', saved);
+    await useCanvasInteractionStore.persist.rehydrate();
+    await render(firstKey, regenerated);
+    expect(Object.values(positions()).sort((a, b) => a.x - b.x)).toEqual(before);
+    expect(authoring.onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+  it('publishes nothing for an equivalent document copy or a different Model layout key', async () => {
+    const document = decodeDvtSubstraitSemanticDocument(
+      readDvtTransformAuthoringAuthority(transform)!.semanticDocument
+    );
+    const other = decodeDvtSubstraitSemanticDocument(
+      readDvtTransformAuthoringAuthority(projectionTarget(source))!.semanticDocument
+    );
+    const publish = vi.fn();
+    const seed = new Map([['legacy-locator', { x: 300, y: -100 }]]);
+    const show = async (layoutKey: string, current = document): Promise<void> => {
+      await act(async () =>
+        root.render(
+          <CanvasModelLayoutSession
+            layoutKey={layoutKey}
+            document={current}
+            initialPositions={seed}
+            onPositionsChange={publish}
+          >
+            <span>Model</span>
+          </CanvasModelLayoutSession>
+        )
+      );
+    };
+    await show(firstKey);
+    await show(firstKey, structuredClone(document));
+    await show(secondKey, other);
+    expect(publish).not.toHaveBeenCalled();
+    expect(useCanvasInteractionStore.getState().canvasLayouts).toEqual({});
   });
   it('retains source, operation and output moves after closing and reopening without Apply', async () => {
     await render();

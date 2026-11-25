@@ -224,6 +224,48 @@ callback. The layout still derives detail offsets from card sizes. Canceling or
 rejecting a removal proposal publishes nothing. Arrange clears the retained
 coordinates through the same layout command.
 
+### Layout across contextual SQL generation
+
+Generating a Model from its contextual SQL editor preserves the compact
+coordinates of surviving inputs, operations and Output. A changed semantic digest
+is not a layout reset. The local adapter reconciles an accepted canonical
+document transition by exact surviving relation identity first, then by a unique
+exact correspondence of canonical operation semantics and ordered input
+provenance. Relation anchors and newly allocated local identities do not define
+presentation equivalence. Source and producer contracts, expressions, types and
+the plan environment remain part of the comparison. Labels, tree paths,
+operation kinds or ordinal positions alone cannot establish correspondence.
+
+Ambiguous, changed and unmatched operations are new cards. Place only those
+cards in deterministic free space around the preserved rectangles, accounting
+for card bounds and Output. Do not move surviving cards to make room or use
+Generate as an implicit Arrange. Existing manual overlaps remain user-owned.
+Explicit Arrange retains its current reset behavior.
+
+The reconciliation changes local coordinates through `PersistCanvasLayout`;
+it never rewrites relation IDs, semantic documents or protected save payloads.
+Close/reopen and local-store rehydration must retain the resulting coordinates.
+SQL validation, preview, concurrency denial and the single protected authoring
+save retain their existing owners. Rejected or stale proposals publish no
+replacement canonical tree and therefore perform no layout transition.
+
+```mermaid
+flowchart LR
+  Previous[Previous canonical tree and compact positions] --> Match[Exact identity or unique semantic correspondence]
+  Accepted[Accepted SQL proposal tree] --> Match
+  Match --> Fixed[Surviving cards and Output stay fixed]
+  Accepted --> New[Unmatched cards]
+  Fixed --> Place[Place only new rectangles in free space]
+  New --> Place
+  Place --> Local[Existing local layout store]
+  Local --> Reopen[Close, reopen and rehydrate]
+```
+
+The [prospective rationale and finite Q scope](https://github.com/dunay2/dvt/issues/3951#issuecomment-7170568838)
+govern the change. The real contextual SQL journey must check positions before
+Generate, after its accepted save, after reopening and after reload. Negative
+coverage retains changed or ambiguous SQL correspondence and explicit Arrange.
+
 One pure Canvas-position value predicate serves store write suppression, outer
 Canvas persistence, and relational layout restoration. Equivalent record or Map
 coordinates are acknowledgements of the current placement; they do not reset

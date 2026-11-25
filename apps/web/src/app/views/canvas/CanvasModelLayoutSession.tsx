@@ -1,9 +1,13 @@
 /** Owned concern: adapt settled Model placement to the existing local Canvas layout store. */
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { jcsCanonicalize } from '@dvt/crypto';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { CardPosition } from './canvasRelationalTreeGeometry';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import { reconcileCanvasModelLayout } from './canvasModelLayoutReconciliation';
+import { areCanvasPositionsEqual } from '../../types/canvasPositions';
 
 export function canvasModelLayoutKey(
   scope: WorkspaceScope | undefined,
@@ -24,11 +28,13 @@ export function canvasModelLayoutKey(
 
 export function CanvasModelLayoutSession({
   layoutKey,
+  document,
   initialPositions,
   onPositionsChange,
   children,
 }: Readonly<{
   layoutKey?: string;
+  document?: SubstraitDocument | null;
   initialPositions: ReadonlyMap<string, CardPosition>;
   onPositionsChange: (positions: ReadonlyMap<string, CardPosition>) => void;
   children: ReactNode;
@@ -49,11 +55,29 @@ export function CanvasModelLayoutSession({
     },
     [layoutKey, save, onPositionsChange]
   );
+  const identity = useMemo(
+    () => (document == null ? null : jcsCanonicalize(document.sidecar)),
+    [document]
+  );
+  const previous = useRef({ layoutKey, document, identity });
+  const seed = positions ?? initialPositions;
+  const reconciled = useMemo(() => {
+    const before = previous.current;
+    if (before.layoutKey !== layoutKey || before.identity === identity) return seed;
+    if (before.document == null || document == null) return seed;
+    return reconcileCanvasModelLayout(before.document, document, seed);
+  }, [document, seed, layoutKey, identity]);
+  useLayoutEffect(() => {
+    if (layoutKey != null && !hydrated) return;
+    previous.current = { layoutKey, document, identity };
+    if (!areCanvasPositionsEqual(reconciled, seed)) publish(reconciled);
+  }, [document, reconciled, seed, publish, layoutKey, hydrated, identity]);
   if (layoutKey != null && !hydrated) return null;
   return (
     <RelationalLayoutSession
+      key={layoutKey}
       isolated={layoutKey != null}
-      initialPositions={positions ?? initialPositions}
+      initialPositions={reconciled}
       onPositionsChange={publish}
     >
       {children}

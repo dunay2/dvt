@@ -1,8 +1,5 @@
 /** Owned concern: calculate deterministic left-to-right geometry for one relational tree. */
-import type {
-  CanvasRelationalTreeChildRole,
-  CanvasRelationalTreeNode,
-} from './canvasRelationalTreeProjection';
+import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import {
   measureCanvasRelationalTree,
   type CanvasRelationalTreeNodeSize,
@@ -11,6 +8,7 @@ import {
 } from './canvasRelationalTreeGeometryMetrics';
 import { projectCanvasRelationalCardExpansion } from './canvasRelationalCardExpansion';
 import { projectCanonicalRelationEdges } from './relational-layout/relationalTreeEdgeProjection';
+import { placeUnanchoredCanvasCards } from './canvasRelationalUnplacedCards';
 
 export type {
   CardPosition,
@@ -88,10 +86,10 @@ export function layoutCanvasRelationalTree(
 
   const place = (
     node: CanvasRelationalTreeNode,
-    parentLocator: string | null,
-    role: CanvasRelationalTreeChildRole | null,
-    ordinal: number,
-    siblingCount: number
+    parent: Pick<
+      CanvasRelationalTreePlacedNode,
+      'parentLocator' | 'role' | 'ordinal' | 'siblingCount'
+    >
   ): void => {
     const depth = depths.get(node.locator) ?? 0;
     const { x, y } = positionFor(node);
@@ -101,18 +99,20 @@ export function layoutCanvasRelationalTree(
       y,
       ...sizeFor(node),
       level: rootDepth - depth + 1,
-      parentLocator,
-      role,
-      ordinal,
-      siblingCount,
+      ...parent,
     });
 
     node.children.forEach((child) => {
-      place(child.node, node.locator, child.role, child.ordinal, node.children.length);
+      place(child.node, {
+        parentLocator: node.locator,
+        role: child.role,
+        ordinal: child.ordinal,
+        siblingCount: node.children.length,
+      });
     });
   };
 
-  if (root != null) place(root, null, null, 0, 1);
+  if (root != null) place(root, { parentLocator: null, role: null, ordinal: 0, siblingCount: 1 });
   const rootNode = nodes[0];
   if (rootNode != null) {
     output.inputLocator = rootNode.node.locator;
@@ -138,6 +138,16 @@ export function layoutCanvasRelationalTree(
     })
   );
   const bounds = [...nodes, output];
+  const fixed = new Set(
+    bounds.filter((card) =>
+      effectivePositions.has(
+        'node' in card
+          ? (card.node.relationId ?? card.node.locator)
+          : CANVAS_RELATIONAL_OUTPUT_POSITION_ID
+      )
+    )
+  );
+  placeUnanchoredCanvasCards(bounds, fixed);
   return {
     expansionFrame: expanded?.frame,
     ...measureCanvasRelationalBounds(bounds),
