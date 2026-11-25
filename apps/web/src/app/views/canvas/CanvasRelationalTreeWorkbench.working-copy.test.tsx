@@ -18,6 +18,10 @@ import { createModelOutputDependencyFixture } from './canvasModelOutputDependenc
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 import { CanvasModelBrowser, type CanvasModelBrowserPresentation } from './CanvasModelBrowser';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import { dbtModelProjection } from './canvasDbtModelReference.test-fixtures';
+import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
+import { canvasDbtModelDefinitionId } from './canvasDbtModelReference';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 
 async function dropModel(id: string, scopeKey?: string): Promise<void> {
   const event = new MouseEvent('drop', { bubbles: true, cancelable: true });
@@ -37,6 +41,76 @@ async function dropModel(id: string, scopeKey?: string): Promise<void> {
 
 describe('working Models inside the open Model', () => {
   setupWorkbenchTest();
+  it('keeps file-only discovery private through Cancel and refreshes once for Apply', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const projection = DbtProjectGraphProjectionSchema.parse({
+      ...dbtModelProjection,
+      executionTarget: {
+        ...dbtModelProjection.executionTarget,
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse-main',
+        },
+      },
+    });
+    const refresh = vi.fn(async () => projection);
+    const apply = vi.fn<CanvasRelationalTreeAuthoringContract['onApplyNodeDraft']>(() => ({
+      outcome: 'no_changes',
+    }));
+    const context: CanvasModelBrowserPresentation = {
+      scopeKey: 'project/native',
+      mode: 'semantic',
+      onSelect: () => false,
+      catalog: () => null,
+      cataloguePresentation: {
+        query: '',
+        open: true,
+        expandedIds: new Set(),
+        onQuery: () => {},
+        onOpenChange: () => {},
+        onToggleDetails: () => {},
+      },
+      fileModels: { projection, refresh },
+    };
+    const id = canvasDbtModelDefinitionId(
+      projection.authorityBinding.canvasId,
+      'model.demo.clientes'
+    );
+    await act(async () =>
+      root.render(
+        <CanvasModelBrowser.Provider value={context}>
+          <CanvasRelationalTreeWorkbench
+            transformNode={graph.producer}
+            nodes={graph.nodes}
+            edges={graph.edges}
+            copy={COPY}
+            authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+          />
+        </CanvasModelBrowser.Provider>
+      )
+    );
+    await dropModel(id, context.scopeKey!);
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(refresh).not.toHaveBeenCalled();
+    expect(apply).not.toHaveBeenCalled();
+    await dropModel(id, context.scopeKey!);
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .click()
+    );
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(apply).toHaveBeenCalledTimes(1);
+    const staged = apply.mock.calls[0]?.[2]?.modelCopies?.[0]?.copy;
+    expect(staged).toMatchObject({ discovery: { definition: { id } }, node: { definitionId: id } });
+    expect(graph.nodes.some((node) => node.id === id)).toBe(false);
+  });
   it('uses the registered dbt publication as a private linked Input and Cancel discards it', async () => {
     const graph = await createModelOutputDependencyFixture();
     const definition = {

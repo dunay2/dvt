@@ -19,6 +19,7 @@ export type CanvasExplorerHeading = Readonly<{ label: string; contextLabel?: str
 export type CanvasExplorerModelAction = Readonly<{
   label: string;
   referenceLabel?: string;
+  canActivate?: (id: string) => boolean;
   onActivate: (id: string) => unknown;
 }>;
 

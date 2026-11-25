@@ -16,7 +16,7 @@ import {
 import {
   canvasDbtModelCompositionSourceSignature,
   type CanvasDbtModelCompositionReference,
-} from './canvasDbtModelReference';
+} from './canvasDbtModelCompositionDiscovery';
 import {
   resolveCanvasDvtCompositionInputs,
   type CanvasDvtCompositionInput,

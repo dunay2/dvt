@@ -30,6 +30,11 @@ import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTr
 import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasModelCompositionDrop } from './useCanvasModelCompositionDrop';
 import { getPluginPortMap } from '../../plugins/registry';
+import { useCanvasModelBrowserPresentation } from './CanvasModelBrowser';
+import {
+  discoverCanvasDbtModels,
+  guardDiscoveredDbtCompositionApply,
+} from './canvasDbtModelCompositionDiscovery';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
   return (
@@ -47,9 +52,19 @@ export function useCanvasRelationalTreeWorkbenchModel(
   >
 ) {
   const state = useCanvasRelationalTreeDraftState();
+  const browser = useCanvasModelBrowserPresentation();
+  const publication = browser?.fileModels;
+  const discoveries = useMemo(
+    () => discoverCanvasDbtModels(publication?.projection, inputArgs.nodes),
+    [publication?.projection, inputArgs.nodes]
+  );
+  const authoring = useMemo(
+    () => guardDiscoveredDbtCompositionApply(inputArgs.authoring, publication?.refresh),
+    [inputArgs.authoring, publication?.refresh]
+  );
   const query = useCanvasRelationalTreeAnalysis({ ...inputArgs, copies: state.modelCopies });
   const { graph, analysis, result, projection, composition, outputPlanRelationIds } = query;
-  const args = { ...inputArgs, ...graph };
+  const args = { ...inputArgs, ...graph, authoring };
   const pluginPorts = useMemo(() => getPluginPortMap(), []);
   const pendingAuthoring =
     args.authoring != null &&
@@ -74,6 +89,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     state,
     start: session.start,
     analysis: session.analysis,
+    discoveries,
   });
   const { sourceInputRecovery } = session;
   const sourceOutputFieldsByRelationId = useMemo(

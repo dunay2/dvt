@@ -41,7 +41,18 @@ export function projectCanvasModelCopies(
   return pending.length === 0
     ? { nodes: args.nodes, edges: args.edges }
     : {
-        nodes: [...args.nodes, ...pending.map((addition) => addition.copy.node)],
+        nodes: [
+          ...new Map(
+            [
+              ...args.nodes,
+              ...pending.flatMap(({ copy }) =>
+                'linkedReference' in copy && copy.discovery != null
+                  ? [copy.discovery.definition, copy.node]
+                  : [copy.node]
+              ),
+            ].map((node) => [node.id, node])
+          ).values(),
+        ],
         edges: [
           ...args.edges,
           ...pending.flatMap((addition) => [...addition.copy.edges, addition.receiverEdge]),
@@ -120,7 +131,11 @@ export function admitCanvasModelCopiesToSession(
       throw new Error('Working-copy receiver has changed.');
     const visibleNodes = resolveCanvasDraftNodes(session, args.canonicalNodesById);
     const linkedDefinition =
-      'linkedReference' in copy ? args.canonicalNodesById.get(copy.sourceId) : undefined;
+      'linkedReference' in copy
+        ? (session.localNodeCatalog?.[copy.sourceId] ??
+          args.canonicalNodesById.get(copy.sourceId) ??
+          copy.discovery?.definition)
+        : undefined;
     const nodes =
       linkedDefinition != null && !visibleNodes.some((node) => node.id === linkedDefinition.id)
         ? [...visibleNodes, linkedDefinition]
@@ -131,6 +146,16 @@ export function admitCanvasModelCopiesToSession(
       nodes,
       edges: canvasModelCompositionSessionEdges(session),
     });
+    if (
+      'linkedReference' in copy &&
+      copy.discovery != null &&
+      !args.canonicalNodesById.has(copy.sourceId) &&
+      session.localNodeCatalog?.[copy.sourceId] == null
+    )
+      session = canvasDraftSession.workingSet.updateNodeDefinition(
+        session,
+        copy.discovery.definition
+      );
     session = canvasDraftSession.workingSet.upsertNode(session, copy.node);
     session = canvasDraftSession.workingSet.replaceEdges(
       session,

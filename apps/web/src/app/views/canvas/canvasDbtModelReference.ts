@@ -5,50 +5,12 @@ import {
   readWorkspaceDbtModelReference,
   WorkspaceDbtModelReferenceSchema,
   type DbtProjectGraphProjection,
-  type WorkspaceDbtModelReference,
   type ConnectionRef,
-  workspaceNodeDefinitionId,
 } from '@dvt/contracts';
-import { jcsCanonicalize } from '@dvt/crypto';
 import { createExternalProducerSignature, indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { resolvePostgresInputDataType, sourceFieldType } from '@dvt/postgres-projection';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveDbtProjectWorkspaceFilePath } from '../code/codeViewFileSelection';
-import { createCanvasNodeInstance } from './canvasNodeInstance';
-
-export type CanvasDbtModelCompositionReference = Readonly<{
-  sourceId: string;
-  sourceSignature: string;
-  node: CanonicalNode;
-  edges: readonly [];
-  linkedReference: WorkspaceDbtModelReference;
-}>;
-
-export function canvasDbtModelCompositionSourceSignature(node: CanonicalNode): string {
-  const signature = resolveCanvasDbtModelSignature(node);
-  if (signature == null || workspaceNodeDefinitionId(node) != null)
-    throw new Error('A registered dbt Model publication is required.');
-  return jcsCanonicalize({ id: node.id, reference: signature.reference });
-}
-
-/** Allocate only a placement; authority remains on the current registered file definition. */
-export function prepareCanvasDbtModelCompositionReference(
-  args: Readonly<{
-    sourceId: string;
-    nodes: readonly CanonicalNode[];
-  }>
-): CanvasDbtModelCompositionReference {
-  const definition = args.nodes.find((node) => node.id === args.sourceId);
-  if (definition == null) throw new Error('The registered dbt Model is unavailable.');
-  const sourceSignature = canvasDbtModelCompositionSourceSignature(definition);
-  return {
-    sourceId: definition.id,
-    sourceSignature,
-    linkedReference: readWorkspaceDbtModelReference(definition)!,
-    node: createCanvasNodeInstance(definition, new Set(args.nodes.map((node) => node.name))),
-    edges: [],
-  };
-}
 
 export function canvasDbtModelDefinitionId(canvasId: string, uniqueId: string): string {
   return `dbt-model-reference:${canvasId}:${uniqueId}`;

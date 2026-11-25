@@ -23,7 +23,8 @@ import { assertCanvasModelCompositionPhysicalInputAvailable } from './canvasMode
 import {
   canvasDbtModelCompositionSourceSignature,
   prepareCanvasDbtModelCompositionReference,
-} from './canvasDbtModelReference';
+} from './canvasDbtModelCompositionDiscovery';
+import type { CanvasDbtModelDiscovery } from './canvasDbtModelCompositionDiscovery';
 
 export function useCanvasModelCompositionDrop(
   args: Readonly<{
@@ -35,9 +36,20 @@ export function useCanvasModelCompositionDrop(
     state: ReturnType<typeof useCanvasRelationalTreeDraftState>;
     start: () => boolean;
     analysis: Readonly<{ session: CanvasRelationAnalysisSession; revision: number }> | null;
+    discoveries: ReadonlyMap<string, CanvasDbtModelDiscovery>;
   }>
 ) {
-  const { nodes, edges, enabled, targetId } = args;
+  const { edges, enabled, targetId } = args;
+  const nodes = useMemo(
+    () => [
+      ...new Map(
+        [...args.nodes, ...[...args.discoveries.values()].map((item) => item.definition)].map(
+          (node) => [node.id, node]
+        )
+      ).values(),
+    ],
+    [args.nodes, args.discoveries]
+  );
   const nodeIds = useMemo(
     () =>
       new Set(
@@ -78,8 +90,14 @@ export function useCanvasModelCompositionDrop(
         const copy =
           readWorkspaceDbtModelReference(source) == null
             ? prepareCanvasModelWorkingCopy({ ...args, sourceId })
-            : prepareCanvasDbtModelCompositionReference({ nodes, sourceId });
-        const candidate = prepareCanvasModelCompositionCandidate({ ...args, copy });
+            : prepareCanvasDbtModelCompositionReference({
+                nodes,
+                sourceId,
+                ...(args.discoveries.get(sourceId) == null
+                  ? {}
+                  : { discovery: args.discoveries.get(sourceId)! }),
+              });
+        const candidate = prepareCanvasModelCompositionCandidate({ ...args, nodes, copy });
         const occurrence = createPendingSourceOccurrence(candidate.input);
         const occupied = new Set([
           ...(args.analysis?.session.sourceAliases(args.analysis.revision) ?? []),

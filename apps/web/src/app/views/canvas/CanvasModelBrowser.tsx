@@ -10,7 +10,9 @@ import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget'
 import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 import type { CanonicalNode } from '../../types/canonical';
 import type { useCanvasModelBrowser } from './useCanvasModelBrowser';
-import { CanvasProjectElementsExplorer } from './explorer/CanvasProjectElementsExplorer';
+import { CanvasProjectElementsExplorerView } from './explorer/CanvasProjectElementsExplorer';
+import { useWorkspaceDbtProjectContext } from '../code/useWorkspaceDbtProjectContext';
+import type { CanvasDbtModelPublication } from './canvasDbtModelCompositionDiscovery';
 import { CanvasWarehouseConnections } from './explorer/CanvasWarehouseConnections';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CanvasModelContextPicker } from './CanvasModelContextPicker';
@@ -31,6 +33,7 @@ export type CanvasModelBrowserPresentation = Readonly<{
     }>
   ) => ReactNode;
   cataloguePresentation: CanvasExplorerCatalogPresentation;
+  fileModels?: CanvasDbtModelPublication;
 }>;
 export const CanvasModelBrowser = createContext<CanvasModelBrowserPresentation | null>(null);
 export function useCanvasModelBrowserPresentation(): CanvasModelBrowserPresentation | null {
@@ -71,6 +74,10 @@ export function CanvasModelBrowserProvider({
   children: ReactNode;
 }>): JSX.Element {
   const { scopeKey, cataloguePresentation, catalogue } = navigation;
+  const projectContext = useWorkspaceDbtProjectContext({
+    enabled: active && selectedId != null,
+    projectRoot,
+  });
   const items = useMemo(() => {
     const selected = nodes.find((node) => node.id === selectedId);
     const definitionId = workspaceNodeDefinitionId(selected) ?? selectedId;
@@ -84,8 +91,10 @@ export function CanvasModelBrowserProvider({
     <CanvasModelBrowser.Provider
       value={{
         ...navigation,
+        fileModels: { projection: projectContext.projection, refresh: projectContext.refresh },
         catalog: (composition) => (
-          <CanvasProjectElementsExplorer
+          <CanvasProjectElementsExplorerView
+            projectContext={projectContext}
             enabled={active && selectedId != null}
             projectRoot={projectRoot}
             items={items.map((item) => ({
@@ -101,6 +110,7 @@ export function CanvasModelBrowserProvider({
                       ? {}
                       : { referenceLabel: composition.referenceLabel }),
                     onActivate: composition.copy,
+                    canActivate: (id) => composition.nodeIds.has(id),
                   }
             }
             onDragStart={(id, event) => startCompositionDrag(composition, scopeKey, id, event)}

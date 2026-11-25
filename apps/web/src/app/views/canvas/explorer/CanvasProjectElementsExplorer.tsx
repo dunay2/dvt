@@ -12,6 +12,16 @@ import { createCanvasDbtModelDefinition } from '../canvasDbtModelReference';
 import { projectCanvasExplorerFileModels, mergeCanvasExplorerModels } from './canvasExplorerItems';
 
 export function CanvasProjectElementsExplorer({
+  ...props
+}: CanvasProjectElementsInput & Readonly<{ projectRoot?: string }>): JSX.Element {
+  const projectContext = useWorkspaceDbtProjectContext({
+    enabled: props.enabled,
+    projectRoot: props.projectRoot,
+  });
+  return <CanvasProjectElementsExplorerView {...props} projectContext={projectContext} />;
+}
+
+export function CanvasProjectElementsExplorerView({
   enabled,
   items,
   onInspectNode,
@@ -26,13 +36,15 @@ export function CanvasProjectElementsExplorer({
   connections,
   projectRoot,
   canCreateInstances = false,
-}: CanvasProjectElementsInput & Readonly<{ projectRoot?: string }>): JSX.Element {
+  projectContext,
+}: CanvasProjectElementsInput &
+  Readonly<{
+    projectRoot?: string;
+    projectContext: ReturnType<typeof useWorkspaceDbtProjectContext>;
+  }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const [creationError, setCreationError] = useState(false);
-  const { binding, projection, unavailable, loading } = useWorkspaceDbtProjectContext({
-    enabled,
-    projectRoot,
-  });
+  const { binding, projection, unavailable, loading } = projectContext;
   const currentIds = new Set(items.map((item) => item.id));
   const models = projectFileExplorerModels({
     enabled,
@@ -40,9 +52,10 @@ export function CanvasProjectElementsExplorer({
     binding,
     canCreateInstances,
     inspectorTarget,
+    modelAction,
   });
   function dragModel(id: string, event: DragEvent<HTMLButtonElement>): void {
-    if (currentIds.has(id)) {
+    if (currentIds.has(id) || modelAction?.canActivate?.(id)) {
       onDragStart?.(id, event);
       return;
     }
@@ -52,14 +65,12 @@ export function CanvasProjectElementsExplorer({
       return;
     }
     try {
-      if (!canCreateInstances || projection == null) throw new Error('Unavailable model.');
-      event.dataTransfer.setData(
-        CANONICAL_NODE_DRAG_MIME_TYPE,
-        JSON.stringify(
-          createCanvasDbtModelDefinition(projection, model.definitionIdentity.uniqueId)
-        )
+      startFileModelPlacement(
+        projection,
+        model.definitionIdentity.uniqueId,
+        canCreateInstances,
+        event
       );
-      event.dataTransfer.effectAllowed = 'copy';
       setCreationError(false);
     } catch {
       event.preventDefault();
@@ -115,18 +126,36 @@ export function CanvasProjectElementsExplorer({
   );
 }
 
+function startFileModelPlacement(
+  projection: ReturnType<typeof useWorkspaceDbtProjectContext>['projection'],
+  uniqueId: string,
+  enabled: boolean,
+  event: DragEvent<HTMLButtonElement>
+): void {
+  if (!enabled || projection == null) throw new Error('Unavailable model.');
+  event.dataTransfer.setData(
+    CANONICAL_NODE_DRAG_MIME_TYPE,
+    JSON.stringify(createCanvasDbtModelDefinition(projection, uniqueId))
+  );
+  event.dataTransfer.effectAllowed = 'copy';
+}
+
 function projectFileExplorerModels({
   enabled,
   projection,
   binding,
   canCreateInstances,
   inspectorTarget,
+  modelAction,
 }: Pick<CanvasProjectElementsInput, 'enabled' | 'canCreateInstances' | 'inspectorTarget'> &
+  Pick<CanvasProjectElementsInput, 'modelAction'> &
   Pick<ReturnType<typeof useWorkspaceDbtProjectContext>, 'projection' | 'binding'>) {
   return enabled && projection != null && binding != null
     ? projectCanvasExplorerFileModels(projection).map((item) => {
         // Unbound logical Models remain visible; the existing factory owns full output admission.
-        const canPlace = canCreateInstances && projection.executionTarget?.connectionRef != null;
+        const canPlace =
+          modelAction?.canActivate?.(item.id) === true ||
+          (canCreateInstances && projection.executionTarget?.connectionRef != null);
         const selected = isSelectedFileExplorerModel(item, binding, inspectorTarget);
         return { ...item, selected, draggable: canPlace, disabled: false };
       })
