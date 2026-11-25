@@ -184,7 +184,7 @@ class BrowserEvidenceSelection {
     this.vitest.add(filePath);
   }
 
-  result() {
+  result(): ReturnType<typeof resolveWebCypressChangedPlan> {
     const commands = CAPABILITIES.filter((capability) => this.selected.has(capability)).map(
       (capability) => {
         const specs =
@@ -209,7 +209,13 @@ export function resolveWebCypressChangedPlan(
   filePaths: readonly string[],
   full = false,
   catalogSnapshots?: WebCypressCatalogSnapshots
-) {
+): {
+  vitestFiles: string[];
+  commands: WebCypressCommand[];
+  requiredFiles: string[];
+  retiredFiles: string[];
+  catalogAdditions?: readonly string[] | null;
+} {
   const selection = new BrowserEvidenceSelection(catalogSnapshots);
   if (full) selection.requireCapabilities(CAPABILITIES);
   for (const filePath of filePaths) selection.admit({ path: repositoryPath(filePath), filePath });
