@@ -65,19 +65,18 @@ export function buildCanonicalSnapshotFromWorkspaceSnapshot(
 export function buildCurrentDraftPayload(
   persistedNodePositions: CanvasNodePositions,
   draftSession: CanvasDraftSession,
-  canvasDocument: CanvasAuthoringCanvasDocument,
-  baselineDraft: WorkspaceGraphAuthoringDraft | null,
-  canonicalNodes: readonly CanonicalNode[],
-  canonicalEdges: readonly CanonicalEdge[]
+  draftDocument: Readonly<{
+    canvas: CanvasAuthoringCanvasDocument;
+    baseline: WorkspaceGraphAuthoringDraft | null;
+  }>,
+  semanticGraph: Readonly<{
+    canonicalNodes: readonly CanonicalNode[];
+    canonicalEdges: readonly CanonicalEdge[];
+  }>
 ): WorkspaceGraphAuthoringDraft {
-  const draftCanonicalNodes = [
-    ...new Map(
-      [...canonicalNodes, ...Object.values(draftSession.localNodeCatalog ?? {})].map((node) => [
-        node.id,
-        node,
-      ])
-    ).values(),
-  ];
+  const { canvas: canvasDocument, baseline: baselineDraft } = draftDocument;
+  const { canonicalNodes, canonicalEdges } = semanticGraph;
+  const draftCanonicalNodes = projectDraftCanonicalNodes(draftSession, canonicalNodes);
   const visibleNodeIds = draftSession.workingSet.visibleNodeIds.filter(
     (nodeId) => persistedNodePositions[nodeId] != null
   );
@@ -120,6 +119,19 @@ export function buildCurrentDraftPayload(
   });
 }
 
+function projectDraftCanonicalNodes(
+  draftSession: CanvasDraftSession,
+  canonicalNodes: readonly CanonicalNode[]
+): CanonicalNode[] {
+  return [
+    ...new Map(
+      [...canonicalNodes, ...Object.values(draftSession.localNodeCatalog ?? {})]
+        .filter((node) => !draftSession.removedDefinitionIds?.includes(node.id))
+        .map((node) => [node.id, node])
+    ).values(),
+  ];
+}
+
 export function isCurrentDraftProjectable(
   currentDraftPayload: WorkspaceGraphAuthoringDraft,
   draftSession: CanvasDraftSession
@@ -131,14 +143,7 @@ export function isCurrentDraftProjectable(
       .filter((node) => visibleNodeIds.has(node.id))
       .map(workspaceNodeDefinitionId)
   );
-  const registeredModelDefinitions = new Set(
-    [
-      ...Object.values(draftSession.localNodeCatalog ?? {}),
-      ...(draftSession.baseline.record?.draft.nodes ?? []),
-    ]
-      .filter((node) => node.role === 'transform' && workspaceNodeDefinitionId(node) == null)
-      .map((node) => node.id)
-  );
+  const registeredModelDefinitions = readRegisteredModelDefinitionIds(draftSession);
   return (
     currentDraftPayload.nodeIds.length === draftSession.workingSet.visibleNodeIds.length &&
     draftSession.workingSet.visibleNodeIds.every((nodeId) => semanticNodeIds.has(nodeId)) &&
@@ -147,10 +152,25 @@ export function isCurrentDraftProjectable(
         node.role === 'input' ||
         visibleNodeIds.has(node.id) ||
         referencedDefinitionIds.has(node.id) ||
-        (node.role === 'transform' &&
-          workspaceNodeDefinitionId(node) == null &&
-          registeredModelDefinitions.has(node.id))
+        (isRegisteredModelDefinition(node) && registeredModelDefinitions.has(node.id))
     ) &&
     currentDraftPayload.edges.length === draftSession.workingSet.visibleEdges.length
   );
+}
+
+function readRegisteredModelDefinitionIds(draftSession: CanvasDraftSession): ReadonlySet<string> {
+  return new Set(
+    [
+      ...Object.values(draftSession.localNodeCatalog ?? {}),
+      ...(draftSession.baseline.record?.draft.nodes ?? []),
+    ]
+      .filter(isRegisteredModelDefinition)
+      .map((node) => node.id)
+  );
+}
+
+function isRegisteredModelDefinition(
+  node: Pick<CanonicalNode, 'role' | 'definitionId' | 'sourceDefinitionId'>
+): boolean {
+  return node.role === 'transform' && workspaceNodeDefinitionId(node) == null;
 }

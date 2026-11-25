@@ -72,6 +72,53 @@ function buildDraftSession(
 
 const pluginPortMap = getPluginPortMap();
 
+function resolveReconnectionToTransform(
+  previousTarget: 'sink-node' | 'transform-node'
+): ReturnType<typeof resolveCanvasEdgeReconnectTransaction> {
+  const canonicalNodesById = new Map([
+    ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
+    ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
+  ]);
+  if (previousTarget === 'sink-node') {
+    canonicalNodesById.set('sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink'));
+  }
+  const edge: Edge = { id: 'edge-1', source: 'source-node', target: previousTarget };
+  return resolveCanvasEdgeReconnectTransaction({
+    canonicalNodesById,
+    connection: {
+      source: 'source-node',
+      sourceHandle: null,
+      target: 'transform-node',
+      targetHandle: null,
+    },
+    draftSession: buildDraftSession([{ sourceId: 'source-node', targetId: previousTarget }]),
+    edge,
+    edges: [edge],
+    pluginPortMap,
+  });
+}
+
+function assertReconnectionToTransform(
+  transaction: ReturnType<typeof resolveCanvasEdgeReconnectTransaction>
+): void {
+  expect(transaction.outcome).toBe('reconnected');
+  if (transaction.outcome !== 'reconnected') {
+    throw new Error('Expected a reconnected edge transaction');
+  }
+  expect(transaction.edges).toEqual([
+    {
+      id: 'edge-1',
+      source: 'source-node',
+      sourceHandle: null,
+      target: 'transform-node',
+      targetHandle: null,
+    },
+  ]);
+  expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
+    { sourceId: 'source-node', targetId: 'transform-node' },
+  ]);
+}
+
 describe('canvasEdgeAdmissionTransaction', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -158,7 +205,18 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects creation when an endpoint is missing from the canonical graph', async () => {
+  it.each([
+    [
+      'rejects creation when an endpoint is missing from the canonical graph',
+      'missing-node',
+      'node_not_found_in_graph',
+    ],
+    [
+      'rejects self-loop creation before graph effects are produced',
+      'source-node',
+      'self_connection',
+    ],
+  ] as const)('%s', async (_name, target, code) => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
@@ -168,7 +226,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       connection: {
         source: 'source-node',
         sourceHandle: null,
-        target: 'missing-node',
+        target,
         targetHandle: null,
       },
       draftSession: buildDraftSession(),
@@ -178,31 +236,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
 
     expect(transaction).toEqual({
       outcome: 'noop',
-      rejection: { code: 'node_not_found_in_graph' },
-    });
-  });
-
-  it('rejects self-loop creation before graph effects are produced', async () => {
-    const canonicalNodesById = new Map([
-      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-    ]);
-
-    const transaction = await resolveCanvasEdgeCreationTransaction({
-      canonicalNodesById,
-      connection: {
-        source: 'source-node',
-        sourceHandle: null,
-        target: 'source-node',
-        targetHandle: null,
-      },
-      draftSession: buildDraftSession(),
-      edges: [],
-      pluginPortMap,
-    });
-
-    expect(transaction).toEqual({
-      outcome: 'noop',
-      rejection: { code: 'self_connection' },
+      rejection: { code },
     });
   });
 
@@ -273,10 +307,8 @@ describe('canvasEdgeAdmissionTransaction', () => {
     const persistedDraft = buildCurrentDraftPayload(
       Object.fromEntries(canonicalNodes.map((node, index) => [node.id, { x: index * 100, y: 0 }])),
       draftSession,
-      { kind: 'transformation', title: 'Main canvas' },
-      null,
-      canonicalNodes,
-      []
+      { canvas: { kind: 'transformation', title: 'Main canvas' }, baseline: null },
+      { canonicalNodes: canonicalNodes, canonicalEdges: [] }
     );
     const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(persistedDraft);
     const projection = buildCanvasAuthoringGraphProjection({
@@ -305,47 +337,8 @@ describe('canvasEdgeAdmissionTransaction', () => {
   });
 
   it('reconnects an edge with a stable edge identity and draft visible edges together', () => {
-    const canonicalNodesById = new Map([
-      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
-      ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
-    ]);
-    const edge: Edge = {
-      id: 'edge-1',
-      source: 'source-node',
-      target: 'sink-node',
-    };
-
-    const transaction = resolveCanvasEdgeReconnectTransaction({
-      canonicalNodesById,
-      connection: {
-        source: 'source-node',
-        sourceHandle: null,
-        target: 'transform-node',
-        targetHandle: null,
-      },
-      draftSession: buildDraftSession([{ sourceId: 'source-node', targetId: 'sink-node' }]),
-      edge,
-      edges: [edge],
-      pluginPortMap,
-    });
-
-    expect(transaction.outcome).toBe('reconnected');
-    if (transaction.outcome !== 'reconnected') {
-      throw new Error('Expected a reconnected edge transaction');
-    }
-    expect(transaction.edges).toEqual([
-      {
-        id: 'edge-1',
-        source: 'source-node',
-        sourceHandle: null,
-        target: 'transform-node',
-        targetHandle: null,
-      },
-    ]);
-    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
-      { sourceId: 'source-node', targetId: 'transform-node' },
-    ]);
+    const transaction = resolveReconnectionToTransform('sink-node');
+    assertReconnectionToTransform(transaction);
   });
 
   it('reprojects available transform columns from the replacement upstream source', async () => {
@@ -423,45 +416,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
   });
 
   it('keeps reconnecting to the same target idempotent instead of duplicating edges', () => {
-    const canonicalNodesById = new Map([
-      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
-    ]);
-    const edge: Edge = {
-      id: 'edge-1',
-      source: 'source-node',
-      target: 'transform-node',
-    };
-
-    const transaction = resolveCanvasEdgeReconnectTransaction({
-      canonicalNodesById,
-      connection: {
-        source: 'source-node',
-        sourceHandle: null,
-        target: 'transform-node',
-        targetHandle: null,
-      },
-      draftSession: buildDraftSession([{ sourceId: 'source-node', targetId: 'transform-node' }]),
-      edge,
-      edges: [edge],
-      pluginPortMap,
-    });
-
-    expect(transaction.outcome).toBe('reconnected');
-    if (transaction.outcome !== 'reconnected') {
-      throw new Error('Expected a reconnected edge transaction');
-    }
-    expect(transaction.edges).toEqual([
-      {
-        id: 'edge-1',
-        source: 'source-node',
-        sourceHandle: null,
-        target: 'transform-node',
-        targetHandle: null,
-      },
-    ]);
-    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
-      { sourceId: 'source-node', targetId: 'transform-node' },
-    ]);
+    const transaction = resolveReconnectionToTransform('transform-node');
+    assertReconnectionToTransform(transaction);
   });
 });

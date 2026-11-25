@@ -5,15 +5,16 @@ import type {
   CanvasExplorerActivityRail,
   CanvasExplorerProjectWorkspace,
 } from './explorer/CanvasExplorer.types';
-import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   CanvasShellContextualWorkbenchSplit,
   CanvasShellMainPanelFrame,
   CanvasShellReadOnlyBannerSlot,
-  CanvasShellWorkspaceSurfaces,
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
-import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
+import {
+  CanvasShellWorkspaceBody,
+  projectCanvasShellSurfacePolicy,
+} from './CanvasShellWorkspaceComposition';
 import { useCanvasNativeNodeEntry } from './useCanvasNativeNodeEntry';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
@@ -153,6 +154,7 @@ function CanvasShellViewport({
       sourceCatalogue={panels.inspectorGraphNodes}
       sourceCatalogueCanvasId={panels.activeCanvasId ?? undefined}
       onInspectNode={graphCommands.onInspectNode}
+      onRemoveEmptyModel={graphCommands.onRemoveEmptyModel}
       inspectorTarget={panels.inspectorTarget}
       catalogueScopeKey={catalogueScopeKey}
       edges={graph.edges}
@@ -225,26 +227,9 @@ function CanvasShellMainSurface({
   | 'projectFiles'
 > & { wrapInspector: (surface: ReactNode, hidden: boolean) => ReactNode }): JSX.Element {
   const codeVisible = workspaceTask == null && projectFiles?.active === true;
-  const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
-  const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
-  const contextualWorkbench =
-    projectFiles != null && layout.contextualWorkbench?.id === 'project-code'
-      ? undefined
-      : layout.contextualWorkbench;
-  const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
-    focusMode: layout.focusMode,
-    inspectorPanelVisible: layout.inspectorPanelVisible,
-    surfaceStrategy: layout.surfaceStrategy,
-    hasInspectorNode: panels.inspectorNode != null || panels.inspectorTarget != null,
-  });
+  const { inspectorInViewport, contextualWorkbench, externalNodeSurfaceActive, hideNodeInspector } =
+    projectCanvasShellSurfacePolicy({ layout, panels, projectFiles, workspaceTask });
   // Suspend transient node surfaces and global Delete while another surface is active.
-  const externalNodeSurfaceActive =
-    projectFiles?.active === true ||
-    workspaceTask != null ||
-    nodeWorkbenchVisible ||
-    contextualWorkbench != null ||
-    layout.centerSurfaceVisible === true;
-  const hideNodeInspector = workspaceTask != null || contextualWorkbench != null;
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
@@ -263,24 +248,12 @@ function CanvasShellMainSurface({
   );
 
   const baseSurface = (
-    <CanvasShellWorkspaceSurfaces
-      viewport={
-        modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
-      }
-      editor={modelWorkspaceOpen ? layout.centerSurface : null}
-      modelWorkspace={layout.modelWorkspace}
-      editorVisible={workspaceTask == null && layout.centerSurfaceVisible === true}
-      hasWorkspaceTabs={panels.activeCanvas != null || projectFiles?.panel != null}
-      code={
-        projectFiles?.panel == null ? undefined : (
-          <RouteWorkbenchFrame
-            scroll={false}
-            presentationMode="embedded"
-            bodyClassName="flex"
-            slots={{ leftPanel: projectFiles.tree, primarySurface: projectFiles.panel }}
-          />
-        )
-      }
+    <CanvasShellWorkspaceBody
+      layout={layout}
+      panels={panels}
+      projectFiles={projectFiles}
+      workspaceTask={workspaceTask}
+      viewport={viewport}
       codeVisible={codeVisible}
     />
   );

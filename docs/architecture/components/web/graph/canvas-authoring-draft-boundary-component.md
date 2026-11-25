@@ -209,11 +209,12 @@ registration. Acceptance must show a final card with its own instance identity,
 the same definition reference after reload, movement of that card, and no
 automatic edge, SQL copy or new project file.
 
-A registered Model definition remains projectable without a placed card when
-its identity is present in the local catalogue or confirmed draft record. Removing
-the card updates visible `nodeIds` and persists that change while retaining the
-definition for future instances. An unregistered hidden model still blocks
-projectability; registration does not admit a model to execution.
+A registered reusable Model definition remains projectable without a placed card
+when its identity is present in the local catalogue or confirmed draft record.
+Removing an ordinary occurrence updates visible `nodeIds` and persists that
+change while retaining the definition for future instances. The explicit empty
+draft deletion below is a different, bounded intent. An unregistered hidden model
+still blocks projectability; registration does not admit a model to execution.
 
 A registered input owns source configuration. Each explicit catalogue drop
 creates a fresh input identity referencing it via `sourceDefinitionId`. The
@@ -223,6 +224,63 @@ Missing, self, chained and incompatible references fail closed. Removing one
 instance retains its source definition and siblings. Existing placed definitions
 remain valid without migration. These semantics remain on `CreateCanvasNode`
 and `SaveWorkspaceGraphDraft`, with existing permission and concurrency gates.
+
+#### Explicit empty Model draft deletion
+
+`RemoveCanvasNode` and `SaveWorkspaceGraphDraft` also carry the intentional
+removal of one eligible empty Model draft, from its last placed card or an
+accessible Explorer action when it has no card. This reuses the current
+authoring session and protected save; it introduces no parallel write endpoint.
+
+Emptiness is structural: native `pluginId=dvt`, `kind=dvt:transform` and
+`role=transform`, no definition reference or path, and metadata containing only
+display `typeLabel` and optionally empty `config`. Any `transformAuthoring`,
+relational or SQL draft, binding, semantic or other authoring metadata preserves
+the definition. Missing SQL alone is never a deletion criterion. Unknown identity
+or metadata cannot be treated as evidence of emptiness. Nonempty business
+descriptions, non-seed business tags and runtime metric facts also preserve the
+definition. A stale or ineligible selection must report a localized rejection
+and retain the item.
+
+The command revalidates the current session and writable posture before mutation.
+Other placements, relevant edges, producer references from other Substrait plans
+or uses in another Canvas prevent definition removal. It targets only the
+explicitly selected identity in the owning workspace/Canvas; every other empty
+draft, configured Model, reusable definition and sibling Canvas remains intact.
+No startup, hydration or catalogue scan purges drafts merely because they have no
+SQL.
+
+Pending `removedDefinitionIds` belong to the existing `CanvasDraftSession`.
+Projection, catalogue counts, resolver inputs and the complete save payload use
+the same selected-ID exclusion. No separate hidden-item store or independently
+filtered Explorer list represents deletion. The confirmed baseline and revision
+remain unchanged until the existing save receipt acknowledges the snapshot.
+
+```mermaid
+flowchart LR
+  Intent[Explicit card or Explorer deletion] --> Guard[Current structural and reference checks]
+  Guard --> Session[Same CanvasDraftSession intent]
+  Session --> Projection[Catalogue, counter and resolver projection]
+  Session --> Payload[Complete canonical draft without the selected definition]
+  Payload --> Save[Existing guarded SaveWorkspaceGraphDraft]
+  Save --> Receipt[Matching confirmed snapshot]
+  Receipt --> Reload[Existing read and rehydration keep the definition absent]
+```
+
+Rapid deletions compose through the current session command owner, never a stale
+rendered session. A confirmed save retires only the intents represented by that
+snapshot; newer pending edits remain. Failure, conflict, denial or changed
+scope/generation cannot claim persisted deletion, silently rebase the command or
+apply an old intent to another session. Existing guarded recovery remains in
+force. After successful save and reload, Explorer items and their counter derive
+from the same confirmed aggregate and the selected empty definition stays absent.
+
+The mounted session journey must exercise the real deletion command through its
+save payload and rehydration, preserving another empty draft, a configured Model
+and a sibling Canvas. It must not fabricate an independent filtered read list.
+The prospective Q-only design and evidence are tracked in
+[GH-3951](https://github.com/dunay2/dvt/issues/3951#issuecomment-7170273958);
+this requirement does not assert acceptance of an earlier candidate.
 
 Placement identities use the shared `@dvt/crypto` UUID primitive, not the
 secure-context-only browser `crypto.randomUUID` API. The primitive requires

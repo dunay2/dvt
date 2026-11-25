@@ -61,7 +61,8 @@ export function useCanvasGraphHandlers(
     canvasGraphHandlerContractBuilders.layout(interactionContracts)
   );
   const nodeAuthoringHandlers = useCanvasNodeAuthoringHandlers(
-    canvasGraphHandlerContractBuilders.nodeAuthoring(interactionContracts)
+    canvasGraphHandlerContractBuilders.nodeAuthoring(interactionContracts),
+    runDraftSessionCommand
   );
 
   return {

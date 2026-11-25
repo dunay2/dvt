@@ -3,6 +3,7 @@ import {
   installE2eApiFetchStub,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { registerEmptyModelDeletionJourney } from '../../support/emptyModelDeletion';
 import {
   connectWorkbenchProducer,
   stageWorkbenchUnary,
@@ -17,6 +18,7 @@ import { form, openEditor } from '../../support/relationalWorkbench/operatorEdit
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('model-session', () => {
+  registerEmptyModelDeletionJourney();
   afterEach(() => {
     // A failed assertion must not leave this test's dirty Model blocking the next navigation.
     const discard = '[data-slot="canvas-draft-discard"]';

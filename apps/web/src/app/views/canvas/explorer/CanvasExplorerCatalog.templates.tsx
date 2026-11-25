@@ -14,6 +14,7 @@ import { useCanvasNodeActivation } from '../../../components/canvas/useCanvasNod
 import type { CanvasExplorerCopy, CanvasExplorerModelAction } from './CanvasExplorer.types';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import styles from './CanvasExplorer.module.css';
+import { CanvasExplorerRemoveEmptyModelAction } from './CanvasExplorerRemoveEmptyModelAction';
 
 /** Shared disclosure structure for project connection and model sections. */
 export function CanvasExplorerSection({
@@ -79,6 +80,7 @@ function CanvasExplorerModelRow({
   onSelect,
   onDragStart,
   modelAction,
+  onRemoveEmptyModel,
 }: Readonly<{
   id: string;
   item: CanvasExplorerItem;
@@ -89,6 +91,7 @@ function CanvasExplorerModelRow({
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
+  onRemoveEmptyModel?: (id: string) => void;
 }>): JSX.Element {
   const unavailable = disabled || item.disabled;
   const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
@@ -162,6 +165,12 @@ function CanvasExplorerModelRow({
             <CopyPlus aria-hidden="true" />
           </button>
         ) : null}
+        <CanvasExplorerRemoveEmptyModelAction
+          item={item}
+          copy={copy}
+          disabled={disabled}
+          onRemove={onRemoveEmptyModel}
+        />
         {item.details?.length ? (
           <button
             type="button"
@@ -205,6 +214,7 @@ export function CanvasExplorerListTemplate({
   onDragStart,
   modelAction,
   onAddModel,
+  onRemoveEmptyModel,
   connections,
   status,
   countKnown,
@@ -223,6 +233,7 @@ export function CanvasExplorerListTemplate({
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
+  onRemoveEmptyModel?: (id: string) => void;
   connections?: ReactNode;
   status?: ReactNode;
   countKnown: boolean;
@@ -277,6 +288,7 @@ export function CanvasExplorerListTemplate({
               onSelect={onSelect}
               onDragStart={onDragStart}
               modelAction={modelAction}
+              onRemoveEmptyModel={onRemoveEmptyModel}
             />
           ))}
         </ul>

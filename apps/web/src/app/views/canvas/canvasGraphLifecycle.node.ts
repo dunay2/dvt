@@ -10,6 +10,8 @@ import type {
   CanvasGraphLifecycleState,
 } from './canvasGraphLifecycle.types';
 import type { CanonicalNode } from '../../types/canonical';
+import { canRemoveEmptyCanvasModel } from './canvasEmptyModelDefinition';
+import { removeEmptyCanvasModelDefinition } from './canvasDraftDefinitionRemoval';
 
 function applyNodeRemovalState(
   state: CanvasGraphLifecycleState,
@@ -43,13 +45,25 @@ function applyNodeRemovalState(
 
 function remove(
   state: CanvasGraphLifecycleState,
-  nodeId: string
+  nodeId: string,
+  intent: 'placement' | 'empty-definition' = 'placement'
 ): CanvasGraphLifecycleNodeRemovalResult {
+  if (intent === 'empty-definition' && !canRemoveEmptyCanvasModel(state.draftSession, nodeId)) {
+    return { outcome: 'rejected', state };
+  }
   const nodeToRemove = state.nodes.find((node) => node.id === nodeId);
   if (!nodeToRemove) {
+    if (intent === 'placement') return { outcome: 'noop', state };
+    const definition =
+      state.draftSession.localNodeCatalog?.[nodeId] ??
+      state.draftSession.baseline.record?.draft.nodes.find((node) => node.id === nodeId);
     return {
-      outcome: 'noop',
-      state,
+      outcome: 'removed',
+      removedNodeName: definition?.name ?? nodeId,
+      state: {
+        ...state,
+        draftSession: removeEmptyCanvasModelDefinition(state.draftSession, nodeId),
+      },
     };
   }
 

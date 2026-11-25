@@ -35,6 +35,7 @@ type CanvasGraphExplorerProps = Readonly<{
   onImport?: () => void;
   onManageConnections?: () => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
+  onRemoveEmptyModel?: (id: string) => void;
   children: ReactNode;
   workspaceTask?: ReactNode;
   projectFiles?: CanvasExplorerProjectWorkspace;
@@ -54,6 +55,7 @@ export function CanvasGraphExplorer({
   onImport,
   onManageConnections,
   onAddModel,
+  onRemoveEmptyModel,
   catalogue,
   sourceCatalogueCanvasId,
   canPlaceSource = false,
@@ -114,6 +116,7 @@ export function CanvasGraphExplorer({
         items,
         presentation: cataloguePresentation,
         onAddModel,
+        onRemoveEmptyModel,
         onImport,
         connections,
         onInspectNode: inspect,
@@ -225,6 +228,7 @@ function buildCanvasGraphExplorerElements({
         items={input.items}
         presentation={input.presentation}
         onAddModel={input.onAddModel}
+        onRemoveEmptyModel={input.onRemoveEmptyModel}
         onImport={input.onImport}
         connections={input.connections}
         onSelect={(id) => input.onInspectNode({ kind: 'canonical-node', nodeId: id })}

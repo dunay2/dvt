@@ -142,6 +142,7 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onInspectNode: CanvasInspectorCommand;
+  onRemoveEmptyModel?: (nodeId: string) => void;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onToggleFrozenNode: (nodeId: string) => void;
   onCreateAuthoringNode?: CreateCanvasAuthoringNode;

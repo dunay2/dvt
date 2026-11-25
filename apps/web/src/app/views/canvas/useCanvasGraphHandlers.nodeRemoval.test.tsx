@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { canvasViewCopy } from './copy';
 import {
   buildDraftSession,
+  buildCanonicalNode,
   renderGraphHandlersHook,
   resetGraphHandlersTestDoubles,
   restoreGraphHandlersTestDoubles,
@@ -86,7 +87,11 @@ describe('useCanvasGraphHandlers node removal', () => {
     expect(setEdges).toHaveBeenCalledWith([]);
     expect(setSelectedNodes).toHaveBeenCalledWith(['sink-node']);
     expect(setInspectorNode).toHaveBeenCalledWith(null);
-    expect(setDraftSession).toHaveBeenCalledWith(
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const update = setDraftSession.mock.calls[0]?.[0] as (
+      current: ReturnType<typeof buildDraftSession>
+    ) => ReturnType<typeof buildDraftSession>;
+    expect(update(buildDraftSession())).toEqual(
       expect.objectContaining({
         workingSet: expect.objectContaining({
           visibleNodeIds: ['sink-node'],
@@ -96,5 +101,73 @@ describe('useCanvasGraphHandlers node removal', () => {
     );
 
     harness.cleanup();
+  });
+
+  it('keeps both rapid orphan deletions in the canonical session without a rendered card', async () => {
+    vi.useFakeTimers();
+    const setDraftSession = vi.fn();
+    const initial = {
+      ...buildDraftSession(),
+      localNodeCatalog: {
+        a: buildCanonicalNode('a', 'transform'),
+        b: buildCanonicalNode('b', 'transform'),
+      },
+    };
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      draftSession: initial,
+      setDraftSession,
+    });
+    await harness.render();
+    act(() => {
+      harness.latest()?.handleRemoveNode('a', 'empty-definition');
+      harness.latest()?.handleRemoveNode('b', 'empty-definition');
+      vi.runAllTimers();
+    });
+    const update = setDraftSession.mock.calls.at(-1)?.[0] as (
+      current: typeof initial
+    ) => typeof initial;
+    expect(update(initial).removedDefinitionIds).toEqual(['a', 'b']);
+    expect(setDraftSession).toHaveBeenCalledTimes(2);
+    expect(harness.setNodes).not.toHaveBeenCalled();
+    harness.cleanup();
+  });
+
+  it('rejects deletion of an authored draft with an explicit explanation', async () => {
+    vi.useFakeTimers();
+    const draftSession = {
+      ...buildDraftSession(),
+      localNodeCatalog: {
+        a: {
+          ...buildCanonicalNode('a', 'transform'),
+          metadata: { config: { materialized: 'table' } },
+        },
+      },
+    };
+    const harness = renderGraphHandlersHook({ canEditEdges: true, draftSession });
+    await harness.render();
+    act(() => {
+      harness.latest()?.handleRemoveNode('a', 'empty-definition');
+      vi.runAllTimers();
+    });
+    expect(toastState.error).toHaveBeenCalledWith(expect.stringMatching(/still used|sigue en uso/));
+    expect(toastState.success).not.toHaveBeenCalled();
+    expect(harness.setDraftSession).not.toHaveBeenCalled();
+    harness.cleanup();
+  });
+
+  it('cancels deferred removal when its owning hook is disposed', async () => {
+    vi.useFakeTimers();
+    const harness = renderGraphHandlersHook({ canEditEdges: true });
+    await harness.render();
+    act(() => {
+      harness.latest()?.handleRemoveNode('source-node');
+    });
+    harness.cleanup();
+    act(() => {
+      vi.runAllTimers();
+    });
+    expect(harness.setDraftSession).not.toHaveBeenCalled();
+    expect(harness.setNodes).not.toHaveBeenCalled();
   });
 });

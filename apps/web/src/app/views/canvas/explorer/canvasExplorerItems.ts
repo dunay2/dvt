@@ -14,6 +14,7 @@ import {
 } from '@dvt/contracts';
 import { canvasDbtModelDefinitionId } from '../canvasDbtModelReference';
 import { resolveCanvasPhysicalCompositionInput } from '../canvasPhysicalCompositionInput';
+import { isEmptyCanvasModelDefinition } from '../canvasEmptyModelDefinition';
 import { readDvtTransformAuthoringAuthority } from '../canvasDvtTransformAuthoringAuthority';
 import { resolveDbtProjectWorkspaceFilePath } from '../../code/codeViewFileSelection';
 import {
@@ -39,6 +40,7 @@ export type CanvasExplorerItem = Readonly<{
   /** File-format fact from the accepted path, independent of Source and execution readiness. */
   definitionFormat?: 'sql';
   publicationState?: 'draft';
+  emptyDefinition?: boolean;
   details?: readonly CanvasExplorerDetail[];
   searchText?: string;
   definitionIdentity?: Readonly<{ canvasId: string; uniqueId: string }>;
@@ -205,6 +207,7 @@ function projectRegisteredDefinition(
       id: node.id,
       label: node.name,
       ...draftPublication(node, binding),
+      emptyDefinition: isEmptyCanvasModelDefinition(node),
       description: location.description,
       isSource,
       definitionFormat: definitionFormatForPath(node.path),

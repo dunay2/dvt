@@ -41,6 +41,7 @@ export type CanvasProjectElementsInput = Readonly<{
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
+  onRemoveEmptyModel?: (id: string) => void;
   onImport?: () => void;
   connections?: ReactNode;
 }>;

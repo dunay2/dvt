@@ -20,6 +20,7 @@ export function CanvasExplorerList({
   onDragStart,
   modelAction,
   onAddModel,
+  onRemoveEmptyModel,
   onImport,
   connections,
   status,
@@ -34,6 +35,7 @@ export function CanvasExplorerList({
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
+  onRemoveEmptyModel?: (id: string) => void;
   onImport?: () => void;
   connections?: ReactNode;
   status?: ReactNode;
@@ -95,6 +97,7 @@ export function CanvasExplorerList({
       onDragStart={onDragStart}
       modelAction={modelAction}
       onAddModel={onAddModel}
+      onRemoveEmptyModel={onRemoveEmptyModel}
       status={
         inspectionFailed ? (
           <>

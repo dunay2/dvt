@@ -15,7 +15,7 @@ export type CanvasGraphLifecycleState = {
 
 export type CanvasGraphLifecycleNodeRemovalResult =
   | {
-      outcome: 'noop';
+      outcome: 'noop' | 'rejected';
       state: CanvasGraphLifecycleState;
     }
   | {
@@ -32,7 +32,8 @@ export type CanvasGraphLifecycleNodeApi = {
   ) => CanvasGraphLifecycleState;
   remove: (
     state: CanvasGraphLifecycleState,
-    nodeId: string
+    nodeId: string,
+    intent?: 'placement' | 'empty-definition'
   ) => CanvasGraphLifecycleNodeRemovalResult;
   admitExplicit: (
     draftSession: CanvasDraftSession,

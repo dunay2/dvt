@@ -65,6 +65,7 @@ type CanvasViewportProps = {
   readonly sourceCatalogue?: readonly CanonicalNode[];
   readonly sourceCatalogueCanvasId?: string;
   readonly onInspectNode: CanvasInspectorCommand;
+  readonly onRemoveEmptyModel?: (nodeId: string) => void;
   readonly inspectorTarget?: CanvasInspectorResource | null;
   readonly catalogueScopeKey?: string;
   readonly edges: Edge[];
@@ -539,6 +540,7 @@ function CanvasViewportWithPresenter({
       catalogue={props.sourceCatalogue}
       sourceCatalogueCanvasId={props.sourceCatalogueCanvasId}
       canPlaceSource={props.canEditEdges}
+      onRemoveEmptyModel={props.canEditEdges ? props.onRemoveEmptyModel : undefined}
       referencePlacementScope={props.referencePlacementScope}
       importedSourceIds={props.importedNodeFocusIds}
       onImportFocusComplete={props.onImportedNodeFocusComplete}

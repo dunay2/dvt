@@ -144,6 +144,7 @@ function buildCanvasShellGraphCommandsArgs({
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
       handleInspectNode: controller.handleInspectNode,
+      handleRemoveNode: controller.handleRemoveNode,
       handleDragOver: controller.handleDragOver,
       handleToggleFrozenNode: controller.handleToggleFrozenNode,
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,

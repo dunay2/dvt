@@ -111,6 +111,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'handleViewportChange'
     | 'handleDrop'
     | 'handleInspectNode'
+    | 'handleRemoveNode'
     | 'handleDragOver'
     | 'handleToggleFrozenNode'
     | 'handleCreateAuthoringNode'

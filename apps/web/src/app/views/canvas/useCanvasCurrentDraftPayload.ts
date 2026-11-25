@@ -24,10 +24,8 @@ export function useCanvasCurrentDraftPayload({
       buildCurrentDraftPayload(
         persistedNodePositions,
         draftSession,
-        canvasDocument ?? { kind: '', title: '' },
-        baselineDraft,
-        canonicalNodes,
-        canonicalEdges
+        { canvas: canvasDocument ?? { kind: '', title: '' }, baseline: baselineDraft },
+        { canonicalNodes: canonicalNodes, canonicalEdges: canonicalEdges }
       ),
     [
       baselineDraft,

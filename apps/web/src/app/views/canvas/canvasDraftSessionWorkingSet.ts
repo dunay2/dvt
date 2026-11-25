@@ -10,6 +10,10 @@ import type {
 } from './canvasDraftSession.types';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
 import { canvasDraftWorkingSetModel } from './canvasDraftWorkingSetModel';
+import {
+  removeEmptyCanvasModelDefinition,
+  restoreCanvasDefinition,
+} from './canvasDraftDefinitionRemoval';
 const { arraysEqual, buildVisibleEdges } = canvasDraftWorkingSetModel;
 export const EMPTY_WORKING_SET: CanvasDraftWorkingSet = {
   visibleNodeIds: [],
@@ -74,12 +78,7 @@ function reconcileSnapshot(
     ...reconciledSession.workingSet.visibleNodeIds,
     ...reconciledSession.workingSet.pendingExplicitNodeIds,
     ...Object.values(currentLocalNodeCatalog)
-      .filter(
-        (node) =>
-          (node.role === 'input' || node.role === 'transform') &&
-          workspaceNodeDefinitionId(node) == null &&
-          snapshot.canonicalNodeIds.includes(node.id)
-      )
+      .filter((node) => isRegisteredDefinition(node) && snapshot.canonicalNodeIds.includes(node.id))
       .map((node) => node.id),
   ]);
   const nextLocalNodeCatalog = Object.fromEntries(
@@ -113,7 +112,7 @@ function upsertNode(session: CanvasDraftSession, canonicalNode: CanonicalNode): 
     pendingExplicitNodeIds: nextPendingNodeIds,
   });
 
-  return updateNodeDefinition(nextSession, canonicalNode);
+  return updateNodeDefinition(restoreCanvasDefinition(nextSession, nodeId), canonicalNode);
 }
 
 function updateNodeDefinition(
@@ -161,10 +160,7 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
   const removed =
     readLocalNodeCatalog(session)[nodeId] ??
     session.baseline.record?.draft.nodes.find((node) => node.id === nodeId);
-  const isDefinition =
-    removed != null &&
-    (removed.role === 'input' || removed.role === 'transform') &&
-    workspaceNodeDefinitionId(removed) == null;
+  const isDefinition = isRegisteredDefinition(removed);
   const nextSession = withWorkingSet(session, {
     visibleNodeIds: session.workingSet.visibleNodeIds.filter(
       (visibleNodeId) => visibleNodeId !== nodeId
@@ -177,6 +173,23 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
     ),
   });
   const { [nodeId]: _removedNode, ...nextLocalNodeCatalog } = readLocalNodeCatalog(nextSession);
+  const localDefinitionEdges = retainRemovedDefinitionEdges(session, nodeId, isDefinition);
+  const result =
+    localDefinitionEdges.length > 0 || session.localDefinitionEdges != null
+      ? { ...nextSession, localDefinitionEdges }
+      : nextSession;
+  const retained = isDefinition ? result : withLocalNodeCatalog(result, nextLocalNodeCatalog);
+  return removeEmptyCanvasModelDefinition(
+    retained,
+    removed == null ? nodeId : (workspaceNodeDefinitionId(removed) ?? nodeId)
+  );
+}
+
+function retainRemovedDefinitionEdges(
+  session: CanvasDraftSession,
+  nodeId: string,
+  isDefinition: boolean
+): CanvasDraftEdge[] {
   const retainedEdges = isDefinition
     ? [
         ...(session.localDefinitionEdges ?? []),
@@ -187,14 +200,18 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
     : (session.localDefinitionEdges ?? []).filter(
         (edge) => edge.sourceId !== nodeId && edge.targetId !== nodeId
       );
-  const localDefinitionEdges = [
+  return [
     ...new Map(retainedEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])).values(),
   ];
-  const result =
-    localDefinitionEdges.length > 0 || session.localDefinitionEdges != null
-      ? { ...nextSession, localDefinitionEdges }
-      : nextSession;
-  return isDefinition ? result : withLocalNodeCatalog(result, nextLocalNodeCatalog);
+}
+
+function isRegisteredDefinition(
+  node: Pick<CanonicalNode, 'role' | 'definitionId' | 'sourceDefinitionId'> | undefined
+): boolean {
+  if (node == null) return false;
+  return (
+    (node.role === 'input' || node.role === 'transform') && workspaceNodeDefinitionId(node) == null
+  );
 }
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {
   return withWorkingSet(session, {

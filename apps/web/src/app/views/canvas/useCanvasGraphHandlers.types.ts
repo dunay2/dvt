@@ -41,7 +41,7 @@ export type UseCanvasGraphHandlersResult = {
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
   handleDuplicateNode: (nodeId: string) => void;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
-  handleRemoveNode: (nodeId: string) => void;
+  handleRemoveNode: (nodeId: string, intent?: 'placement' | 'empty-definition') => void;
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;

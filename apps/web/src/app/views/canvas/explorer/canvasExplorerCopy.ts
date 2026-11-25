@@ -35,6 +35,8 @@ const en = {
   schema: 'Schema',
   type: 'Type',
   addModel: 'Add model',
+  deleteEmptyModel: 'Delete empty draft',
+  deleteEmptyModelUnavailable: 'This draft has content or is still used by a Model or Canvas.',
   resize: 'Resize explorer',
   collapse: 'Collapse explorer',
   close: 'Close explorer',
@@ -82,6 +84,9 @@ const es: typeof en = {
   schema: 'Esquema',
   type: 'Tipo',
   addModel: 'Añadir modelo',
+  deleteEmptyModel: 'Eliminar borrador vacío',
+  deleteEmptyModelUnavailable:
+    'Este borrador tiene contenido o sigue en uso por un modelo o canvas.',
   resize: 'Ajustar ancho del explorador',
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',

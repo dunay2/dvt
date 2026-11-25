@@ -21,6 +21,7 @@ export function CanvasProjectElementsExplorer({
   onDragStart,
   modelAction,
   onAddModel,
+  onRemoveEmptyModel,
   onImport,
   connections,
   projectRoot,
@@ -91,6 +92,7 @@ export function CanvasProjectElementsExplorer({
         items={mergeCanvasExplorerModels(items, models)}
         presentation={presentation}
         onAddModel={onAddModel}
+        onRemoveEmptyModel={onRemoveEmptyModel}
         modelAction={modelAction}
         onImport={onImport}
         connections={connections}

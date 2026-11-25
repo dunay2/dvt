@@ -585,10 +585,8 @@ describe('canvasDraftSession', () => {
     const persistedAfterRemoval = buildCurrentDraftPayload(
       persistedDraft.nodePositions,
       removedState.draftSession,
-      persistedDraft.canvas,
-      persistedDraft,
-      canonicalNodes,
-      canonicalEdges
+      { canvas: persistedDraft.canvas, baseline: persistedDraft },
+      { canonicalNodes: canonicalNodes, canonicalEdges: canonicalEdges }
     );
     const authoringPort = buildAuthoringPort();
     const draftRepository = createCanvasDraftRepository(authoringPort);
