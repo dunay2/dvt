@@ -35,6 +35,8 @@ export const RUNTIME_ROUTE_PATH = {
     '/workspace/warehouse/connections/:connectionId/source-data-sample',
   warehouseConnectionTest: '/workspace/warehouse/connections/:connectionId/test',
   warehousePostgresSqlValidation: '/workspace/warehouse/sql-validation',
+  sqlWorksheetExecutions: '/workspace/sql/executions',
+  sqlWorksheetExecution: '/workspace/sql/executions/:executionId',
   warehouseSourcesImport: '/workspace/sources/import',
   warehouseSourceRebind: '/workspace/sources/:nodeId/binding',
   workspaceFiles: '/workspace/files',

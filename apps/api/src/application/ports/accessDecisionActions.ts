@@ -18,6 +18,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   workspaceSourceImportRebind: 'workspace:source-import:rebind',
   workspaceLocalDataCapture: 'workspace:local-data:capture',
   workspaceLocalDataDelete: 'workspace:local-data:delete',
+  workspaceSqlExecute: 'workspace:sql:execute',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
   runList: 'run:list',
@@ -28,6 +29,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   workspaceSourceImportView: 'workspace:source-import:view',
   workspaceLocalDataView: 'workspace:local-data:view',
   workspacePluginsView: 'workspace:plugins:view',
+  workspaceSqlHistoryView: 'workspace:sql-history:view',
 } as const;
 
 export type CommandAuthorizationActionName =
@@ -45,6 +47,7 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind
   | typeof AUTHORIZATION_ACTION_NAME.workspaceLocalDataCapture
   | typeof AUTHORIZATION_ACTION_NAME.workspaceLocalDataDelete
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSqlExecute
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
 export type QueryAuthorizationActionName =
@@ -56,7 +59,8 @@ export type QueryAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.workspaceDiffView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceLocalDataView
-  | typeof AUTHORIZATION_ACTION_NAME.workspacePluginsView;
+  | typeof AUTHORIZATION_ACTION_NAME.workspacePluginsView
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSqlHistoryView;
 
 export type AuthorizationAction =
   | {
@@ -129,6 +133,10 @@ export const AUTHORIZATION_ACTION = {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceLocalDataDelete,
   },
+  workspaceSqlExecute: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSqlExecute,
+  },
   adminRebuildSnapshot: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot,
@@ -168,5 +176,9 @@ export const AUTHORIZATION_ACTION = {
   workspacePluginsView: {
     kind: 'query',
     name: AUTHORIZATION_ACTION_NAME.workspacePluginsView,
+  },
+  workspaceSqlHistoryView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSqlHistoryView,
   },
 } as const satisfies Readonly<Record<string, AuthorizationAction>>;

@@ -206,6 +206,11 @@ Behavior:
 - starts `dvt-api` and `@dvt/web` together with coordinated shutdown
 - injects `DVT_READYZ_ENABLED=true` into the API process
 - injects `VITE_API_BASE_URL` into the web dev server
+- when external OIDC is absent, the existing local auth bootstrap signs the
+  selected `DVT_DEV_PRINCIPAL_ID` session and provisions its tenant grant with
+  `workspace:sql:execute` and `workspace:sql-history:view`, alongside the existing
+  development actions; these grants allow the independent `/sql` worksheet and
+  do not grant SQL access to other principals or alter external OIDC policy
 - if `DATABASE_URL` is not already configured, bootstraps the canonical local
   Docker Postgres proof environment before starting the API
 - exports the canonical local proof DSN as `DATABASE_URL` to the API when local

@@ -13,6 +13,7 @@ export * from './contracts/planner/DvtSubstraitAuthoringGroup.v1.js';
 export * from './contracts/data-access/DataAccess.v1.js';
 export * from './contracts/local-data/index.js';
 export * from './contracts/source-import/index.js';
+export * from './contracts/sql-workspace/SqlWorksheet.v1.js';
 export * from './contracts/canvas/index.js';
 export * from './contracts/dbt-project/index.js';
 export * from './contracts/workspace/ProjectWorkspace.v1.js';

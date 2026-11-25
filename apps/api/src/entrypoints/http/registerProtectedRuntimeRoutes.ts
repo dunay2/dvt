@@ -29,6 +29,7 @@ import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteD
 import { registerProtectedRunRoutes } from './protectedRuntimeRunRoutes.js';
 import { registerProtectedSessionRoutes } from './protectedRuntimeSessionRoutes.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
+import { registerSqlWorksheetRouteGroup } from './sqlWorksheetRouteGroup.js';
 import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSourceImportRouteGroup.js';
 import { workspaceContextRoute } from './workspaceContextRoute.js';
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
@@ -71,6 +72,11 @@ export async function registerProtectedRuntimeRoutes(
     connectionProbe: dependencies.warehouseConnectionProbe,
     previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
     validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
+  });
+  registerSqlWorksheetRouteGroup(app, {
+    protectedModule,
+    runtimeAuth: dependencies.runtimeAuth,
+    rateLimit: protectedRateLimit,
   });
   registerProtectedWorkspaceFileRoutes(app, options, dependencies, protectedRateLimit);
   registerProtectedRunRoutes(app, env, protectedModule, dependencies);

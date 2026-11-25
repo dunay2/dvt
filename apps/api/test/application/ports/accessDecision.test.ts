@@ -32,6 +32,8 @@ describe('accessDecision contract vocabulary', () => {
       'workspace:source-import:import',
       'workspace:source-import:rebind',
       'workspace:plugins:view',
+      'workspace:sql:execute',
+      'workspace:sql-history:view',
     ]);
   });
 

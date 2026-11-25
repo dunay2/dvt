@@ -17,6 +17,8 @@ export const PROJECT_ONBOARDING_POLICY = Object.freeze({
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind,
     AUTHORIZATION_ACTION_NAME.workspacePluginsView,
+    AUTHORIZATION_ACTION_NAME.workspaceSqlExecute,
+    AUTHORIZATION_ACTION_NAME.workspaceSqlHistoryView,
   ]),
 });
 
@@ -35,7 +37,9 @@ export function isCreatorWorkspaceActionGranted(
       .filter(
         (requiredAction) =>
           requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename &&
-          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind
+          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind &&
+          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSqlExecute &&
+          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSqlHistoryView
       )
       .every((requiredAction) => allowedActions.includes(requiredAction))
   );
