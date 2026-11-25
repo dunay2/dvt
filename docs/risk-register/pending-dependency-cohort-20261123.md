@@ -173,3 +173,9 @@ configuration digest, checks for conflicting model names and uses an
 absence-checked write. Canvas publication requires a complete reviewed proposal
 and the existing revision-checked graph save. Exercise denied, stale and repeat
 submissions at the same public boundaries as successful publication.
+
+Omitting a focused test when its runtime differs could hide a regression.
+Compare executable Vitest configurations, preserving distinctions in options
+such as browser resolution conditions. Only absorb a file when its execution
+is covered by a complete Presentation run with equivalent settings. Preserve
+the original command if the current inventory is unavailable or ambiguous.

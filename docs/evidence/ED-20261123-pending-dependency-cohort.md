@@ -523,3 +523,31 @@ Shared browser infrastructure and ambiguous catalog changes retain the full
 plan. The affected routing and nightly architecture suites passed 154 tests.
 This measures browser spec selection for a single edit. Hosted duration also
 depends on dependency changes, runner startup and concurrent jobs.
+
+The worksheet composition was reduced from 344 to 132 lines at `bea49010b`.
+The parent owns the scoped query and editor lifetime. The header, actions,
+notices, editor frame and output panel take only the inputs each needs.
+TypeScript and typed ESLint passed. Both controlled worksheet cases passed in
+native Chrome 158. CodeScene scored all six edited TypeScript files 10/10.
+The browser router selects the existing worksheet journey once when all five
+new modules change together.
+
+On the full Web plan, 43 of 92 focused file executions also ran under the
+same Presentation configuration. The router removes those 43 and keeps the
+other 49 under their original configurations (17 Monaco, 22 Shell and 10
+Workspace). All primary suites still run. In six local routing suites, 192
+cases passed. Four regression cases distinguish different functions, regular
+expressions, maps and explicit undefined options when comparing configs.
+
+For the two measured overlap scenarios, scanning the source inventory took
+about 157 ms and selecting residual files took 24–28 ms. The alternative
+using native Vitest discovery required about 1.36 seconds to load Vitest in
+a new process. Both strategies identified the same 1,022 test files. Four
+representative isolated changes avoided inventory acquisition entirely.
+
+The Windows integration gate reproduced a browser reset failure between two
+specs with Cypress 15.18.1 and Chrome 158. Chrome rejected the wildcard origin
+during storage cleanup. Cypress 15.21.2 tracks concrete origins for that
+operation. Repeating the same two specs in one Chrome run executed all 12
+cases successfully. The dependency lock and the Web and live-proof Docker
+runners use the same Cypress release.
