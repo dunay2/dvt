@@ -10,13 +10,14 @@ import type { useCanvasControllerReadModel } from './useCanvasControllerReadMode
 import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import {
-  listProjectCanvasDocuments,
   resolveActiveProjectCanvasId,
+  type ProjectCanvasDocument,
 } from './canvasProjectCanvasLifecycle';
 
 const canvasControllerNodeTypes: NodeTypes = { dbtNode: DbtNodeComponent };
 type CanvasAuthoringRuntime = ReturnType<typeof useCanvasAuthoringRuntime>;
 export type CanvasShellViewModelArgs = Readonly<{
+  canvasDocuments: readonly ProjectCanvasDocument[];
   environment: ReturnType<typeof useCanvasControllerEnvironment>;
   authoringRuntime: CanvasAuthoringRuntime;
   overlayModel: ReturnType<typeof useCanvasOverlayModel>;
@@ -32,7 +33,7 @@ function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime
   return graphError instanceof Error ? graphError.message : null;
 }
 
-function resolveRouteDraftRecord({
+export function resolveRouteDraftRecord({
   draftReadModel,
   draftSession,
 }: Pick<CanvasAuthoringRuntime, 'draftReadModel' | 'draftSession'>) {
@@ -86,7 +87,7 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities, applicationLanguage),
     canvasDocument: routeDraft?.canvas ?? null,
-    canvasDocuments: listProjectCanvasDocuments(routeDraft),
+    canvasDocuments: args.canvasDocuments,
     activeCanvasId: resolveActiveProjectCanvasId(routeDraft),
     executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
     canCreateCanvasDocument: canCreateCanvasDocument && routeDraftRecord == null,

@@ -14,6 +14,54 @@ import { renderCanvasCenterSurface } from './CanvasCenterSurface';
 import { deriveCanvasRouteViewState } from './canvasRouteViewState';
 import { canvasViewCopy } from './copy';
 
+async function preserveQueryStructuralSharing(
+  harness: ReturnType<typeof setupCanvasControllerHarness>
+): Promise<void> {
+  const { replaceEqualDeep } =
+    await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
+  const readQuery = harness.mocks.useQuery.getMockImplementation();
+  if (readQuery == null) throw new Error('The query test adapter is not configured.');
+  const dataByKey = new Map<string, unknown>();
+  // Match React Query's default data sharing while preserving fresh observer wrappers and flags.
+  harness.mocks.useQuery.mockImplementation((options) => {
+    const result = readQuery(options);
+    const key = JSON.stringify(options.queryKey);
+    const data = replaceEqualDeep(dataByKey.get(key), result.data);
+    dataByKey.set(key, data);
+    return { ...result, data };
+  });
+}
+
+function expectUnsupportedCanvasRuntime(
+  harness: ReturnType<typeof setupCanvasControllerHarness>
+): void {
+  const controller = harness.getLatestResult();
+  if (controller == null) throw new Error('The actual Canvas controller is unavailable.');
+  expect(controller.canEditInspectorNode).toBe(false);
+  expect(controller.canOpenSourceImport).toBe(false);
+  expect(controller.userPermissions).toEqual(
+    expect.objectContaining({ canEditEdges: false, canPlan: false, canRun: false })
+  );
+  expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+    expect.objectContaining({ graphStrategy: null, canEditEdges: false })
+  );
+  expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      executionStrategy: null,
+      canPlan: false,
+      runAdmission: { allowed: false, reason: 'capability_mismatch' },
+    })
+  );
+}
+
+function requireCreationButton(container: HTMLElement): HTMLButtonElement {
+  const button = container.querySelector<HTMLButtonElement>(
+    '[data-slot="canvas-playground-template-choice"]'
+  );
+  if (button == null) throw new Error('The actual first-Canvas creation button is missing.');
+  return button;
+}
+
 describe('useCanvasController canvas document contract', () => {
   let harness: ReturnType<typeof setupCanvasControllerHarness>;
 
@@ -32,6 +80,44 @@ describe('useCanvasController canvas document contract', () => {
 
   afterEach(() => {
     harness.cleanup();
+  });
+
+  it('retains document and lifecycle command identity while the authoritative draft is unchanged', async () => {
+    await preserveQueryStructuralSharing(harness);
+    await harness.renderProbe();
+    const first = harness.getLatestResult();
+    expect(first?.canvasDocuments.length).toBeGreaterThan(0);
+
+    await harness.renderProbe();
+
+    const current = harness.getLatestResult();
+    expect(current?.canvasDocuments).toBe(first?.canvasDocuments);
+    expect(current?.handleCreateCanvasDocument).toBe(first?.handleCreateCanvasDocument);
+    expect(current?.handleSelectCanvasDocument).toBe(first?.handleSelectCanvasDocument);
+  });
+
+  it('invalidates documents and lifecycle commands when authoritative data changes', async () => {
+    await preserveQueryStructuralSharing(harness);
+    await harness.renderProbe();
+    const first = harness.getLatestResult();
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: { kind: 'transformation', title: 'Changed Canvas' },
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: { node_1: { x: 0, y: 0 }, node_2: { x: 100, y: 0 } },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    const changed = harness.getLatestResult();
+    expect(changed?.canvasDocuments).not.toBe(first?.canvasDocuments);
+    expect(changed?.canvasDocument?.title).toBe('Changed Canvas');
+    expect(changed?.handleCreateCanvasDocument).not.toBe(first?.handleCreateCanvasDocument);
+    expect(changed?.handleSelectCanvasDocument).not.toBe(first?.handleSelectCanvasDocument);
   });
 
   it('fails closed for legacy dbt canvas documents', async () => {
@@ -55,28 +141,7 @@ describe('useCanvasController canvas document contract', () => {
     await harness.renderProbe();
 
     expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith('dbt', undefined);
-    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
-    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
-    expect(harness.getLatestResult()?.userPermissions).toEqual(
-      expect.objectContaining({
-        canEditEdges: false,
-        canPlan: false,
-        canRun: false,
-      })
-    );
-    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        graphStrategy: null,
-        canEditEdges: false,
-      })
-    );
-    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        executionStrategy: null,
-        canPlan: false,
-        runAdmission: { allowed: false, reason: 'capability_mismatch' },
-      })
-    );
+    expectUnsupportedCanvasRuntime(harness);
   });
 
   it('keeps first-canvas creation available while graph mutation waits for a typed document', async () => {
@@ -120,13 +185,10 @@ describe('useCanvasController canvas document contract', () => {
       });
     };
     const clickCreate = async (): Promise<void> => {
-      const button = container.querySelector<HTMLButtonElement>(
-        '[data-slot="canvas-playground-template-choice"]'
-      );
-      expect(button).not.toBeNull();
-      expect(button?.disabled).toBe(false);
+      const button = requireCreationButton(container);
+      expect(button.disabled).toBe(false);
       await act(async () => {
-        button?.click();
+        button.click();
       });
       await harness.renderProbe();
       await renderSurface();
@@ -253,27 +315,6 @@ describe('useCanvasController canvas document contract', () => {
     await harness.renderProbe();
     await harness.renderProbe();
 
-    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
-    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
-    expect(harness.getLatestResult()?.userPermissions).toEqual(
-      expect.objectContaining({
-        canEditEdges: false,
-        canPlan: false,
-        canRun: false,
-      })
-    );
-    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        graphStrategy: null,
-        canEditEdges: false,
-      })
-    );
-    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        executionStrategy: null,
-        canPlan: false,
-        runAdmission: { allowed: false, reason: 'capability_mismatch' },
-      })
-    );
+    expectUnsupportedCanvasRuntime(harness);
   });
 });

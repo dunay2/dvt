@@ -1,6 +1,5 @@
 /** Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation into one narrow Canvas draft-lifecycle seam. */
-import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { useState } from 'react';
 
 import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
 import type {
@@ -13,15 +12,27 @@ import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 import { useCanvasExecutionDraftFlush } from './useCanvasExecutionDraftFlush';
-import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import { deriveCanCreateCanvasDocument } from './canvasCreateCanvasDocumentAvailability';
-import { executeSelectCanvasDocumentCommand } from './canvasProjectCanvasLifecycleCommand';
-import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
-import { canvasProjectSnapshot } from './canvasProjectSnapshot';
-import { canvasViewCopy } from './copy';
+import { useCanvasProjectCanvasCommands } from './useCanvasProjectCanvasCommands';
+import { useCanvasProjectSnapshotCommands } from './useCanvasProjectSnapshotCommands';
 
 function createCanvasDraftIdempotencyKey(): string {
   return createBrowserIdempotencyKey('canvas-draft');
+}
+
+function resolveEffectiveDraftSaveStatus(args: {
+  syncState: CanvasDraftLifecycleDto['session']['draftSession']['syncState'];
+  canPersist: boolean;
+  signature: string;
+  savedSignature: string | null;
+  failedSignature: string | null;
+  status: DraftSaveStatus;
+}): DraftSaveStatus {
+  if (args.syncState !== 'editing' || !args.canPersist) return args.status;
+  if (args.signature === args.savedSignature || args.signature === args.failedSignature) {
+    return args.status;
+  }
+  return 'saving';
 }
 
 export function useCanvasDraftLifecycle({
@@ -91,80 +102,26 @@ export function useCanvasDraftLifecycle({
     applyReloadedRemoteDraft,
     createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
-  const effectiveDraftSaveStatus =
-    draftSession.syncState === 'editing' &&
-    canPersistCurrentDraft &&
-    currentDraftPayloadSignature !== refs.lastSavedSignatureRef.current &&
-    currentDraftPayloadSignature !== refs.lastFailedSignatureRef.current
-      ? 'saving'
-      : draftSaveStatus;
+  const effectiveDraftSaveStatus = resolveEffectiveDraftSaveStatus({
+    syncState: draftSession.syncState,
+    canPersist: canPersistCurrentDraft,
+    signature: currentDraftPayloadSignature,
+    savedSignature: refs.lastSavedSignatureRef.current,
+    failedSignature: refs.lastFailedSignatureRef.current,
+    status: draftSaveStatus,
+  });
 
-  const handleCreateCanvasDocument = useCallback<
-    CanvasDraftLifecycle['handleCreateCanvasDocument']
-  >(
-    async (command) => {
-      await executeCreateCanvasDocumentCommand({
-        command,
-        currentDraftPayload,
-        draftRepository,
-        graphDraftQuery,
-        draftQueryCache,
-        canPersistGraphDraft,
-        setDraftSession,
-        setDraftSaveStatus,
-        lastSavedSignatureRef: refs.lastSavedSignatureRef,
-        invalidateInFlightSaveAttempt,
-      });
-    },
-    [
-      canPersistGraphDraft,
-      draftQueryCache,
-      draftRepository,
-      graphDraftQuery.data,
-      graphDraftQuery.isError,
-      graphDraftQuery.isPending,
-      refs.lastSavedSignatureRef,
-      setDraftSession,
-      setDraftSaveStatus,
-      currentDraftPayload,
-      invalidateInFlightSaveAttempt,
-    ]
-  );
-  const canvasLifecycleCommandDto = useMemo(
-    () => ({
-      currentDraftPayload,
-      draftRepository,
-      graphDraftQuery,
-      draftQueryCache,
-      canPersistGraphDraft,
-      setDraftSession,
-      setDraftSaveStatus,
-      lastSavedSignatureRef: refs.lastSavedSignatureRef,
-      invalidateInFlightSaveAttempt,
-    }),
-    [
-      canPersistGraphDraft,
-      currentDraftPayload,
-      draftQueryCache,
-      draftRepository,
-      graphDraftQuery,
-      refs.lastSavedSignatureRef,
-      setDraftSession,
-      setDraftSaveStatus,
-      invalidateInFlightSaveAttempt,
-    ]
-  );
-  const handleSelectCanvasDocument = useCallback<
-    CanvasDraftLifecycle['handleSelectCanvasDocument']
-  >(
-    async (canvasId) => {
-      await executeSelectCanvasDocumentCommand({
-        ...canvasLifecycleCommandDto,
-        canvasId,
-      });
-    },
-    [canvasLifecycleCommandDto]
-  );
+  const projectCanvasCommands = useCanvasProjectCanvasCommands({
+    currentDraftPayload,
+    draftRepository,
+    graphDraftQuery,
+    draftQueryCache,
+    canPersistGraphDraft,
+    setDraftSession,
+    setDraftSaveStatus,
+    lastSavedSignatureRef: refs.lastSavedSignatureRef,
+    invalidateInFlightSaveAttempt,
+  });
   const flushDraftForExecution = useCanvasExecutionDraftFlush({
     draftRepository,
     draftQueryCache,
@@ -180,84 +137,34 @@ export function useCanvasDraftLifecycle({
     setDraftSaveStatus,
     createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
-  const canExportProjectSnapshot =
-    graphDraftQuery.data?.record != null &&
-    !graphDraftQuery.isPending &&
-    !graphDraftQuery.isError &&
-    draftSaveStatus !== 'saving' &&
-    draftSaveStatus !== 'failed';
   const canCreateCanvasDocument = deriveCanCreateCanvasDocument({
     canPersistGraphDraft,
     graphDraftQuery,
   });
-  const canImportProjectSnapshot =
-    canPersistGraphDraft && !graphDraftQuery.isPending && !graphDraftQuery.isError;
-  const handleExportProjectSnapshot = useCallback<
-    CanvasDraftLifecycle['handleExportProjectSnapshot']
-  >(() => {
-    const record = graphDraftQuery.data?.record ?? null;
-    if (!canExportProjectSnapshot || record == null) {
-      toast.error(canvasViewCopy.projectSnapshotExportUnavailableMessage);
-      return;
-    }
-
-    const exported = canvasProjectSnapshot.exportFile({
-      record,
-      workspaceScope,
-      exportedAt: new Date().toISOString(),
-    });
-    const blob = new Blob([exported.contents], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = exported.fileName;
-    anchor.rel = 'noopener';
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  }, [canExportProjectSnapshot, graphDraftQuery.data?.record, workspaceScope]);
-  const handleImportProjectSnapshotFile = useCallback<
-    CanvasDraftLifecycle['handleImportProjectSnapshotFile']
-  >(
-    async (file) => {
-      await executeImportProjectSnapshotCommand({
-        file,
-        canImportProjectSnapshot,
-        draftRepository,
-        graphDraftQuery,
-        draftQueryCache,
-        setDraftSession,
-        setDraftSaveStatus,
-        refs,
-        invalidateInFlightSaveAttempt,
-      });
-    },
-    [
-      canImportProjectSnapshot,
-      draftQueryCache,
-      draftRepository,
-      graphDraftQuery.data?.record?.revision,
-      invalidateInFlightSaveAttempt,
-      refs,
-      setDraftSession,
-      setDraftSaveStatus,
-    ]
-  );
+  const snapshotCommands = useCanvasProjectSnapshotCommands({
+    draftRepository,
+    graphDraftQuery,
+    draftQueryCache,
+    canPersistGraphDraft,
+    draftSaveStatus,
+    workspaceScope,
+    setDraftSession,
+    setDraftSaveStatus,
+    refs,
+    invalidateInFlightSaveAttempt,
+  });
 
   return {
     draftSaveStatus: effectiveDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     flushDraftForExecution,
     reloadLatestDraft,
-    handleCreateCanvasDocument,
-    handleSelectCanvasDocument,
+    handleCreateCanvasDocument: projectCanvasCommands.handleCreateCanvasDocument,
+    handleSelectCanvasDocument: projectCanvasCommands.handleSelectCanvasDocument,
     canCreateCanvasDocument,
-    canExportProjectSnapshot,
-    canImportProjectSnapshot,
-    handleExportProjectSnapshot,
-    handleImportProjectSnapshotFile,
+    canExportProjectSnapshot: snapshotCommands.canExportProjectSnapshot,
+    canImportProjectSnapshot: snapshotCommands.canImportProjectSnapshot,
+    handleExportProjectSnapshot: snapshotCommands.handleExportProjectSnapshot,
+    handleImportProjectSnapshotFile: snapshotCommands.handleImportProjectSnapshotFile,
   };
 }

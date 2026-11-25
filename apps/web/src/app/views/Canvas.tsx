@@ -12,7 +12,10 @@ import { CanvasInvalidAuthorityState } from './canvas/CanvasInvalidAuthorityStat
 import type { CanvasModalHostProps } from './canvas/canvasModalHost.types';
 import { buildCanvasModalHostProps } from './canvas/canvasModalHostPropsBuilder';
 import { deriveCanvasRouteViewState } from './canvas/canvasRouteViewState';
-import { buildCanvasShellProps } from './canvas/canvasShellPropsBuilder';
+import {
+  buildCanvasShellProps,
+  useCanvasShellCanvasCommands,
+} from './canvas/canvasShellPropsBuilder';
 import {
   buildDbtProjectFileCanvasPath,
   resolveCanvasRouteAuthority,
@@ -64,12 +67,16 @@ function GraphDraftAuthorityContent({
   const { presentationState } = routeViewState;
 
   useCanvasRoutePresentationSync(presentationState);
+  const canvasCommands = useCanvasShellCanvasCommands({ controller, routeViewState });
 
   const shellProps: CanvasShellProps = {
-    ...buildCanvasShellProps({
-      controller,
-      routeViewState,
-    }),
+    ...buildCanvasShellProps(
+      {
+        controller,
+        routeViewState,
+      },
+      canvasCommands
+    ),
     warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery,
     runSnapshot: runSnapshotQuery.data ?? null,

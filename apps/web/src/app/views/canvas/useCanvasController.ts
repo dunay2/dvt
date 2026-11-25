@@ -2,6 +2,8 @@
 import { useMemo } from 'react';
 
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
+import { resolveRouteDraftRecord } from './canvasShellViewModel';
+import { listProjectCanvasDocuments } from './canvasProjectCanvasLifecycle';
 import { useCanvasControllerRuntime } from './useCanvasControllerRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
@@ -164,7 +166,11 @@ export function useCanvasController() {
     overlayModel,
   });
 
+  const routeDraft = resolveRouteDraftRecord(authoringRuntime)?.draft;
+  const canvasDocuments = useMemo(() => listProjectCanvasDocuments(routeDraft), [routeDraft]);
+
   return buildCanvasControllerViewModel({
+    canvasDocuments,
     environment,
     authoringRuntime,
     persistence,
