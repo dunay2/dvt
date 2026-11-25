@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-11-24",
+  "generated": "2026-11-25",
   "repo": {
     "sha": "local"
   },
@@ -1142,6 +1142,16 @@
       "title": "ADR-0049 - RETRY_RUN is a separate recovery use case, not a canonical signal"
     },
     {
+      "number": "ADR-0051",
+      "decisions": [
+        "Separate bounded transient query rows from immutable terminal execution metadata."
+      ],
+      "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/sql-workspace/SqlWorksheet.v1.ts"
+      ],
+      "title": "ADR-0051 - Access decision service and embedded-first adapter boundary"
+    },
+    {
       "number": "ADR-0052",
       "decisions": [
         "Count real graph preparations while retaining real integrity and scope checks on every request.",
@@ -1210,7 +1220,8 @@
         "Re-export only source-object catalog and source-import operation contracts from this barrel.",
         "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
         "Represent discoverable inputs as source objects instead of relational-table-only DTOs.",
-        "Reuse coverage/selection contracts; verify schema and request digests and completion facts."
+        "Reuse coverage/selection contracts; verify schema and request digests and completion facts.",
+        "Separate bounded transient query rows from immutable terminal execution metadata."
       ],
       "implemented_by": [
         "apps/api/src/application/ports/warehouseSourceImport.ts",
@@ -1222,7 +1233,8 @@
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
-        "packages/@dvt/contracts/src/contracts/source-import/index.ts"
+        "packages/@dvt/contracts/src/contracts/source-import/index.ts",
+        "packages/@dvt/contracts/src/contracts/sql-workspace/SqlWorksheet.v1.ts"
       ],
       "title": "ADR-0058: Warehouse Source Import Rails"
     },
@@ -1236,10 +1248,13 @@
         "Expose stable content revisions and compare-and-swap writes at the workspace-file port.",
         "Keep dbt file analysis in a versioned projection separate from execution and draft persistence.",
         "Native dbt analysis owns semantics; this contract exposes only",
+        "Publish selected-model SQL with exact project, analysis and SQL digests.",
         "Publish the complete graph-derived dbt artifact set through one specific atomic command.",
         "Re-export only versioned dbt project published language",
         "Refer to the selected model and scoped connection without copying executable SQL.",
+        "Require an explicit project binding and configuration revision for file creation.",
         "Resolve authority on the server and return a discriminated outcome for the one mutated authority.",
+        "Return a revision-bound semantic proposal for the existing guarded graph save.",
         "Serialize mutations per scoped path and publish writes through atomic replacement.",
         "The client names semantic identities; the server owns source patches.",
         "Use one discriminated provenance contract for protected DVT drafts, transformation Git artifacts, and file-authoritative dbt projects.",
@@ -1251,14 +1266,17 @@
         "apps/api/src/application/ports/workspaceFiles.ts",
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.ts",
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/WorksheetCanvasModel.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectRootRelocation.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelExecutionSql.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/RunParameters.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/WorksheetDbtModel.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
@@ -1331,6 +1349,7 @@
         "Require typed standard-first evidence before semantic admission.",
         "Resolve existing bindings and messages; never infer groups from adjacency.",
         "Retain product gaps separately from standard semantic identities.",
+        "Return a revision-bound semantic proposal for the existing guarded graph save.",
         "Reuse unary, binary and repeated-input policies in one named operation mapping.",
         "Seed candidates only from pinned core and official extension identities.",
         "Select the sole admitted publication from the validated Run workload.",
@@ -1346,6 +1365,7 @@
         "packages/@dvt/contracts/src/contracts/canvas/TransformDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/TransformSqlDraftDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/TransformSqlProjection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/WorksheetCanvasModel.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/index.ts",
         "packages/@dvt/contracts/src/contracts/data-access/DataAccess.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtInputBindings.v1.ts",
