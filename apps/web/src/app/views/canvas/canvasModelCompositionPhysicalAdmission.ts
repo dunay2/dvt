@@ -8,6 +8,8 @@
  */
 import { resolveWorkspaceNodeInstances, projectWorkspaceNodeInstanceEdges } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasPhysicalSourceReferenceKey } from './canvasRelationalAnalysis';
 
 export function assertCanvasModelCompositionPhysicalInputAvailable(
@@ -28,4 +30,18 @@ export function assertCanvasModelCompositionPhysicalInputAvailable(
     if (input != null && canvasPhysicalSourceReferenceKey(input) === key)
       throw new Error('Physical Source already supplies this receiver.');
   }
+}
+
+export function readCanvasPhysicalCopyMetadata(source: CanonicalNode): Record<string, unknown> {
+  if (!resolveCanvasPhysicalCompositionInput(source, { sourceId: source.id, targetId: source.id }))
+    throw new Error('Physical Model publication is unavailable.');
+  const metadata = Object.fromEntries(
+    ['columns', 'schema', 'tableName', 'connectedSourceRef'].map((key) => [
+      key,
+      source.metadata?.[key],
+    ])
+  );
+  const authority = readDvtTransformAuthoringAuthority(source);
+  if (authority != null) metadata.transformAuthoring = authority;
+  return metadata;
 }

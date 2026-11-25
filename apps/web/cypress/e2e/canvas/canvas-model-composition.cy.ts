@@ -162,6 +162,12 @@ describe('Model composition inside the selected Model', () => {
     const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
     const context = {
       ...initial,
+      nodes: initial.nodes.map((node) =>
+        node.id === source.id
+          ? { ...node, name: 'sales_calendar', path: 'models/sources/src_demo_sales_stage.yml' }
+          : node
+      ),
+      nodeIds: initial.nodeIds.filter((id) => id !== source.id),
       edges: initial.edges.filter(
         (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
       ),
@@ -197,8 +203,12 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
+    dragModel(source.id);
+    cy.get(pending).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+    cy.get(pending).should('not.exist');
     cy.get(
-      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: ${source.name}"]`
+      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: sales_calendar"]`
     )
       .filter(':visible')
       .focus();

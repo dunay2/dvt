@@ -1,8 +1,27 @@
 /** Prove independent native definitions preserve meaning and real input provenance. */
+import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { prepareCanvasModelWorkingCopy } from './canvasModelWorkingCopy';
+
+function expectIndependentIdentities(
+  source: DvtSubstraitSemanticDocumentV1,
+  document: DvtSubstraitSemanticDocumentV1
+): void {
+  const fields = new Set(document.sidecar.fields.map((field) => field.fieldId));
+  expect(source.sidecar.fields.some((field) => fields.has(field.fieldId))).toBe(false);
+  for (const [index, relation] of source.sidecar.relations.entries()) {
+    const copied = document.sidecar.relations[index]!;
+    expect(copied.relationId).not.toBe(relation.relationId);
+    expect(copied.producerRef?.nodeId).toBe(relation.producerRef?.nodeId);
+    for (const mapping of copied.producerRef?.fields ?? [])
+      expect(fields.has(mapping.fieldId)).toBe(true);
+    expect(copied.producerRef?.fields.map((field) => field.producerFieldId)).toEqual(
+      relation.producerRef?.fields.map((field) => field.producerFieldId)
+    );
+  }
+}
 
 describe('Model working copy', () => {
   it('copies a composed Model with new local identities and the same external producers', async () => {
@@ -33,18 +52,7 @@ describe('Model working copy', () => {
     expect(copy.node.metadata?.config).toBeUndefined();
     expect(copy.node.metadata?.resultTarget).toBeUndefined();
     expect(document.semanticPlan).toEqual(source.semanticPlan);
-    const fields = new Set(document.sidecar.fields.map((field) => field.fieldId));
-    expect(source.sidecar.fields.some((field) => fields.has(field.fieldId))).toBe(false);
-    for (const [index, relation] of source.sidecar.relations.entries()) {
-      const copied = document.sidecar.relations[index]!;
-      expect(copied.relationId).not.toBe(relation.relationId);
-      expect(copied.producerRef?.nodeId).toBe(relation.producerRef?.nodeId);
-      for (const mapping of copied.producerRef?.fields ?? [])
-        expect(fields.has(mapping.fieldId)).toBe(true);
-      expect(copied.producerRef?.fields.map((field) => field.producerFieldId)).toEqual(
-        relation.producerRef?.fields.map((field) => field.producerFieldId)
-      );
-    }
+    expectIndependentIdentities(source, document);
     expect(copy.edges.map((edge) => edge.sourceId)).toEqual(
       graph.edges.filter((edge) => edge.targetId === original.id).map((edge) => edge.sourceId)
     );
@@ -62,11 +70,17 @@ describe('Model working copy', () => {
 
   it('preserves the shared physical connection while creating a separate Source Model', async () => {
     const graph = await createModelOutputDependencyFixture();
+    const imported = {
+      ...graph.source,
+      name: 'sales_calendar',
+      path: 'models/sources/src_demo_sales_stage.yml',
+    };
     const copy = prepareCanvasModelWorkingCopy({
-      sourceId: graph.source.id,
-      nodes: graph.nodes,
+      sourceId: imported.id,
+      nodes: graph.nodes.map((node) => (node.id === imported.id ? imported : node)),
       edges: graph.edges,
     });
+    expect(copy.node.path).toBeUndefined();
     expect(copy.node.id).not.toBe(graph.source.id);
     expect(copy.node.kind).toBe(graph.source.kind);
     expect(copy.node.metadata?.connectedSourceRef).toEqual(
