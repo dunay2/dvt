@@ -34,6 +34,10 @@ code_refs:
   - scripts/planning-db/current-component-kind-constraint.cjs
   - tools/planning-db/schema/architecture/tables.sql
   - scripts/policy-validation-files.cjs
+  - apps/api/src/entrypoints/http/sqlWorksheetRoutes.ts
+  - apps/api/src/application/services/createWorksheetDbtModel.ts
+  - apps/web/src/app/views/code/SqlWorksheetFiles.tsx
+  - packages/@dvt/contracts/src/contracts/sql-workspace/SqlWorksheet.v1.ts
 evidence:
   tests:
     - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.catalog.architecture.test.ts
@@ -481,3 +485,31 @@ warning mode accepts them and error mode rejects them. No wording rewrite or
 severity reduction conceals that result. The glossary's three literal claims
 are a limited lexical projection of existing invariants, not semantic-language
 inference or equivalent coverage to the retired generic synonym bans.
+
+## SQL worksheet execution and model publication
+
+The [worksheet design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7148049698)
+separates ad hoc SQL execution and history from model authoring. The
+[SQL worksheet component](../architecture/components/api/sql-worksheet-component.md)
+documents the execution port, read-only transaction, timeout, result limits and
+actor-scoped persistence. The [file workflow](https://github.com/dunay2/dvt/issues/3951#issuecomment-7147812883)
+uses the existing workspace file, Git history and conditional save ports.
+The [conversion design](https://github.com/dunay2/dvt/issues/3951#issuecomment-7148020065)
+requires an explicit choice of destination before publication.
+
+The isolated PostgreSQL integration suite passed all three cases after hook
+formatting at commit `7659cb3fe`. It exercised a real scoped authorization
+grant, execution against the selected connection, history after repository
+recreation, rejected writes and timeout recording. All 17 contract tests
+passed, including the UTF-8 byte limit. The mounted file and conversion suites
+passed 13 tests, including preserving query text after a late file response and
+preserving the entered model name when switching destinations. The dbt command
+and protected route suites passed 12 tests, including denial with either
+required capability missing and refusal when another file owns the model name.
+
+In the coordinated development stack, a browser entered the SQL activity
+through the local session, selected the demo PostgreSQL connection and ran
+`select 1 as comprobacion_editor_sql`. The result contained one column and one
+row. The execution history returned the SQL, selected connection, completion
+status and measured duration. This check added one history entry to the demo
+workspace. Database restore verification preceded the local grant update.

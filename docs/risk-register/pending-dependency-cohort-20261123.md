@@ -160,3 +160,16 @@ retain the original execution outcome. Validate cancellation and spawn
 failure with real processes. Validate the complete dependency graph with
 bounded parallelism on the integration host so simultaneous Vitest worker
 pools do not obscure failures in unrelated suites.
+
+Selecting the wrong warehouse or exposing another actor's SQL history can
+disclose project information. The worksheet resolves the connection under the
+authorized tenant, project and environment and partitions history by actor.
+History retains execution metadata and SQL. Returned row values stay transient.
+The provider enforces a read-only transaction and a statement timeout.
+
+Converting a worksheet could otherwise overwrite a file or introduce a partial
+graph. File publication verifies the selected dbt project authority and current
+configuration digest, checks for conflicting model names and uses an
+absence-checked write. Canvas publication requires a complete reviewed proposal
+and the existing revision-checked graph save. Exercise denied, stale and repeat
+submissions at the same public boundaries as successful publication.
