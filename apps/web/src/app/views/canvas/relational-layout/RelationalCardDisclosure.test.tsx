@@ -8,7 +8,9 @@ import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
 import {
   projectExpressionStage,
   withScalarOutput,
+  expressionStageDraft,
 } from '../canvasRelationalExpressionStage.test-support';
+import * as semanticDetails from '../canvasRelationalTreeDetails';
 import { RelationalLayoutSession } from './RelationalLayoutSession';
 import { RelationalNavigationControls } from './RelationalNavigationControls';
 import { layoutCanvasRelationalTree, type CardPosition } from '../canvasRelationalTreeGeometry';
@@ -21,7 +23,8 @@ describe('Relational card disclosure', () => {
   const render = (
     zoom: number,
     view = 'inspection',
-    positions?: ReadonlyMap<string, CardPosition>
+    positions?: ReadonlyMap<string, CardPosition>,
+    currentFixture = fixture
   ): void =>
     act(() =>
       root.render(
@@ -29,13 +32,13 @@ describe('Relational card disclosure', () => {
           <RelationalNavigationControls />
           <CanvasRelationalTreeLayout
             key={view}
-            root={fixture.projection.root}
+            root={currentFixture.projection.root}
             outputName="Model"
-            selectedLocator={fixture.projection.root.locator}
+            selectedLocator={currentFixture.projection.root.locator}
             copy={resolveCanvasViewCopy('en')}
             onSelect={vi.fn()}
             onExpand={inspect}
-            semanticContext={{ transformNode: fixture.node }}
+            semanticContext={{ transformNode: currentFixture.node }}
             zoom={zoom}
           />
         </RelationalLayoutSession>
@@ -82,7 +85,36 @@ describe('Relational card disclosure', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.restoreAllMocks();
   });
+
+  it.each([0.6, 1.2])(
+    'reuses semantic projection while moving the card body at zoom %s',
+    (zoom) => {
+      const projected = vi.spyOn(semanticDetails, 'projectCanvasRelationalTreeDetails');
+      render(zoom, 'projection-measurement');
+      expect(projected).toHaveBeenCalledTimes(1);
+      const original = JSON.stringify(fixture.node);
+      const card = movableCard();
+      const body = card.querySelector<HTMLElement>('[data-slot="canvas-relational-node-title"]')!;
+      const before = cardPosition(card);
+      pointer(body, 'pointerdown', 100, 100);
+      for (const delta of [10, 20, 30, 20, 10]) {
+        pointer(body, 'pointermove', 100 + delta * zoom, 100 + (delta * zoom) / 2);
+        expect(cardPosition(card).x).toBeCloseTo(before.x + delta);
+        expect(cardPosition(card).y).toBeCloseTo(before.y + delta / 2);
+      }
+      pointer(body, 'pointerup', 100 + 10 * zoom, 100 + 5 * zoom);
+      expect(projected).toHaveBeenCalledTimes(1);
+      expect(JSON.stringify(fixture.node)).toBe(original);
+      expect(inspect).not.toHaveBeenCalled();
+      const changed = projectExpressionStage(expressionStageDraft());
+      expect(JSON.stringify(changed.node)).not.toBe(original);
+      render(zoom, 'projection-measurement', undefined, changed);
+      expect(projected).toHaveBeenCalledTimes(2);
+      expect(projected.mock.calls.at(-1)?.[1]?.transformNode).toBe(changed.node);
+    }
+  );
 
   it('reveals semantic detail when zoom reaches the readable threshold', () => {
     const before = geometry();

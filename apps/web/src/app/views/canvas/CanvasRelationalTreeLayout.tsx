@@ -11,6 +11,8 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
 import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';
 
+const EMPTY_STAGED_OPERATIONS: readonly CanvasStagedOperation[] = [];
+
 export function CanvasRelationalTreeLayout({
   outputName,
   root,
@@ -24,7 +26,7 @@ export function CanvasRelationalTreeLayout({
   onManualLayout,
   onOpenOutput,
   occurrences,
-  stagedOperations = [],
+  stagedOperations = EMPTY_STAGED_OPERATIONS,
   selectedStagedOperationId = null,
   onSelectStagedOperation,
   onConnectStagedOperation,
