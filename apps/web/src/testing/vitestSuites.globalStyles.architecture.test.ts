@@ -1,8 +1,9 @@
 /** Owned concern: preserve complete global-style proof and distinct companion environments. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
+import { createVitest } from 'vitest/node';
 
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
@@ -15,6 +16,7 @@ import {
 } from '../../cypress.catalog';
 import { main } from '../../scripts/run-vitest-changed-suites';
 import { readWebVitestCoverageInventory } from '../../scripts/changed-suite-coverage';
+import * as coverageAdapter from '../../scripts/changed-suite-coverage';
 import { absorbWebVitestCommandPlan } from '../../vitest/commands';
 import { selectUncoveredWebVitestFiles } from '../../vitest/coverage';
 import * as runtimeConfig from '../../vitest/runtimeConfig';
@@ -48,7 +50,43 @@ const globalFiles = [
   return [relative, `apps/web/${relative}`, `./apps/web/${relative.replaceAll('/', '\\')}`];
 });
 
+async function readNativeCoverageInventory(): Promise<readonly string[]> {
+  const root = process.cwd();
+  const context = await createVitest({
+    root,
+    config: resolve(root, 'vitest.config.ts'),
+    watch: false,
+    run: true,
+  });
+  try {
+    return (await context.globTestSpecifications())
+      .map((spec) => relative(root, spec.moduleId).replaceAll('\\', '/'))
+      .sort();
+  } finally {
+    await context.close();
+  }
+}
+
 describe('global Web styles evidence routing', () => {
+  it('reads the complete real inventory from its own stable source-tree fixture', () => {
+    const fixture = mkdtempSync(resolve(tmpdir(), 'dvt-focus-inventory-'));
+    const plan = resolveWebVitestChangedSuitePlan([
+      'src/styles/index.css',
+      'src/app/views/code/codeViewCopy.ts',
+    ]);
+    try {
+      mkdirSync(resolve(fixture, 'src/nested'), { recursive: true });
+      writeFileSync(resolve(fixture, 'src/a.test.ts'), '');
+      writeFileSync(resolve(fixture, 'src/nested/b.test.tsx'), '');
+      writeFileSync(resolve(fixture, 'src/nested/production.ts'), '');
+      expect(readWebVitestCoverageInventory(plan, fixture)).toEqual([
+        'src/a.test.ts',
+        'src/nested/b.test.tsx',
+      ]);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
   it.each([
     ['src/app/views/code/codeViewCopy.ts'],
     ['src/styles/index.css'],
@@ -168,7 +206,7 @@ describe('global Web styles evidence routing', () => {
     ).toBeNull();
   });
 
-  it('preserves the exact focus file/config union except identical Presentation executions', () => {
+  it('preserves the exact focus file/config union except identical Presentation executions', async () => {
     const sources = [
       'src/styles/index.css',
       'src/app/views/code/codeViewCopy.ts',
@@ -176,7 +214,7 @@ describe('global Web styles evidence routing', () => {
       'src/app/services/workspace/sourceObjectMetricEvidence.ts',
     ];
     const baseline = resolveWebVitestChangedSuitePlan(sources);
-    const files = listWebVitestFiles();
+    const files = await readNativeCoverageInventory();
     const plan = absorbWebVitestCommandPlan(baseline, files);
     const residual = plan.commandPlan.filter((entry) => entry.kind === 'vitest-files');
     const expected = ['monaco', 'shell-session'] as const;
@@ -215,22 +253,27 @@ describe('global Web styles evidence routing', () => {
       ],
       residual: [{ config: 'vitest.shell-session.config.ts', files: 22 }],
     },
-  ])('absorbs only identical Presentation executions for $sources', ({ sources, residual }) => {
-    const output = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    main(['--plan', '--phase=vitest', '--files', 'src/styles/index.css', ...sources]);
-    const plan = JSON.parse(String(output.mock.calls.at(-1)![0]));
-    expect(
-      plan.commandPlan
-        .filter((entry: { kind: string }) => entry.kind === 'vitest-files')
-        .map((entry: { config: string; filePaths: string[] }) => ({
-          config: entry.config,
-          files: entry.filePaths.length,
-        }))
-    ).toEqual(residual);
-    expect(plan.commands).toEqual(expect.arrayContaining(primaryCommands));
-    if (sources.length > 1)
-      expect(plan.commands).toContain(WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services']);
-  });
+  ])(
+    'absorbs only identical Presentation executions for $sources',
+    async ({ sources, residual }) => {
+      const inventory = await readNativeCoverageInventory();
+      vi.spyOn(coverageAdapter, 'readWebVitestCoverageInventory').mockReturnValueOnce(inventory);
+      const output = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      main(['--plan', '--phase=vitest', '--files', 'src/styles/index.css', ...sources]);
+      const plan = JSON.parse(String(output.mock.calls.at(-1)![0]));
+      expect(
+        plan.commandPlan
+          .filter((entry: { kind: string }) => entry.kind === 'vitest-files')
+          .map((entry: { config: string; filePaths: string[] }) => ({
+            config: entry.config,
+            files: entry.filePaths.length,
+          }))
+      ).toEqual(residual);
+      expect(plan.commands).toEqual(expect.arrayContaining(primaryCommands));
+      if (sources.length > 1)
+        expect(plan.commands).toContain(WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services']);
+    }
+  );
 
   it.each(globalFiles)(
     'requires complete canonical proof without filesystem presence: %s',
