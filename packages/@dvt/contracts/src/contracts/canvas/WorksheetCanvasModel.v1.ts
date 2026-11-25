@@ -9,11 +9,15 @@
 import { z } from 'zod';
 
 import { CanvasHumanNameV1Schema } from '../planner/CanvasAuthoringFieldPolicy.v1.js';
+import { isSourceFreeDvtSubstraitDocumentV1 } from '../planner/DvtSubstraitLiteralRow.v1.js';
 import { DvtTransformAuthoringAuthorityV1Schema } from '../planner/DvtTransformAuthoringAuthority.v1.js';
 import { WorkspaceDbtModelReferenceSchema } from '../planner/WorkspaceDbtModelReference.v1.js';
-import { WorkspaceGraphAuthoringDraftSchema } from '../planner/WorkspaceGraphAuthoringDraft.v1.js';
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphAuthoringDraft,
+} from '../planner/WorkspaceGraphAuthoringDraft.v1.js';
 import { WorkspaceGraphDraftScopeSchema } from '../planner/WorkspaceGraphDraft.v1.js';
-import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
+import { ConnectionRefSchema, type ConnectionRef } from '../source-import/ConnectedSourceRef.v1.js';
 
 import {
   ModelSqlBufferSchema,
@@ -79,6 +83,33 @@ const ProposalIdentitySchema = z.object({
   contextSha256: ModelSqlDigestSchema,
 });
 
+function matchesLiteralConnection(metadata: unknown, expected: ConnectionRef): boolean {
+  const connection = ConnectionRefSchema.safeParse(metadata);
+  if (!connection.success || expected.provider !== 'postgres') return false;
+  return (
+    connection.data.provider === expected.provider &&
+    connection.data.connectionId === expected.connectionId
+  );
+}
+
+function hasWorksheetModelInputAuthority(
+  proposal: Readonly<{
+    draft: WorkspaceGraphAuthoringDraft;
+    modelId: string;
+    connectionRef: ConnectionRef;
+  }>
+): boolean {
+  const target = proposal.draft.nodes.find((node) => node.id === proposal.modelId);
+  const authority = DvtTransformAuthoringAuthorityV1Schema.safeParse(
+    target?.metadata?.['transformAuthoring']
+  );
+  if (!authority.success) return false;
+  const hasInput = proposal.draft.edges.some((edge) => edge.targetId === proposal.modelId);
+  if (!isSourceFreeDvtSubstraitDocumentV1(authority.data.semanticDocument)) return hasInput;
+  if (hasInput) return false;
+  return matchesLiteralConnection(target?.metadata?.['connectionRef'], proposal.connectionRef);
+}
+
 export const WorksheetCanvasModelProposalSchema = z.discriminatedUnion('status', [
   ProposalIdentitySchema.extend({ status: z.literal('current') }).strict(),
   ProposalIdentitySchema.extend({
@@ -95,11 +126,9 @@ export const WorksheetCanvasModelProposalSchema = z.discriminatedUnion('status',
         target?.name === proposal.name &&
         target.role === 'transform' &&
         proposal.draft.nodeIds.includes(target.id) &&
-        DvtTransformAuthoringAuthorityV1Schema.safeParse(target.metadata?.['transformAuthoring'])
-          .success &&
-        proposal.draft.edges.some((edge) => edge.targetId === target.id)
+        hasWorksheetModelInputAuthority(proposal)
       );
-    }, 'A successful proposal requires the complete visible canonical Model and input relationships.'),
+    }, 'A successful proposal requires a complete visible canonical Model with exact input or literal execution authority.'),
   ProposalIdentitySchema.extend({
     status: z.literal('invalid'),
     diagnostics: z.array(ModelSqlDiagnosticSchema).min(1).max(128),

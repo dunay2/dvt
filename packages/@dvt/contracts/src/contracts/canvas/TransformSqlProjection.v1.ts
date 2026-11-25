@@ -10,6 +10,12 @@ import { z } from 'zod';
 import { isSha256HexString } from '../../utils/contractPrimitives.js';
 import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
+import {
+  CanvasLiteralModelProvenanceSchema,
+  hasCanvasModelProvenance,
+  matchesCanvasLiteralPlan,
+} from './CanvasLiteralModelProvenance.v1.js';
+
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256Schema = z.string().refine(isSha256HexString);
 const SqlTextSchema = z.string().refine((value) => value.trim().length > 0);
@@ -71,6 +77,7 @@ export const TransformSqlProjectionResponseSchema = z
     provenance: z
       .object({
         sourceRefs: z.array(ConnectedSourceRefSchema),
+        literalModel: CanvasLiteralModelProvenanceSchema.optional(),
         modelRefs: z
           .array(
             z
@@ -86,11 +93,16 @@ export const TransformSqlProjectionResponseSchema = z
           .optional(),
       })
       .strict()
-      .refine((value) => value.sourceRefs.length > 0 || (value.modelRefs?.length ?? 0) > 0, {
-        message: 'SQL projection requires an authorized physical source or model revision.',
+      .refine(hasCanvasModelProvenance, {
+        message:
+          'SQL projection requires exact physical, file-model or literal execution authority.',
       }),
   })
-  .strict();
+  .strict()
+  .refine(matchesCanvasLiteralPlan, {
+    message: 'Literal provenance must match the selected semantic plan.',
+    path: ['provenance', 'literalModel'],
+  });
 
 export type TransformSqlProjectionRequest = z.infer<typeof TransformSqlProjectionRequestSchema>;
 export type TransformSqlProjectionResponse = z.infer<typeof TransformSqlProjectionResponseSchema>;
