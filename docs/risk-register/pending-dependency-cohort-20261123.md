@@ -208,3 +208,19 @@ coordinate into another graph. Keep selection and keyboard updates immediate,
 discard transient coordinates when a node disappears or the Canvas changes,
 and use the settled gesture to update the existing layout. Check multiple
 card counts, coordinates after reload and graph writes during the gesture.
+
+Replacing Explorer content during a background request can lose the active
+filter, keyboard focus and scroll position. Preserve the mounted list for
+loading and recoverable failures, while clearing data on scope denial. Verify
+these transitions against the rendered list rather than a status flag alone.
+
+A repeated relational use of a warehouse source must not create another
+physical dependency or overwrite an earlier alias. Keep the physical edge
+unique and assign each Read occurrence its own relation and field identities.
+Confirm those identities after Apply and reopening, with Cancel and denied
+scope retaining the original graph.
+
+Browser admission must not replace the product's Vitest obligations. Retain
+product inputs independently of the declared browser runtime, and deduplicate
+the browser baseline for mixed source and stylesheet changes. Preserve the
+existing runtime classification of each scenario.

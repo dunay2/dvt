@@ -38,10 +38,16 @@ code_refs:
   - apps/api/src/application/services/createWorksheetDbtModel.ts
   - apps/web/src/app/views/code/SqlWorksheetFiles.tsx
   - packages/@dvt/contracts/src/contracts/sql-workspace/SqlWorksheet.v1.ts
+  - apps/web/src/app/views/canvas/explorer/CanvasExplorerModelStatus.tsx
+  - apps/web/src/app/views/canvas/canvasModelCompositionPhysicalAdmission.ts
+  - apps/web/src/app/plugins/graph/GraphNodeColumnViews.tsx
+  - apps/web/cypress.changed.ts
 evidence:
   tests:
     - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.catalog.architecture.test.ts
     - node --test tools/ci/engine-coverage.test.mjs
+    - pnpm --filter @dvt/web typecheck
+    - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.browserRouting.architecture.test.ts
     - pnpm verify:prepush
 ---
 
@@ -632,3 +638,36 @@ In the relational editor at 60% and 120% zoom, five pointer moves plus
 release previously projected the same relational document seven times. The
 mounted regression now observes one initial projection across the gesture and
 a second projection when the semantic document actually changes.
+
+### Explorer continuity and repeated source occurrences
+
+The Explorer status change passed 42 mounted cases and three isolated Chrome
+cases. Loading and recoverable errors retain the same list, filter, focus and
+scroll position. A denied scope clears the rows and reports the error; a
+successful empty response reports the real zero count.
+
+The connected-source regression passed 14 unit and 12 mounted cases. Adding
+the same physical source twice creates distinct relational Read identities,
+aliases and field identities while retaining one physical dependency edge.
+Apply and reopening preserve those identities without copying the source
+definition. Cancel and authorization failures leave the graph untouched.
+
+Column headings and relation labels passed 101 focused cases and two isolated
+Chrome cases in English and Spanish. The labels distinguish local aliases
+from the original source and expose the input and output column counts to
+assistive technology.
+
+The browser router passed all 225 cases. The two column-view source paths
+select the existing available-runtime baseline once and remain eligible for
+Vitest classification. Cypress support and spec files remain outside Vitest.
+The initial regression also reproduced a lost Vitest input after declaring
+available-runtime coverage; the existing selector now retains product inputs
+before branching on the coverage form. The three original column scenarios
+retain their available-runtime classification.
+
+The complete controlled composition journey passed all five cases in Chrome
+158 with Cypress 15.21.2. Its intercepted transport retained the acknowledged
+Apply request across reopening: the final guard compares the original write
+ledger and requires zero additional PUT requests. The first run exposed a
+test oracle that mistook the retained Apply request for a new write; that
+failed receipt is preserved. No product change or ledger reset was needed.
