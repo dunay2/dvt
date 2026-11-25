@@ -75,6 +75,7 @@ export function CanvasExplorerList({
   return (
     <CanvasExplorerListTemplate
       items={matches}
+      hasModels={items.length > 0}
       open={open}
       onOpenChange={controls.onOpenChange}
       expandedIds={expandedIds}

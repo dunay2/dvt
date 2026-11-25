@@ -8,6 +8,7 @@
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import type { DbtProjectGraphProjection } from '@dvt/contracts';
 import { useCallback, useMemo } from 'react';
+import { ApiError } from '../../services/api/createApiClient';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import {
   useWorkspaceFileContentQuery,
@@ -41,6 +42,24 @@ type ConfigurationSnapshot = Readonly<{
   query: FileContentQuery;
   binding: DbtProjectFilesAuthorityBinding | undefined;
 }>;
+
+function transientProjectRefreshFailure(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.category === 'network' || (error.statusCode ?? 0) >= 500)
+  );
+}
+
+function projectPublicationSnapshot(
+  binding: DbtProjectFilesAuthorityBinding | undefined,
+  query: Pick<ProjectGraphQuery, 'data' | 'isSuccess' | 'error'>
+) {
+  const publication = currentProjectPublication(binding, query.data);
+  return {
+    projection: query.isSuccess ? publication : undefined,
+    displayProjection:
+      query.isSuccess || transientProjectRefreshFailure(query.error) ? publication : undefined,
+  };
+}
 
 function acceptedQueryStatus(
   required: boolean,
@@ -90,7 +109,7 @@ export function useWorkspaceDbtProjectContext({
     [configPath, config.isSuccess, config.data, canvasId]
   );
   const graph = useDbtProjectGraphQuery(binding, { enabled });
-  const projection = graph.isSuccess ? currentProjectPublication(binding, graph.data) : undefined;
+  const { projection, displayProjection } = projectPublicationSnapshot(binding, graph);
   const statuses = projectContextStatuses(
     tree,
     { discovery, query: config, binding },
@@ -105,5 +124,5 @@ export function useWorkspaceDbtProjectContext({
     const current = await refetch();
     return current.isSuccess ? currentProjectPublication(binding, current.data) : undefined;
   }, [binding, refetch]);
-  return { binding, projection, unavailable, loading, refresh };
+  return { binding, projection, displayProjection, unavailable, loading, refresh };
 }

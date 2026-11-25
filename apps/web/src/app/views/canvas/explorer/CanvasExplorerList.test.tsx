@@ -303,6 +303,34 @@ it('distinguishes an unknown model count from a successful empty result', () => 
   expect(screen.getByText('No models yet.')).toBeTruthy();
 });
 
+it('keeps status messages outside the search and populated list flow', () => {
+  const renderStatus = (pending: boolean, status?: JSX.Element): void => {
+    act(() =>
+      root.render(
+        <CanvasExplorerList items={items} onSelect={vi.fn()} pending={pending} status={status} />
+      )
+    );
+  };
+  renderStatus(false);
+  const search = screen.getByRole<HTMLInputElement>('searchbox');
+  const row = screen.getAllByRole('button', { name: 'Orders' })[0];
+  act(() => search.focus());
+  renderStatus(true, <p role="status">Loading project models…</p>);
+  expect(screen.getByRole('searchbox')).toBe(search);
+  expect(document.activeElement).toBe(search);
+  expect(screen.getAllByRole('button', { name: 'Orders' })[0]).toBe(row);
+  const indicator = container.querySelector('[data-slot="canvas-explorer-model-status"]');
+  expect(indicator?.getAttribute('data-state')).toBe('loading');
+  expect(indicator?.contains(screen.getByRole('status'))).toBe(true);
+  renderStatus(false, <p role="alert">Project models unavailable.</p>);
+  expect(indicator?.getAttribute('data-state')).toBe('error');
+  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  expect(indicator?.contains(screen.getByRole('alert'))).toBe(true);
+  renderStatus(false);
+  expect(document.activeElement).toBe(search);
+  expect(indicator?.getAttribute('data-state')).toBe('ready');
+});
+
 it('keeps the full model name and Source facet in a wrapping title group', () => {
   // Native proof at the retained dock width exposed a fixed badge column squeezing Customers into letter fragments.
   act(() =>

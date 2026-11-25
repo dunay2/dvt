@@ -44,11 +44,12 @@ export function CanvasProjectElementsExplorerView({
   }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const [creationError, setCreationError] = useState(false);
-  const { binding, projection, unavailable, loading } = projectContext;
+  const { binding, projection, displayProjection, unavailable, loading } = projectContext;
   const currentIds = new Set(items.map((item) => item.id));
   const models = projectFileExplorerModels({
     enabled,
     projection,
+    displayProjection,
     binding,
     canCreateInstances,
     inspectorTarget,
@@ -94,12 +95,7 @@ export function CanvasProjectElementsExplorerView({
   return (
     <CanvasExplorerCatalogPanel key={catalogueScopeKey} copy={copy}>
       <CanvasExplorerList
-        key={JSON.stringify([
-          catalogueScopeKey,
-          projectRoot,
-          binding?.canvasId,
-          binding?.authority.projectRoot,
-        ])}
+        key={JSON.stringify([catalogueScopeKey, projectRoot])}
         items={mergeCanvasExplorerModels(items, models)}
         presentation={presentation}
         onAddModel={onAddModel}
@@ -140,26 +136,41 @@ function startFileModelPlacement(
   event.dataTransfer.effectAllowed = 'copy';
 }
 
-function projectFileExplorerModels({
-  enabled,
-  projection,
-  binding,
-  canCreateInstances,
-  inspectorTarget,
-  modelAction,
-}: Pick<CanvasProjectElementsInput, 'enabled' | 'canCreateInstances' | 'inspectorTarget'> &
-  Pick<CanvasProjectElementsInput, 'modelAction'> &
-  Pick<ReturnType<typeof useWorkspaceDbtProjectContext>, 'projection' | 'binding'>) {
-  return enabled && projection != null && binding != null
-    ? projectCanvasExplorerFileModels(projection).map((item) => {
-        // Unbound logical Models remain visible; the existing factory owns full output admission.
-        const canPlace =
-          modelAction?.canActivate?.(item.id) === true ||
-          (canCreateInstances && projection.executionTarget?.connectionRef != null);
-        const selected = isSelectedFileExplorerModel(item, binding, inspectorTarget);
-        return { ...item, selected, draggable: canPlace, disabled: false };
-      })
+type FileExplorerProjectionContext = Pick<
+  CanvasProjectElementsInput,
+  'enabled' | 'canCreateInstances' | 'inspectorTarget' | 'modelAction'
+> &
+  Pick<
+    ReturnType<typeof useWorkspaceDbtProjectContext>,
+    'projection' | 'displayProjection' | 'binding'
+  >;
+
+function projectFileExplorerModels(context: FileExplorerProjectionContext) {
+  const { enabled, displayProjection, binding } = context;
+  return enabled && displayProjection != null && binding != null
+    ? projectCanvasExplorerFileModels(displayProjection).map((item) =>
+        projectFileExplorerModel(item, context)
+      )
     : [];
+}
+
+function projectFileExplorerModel(
+  item: ReturnType<typeof projectCanvasExplorerFileModels>[number],
+  {
+    projection,
+    binding,
+    canCreateInstances,
+    inspectorTarget,
+    modelAction,
+  }: FileExplorerProjectionContext
+) {
+  // A retained row is presentation only; the current publication still owns placement admission.
+  const canPlace =
+    projection != null &&
+    (modelAction?.canActivate?.(item.id) === true ||
+      (canCreateInstances && projection.executionTarget?.connectionRef != null));
+  const selected = binding != null && isSelectedFileExplorerModel(item, binding, inspectorTarget);
+  return { ...item, selected, draggable: canPlace, disabled: false };
 }
 
 function ProjectElementsStatus({

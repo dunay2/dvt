@@ -15,6 +15,7 @@ import type { CanvasExplorerCopy, CanvasExplorerModelAction } from './CanvasExpl
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import styles from './CanvasExplorer.module.css';
 import { CanvasExplorerRemoveEmptyModelAction } from './CanvasExplorerRemoveEmptyModelAction';
+import { CanvasExplorerModelStatus } from './CanvasExplorerModelStatus';
 
 /** Shared disclosure structure for project connection and model sections. */
 export function CanvasExplorerSection({
@@ -223,6 +224,7 @@ export function CanvasExplorerListTemplate({
   status,
   countKnown,
   pending,
+  hasModels,
 }: Readonly<{
   items: readonly CanvasExplorerItem[];
   open: boolean;
@@ -242,6 +244,7 @@ export function CanvasExplorerListTemplate({
   status?: ReactNode;
   countKnown: boolean;
   pending: boolean;
+  hasModels: boolean;
 }>): JSX.Element {
   const id = useId();
   return (
@@ -256,19 +259,25 @@ export function CanvasExplorerListTemplate({
         onOpenChange={onOpenChange}
         busy={pending}
         action={
-          <button
-            type="button"
-            className={styles.headerAction}
-            aria-label={copy.addModel}
-            title={copy.addModel}
-            disabled={disabled || onAddModel == null}
-            onClick={(event) => onAddModel?.(event.currentTarget)}
-          >
-            <Plus aria-hidden="true" />
-          </button>
+          <>
+            <CanvasExplorerModelStatus
+              status={hasModels ? status : undefined}
+              pending={pending}
+              label={copy.details}
+            />
+            <button
+              type="button"
+              className={styles.headerAction}
+              aria-label={copy.addModel}
+              title={copy.addModel}
+              disabled={disabled || onAddModel == null}
+              onClick={(event) => onAddModel?.(event.currentTarget)}
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          </>
         }
       >
-        {status}
         <label className={styles.search}>
           <Search aria-hidden="true" />
           <input
@@ -279,6 +288,7 @@ export function CanvasExplorerListTemplate({
             placeholder={copy.search}
           />
         </label>
+        {hasModels ? null : status}
         <ul className={styles.list}>
           {items.map((item) => (
             <CanvasExplorerModelRow
