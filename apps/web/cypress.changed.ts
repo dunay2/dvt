@@ -99,8 +99,6 @@ class BrowserEvidenceSelection {
   private readonly retired = new Set<string>();
   private catalogAdditions?: readonly string[] | null;
 
-  constructor(private readonly catalogSnapshots?: WebCypressCatalogSnapshots) {}
-
   requireCapabilities(capabilities: readonly WebCypressCapability[], spec?: string): void {
     for (const capability of capabilities) this.selected.add(capability);
     if (!capabilities.includes('controlled')) return;
@@ -109,12 +107,9 @@ class BrowserEvidenceSelection {
     for (const path of paths) this.controlled.add(path);
   }
 
-  private admitCatalog(): void {
+  private admitCatalog(snapshots?: WebCypressCatalogSnapshots): void {
     if (this.catalogAdditions === undefined) {
-      this.catalogAdditions = resolveControlledCatalogAdditions(
-        WEB_CYPRESS_CATALOG,
-        this.catalogSnapshots
-      );
+      this.catalogAdditions = resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, snapshots);
     }
     if (this.catalogAdditions === null) this.requireCapabilities(CAPABILITIES);
     else this.catalogAdditions.forEach((spec) => this.requireCapabilities(['controlled'], spec));
@@ -166,9 +161,9 @@ class BrowserEvidenceSelection {
     this.requireCapabilities(['available', 'unavailable']);
   }
 
-  admit(change: BrowserSourceChange): void {
+  admit(change: BrowserSourceChange, snapshots?: WebCypressCatalogSnapshots): void {
     const { path, filePath } = change;
-    if (path === WEB_CYPRESS_CATALOG_PATH) return this.admitCatalog();
+    if (path === WEB_CYPRESS_CATALOG_PATH) return this.admitCatalog(snapshots);
     if (isNightlyBrowserChange(change)) return this.admitNightly();
     if (completeBrowserBoundary(change)) {
       this.requireCapabilities(CAPABILITIES);
@@ -216,9 +211,10 @@ export function resolveWebCypressChangedPlan(
   retiredFiles: string[];
   catalogAdditions?: readonly string[] | null;
 } {
-  const selection = new BrowserEvidenceSelection(catalogSnapshots);
+  const selection = new BrowserEvidenceSelection();
   if (full) selection.requireCapabilities(CAPABILITIES);
-  for (const filePath of filePaths) selection.admit({ path: repositoryPath(filePath), filePath });
+  for (const filePath of filePaths)
+    selection.admit({ path: repositoryPath(filePath), filePath }, catalogSnapshots);
   return selection.result();
 }
 
