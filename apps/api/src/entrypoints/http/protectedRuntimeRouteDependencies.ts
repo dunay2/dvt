@@ -190,6 +190,8 @@ function buildCanvasModelQueries(
     }),
   });
   const modelSqlContext = new ProjectCanvasModelSqlContextQuery({
+    authorizer: protectedModule.authorizer,
+    connectionCatalog: protectedModule.warehouseConnectionCatalog,
     store: protectedModule.workspaceGraphDraftStore,
     authorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
     inputs: modelSqlInputs,

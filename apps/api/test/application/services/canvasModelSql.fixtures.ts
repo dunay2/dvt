@@ -1,6 +1,7 @@
 /** Scoped SQL authoring fixtures use real saved graph and publication contracts. */
 import {
   buildRelationalSourceObjectId,
+  ConnectedSourceRefSchema,
   SourceObjectCatalogResponseSchema,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   type CanvasAuthoringAuthorityResolution,
@@ -16,6 +17,7 @@ import type { IAccessDecisionService } from '../../../src/application/ports/acce
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/authContract.js';
 import type { IDbtModelProducerResolver } from '../../../src/application/ports/dbtModelProducer.js';
 import { AuthorizeCommandScopeService } from '../../../src/application/services/authorizeCommandScopeService.js';
+import type { CanvasLiteralConnectionAuthority } from '../../../src/application/services/canvasLiteralModelConnection.js';
 import { physicalModelSqlPublication } from '../../../src/application/services/canvasModelSqlPublications.js';
 import { ProjectCanvasModelSqlContextQuery } from '../../../src/application/services/projectCanvasModelSqlContextQuery.js';
 import { ResolveCanvasModelSqlInputs } from '../../../src/application/services/resolveCanvasModelSqlInputs.js';
@@ -66,6 +68,33 @@ export type ModelSqlHarness = {
   query: ProjectCanvasModelSqlContextQuery;
 };
 
+function modelSqlLiteralAuthority(
+  draft: WorkspaceGraphAuthoringDraft
+): CanvasLiteralConnectionAuthority {
+  const source = draft.nodes.find((node) => node.role === 'input');
+  const reference = ConnectedSourceRefSchema.parse(source?.metadata?.connectedSourceRef);
+  const decide = vi.fn<IAccessDecisionService['decide']>(async (_principal, requested) => ({
+    ok: true,
+    approvedScope: requested,
+  }));
+  return {
+    authorizer: new AuthorizeCommandScopeService(
+      { decide, decideMany: async () => [] },
+      { record: vi.fn() },
+      () => new Date('2026-11-17')
+    ),
+    connectionCatalog: {
+      getConnection: async () => ({
+        id: reference.connectionRef.connectionId,
+        name: 'Fixture warehouse',
+        database: 'analytics',
+        type: 'postgres',
+        sourceObjects: [],
+      }),
+    },
+  };
+}
+
 export function modelSqlHarness(): ModelSqlHarness {
   const original = buildDvtJoinPreviewDraft(2);
   const draft: WorkspaceGraphAuthoringDraft = {
@@ -114,7 +143,12 @@ export function modelSqlHarness(): ModelSqlHarness {
     modelProducers,
     physical: { execute: async (node) => physicalModelSqlPublication(node) },
   });
-  const query = new ProjectCanvasModelSqlContextQuery({ store, authorityPolicy, inputs });
+  const query = new ProjectCanvasModelSqlContextQuery({
+    store,
+    authorityPolicy,
+    inputs,
+    ...modelSqlLiteralAuthority(draft),
+  });
   return { draft, record, store, authorityPolicy, projection, modelProducers, query };
 }
 

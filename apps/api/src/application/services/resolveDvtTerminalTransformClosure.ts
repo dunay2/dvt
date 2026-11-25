@@ -29,6 +29,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 import type { DbtModelProducer } from '../ports/dbtModelProducer.js';
 
+import { readCanvasLiteralModelConnection } from './canvasLiteralModelConnection.js';
 import {
   selectProtectedDvtTransforms,
   type DvtTransformSelection,
@@ -58,6 +59,7 @@ export type DvtTerminalTransformClosure = {
   readonly transformNodes: readonly WorkspaceGraphAuthoringNode[];
   readonly documents: ReadonlyMap<string, SubstraitDocument>;
   readonly preview: boolean;
+  readonly literalConnections?: ReadonlyMap<string, ConnectionRef>;
 };
 
 export function resolveDvtTerminalTransformClosure(
@@ -127,14 +129,24 @@ export function resolveDvtTerminalTransformClosure(
       : protectedSources.filter(({ ref }) =>
           semanticSources.some((source) => sameConnectedSource(source, ref))
         );
+  const literalConnections = new Map<string, ConnectionRef>();
+  for (const { node } of authorities) {
+    const connection = readCanvasLiteralModelConnection(node, documents.get(node.id));
+    if (connection != null) literalConnections.set(node.id, connection);
+  }
   const connectionRef =
-    sources[0]?.ref.connectionRef ?? externalProducers.values().next().value?.connection;
+    sources[0]?.ref.connectionRef ??
+    externalProducers.values().next().value?.connection ??
+    literalConnections.values().next().value;
   if (connectionRef == null) throw new Error('An execution connection is required.');
   if (
     connectionRef.provider !== 'postgres' ||
     sources.some(({ ref }) => !sameConnection(ref.connectionRef, connectionRef)) ||
     [...externalProducers.values()].some(
       (producer) => !sameConnection(producer.connection, connectionRef)
+    ) ||
+    [...literalConnections.values()].some(
+      (connection) => !sameConnection(connection, connectionRef)
     ) ||
     (semanticSources.length > 0 &&
       !hasExactDvtSourceCoverage(
@@ -160,7 +172,8 @@ export function resolveDvtTerminalTransformClosure(
     (!hasJoin &&
       !hasSet &&
       input.previewTargetId == null &&
-      sources.length + externalProducers.size !== 1)
+      sources.length + externalProducers.size !== 1 &&
+      !literalConnections.has(transform.id))
   ) {
     throw new Error(
       'Transform operational profile must match its canonical semantic relation family.'
@@ -179,6 +192,7 @@ export function resolveDvtTerminalTransformClosure(
     transformNodes: transforms,
     documents,
     preview: input.previewTargetId != null,
+    literalConnections,
     profileId: hasJoin
       ? DVT_POSTGRES_JOIN_PROFILE_ID
       : hasSet

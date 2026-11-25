@@ -23,6 +23,7 @@ import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js'
 
 import type { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
 import type { CanvasAuthoringAuthorityPolicy } from './canvasAuthoringAuthorityPolicy.js';
+import { resolveWorksheetExecutionConnection } from './canvasLiteralModelConnection.js';
 import { CompileCanvasModelSqlQuery } from './compileCanvasModelSqlQuery.js';
 import { PrepareCanvasSqlDraftProjection } from './prepareCanvasSqlDraftProjection.js';
 import type { ResolveCanvasModelSqlInputs } from './resolveCanvasModelSqlInputs.js';
@@ -129,6 +130,7 @@ function preparedContext(
     contextSha256: sha256HexUtf8(
       jcsCanonicalize({
         ...identity,
+        connectionRef: resolved.connectionRef,
         inputs: resolved.inputs,
         provenance: resolved.provenance,
         dependencies: resolved.dependencyDigests,
@@ -207,9 +209,12 @@ async function prepareVirtualProposal(
     context
   );
   assertResolvedProvenance(models, resolved);
-  if (jcsCanonicalize(resolved.connectionRef) !== jcsCanonicalize(input.connectionRef))
-    throw new CanvasModelSqlUnavailableError('input_unavailable');
-  const prepared = preparedContext(input, resolved);
+  const execution = resolveWorksheetExecutionConnection(
+    resolved,
+    input,
+    physical.size + models.length
+  );
+  const prepared = preparedContext(input, execution);
   const namespace = new Map(resolved.source.inputs.map((input) => [input.nodeId, input.sqlName]));
   const bindSql = () =>
     bindWorksheetModelSql(

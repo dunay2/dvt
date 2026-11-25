@@ -8,6 +8,7 @@ import {
   type TransformSqlDraftDataSampleRequest,
   type TransformDataSampleRequest,
   type TransformDataSampleResponse,
+  isSourceFreeDvtSubstraitDocumentV1,
 } from '@dvt/contracts';
 
 import type { AuthorizedExecutionContext } from '../ports/authContract.js';
@@ -29,7 +30,16 @@ type RowQuery = Readonly<{
   semanticPlanSha256: string;
   sourceRefs: readonly ConnectedSourceRef[];
   modelRefs: readonly DbtModelProducer['provenance'][];
+  literalModel?: Readonly<{ connectionRef: ConnectionRef; semanticPlanSha256: string }>;
 }>;
+
+function previewScope(context: AuthorizedExecutionContext) {
+  const projectId = context.scope.projectId?.value;
+  const environmentId = context.scope.environmentId?.value;
+  if (projectId == null || environmentId == null)
+    throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
+  return { tenantId: context.scope.tenantId.value, projectId, environmentId };
+}
 
 export class PreviewCanvasTransformRowsUseCase {
   public constructor(
@@ -64,6 +74,14 @@ export class PreviewCanvasTransformRowsUseCase {
       semanticPlanSha256: closure.semanticDocument.semanticPlan.sha256,
       sourceRefs: projection.sourceRefs,
       modelRefs: [...closure.externalProducers.values()].map((producer) => producer.provenance),
+      ...(closure.literalConnections?.has(input.transformNodeId)
+        ? {
+            literalModel: {
+              connectionRef: closure.connectionRef,
+              semanticPlanSha256: closure.semanticDocument.semanticPlan.sha256,
+            },
+          }
+        : {}),
     });
   }
 
@@ -84,6 +102,14 @@ export class PreviewCanvasTransformRowsUseCase {
         source.sourceRef == null ? [] : [source.sourceRef]
       ),
       modelRefs: [...prepared.modelRefs],
+      ...(isSourceFreeDvtSubstraitDocumentV1(prepared.response.semanticDocument)
+        ? {
+            literalModel: {
+              connectionRef: prepared.connectionRef,
+              semanticPlanSha256: prepared.semanticPlanSha256,
+            },
+          }
+        : {}),
     });
     return TransformSqlDraftDataSampleResponseSchema.parse({
       schemaVersion: 'canvas-transform-sql-draft-data-sample.v1',
@@ -98,26 +124,7 @@ export class PreviewCanvasTransformRowsUseCase {
     context: AuthorizedExecutionContext,
     prepared: RowQuery
   ): Promise<TransformDataSampleResponse> {
-    const projectId = context.scope.projectId?.value;
-    const environmentId = context.scope.environmentId?.value;
-    if (projectId == null || environmentId == null)
-      throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
-
-    const connection = await this.deps.connectionCatalog.getConnection(
-      {
-        tenantId: context.scope.tenantId.value,
-        projectId,
-        environmentId,
-      },
-      prepared.connectionRef.connectionId
-    );
-    if (
-      connection.type !== prepared.connectionRef.provider ||
-      connection.credentialRef === undefined
-    ) {
-      throw new CanvasTransformDataSampleUnavailableError('connection_mismatch');
-    }
-
+    const connection = await this.previewConnection(context, prepared.connectionRef);
     const sample = await this.deps.probe.previewTransformRows({
       type: connection.type,
       credentialRef: connection.credentialRef,
@@ -139,6 +146,7 @@ export class PreviewCanvasTransformRowsUseCase {
       provenance: {
         mode: 'live',
         sourceRefs: prepared.sourceRefs,
+        ...(prepared.literalModel == null ? {} : { literalModel: prepared.literalModel }),
         ...(prepared.modelRefs.length === 0
           ? {}
           : {
@@ -149,5 +157,16 @@ export class PreviewCanvasTransformRowsUseCase {
         limit: input.limit,
       },
     });
+  }
+
+  private async previewConnection(context: AuthorizedExecutionContext, ref: ConnectionRef) {
+    const scope = previewScope(context);
+
+    const connection = await this.deps.connectionCatalog.getConnection(scope, ref.connectionId);
+    if (connection.type !== ref.provider || connection.credentialRef === undefined) {
+      throw new CanvasTransformDataSampleUnavailableError('connection_mismatch');
+    }
+
+    return { type: connection.type, credentialRef: connection.credentialRef };
   }
 }

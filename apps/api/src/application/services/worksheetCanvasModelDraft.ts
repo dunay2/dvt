@@ -4,6 +4,7 @@ import {
   WorkspaceGraphAuthoringDraftSchema,
   workspaceNodeDefinitionId,
   resolveWorkspaceNodeInstances,
+  isSourceFreeDvtSubstraitDocumentV1,
   readWorkspaceDbtModelReference,
   type ConnectedSourceRef,
   type ModelSqlCompilationResponse,
@@ -142,7 +143,7 @@ export function appendWorksheetVirtualTarget(
     role: 'transform',
     status: 'idle',
     tags: ['model'],
-    metadata: {},
+    metadata: inputIds.length === 0 ? { connectionRef: input.connectionRef } : {},
   };
   const edges = [
     ...draft.edges,
@@ -246,7 +247,8 @@ export function completeWorksheetDraft(
         }
       : node
   );
-  if (draft.edges.every((edge) => edge.targetId !== input.modelId))
+  const sourceFree = isSourceFreeDvtSubstraitDocumentV1(compilation.semanticDocument);
+  if (draft.edges.some((edge) => edge.targetId === input.modelId) === sourceFree)
     throw new CanvasModelSqlUnavailableError('input_unavailable');
   return WorkspaceGraphAuthoringDraftSchema.parse(
     replaceActiveCanvas(draft, nodes, draft.edges, draft.nodeIds, draft.nodePositions)
