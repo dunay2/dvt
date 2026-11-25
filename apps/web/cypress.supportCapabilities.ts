@@ -23,6 +23,11 @@ type BrowserCoverage =
 export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
   'apps/web/src/app/views/SqlView.tsx': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/sql/SqlWorksheet.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetHeader.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetActions.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetWorkbench.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetOutputPanel.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetNotices.tsx': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/sql/SqlWorksheet.module.css': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/sql/SqlWorksheetToolbar.tsx': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/sql/SqlWorksheetMonaco.tsx': WORKSHEET_CONSUMER,
