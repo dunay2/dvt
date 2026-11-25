@@ -551,3 +551,48 @@ during storage cleanup. Cypress 15.21.2 tracks concrete origins for that
 operation. Repeating the same two specs in one Chrome run executed all 12
 cases successfully. The dependency lock and the Web and live-proof Docker
 runners use the same Cypress release.
+
+### Canvas deletion and model regeneration
+
+The controlled model-session journey passed all five cases in Chrome. The
+deletion case removed one empty model, observed one acknowledged graph save,
+and checked the model count after reload. A neighboring empty model and an
+authored model remained available. The geometry journey passed both cases in
+Chrome, including repeated generation and reopening after the relation identity
+changed. The test checks the card coordinates in canvas space.
+
+The two changes are tracked in commits `18e9d4a63` and `d2a6d62a5`. The
+browser-routing registry associates the helpers with those journeys. With the
+SQL authoring journey included, the helper's complete consumer set has 33 specs.
+
+The worksheet query `select 1 as comprobacion_editor_sql` produced one
+non-nullable PostgreSQL int4 output in a real protected proposal for model
+`mm` on the local demo connection. Comparing the graph revisions before and
+after preparation confirmed that the proposal did not save a model. A separate
+PostgreSQL integration exercised confirmation, graph save, idempotent replay,
+reopen and protected preview. The preview returned one row containing 1.
+
+The complete contract, Substrait analysis and PostgreSQL projection suites
+passed 1,628 cases across 151 files during integration of the literal row.
+
+### Adding a source or dbt model in the semantic editor
+
+On the local demo workspace, dragging `sales_calendar` into `Model 1` added
+the warehouse source to the private working tree. Its YAML catalog path had
+previously prevented admission even though its connection and five published
+columns were available. Dragging `clientes` into the same editor added the
+published dbt definition as a linked input. The operator canceled both pending
+additions in that session. The actions beside the two rows also expose these
+operations to keyboard users.
+
+A controlled browser regression exposed a second graph write after a worksheet
+model reopened. Comparing both requests showed two changes in representation:
+the plugin-local node kind and the explicit mirror of the active canvas.
+The structural comparison now treats these representations as equivalent.
+The unit suite checks that editing another canvas or changing the node kind
+still produces a different signature.
+
+Together, the worksheet and composition journeys passed all seven cases in
+Chrome. The worksheet case observed a single graph save across explicit
+confirmation and reopening. The dbt case applied the linked input once and
+reopened the same file definition with its publication fingerprint intact.

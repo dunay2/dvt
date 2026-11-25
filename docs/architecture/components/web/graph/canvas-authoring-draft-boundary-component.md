@@ -325,6 +325,87 @@ flowchart LR
 - Layout can project from authoring positions, but it cannot replace protected
   graph truth.
 
+### Equivalent saved draft representations
+
+The existing draft structural signature compares graph meaning after applying
+the established native kind normalization. A saved `dvt:transform` and its
+rehydrated `transform` representation are equivalent under that policy. An
+omitted Canvas collection and an explicit mirror of the same active Canvas are
+equivalent only when their graph and active Canvas identity agree. Preserve
+sibling canvases and every real semantic, metadata or position change in the
+comparison. Normalization must not discard edits or alter the saved payload.
+
+```mermaid
+flowchart LR
+  Read[Authoritative saved draft] --> Normalize[Kind and equivalent active mirror]
+  Normalize --> Compare[Existing baseline structural signature]
+  Compare --> Same[Unchanged graph: no redundant save]
+  Compare --> Changed[Real change: existing guarded save]
+```
+
+The [bounded rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7172158910)
+requires a real reopen to avoid a second save while sibling Canvas and actual
+graph edits remain distinguishable. This is baseline equivalence within
+`SaveWorkspaceGraphDraft`, with its existing authorization and revision guards.
+
+### Authority-aware Model composition
+
+Composition classifies the actual definition's authority before admitting a
+gesture. A native warehouse Source may retain a descriptive YAML path together
+with its validated `connectedSourceRef` and current published columns. That path
+alone does not make the definition file-authoritative. Native working-copy
+preparation keeps fresh local identities and shared canonical resource and
+dependency references, while excluding path, copied SQL, runtime evidence and
+durable destinations. The original definition remains unchanged.
+
+A file-owned dbt Model keeps its actual file-model reference and publication.
+Adding it as an input to a native Model uses the existing published producer
+reference; it does not copy SQL or file authority into a native working copy.
+Presentation must identify use of a reference and must not report it as an
+independent copy. Independent copying of a file-owned Model still requires a
+real new file or an admitted conversion, as described by the proposed ADR-0070.
+This bounded reference composition does not rewrite that restriction.
+
+For a file-only dbt definition discovered through the existing authenticated
+project query, the Browser shares one actual discovery snapshot with Explorer
+and the Model workbench. Staging does not register a definition or save. Apply
+re-reads that same query and validates binding, revision, analysis, field
+contract, connection, permission and cancellation before admitting the verified
+reference and its instance/dependency to the private candidate. Cancel leaves
+no definition or save. The [discovery rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7172358517)
+does not introduce a second query pipeline or copy SQL/file authority.
+
+Definitions can be selected from the canonical catalogue without an existing
+placed card. Resolve that exact definition and its current publication; do not
+replace an unavailable reference with a guessed physical table, SQL text or
+fabricated signature. Native editable receiver, scope, field/provenance,
+connection, duplicate-resource and cycle checks remain mandatory. A source's
+shape cannot silently change the destination or create a second project drop.
+
+The existing Model transaction stages the accepted native copy or referenced
+input. Cancel, stale source/receiver, denied authorization, validation failure
+and CAS conflict leave no orphan definition or partial edge. Apply publishes
+the admitted candidate through the existing protected save only once.
+
+```mermaid
+flowchart TD
+  Definition[Actual catalogue definition] --> Authority{Canonical authority}
+  Authority --> Native[Native Source or Model]
+  Authority --> File[File-owned dbt Model]
+  Native --> Copy[Validate publication and prepare native copy]
+  File --> Reference[Use existing published producer reference]
+  Copy --> Session[Existing receiver Model transaction]
+  Reference --> Session
+  Session --> Apply[Dependency guards and one protected save]
+  Session --> Cancel[Discard with no orphan or partial edge]
+```
+
+The [prospective rationale and scope](https://github.com/dunay2/dvt/issues/3951#issuecomment-7171704979)
+require the existing integrated Model-composition and browser journeys to cover
+unplaced definitions of both shapes, correct publication after save/reload,
+unchanged original authority and cancellation. Unsupported, stale, cross-scope,
+duplicate-resource and cyclic candidates remain negative cases.
+
 ## Command And Query Rails
 
 | Rail                                  | Type    | Bounded context             | DDD owner                                     | Application port                                     | Negative tests                                                                                                                                    |

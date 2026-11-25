@@ -179,3 +179,26 @@ Compare executable Vitest configurations, preserving distinctions in options
 such as browser resolution conditions. Only absorb a file when its execution
 is covered by a complete Presentation run with equivalent settings. Preserve
 the original command if the current inventory is unavailable or ambiguous.
+
+A worksheet query with no warehouse inputs still needs an authorized execution
+connection. Bind it to the selected project and environment, require exactly one
+typed literal row, and recheck the semantic digest before preview. Reject a
+source or producer binding on this row. A saved physical-table read continues
+to require its authorized input.
+
+Removing an empty draft or regenerating a model can affect neighboring work.
+Delete only the explicitly selected empty model after checking its dependencies.
+Retain card coordinates by stable semantic identity and verify the saved layout
+after reopening the workspace.
+
+The explorer can contain both a warehouse source described by YAML and a
+published dbt file model. Copying a file model would fork its definition;
+rejecting any source with a path would hide legitimate warehouse inputs.
+Validate physical source identity and columns for a working copy. For a dbt
+input, retain the linked definition and recheck the published schema and
+connection before Apply. Cancel discards the staged addition.
+
+Reopening a model must preserve its graph revision. Compare the stored and
+hydrated forms of plugin kinds and active canvas membership, retaining the
+other canvases and their contents in the comparison. The browser regression
+counts graph writes through confirmation and reopen.
