@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 /** Catalogue drops edit the open Model transaction; they never navigate or write before Apply. */
 import React, { act } from 'react';
+import {
+  WorkspaceDbtModelReferenceSchema,
+  allocateDvtRelationId,
+  allocateDvtFieldId,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
@@ -32,6 +37,57 @@ async function dropModel(id: string, scopeKey?: string): Promise<void> {
 
 describe('working Models inside the open Model', () => {
   setupWorkbenchTest();
+  it('uses the registered dbt publication as a private linked Input and Cancel discards it', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const definition = {
+      ...graph.producer,
+      id: 'registered-clientes',
+      name: 'clientes',
+      path: 'models/clientes.sql',
+      metadata: {
+        dbtModelReference: WorkspaceDbtModelReferenceSchema.parse({
+          schemaVersion: 'workspace-dbt-model-reference.v1',
+          canvasId: 'file-owner',
+          uniqueId: 'model.demo.clientes',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            provider: 'postgres',
+            connectionId: 'warehouse-main',
+          },
+          relationId: allocateDvtRelationId(),
+          fields: [
+            { fieldId: allocateDvtFieldId(), name: 'client_id', dataType: 'text', nullable: true },
+          ],
+        }),
+      },
+    };
+    const apply = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.producer}
+          nodes={[...graph.nodes, definition]}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+        />
+      )
+    );
+    await dropModel(definition.id);
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
+    expect(container.querySelector('[data-pending="true"]')?.textContent).toContain('clientes');
+    expect(apply).not.toHaveBeenCalled();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
+    expect(apply).not.toHaveBeenCalled();
+    expect(definition.metadata.dbtModelReference.uniqueId).toBe('model.demo.clientes');
+    expect('transformAuthoring' in definition.metadata).toBe(false);
+  });
+
   it('rejects an incoming physical Source before editing and refreshes admission for a new receiver', async () => {
     const graph = await createModelOutputDependencyFixture();
     const apply = vi.fn();

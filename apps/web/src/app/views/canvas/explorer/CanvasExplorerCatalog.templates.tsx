@@ -96,6 +96,10 @@ function CanvasExplorerModelRow({
   const unavailable = disabled || item.disabled;
   const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
   const draggable = !unavailable && item.draggable !== false && onDragStart != null;
+  const actionLabel =
+    item.definitionIdentity == null
+      ? modelAction?.label
+      : (modelAction?.referenceLabel ?? modelAction?.label);
   const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
   const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
   const formatId = `${id}-${encodeURIComponent(item.id)}-format`;
@@ -155,8 +159,8 @@ function CanvasExplorerModelRow({
           <button
             type="button"
             className={styles.headerAction}
-            aria-label={`${modelAction.label}: ${item.label}`}
-            title={`${modelAction.label}: ${item.label}`}
+            aria-label={`${actionLabel}: ${item.label}`}
+            title={`${actionLabel}: ${item.label}`}
             onClick={(event) => {
               event.stopPropagation();
               modelAction.onActivate(item.id);

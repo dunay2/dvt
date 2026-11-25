@@ -7,6 +7,7 @@
  * @version 1.0.0
  */
 import { useMemo } from 'react';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import {
@@ -19,6 +20,10 @@ import { nextSourceOccurrenceAlias } from './relational-source-occurrence/source
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { assertCanvasModelCompositionPhysicalInputAvailable } from './canvasModelCompositionPhysicalAdmission';
+import {
+  canvasDbtModelCompositionSourceSignature,
+  prepareCanvasDbtModelCompositionReference,
+} from './canvasDbtModelReference';
 
 export function useCanvasModelCompositionDrop(
   args: Readonly<{
@@ -40,7 +45,9 @@ export function useCanvasModelCompositionDrop(
           ? nodes
               .filter((node) => {
                 try {
-                  canvasModelCopySourceSignature({ nodes, edges, sourceId: node.id });
+                  if (readWorkspaceDbtModelReference(node) != null)
+                    canvasDbtModelCompositionSourceSignature(node);
+                  else canvasModelCopySourceSignature({ nodes, edges, sourceId: node.id });
                   assertCanvasModelCompositionPhysicalInputAvailable({
                     nodes,
                     edges,
@@ -59,10 +66,19 @@ export function useCanvasModelCompositionDrop(
   );
   return {
     nodeIds,
+    linkedNodeIds: new Set(
+      nodes
+        .filter((node) => nodeIds.has(node.id) && readWorkspaceDbtModelReference(node) != null)
+        .map((node) => node.id)
+    ),
     copy: (sourceId: string): boolean => {
       if (!args.enabled || !nodeIds.has(sourceId)) return false;
       try {
-        const copy = prepareCanvasModelWorkingCopy({ ...args, sourceId });
+        const source = nodes.find((node) => node.id === sourceId)!;
+        const copy =
+          readWorkspaceDbtModelReference(source) == null
+            ? prepareCanvasModelWorkingCopy({ ...args, sourceId })
+            : prepareCanvasDbtModelCompositionReference({ nodes, sourceId });
         const candidate = prepareCanvasModelCompositionCandidate({ ...args, copy });
         const occurrence = createPendingSourceOccurrence(candidate.input);
         const occupied = new Set([

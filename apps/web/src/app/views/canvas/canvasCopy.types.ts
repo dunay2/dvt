@@ -6,6 +6,8 @@ export type CanvasViewCopy = {
   readonly relationalModelCopyDropLabel: string;
   readonly relationalModelCopyUnavailableMessage: string;
   readonly relationalModelCopyAddLabel: string;
+  readonly relationalModelReferenceAddLabel: string;
+  readonly relationalModelReferenceDropLabel: string;
   readonly sourceOccurrenceFieldsUnavailable: string;
   readonly sourceOccurrenceAdd: string;
   readonly sourceOccurrenceAlias: string;

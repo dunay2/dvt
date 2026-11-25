@@ -4,8 +4,10 @@ export const canvasViewAuthoringCopyEs = {
   showCardMetricsLabel: 'Mostrar métricas en la tarjeta',
   relationalModelCopyDropLabel: 'Añadir una copia independiente a',
   relationalModelCopyAddLabel: 'Añadir copia de trabajo',
+  relationalModelReferenceAddLabel: 'Usar como entrada',
+  relationalModelReferenceDropLabel: 'Usar el modelo dbt vinculado como entrada de',
   relationalModelCopyUnavailableMessage:
-    'No se puede copiar este modelo aquí. Revisa su autoridad nativa, las entradas y el permiso de edición.',
+    'No se puede añadir este modelo aquí. Revisa su publicación actual, las entradas y el permiso de edición.',
   sourceOccurrenceFieldsUnavailable: 'No se han podido analizar los campos de esta relación.',
   sourceOccurrenceAdd: 'Añadir instancia',
   sourceOccurrenceAlias: 'Alias de instancia',

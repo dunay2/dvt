@@ -6,35 +6,24 @@
  * @consequence Rejected preparation leaves the original draft unchanged.
  * @version 1.0.0
  */
-import { jcsCanonicalize, randomUuidV4 } from '@dvt/crypto';
+import { randomUuidV4 } from '@dvt/crypto';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { evaluateConnection, type PluginPortMap } from '../../plugins/contracts/ConnectionRules';
-import {
-  canvasModelCopySourceSignature,
-  type CanvasModelWorkingCopy,
-} from './canvasModelWorkingCopy';
+import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import {
-  readCanvasModelCompositionPublication,
-  projectCanvasModelCompositionInput,
-} from './canvasModelCompositionInput';
-import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
+  compositionNodes,
+  compositionInput,
+  appendDependency,
+  type CandidateArgs,
+  type CompositionProducer,
+} from './canvasModelCompositionAdmission';
 import { canvasInputSlotId } from './canvasInputBindings';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
-import { assertCanvasModelCompositionPhysicalInputAvailable } from './canvasModelCompositionPhysicalAdmission';
-
-type CandidateArgs = Readonly<{
-  copy: CanvasModelWorkingCopy;
-  targetId: string;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  pluginPorts: PluginPortMap;
-}>;
-
 export type CanvasModelCompositionCopy = Readonly<{
-  copy: CanvasModelWorkingCopy;
+  copy: CompositionProducer;
   receiverEdge: CanonicalEdge;
 }>;
 
@@ -60,62 +49,15 @@ export function projectCanvasModelCopies(
       };
 }
 
-export function prepareCanvasModelCompositionCandidate(args: CandidateArgs) {
-  const { copy, targetId, pluginPorts } = args;
-  if (
-    args.nodes.some((node) => node.id === copy.node.id) ||
-    canvasModelCopySourceSignature({ ...args, sourceId: copy.sourceId }) !== copy.sourceSignature
-  )
-    throw new Error('Working-copy source context has changed.');
-  const nodes = [...args.nodes, copy.node];
-  const target = nodes.find((node) => node.id === targetId);
-  if (target?.pluginId !== 'dvt' || target.kind !== 'dvt:transform')
-    throw new Error('Unavailable receiver.');
-  assertCanvasModelCompositionPhysicalInputAvailable({
-    nodes,
-    edges: args.edges,
+function compositionReceiverEdge(
+  copy: CompositionProducer,
+  targetId: string,
+  input: CanvasDvtCompositionInput
+): CanonicalEdge {
+  return {
+    id: randomUuidV4(),
     sourceId: copy.node.id,
     targetId,
-  });
-  const edges = [...args.edges];
-  const append = (edge: CanonicalEdge) => {
-    const source = nodes.find((node) => node.id === edge.sourceId);
-    const receiver = nodes.find((node) => node.id === edge.targetId);
-    if (
-      source == null ||
-      receiver == null ||
-      !evaluateConnection(source, receiver, edges, pluginPorts).allowed
-    )
-      throw new Error('Model dependency is not admitted.');
-    edges.push(edge);
-  };
-  for (const edge of copy.edges) append(edge);
-  const identity = { sourceId: copy.node.id, targetId };
-  const physical = resolveCanvasPhysicalCompositionInput(copy.node, identity);
-  const publication =
-    physical == null ? readCanvasModelCompositionPublication(copy.node, nodes, edges) : null;
-  const input =
-    physical ??
-    (publication == null ? null : projectCanvasModelCompositionInput(publication, identity));
-  if (input == null || input.fields.length === 0)
-    throw new Error('Working-copy output is unavailable.');
-  const connection = input.sourceRef?.connectionRef ?? input.producer?.connection;
-  const existing = resolveCanvasDvtCompositionInputs({
-    targetNodeId: targetId,
-    nodes: args.nodes,
-    edges: args.edges,
-  });
-  if (
-    existing.some(
-      (current) =>
-        jcsCanonicalize(current.sourceRef?.connectionRef ?? current.producer?.connection) !==
-        jcsCanonicalize(connection)
-    )
-  )
-    throw new Error('Composition inputs require the same connection.');
-  const receiverEdge: CanonicalEdge = {
-    id: randomUuidV4(),
-    ...identity,
     relation: 'lineage',
     metadata: {
       inputBindings: {
@@ -127,7 +69,16 @@ export function prepareCanvasModelCompositionCandidate(args: CandidateArgs) {
       },
     },
   };
-  append(receiverEdge);
+}
+
+export function prepareCanvasModelCompositionCandidate(args: CandidateArgs) {
+  const { copy, targetId, pluginPorts } = args;
+  const nodes = compositionNodes(args);
+  const edges = [...args.edges];
+  for (const edge of copy.edges) appendDependency(nodes, edges, pluginPorts, edge);
+  const input = compositionInput(args, nodes, edges);
+  const receiverEdge = compositionReceiverEdge(copy, targetId, input);
+  appendDependency(nodes, edges, pluginPorts, receiverEdge);
   const admitted = resolveCanvasDvtCompositionInputs({ targetNodeId: targetId, nodes, edges }).find(
     (current) => current.nodeId === copy.node.id
   );
@@ -167,10 +118,17 @@ export function admitCanvasModelCopiesToSession(
     const { copy } = addition;
     if (addition.receiverEdge.targetId !== args.targetId)
       throw new Error('Working-copy receiver has changed.');
+    const visibleNodes = resolveCanvasDraftNodes(session, args.canonicalNodesById);
+    const linkedDefinition =
+      'linkedReference' in copy ? args.canonicalNodesById.get(copy.sourceId) : undefined;
+    const nodes =
+      linkedDefinition != null && !visibleNodes.some((node) => node.id === linkedDefinition.id)
+        ? [...visibleNodes, linkedDefinition]
+        : visibleNodes;
     const candidate = prepareCanvasModelCompositionCandidate({
       ...args,
       copy,
-      nodes: resolveCanvasDraftNodes(session, args.canonicalNodesById),
+      nodes,
       edges: canvasModelCompositionSessionEdges(session),
     });
     session = canvasDraftSession.workingSet.upsertNode(session, copy.node);

@@ -4,8 +4,10 @@ export const canvasViewAuthoringCopyByKey = {
   showCardMetricsLabel: 'Show metrics on card',
   relationalModelCopyDropLabel: 'Add an independent copy to',
   relationalModelCopyAddLabel: 'Add working copy',
+  relationalModelReferenceAddLabel: 'Use as input',
+  relationalModelReferenceDropLabel: 'Use the linked dbt Model as input to',
   relationalModelCopyUnavailableMessage:
-    'This Model cannot be copied here. Check native authority, inputs and edit permission.',
+    'This Model cannot be added here. Check its current publication, inputs and edit permission.',
   sourceOccurrenceFieldsUnavailable: 'The fields of this relation could not be analyzed.',
   sourceOccurrenceAdd: 'Add instance',
   sourceOccurrenceAlias: 'Instance alias',

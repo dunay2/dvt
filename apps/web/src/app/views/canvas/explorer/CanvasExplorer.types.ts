@@ -18,6 +18,7 @@ export type CanvasExplorerActivityRail = Readonly<{ codeVisible: boolean }>;
 export type CanvasExplorerHeading = Readonly<{ label: string; contextLabel?: string }>;
 export type CanvasExplorerModelAction = Readonly<{
   label: string;
+  referenceLabel?: string;
   onActivate: (id: string) => unknown;
 }>;
 
