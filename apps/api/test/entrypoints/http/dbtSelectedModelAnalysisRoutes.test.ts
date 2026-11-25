@@ -9,47 +9,69 @@ const VALID_QUERY =
   'tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId=canvas-orders&selectedUniqueId=model.analytics.orders';
 
 describe('dbtSelectedModelAnalysisRoutes', () => {
-  it('authorizes and returns the selected-model analysis', async () => {
-    const execute = vi.fn().mockResolvedValue(projection());
-    const authorize = vi.fn().mockImplementation((_principal, requestedScope) => ({
-      ok: true,
-      context: {
-        principal: principal(),
-        scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
-        action: requestedScope.action,
-        requestId: 'req-1',
-        authorizedAt: new Date('2026-08-01T00:00:00Z'),
-      },
-    }));
-    const app = Fastify({ logger: false });
-    registerDbtSelectedModelAnalysisRoutes(app, {
-      authenticator: {
-        authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: principal() }),
-      } as never,
-      authorizer: { authorize } as never,
-      query: { execute },
-      rateLimit: { max: 100, timeWindow: 60_000 },
-    });
+  it.each(['analysis', 'pinned', 'current'])(
+    'authorizes and returns selected-model analysis with explicit SQL: %s',
+    async (mode) => {
+      const executableSql = mode !== 'analysis';
+      const revision = mode === 'pinned' ? `&expectedProjectRevision=${'a'.repeat(64)}` : '';
+      const execute = vi.fn().mockResolvedValue(projection());
+      const authorize = vi.fn().mockImplementation((_principal, requestedScope) => ({
+        ok: true,
+        context: {
+          principal: principal(),
+          scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
+          action: requestedScope.action,
+          requestId: 'req-1',
+          authorizedAt: new Date('2026-08-01T00:00:00Z'),
+        },
+      }));
+      const app = Fastify({ logger: false });
+      registerDbtSelectedModelAnalysisRoutes(app, {
+        authenticator: {
+          authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: principal() }),
+        } as never,
+        authorizer: { authorize } as never,
+        query: { execute },
+        rateLimit: { max: 100, timeWindow: 60_000 },
+      });
 
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/dbt/analysis/selected-model?${VALID_QUERY}`,
-    });
+      const response = await app.inject({
+        method: 'GET',
+        url: `/workspace/dbt/analysis/selected-model?${VALID_QUERY}${executableSql ? `&includeExecutableSql=1${revision}` : ''}`,
+      });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual(projection());
-    expect(authorize.mock.calls.map(([, requestedScope]) => requestedScope.action)).toEqual([
-      { kind: 'query', name: 'workspace:graph-draft:view' },
-      { kind: 'query', name: 'workspace:files:view' },
-    ]);
-    expect(execute).toHaveBeenCalledWith({
-      scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
-      canvasId: 'canvas-orders',
-      selectedUniqueId: 'model.analytics.orders',
-    });
-  });
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual(projection());
+      expect(authorize.mock.calls.map(([, requestedScope]) => requestedScope.action)).toEqual([
+        { kind: 'query', name: 'workspace:graph-draft:view' },
+        { kind: 'query', name: 'workspace:files:view' },
+      ]);
+      expect(execute).toHaveBeenCalledWith(
+        {
+          scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+          canvasId: 'canvas-orders',
+          selectedUniqueId: 'model.analytics.orders',
+          ...(executableSql
+            ? { executionSql: mode === 'pinned' ? { expectedProjectRevision: 'a'.repeat(64) } : {} }
+            : {}),
+        },
+        expect.objectContaining({
+          principal: principal(),
+          requestId: 'req-1',
+          action: { kind: 'query', name: 'workspace:graph-draft:view' },
+        })
+      );
+      expect(execute).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it.each([
+    ['malformed SQL revision', `${VALID_QUERY}&includeExecutableSql=1&expectedProjectRevision=bad`],
+    ['SQL revision without opt-in', `${VALID_QUERY}&expectedProjectRevision=${'a'.repeat(64)}`],
+    [
+      'unknown SQL opt-in',
+      `${VALID_QUERY}&includeExecutableSql=yes&expectedProjectRevision=${'a'.repeat(64)}`,
+    ],
     ['missing selection', 'tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId=c'],
     [
       'blank selection',

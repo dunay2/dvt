@@ -60,7 +60,15 @@ describe('native dbt analysis reuse retention, independent query authority and n
       connectionCatalog: { getConnection: vi.fn() },
     });
     const selected = new AnalyzeSelectedDbtModelQuery(
-      new SelectedDbtModelAnalysisResolver({ analyzer, authorityPolicy })
+      new SelectedDbtModelAnalysisResolver({ analyzer, authorityPolicy }),
+      {
+        projectGraph: graph,
+        producers: {
+          resolve: vi.fn(async () => {
+            throw new Error('Analysis reuse must not opt into executable SQL.');
+          }),
+        },
+      }
     );
     const input = { scope: fixture.input.scope, canvasId: binding.canvasId };
     const selection = { ...input, selectedUniqueId: 'model.analytics.orders' };

@@ -1,9 +1,11 @@
+import type { DbtSelectedModelAnalysis } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { DbtProjectAnalysis } from '../../src/application/ports/dbtProjectAnalysis.js';
 import { DbtProjectFileAuthorityRequiredError } from '../../src/application/ports/dbtProjectImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../src/application/services/analyzeSelectedDbtModelQuery.js';
 import { SelectedDbtModelAnalysisResolver } from '../../src/application/services/selectedDbtModelAnalysisResolver.js';
+import type { SelectedDbtModelSqlDependencies } from '../../src/application/services/selectedDbtModelExecutionSql.js';
 
 import {
   SELECTED_MODEL_ANALYSIS_SCOPE,
@@ -34,54 +36,9 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
     });
 
     expect(first.status).toBe('ready');
-    expect(first.identities).toEqual([
-      expect.objectContaining({
-        uniqueId: 'macro.analytics.normalize_order',
-        relationToSelection: 'macro',
-      }),
-      expect.objectContaining({
-        uniqueId: 'model.analytics.orders',
-        relationToSelection: 'selected',
-      }),
-      expect.objectContaining({
-        uniqueId: 'source.analytics.raw.orders',
-        relationToSelection: 'upstream',
-      }),
-      expect.objectContaining({
-        uniqueId: 'test.analytics.not_null_orders_order_id',
-        relationToSelection: 'test',
-      }),
-    ]);
-    expect(first.dependencies).toEqual([
-      {
-        sourceUniqueId: 'macro.analytics.normalize_order',
-        targetUniqueId: 'model.analytics.orders',
-        relation: 'macro',
-      },
-      {
-        sourceUniqueId: 'model.analytics.orders',
-        targetUniqueId: 'test.analytics.not_null_orders_order_id',
-        relation: 'test_target',
-      },
-      {
-        sourceUniqueId: 'source.analytics.raw.orders',
-        targetUniqueId: 'model.analytics.orders',
-        relation: 'dependency',
-        regionId: 'region-source-orders',
-      },
-    ]);
-    expect(first.regions).toEqual([
-      expect.objectContaining({
-        regionId: 'region-source-orders',
-        classification: 'supported',
-        targetUniqueId: 'source.analytics.raw.orders',
-      }),
-      expect.objectContaining({
-        regionId: 'region-dynamic',
-        classification: 'code_only',
-        reasonCode: 'dbt_jinja_dynamic_argument',
-      }),
-    ]);
+    assertSelectedIdentities(first);
+    assertSelectedDependencies(first);
+    assertSelectedRegions(first);
     expect(first.files).toEqual(analysis.semanticEvidence.files);
     expect(second.selectedAnalysisSha256).toBe(first.selectedAnalysisSha256);
     expect(second.capabilitySet.capabilitySetSha256).toBe(first.capabilitySet.capabilitySetSha256);
@@ -180,7 +137,8 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
             authority: { kind: 'graph-draft' },
           }),
         },
-      })
+      }),
+      analysisOnlySqlDependencies()
     );
 
     await expect(
@@ -199,6 +157,79 @@ function buildQuery(analysis: DbtProjectAnalysis): AnalyzeSelectedDbtModelQuery 
     new SelectedDbtModelAnalysisResolver({
       analyzer: { analyze: vi.fn().mockResolvedValue(analysis) },
       authorityPolicy: { resolve: vi.fn().mockResolvedValue(SELECTED_MODEL_FILE_AUTHORITY) },
-    })
+    }),
+    analysisOnlySqlDependencies()
   );
+}
+
+function analysisOnlySqlDependencies(): SelectedDbtModelSqlDependencies {
+  return {
+    projectGraph: {
+      projectValidatedAnalysis: vi.fn(async () => {
+        throw new Error('Analysis-only query must not project executable SQL.');
+      }),
+    },
+    producers: {
+      resolve: vi.fn(async () => {
+        throw new Error('Analysis-only query must not compile executable SQL.');
+      }),
+    },
+  };
+}
+
+function assertSelectedIdentities(first: DbtSelectedModelAnalysis): void {
+  expect(first.identities).toEqual([
+    expect.objectContaining({
+      uniqueId: 'macro.analytics.normalize_order',
+      relationToSelection: 'macro',
+    }),
+    expect.objectContaining({
+      uniqueId: 'model.analytics.orders',
+      relationToSelection: 'selected',
+    }),
+    expect.objectContaining({
+      uniqueId: 'source.analytics.raw.orders',
+      relationToSelection: 'upstream',
+    }),
+    expect.objectContaining({
+      uniqueId: 'test.analytics.not_null_orders_order_id',
+      relationToSelection: 'test',
+    }),
+  ]);
+}
+
+function assertSelectedDependencies(first: DbtSelectedModelAnalysis): void {
+  expect(first.dependencies).toEqual([
+    {
+      sourceUniqueId: 'macro.analytics.normalize_order',
+      targetUniqueId: 'model.analytics.orders',
+      relation: 'macro',
+    },
+    {
+      sourceUniqueId: 'model.analytics.orders',
+      targetUniqueId: 'test.analytics.not_null_orders_order_id',
+      relation: 'test_target',
+    },
+    {
+      sourceUniqueId: 'source.analytics.raw.orders',
+      targetUniqueId: 'model.analytics.orders',
+      relation: 'dependency',
+      regionId: 'region-source-orders',
+    },
+  ]);
+}
+
+function assertSelectedRegions(first: DbtSelectedModelAnalysis): void {
+  expect(first.regions).toEqual([
+    expect.objectContaining({
+      regionId: 'region-source-orders',
+      classification: 'supported',
+      targetUniqueId: 'source.analytics.raw.orders',
+    }),
+    expect.objectContaining({
+      regionId: 'region-dynamic',
+      classification: 'code_only',
+      reasonCode: 'dbt_jinja_dynamic_argument',
+    }),
+  ]);
 }

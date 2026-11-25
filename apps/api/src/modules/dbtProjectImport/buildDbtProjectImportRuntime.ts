@@ -55,8 +55,15 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
     analyzer: deps.analyzer,
     authorityPolicy: deps.authorityPolicy,
   });
+  const modelProducerResolver = new ResolveDbtModelProducers({
+    analyzer: deps.analyzer,
+    authorityPolicy: deps.authorityPolicy,
+    projectGraph: projectGraphUseCase,
+    authorizer: deps.authorizer,
+  });
   const selectedModelAnalysisQuery = new AnalyzeSelectedDbtModelQuery(
-    selectedModelAnalysisResolver
+    selectedModelAnalysisResolver,
+    { projectGraph: projectGraphUseCase, producers: modelProducerResolver }
   );
   const graphModelCompilationQuery = new CompileGraphDbtModelsQuery({
     analyzer: deps.analyzer,
@@ -78,12 +85,7 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
 
   return {
     previewCompilation: new DbtPreviewCompilationGate(deps.analyzer),
-    modelProducerResolver: new ResolveDbtModelProducers({
-      analyzer: deps.analyzer,
-      authorityPolicy: deps.authorityPolicy,
-      projectGraph: projectGraphUseCase,
-      authorizer: deps.authorizer,
-    }),
+    modelProducerResolver,
     projectGraphUseCase,
     selectedModelAnalysisQuery,
     selectedModelAnalysisResolver,

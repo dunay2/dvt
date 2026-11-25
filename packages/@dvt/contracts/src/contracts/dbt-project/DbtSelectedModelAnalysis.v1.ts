@@ -14,6 +14,8 @@ import { isSha256HexString, SHA256_HEX_STRING_MESSAGE } from '../../utils/contra
 import { CanvasAuthoringAuthorityBindingSchema } from '../planner/CanvasAuthoringAuthorityBinding.v1.js';
 import { DbtProjectRevisionSchema } from '../planner/DbtProjectGraphProjection.v1.js';
 
+import { DbtSelectedModelExecutionSqlSchema } from './DbtSelectedModelExecutionSql.v1.js';
+
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256Schema = NonBlankStringSchema.refine(isSha256HexString, {
   message: SHA256_HEX_STRING_MESSAGE,
@@ -139,6 +141,7 @@ export const DbtSelectedModelAnalysisSchema = z
     dependencies: z.array(DbtSelectedDependencySchema),
     regions: z.array(DbtSemanticRegionSchema),
     diagnostics: z.array(DbtAnalysisDiagnosticSchema),
+    executionSql: DbtSelectedModelExecutionSqlSchema.optional(),
   })
   .strict()
   .superRefine((analysis, ctx) => {
@@ -153,6 +156,7 @@ export const DbtSelectedModelAnalysisSchema = z
     if (analysis.authorityBinding.authority.projectRoot !== analysis.projectRevision.projectRoot) {
       addIssue(ctx, ['projectRevision', 'projectRoot'], 'Authority and project roots must match');
     }
+    requireExecutionSqlIdentity(analysis, ctx);
 
     requireSortedUnique(analysis.files, (file) => file.path, ctx, 'files');
     requireSortedUnique(analysis.identities, (identity) => identity.uniqueId, ctx, 'identities');
@@ -243,6 +247,28 @@ export const DbtSelectedModelAnalysisSchema = z
       }
     });
   });
+
+function requireExecutionSqlIdentity(
+  analysis: Readonly<{
+    status: string;
+    selectedUniqueId: string;
+    authorityBinding: { canvasId: string };
+    projectRevision: { contentSetSha256: string };
+    executionSql?: z.infer<typeof DbtSelectedModelExecutionSqlSchema> | undefined;
+  }>,
+  ctx: z.RefinementCtx
+): void {
+  const sql = analysis.executionSql;
+  if (sql == null) return;
+  const facts = [
+    [analysis.status, 'ready'],
+    [sql.reference.canvasId, analysis.authorityBinding.canvasId],
+    [sql.reference.uniqueId, analysis.selectedUniqueId],
+    [sql.projectRevisionSha256, analysis.projectRevision.contentSetSha256],
+  ];
+  if (facts.some(([actual, expected]) => actual !== expected))
+    addIssue(ctx, ['executionSql'], 'Executable SQL must match the selected current file Model.');
+}
 
 export type DbtSelectedModelAnalysis = z.infer<typeof DbtSelectedModelAnalysisSchema>;
 export type DbtSelectedModelSemanticRegion = z.infer<typeof DbtSemanticRegionSchema>;
