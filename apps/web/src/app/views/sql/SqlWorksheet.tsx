@@ -155,6 +155,142 @@ function SqlWorksheetNotices({
   );
 }
 
+type Connections = ReturnType<typeof useWarehouseConnectionsQuery>;
+type WorksheetSurface = Props &
+  Readonly<{
+    worksheet: Worksheet;
+    catalogue: ReturnType<typeof useSqlWorksheetCatalogue>;
+    references: ReturnType<typeof useSqlWorksheetReferences>;
+    copy: SqlWorksheetCopy;
+    locale: string;
+    panel: Panel;
+    onPanelChange: (panel: Panel) => void;
+    onRun: () => void;
+  }>;
+
+function SqlWorksheetActions({ surface }: Readonly<{ surface: WorksheetSurface }>): JSX.Element {
+  const { scope, worksheet, catalogue, copy, panel, onPanelChange } = surface;
+  const { state } = worksheet;
+  return (
+    <>
+      <SqlWorksheetFiles scope={scope} sql={state.sql} onSqlChange={worksheet.setSql} />
+      <SqlWorksheetConversion
+        scope={scope}
+        sql={state.sql}
+        connection={worksheet.connection}
+        record={catalogue.record}
+        insertions={state.insertions}
+      />
+      <Button
+        size="sm"
+        variant="ghost"
+        aria-label={copy.history}
+        aria-pressed={panel === 'history'}
+        onClick={() => onPanelChange(panel === 'history' ? null : 'history')}
+      >
+        <History className={styles.icon} aria-hidden="true" />
+        {copy.history}
+      </Button>
+    </>
+  );
+}
+
+function SqlWorksheetHeader({
+  surface,
+  connections,
+  onToggleExplorer,
+}: Readonly<{
+  surface: WorksheetSurface;
+  connections: Connections;
+  onToggleExplorer: () => void;
+}>): JSX.Element {
+  const { worksheet, copy, onRun } = surface;
+  const { state } = worksheet;
+  const busy = state.pending != null;
+  return (
+    <>
+      <SqlWorksheetToolbar
+        copy={copy}
+        connections={connections.data ?? NO_CONNECTIONS}
+        connectionId={state.connectionId}
+        onConnectionChange={worksheet.setConnection}
+        busy={busy}
+        canRun={worksheet.canRun}
+        limit={state.limit}
+        onLimitChange={worksheet.setLimit}
+        onRun={onRun}
+        onToggleExplorer={onToggleExplorer}
+        actions={<SqlWorksheetActions surface={surface} />}
+      />
+      <div className={styles.statusBar}>
+        <h1 className={styles.title}>{copy.title}</h1>
+        <span>{copy.readOnly}</span>
+      </div>
+      {connections.isError ? (
+        <p className={styles.error} role="alert">
+          {copy.connectionsError}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              void connections.refetch();
+            }}
+          >
+            {copy.retry}
+          </Button>
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+function SqlWorksheetWorkbench({ surface }: Readonly<{ surface: WorksheetSurface }>): JSX.Element {
+  const { scopeKey, worksheet, catalogue, references, copy, locale, panel, onPanelChange, onRun } =
+    surface;
+  const { state } = worksheet;
+  return (
+    <div className={styles.workbench}>
+      <CanvasExplorer
+        openerId="sql-worksheet-explorer-toggle"
+        elements={
+          <SqlWorksheetExplorer
+            catalogue={catalogue}
+            scopeKey={scopeKey}
+            enabled={worksheet.connection?.type === 'postgres'}
+            busy={references.pending}
+            onReference={(value) => {
+              void references.insert(value);
+            }}
+            copy={copy}
+          />
+        }
+      >
+        <main className={styles.main}>
+          <SqlWorksheetMonaco
+            ref={references.editor}
+            scopeKey={scopeKey}
+            dragScopeKey={scopeKey}
+            sql={state.sql}
+            onChange={worksheet.setSql}
+            onRun={onRun}
+            onReference={(value) => {
+              void references.insert(value);
+            }}
+            copy={copy}
+          />
+          <SqlWorksheetOutputPanel
+            worksheet={worksheet}
+            panel={panel}
+            onPanelChange={onPanelChange}
+            copy={copy}
+            locale={locale}
+          />
+        </main>
+      </CanvasExplorer>
+    </div>
+  );
+}
+
 export function SqlWorksheet(props: Props): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveSqlWorksheetCopy(language);
@@ -177,108 +313,32 @@ export function SqlWorksheet(props: Props): JSX.Element {
   const dispatchExplorer = useUiLayoutStore((state) => state.dispatchCanvasExplorer);
   const catalogue = useSqlWorksheetCatalogue(props.scope, worksheet.connection, explorerOpen);
   const references = useSqlWorksheetReferences(props, worksheet, catalogue);
-  const { state } = worksheet;
-  const busy = state.pending != null;
   const run = () => {
     if (worksheet.canRun) {
       setPanel('results');
       void worksheet.execute();
     }
   };
+  const surface: WorksheetSurface = {
+    ...props,
+    worksheet,
+    catalogue,
+    references,
+    copy,
+    locale: language,
+    panel,
+    onPanelChange: setPanel,
+    onRun: run,
+  };
   return (
     <div className={styles.root} data-slot="sql-worksheet">
-      <SqlWorksheetToolbar
-        copy={copy}
-        connections={connections.data ?? NO_CONNECTIONS}
-        connectionId={state.connectionId}
-        onConnectionChange={worksheet.setConnection}
-        busy={busy}
-        canRun={worksheet.canRun}
-        limit={state.limit}
-        onLimitChange={worksheet.setLimit}
-        onRun={run}
+      <SqlWorksheetHeader
+        surface={surface}
+        connections={connections}
         onToggleExplorer={() => dispatchExplorer({ type: 'toggle' })}
-        actions={
-          <>
-            <SqlWorksheetFiles scope={props.scope} sql={state.sql} onSqlChange={worksheet.setSql} />
-            <SqlWorksheetConversion
-              scope={props.scope}
-              sql={state.sql}
-              connection={worksheet.connection}
-              record={catalogue.record}
-              insertions={state.insertions}
-            />
-            <Button
-              size="sm"
-              variant="ghost"
-              aria-label={copy.history}
-              aria-pressed={panel === 'history'}
-              onClick={() => setPanel(panel === 'history' ? null : 'history')}
-            >
-              <History className={styles.icon} aria-hidden="true" />
-              {copy.history}
-            </Button>
-          </>
-        }
       />
-      <div className={styles.statusBar}>
-        <h1 className={styles.title}>{copy.title}</h1>
-        <span>{copy.readOnly}</span>
-      </div>
-      {connections.isError ? (
-        <p className={styles.error} role="alert">
-          {copy.connectionsError}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              void connections.refetch();
-            }}
-          >
-            {copy.retry}
-          </Button>
-        </p>
-      ) : null}
       <SqlWorksheetNotices worksheet={worksheet} references={references} copy={copy} />
-      <div className={styles.workbench}>
-        <CanvasExplorer
-          openerId="sql-worksheet-explorer-toggle"
-          elements={
-            <SqlWorksheetExplorer
-              catalogue={catalogue}
-              scopeKey={props.scopeKey}
-              enabled={worksheet.connection?.type === 'postgres'}
-              busy={references.pending}
-              onReference={(value) => {
-                void references.insert(value);
-              }}
-              copy={copy}
-            />
-          }
-        >
-          <main className={styles.main}>
-            <SqlWorksheetMonaco
-              ref={references.editor}
-              scopeKey={props.scopeKey}
-              dragScopeKey={props.scopeKey}
-              sql={state.sql}
-              onChange={worksheet.setSql}
-              onRun={run}
-              onReference={(value) => {
-                void references.insert(value);
-              }}
-              copy={copy}
-            />
-            <SqlWorksheetOutputPanel
-              worksheet={worksheet}
-              panel={panel}
-              onPanelChange={setPanel}
-              copy={copy}
-              locale={language}
-            />
-          </main>
-        </CanvasExplorer>
-      </div>
+      <SqlWorksheetWorkbench surface={surface} />
     </div>
   );
 }
