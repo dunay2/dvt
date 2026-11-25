@@ -17,7 +17,10 @@ import {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
-import { serializeWorkspaceGraphAuthoringDraftStructuralSignature } from './canvasDraftStructuralSignature';
+import {
+  serializeWorkspaceGraphAuthoringDraftStructuralSignature,
+  toWorkspaceGraphAuthoringNodeKind,
+} from './canvasDraftStructuralSignature';
 import type { CanvasDraftEdge } from './canvasDraftSession.types';
 import { isDbtCompatibleModel, isDbtCompatibleSource } from './canvasDbtAuthoringModel';
 
@@ -36,11 +39,6 @@ export type CanvasDraftAuthoringBaselineSignatureInput = {
   record: CanvasAuthoringDraftRecord | null;
 };
 
-function toWorkspaceGraphAuthoringNodeKind(node: CanonicalNode): string {
-  const pluginPrefix = `${node.pluginId}:`;
-  return node.kind.startsWith(pluginPrefix) ? node.kind.slice(pluginPrefix.length) : node.kind;
-}
-
 export function projectCanonicalNodeToAuthoringNode(
   node: CanonicalNode
 ): WorkspaceGraphAuthoringNode {
@@ -56,9 +54,6 @@ export function projectCanonicalNodeToAuthoringNode(
     tags: [...node.tags],
   };
 
-  if (node.path != null && workspaceNodeDefinitionId(node) == null) {
-    authoringNode.path = node.path;
-  }
   if (node.description != null) {
     authoringNode.description = node.description;
   }
@@ -68,12 +63,18 @@ export function projectCanonicalNodeToAuthoringNode(
   if (node.lastCost != null) {
     authoringNode.lastCost = node.lastCost;
   }
-  const metadata = toCanvasAuthoringMetadata(node.metadata);
-  if (metadata != null && workspaceNodeDefinitionId(node) == null) {
-    authoringNode.metadata = metadata;
-  }
+  return { ...authoringNode, ...definitionAuthority(node) };
+}
 
-  return authoringNode;
+function definitionAuthority(
+  node: CanonicalNode
+): Pick<WorkspaceGraphAuthoringNode, 'path' | 'metadata'> {
+  if (workspaceNodeDefinitionId(node) != null) return {};
+  const metadata = toCanvasAuthoringMetadata(node.metadata);
+  return {
+    ...(node.path == null ? {} : { path: node.path }),
+    ...(metadata == null ? {} : { metadata }),
+  };
 }
 
 function createAuthoringEdgeId(sourceId: string, targetId: string): string {
@@ -95,15 +96,19 @@ function isDbtReferenceOnlyEdge(args: {
     return false;
   }
 
-  const targetConsumesReference =
-    isDbtCompatibleModel(targetNode) ||
-    (targetNode.pluginId === 'dbt' && targetNode.kind === 'dbt:snapshot');
-  const sourceProvidesReference =
-    isDbtCompatibleSource(sourceNode) ||
-    (sourceNode.pluginId === 'dbt' && sourceNode.kind === 'dbt:macro') ||
-    (sourceNode.pluginId === 'dvt.warehouse-source' && sourceNode.kind === 'dvt:source');
+  return consumesDbtReference(targetNode) && providesDbtReference(sourceNode);
+}
 
-  return targetConsumesReference && sourceProvidesReference;
+function consumesDbtReference(node: CanonicalNode): boolean {
+  return isDbtCompatibleModel(node) || (node.pluginId === 'dbt' && node.kind === 'dbt:snapshot');
+}
+
+function providesDbtReference(node: CanonicalNode): boolean {
+  return (
+    isDbtCompatibleSource(node) ||
+    (node.pluginId === 'dbt' && node.kind === 'dbt:macro') ||
+    (node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source')
+  );
 }
 
 function resolveAuthoringEdgeMetadata(args: {
@@ -181,12 +186,8 @@ export function serializeCanvasDraftAuthoringBaselineSignature({
   return serializeWorkspaceGraphAuthoringDraftStructuralSignature(record.draft);
 }
 
-export function buildCanvasAuthoringDraft(
-  input: CanvasAuthoringDraftBuildInput
-): WorkspaceGraphAuthoringDraft {
-  const canonicalNodesById = new Map(input.canonicalNodes.map((node) => [node.id, node]));
-  const canonicalEdgeLookup = buildCanonicalEdgeLookup(input.canonicalEdges);
-  const semanticNodeIds = [
+function draftDefinitionAndPlacementIds(input: CanvasAuthoringDraftBuildInput): string[] {
+  return [
     ...new Set([
       ...input.nodeIds,
       ...input.canonicalNodes
@@ -198,13 +199,22 @@ export function buildCanvasAuthoringDraft(
         .map((node) => node.id),
     ]),
   ];
+}
+
+function includesEndpoints(ids: ReadonlySet<string>, edge: CanvasDraftEdge): boolean {
+  return ids.has(edge.sourceId) && ids.has(edge.targetId);
+}
+
+export function buildCanvasAuthoringDraft(
+  input: CanvasAuthoringDraftBuildInput
+): WorkspaceGraphAuthoringDraft {
+  const canonicalNodesById = new Map(input.canonicalNodes.map((node) => [node.id, node]));
+  const canonicalEdgeLookup = buildCanonicalEdgeLookup(input.canonicalEdges);
+  const semanticNodeIds = draftDefinitionAndPlacementIds(input);
   const visibleIds = new Set(input.nodeIds);
   const semanticIds = new Set(semanticNodeIds);
   const hiddenDefinitionEdges = input.canonicalEdges.filter(
-    (edge) =>
-      semanticIds.has(edge.sourceId) &&
-      semanticIds.has(edge.targetId) &&
-      (!visibleIds.has(edge.sourceId) || !visibleIds.has(edge.targetId))
+    (edge) => includesEndpoints(semanticIds, edge) && !includesEndpoints(visibleIds, edge)
   );
   const edges = [
     ...new Map(
@@ -240,7 +250,7 @@ export function buildCanvasAuthoringDraft(
         edge,
         canonicalEdgeLookup,
         canonicalNodesById,
-        !visibleIds.has(edge.sourceId) || !visibleIds.has(edge.targetId)
+        !includesEndpoints(visibleIds, edge)
       )
     ),
   };
