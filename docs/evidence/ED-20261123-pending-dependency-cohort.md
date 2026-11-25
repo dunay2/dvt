@@ -1,11 +1,13 @@
 ---
-title: Pending dependency cohort reconciliation
+title: Pending integration and quality reconciliation
 status: draft
 date: 2026-11-23
 owners:
   - Engineering
   - Web
   - Temporal
+  - Architecture
+  - CI
 arc_level: ARC-2
 breaking: false
 code_refs:
@@ -23,6 +25,15 @@ code_refs:
   - apps/web/src/app/views/code/workspaceFileEditorContributions.tsx
   - apps/web/src/app/views/canvas/CanvasShell.semanticEditor.navigation.test.tsx
   - apps/api/src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.ts
+  - apps/web/src/app/components/PlanPreviewModal.tsx
+  - apps/web/src/app/components/planPreview/PlanPreview.module.css
+  - tools/ci/scope-config.mjs
+  - tools/ci/package-json-scope.mjs
+  - tools/ci/workflow-scope-projection.mjs
+  - scripts/planning-db/documentary-component.cjs
+  - scripts/planning-db/current-component-kind-constraint.cjs
+  - tools/planning-db/schema/architecture/tables.sql
+  - scripts/policy-validation-files.cjs
 evidence:
   tests:
     - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.catalog.architecture.test.ts
@@ -30,7 +41,7 @@ evidence:
     - pnpm verify:prepush
 ---
 
-# Pending dependency cohort reconciliation
+# Pending integration and quality reconciliation
 
 ## Dependency impact and CI admission
 
@@ -222,16 +233,29 @@ The requested quality boundary now requires score 10 for every numerically
 graded file in the complete integration cut. Removing regressions alone does
 not satisfy that boundary. The original cut contained 71 files below 10.
 The installed extension engine 1.0.80 reviewed the clean, hook-normalized
-commit `94ad0f508ede97bb11c2e8dfb9c7289a39b90fe0` against
-`11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`. All 506 changed paths were
-submitted: 380 received reviews and all 336 numeric scores equal 10. All
-125 comparable deltas are nonnegative. The other 44 reviews were ungraded
-and 126 inputs received no file review; none is assigned a fabricated score.
+commit `2f0a9dc12fdd80a839f0b42aaa76fc6023b57695` against
+`11b142d1d22dbdb49cdb40f3533fd1e1975e9e60`. The engine received all 548
+changed paths, reviewed 398 and returned 352 numeric scores of 10. All
+126 comparable deltas are nonnegative. The other 46 reviews were ungraded
+and 150 inputs received no file review; none is assigned a fabricated score.
 The proof verifies the exact commit and every input hash before and after
 review. The reconciliation branch was advanced only after this proof passed.
 Later source changes require another complete committed-candidate review.
 No CodeScene rule, threshold, exclusion, lint rule or component-warning
 baseline is relaxed.
+
+The full non-Web validation exposed a dbt cancellation race on Windows.
+Node could reject the child process promise before the operating system
+released its working directory. Cleanup then reported a resource error
+in place of cancellation. The process adapter now waits for the child's
+close event on the original process handle before returning control to
+cleanup. Six real-child lifecycle cases, all 33 plugin tests, build, typed
+lint and type checking passed. A later workspace run passed the plugin but
+timed out in two independent suites under concurrent load. Each passed on
+its own. Repeating the full non-Web graph at four concurrent tasks passed
+85 of 85 tasks in 82.168 seconds. Four tasks executed and 81 reused verified
+cache entries. Aggregated output recorded 5,474 passing tests and 149 declared
+skips. The 3,634 tracked non-Web source hashes matched before and after the run.
 
 The first complete post-hook review exposed nine remaining findings that
 the earlier working-tree diagnostic had not cleared. The correction separates
@@ -243,7 +267,7 @@ scenario preservation, the Canvas test assertions and actual package checks
 remain independent evidence; a quality score does not replace execution.
 
 The subsequent SRP review separates the former 910-line `PlanPreviewModal`
-into a 115-line dialog/action composition and cohesive field, overview,
+into a small dialog/action composition and cohesive field, overview,
 rejection, evidence and execution-step modules. A separate message type keeps
 its public type export, and a semantic CSS module owns the presentation rules.
 No additional session, subscription, command or acquisition is introduced.
@@ -420,3 +444,40 @@ requires known callbacks and proves foreign-Canvas exclusion, latest dispatch
 and retirement after capability removal. Physical bindings are declared before
 file creation; superseded prototype bindings are retired with committed history
 through the audited native operation, preserving other evidence and authorities.
+
+## Component responsibility and contract evidence
+
+The original 101 component warnings are resolved at their causes. Mixed
+physical ownership categories now delegate to actual capability owners with
+explicit boundaries and maintained proofs. The empty CI and repository
+metadata categories are retired, with their independent children attached to
+the existing organizational workspaces. HTTP capability ownership covers
+164 exact paths; API subject ownership covers 262 paths and 214 required
+associations while retaining previous evidence identities and responsibilities.
+
+Documentary collections and prospective declarations have distinct typed
+semantics. Passive bytes, declared lifecycle and genuine normative links are
+verified; executable configuration, code assertions, unresolved references
+and implemented product claims cannot receive a documentary exemption. The
+native component-kind constraint was changed only after an independently
+restored Planning DB backup. No import, projection rebuild, warning baseline,
+rule downgrade or fabricated implementation was used to achieve zero warnings.
+
+After the six real contract-tooling promotions, the unchanged strict operational
+integrity check passes with zero component, vocabulary and source-drift findings
+and no authority-dependent checks omitted. The selected inventory contains
+6,564 files with zero missing or ambiguous owners. The raw authority-reference
+audit retains its 26 inherited unresolved entries and introduces none; this is
+not a claim that those historical reference findings have been eliminated.
+
+The contract tools now read the actual shared corpus and reject missing,
+empty or malformed policy input. The unused parallel validator is removed;
+the existing CLI and dedicated validation ports retain their responsibilities.
+The index check covers 32 contracts, 13 schemas pass, the CLI passes 24 checks,
+five idempotency vectors match and 30 executable snippets have no syntax
+diagnostics. Both glossary and reference modes inspect 36 files without
+findings. The RFC2119 scanner exposes 85 inherited findings: its existing
+warning mode accepts them and error mode rejects them. No wording rewrite or
+severity reduction conceals that result. The glossary's three literal claims
+are a limited lexical projection of existing invariants, not semantic-language
+inference or equivalent coverage to the retired generic synonym bans.

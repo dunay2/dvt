@@ -54,6 +54,22 @@ zero negative comparable deltas in the complete cut after hook formatting.
 Record unsupported or ungraded inputs
 explicitly; do not assign them an invented score or exclude a failing file.
 
+Physical ownership buckets must not be given invented runtime responsibilities
+to silence component warnings. Preserve real capability, source, test and
+relation identities while transferring each implemented concern. Documentary
+classification requires passive-byte and declared-lifecycle evidence; code,
+configuration and implemented product claims retain executable obligations.
+Check the complete selected Git inventory for gaps and ambiguity after native
+transfers. Preserve existing source authorities and use actual Git history for
+retired symbols; no routine import or projection rebuild establishes evidence.
+
+A stale contract corpus path can silently validate zero files. Keep a shared
+canonical corpus, fail closed on missing/empty/malformed input and test actual
+corruption after formatter normalization. Preserve the existing warning/error
+modes and report inherited findings explicitly. Literal glossary claims are
+limited lexical checks; they cannot claim natural-language understanding or
+replace retired generic terminology bans without a documented policy change.
+
 Separating Preview responsibilities and extracting CSS must retain the actual
 dialog lifecycle, DOM/ARIA, localized rejection, read-only plan details and
 single Start Run/close dispatch. Keep semantic modules within the existing
@@ -137,3 +153,10 @@ policy; avoid wrappers that only forward props or create another subscription.
 Require the existing complete behavior suite, meaningful scope/lifecycle
 characterization, canonical typed lint, types and the actual CodeScene report.
 An interrupted earlier candidate cannot authorize the changed final candidate.
+
+Child termination and release of filesystem handles can occur after an abort
+notification. Keep the resource cleanup barrier on the process handle and
+retain the original execution outcome. Validate cancellation and spawn
+failure with real processes. Validate the complete dependency graph with
+bounded parallelism on the integration host so simultaneous Vitest worker
+pools do not obscure failures in unrelated suites.
