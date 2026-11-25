@@ -214,6 +214,8 @@ export { CommonStepTypeConfigSchema } from './step-registry/CommonStepTypeConfig
 export * from './step-registry/StepTypeRegistry.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';
+export * from './contracts/canvas/WorksheetCanvasModel.v1.js';
 export * from './contracts/planner/WorkspaceDbtModelReference.v1.js';
 export * from './contracts/dbt-project/RunParameters.v1.js';
 export * from './contracts/dbt-project/resolveRunParameters.js';
+export * from './contracts/dbt-project/DbtSelectedModelExecutionSql.v1.js';

@@ -3,6 +3,10 @@ import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { ICanvasTransformSqlQueryPort } from '../../ports/canvasTransformSql';
 import type { ICanvasModelSqlQueryPort } from '../../ports/canvasModelSql';
+import type { IWorksheetCanvasModelQueryPort } from '../../ports/worksheetCanvasModel';
+import { createWorksheetCanvasModelQuery } from '../canvas/worksheetCanvasModel.api';
+import type { ISqlWorksheetPort } from '../../ports/sqlWorksheet';
+import { createApiSqlWorksheetPort } from '../sql/sqlWorksheet.api';
 import { createApiCanvasModelSqlQueryPort } from '../canvas/canvasModelSql.api';
 import { createApiCanvasTransformSqlQueryPort } from '../canvas/canvasTransformSql.api';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
@@ -31,6 +35,8 @@ import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGra
 import type { IDbtProjectGraphQueryPort } from '../../ports/dbtProjectGraph';
 import type { IDbtSelectedModelAnalysisQueryPort } from '../../ports/dbtSelectedModelAnalysis';
 import type { IDbtProjectImportPort } from '../../ports/dbtProjectImport';
+import type { IWorksheetDbtModelCommand } from '../../ports/worksheetDbtModel';
+import { createWorksheetDbtModelCommand } from '../dbtProject/worksheetDbtModel.api';
 import type { IDbtYamlDescriptionEditPort } from '../../ports/dbtYamlDescriptionEdit';
 import { createApiClient, type ApiClient } from '../api/createApiClient';
 import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
@@ -70,6 +76,8 @@ export interface AppServices {
   readonly canvasTransformDataSampleQuery: ICanvasTransformDataSampleQueryPort;
   readonly canvasTransformSqlQuery: ICanvasTransformSqlQueryPort;
   readonly canvasModelSqlQuery: ICanvasModelSqlQueryPort;
+  readonly worksheetCanvasModelQuery: IWorksheetCanvasModelQueryPort;
+  readonly sqlWorksheet: ISqlWorksheetPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
@@ -77,6 +85,7 @@ export interface AppServices {
   readonly dbtProjectGraphQueryPort: IDbtProjectGraphQueryPort;
   readonly dbtSelectedModelAnalysisQueryPort: IDbtSelectedModelAnalysisQueryPort;
   readonly dbtProjectImportPort: IDbtProjectImportPort;
+  readonly worksheetDbtModelCommand: IWorksheetDbtModelCommand;
   readonly dbtYamlDescriptionEditPort: IDbtYamlDescriptionEditPort;
   readonly runsService: IRunsPort;
   readonly plansService: IPlansPort;
@@ -103,6 +112,8 @@ export interface AppServicesOverrides {
   readonly canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   readonly canvasTransformSqlQuery?: ICanvasTransformSqlQueryPort;
   readonly canvasModelSqlQuery?: ICanvasModelSqlQueryPort;
+  readonly worksheetCanvasModelQuery?: IWorksheetCanvasModelQueryPort;
+  readonly sqlWorksheet?: ISqlWorksheetPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
@@ -110,6 +121,7 @@ export interface AppServicesOverrides {
   readonly dbtProjectGraphQueryPort?: IDbtProjectGraphQueryPort;
   readonly dbtSelectedModelAnalysisQueryPort?: IDbtSelectedModelAnalysisQueryPort;
   readonly dbtProjectImportPort?: IDbtProjectImportPort;
+  readonly worksheetDbtModelCommand?: IWorksheetDbtModelCommand;
   readonly dbtYamlDescriptionEditPort?: IDbtYamlDescriptionEditPort;
   readonly runsService?: IRunsPort;
   readonly plansService?: IPlansPort;
@@ -119,6 +131,27 @@ export interface AppServicesOverrides {
   readonly workspaceScopeSelection?: WorkspaceScopeSelectionPort;
   readonly shellFeedback?: ShellFeedbackPort;
   readonly frontendOperabilitySink?: FrontendOperabilitySink;
+}
+
+function buildCanvasSqlPorts(
+  overrides: AppServicesOverrides,
+  apiClient: ApiClient,
+  frontendOperabilitySink: FrontendOperabilitySink
+) {
+  return {
+    canvasTransformDataSampleQuery:
+      overrides.canvasTransformDataSampleQuery ??
+      createApiCanvasTransformDataSampleQueryPort(apiClient, frontendOperabilitySink),
+    canvasTransformSqlQuery:
+      overrides.canvasTransformSqlQuery ??
+      createApiCanvasTransformSqlQueryPort(apiClient, frontendOperabilitySink),
+    canvasModelSqlQuery:
+      overrides.canvasModelSqlQuery ??
+      createApiCanvasModelSqlQueryPort(apiClient, frontendOperabilitySink),
+    worksheetCanvasModelQuery:
+      overrides.worksheetCanvasModelQuery ?? createWorksheetCanvasModelQuery(apiClient),
+    sqlWorksheet: overrides.sqlWorksheet ?? createApiSqlWorksheetPort(apiClient),
+  };
 }
 
 export function buildAppServices(overrides: AppServicesOverrides = {}): AppServices {
@@ -150,15 +183,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     warehouseSourceImport: overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport,
     warehouseSourceDataSampleQuery:
       overrides.warehouseSourceDataSampleQuery ?? workspacePorts.warehouseSourceDataSampleQuery,
-    canvasTransformDataSampleQuery:
-      overrides.canvasTransformDataSampleQuery ??
-      createApiCanvasTransformDataSampleQueryPort(apiClient, frontendOperabilitySink),
-    canvasTransformSqlQuery:
-      overrides.canvasTransformSqlQuery ??
-      createApiCanvasTransformSqlQueryPort(apiClient, frontendOperabilitySink),
-    canvasModelSqlQuery:
-      overrides.canvasModelSqlQuery ??
-      createApiCanvasModelSqlQueryPort(apiClient, frontendOperabilitySink),
+    ...buildCanvasSqlPorts(overrides, apiClient, frontendOperabilitySink),
     workspaceFileContentCommand:
       overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand:
@@ -177,6 +202,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
       createApiDbtSelectedModelAnalysisQueryPort(apiClient),
     dbtProjectImportPort:
       overrides.dbtProjectImportPort ?? createApiDbtProjectImportPort(apiClient),
+    worksheetDbtModelCommand:
+      overrides.worksheetDbtModelCommand ?? createWorksheetDbtModelCommand(apiClient),
     dbtYamlDescriptionEditPort:
       overrides.dbtYamlDescriptionEditPort ?? createApiDbtYamlDescriptionEditPort(apiClient),
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),

@@ -31,6 +31,7 @@ import { registerProtectedSessionRoutes } from './protectedRuntimeSessionRoutes.
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 import { registerSqlWorksheetRouteGroup } from './sqlWorksheetRouteGroup.js';
 import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSourceImportRouteGroup.js';
+import { registerWorksheetCanvasModelRoutes } from './worksheetCanvasModelRoutes.js';
 import { workspaceContextRoute } from './workspaceContextRoute.js';
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
 import { registerWorkspaceFileHistoryRoutes } from './workspaceFileHistoryRoutes.js';
@@ -182,6 +183,11 @@ function registerProtectedCanvasRoutes(
     context: dependencies.modelSqlContext,
     compilation: dependencies.modelSqlCompilation,
     rows: dependencies.previewCanvasTransformRowsUseCase,
+    rateLimit: protectedRateLimit,
+  });
+  registerWorksheetCanvasModelRoutes(app, {
+    ...dependencies.runtimeAuth,
+    query: dependencies.worksheetCanvasModelQuery,
     rateLimit: protectedRateLimit,
   });
 }

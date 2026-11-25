@@ -1,0 +1,27 @@
+@layer components {
+  .form,
+  .field {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .form {
+    gap: 0.875rem;
+  }
+  .destinations {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .destinations label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .choice {
+    height: var(--shell-control-height);
+    color: var(--text-strong);
+    background: var(--surface-panel);
+  }
+}

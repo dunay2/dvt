@@ -5,6 +5,8 @@ import type { CapabilitiesPort } from '../ports/capabilities';
 import type { ICanvasTransformDataSampleQueryPort } from '../ports/canvasDataSample';
 import type { ICanvasTransformSqlQueryPort } from '../ports/canvasTransformSql';
 import type { ICanvasModelSqlQueryPort } from '../ports/canvasModelSql';
+import type { IWorksheetCanvasModelQueryPort } from '../ports/worksheetCanvasModel';
+import type { ISqlWorksheetPort } from '../ports/sqlWorksheet';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../ports/graphDbtModelCompilation';
@@ -30,6 +32,7 @@ import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphD
 import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
 import type { IDbtSelectedModelAnalysisQueryPort } from '../ports/dbtSelectedModelAnalysis';
 import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
+import type { IWorksheetDbtModelCommand } from '../ports/worksheetDbtModel';
 import type { IDbtYamlDescriptionEditPort } from '../ports/dbtYamlDescriptionEdit';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
@@ -73,6 +76,9 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrideInputs.canvasTransformDataSampleQuery,
       overrideInputs.canvasTransformSqlQuery,
       overrideInputs.canvasModelSqlQuery,
+      overrideInputs.worksheetCanvasModelQuery,
+      overrideInputs.worksheetDbtModelCommand,
+      overrideInputs.sqlWorksheet,
       overrideInputs.workspaceFileContentCommand,
       overrideInputs.graphDbtWorkspaceArtifactPublicationCommand,
       overrideInputs.graphDbtModelCompilationQuery,
@@ -98,6 +104,14 @@ function useRequiredAppServicesContext(): AppServices {
     throw new Error('AppServicesProvider is required to consume app services.');
   }
   return context;
+}
+
+export function useSqlWorksheetPort(): ISqlWorksheetPort {
+  return useRequiredAppServicesContext().sqlWorksheet;
+}
+
+export function useWorksheetCanvasModelQuery(): IWorksheetCanvasModelQueryPort {
+  return useRequiredAppServicesContext().worksheetCanvasModelQuery;
 }
 
 export function useWorkspaceGraphSnapshotQueryPort(): IWorkspaceGraphSnapshotQueryPort {
@@ -174,6 +188,10 @@ export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAutho
 
 export function useDbtProjectGraphQueryPort(): IDbtProjectGraphQueryPort {
   return useRequiredAppServicesContext().dbtProjectGraphQueryPort;
+}
+
+export function useWorksheetDbtModelCommand(): IWorksheetDbtModelCommand {
+  return useRequiredAppServicesContext().worksheetDbtModelCommand;
 }
 
 export function useDbtSelectedModelAnalysisQueryPort(): IDbtSelectedModelAnalysisQueryPort {
