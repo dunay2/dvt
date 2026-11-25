@@ -68,16 +68,14 @@ describe('Model layout persistence through the real Workbench', () => {
     await render();
     for (const id of Object.keys(positions())) {
       await act(async () =>
-        container
-          .querySelector<HTMLElement>(`[data-relational-card-id="${id}"]`)!
-          .dispatchEvent(
-            new KeyboardEvent('keydown', {
-              bubbles: true,
-              key: 'ArrowDown',
-              altKey: true,
-              shiftKey: true,
-            })
-          )
+        container.querySelector<HTMLElement>(`[data-relational-card-id="${id}"]`)!.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            bubbles: true,
+            key: 'ArrowDown',
+            altKey: true,
+            shiftKey: true,
+          })
+        )
       );
     }
     const before = Object.values(positions()).sort((a, b) => a.x - b.x);

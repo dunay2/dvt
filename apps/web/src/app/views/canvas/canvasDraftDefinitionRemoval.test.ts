@@ -20,9 +20,7 @@ function model(id: string): CanonicalNode {
   };
 }
 
-function fixture(
-  visible = false
-): Readonly<{
+function fixture(visible = false): Readonly<{
   nodes: CanonicalNode[];
   record: CanvasAuthoringDraftRecord;
   session: CanvasDraftSession;
