@@ -66,11 +66,9 @@ export function registerWorksheetCanvasModelRoutes(
           (key) => !['tenantId', 'projectId', 'environmentId'].includes(key)
         )
       )
-        return reply
-          .code(400)
-          .send({
-            error: { type: 'bad_request', reason: 'invalid_worksheet_canvas_model_request' },
-          });
+        return reply.code(400).send({
+          error: { type: 'bad_request', reason: 'invalid_worksheet_canvas_model_request' },
+        });
       const authorized = await authorizeExecutionScope({
         authenticator: deps.authenticator,
         authorizer: deps.authorizer,
@@ -84,14 +82,12 @@ export function registerWorksheetCanvasModelRoutes(
       } catch (error) {
         const failure = proposalFailure(error);
         if (failure == null) throw error;
-        return reply
-          .code(failure.status)
-          .send({
-            error: {
-              type: failure.status === 409 ? 'conflict' : 'unprocessable_entity',
-              reason: failure.reason,
-            },
-          });
+        return reply.code(failure.status).send({
+          error: {
+            type: failure.status === 409 ? 'conflict' : 'unprocessable_entity',
+            reason: failure.reason,
+          },
+        });
       }
     }
   );

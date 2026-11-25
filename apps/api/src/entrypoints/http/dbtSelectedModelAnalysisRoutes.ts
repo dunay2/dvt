@@ -99,11 +99,9 @@ function respondToSelectedModelFailure(reply: FastifyReply, error: unknown): boo
     return true;
   }
   if (error instanceof DbtProjectFileAuthorityRequiredError) {
-    reply
-      .code(409)
-      .send({
-        error: { type: 'conflict', reason: HTTP_ERROR_REASON.dbtProjectFileAuthorityRequired },
-      });
+    reply.code(409).send({
+      error: { type: 'conflict', reason: HTTP_ERROR_REASON.dbtProjectFileAuthorityRequired },
+    });
     return true;
   }
   return false;
