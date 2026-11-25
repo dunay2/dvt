@@ -21,6 +21,21 @@ type BrowserCoverage =
   readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
 
 export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
+  'apps/web/src/app/views/canvas/canvasModelLayoutSignatures.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
+  },
+  'apps/web/src/app/views/canvas/canvasModelLayoutReconciliation.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
+  },
+  'apps/web/src/app/views/canvas/canvasRelationalUnplacedCards.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
+  },
+  'apps/web/src/app/views/canvas/CanvasModelLayoutSession.tsx': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts',
+    ],
+  },
   'apps/web/src/app/views/SqlView.tsx': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/sql/SqlWorksheet.tsx': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/sql/SqlWorksheetHeader.tsx': WORKSHEET_CONSUMER,
@@ -83,6 +98,9 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
   'apps/web/cypress/support/dbtFileProjection/references.ts': ['available'],
   'apps/web/cypress/support/codeWorkbench/bootstrap.ts': ['controlled'],
   'apps/web/cypress/support/modelSqlAuthoring.ts': ['controlled'],
+  'apps/web/cypress/support/emptyModelDeletion.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-session.cy.ts'],
+  },
   'apps/web/cypress/support/e2eApiStub.ts': CAPABILITIES,
   'apps/web/cypress/support/nativeKeyboard.ts': ['controlled', 'available'],
   'apps/web/cypress/support/shellWorkbench/browserEmulation.ts': ['controlled'],
