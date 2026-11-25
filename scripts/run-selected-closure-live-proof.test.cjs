@@ -342,7 +342,7 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       'CYPRESS_postgresTargetSchema',
       '-e',
       'CYPRESS_postgresDatabaseName',
-      'cypress/included:15.18.1',
+      'cypress/included:15.21.2',
       '--project',
       '/repo/apps/web',
       '--config-file',

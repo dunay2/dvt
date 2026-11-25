@@ -15,7 +15,7 @@ const dockerArgs = [
   '/repo/apps/web',
   '-e',
   'CYPRESS_baseUrl=http://host.docker.internal:4173',
-  'cypress/included:15.18.1',
+  'cypress/included:15.21.2',
   '--project',
   '/repo/apps/web',
   '--config-file',
