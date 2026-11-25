@@ -12,6 +12,7 @@ import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canv
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubCanvasDraftSave } from '../../support/canvasDraftAuthoring';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
+import { assertSavedDbtComposition, stubDbtComposition } from '../../support/dbtModelComposition';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
@@ -96,6 +97,36 @@ function assertIndependentModelCopy({
 }
 
 describe('Model composition inside the selected Model', () => {
+  it('links clientes as a dbt input and reopens the same file definition after one Apply', () => {
+    const seed = stubDbtComposition();
+    let instanceId = '';
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    openModel();
+    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
+    cy.get(action).filter(':visible').should('be.enabled');
+    dragModel(seed.definitionId);
+    cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+    cy.get(pending).should('not.exist');
+    cy.get(action).filter(':visible').focus();
+    pressNativeKey('Enter');
+    cy.get(pending).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
+    cy.wrap(null).should(() => {
+      instanceId = assertSavedDbtComposition(seed);
+    });
+    revisitWorkbenchCanvas(() => visitWorkbenchCanvas());
+    openModel();
+    cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+      'have.text',
+      seed.receiverName
+    );
+    cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
+    cy.then(() => expect(assertSavedDbtComposition(seed)).to.equal(instanceId));
+  });
+
   it('cancels privately, then applies an independent Model copy and reopens its own semantics', () => {
     const initial = stubWorkbenchScenario('saved-join');
     const original = initial.nodes.find((node) => node.id === receiver)!;
@@ -168,6 +199,9 @@ describe('Model composition inside the selected Model', () => {
           : node
       ),
       nodeIds: initial.nodeIds.filter((id) => id !== source.id),
+      nodePositions: Object.fromEntries(
+        Object.entries(initial.nodePositions).filter(([id]) => id !== source.id)
+      ),
       edges: initial.edges.filter(
         (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
       ),

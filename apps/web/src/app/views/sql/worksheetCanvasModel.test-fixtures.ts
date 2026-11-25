@@ -1,15 +1,18 @@
 /** Complete fixture built with the same canonical semantic constructor as Canvas authoring. */
 import {
   allocateDvtFieldId,
+  ConnectedSourceRefSchema,
   ModelSqlCompilationResponseSchema,
   WorksheetCanvasModelProposalSchema,
   type WorksheetCanvasModelRequest,
+  type WorksheetCanvasModelProposal,
   type WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
+import { compileModelSqlSource } from '@dvt/postgres-projection';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { createDvtSubstraitProjectionDraft } from '../canvas/canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitSemanticDocument } from '../canvas/canvasDvtSubstraitSemanticDocument';
-import { sourceRef } from '../canvas/CanvasRelationalTreeWorkbench.test-support';
 
 export function buildWorksheetCanvasProposal(
   input: WorksheetCanvasModelRequest,
@@ -34,7 +37,11 @@ export function buildWorksheetCanvasProposal(
       sqlSha256: sha256HexUtf8(input.sql),
       contextSha256,
     });
-  const ref = { ...sourceRef('orders'), connectionRef: input.connectionRef };
+  const ref = ConnectedSourceRefSchema.parse({
+    schemaVersion: 'connected-source-ref.v1',
+    connectionRef: input.connectionRef,
+    sourceObjectId: 'public.orders',
+  });
   const document = createDvtSubstraitProjectionDraft({
     source: {
       nodeId: 'orders',
@@ -131,5 +138,90 @@ export function buildWorksheetCanvasProposal(
   return WorksheetCanvasModelProposalSchema.parse({
     ...scopedBody,
     proposalSha256: sha256HexUtf8(jcsCanonicalize(scopedBody)),
+  });
+}
+
+/** Both UI proofs consume a real compiled document, never a synthetic physical Source. */
+export function buildWorksheetCanvasLiteralProposal(
+  input: WorksheetCanvasModelRequest,
+  scope: WorkspaceGraphDraftScope,
+  contextSha256 = 'a'.repeat(64)
+): WorksheetCanvasModelProposal {
+  if (input.sql !== 'SELECT 1 AS comprobacion_editor_sql' || input.models.length !== 0)
+    throw new Error('Expected the exact source-free worksheet SQL and no Model references.');
+  const graphScope = {
+    tenantId: scope.tenantId,
+    projectId: scope.projectId,
+    environmentId: scope.environmentId,
+  };
+  const identity = {
+    schemaVersion: 'worksheet-canvas-model-proposal.v1' as const,
+    scope: graphScope,
+    canvasId: input.canvasId,
+    expectedRevision: input.expectedRevision,
+    modelId: input.modelId,
+    name: input.name,
+    connectionRef: input.connectionRef,
+    sqlSha256: sha256HexUtf8(input.sql),
+    contextSha256,
+  };
+  if (input.verifyContextSha256 !== undefined)
+    return WorksheetCanvasModelProposalSchema.parse({ ...identity, status: 'current' });
+  const { document, inputAdditions } = compileModelSqlSource(
+    {
+      SelectStmt: {
+        op: 'SETOP_NONE',
+        targetList: [
+          {
+            ResTarget: { name: 'comprobacion_editor_sql', val: { A_Const: { ival: { ival: 1 } } } },
+          },
+        ],
+        fromClause: [],
+      },
+    },
+    { inputs: [] }
+  );
+  if (inputAdditions.length !== 0) throw new Error('A literal Model cannot invent an input.');
+  const analysis = deriveSubstraitSchemas(document);
+  const columns = analysis.index.relations.get(analysis.index.rootId)!.fields.map((field) => ({
+    id: field.fieldId,
+    name: field.displayName,
+    dataType: analysis.schemas.get(analysis.index.rootId)![field.outputOrdinal]!.type.kind.case,
+    nullable: false,
+  }));
+  const body = {
+    ...identity,
+    status: 'valid' as const,
+    columns,
+    draft: {
+      canvas: { id: input.canvasId, title: 'Canvas', kind: 'transformation' },
+      activeCanvasId: input.canvasId,
+      nodeIds: [input.modelId],
+      nodePositions: { [input.modelId]: { x: 320, y: 0 } },
+      nodes: [
+        {
+          id: input.modelId,
+          name: input.name,
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform' as const,
+          status: 'idle' as const,
+          tags: ['model'],
+          metadata: {
+            connectionRef: input.connectionRef,
+            transformAuthoring: {
+              version: 'v1',
+              mode: 'substrait',
+              semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+            },
+          },
+        },
+      ],
+      edges: [],
+    },
+  };
+  return WorksheetCanvasModelProposalSchema.parse({
+    ...body,
+    proposalSha256: sha256HexUtf8(jcsCanonicalize(body)),
   });
 }

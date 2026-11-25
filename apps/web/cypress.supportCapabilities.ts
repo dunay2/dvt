@@ -21,6 +21,11 @@ type BrowserCoverage =
   readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
 
 export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
+  'apps/web/cypress/support/dbtModelComposition.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-composition.cy.ts'],
+  },
+  'apps/web/cypress/support/literalModelConversion.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/worksheetCanvasModel.test-fixtures.ts': WORKSHEET_CONSUMER,
   'apps/web/src/app/views/canvas/canvasModelLayoutSignatures.ts': {
     controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
   },

@@ -18,7 +18,10 @@ import {
 } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { SqlWorksheetConversionProps } from './sqlWorksheet.types';
-import { buildWorksheetCanvasProposal } from './worksheetCanvasModel.test-fixtures';
+import {
+  buildWorksheetCanvasProposal,
+  buildWorksheetCanvasLiteralProposal,
+} from './worksheetCanvasModel.test-fixtures';
 import { WorksheetCanvasModelForm } from './WorksheetCanvasModelForm';
 
 let container: HTMLDivElement, root: Root;
@@ -125,6 +128,32 @@ async function prepare(): Promise<void> {
 }
 
 describe('WorksheetCanvasModelForm', () => {
+  it('prepares a source-free literal and confirms exactly its displayed canonical proposal', async () => {
+    const h = fixture();
+    h.propose.mockImplementation(async (input) =>
+      buildWorksheetCanvasLiteralProposal(input, h.props.scope)
+    );
+    h.render({ sql: 'SELECT 1 AS comprobacion_editor_sql' });
+    await prepare();
+    expect(h.propose.mock.calls[0]?.[0].models).toEqual([]);
+    expect(within(container).getByText('comprobacion_editor_sql')).toBeDefined();
+    expect(h.saveGraphDraft).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(within(container).getByRole('button', { name: 'Confirm Canvas Model' }));
+    });
+    expect(h.propose).toHaveBeenCalledTimes(2);
+    expect(h.saveGraphDraft).toHaveBeenCalledTimes(1);
+    const saved = h.saveGraphDraft.mock.calls[0]![0];
+    const displayed = await h.propose.mock.results[0]!.value;
+    if (displayed.status !== 'valid') throw new Error('Expected a complete literal proposal.');
+    expect(saved.draft).toEqual(displayed.draft);
+    expect(saved.draft.nodes).toHaveLength(1);
+    expect(saved.draft.edges).toEqual([]);
+    expect(saved.draft.nodes[0]?.metadata?.connectionRef).toEqual(displayed.connectionRef);
+    expect(saved.expectedRevision).toBe('r1');
+    expect(h.propose.mock.calls[1]?.[0].verifyContextSha256).toBe(displayed.contextSha256);
+    expect(within(container).getByRole('status').textContent).toContain('Created Canvas Model');
+  });
   it('shows real typed columns before a single complete graph save', async () => {
     const h = fixture();
     await prepare();

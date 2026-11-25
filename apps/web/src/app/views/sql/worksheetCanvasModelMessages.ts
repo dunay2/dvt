@@ -6,7 +6,7 @@ export const worksheetCanvasModelMessages = {
     confirm: 'Confirm Canvas Model',
     retry: 'Retry confirmation',
     busy: 'Working…',
-    confirmation: 'Confirm this Model and its input relationships in the current Canvas.',
+    confirmation: 'Confirm this Model in the current Canvas.',
     columns: 'Proposed columns',
     context: 'Select a PostgreSQL connection and an editable Canvas before preparing a Model.',
     stale: 'The worksheet, Canvas or workspace changed. Prepare a new proposal before confirming.',
@@ -28,7 +28,7 @@ export const worksheetCanvasModelMessages = {
     confirm: 'Confirmar modelo de Canvas',
     retry: 'Reintentar confirmación',
     busy: 'Procesando…',
-    confirmation: 'Confirma este modelo y sus relaciones de entrada en el Canvas actual.',
+    confirmation: 'Confirma este modelo en el Canvas actual.',
     columns: 'Columnas propuestas',
     context: 'Selecciona una conexión PostgreSQL y un Canvas editable antes de preparar un modelo.',
     stale:

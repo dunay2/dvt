@@ -19,6 +19,7 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { registerLiteralModelConversionJourney } from '../../support/literalModelConversion';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -256,6 +257,7 @@ function recoverFile(original: HTMLElement): void {
 
 describe('independent SQL worksheet', () => {
   beforeEach(prepareWorksheet);
+  registerLiteralModelConversionJourney();
 
   it('opens the original SQL activity without a selected Model and runs a dragged object in the same editor', () => {
     visitWorksheet('/canvas');
