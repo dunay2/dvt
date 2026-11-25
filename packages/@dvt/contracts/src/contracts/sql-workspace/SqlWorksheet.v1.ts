@@ -1,4 +1,11 @@
-/** Published language for independent SQL execution and immutable completed query history. */
+/**
+ * Published language for independent SQL execution and immutable completed query history.
+ * @baseline ADR-0058: Reuse the authorized warehouse connection and source-column vocabulary.
+ * @baseline ADR-0051: Protected operations receive the approved actor and resource scope.
+ * @decision Separate bounded transient query rows from immutable terminal execution metadata.
+ * @consequence History restores query facts without saved row values or client-supplied authority.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';

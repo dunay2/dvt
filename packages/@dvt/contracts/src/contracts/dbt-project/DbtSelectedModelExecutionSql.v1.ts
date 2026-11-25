@@ -1,4 +1,10 @@
-/** Read-only file Model SQL and its assigned publication signature; never a persisted Model mutation. */
+/**
+ * Read-only file Model SQL and its assigned publication signature.
+ * @baseline ADR-0060: Native dbt project files remain the Model authoring authority.
+ * @decision Publish selected-model SQL with exact project, analysis and SQL digests.
+ * @consequence Reading executable SQL does not persist or replace a Model definition.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { ModelSqlDigestSchema, MODEL_SQL_MAX_LENGTH } from '../canvas/ModelSqlContext.v1.js';

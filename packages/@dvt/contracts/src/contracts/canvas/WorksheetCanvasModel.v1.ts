@@ -1,4 +1,11 @@
-/** A read-only complete Model proposal, distinct from its existing guarded graph save. */
+/**
+ * A read-only complete Model proposal, distinct from its existing guarded graph save.
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile.
+ * @baseline ADR-0060: Project-file producers retain their authoring authority.
+ * @decision Return a revision-bound semantic proposal for the existing guarded graph save.
+ * @consequence Reading a proposal neither saves the graph nor transfers file authority.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { CanvasHumanNameV1Schema } from '../planner/CanvasAuthoringFieldPolicy.v1.js';

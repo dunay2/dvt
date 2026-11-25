@@ -1,4 +1,10 @@
-/** Convert a single worksheet query to a named file-owned dbt model. */
+/**
+ * Convert a single worksheet query to a named file-owned dbt model.
+ * @baseline ADR-0060: dbt Project Authoring Authority.
+ * @decision Require an explicit project binding and configuration revision for file creation.
+ * @consequence Conversion preserves file authority and reports conflicts without implicit adoption.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { isSha256HexString } from '../../utils/contractPrimitives.js';
