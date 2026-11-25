@@ -856,6 +856,8 @@ describe('Canvas ready node authoring', () => {
       .should('have.focus')
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
     cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
+    cy.get('button[aria-label="Close graph filters"]').click();
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
     cy.get(englishTagAction).click();
     cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
     cy.get('button[aria-label="Clear graph filters"]').click();
