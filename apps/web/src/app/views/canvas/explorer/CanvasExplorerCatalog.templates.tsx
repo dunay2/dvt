@@ -98,9 +98,10 @@ function CanvasExplorerModelRow({
   const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
   const draggable = !unavailable && item.draggable !== false && onDragStart != null;
   const actionLabel =
-    item.definitionIdentity == null
+    modelAction?.labelFor?.(item.id) ??
+    (item.definitionIdentity == null
       ? modelAction?.label
-      : (modelAction?.referenceLabel ?? modelAction?.label);
+      : (modelAction?.referenceLabel ?? modelAction?.label));
   const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
   const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
   const formatId = `${id}-${encodeURIComponent(item.id)}-format`;

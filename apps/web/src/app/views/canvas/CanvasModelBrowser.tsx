@@ -30,6 +30,8 @@ export type CanvasModelBrowserPresentation = Readonly<{
       label: string;
       referenceLabel?: string;
       linkedNodeIds?: ReadonlySet<string>;
+      occurrenceNodeIds?: ReadonlySet<string>;
+      labelFor?: (id: string) => string;
     }>
   ) => ReactNode;
   cataloguePresentation: CanvasExplorerCatalogPresentation;
@@ -51,7 +53,8 @@ function startCompositionDrag(
     return;
   }
   event.dataTransfer.setData(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE, JSON.stringify({ id, scopeKey }));
-  event.dataTransfer.effectAllowed = composition.linkedNodeIds?.has(id) ? 'link' : 'copy';
+  event.dataTransfer.effectAllowed =
+    composition.linkedNodeIds?.has(id) || composition.occurrenceNodeIds?.has(id) ? 'link' : 'copy';
 }
 
 export function CanvasModelBrowserProvider({
@@ -106,6 +109,7 @@ export function CanvasModelBrowserProvider({
                 ? undefined
                 : {
                     label: composition.label,
+                    ...(composition.labelFor == null ? {} : { labelFor: composition.labelFor }),
                     ...(composition.referenceLabel == null
                       ? {}
                       : { referenceLabel: composition.referenceLabel }),

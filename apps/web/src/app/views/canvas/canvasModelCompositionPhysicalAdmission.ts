@@ -10,7 +10,63 @@ import { resolveWorkspaceNodeInstances, projectWorkspaceNodeInstanceEdges } from
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { canvasPhysicalSourceReferenceKey } from './canvasRelationalAnalysis';
+import {
+  canvasPhysicalSourceReferenceKey,
+  canvasSourceReferenceKey,
+} from './canvasRelationalAnalysis';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+
+function admittedPhysicalInput(
+  input: CanvasDvtCompositionInput | undefined,
+  key: string
+): CanvasDvtCompositionInput | null {
+  if (input?.sourceRef == null || input.fields.length === 0) return null;
+  return canvasSourceReferenceKey(input.sourceRef) === key ? input : null;
+}
+
+function physicalInputsByReference(
+  args: Readonly<{
+    nodes: ReadonlyMap<string, CanonicalNode>;
+    edges: readonly CanonicalEdge[];
+    inputs: ReadonlyMap<string, CanvasDvtCompositionInput>;
+    targetId: string;
+  }>
+): ReadonlyMap<string, CanvasDvtCompositionInput | null> {
+  const physical = new Map<string, CanvasDvtCompositionInput | null>();
+  for (const edge of args.edges) {
+    if (edge.targetId !== args.targetId) continue;
+    const source = args.nodes.get(edge.sourceId);
+    const key = source == null ? null : canvasPhysicalSourceReferenceKey(source);
+    if (key == null) continue;
+    const input = admittedPhysicalInput(args.inputs.get(edge.sourceId), key);
+    physical.set(key, physical.has(key) ? null : input);
+  }
+  return physical;
+}
+
+/** Index existing admitted Inputs once; Read count cannot remove a physical dependency. */
+export function readCanvasModelCompositionPhysicalInputs(
+  args: Readonly<{
+    targetId: string;
+    nodes: readonly CanonicalNode[];
+    edges: readonly CanonicalEdge[];
+    inputs: readonly CanvasDvtCompositionInput[];
+  }>
+): ReadonlyMap<string, CanvasDvtCompositionInput | null> {
+  const nodes = resolveWorkspaceNodeInstances(args.nodes);
+  const physical = physicalInputsByReference({
+    nodes: new Map(nodes.map((node) => [node.id, node])),
+    edges: projectWorkspaceNodeInstanceEdges(args.nodes, args.edges),
+    inputs: new Map(args.inputs.map((input) => [input.nodeId, input])),
+    targetId: args.targetId,
+  });
+  const result = new Map<string, CanvasDvtCompositionInput | null>();
+  for (const node of nodes) {
+    const key = canvasPhysicalSourceReferenceKey(node);
+    if (key != null && physical.has(key)) result.set(node.id, physical.get(key) ?? null);
+  }
+  return result;
+}
 
 export function assertCanvasModelCompositionPhysicalInputAvailable(
   args: Readonly<{

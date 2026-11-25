@@ -90,6 +90,8 @@ export function useCanvasRelationalTreeWorkbenchModel(
     start: session.start,
     analysis: session.analysis,
     discoveries,
+    inputs: session.sourceInputRecovery.inputs,
+    occurrences: session.occurrences,
   });
   const { sourceInputRecovery } = session;
   const sourceOutputFieldsByRelationId = useMemo(

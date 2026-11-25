@@ -162,7 +162,7 @@ describe('working Models inside the open Model', () => {
     expect('transformAuthoring' in definition.metadata).toBe(false);
   });
 
-  it('rejects an incoming physical Source before editing and refreshes admission for a new receiver', async () => {
+  it('reuses an incoming physical Source occurrence and refreshes admission for a new receiver', async () => {
     const graph = await createModelOutputDependencyFixture();
     const apply = vi.fn();
     let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -177,12 +177,12 @@ describe('working Models inside the open Model', () => {
       return null;
     }
     await act(async () => root.render(<Host target={graph.consumer} />));
-    expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(false);
+    expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(true);
     await act(async () => {
-      expect(model!.modelComposition.copy(graph.right.id)).toBe(false);
+      expect(model!.modelComposition.copy(graph.right.id)).toBe(true);
     });
-    expect(model!.session.active).toBe(false);
-    expect(model!.session.occurrences.pending).toHaveLength(0);
+    expect(model!.session.active).toBe(true);
+    expect(model!.session.occurrences.pending).toHaveLength(1);
     await act(async () => root.render(<Host target={graph.producer} />));
     expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(true);
     expect(apply).not.toHaveBeenCalled();

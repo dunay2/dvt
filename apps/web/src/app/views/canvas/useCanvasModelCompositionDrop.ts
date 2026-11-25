@@ -19,7 +19,12 @@ import { createPendingSourceOccurrence } from './relational-source-occurrence/pe
 import { nextSourceOccurrenceAlias } from './relational-source-occurrence/sourceOccurrenceAlias';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { assertCanvasModelCompositionPhysicalInputAvailable } from './canvasModelCompositionPhysicalAdmission';
+import {
+  assertCanvasModelCompositionPhysicalInputAvailable,
+  readCanvasModelCompositionPhysicalInputs,
+} from './canvasModelCompositionPhysicalAdmission';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import {
   canvasDbtModelCompositionSourceSignature,
   prepareCanvasDbtModelCompositionReference,
@@ -37,6 +42,8 @@ export function useCanvasModelCompositionDrop(
     start: () => boolean;
     analysis: Readonly<{ session: CanvasRelationAnalysisSession; revision: number }> | null;
     discoveries: ReadonlyMap<string, CanvasDbtModelDiscovery>;
+    inputs: readonly CanvasDvtCompositionInput[];
+    occurrences: Pick<SourceOccurrenceActions, 'drop'>;
   }>
 ) {
   const { edges, enabled, targetId } = args;
@@ -50,6 +57,10 @@ export function useCanvasModelCompositionDrop(
     ],
     [args.nodes, args.discoveries]
   );
+  const physicalInputs = useMemo(
+    () => readCanvasModelCompositionPhysicalInputs({ nodes, edges, targetId, inputs: args.inputs }),
+    [nodes, edges, targetId, args.inputs]
+  );
   const nodeIds = useMemo(
     () =>
       new Set(
@@ -57,6 +68,7 @@ export function useCanvasModelCompositionDrop(
           ? nodes
               .filter((node) => {
                 try {
+                  if (physicalInputs.has(node.id)) return physicalInputs.get(node.id) != null;
                   if (readWorkspaceDbtModelReference(node) != null)
                     canvasDbtModelCompositionSourceSignature(node);
                   else canvasModelCopySourceSignature({ nodes, edges, sourceId: node.id });
@@ -74,10 +86,15 @@ export function useCanvasModelCompositionDrop(
               .map((node) => node.id)
           : []
       ),
-    [nodes, edges, enabled, targetId]
+    [nodes, edges, enabled, targetId, physicalInputs]
   );
   return {
     nodeIds,
+    occurrenceNodeIds: new Set(
+      [...physicalInputs]
+        .filter(([id, input]) => input != null && nodeIds.has(id))
+        .map(([id]) => id)
+    ),
     linkedNodeIds: new Set(
       nodes
         .filter((node) => nodeIds.has(node.id) && readWorkspaceDbtModelReference(node) != null)
@@ -86,6 +103,8 @@ export function useCanvasModelCompositionDrop(
     copy: (sourceId: string): boolean => {
       if (!args.enabled || !nodeIds.has(sourceId)) return false;
       try {
+        const input = physicalInputs.get(sourceId);
+        if (input != null) return args.occurrences.drop(input.nodeId) != null;
         const source = nodes.find((node) => node.id === sourceId)!;
         const copy =
           readWorkspaceDbtModelReference(source) == null

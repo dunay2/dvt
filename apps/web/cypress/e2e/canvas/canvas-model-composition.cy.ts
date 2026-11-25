@@ -1,6 +1,7 @@
 /** Prove independent producer composition, cancellation and durable reload through the real UI. */
 import {
   DvtTransformAuthoringAuthorityV1Schema,
+  DvtRelationalAuthoringDraftV1Schema,
   WorkspaceGraphDraftReadResponseSchema,
   WorkspaceGraphDraftSaveRequestSchema,
 } from '@dvt/contracts';
@@ -100,6 +101,41 @@ function assertIndependentModelCopy({
     saved.nodes.find((node) => node.id === receiver)?.metadata?.relationalAuthoringDraft
   ).to.have.property('sources');
   return copy.id;
+}
+
+function assertSavedPhysicalOccurrences(
+  initial: ReturnType<typeof stubWorkbenchScenario>,
+  source: ReturnType<typeof stubWorkbenchScenario>['nodes'][number]
+): Readonly<{ ids: string[]; aliases: string[] }> {
+  const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+  expect(calls, 'one actual protected composition save').to.have.length(1);
+  const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
+  expect(
+    saved.nodes.map((node) => node.id).sort(),
+    'no working definition was copied'
+  ).to.deep.equal(initial.nodes.map((node) => node.id).sort());
+  expect(
+    saved.nodes.find((node) => node.id === source.id),
+    'original Source unchanged'
+  ).to.deep.equal(source);
+  expect(saved.edges, 'the same single physical dependency').to.deep.equal(initial.edges);
+  const target = saved.nodes.find((node) => node.id === receiver)!;
+  const draft = DvtRelationalAuthoringDraftV1Schema.parse(
+    target.metadata?.relationalAuthoringDraft
+  );
+  const sources = draft.sources.filter((read) => read.sourceNodeId === source.id);
+  expect(sources, 'two independent local Reads').to.have.length(2);
+  const ids = sources.map((read) => read.relationId);
+  const aliases = sources.map((read) => read.displayName);
+  expect(new Set(ids).size).to.equal(2);
+  expect(new Set(aliases).size).to.equal(2);
+  const before = DvtTransformAuthoringAuthorityV1Schema.parse(
+    initial.nodes.find((node) => node.id === receiver)!.metadata?.transformAuthoring
+  ).semanticDocument;
+  expect(
+    ids.every((id) => !before.sidecar.relations.some((read) => read.relationId === id))
+  ).to.equal(true);
+  return { ids, aliases };
 }
 
 describe('Model composition inside the selected Model', () => {
@@ -304,17 +340,44 @@ describe('Model composition inside the selected Model', () => {
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
 
-  it('does not advertise or stage an already incoming physical Source', () => {
+  it('reuses one incoming physical dependency for action and drag occurrences through Cancel, Apply and reopen', () => {
     const initial = stubWorkbenchScenario('saved-join');
     const source = initial.nodes.find((node) => node.role === 'input')!;
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    cy.get(row(source.id)).should('have.attr', 'draggable', 'false');
-    cy.get(
-      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: ${source.name}"]`
-    ).should('not.exist');
+    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add instance: ${source.name}"]`;
+    let saved: ReturnType<typeof assertSavedPhysicalOccurrences>;
+    cy.get(row(source.id)).should('have.attr', 'draggable', 'true');
+    cy.get(action).filter(':visible').should('be.enabled').focus();
+    pressNativeKey('Enter');
+    dragModel(source.id);
+    cy.get(pending).should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get(action).filter(':visible').click();
+    dragModel(source.id);
+    cy.get(pending).should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
+    cy.wrap(null).should(() => {
+      saved = assertSavedPhysicalOccurrences(initial, source);
+    });
+    revisitWorkbenchCanvas(() => visitWorkbenchCanvas());
+    openModel();
+    cy.get(pending)
+      .should('have.length', 2)
+      .then(($cards) => {
+        expect(
+          [...$cards].map((card) => card.getAttribute('data-relation-id')).sort()
+        ).to.deep.equal([...saved.ids].sort());
+        for (const alias of saved.aliases) expect($cards.text()).to.contain(alias);
+      });
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+        'reload makes no redundant save'
+      ).to.have.length(0)
+    );
   });
 });

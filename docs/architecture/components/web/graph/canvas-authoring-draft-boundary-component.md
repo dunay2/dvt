@@ -358,6 +358,42 @@ preparation keeps fresh local identities and shared canonical resource and
 dependency references, while excluding path, copied SQL, runtime evidence and
 durable destinations. The original definition remains unchanged.
 
+An already connected physical Source has one admitted incoming dependency and
+may supply zero, one or several local Reads. Adding it from the Model Explorer
+reuses that exact current Input through the existing occurrence command; it does
+not create another working definition or exterior edge. Each Read receives its
+own opaque relation and field identities and a distinct local alias, allowing
+self-joins without changing the Source. The action identifies this intent as
+adding an instance rather than a working copy.
+
+The local alias remains the occurrence title. When it differs from the canonical
+physical table name, presentation may show that actual qualified name as a
+separate description. Read it from the physical Read's named-table identity;
+never turn a dbt reference, an opaque source-object ID or a local alias into a
+physical table. Input and Output column sets belong under a localized Columns
+heading and retain complete accessible labels.
+
+Resolve the canonical physical reference and current publication independently
+from the number of existing Reads. Ambiguous duplicate dependencies, unavailable
+or stale bindings, denied editing and foreign scopes reject without mutation.
+Keep the duplicate-physical-edge guard for actual working-copy admission. Cancel
+discards only the new local occurrences; Apply and reopen retain their identities
+and aliases through the existing Model draft and protected save.
+
+```mermaid
+flowchart LR
+  Catalogue[Model Explorer action or scoped drop] --> Input[One current admitted physical Input]
+  Input --> Reads[Independent local Read identities and aliases]
+  Reads --> Session[Existing discardable Model session]
+  Session --> Cancel[Cancel preserves original Source and previous Reads]
+  Session --> Apply[Apply uses existing guarded save]
+  Apply --> Reopen[One dependency and stable multiple occurrences]
+```
+
+The [bounded occurrence rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7175369225)
+separates this existing Input reuse from independent working-copy creation. It
+adds no command, permission, cache or semantic authority.
+
 A file-owned dbt Model keeps its actual file-model reference and publication.
 Adding it as an input to a native Model uses the existing published producer
 reference; it does not copy SQL or file authority into a native working copy.

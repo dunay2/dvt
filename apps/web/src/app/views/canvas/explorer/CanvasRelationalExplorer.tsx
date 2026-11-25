@@ -62,6 +62,12 @@ export function CanvasRelationalExplorer({
                     ...model.modelComposition,
                     label: viewCopy.relationalModelCopyAddLabel,
                     referenceLabel: viewCopy.relationalModelReferenceAddLabel,
+                    labelFor: (id) =>
+                      model.modelComposition.occurrenceNodeIds.has(id)
+                        ? viewCopy.sourceOccurrenceAdd
+                        : model.modelComposition.linkedNodeIds.has(id)
+                          ? viewCopy.relationalModelReferenceAddLabel
+                          : viewCopy.relationalModelCopyAddLabel,
                     copy: (id) => {
                       const accepted = model.modelComposition.copy(id);
                       if (!accepted) toast.error(viewCopy.relationalModelCopyUnavailableMessage);
