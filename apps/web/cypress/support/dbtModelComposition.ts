@@ -9,17 +9,20 @@ import {
   allocateDvtFieldId,
   allocateDvtRelationId,
   ConnectedSourceRefSchema,
+  DbtProjectGraphProjectionSchema,
   DvtRelationalAuthoringDraftV1Schema,
   WorkspaceDbtModelReferenceSchema,
   WorkspaceGraphDraftSaveRequestSchema,
   type WorkspaceGraphAuthoringNode,
+  type DbtProjectGraphProjection,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import { canvasDbtModelDefinitionId } from '../../src/app/views/canvas/canvasDbtModelReference';
+import { dbtModelProjection } from '../../src/app/views/canvas/canvasDbtModelReference.test-fixtures';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
-import { getE2eApiCalls } from './e2eApiStub';
+import { getE2eApiCalls, stubE2eJsonApi } from './e2eApiStub';
 import { stubWorkbenchScenario } from './relationalWorkbench/scenario';
 
 export type DbtCompositionSeed = Readonly<{
@@ -28,6 +31,80 @@ export type DbtCompositionSeed = Readonly<{
   originalIds: ReadonlySet<string>;
   receiverName: string;
 }>;
+
+export type DiscoveredDbtCompositionSeed = Omit<DbtCompositionSeed, 'definitionFingerprint'> &
+  Readonly<{ projection: DbtProjectGraphProjection }>;
+
+export function stubDiscoveredDbtComposition(): DiscoveredDbtCompositionSeed {
+  const initial = stubWorkbenchScenario('saved-join');
+  const source = initial.nodes.find((node) => node.role === 'input')!;
+  const projection = DbtProjectGraphProjectionSchema.parse({
+    ...dbtModelProjection,
+    executionTarget: {
+      ...dbtModelProjection.executionTarget,
+      connectionRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)
+        .connectionRef,
+    },
+  });
+  stubE2eJsonApi('GET', '/workspace/files', [
+    { name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' },
+    { name: 'clientes.sql', path: 'models/clientes.sql', kind: 'file' },
+  ]);
+  stubE2eJsonApi('GET', '/workspace/files/dbt_project.yml', {
+    path: 'dbt_project.yml',
+    name: 'dbt_project.yml',
+    language: 'yaml',
+    content: 'name: demo',
+    contentSha256: 'c'.repeat(64),
+    lastModified: '2026-11-25T00:00:00.000Z',
+    authoringAuthority: { kind: 'resolved', binding: projection.authorityBinding },
+  });
+  stubE2eJsonApi('GET', '/workspace/dbt/graph', projection);
+  return {
+    definitionId: canvasDbtModelDefinitionId(
+      projection.authorityBinding.canvasId,
+      'model.demo.clientes'
+    ),
+    projection,
+    originalIds: new Set(initial.nodes.map((node) => node.id)),
+    receiverName: initial.nodes.find((node) => node.id === 'join-transform')!.name,
+  };
+}
+
+export function captureDiscoveredDbtComposition(
+  seed: DiscoveredDbtCompositionSeed
+): DbtCompositionSeed {
+  const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+  expect(calls, 'one atomic definition, placement and receiver save').to.have.length(1);
+  const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
+  const definition = saved.nodes.find((node) => node.id === seed.definitionId)!;
+  const reference = WorkspaceDbtModelReferenceSchema.parse(definition.metadata?.dbtModelReference);
+  expect(seed.originalIds.has(definition.id), 'definition did not exist before Apply').to.equal(
+    false
+  );
+  expect(
+    saved.nodes.filter((node) => !seed.originalIds.has(node.id)),
+    'one definition and one placement'
+  ).to.have.length(2);
+  expect(reference).to.deep.include({
+    canvasId: seed.projection.authorityBinding.canvasId,
+    uniqueId: 'model.demo.clientes',
+    connectionRef: seed.projection.executionTarget!.connectionRef,
+  });
+  expect(
+    reference.fields.map((field) => ({ name: field.name, dataType: field.dataType }))
+  ).to.deep.equal(seed.projection.nodes[0]!.columns);
+  expect(definition.path).to.equal('models/clientes.sql');
+  expect(
+    definition.metadata?.transformAuthoring,
+    'the registered producer remains file-owned'
+  ).to.equal(undefined);
+  return {
+    ...seed,
+    originalIds: new Set([...seed.originalIds, definition.id]),
+    definitionFingerprint: jcsCanonicalize(definition),
+  };
+}
 
 export function stubDbtComposition(): DbtCompositionSeed {
   const initial = stubWorkbenchScenario('saved-join');

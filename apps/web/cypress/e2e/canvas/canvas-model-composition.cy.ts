@@ -12,7 +12,13 @@ import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canv
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubCanvasDraftSave } from '../../support/canvasDraftAuthoring';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
-import { assertSavedDbtComposition, stubDbtComposition } from '../../support/dbtModelComposition';
+import {
+  assertSavedDbtComposition,
+  stubDbtComposition,
+  stubDiscoveredDbtComposition,
+  captureDiscoveredDbtComposition,
+  type DbtCompositionSeed,
+} from '../../support/dbtModelComposition';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
@@ -97,6 +103,50 @@ function assertIndependentModelCopy({
 }
 
 describe('Model composition inside the selected Model', () => {
+  it('registers a file-only published model on one Apply and reopens the same linked input', () => {
+    const seed = stubDiscoveredDbtComposition();
+    let saved: DbtCompositionSeed;
+    let instanceId = '';
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    openModel();
+    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
+    cy.get(action).filter(':visible').should('be.enabled');
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/dbt/graph', 'GET'),
+        'one catalogue acquisition'
+      ).to.have.length(1)
+    );
+    dragModel(seed.definitionId);
+    cy.get(pending).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+    cy.get(pending).should('not.exist');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.then(() => expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1));
+    cy.get(action).filter(':visible').focus();
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
+    cy.wrap(null).should(() => {
+      saved = captureDiscoveredDbtComposition(seed);
+      instanceId = assertSavedDbtComposition(saved);
+    });
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/dbt/graph', 'GET'),
+        'one pre-Apply revalidation'
+      ).to.have.length(2)
+    );
+    revisitWorkbenchCanvas(() => visitWorkbenchCanvas());
+    openModel();
+    cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
+    cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+      'have.text',
+      seed.receiverName
+    );
+    cy.then(() => expect(assertSavedDbtComposition(saved)).to.equal(instanceId));
+  });
+
   it('links clientes as a dbt input and reopens the same file definition after one Apply', () => {
     const seed = stubDbtComposition();
     let instanceId = '';

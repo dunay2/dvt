@@ -596,3 +596,13 @@ Together, the worksheet and composition journeys passed all seven cases in
 Chrome. The worksheet case observed a single graph save across explicit
 confirmation and reopening. The dbt case applied the linked input once and
 reopened the same file definition with its publication fingerprint intact.
+
+For a published dbt file that is absent from the graph registry, the Chrome
+case observed one initial catalog read. Cancel issued no graph write. Apply
+refreshed the publication once and saved the definition, placement and edge
+in one request. After reopening, the file reference, schema and fingerprint
+matched the original publication.
+
+Before integration, separate disposable restores verified the product backup
+`20261125T192759189Z`. Every table matched its dump, including 232 tables
+with 26,272 rows in `dvt` and 21 tables with 4,853 rows in `dvt_demo`.
