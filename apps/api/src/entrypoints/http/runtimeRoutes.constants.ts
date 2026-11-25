@@ -16,6 +16,7 @@ export const RUNTIME_ROUTE_PATH = {
   canvasModelSqlCompilation:
     '/workspace/graph/canvases/:canvasId/transforms/:transformNodeId/sql-compilation',
   dbtProjectGraph: '/workspace/dbt/graph',
+  worksheetDbtModel: '/workspace/dbt/worksheet-model',
   dbtSelectedModelAnalysis: '/workspace/dbt/analysis/selected-model',
   dbtDependencyEditApplications: '/workspace/dbt/dependency-edits/applications',
   graphDbtWorkspaceArtifactPublications: '/workspace/dbt/graph-artifacts/publications',

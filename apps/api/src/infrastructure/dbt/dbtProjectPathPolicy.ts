@@ -1,8 +1,9 @@
 /** Owned concern: keep dbt source, generated, and dependency paths contained and disjoint. */
-import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { load as loadYaml } from 'js-yaml';
+
+import { readDbtProjectSnapshotConfigs } from './dbtProjectSnapshotConfigs.js';
 
 export type DbtProjectPathPolicyResult =
   | { readonly ok: true }
@@ -50,36 +51,25 @@ export type DbtProjectDirectoryPartition = Readonly<{
 }>;
 
 export function evaluateDbtProjectPathPolicy(dbtProjectYaml: string): DbtProjectPathPolicyResult {
-  const document = parseDbtProjectDocument(dbtProjectYaml);
+  return evaluateProjectDirectories(parseDbtProjectDocument(dbtProjectYaml));
+}
+
+function evaluateProjectDirectories(
+  document: Record<string, unknown> | null
+): DbtProjectPathPolicyResult {
   if (document === null) {
     return { ok: false, reason: 'malformed_config' };
   }
 
-  for (const [setting, configuredValue] of Object.entries(document)) {
+  for (const [setting, value] of Object.entries(document)) {
     if (!PATH_SETTING.test(setting)) continue;
-
-    const configuredPaths = readConfiguredPaths(configuredValue);
-    if (configuredPaths === null) {
-      return { ok: false, reason: 'unsupported_path_value' };
-    }
-    for (const configuredPath of configuredPaths) {
-      if (TEMPLATE_MARKER.test(configuredPath)) {
-        return { ok: false, reason: 'unverifiable_path' };
-      }
-      if (!isSnapshotContainedRelativePath(configuredPath)) {
-        return { ok: false, reason: 'escaping_path' };
-      }
-    }
+    const result = evaluateConfiguredPaths(value);
+    if (!result.ok) return result;
   }
-
-  if (nonSourcePathsOverlap(document)) {
-    return { ok: false, reason: 'non_source_path_overlap' };
-  }
-
-  if (nonSourcePathShadowsConfiguredSource(document)) {
+  const partition = readDirectoryPartition(document);
+  if (nonSourcePathsOverlap(partition)) return { ok: false, reason: 'non_source_path_overlap' };
+  if (nonSourcePathShadowsConfiguredSource(partition))
     return { ok: false, reason: 'non_source_path_shadows_source' };
-  }
-
   return { ok: true };
 }
 
@@ -96,44 +86,80 @@ export function resolveDbtProjectDirectoryPartition(
       ),
     };
   }
+  const partition = readDirectoryPartition(document);
+  return {
+    ...partition,
+    generatedArtifactDirectories: partition.generatedArtifactDirectories.filter(
+      (dir) => dir !== '.'
+    ),
+    installedDependencyDirectories: partition.installedDependencyDirectories.filter(
+      (dir) => dir !== '.'
+    ),
+  };
+}
+
+function readDirectoryPartition(document: Record<string, unknown>): DbtProjectDirectoryPartition {
   return {
     generatedArtifactDirectories: resolveEffectivePathSettings(
       document,
       GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS
-    ).filter((configuredPath) => configuredPath !== '.'),
+    ),
     installedDependencyDirectories: resolveEffectivePathSettings(
       document,
       INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS
-    ).filter((configuredPath) => configuredPath !== '.'),
+    ),
     sourceDirectories: resolveEffectivePathSettings(document, SOURCE_PATH_SETTING_DEFAULTS),
+  };
+}
+
+function evaluateConfiguredPaths(value: unknown): DbtProjectPathPolicyResult {
+  const paths = readConfiguredPaths(value);
+  if (!paths) return { ok: false, reason: 'unsupported_path_value' };
+  for (const entry of paths) {
+    if (TEMPLATE_MARKER.test(entry)) return { ok: false, reason: 'unverifiable_path' };
+    if (normalizeContainedRelativePath(entry) === null)
+      return { ok: false, reason: 'escaping_path' };
+  }
+  return { ok: true };
+}
+
+/** Publish new models to the first model folder declared by the project. */
+export function resolveWorksheetDbtModelDirectory(
+  config: Readonly<{ path: string; content: string }>
+) {
+  const document = parseDbtProjectDocument(config.content);
+  if (!document) return null;
+  if (typeof document.name !== 'string') return null;
+  if (!evaluateProjectDirectories(document).ok) return null;
+  const paths = readConfiguredPaths(document['model-paths']);
+  const directory = normalizeContainedRelativePath(
+    paths?.[0] ?? SOURCE_PATH_SETTING_DEFAULTS['model-paths']
+  );
+  if (directory === null) return null;
+  return {
+    projectName: document.name,
+    directory,
+    workspaceDirectory: path.posix.join(path.posix.dirname(config.path), directory),
   };
 }
 
 export async function evaluateDbtProjectSnapshotPathPolicy(
   snapshotDirectory: string
 ): Promise<DbtProjectPathPolicyResult> {
-  for (const projectFile of await listDbtProjectFiles(snapshotDirectory)) {
-    const result = evaluateDbtProjectPathPolicy(await readFile(projectFile, 'utf8'));
+  for await (const content of readDbtProjectSnapshotConfigs(snapshotDirectory)) {
+    const result = evaluateDbtProjectPathPolicy(content);
     if (!result.ok) return result;
   }
   return { ok: true };
 }
 
 function readConfiguredPaths(value: unknown): readonly string[] | null {
-  if (value === undefined) return null;
-  if (typeof value === 'string') return value.length > 0 ? [value] : null;
-  if (
-    !Array.isArray(value) ||
-    value.length === 0 ||
-    value.some((item) => typeof item !== 'string')
-  ) {
-    return null;
-  }
-  return value.every((item) => item.length > 0) ? value : null;
-}
-
-function isSnapshotContainedRelativePath(configuredPath: string): boolean {
-  return normalizeContainedRelativePath(configuredPath) !== null;
+  const paths = typeof value === 'string' ? [value] : value;
+  if (!Array.isArray(paths) || paths.length === 0) return null;
+  const admissible = paths.every(
+    (item: unknown): item is string => typeof item === 'string' && item.length > 0
+  );
+  return admissible ? paths : null;
 }
 
 function normalizeContainedRelativePath(configuredPath: string): string | null {
@@ -147,16 +173,12 @@ function normalizeContainedRelativePath(configuredPath: string): string | null {
   return normalized === '.' ? normalized : normalized.replace(/\/+$/u, '');
 }
 
-function nonSourcePathShadowsConfiguredSource(document: Record<string, unknown>): boolean {
+function nonSourcePathShadowsConfiguredSource(partition: DbtProjectDirectoryPartition): boolean {
   const nonSourcePaths = [
-    ...resolveEffectivePathSettings(document, GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS),
-    ...resolveEffectivePathSettings(document, INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS),
+    ...partition.generatedArtifactDirectories,
+    ...partition.installedDependencyDirectories,
   ];
-  const configuredSourcePaths = resolveEffectivePathSettings(
-    document,
-    SOURCE_PATH_SETTING_DEFAULTS
-  );
-
+  const configuredSourcePaths = partition.sourceDirectories;
   return nonSourcePaths.some(
     (nonSourcePath) =>
       nonSourcePath === '.' ||
@@ -166,16 +188,11 @@ function nonSourcePathShadowsConfiguredSource(document: Record<string, unknown>)
   );
 }
 
-function nonSourcePathsOverlap(document: Record<string, unknown>): boolean {
-  const generatedArtifactPaths = resolveEffectivePathSettings(
-    document,
-    GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS
-  );
-  const installedDependencyPaths = resolveEffectivePathSettings(
-    document,
-    INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS
-  );
-
+function nonSourcePathsOverlap(partition: DbtProjectDirectoryPartition): boolean {
+  const {
+    generatedArtifactDirectories: generatedArtifactPaths,
+    installedDependencyDirectories: installedDependencyPaths,
+  } = partition;
   return generatedArtifactPaths.some((generatedPath) =>
     installedDependencyPaths.some(
       (dependencyPath) =>
@@ -212,18 +229,4 @@ function parseDbtProjectDocument(content: string): Record<string, unknown> | nul
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-async function listDbtProjectFiles(directory: string): Promise<readonly string[]> {
-  const projectFiles: string[] = [];
-  const entries = await readdir(directory, { withFileTypes: true });
-  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
-    const candidate = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      projectFiles.push(...(await listDbtProjectFiles(candidate)));
-    } else if (entry.isFile() && entry.name === 'dbt_project.yml') {
-      projectFiles.push(candidate);
-    }
-  }
-  return projectFiles;
 }
