@@ -875,6 +875,43 @@ Historical cycle patch surfaces retain their original meaning. Proven absent
 declarations use the existing exact evidence-retirement rail; they receive no
 invented destination or compatibility alias.
 
+## Typed mechanization evidence preservation
+
+`RecordFeatureMechanizationRail` applies forbidden implementation surfaces to
+complete implementation identities and allowed implementation paths. An incoming
+forbidden implementation reference must fail before a write. It must never
+become a partial symbol object with its `path` removed.
+
+Verification metadata is not an implementation grant. Preserve each symbol's
+unit tests, architecture guard, browser coverage, owner and rail metadata even
+when a verification source lies outside the implementation boundary. Recursive
+string pruning must not erase these fields or governing evidence.
+
+The effective combined forbidden boundary also applies to every implementation
+reference mirror. Omitting a persisted exclusion does not remove it. Existing
+implementation extensions, including a recorded decorator path, retain their
+implementation filtering; typed verification and historical fields retain
+their evidence. Explicit current replacement still validates incoming identities.
+
+`--replace-implementation-refs` selects the current identity set. Retained
+identities keep their exact existing heterogeneous symbol metadata; only new
+identities use the command's symbol defaults. `--replace-current` remains the
+explicit full-record replacement. Every replacement retains its native CAS,
+audit and validation obligations.
+
+```mermaid
+flowchart LR
+  Request[Record request] --> Boundary[Reject forbidden implementation identities]
+  Boundary --> Merge[Merge complete typed identities]
+  Proof[Existing proof metadata] --> Merge
+  Merge --> Write[Existing native CAS and audit]
+```
+
+The [bounded repair rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7174182206)
+requires regression proof before source promotion. Repairing legacy malformed
+artifacts must preserve every valid reference and prove its proper owning rail;
+it does not authorize hiding evidence or relaxing a forbidden surface.
+
 ## Lossless implementation-reference relocation
 
 `RecordFeatureMechanizationRail` uses its existing catalog-reconciliation mode

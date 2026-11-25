@@ -594,7 +594,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   const retained = (values) =>
     values.filter(
       (value) =>
-        !excludesFeatureMechanizationSurface(value, command.forbiddenImplementationSurfaces)
+        !excludesFeatureMechanizationSurface(value, rawManifest.forbiddenImplementationSurfaces)
     );
   const previousSymbolRefs = replaceImplementationRefs ? [] : retainedPrevious?.symbolRefs;
   const previousImplementationRefs = replaceImplementationRefs
