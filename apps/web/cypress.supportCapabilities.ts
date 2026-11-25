@@ -13,6 +13,10 @@ const WORKSHEET_CONSUMER = {
   controlledSpecs: ['apps/web/cypress/e2e/sql/sql-worksheet.cy.ts'],
 } as const;
 
+const SCREEN_COMPOSITION_CONSUMER = {
+  controlledSpecs: ['apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'],
+} as const;
+
 type BrowserCoverage =
   readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
 
@@ -81,6 +85,10 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
   'apps/web/cypress/support/shellWorkbench/accessibilityAssertions.ts': ['controlled'],
   'apps/web/cypress/support/shellWorkbench/viewportGeometry.ts': ['controlled'],
   'apps/web/cypress/support/shellWorkbench/dependencyDirection.ts': ['controlled'],
+  'apps/web/cypress/support/screenComposition/focusProof.ts': SCREEN_COMPOSITION_CONSUMER,
+  'apps/web/cypress/support/screenComposition/narrowProof.ts': SCREEN_COMPOSITION_CONSUMER,
+  'apps/web/cypress/support/screenComposition/scenario.ts': SCREEN_COMPOSITION_CONSUMER,
+  'apps/web/cypress/support/screenComposition/startupProof.ts': SCREEN_COMPOSITION_CONSUMER,
   'apps/web/cypress/support/workspaceSession.ts': CAPABILITIES,
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',
@@ -113,12 +121,14 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/relationalWorkbench/joinChain.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operationMenu.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/persistence.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/columns.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/cardOutputControls.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/materializationDrawer.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/sampleGridInteractions.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/savedOutputs.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/emptyOutputs.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/fieldSelection.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/geometry.ts': ['controlled', 'available'],
@@ -130,8 +140,13 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
     'available',
   ],
   'apps/web/cypress/support/relationalWorkbench/transformFormulaJourney.ts': ['available'],
+  'apps/web/cypress/support/relationalWorkbench/transformChainJourney.ts': [
+    'controlled',
+    'available',
+  ],
   'apps/web/cypress/support/relationalWorkbench/transformTreeJourney.ts': ['available'],
   'apps/web/cypress/support/semanticLive/fixture.ts': ['available'],
+  'apps/web/cypress/support/semanticLive/unsupportedFixture.ts': ['available'],
   'apps/web/cypress/support/semanticLive/canonicalAssertions.ts': ['available'],
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/semanticLive/progressive.ts': ['available'],

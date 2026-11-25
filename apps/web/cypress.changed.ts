@@ -138,7 +138,7 @@ class BrowserEvidenceSelection {
     this.required.add(path);
     if (coverage && 'controlledSpecs' in coverage) {
       this.admitProductConsumers(coverage.controlledSpecs);
-      this.vitest.add(filePath);
+      if (!path.startsWith('apps/web/cypress/')) this.vitest.add(filePath);
       return;
     }
     this.requireCapabilities(coverage ?? browserCapabilities(path), path);
