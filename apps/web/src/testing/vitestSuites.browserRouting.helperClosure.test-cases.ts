@@ -95,6 +95,7 @@ export function registerBrowserRoutingHelperClosure(): void {
           resolve('cypress/e2e/canvas/canvas-model-card-materialization.cy.ts'),
           resolve('cypress/e2e/canvas/canvas-model-composition.cy.ts'),
           resolve('cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'),
+          resolve('cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'),
           resolve('cypress/e2e/canvas/canvas-predicate-reopen.cy.ts'),
           resolve('cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts'),
           resolve('cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts'),
