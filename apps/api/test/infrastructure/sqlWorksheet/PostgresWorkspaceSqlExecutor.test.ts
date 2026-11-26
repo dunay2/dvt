@@ -69,7 +69,11 @@ describe('independent PostgreSQL worksheet transport', () => {
     expect(state.query).toHaveBeenCalledWith('begin transaction read only');
     expect(state.query).toHaveBeenCalledWith('set local statement_timeout = 3000');
     expect(state.query).toHaveBeenCalledWith(
-      expect.objectContaining({ rowMode: 'array', text: expect.stringMatching(/limit 2\s*$/iu) })
+      expect.objectContaining({
+        rowMode: 'array',
+        queryMode: 'extended',
+        text: expect.stringMatching(/limit 2\s*$/iu),
+      })
     );
     expect(state.query).toHaveBeenLastCalledWith('commit');
     expect(state.end).toHaveBeenCalledTimes(1);

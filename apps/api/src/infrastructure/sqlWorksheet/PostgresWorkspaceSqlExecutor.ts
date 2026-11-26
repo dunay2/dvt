@@ -16,7 +16,7 @@ import {
 type SqlClient = Readonly<{
   connect(): Promise<unknown>;
   end(): Promise<unknown>;
-  query(input: string | QueryArrayConfig): Promise<
+  query(input: string | (QueryArrayConfig & Readonly<{ queryMode?: 'extended' }>)): Promise<
     Readonly<{
       fields: readonly Readonly<{ name: string; dataTypeID: number }>[];
       rows: readonly unknown[][];
@@ -71,6 +71,7 @@ async function executeReadOnly(client: SqlClient, sql: string, limit: number) {
     const result = await client.query({
       text: `select * from (\n${sql.replace(/;\s*$/u, '')}\n) as dvt_sql_worksheet limit ${limit + 1}`,
       rowMode: 'array',
+      queryMode: 'extended',
     });
     await client.query('commit');
     transaction = false;

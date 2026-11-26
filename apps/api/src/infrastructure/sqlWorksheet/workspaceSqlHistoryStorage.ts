@@ -2,8 +2,13 @@
 import { lstat } from 'node:fs/promises';
 import path from 'node:path';
 
+import { WorkspaceSqlExecutionIdSchema } from '@dvt/contracts';
+
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
-import { resolveWorkspaceScopeStorageRoot } from '../workspaceFiles/workspaceScopeStoragePath.js';
+import {
+  resolveWorkspaceFileStoragePath,
+  resolveWorkspaceScopeStorageRoot,
+} from '../workspaceFiles/workspaceScopeStoragePath.js';
 
 export async function assertSqlHistoryStorage(
   namespace: string,
@@ -18,11 +23,20 @@ export async function assertSqlHistoryStorage(
   }
 }
 
-export async function assertSqlHistoryRecordFile(absolutePath: string): Promise<void> {
-  const stat = await optionalStat(absolutePath);
-  if (stat === undefined) return;
+export async function assertSqlHistoryRecordFile(
+  input: Readonly<{ namespace: string; scope: WorkspaceStorageScope; executionId: string }>
+): Promise<ReturnType<typeof resolveWorkspaceFileStoragePath>> {
+  const executionId = WorkspaceSqlExecutionIdSchema.parse(input.executionId);
+  const target = resolveWorkspaceFileStoragePath(
+    input.namespace,
+    input.scope,
+    `${executionId}.json`
+  );
+  const stat = await optionalStat(target.absolutePath);
+  if (stat === undefined) return target;
   if (!stat.isFile()) throw new Error('Invalid history file.');
   if (stat.isSymbolicLink()) throw new Error('Unsafe history file.');
+  return target;
 }
 
 async function optionalStat(absolutePath: string) {

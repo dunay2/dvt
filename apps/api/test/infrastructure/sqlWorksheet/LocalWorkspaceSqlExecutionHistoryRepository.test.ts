@@ -1,4 +1,13 @@
-import { mkdir, mkdtemp, readdir, realpath, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -88,6 +97,39 @@ describe('immutable SQL history independent of Git', () => {
       reason: 'unavailable',
     });
     expect(await history.get(SQL_SCOPE, first.executionId)).toEqual(first);
+  });
+
+  it.each(['../outside', '..%2foutside', 'nested/record', 'record.json', 'C:\\outside'])(
+    'rejects an invalid execution identity without reading another namespace: %s',
+    async (executionId) => {
+      await history.append(SQL_SCOPE, execution(0));
+      await expect(history.get(SQL_SCOPE, executionId)).rejects.toMatchObject({
+        reason: 'unavailable',
+      });
+      expect((await history.list(SQL_SCOPE, { limit: 20 })).executions).toEqual([execution(0)]);
+    }
+  );
+
+  it('rejects a symlinked scope directory without following or changing its record', async () => {
+    const record = execution(0);
+    const outside = path.join(root, 'outside-history');
+    await mkdir(outside);
+    const content = JSON.stringify(record);
+    const outsideRecord = path.join(outside, `${record.executionId}.json`);
+    await writeFile(outsideRecord, content);
+    const scopeDirectory = resolveWorkspaceScopeStorageRoot(
+      path.join(root, '.dvt', 'sql-worksheet-history'),
+      SQL_SCOPE
+    );
+    await mkdir(path.dirname(scopeDirectory), { recursive: true });
+    await symlink(outside, scopeDirectory, 'junction');
+    await expect(history.get(SQL_SCOPE, record.executionId)).rejects.toMatchObject({
+      reason: 'unavailable',
+    });
+    await expect(history.append(SQL_SCOPE, record)).rejects.toMatchObject({
+      reason: 'unavailable',
+    });
+    expect(await readFile(outsideRecord, 'utf8')).toBe(content);
   });
 
   it('ignores only the atomic writer temporary record while rejecting non-file evidence', async () => {

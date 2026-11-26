@@ -3,7 +3,6 @@ import path from 'node:path';
 
 import {
   ListWorkspaceSqlExecutionsRequestSchema,
-  WorkspaceSqlExecutionIdSchema,
   WorkspaceSqlExecutionSchema,
   type ListWorkspaceSqlExecutionsRequest,
   type WorkspaceSqlExecution,
@@ -19,7 +18,6 @@ import {
   type WorkspaceStorageScope,
 } from '../../application/ports/workspaceFiles.js';
 import { LocalWorkspaceFileRepository } from '../workspaceFiles/LocalWorkspaceFileRepository.js';
-import { resolveWorkspaceScopeStorageRoot } from '../workspaceFiles/workspaceScopeStoragePath.js';
 
 import {
   decodeSqlHistoryCursor,
@@ -48,15 +46,14 @@ export class LocalWorkspaceSqlExecutionHistoryRepository implements IWorkspaceSq
     try {
       const record = WorkspaceSqlExecutionSchema.parse(execution);
       await assertSqlHistoryStorage(this.namespace, scope);
-      await assertSqlHistoryRecordFile(
-        path.join(
-          resolveWorkspaceScopeStorageRoot(this.namespace, scope),
-          `${record.executionId}.json`
-        )
-      );
+      const target = await assertSqlHistoryRecordFile({
+        namespace: this.namespace,
+        scope,
+        executionId: record.executionId,
+      });
       const content = JSON.stringify(record);
       const result = await this.files.saveFileContent(scope, {
-        path: `${record.executionId}.json`,
+        path: target.workspacePath,
         content,
         expectedRevision: { kind: 'absent' },
       });
@@ -72,12 +69,13 @@ export class LocalWorkspaceSqlExecutionHistoryRepository implements IWorkspaceSq
     executionId: string
   ): Promise<WorkspaceSqlExecution | null> {
     try {
-      WorkspaceSqlExecutionIdSchema.parse(executionId);
       await assertSqlHistoryStorage(this.namespace, scope);
-      await assertSqlHistoryRecordFile(
-        path.join(resolveWorkspaceScopeStorageRoot(this.namespace, scope), `${executionId}.json`)
-      );
-      const file = await this.files.getFileContent(scope, `${executionId}.json`);
+      const target = await assertSqlHistoryRecordFile({
+        namespace: this.namespace,
+        scope,
+        executionId,
+      });
+      const file = await this.files.getFileContent(scope, target.workspacePath);
       const record = WorkspaceSqlExecutionSchema.parse(JSON.parse(file.content));
       if (record.executionId !== executionId) throw new Error('History identity mismatch.');
       return record;

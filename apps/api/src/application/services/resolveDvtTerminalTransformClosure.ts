@@ -34,7 +34,7 @@ import {
   selectProtectedDvtTransforms,
   type DvtTransformSelection,
 } from './dvtProtectedTransformSelection.js';
-import { containsJoinRelation, containsSetRelation } from './dvtRelationFamily.js';
+import { classifyDvtRelationFamily } from './dvtRelationFamily.js';
 import {
   distinctDvtSourceDefinitions,
   hasExactDvtSourceCoverage,
@@ -160,12 +160,7 @@ export function resolveDvtTerminalTransformClosure(
       'Transform semantic sources must exactly match the selected connected Sources on one PostgreSQL connection.'
     );
   }
-  const roots = [...documents.values()].flatMap(({ plan }) => {
-    const root = plan.relations[0]?.relType;
-    return root?.case === 'root' && root.value.input != null ? [root.value.input] : [];
-  });
-  const hasJoin = roots.some(containsJoinRelation);
-  const hasSet = roots.some(containsSetRelation);
+  const { hasJoin, hasSet } = classifyDvtRelationFamily(documents.values());
   if (
     (hasJoin && hasSet) ||
     ((hasJoin || hasSet) && semanticSources.length + externalProducers.size < 2) ||

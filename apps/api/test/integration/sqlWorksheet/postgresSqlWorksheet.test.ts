@@ -10,15 +10,16 @@ import {
   ListWorkspaceSqlExecutionsResponseSchema,
 } from '@dvt/contracts';
 import { randomUuidV4 } from '@dvt/crypto';
-import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
-import { Pool } from 'pg';
+import rateLimit from '@fastify/rate-limit';
+import Fastify from 'fastify';
+import { Pool, type QueryArrayConfig } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AuthorizeCommandScopeService } from '../../../src/application/services/authorizeCommandScopeService.js';
 import { ExecuteWorkspaceSqlCommand } from '../../../src/application/services/sqlWorksheet/ExecuteWorkspaceSqlCommand.js';
 import { GetWorkspaceSqlExecutionQuery } from '../../../src/application/services/sqlWorksheet/GetWorkspaceSqlExecutionQuery.js';
 import { ListWorkspaceSqlExecutionsQuery } from '../../../src/application/services/sqlWorksheet/ListWorkspaceSqlExecutionsQuery.js';
-import { sessionRoute } from '../../../src/entrypoints/http/sessionRoute.js';
+import { registerProtectedSessionRoutes } from '../../../src/entrypoints/http/protectedRuntimeSessionRoutes.js';
 import { registerSqlWorksheetRoutes } from '../../../src/entrypoints/http/sqlWorksheetRoutes.js';
 import { EmbeddedAccessDecisionService } from '../../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 import { EmbeddedPrincipalGrantRepository } from '../../../src/infrastructure/auth/embeddedPrincipalGrantRepository.js';
@@ -105,7 +106,7 @@ describe.skipIf(adminUrl === undefined)('independent SQL worksheet native Postgr
     parent = await realpath(tmpdir());
     root = await mkdtemp(path.join(parent, 'dvt-sql-native-'));
     history = new LocalWorkspaceSqlExecutionHistoryRepository({ root });
-    app = createSqlProofApp({ authenticator, grants, history, connectionString: lease.url });
+    app = await createSqlProofApp({ authenticator, grants, history, connectionString: lease.url });
   });
 
   afterAll(async () => {
@@ -125,6 +126,7 @@ describe.skipIf(adminUrl === undefined)('independent SQL worksheet native Postgr
   it('exposes actual SQL session grants and runs unsaved SQL with duplicate columns, nulls and truncation', async () => {
     const session = await app.inject({ url: '/session', headers: headers() });
     expect(session.statusCode).toBe(200);
+    expect(session.headers['x-ratelimit-limit']).toBe('1000');
     expect(session.json().grants.scopes).toEqual(
       expect.arrayContaining(['workspace:sql:execute', 'workspace:sql-history:view'])
     );
@@ -200,20 +202,70 @@ describe.skipIf(adminUrl === undefined)('independent SQL worksheet native Postgr
     expect(outcome.execution).toMatchObject({ status: 'failed', error: { code: 'query_timeout' } });
     expect(outcome.result).toBeUndefined();
   });
+
+  it('uses the native extended protocol without values and rejects multiple commands', async () => {
+    if (pool === undefined) throw new Error('The disposable PostgreSQL provider is unavailable.');
+    const query = {
+      text: 'select 1; select 2',
+      rowMode: 'array',
+      queryMode: 'extended',
+    } satisfies QueryArrayConfig & Readonly<{ queryMode: 'extended' }>;
+    await expect(pool.query(query)).rejects.toMatchObject({ code: '42601' });
+  });
+
+  it('retains the configured role and rejects a function write inside the read-only transaction', async () => {
+    if (pool === undefined) throw new Error('The disposable PostgreSQL provider is unavailable.');
+    const identity = await pool.query<{ role: string }>('select current_user as role');
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sql/executions?${SQL_SCOPE_QUERY}`,
+      headers: headers(),
+      payload: {
+        connectionId: 'warehouse',
+        sql: "select current_user as role, current_setting('transaction_read_only') as read_only",
+      },
+    });
+    const outcome = ExecuteWorkspaceSqlResponseSchema.parse(response.json());
+    expect(outcome.execution.status).toBe('succeeded');
+    expect(outcome.result?.rows).toEqual([{ values: [identity.rows[0]?.role, 'on'] }]);
+    await pool.query('create table worksheet_write_probe (value integer not null)');
+    await pool.query(
+      'create function worksheet_attempt_write() returns integer language plpgsql as $$ begin insert into worksheet_write_probe values (1); return 1; end $$'
+    );
+    const write = await app.inject({
+      method: 'POST',
+      url: `/workspace/sql/executions?${SQL_SCOPE_QUERY}`,
+      headers: headers(),
+      payload: { connectionId: 'warehouse', sql: 'select worksheet_attempt_write()' },
+    });
+    expect(ExecuteWorkspaceSqlResponseSchema.parse(write.json()).execution).toMatchObject({
+      status: 'failed',
+      error: { code: 'query_failed' },
+    });
+    expect(
+      (await pool.query('select count(*)::integer as count from worksheet_write_probe')).rows
+    ).toEqual([{ count: 0 }]);
+  });
 });
 
-function createSqlProofApp(
+async function createSqlProofApp(
   input: Readonly<{
     authenticator: OidcAuthenticator;
     grants: EmbeddedPrincipalGrantRepository;
     history: LocalWorkspaceSqlExecutionHistoryRepository;
     connectionString: string;
   }>
-): ReturnType<typeof Fastify> {
+): Promise<ReturnType<typeof Fastify>> {
   const app = Fastify();
   const { authenticator, history } = input;
-  app.get('/session', (request: FastifyRequest, reply: FastifyReply) =>
-    sessionRoute(request, reply, { authenticator })
+  await app.register(rateLimit, { global: false });
+  registerProtectedSessionRoutes(
+    app,
+    {
+      DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX: 1000,
+      DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS: 60_000,
+    },
+    { authenticator }
   );
   registerSqlWorksheetRoutes(app, {
     authenticator,
