@@ -216,7 +216,7 @@ function WorksheetFileActions({
       )}
       {session.file && (
         <CodeFileVersionHistory
-          key={session.file.path}
+          key={`history:${session.file.path}`}
           copy={resolveCodeViewCopy(locale)}
           path={session.file.path}
           language="sql"

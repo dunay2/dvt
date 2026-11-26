@@ -25,6 +25,7 @@ let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
 afterEach(async () => {
   await mounted?.cleanup();
   mounted = undefined;
+  vi.restoreAllMocks();
 });
 
 type Controls = Record<'open' | 'tree' | 'history' | 'save', ReturnType<typeof vi.fn>> & {
@@ -69,6 +70,7 @@ async function openDialog(): Promise<void> {
 }
 
 it('starts with no file IO and only shows Git history for an explicitly opened file', async () => {
+  const reactErrors = vi.spyOn(console, 'error');
   const h = await mount();
   expect(h.tree).not.toHaveBeenCalled();
   await openDialog();
@@ -79,6 +81,9 @@ it('starts with no file IO and only shows Git history for an explicitly opened f
   await waitForReactQuery(() => h.history.mock.calls.length > 0);
   expect(h.history.mock.calls[0]?.[0]).toBe(path);
   expect(h.save).not.toHaveBeenCalled();
+  expect(reactErrors.mock.calls.map(([message]) => message)).not.toContainEqual(
+    expect.stringContaining('Encountered two children with the same key')
+  );
 });
 
 it('preserves newer editor input when the selected file reply arrives late', async () => {
