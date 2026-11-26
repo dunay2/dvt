@@ -10,6 +10,7 @@ import {
   quoteSqlWorksheetIdentifier,
   retainSqlWorksheetInsertions,
 } from './sqlWorksheetInsertions';
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalNode } from '../../types/canonical';
 import { hasPublishedCanvasExplorerDefinition } from '../canvas/explorer/canvasExplorerItems';
 
@@ -53,7 +54,8 @@ const literalProposal = buildWorksheetCanvasLiteralProposal(
   { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' }
 );
 if (literalProposal.status !== 'valid') throw new Error('Expected the published literal fixture.');
-const literalNode = literalProposal.draft.nodes[0]!;
+const literalNode = projectWorkspaceGraphAuthoringDraftSemanticGraph(literalProposal.draft)
+  .canonicalNodes[0]!;
 const literalPlan = readDvtTransformAuthoringAuthority(literalNode)!.semanticDocument.semanticPlan;
 const literalQuery = {
   projectTransformSql: async () =>
