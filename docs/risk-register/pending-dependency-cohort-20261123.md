@@ -224,3 +224,22 @@ Browser admission must not replace the product's Vitest obligations. Retain
 product inputs independently of the declared browser runtime, and deduplicate
 the browser baseline for mixed source and stylesheet changes. Preserve the
 existing runtime classification of each scenario.
+
+Deleting a reference to an empty model can accidentally remove its original
+placement. Protect a parent definition that remains directly visible in the
+automatic removal path, while preserving the separate explicit deletion
+policy. Save and reopen the original-plus-reference and last-reference cases.
+
+Capturing automatic relational coordinates during every semantic edit prevents
+later graph changes from reflowing Output. Reconcile only existing explicit
+anchors by default. Scope compact-coordinate capture to an accepted contextual
+Generate operation and bind its one-shot intent to the model, canvas and exact
+document identity. Cancel, rejection and abort must not publish that intent or
+cause a semantic save. Retain the existing Generate coordinate-preservation
+regression alongside movement cancellation and layout persistence.
+
+Fixture hydration must not be mistaken for a graph edit. Require the actual
+graph read and a mounted hydrated control with zero writes at read-only startup,
+then keep the distinct acknowledged-save assertions after real edits. Column
+count assertions must also use the locale declared by each visit, including a
+different locale after reopening.

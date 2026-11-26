@@ -42,6 +42,9 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasModelCompositionPhysicalAdmission.ts
   - apps/web/src/app/plugins/graph/GraphNodeColumnViews.tsx
   - apps/web/cypress.changed.ts
+  - apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
+  - apps/web/src/app/views/canvas/canvasModelLayoutReconciliation.ts
+  - apps/web/src/app/views/canvas/model-sql/useCanvasModelSqlLayout.ts
 evidence:
   tests:
     - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.catalog.architecture.test.ts
@@ -671,3 +674,48 @@ Apply request across reopening: the final guard compares the original write
 ledger and requires zero additional PUT requests. The first run exposed a
 test oracle that mistook the retained Apply request for a new write; that
 failed receipt is preserved. No product change or ledger reset was needed.
+
+### Integration regressions in model removal and layout
+
+The complete browser diagnostic on `2876c948f3` executed 99 specs and recorded
+259 passing cases, 14 failures and 13 cases blocked by failed setup hooks.
+The failures separated into obsolete startup-write expectations, removal of a
+still-visible original model, automatic layout coordinates becoming anchors,
+and an English column-label expectation in a Spanish fixture. That diagnostic
+did not establish acceptance.
+
+Removing a model reference now retains the empty parent definition when the
+original placement is still visible. The automatic removal path alone changes;
+the explicit empty-definition policy remains intact. A regression saved and
+reopened each of three placement-removal sequences. Its first run reproduced
+the deleted-definition bug; all ten definition-removal cases then passed.
+
+An isolated replay of the three movement-cancellation cases decoded the saved
+Substrait plan and confirmed a Filter upstream of JOIN, one acknowledged graph
+write and an Output card fixed at `(620, 98)`. The local layout contained four
+positions that had been automatic before Apply. The common reconciler now
+carries only explicit stored anchors. Contextual SQL generation separately
+captures compact coordinates and publishes that intent only after its accepted
+Apply, for the same model, canvas and exact canonical sidecar identity. Cancel,
+abort, rejection and a different document cannot consume the intent. Existing
+stored coordinates, including those retained by an earlier accepted Generate,
+remain explicit; no coordinate provenance is inferred.
+
+The revised layout passed seven pure reconciliation cases, 38 presentation
+cases and 20 architecture cases before integration. The presentation cases use
+the real Apply command, draft session and acknowledgment, and distinguish equal
+plan hashes with different relation identities. The ordinary semantic Apply
+does not materialize new automatic anchors or issue an extra graph save.
+
+Browser setup now waits for the acknowledged graph read and the hydrated UI
+where opening a fixture requires no write. Those sites explicitly require zero
+PUT requests; the later Apply and deletion save assertions remain. An inverse
+AST comparison of the three additional readiness modules proves that all other
+code is unchanged. The chain-persistence case checks both visible and accessible
+eight-column counts in Spanish before reopening and English afterward.
+
+After the repairs, native Chrome 158 with Cypress 15.21.2 passed all 45 cases
+across the ten affected specs: 26 controlled cases and 19 cases using the
+available-runtime proof. All 13 previously blocked cases executed. Generate,
+movement cancellation and layout persistence passed together. These focused
+results retain the complete browser plan as a separate prepush obligation.

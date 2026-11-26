@@ -1,5 +1,5 @@
 /** Owned concern: prove catalog disclosure, placement boundaries and scoped connection management. */
-import type { CanvasAuthoringDraft } from './canvasDraftAuthoring';
+import type { CanvasAuthoringDraft } from './canvasDrafts/scenario';
 import { getE2eApiCalls, stubE2eJsonApi } from './e2eApiStub';
 import { pressNativeKey } from './nativeKeyboard';
 import { dragWorkbenchField } from './relationalWorkbench/pointer';
