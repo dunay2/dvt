@@ -101,6 +101,7 @@ const CanvasRelationalTreeWorkbenchSession = forwardRef<
         document={model.layoutDocument}
         initialPositions={model.session.positions}
         onPositionsChange={model.session.setPositions}
+        transition={props.layoutTransition}
       >
         <div
           {...focus}

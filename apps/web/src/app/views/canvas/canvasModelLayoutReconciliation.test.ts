@@ -16,7 +16,10 @@ import {
   type IndexedRelation,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
-import { reconcileCanvasModelLayout } from './canvasModelLayoutReconciliation';
+import {
+  captureCanvasModelLayout,
+  reconcileCanvasModelLayout,
+} from './canvasModelLayoutReconciliation';
 import { CANVAS_RELATIONAL_OUTPUT_POSITION_ID } from './canvasRelationalTreeGeometry';
 
 const input: ModelSqlSourceContext['inputs'][number] = {
@@ -100,6 +103,40 @@ function branchJoin(columns: readonly [string, string]): SubstraitDocument {
 }
 
 describe('canonical Model layout correspondence', () => {
+  it('does not promote automatic cards or Output into anchors during an ordinary document transition', () => {
+    const old = generate('id');
+    const next = generate('country', old);
+    const positions = new Map<string, { x: number; y: number }>();
+    const result = reconcileCanvasModelLayout(old, next, positions);
+    expect(result.size).toBe(0);
+    expect(positions.size).toBe(0);
+  });
+
+  it('transfers only explicitly settled entries and leaves an automatic Output free to reflow', () => {
+    const old = generate('id');
+    const next = generate('country', old);
+    const readId = deriveSubstraitSchemas(old).index.postorder[0]!;
+    const position = { x: -200, y: 80 };
+    const result = reconcileCanvasModelLayout(old, next, new Map([[readId, position]]));
+    expect([...result]).toEqual([[readId, position]]);
+    expect(result.has(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)).toBe(false);
+  });
+
+  it('captures compact placement explicitly for an accepted SQL-generated document', () => {
+    const old = generate('id');
+    const next = generate('id', old);
+    const captured = captureCanvasModelLayout(old, new Map());
+    const result = reconcileCanvasModelLayout(old, next, captured);
+    expect(captured.size).toBe(3);
+    expect(result.size).toBe(captured.size);
+    expect(result.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)).toEqual(
+      captured.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)
+    );
+    const oldRoot = deriveSubstraitSchemas(old).index.rootId;
+    const nextRoot = deriveSubstraitSchemas(next).index.rootId;
+    expect(result.get(nextRoot)).toEqual(captured.get(oldRoot));
+  });
+
   it('keeps exact input, regenerated operation and Output world coordinates without rewriting either document', () => {
     const old = generate('id');
     const next = generate('id', old);

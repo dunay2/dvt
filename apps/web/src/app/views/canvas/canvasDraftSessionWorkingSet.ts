@@ -179,10 +179,9 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
       ? { ...nextSession, localDefinitionEdges }
       : nextSession;
   const retained = isDefinition ? result : withLocalNodeCatalog(result, nextLocalNodeCatalog);
-  return removeEmptyCanvasModelDefinition(
-    retained,
-    removed == null ? nodeId : (workspaceNodeDefinitionId(removed) ?? nodeId)
-  );
+  const definitionId = removed == null ? nodeId : (workspaceNodeDefinitionId(removed) ?? nodeId);
+  if (retained.workingSet.visibleNodeIds.includes(definitionId)) return retained;
+  return removeEmptyCanvasModelDefinition(retained, definitionId);
 }
 
 function retainRemovedDefinitionEdges(

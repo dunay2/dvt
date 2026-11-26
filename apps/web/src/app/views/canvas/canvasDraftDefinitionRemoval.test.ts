@@ -4,7 +4,10 @@ import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
-import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
+import {
+  buildCurrentDraftPayload,
+  isCurrentDraftProjectable,
+} from './canvasDraftLifecycleSnapshot';
 import { removeEmptyCanvasModelDefinition } from './canvasDraftDefinitionRemoval';
 
 function model(id: string): CanonicalNode {
@@ -46,7 +49,115 @@ function fixture(visible = false): Readonly<{
   };
 }
 
+function referenceFixture(): ReturnType<typeof fixture> {
+  const reference: CanonicalNode = {
+    id: 'target-ref',
+    definitionId: 'target',
+    name: 'target 2',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+  };
+  const nodes = [...fixture().nodes, reference];
+  const draft = buildCanvasAuthoringDraft({
+    canvas: { id: 'main', kind: 'transformation', title: 'Main' },
+    nodeIds: ['target', reference.id],
+    nodePositions: { target: { x: 0, y: 0 }, [reference.id]: { x: 200, y: 0 } },
+    visibleEdges: [],
+    canonicalNodes: nodes,
+    canonicalEdges: [],
+  });
+  const record = { revision: 'rev-1', savedAt: '2026-11-25T00:00:00Z', draft };
+  return {
+    nodes,
+    record,
+    session: canvasDraftSession.machine.bootstrap({
+      remoteDraft: record,
+      canonicalNodeIds: nodes.map((node) => node.id),
+      canonicalEdges: [],
+    }),
+  };
+}
+
+function saveAndReopenRemoval(
+  session: CanvasDraftSession,
+  nodes: CanonicalNode[]
+): Readonly<{
+  payload: CanvasAuthoringDraftRecord['draft'];
+  acknowledged: CanvasDraftSession;
+  reopened: CanvasDraftSession;
+}> {
+  const record = session.baseline.record!;
+  const payload = buildCurrentDraftPayload(
+    record.draft.nodePositions,
+    session,
+    { canvas: record.draft.canvas, baseline: record.draft },
+    { canonicalNodes: nodes, canonicalEdges: [] }
+  );
+  const saved = { ...record, revision: 'rev-2', draft: payload };
+  const acknowledged = canvasDraftSession.machine.applySaveSuccess(
+    canvasDraftSession.machine.markSaving(session),
+    saved
+  );
+  const reopened = canvasDraftSession.machine.bootstrap({
+    remoteDraft: saved,
+    canonicalNodeIds: payload.nodes.map((node) => node.id),
+    canonicalEdges: [],
+  });
+  return { payload, acknowledged, reopened };
+}
+
 describe('empty definition removal through the Canvas draft session', () => {
+  it('keeps the directly placed original when a reference is removed before and after Save', () => {
+    const { nodes, session } = referenceFixture();
+    const removed = canvasDraftSession.workingSet.removeNode(session, 'target-ref');
+    expect(removed.workingSet.visibleNodeIds).toEqual(['target']);
+    expect(removed.removedDefinitionIds).toBeUndefined();
+    const saved = saveAndReopenRemoval(removed, nodes);
+    expect(isCurrentDraftProjectable(saved.payload, removed)).toBe(true);
+    expect(saved.payload.nodeIds).toEqual(['target']);
+    expect(saved.payload.nodes.map((node) => node.id)).toEqual(['target', 'neighbor']);
+    expect(saved.acknowledged.workingSet.visibleNodeIds).toEqual(['target']);
+    expect(saved.reopened.workingSet.visibleNodeIds).toEqual(['target']);
+    expect(saved.reopened.baseline.record?.draft.nodes.some((node) => node.id === 'target')).toBe(
+      true
+    );
+  });
+
+  it('keeps the shared definition when its original placement is removed and a reference remains', () => {
+    const { nodes, session } = referenceFixture();
+    const removed = canvasDraftSession.workingSet.removeNode(session, 'target');
+    expect(removed.workingSet.visibleNodeIds).toEqual(['target-ref']);
+    expect(removed.removedDefinitionIds).toBeUndefined();
+    const saved = saveAndReopenRemoval(removed, nodes);
+    expect(isCurrentDraftProjectable(saved.payload, removed)).toBe(true);
+    expect(saved.payload.nodeIds).toEqual(['target-ref']);
+    expect(saved.payload.nodes.find((node) => node.id === 'target')).toBeDefined();
+    expect(saved.payload.nodes.find((node) => node.id === 'target-ref')?.definitionId).toBe(
+      'target'
+    );
+    expect(saved.reopened.workingSet.visibleNodeIds).toEqual(['target-ref']);
+  });
+
+  it('retires the empty definition when the last reference is removed without an original placement', () => {
+    const { nodes, session } = referenceFixture();
+    const withoutOriginal = canvasDraftSession.workingSet.removeNode(session, 'target');
+    const removed = canvasDraftSession.workingSet.removeNode(withoutOriginal, 'target-ref');
+    expect(removed.workingSet.visibleNodeIds).toEqual([]);
+    expect(removed.removedDefinitionIds).toEqual(['target']);
+    const saved = saveAndReopenRemoval(removed, nodes);
+    expect(isCurrentDraftProjectable(saved.payload, removed)).toBe(true);
+    expect(saved.payload.nodeIds).toEqual([]);
+    expect(saved.payload.nodes.map((node) => node.id)).toEqual(['neighbor']);
+    expect(saved.acknowledged.removedDefinitionIds).toBeUndefined();
+    expect(saved.reopened.workingSet.visibleNodeIds).toEqual([]);
+    expect(saved.reopened.baseline.record?.draft.nodes.map((node) => node.id)).toEqual([
+      'neighbor',
+    ]);
+  });
+
   it('removes an orphan from the actual save payload while keeping the baseline immutable', () => {
     const { nodes, record, session } = fixture();
     const removed = removeEmptyCanvasModelDefinition(session, 'target');

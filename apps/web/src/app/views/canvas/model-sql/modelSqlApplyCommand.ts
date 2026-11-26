@@ -13,19 +13,23 @@ export async function applyModelSqlProposal(
   node: CanonicalNode,
   authoring: CanvasRelationalTreeAuthoringContract | undefined,
   proposal: ModelSqlCompilationResponse,
-  signal: AbortSignal
+  { signal, onAccepted }: Readonly<{ signal: AbortSignal; onAccepted?: () => void }>
 ): Promise<CanvasRelationalTreeApplyResult> {
-  if (signal.aborted || authoring?.canEditNode !== true || proposal.status !== 'valid')
-    return { outcome: 'rejected', reason: 'command_unavailable' };
+  const unavailable = { outcome: 'rejected', reason: 'command_unavailable' } as const;
+  if (signal.aborted) return unavailable;
+  if (authoring?.canEditNode !== true) return unavailable;
+  if (proposal.status !== 'valid') return unavailable;
   const canonical = applyDvtSubstraitSemanticDocument(node, proposal.semanticDocument);
   const draft = { ...createCanvasInspectorNodeDraft(canonical), relationalAuthoringDraft: null };
-  return authoring.onApplyNodeDraft(node.id, draft, {
+  const result = await authoring.onApplyNodeDraft(node.id, draft, {
     inputAdditions: proposal.inputAdditions.map((addition) => ({
       nodeId: addition.nodeId,
       columnId: addition.columnId,
     })),
     signal,
   });
+  if (!signal.aborted && result.outcome !== 'rejected') onAccepted?.();
+  return result;
 }
 
 /** Keep command acknowledgement independent of the query revision it changes itself. */

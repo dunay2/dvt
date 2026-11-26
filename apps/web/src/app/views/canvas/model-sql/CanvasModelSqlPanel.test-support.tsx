@@ -15,7 +15,10 @@ import { AppServicesProvider } from '../../../services/AppServicesContext';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { transformNode, sourceRef } from '../CanvasRelationalTreeWorkbench.test-support';
 import type { CanvasRelationalTreeWorkbenchHandle } from '../useCanvasRelationalTreeWorkbenchHandle';
-import type { CanvasRelationalTreeAuthoringContract } from '../canvasRelationalTreeWorkbench.types';
+import type {
+  CanvasRelationalTreeAuthoringContract,
+  CanvasModelLayoutCapture,
+} from '../canvasRelationalTreeWorkbench.types';
 import { CanvasModelSqlPanel } from './CanvasModelSqlPanel';
 import { modelSqlContext as context, proposal } from './modelSqlProtocol.test-fixtures';
 
@@ -31,7 +34,7 @@ afterEach(async () => {
   dataHost?.remove();
   useApplicationLanguageStore.setState({ language: 'en' });
 });
-export async function mount() {
+export async function mount(captureGeneratedLayout?: CanvasModelLayoutCapture) {
   useApplicationLanguageStore.setState({ language: 'en' });
   container = documentElement();
   dataHost = documentElement();
@@ -87,6 +90,7 @@ export async function mount() {
           ownsData
           dataHost={dataHost}
           onOpenData={onOpenData}
+          captureGeneratedLayout={captureGeneratedLayout}
           onClose={vi.fn()}
         />
       </AppServicesProvider>

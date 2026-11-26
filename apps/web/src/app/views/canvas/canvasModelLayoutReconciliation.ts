@@ -1,4 +1,4 @@
-/** Transfer compact placement through unique canonical correspondence without changing graph meaning. */
+/** Transfer explicit placement through unique correspondence; capture compact placement only on request. */
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import { canvasModelLayoutSignatures } from './canvasModelLayoutSignatures';
 import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
@@ -15,16 +15,15 @@ function uniqueLayoutSignatures(signatures: ReadonlyMap<string, string>) {
   return identities;
 }
 
-export function reconcileCanvasModelLayout(
-  previous: SubstraitDocument,
-  current: SubstraitDocument,
+export function captureCanvasModelLayout(
+  document: SubstraitDocument,
   positions: ReadonlyMap<string, CardPosition>
 ): ReadonlyMap<string, CardPosition> {
-  const old = indexSubstraitRelations(previous);
+  const old = indexSubstraitRelations(document);
   if (!old.ok) return positions;
   const root = buildCanvasRelationalTreeRelation({
     index: old.index,
-    digest: previous.sidecar.semanticPlanSha256,
+    digest: document.sidecar.semanticPlanSha256,
   });
   const layout = layoutCanvasRelationalTree(root, new Map(), positions);
   const compact = new Map(
@@ -32,12 +31,21 @@ export function reconcileCanvasModelLayout(
   );
   if (layout.output != null)
     compact.set(CANVAS_RELATIONAL_OUTPUT_POSITION_ID, { x: layout.output.x, y: layout.output.y });
+  return compact;
+}
+
+export function reconcileCanvasModelLayout(
+  previous: SubstraitDocument,
+  current: SubstraitDocument,
+  positions: ReadonlyMap<string, CardPosition>
+): ReadonlyMap<string, CardPosition> {
+  if (!indexSubstraitRelations(previous).ok) return positions;
   const next = new Map<string, CardPosition>();
   for (const [id, oldId] of correspondingLayoutIdentities(previous, current)) {
-    const position = compact.get(oldId);
+    const position = positions.get(oldId);
     if (position != null) next.set(id, position);
   }
-  const output = compact.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID);
+  const output = positions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID);
   if (output != null) next.set(CANVAS_RELATIONAL_OUTPUT_POSITION_ID, output);
   return next;
 }

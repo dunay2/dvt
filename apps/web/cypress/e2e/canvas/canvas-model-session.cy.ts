@@ -1,8 +1,4 @@
-import {
-  getE2eApiCalls,
-  installE2eApiFetchStub,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
+import { getE2eApiCalls, installE2eApiFetchStub } from '../../support/e2eApiStub';
 import { registerEmptyModelDeletionJourney } from '../../support/emptyModelDeletion';
 import {
   connectWorkbenchProducer,
@@ -107,10 +103,11 @@ describe('model-session', () => {
   });
   it('keeps editing or applies local composition changes before closing the Model', () => {
     openEditor();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      expect(initialWrites, 'opening a hydrated Model is read-only').to.equal(0);
     });
     stageWorkbenchUnary({
       operation: 'aggregate',
@@ -169,10 +166,11 @@ describe('model-session', () => {
   });
   it('discards local composition changes before closing the Model', () => {
     openEditor();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      expect(initialWrites, 'opening a hydrated Model is read-only').to.equal(0);
     });
     stageWorkbenchUnary({
       operation: 'aggregate',

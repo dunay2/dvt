@@ -21,6 +21,21 @@ type BrowserCoverage =
   readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
 
 export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
+  'apps/web/cypress/support/canvasHappyPathCatalog.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+  },
+  'apps/web/cypress/support/canvasHappyPathFileModels.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+  },
+  'apps/web/cypress/support/canvasHappyPathTextSelection.ts': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
+      'apps/web/cypress/e2e/shell/shell-context-menu.cy.ts',
+    ],
+  },
+  'apps/web/cypress/support/canvasHappyPathPlacement.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+  },
   'apps/web/src/app/plugins/graph/GraphNodeColumnViews.tsx': ['available'],
   'apps/web/src/app/plugins/graph/GraphNodeColumnViews.module.css': ['available'],
   'apps/web/cypress/support/dbtModelComposition.ts': {
@@ -32,6 +47,18 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
     controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
   },
   'apps/web/src/app/views/canvas/canvasModelLayoutReconciliation.ts': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
+    ],
+  },
+  'apps/web/src/app/views/canvas/model-sql/useCanvasModelSqlLayout.ts': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
+    ],
+  },
+  'apps/web/src/app/views/canvas/model-sql/modelSqlApplyCommand.ts': {
     controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
   },
   'apps/web/src/app/views/canvas/canvasRelationalUnplacedCards.ts': {
@@ -41,6 +68,7 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
     controlledSpecs: [
       'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
     ],
   },
   'apps/web/src/app/views/SqlView.tsx': WORKSHEET_CONSUMER,

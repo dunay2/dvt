@@ -8,6 +8,22 @@ import type { CardPosition } from './canvasRelationalTreeGeometry';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { reconcileCanvasModelLayout } from './canvasModelLayoutReconciliation';
 import { areCanvasPositionsEqual } from '../../types/canvasPositions';
+import type {
+  CanvasModelLayoutRetention,
+  CanvasModelLayoutTransition,
+} from './canvasRelationalTreeWorkbench.types';
+
+function matchingCanvasModelLayoutRetention(
+  retention: CanvasModelLayoutRetention | null | undefined,
+  before: Readonly<{ layoutKey?: string; identity: string | null }>,
+  identity: string | null
+): CanvasModelLayoutRetention | null {
+  if (retention == null) return null;
+  if (retention.layoutKey !== before.layoutKey) return null;
+  if (retention.sourceDocumentIdentity !== before.identity) return null;
+  if (retention.targetDocumentIdentity !== identity) return null;
+  return retention;
+}
 
 export function canvasModelLayoutKey(
   scope: WorkspaceScope | undefined,
@@ -31,12 +47,14 @@ export function CanvasModelLayoutSession({
   document,
   initialPositions,
   onPositionsChange,
+  transition,
   children,
 }: Readonly<{
   layoutKey?: string;
   document?: SubstraitDocument | null;
   initialPositions: ReadonlyMap<string, CardPosition>;
   onPositionsChange: (positions: ReadonlyMap<string, CardPosition>) => void;
+  transition?: CanvasModelLayoutTransition;
   children: ReactNode;
 }>): JSX.Element | null {
   const hydrated = useCanvasInteractionStore((state) => state._hasHydrated);
@@ -61,17 +79,27 @@ export function CanvasModelLayoutSession({
   );
   const previous = useRef({ layoutKey, document, identity });
   const seed = positions ?? initialPositions;
+  const deferred = transition?.pending === true;
   const reconciled = useMemo(() => {
     const before = previous.current;
+    if (deferred) return seed;
     if (before.layoutKey !== layoutKey || before.identity === identity) return seed;
     if (before.document == null || document == null) return seed;
-    return reconcileCanvasModelLayout(before.document, document, seed);
-  }, [document, seed, layoutKey, identity]);
+    const retained = matchingCanvasModelLayoutRetention(transition?.accepted, before, identity);
+    return reconcileCanvasModelLayout(before.document, document, retained?.positions ?? seed);
+  }, [document, seed, layoutKey, identity, deferred, transition?.accepted]);
   useLayoutEffect(() => {
     if (layoutKey != null && !hydrated) return;
+    if (deferred) return;
+    const before = previous.current;
+    const retained =
+      before.layoutKey === layoutKey && before.identity !== identity
+        ? matchingCanvasModelLayoutRetention(transition?.accepted, before, identity)
+        : null;
     previous.current = { layoutKey, document, identity };
     if (!areCanvasPositionsEqual(reconciled, seed)) publish(reconciled);
-  }, [document, reconciled, seed, publish, layoutKey, hydrated, identity]);
+    if (retained != null) transition?.consume(retained);
+  }, [document, reconciled, seed, publish, layoutKey, hydrated, identity, deferred, transition]);
   if (layoutKey != null && !hydrated) return null;
   return (
     <RelationalLayoutSession

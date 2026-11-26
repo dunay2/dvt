@@ -5,7 +5,8 @@
  */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { openCanvasContextMenuAt } from '../../support/canvasExecutionSelection';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { selectElementWord } from '../../support/canvasHappyPathTextSelection';
+import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../../support/workspaceSession';
 
@@ -31,8 +32,8 @@ describe('scoped Shell context menus', () => {
     stubE2eJsonApi('GET', '/workspace/warehouse/connections', []);
     stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
     visitWorkbenchCanvas('en');
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
-    // The real graph overlay retires its Saving badge after acknowledgement.
+    cy.get('[data-testid="canvas-viewport"]').should('be.visible');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.then(() => {
       graphWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -50,23 +51,8 @@ describe('scoped Shell context menus', () => {
       .then(($button) => {
         const button = $button[0];
         if (button == null) throw new Error('The production Shell menu trigger must exist.');
-        const document = button.ownerDocument;
-        const view = document.defaultView;
-        if (view == null)
-          throw new Error('The Shell trigger must belong to the application window.');
-        const walker = document.createTreeWalker(button, view.NodeFilter.SHOW_TEXT);
-        let text = walker.nextNode();
-        while (text != null && !text.textContent?.trim()) text = walker.nextNode();
-        const word = /[\p{L}\p{M}]+/u.exec(text?.textContent ?? '');
-        const selection = document.getSelection();
-        if (text == null || word == null || selection == null)
-          throw new Error('The real Shell trigger must contain selectable text.');
-        term = word[0];
-        const range = document.createRange();
-        range.setStart(text, word.index);
-        range.setEnd(text, word.index + term.length);
-        selection.removeAllRanges();
-        selection.addRange(range);
+        term = selectElementWord(button);
+        const selection = button.ownerDocument.getSelection()!;
         expect(selection.toString()).to.equal(term);
       });
     cy.get(SELECTION_MENU).should('not.exist');

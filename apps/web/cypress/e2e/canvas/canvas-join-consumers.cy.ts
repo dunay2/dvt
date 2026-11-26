@@ -1,8 +1,4 @@
-import {
-  getE2eApiCalls,
-  installE2eApiFetchStub,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
+import { getE2eApiCalls, installE2eApiFetchStub } from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
   stageWorkbenchUnary,
@@ -224,10 +220,11 @@ describe('join-consumers', () => {
 
   it('keeps the selected JOIN editable below grouping and windows, and removes the selected wrapper', () => {
     openEditor();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      expect(initialWrites, 'opening a hydrated Model is read-only').to.equal(0);
     });
     cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-relational-expression-node"]').should('have.length.at.least', 3);

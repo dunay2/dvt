@@ -260,10 +260,25 @@ coordinates through the same layout command.
 
 ### Layout across contextual SQL generation
 
+Common canonical-document reconciliation transfers only coordinates already
+present in the scoped position map. Missing entries remain automatic, including
+Output. A saved visual edit must not turn the previous automatic arrangement
+into fixed anchors. Existing accepted card-removal capture remains its explicit
+policy; cancellation does not acquire that intention.
+
 Generating a Model from its contextual SQL editor preserves the compact
 coordinates of surviving inputs, operations and Output. A changed semantic digest
-is not a layout reset. The local adapter reconciles an accepted canonical
-document transition by exact surviving relation identity first, then by a unique
+is not a layout reset. The Generate owner captures compact placement before
+applying its proposal, then requests preservation explicitly after an accepted,
+non-aborted command. Bind that one-shot intention to the existing workspace,
+Canvas and Model layout key and the previous and confirmed target documents.
+Use the session's existing exact document identity,
+`jcsCanonicalize(document.sidecar)`, for both sides of that match. The sidecar
+includes the plan SHA and authoring IDs: regenerating the same SQL can retain
+the plan SHA while changing those IDs. Comparing the plan SHA alone cannot
+identify the confirmed target document. No additional hash or registry is needed.
+The local adapter reconciles that admitted transition by exact surviving
+relation identity first, then by a unique
 exact correspondence of canonical operation semantics and ordered input
 provenance. Relation anchors and newly allocated local identities do not define
 presentation equivalence. Source and producer contracts, expressions, types and
@@ -276,6 +291,14 @@ for card bounds and Output. Do not move surviving cards to make room or use
 Generate as an implicit Arrange. Existing manual overlaps remain user-owned.
 Explicit Arrange retains its current reset behavior.
 
+While the matching SQL apply is in transit, defer common reconciliation. When
+the confirmed target arrives, consume its matching intention once and reconcile
+once. Rejection, abort, cancellation, a different document or a scope or Model
+change cannot publish captured compact positions or attach them to a later
+edit. The capture is local presentation data; it adds no semantic metadata,
+store, query, session or save command. Ordinary reconciliation continues to
+migrate explicit positions only.
+
 The reconciliation changes local coordinates through `PersistCanvasLayout`;
 it never rewrites relation IDs, semantic documents or protected save payloads.
 Close/reopen and local-store rehydration must retain the resulting coordinates.
@@ -285,13 +308,17 @@ replacement canonical tree and therefore perform no layout transition.
 
 ```mermaid
 flowchart LR
-  Previous[Previous canonical tree and compact positions] --> Match[Exact identity or unique semantic correspondence]
-  Accepted[Accepted SQL proposal tree] --> Match
+  Ordinary[Ordinary accepted document] --> Manual[Transfer explicit positions only]
+  Generate[Contextual Generate owner] --> Capture[Capture compact positions before apply]
+  Capture --> Accepted[Accepted command and matching scoped target document]
+  Accepted --> Intent[Consume preservation intention once]
+  Intent --> Match[Exact identity or unique semantic correspondence]
   Match --> Fixed[Surviving cards and Output stay fixed]
-  Accepted --> New[Unmatched cards]
+  Intent --> New[Unmatched cards]
   Fixed --> Place[Place only new rectangles in free space]
   New --> Place
   Place --> Local[Existing local layout store]
+  Manual --> Local
   Local --> Reopen[Close, reopen and rehydrate]
 ```
 
@@ -299,6 +326,15 @@ The [prospective rationale and finite Q scope](https://github.com/dunay2/dvt/iss
 govern the change. The real contextual SQL journey must check positions before
 Generate, after its accepted save, after reopening and after reload. Negative
 coverage retains changed or ambiguous SQL correspondence and explicit Arrange.
+The [transition-intention correction](https://github.com/dunay2/dvt/issues/3951#issuecomment-7179666751)
+separates that explicit Generate policy from ordinary automatic reflow. Its
+negative coverage retains missing entries after all native cancellation reasons,
+manual placement, rejected or aborted Generate, mismatched document or scope,
+and repeated acknowledgement without another publication or protected save.
+The [exact-document refinement](https://github.com/dunay2/dvt/issues/3951#issuecomment-7180245280)
+also covers regenerated documents with the same plan SHA and different sidecar
+IDs, and declares their actual controlled browser consumers in the existing
+registry.
 
 One pure Canvas-position value predicate serves store write suppression, outer
 Canvas persistence, and relational layout restoration. Equivalent record or Map

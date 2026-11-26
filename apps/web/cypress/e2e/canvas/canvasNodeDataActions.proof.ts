@@ -254,7 +254,13 @@ export function registerCanvasNodeDataActionsProof(): void {
         },
       });
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
-      waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+      cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
+      cy.then(() =>
+        expect(
+          getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+          'opening the hydrated Canvas is read-only'
+        ).to.have.length(0)
+      );
     });
 
     for (const nodeId of ['source-1', 'dvt-transform-1', 'inner-read', 'inner-project']) {
