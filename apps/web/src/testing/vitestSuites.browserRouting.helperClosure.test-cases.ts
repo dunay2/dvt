@@ -44,7 +44,8 @@ const additionalRevisitConsumers = [
   resolve('cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts'),
   resolve('cypress/e2e/canvas/canvas-formula-lineage.cy.ts'),
   resolve('cypress/e2e/canvas/canvas-geometry-performance.cy.ts'),
-  resolve('cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'),
+  resolve('cypress/support/canvasHappyPathFileModels.ts'),
+  resolve('cypress/support/canvasHappyPathPlacement.ts'),
   resolve('cypress/e2e/canvas/canvas-join-output-policies.cy.ts'),
   resolve('cypress/e2e/canvas/canvas-model-card-materialization.cy.ts'),
   resolve('cypress/e2e/canvas/canvas-model-composition.cy.ts'),
@@ -140,6 +141,7 @@ export function registerBrowserRoutingHelperClosure(): void {
         ...inspectorConsumers.map(webPath),
         ...liveWorkloadConsumers.map(webPath),
         webPath(transformStage),
+        resolve('cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'),
       ]);
     });
   });

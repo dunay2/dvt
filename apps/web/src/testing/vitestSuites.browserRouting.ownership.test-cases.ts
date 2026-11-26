@@ -40,6 +40,7 @@ export function registerBrowserRoutingOwnership(): void {
         ['controlled', 'apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts'],
         ['controlled', 'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'],
         ['controlled', 'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts'],
+        ['controlled', 'apps/web/cypress/e2e/shell/shell-context-menu.cy.ts'],
         ['controlled', 'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts'],
       ] as const;
       expect(consumers).toEqual(expectedConsumers.map(([, consumer]) => consumer).sort());
