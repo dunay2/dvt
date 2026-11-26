@@ -1,9 +1,12 @@
 /** Prove SQL references retain actual identities and never treat labels as relations. */
 import { TransformSqlProjectionResponseSchema } from '@dvt/contracts';
+import { readDvtTransformAuthoringAuthority } from '../canvas/canvasDvtTransformAuthoringAuthority';
+import { buildWorksheetCanvasLiteralProposal } from './worksheetCanvasModel.test-fixtures';
 import { expect, it } from 'vitest';
 import {
   buildSqlWorksheetModelInsertion,
   buildSqlWorksheetTableInsertion,
+  materializeSqlWorksheetNode,
   quoteSqlWorksheetIdentifier,
   retainSqlWorksheetInsertions,
 } from './sqlWorksheetInsertions';
@@ -33,6 +36,68 @@ const projection = TransformSqlProjectionResponseSchema.parse({
       { schemaVersion: 'connected-source-ref.v1', connectionRef, sourceObjectId: 'orders' },
     ],
   },
+});
+
+const literalSql = 'SELECT 1 AS comprobacion_editor_sql';
+const literalProposal = buildWorksheetCanvasLiteralProposal(
+  {
+    schemaVersion: 'worksheet-canvas-model-request.v1',
+    canvasId: target.canvasId,
+    expectedRevision: projection.draftRevision,
+    modelId: target.nodeId,
+    name: 'Literal Model',
+    connectionRef,
+    sql: literalSql,
+    models: [],
+  },
+  { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' }
+);
+if (literalProposal.status !== 'valid') throw new Error('Expected the published literal fixture.');
+const literalNode = literalProposal.draft.nodes[0]!;
+const literalPlan = readDvtTransformAuthoringAuthority(literalNode)!.semanticDocument.semanticPlan;
+const literalQuery = {
+  projectTransformSql: async () =>
+    TransformSqlProjectionResponseSchema.parse({
+      ...projection,
+      semanticPlanSha256: literalPlan.sha256,
+      sql: literalSql,
+      provenance: {
+        sourceRefs: [],
+        literalModel: { connectionRef, semanticPlanSha256: literalPlan.sha256 },
+      },
+    }),
+};
+const warehouse = {
+  id: connectionRef.connectionId,
+  name: 'Warehouse',
+  type: 'postgres',
+  database: 'analytics',
+} as const;
+
+it('inserts a published literal Model using its projected connection', async () => {
+  const result = await materializeSqlWorksheetNode(
+    literalNode,
+    target.canvasId,
+    warehouse,
+    literalQuery
+  );
+  expect(result).toMatchObject({
+    kind: 'model',
+    connectionRef,
+    semanticPlanSha256: literalPlan.sha256,
+  });
+  expect(result.fragment).toContain(literalSql);
+});
+
+it('rejects a published literal Model when another connection is selected', async () => {
+  await expect(
+    materializeSqlWorksheetNode(
+      literalNode,
+      target.canvasId,
+      { ...warehouse, id: 'foreign' },
+      literalQuery
+    )
+  ).rejects.toThrow('The Model connection is unavailable.');
 });
 
 it.each([

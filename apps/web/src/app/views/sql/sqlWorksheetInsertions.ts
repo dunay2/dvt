@@ -129,15 +129,25 @@ export async function materializeSqlWorksheetNode(
   });
   const projection = await query.projectTransformSql(request);
   if (projection.provenance.sourceRefs.length === 0)
-    assertSourceLessModelConnection(node, connectionRef);
+    assertSourceLessModelConnection(
+      node,
+      connectionRef,
+      projection.provenance.literalModel?.connectionRef
+    );
   return buildSqlWorksheetModelInsertion(
     { connectionRef, canvasId, nodeId: node.id, semanticPlanSha256: request.semanticPlanSha256 },
     projection
   );
 }
 
-function assertSourceLessModelConnection(node: CanonicalNode, connectionRef: ConnectionRef): void {
-  if (!sameSqlConnection(readWorkspaceDbtModelReference(node)?.connectionRef, connectionRef))
+function assertSourceLessModelConnection(
+  node: CanonicalNode,
+  connectionRef: ConnectionRef,
+  literalConnection: ConnectionRef | undefined
+): void {
+  const publishedConnection =
+    literalConnection ?? readWorkspaceDbtModelReference(node)?.connectionRef;
+  if (!sameSqlConnection(publishedConnection, connectionRef))
     throw new Error('The Model connection is unavailable.');
 }
 
