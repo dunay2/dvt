@@ -14,7 +14,8 @@
       "types": "./dist/substrait.d.ts",
       "import": "./dist/substrait.js",
       "default": "./dist/substrait.js"
-    }
+    },
+    "./examples/workspace-sql-execution.json": "./src/contracts/sql-workspace/examples/WorkspaceSqlExecution.example.json"
   },
   "private": true,
   "license": "MIT",

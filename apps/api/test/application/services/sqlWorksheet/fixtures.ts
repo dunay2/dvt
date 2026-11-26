@@ -7,8 +7,8 @@ import {
   type WorkspaceSqlExecution,
   type ExecuteWorkspaceSqlResponse,
 } from '@dvt/contracts';
+import example from '@dvt/contracts/examples/workspace-sql-execution.json' with { type: 'json' };
 
-import example from '../../../../../../packages/@dvt/contracts/src/contracts/sql-workspace/examples/WorkspaceSqlExecution.example.json' with { type: 'json' };
 import {
   AUTHORIZATION_ACTION,
   buildEnvironmentAccessScope,
