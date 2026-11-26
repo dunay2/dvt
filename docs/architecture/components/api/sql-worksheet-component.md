@@ -65,6 +65,20 @@ maximum 1000; reading one additional row establishes truncation. Array-mode rows
 preserve duplicate output column names by position. Display serialization reuses
 the existing PostgreSQL cell and type projection.
 
+The worksheet accepts SQL text without a prepared-statement parameter map. Its
+adapter rejects PostgreSQL `ParamRef` nodes in the validated user AST before
+credential resolution or warehouse client IO. A string literal such as `'$1'`
+remains ordinary SQL data. The wrapper binds its own row limit through `$1` and
+`values: [limit + 1]` in the extended query protocol; it does not interpolate the
+request limit into SQL. The shared structural parser policy remains unchanged.
+Authorization, catalog lookup and terminal `sql_invalid` history retain their
+existing command lifecycle.
+
+`sqlWorksheetStatementPolicy.ts` owns request-field validation, shared parser
+admission, AST parameter checks and safe diagnostics. The existing
+`PostgresWorkspaceSqlExecutor` calls that policy once and owns credential
+resolution, the bound query and the read-only session lifecycle.
+
 Terminal states are `succeeded` and `failed`; browser loading state is transient.
 History contains original SQL, selected public connection reference/name, actor,
 timestamps, elapsed duration, limit, row count, truncation, column metadata and

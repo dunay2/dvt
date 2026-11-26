@@ -172,6 +172,45 @@ describe.skipIf(adminUrl === undefined)('independent SQL worksheet native Postgr
     expect(JSON.stringify(viewer?.rows[0]?.tenant_access)).not.toContain('workspace:sql:');
   });
 
+  it('returns a dollar-number literal as data while binding an independent truncation limit', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sql/executions?${SQL_SCOPE_QUERY}`,
+      headers: headers(),
+      payload: {
+        connectionId: 'warehouse',
+        sql: "select '$1' as marker from generate_series(1, 3)",
+        limit: 1,
+      },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(ExecuteWorkspaceSqlResponseSchema.parse(response.json())).toMatchObject({
+      execution: { status: 'succeeded', limit: 1, rowCount: 1, truncated: true },
+      result: { rows: [{ values: ['$1'] }] },
+    });
+  });
+
+  it.each(['select $1::integer as value', 'select (select $2::integer) as value'])(
+    'records a typed unsupported-parameter outcome for %s',
+    async (sql) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/workspace/sql/executions?${SQL_SCOPE_QUERY}`,
+        headers: headers(),
+        payload: { connectionId: 'warehouse', sql },
+      });
+      expect(response.statusCode).toBe(200);
+      const failed = ExecuteWorkspaceSqlResponseSchema.parse(response.json());
+      expect(failed.execution).toMatchObject({
+        sql,
+        status: 'failed',
+        error: { code: 'sql_invalid' },
+      });
+      expect(failed.result).toBeUndefined();
+      expect(await history.get(SQL_SCOPE, failed.execution.executionId)).toEqual(failed.execution);
+    }
+  );
+
   it('persists safe failed SELECT outcomes and refuses writes without changing the provider database', async () => {
     const response = await app.inject({
       method: 'POST',

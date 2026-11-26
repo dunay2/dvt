@@ -72,11 +72,39 @@ describe('independent PostgreSQL worksheet transport', () => {
       expect.objectContaining({
         rowMode: 'array',
         queryMode: 'extended',
-        text: expect.stringMatching(/limit 2\s*$/iu),
+        text: expect.stringMatching(/limit \$1\s*$/iu),
+        values: [2],
       })
     );
     expect(state.query).toHaveBeenLastCalledWith('commit');
     expect(state.end).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    'select $1 as value',
+    'select (select $2::integer) as value',
+    'with supplied as (select $1::integer as n) select n from supplied',
+    'select 1 as value limit $1',
+  ])('rejects user parameters before credential or provider IO: %s', async (sql) => {
+    const state = fixture();
+    await expect(state.executor.execute({ ...input, sql })).rejects.toMatchObject({
+      failure: { code: 'sql_invalid' },
+    });
+    expect(state.resolveCredential).not.toHaveBeenCalled();
+    expect(state.createClient).not.toHaveBeenCalled();
+    expect(state.query).not.toHaveBeenCalled();
+  });
+
+  it('admits a dollar-number string literal independently from the private row-limit binding', async () => {
+    const state = fixture();
+    await state.executor.execute({ ...input, sql: "select '$1' as marker" });
+    expect(state.query).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("'$1'"),
+        values: [2],
+        queryMode: 'extended',
+      })
+    );
   });
 
   it.each([

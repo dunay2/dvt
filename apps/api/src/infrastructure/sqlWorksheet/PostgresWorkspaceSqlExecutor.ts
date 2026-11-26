@@ -1,17 +1,17 @@
 /** Execute one structurally admitted SELECT through a private read-only PostgreSQL session. */
 import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
-import { ExecuteWorkspaceSqlRequestSchema } from '@dvt/contracts';
 import { Client, type QueryArrayConfig } from 'pg';
 
 import {
   WorkspaceSqlQueryError,
   type IWorkspaceSqlExecutor,
 } from '../../application/ports/sqlWorksheet.js';
-import { validatePostgresTransformSqlStructure } from '../../application/services/postgresTransformSqlPolicy.js';
 import {
   postgresTypeNameFromDataTypeId,
   serializePostgresSampleCell,
 } from '../postgres/postgresDataSampleSerialization.js';
+
+import { admitSql } from './sqlWorksheetStatementPolicy.js';
 
 type SqlClient = Readonly<{
   connect(): Promise<unknown>;
@@ -69,7 +69,8 @@ async function executeReadOnly(client: SqlClient, sql: string, limit: number) {
     transaction = true;
     await client.query('set local statement_timeout = 3000');
     const result = await client.query({
-      text: `select * from (\n${sql.replace(/;\s*$/u, '')}\n) as dvt_sql_worksheet limit ${limit + 1}`,
+      text: `select * from (\n${sql.replace(/;\s*$/u, '')}\n) as dvt_sql_worksheet limit $1`,
+      values: [limit + 1],
       rowMode: 'array',
       queryMode: 'extended',
     });
@@ -94,25 +95,6 @@ async function executeReadOnly(client: SqlClient, sql: string, limit: number) {
   } finally {
     await client.end().catch(() => undefined);
   }
-}
-
-async function admitSql(input: Parameters<IWorkspaceSqlExecutor['execute']>[0]): Promise<string> {
-  const validRequest = ExecuteWorkspaceSqlRequestSchema.pick({ sql: true, limit: true }).safeParse({
-    sql: input.sql,
-    limit: input.limit,
-  });
-  if (!validRequest.success) throw failure('sql_invalid', 'The SQL text or row limit is invalid.');
-  const admitted = await validatePostgresTransformSqlStructure(input.sql);
-  if (admitted.status === 'valid') return admitted.canonicalSql;
-  throw new WorkspaceSqlQueryError({
-    code: 'sql_invalid',
-    message: 'The SQL statement is not an admitted SELECT.',
-    diagnostics: admitted.diagnostics.map(({ message, startOffset, endOffset }) => ({
-      message,
-      ...(startOffset === undefined ? {} : { startOffset }),
-      ...(endOffset === undefined ? {} : { endOffset }),
-    })),
-  });
 }
 
 function transportFailure(error: unknown, connected: boolean): WorkspaceSqlQueryError {
