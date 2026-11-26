@@ -1,4 +1,10 @@
-/** Identify the exact single-row relation that needs an execution connection and no input. */
+/**
+ * Owned concern: identify the exact single-row relation admitted as an input-free literal Model.
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Require one canonical virtual Read, matching plan digest and identity-only sidecar.
+ * @consequence Physical reads and upstream-bound or stale documents remain outside this profile.
+ * @version 1.0.0
+ */
 import {
   ReadRelSchema,
   type ReadRel,

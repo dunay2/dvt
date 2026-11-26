@@ -1,4 +1,10 @@
-/** Validate the pinned, required scalar values of a single literal model row. */
+/**
+ * Owned concern: validate the pinned, required scalar values of a single literal model row.
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Match REQUIRED i32, boolean and text literals to their schema and explicit names.
+ * @consequence Malformed, nullable or mismatched rows fail closed before projection.
+ * @version 1.0.0
+ */
 import type {
   Expression,
   ReadRel,
