@@ -7,6 +7,7 @@ import { createApiDbtSelectedModelAnalysisQueryPort } from './dbtSelectedModelAn
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { ApiError } from '../api/createApiClient';
 import { createApiClientHarness, jsonResponse } from '../workspace/workspaceApiClient.test.harness';
+import { buildSqlWorksheetDbtAnalysis } from '../../views/sql/sqlWorksheet.test-fixtures';
 import {
   buildWorkspaceScope,
   clearGrantedWorkspaceScope,
@@ -60,6 +61,39 @@ function buildAnalysis(): ReturnType<typeof DbtSelectedModelAnalysisSchema.parse
 
 describe('selected dbt model analysis API port', () => {
   beforeEach(() => setWorkspaceScope(buildWorkspaceScope()));
+
+  it('requests canonical executable SQL by Canvas identity without selecting a project root', async () => {
+    const analysis = buildSqlWorksheetDbtAnalysis('SELECT 1 AS id');
+    const transport = createApiClientHarness({ requestRaw: async () => jsonResponse(analysis) });
+    await expect(
+      createApiDbtSelectedModelAnalysisQueryPort(transport.apiClient).analyzeSelectedModel(
+        { canvasId: 'files' },
+        analysis.selectedUniqueId,
+        { expectedProjectRevision: analysis.projectRevision.contentSetSha256 }
+      )
+    ).resolves.toEqual(analysis);
+    expect(transport.requestRaw).toHaveBeenCalledExactlyOnceWith(
+      `/workspace/dbt/analysis/selected-model?tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId=files&selectedUniqueId=model.demo.orders&includeExecutableSql=1&expectedProjectRevision=${'a'.repeat(64)}`,
+      { method: 'GET' }
+    );
+    expect(transport.postJson).not.toHaveBeenCalled();
+  });
+
+  it('refuses a response completed after the protected workspace changes', async () => {
+    const analysis = buildAnalysis();
+    const transport = createApiClientHarness({
+      requestRaw: async () => {
+        setWorkspaceScope(buildWorkspaceScope({ projectId: 'other' }));
+        return jsonResponse(analysis);
+      },
+    });
+    await expect(
+      createApiDbtSelectedModelAnalysisQueryPort(transport.apiClient).analyzeSelectedModel(
+        binding,
+        selectedUniqueId
+      )
+    ).rejects.toThrow('workspace changed');
+  });
 
   it('queries the existing rail using the granted workspace and accepted Canvas identity', async () => {
     const analysis = buildAnalysis();

@@ -21,6 +21,7 @@ import {
 } from './vitestSuites.browserRouting.runtime.test-support';
 import { registerBrowserRoutingSurfaces } from './vitestSuites.browserRouting.surfaces.test-cases';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:child_process')>()),
   spawnSync: vi.fn(),

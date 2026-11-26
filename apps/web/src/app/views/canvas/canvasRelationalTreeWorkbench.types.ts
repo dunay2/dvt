@@ -9,14 +9,33 @@ import type { GraphNodeInputMapping } from '../../plugins/graph/graphNodeColumnC
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
+import type { DvtRelationalAuthoringDraftV1, DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { CanvasTransformSqlQueryBinding } from '../../ports/canvasTransformSql';
+import type { CardPosition } from './canvasRelationalTreeGeometry';
+
+export type CanvasModelLayoutRetention = Readonly<{
+  layoutKey: string;
+  sourceDocumentIdentity: string;
+  targetDocumentIdentity: string;
+  positions: ReadonlyMap<string, CardPosition>;
+}>;
+
+export type CanvasModelLayoutTransition = Readonly<{
+  pending: boolean;
+  accepted: CanvasModelLayoutRetention | null;
+  consume: (retention: CanvasModelLayoutRetention) => void;
+}>;
+
+export type CanvasModelLayoutCapture = (
+  document: DvtSubstraitSemanticDocumentV1
+) => (() => void) | undefined;
 
 export type CanvasRelationalTreeWorkbenchProps = Readonly<{
   active?: boolean;
   codeProjection?: CanvasTransformSqlQueryBinding;
   layoutKey?: string;
+  layoutTransition?: CanvasModelLayoutTransition;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
@@ -151,6 +170,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'relationalTreeParticipatingLabel'
   | 'relationalTreePendingLabel'
   | 'relationalTreePrimaryInputLabel'
+  | 'relationalTreeConnectedSourceTemplate'
   | 'relationalTreePrimarySlotLabel'
   | 'relationalTreeProjectOperationLabel'
   | 'relationalTreeFieldTransformationStageLabel'

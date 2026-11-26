@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { MODEL_SQL_MAX_LENGTH } from '@dvt/contracts';
 import { container, dataHost, mount } from './CanvasModelSqlPanel.test-support';
 import { proposal } from './modelSqlProtocol.test-fixtures';
+import type { CanvasModelLayoutCapture } from '../canvasRelationalTreeWorkbench.types';
 
 vi.mock('../../../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
@@ -75,7 +76,9 @@ describe('Model SQL panel', () => {
     expect(h.onApplyNodeDraft).not.toHaveBeenCalled();
   });
   it('generates only through the existing draft command and retains rejected SQL', async () => {
-    const h = await mount();
+    const retain = vi.fn<() => void>();
+    const capture = vi.fn<CanvasModelLayoutCapture>(() => retain);
+    const h = await mount(capture);
     await h.type('SELECT orders_id FROM orders');
     h.onApplyNodeDraft.mockReturnValueOnce({ outcome: 'rejected', reason: 'invalid_draft' });
     await h.click('Generate Model');
@@ -87,7 +90,38 @@ describe('Model SQL panel', () => {
     expect(h.ref.current?.hasUnappliedChanges).toBe(true);
     expect(getByRole(container, 'textbox')).toHaveProperty('value', 'SELECT orders_id FROM orders');
     expect(getByRole(container, 'alert').textContent).toContain('rejected');
+    expect(capture).toHaveBeenCalledOnce();
+    expect(retain).not.toHaveBeenCalled();
   });
+  it.each(['accepted', 'aborted'] as const)(
+    'publishes captured Generate layout only after a live acknowledgement (%s)',
+    async (outcome) => {
+      const retain = vi.fn<() => void>();
+      const capture = vi.fn<CanvasModelLayoutCapture>(() => retain);
+      const h = await mount(capture);
+      await h.type('SELECT orders_id FROM orders');
+      let settle!: (value: { outcome: 'no_changes' }) => void;
+      h.onApplyNodeDraft.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            settle = resolve;
+          })
+      );
+      await h.click('Generate Model');
+      expect(capture).toHaveBeenCalledOnce();
+      expect(capture).toHaveBeenCalledWith(
+        proposal(h.query.compile.mock.calls[0]![0]).semanticDocument
+      );
+      expect(retain).not.toHaveBeenCalled();
+      if (outcome === 'aborted') {
+        await act(async () => h.ref.current!.cancel());
+        expect(h.onApplyNodeDraft.mock.calls[0]![2]?.signal?.aborted).toBe(true);
+      }
+      await act(async () => settle({ outcome: 'no_changes' }));
+      expect(retain).toHaveBeenCalledTimes(outcome === 'accepted' ? 1 : 0);
+      expect(h.onApplyNodeDraft).toHaveBeenCalledOnce();
+    }
+  );
   it('discards a late validation response after text changes', async () => {
     const h = await mount();
     await h.type('SELECT orders_id FROM orders');
@@ -106,7 +140,8 @@ describe('Model SQL panel', () => {
     expect(h.onApplyNodeDraft).not.toHaveBeenCalled();
   });
   it('blocks SQL generation while the visual editor has unapplied edits', async () => {
-    const h = await mount();
+    const capture = vi.fn<CanvasModelLayoutCapture>();
+    const h = await mount(capture);
     await h.type('SELECT orders_id FROM orders');
     Object.defineProperty(h.visual, 'current', {
       value: { hasUnappliedChanges: true },
@@ -115,6 +150,7 @@ describe('Model SQL panel', () => {
     await h.click('Generate Model');
     expect(h.query.compile).not.toHaveBeenCalled();
     expect(getByRole(container, 'alert').textContent).toContain('semantic edits');
+    expect(capture).not.toHaveBeenCalled();
   });
   it('locks the admitted buffer during Apply and retains the command acknowledgement across its own revision', async () => {
     const h = await mount();

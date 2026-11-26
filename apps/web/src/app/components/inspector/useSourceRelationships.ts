@@ -1,5 +1,6 @@
-/** Selection and visual-only ordering, bound to the existing Inspector layout owner. */
-import { useId, useMemo, useRef, useState, type ComponentProps, type KeyboardEvent } from 'react';
+/** Bind Source output rows to the existing Inspector layout order. */
+import { useId, useLayoutEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { resolveCopyLanguage } from '../../copyLanguage';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../types/canonical';
 import type { NodePropertySection } from './nodePropertiesContracts';
@@ -9,8 +10,10 @@ import { sourceRelationshipsCopyEs } from './sourceRelationshipsCopy.es';
 import { useCanvasInspectorListOrder } from './useCanvasInspectorListOrder';
 import { useInspectorListReorder } from './useInspectorListReorder';
 
+const copyByLanguage = { en: sourceRelationshipsCopyEn, es: sourceRelationshipsCopyEs };
+
 export type SourceRelationshipsArgs = Readonly<{
-  node: Pick<CanonicalNode, 'id' | 'name'>;
+  node: Pick<CanonicalNode, 'id'>;
   section: NodePropertySection;
   canReorder?: boolean;
   workspaceLayoutKey?: string | null;
@@ -18,9 +21,8 @@ export type SourceRelationshipsArgs = Readonly<{
 
 export type SourceRelationshipRowModel = Readonly<{
   relationship: SourceRelationship;
-  selected: boolean;
   dropPlacement?: 'before' | 'after';
-  control: ComponentProps<'button'>;
+  control: ComponentProps<'li'> | null;
 }>;
 
 export function useSourceRelationships({
@@ -30,125 +32,96 @@ export function useSourceRelationships({
   workspaceLayoutKey = null,
 }: SourceRelationshipsArgs) {
   const language = useApplicationLanguageStore((state) => state.language);
-  const copy = language.trim().toLowerCase().startsWith('es')
-    ? sourceRelationshipsCopyEs
-    : sourceRelationshipsCopyEn;
+  const copy = copyByLanguage[resolveCopyLanguage(language)];
   const relationships = useMemo(
     () => readSourceRelationships(section.tableRows),
     [section.tableRows]
   );
-  const inputs = relationships.filter((relationship) => relationship.direction === 'input');
-  const canonicalOutputs = useMemo(
-    () => relationships.filter((relationship) => relationship.direction === 'output'),
+  const byId = useMemo(
+    () => new Map(relationships.map((relationship) => [relationship.id, relationship])),
     [relationships]
   );
-  const canonicalOutputIds = useMemo(
-    () => canonicalOutputs.map(({ id }) => id),
-    [canonicalOutputs]
-  );
+  const canonicalIds = useMemo(() => [...byId.keys()], [byId]);
   const outputOrder = useCanvasInspectorListOrder({
     workspaceLayoutKey,
     nodeId: node.id,
     listId: 'outputs',
-    canonicalIds: canonicalOutputIds,
+    canonicalIds,
   });
-  const outputs = useMemo(() => {
-    const byId = new Map(canonicalOutputs.map((relationship) => [relationship.id, relationship]));
-    return outputOrder.orderedIds.flatMap((id) => {
-      const relationship = byId.get(id);
-      return relationship == null ? [] : [relationship];
-    });
-  }, [canonicalOutputs, outputOrder.orderedIds]);
-  const orderedRelationships = [...inputs, ...outputs];
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [reorderStatus, setReorderStatus] = useState('');
+  const rowRefs = useRef(new Map<string, HTMLLIElement>());
+  const [recentMove, setRecentMove] = useState<{ id: string } | null>(null);
   const reorderHintId = useId();
-  const rowRefs = useRef(new Map<string, HTMLButtonElement>());
-  const selectAndFocus = (id: string) => {
-    setSelectedId(id);
-    rowRefs.current.get(id)?.focus();
-  };
+  useLayoutEffect(() => {
+    if (recentMove != null) rowRefs.current.get(recentMove.id)?.focus();
+  }, [recentMove]);
+
   const outputReorder = useInspectorListReorder({
     orderedIds: outputOrder.orderedIds,
-    visibleIds: outputs.map(({ id }) => id),
-    enabled: canReorder && outputOrder.canPersist,
+    visibleIds: outputOrder.orderedIds,
+    enabled: canReorder && outputOrder.canPersist && canonicalIds.length > 1,
     onMove: outputOrder.move,
-    onMoved: (id) => {
-      selectAndFocus(id);
-      setReorderStatus(copy.reordered + ': ' + id);
-    },
+    onMoved: (id) => setRecentMove({ id }),
   });
-  const selected =
-    orderedRelationships.find(({ id }) => id === selectedId) ?? orderedRelationships[0] ?? null;
 
-  const onKeyDown = (
-    event: KeyboardEvent<HTMLButtonElement>,
-    relationship: SourceRelationship,
-    index: number
-  ) => {
-    if (
-      relationship.direction === 'output' &&
-      outputReorder.moveWithKeyboard(relationship.id, event)
-    )
-      return;
-    const targets: Record<string, number> = {
-      ArrowDown: index + 1,
-      ArrowUp: index - 1,
-      Home: 0,
-      End: orderedRelationships.length - 1,
-    };
-    const target = targets[event.key];
-    if (target == null || target === index || target < 0 || target >= orderedRelationships.length)
-      return;
-    event.preventDefault();
-    selectAndFocus(orderedRelationships[target]!.id);
-  };
-  const buildRow = (
-    relationship: SourceRelationship,
-    index: number
-  ): SourceRelationshipRowModel => {
-    const isSelected = selected?.id === relationship.id;
-    const draggable = relationship.direction === 'output' && outputReorder.canReorder;
-    return {
-      relationship,
-      selected: isSelected,
-      dropPlacement: outputReorder.dropPlacement(relationship.id),
-      control: {
-        ref: (element) => {
-          if (element == null) rowRefs.current.delete(relationship.id);
-          else rowRefs.current.set(relationship.id, element);
-        },
-        type: 'button',
-        role: 'option',
-        'aria-selected': isSelected,
-        tabIndex: isSelected ? 0 : -1,
-        draggable,
-        title: draggable ? copy.reorder + ': ' + relationship.relatedNodeName : undefined,
-        onClick: () => setSelectedId(relationship.id),
-        onKeyDown: (event) => onKeyDown(event, relationship, index),
-        onDragStart: (event) => outputReorder.startDrag(relationship.id, event),
-        onDragEnd: outputReorder.endDrag,
-        onDragOver: (event) => outputReorder.dragOver(relationship.id, event),
-        onDragLeave: outputReorder.dragLeave,
-        onDrop: (event) => outputReorder.drop(relationship.id, event),
-      },
-    };
-  };
   return {
-    copy,
-    selected,
+    reorderHint: copy.reorderHint,
     reorderHintId,
-    reorderStatus,
+    reorderStatus: resolveSourceRelationshipStatus(recentMove, byId, copy),
     canReorder: outputReorder.canReorder,
-    count: orderedRelationships.length,
-    groups: [
-      { id: 'inputs', label: copy.inputs, empty: copy.noInputs, rows: inputs.map(buildRow) },
-      {
-        id: 'outputs',
-        label: copy.outputs,
-        empty: copy.noOutputs,
-        rows: outputs.map((relationship, index) => buildRow(relationship, inputs.length + index)),
-      },
-    ],
+    rows: outputOrder.orderedIds.flatMap((id): SourceRelationshipRowModel[] => {
+      const relationship = byId.get(id);
+      if (relationship == null) return [];
+      const control: SourceRelationshipRowModel['control'] = outputReorder.canReorder
+        ? createSourceRelationshipControl({
+            id,
+            rowRefs: rowRefs.current,
+            reorderHintId,
+            outputReorder,
+          })
+        : null;
+      return [{ relationship, control, dropPlacement: outputReorder.dropPlacement(id) }];
+    }),
+  };
+}
+
+function resolveSourceRelationshipStatus(
+  recentMove: { id: string } | null,
+  byId: ReadonlyMap<string, SourceRelationship>,
+  copy: Pick<typeof sourceRelationshipsCopyEn, 'reordered'>
+): string {
+  if (recentMove === null) return '';
+  const moved = byId.get(recentMove.id);
+  if (moved === undefined) return '';
+  return copy.reordered(moved.relatedNodeName);
+}
+
+function createSourceRelationshipControl({
+  id,
+  rowRefs,
+  reorderHintId,
+  outputReorder,
+}: {
+  id: string;
+  rowRefs: Map<string, HTMLLIElement>;
+  reorderHintId: string;
+  outputReorder: ReturnType<typeof useInspectorListReorder>;
+}): NonNullable<SourceRelationshipRowModel['control']> {
+  return {
+    ref: (element) => {
+      if (element == null) rowRefs.delete(id);
+      else rowRefs.set(id, element);
+    },
+    'aria-describedby': reorderHintId,
+    'aria-keyshortcuts': 'Alt+ArrowUp Alt+ArrowDown',
+    tabIndex: 0,
+    draggable: true,
+    onKeyDown: (event) => {
+      outputReorder.moveWithKeyboard(id, event);
+    },
+    onDragStart: (event) => outputReorder.startDrag(id, event),
+    onDragEnd: outputReorder.endDrag,
+    onDragOver: (event) => outputReorder.dragOver(id, event),
+    onDragLeave: outputReorder.dragLeave,
+    onDrop: (event) => outputReorder.drop(id, event),
   };
 }

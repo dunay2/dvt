@@ -6,6 +6,7 @@ import { useCanvasAuthoringProjection } from './useCanvasAuthoringProjection';
 import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
 import { useCanvasDraftLifecycle } from './useCanvasDraftLifecycle';
 import { useCanvasWorkspaceDraftSession } from './useCanvasWorkspaceDraftSession';
+import { projectRetainedCanvasDefinitions } from './canvasDraftDefinitionRemoval';
 
 export function useCanvasAuthoringRuntimeDraftFlow({
   workspaceGraphDraftAuthoringPort,
@@ -39,7 +40,14 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     },
     visibleNodeIds: draftSession.workingSet.visibleNodeIds,
     visibleEdges: draftSession.workingSet.visibleEdges,
-    draftSemanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
+    draftSemanticGraph: useMemo(
+      () =>
+        projectRetainedCanvasDefinitions(
+          graphDraftQuery.data?.semanticGraph ?? null,
+          draftSession.removedDefinitionIds
+        ),
+      [graphDraftQuery.data?.semanticGraph, draftSession.removedDefinitionIds]
+    ),
     localCanonicalNodes,
     localDefinitionEdges: draftSession.localDefinitionEdges,
     columnLevelLineageEnabled,

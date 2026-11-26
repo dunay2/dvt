@@ -54,13 +54,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
     };
     function DrawerBody(): React.JSX.Element {
       const { contribution, activeTab } = useOperationalDrawerContributionStore();
-      return (
-        <BottomOperationalDrawerBody
-          contribution={contribution}
-          activeTab={activeTab}
-          logBody={null}
-        />
-      );
+      return <BottomOperationalDrawerBody contribution={contribution} activeTab={activeTab} />;
     }
     const renderDiagnostic = (message: string): React.ReactElement => (
       <>
@@ -77,7 +71,6 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
               diagnostic: { blocker: 'plan_integrity', message },
             },
           }}
-          runControls={shell.runControls}
           onPreviewExecutionPlan={vi.fn()}
           onStartRun={vi.fn()}
           selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
@@ -136,7 +129,6 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
           policy={shell.layout.surfaceStrategy!.operationalDrawer!}
           panels={shell.panels}
           chromeState={shell.chromeState}
-          runControls={shell.runControls}
           onPreviewExecutionPlan={vi.fn()}
           onStartRun={vi.fn()}
           selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
@@ -169,7 +161,6 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
           policy={shell.layout.surfaceStrategy!.operationalDrawer!}
           panels={shell.panels}
           chromeState={{ ...shell.chromeState, canPlanGraph: !suspended }}
-          runControls={shell.runControls}
           onPreviewExecutionPlan={vi.fn()}
           onStartRun={vi.fn()}
           selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
@@ -202,7 +193,6 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
             blockers: [...shell.chromeState.planRunReadiness.blockers],
           },
         }}
-        runControls={shell.runControls}
         onPreviewExecutionPlan={onPreviewExecutionPlan}
         onStartRun={vi.fn()}
         selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
@@ -234,7 +224,6 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
           policy={policy}
           panels={shell.panels}
           chromeState={shell.chromeState}
-          runControls={shell.runControls}
           onPreviewExecutionPlan={vi.fn()}
           onStartRun={vi.fn()}
           selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
@@ -255,9 +244,6 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
     expect(spanishContribution).toMatchObject({
       title: 'Operaciones del Canvas',
       tabs: [
-        { id: 'log', label: 'Registro' },
-        { id: 'problems', label: 'Problemas' },
-        { id: 'runs', label: 'Ejecuciones' },
         { id: 'preview', label: 'Vista previa' },
         { id: 'semantic', label: 'Árbol relacional' },
       ],

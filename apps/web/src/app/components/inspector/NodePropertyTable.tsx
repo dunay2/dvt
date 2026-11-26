@@ -1,6 +1,8 @@
 /** Shared property cells, rendered as an Inspector table or workbench records. */
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { cn } from '../ui/utils';
+import { InspectorRelationshipFocusContext } from './inspectorRelationshipFocusContext';
 import metadataStyles from './InspectorMetadata.module.css';
 import type { NodePropertySection, NodePropertyTableRow } from './nodePropertiesContracts';
 import {
@@ -50,11 +52,12 @@ function RelationshipRecord({
   renderTableCell,
 }: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
   Readonly<{ row: NodePropertyTableRow }>): JSX.Element {
-  const nodeName = row.cells.node?.trim();
-  const displayName = nodeName && nodeName !== row.cells.nodeId?.trim() ? row.cells.node : '';
-  return (
-    <li data-slot="node-property-relationship-record" className={styles.records.relationshipCard}>
-      <div
+  const { nodeId, displayName } = readRelationshipTarget(row);
+  const focusNode = useContext(InspectorRelationshipFocusContext);
+  const activate = resolveRelationshipActivation(displayName, nodeId, focusNode);
+  const content = (
+    <>
+      <span
         data-slot="node-property-relationship-summary"
         className={styles.records.relationshipSummary}
       >
@@ -89,11 +92,11 @@ function RelationshipRecord({
             renderTableCell={renderTableCell}
           />
         </span>
-      </div>
+      </span>
       {row.cells.connection?.trim() ? (
-        <p
+        <span
           data-slot="node-property-relationship-connection"
-          className={styles.records.relationshipConnection}
+          className={cn('block', styles.records.relationshipConnection)}
         >
           <PropertyCell
             section={section}
@@ -101,10 +104,51 @@ function RelationshipRecord({
             columnKey="connection"
             renderTableCell={renderTableCell}
           />
-        </p>
+        </span>
       ) : null}
+    </>
+  );
+  return (
+    <li
+      data-slot="node-property-relationship-record"
+      className={activate == null ? styles.records.relationshipCard : undefined}
+    >
+      {activate == null ? (
+        content
+      ) : (
+        <button
+          type="button"
+          className={cn(
+            styles.records.relationshipCard,
+            'block w-full cursor-pointer text-left hover:bg-(--surface-selected) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring)'
+          )}
+          onDoubleClick={activate}
+          onClick={(event) => {
+            if (event.detail === 0) activate();
+          }}
+        >
+          {content}
+        </button>
+      )}
     </li>
   );
+}
+
+function readRelationshipTarget(row: NodePropertyTableRow) {
+  const nodeName = row.cells.node?.trim();
+  const nodeId = row.cells.nodeId?.trim();
+  return { nodeId, displayName: nodeName && nodeName !== nodeId ? row.cells.node : '' };
+}
+
+function resolveRelationshipActivation(
+  displayName: string | undefined,
+  nodeId: string | undefined,
+  focusNode: ((nodeId: string) => void) | null
+) {
+  if (!displayName) return undefined;
+  if (!nodeId) return undefined;
+  if (!focusNode) return undefined;
+  return () => focusNode(nodeId);
 }
 
 function PropertyRecords({
@@ -130,43 +174,14 @@ function PropertyRecords({
               renderTableCell={renderTableCell}
             />
           );
-        const fields =
-          detailKeys.length === 0 ? null : (
-            <dl className={styles.records.details}>
-              {detailKeys.map((key) => (
-                <div key={key} className={metadataStyles.fact}>
-                  <dt className={inspectorVisualClasses.inspectorLabel}>
-                    {columnLabel(section, key)}
-                  </dt>
-                  <dd className={metadataStyles.value}>
-                    <PropertyCell
-                      section={section}
-                      row={row}
-                      columnKey={key}
-                      renderTableCell={renderTableCell}
-                    />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          );
         return (
-          <li key={row.id} data-slot="node-property-column-record">
-            <details
-              data-slot="node-property-column-disclosure"
-              className={styles.records.disclosure}
-            >
-              <summary className={styles.records.trigger}>
-                <ChevronRight
-                  data-slot="node-property-column-disclosure-arrow"
-                  className={styles.records.arrow}
-                  aria-hidden="true"
-                />
-                <span className={styles.records.name}>{row.cells.name || row.id}</span>
-              </summary>
-              {fields}
-            </details>
-          </li>
+          <NodePropertyColumnRecord
+            key={row.id}
+            section={section}
+            row={row}
+            detailKeys={detailKeys}
+            renderTableCell={renderTableCell}
+          />
         );
       })}
     </ul>
@@ -184,6 +199,10 @@ function columnLabel(section: NodePropertySection, key: string): string {
   return section.columnLabels?.[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+function isPropertyRecordsSection(section: NodePropertySection): boolean {
+  return ['columns', 'inputs-outputs'].includes(section.id);
+}
+
 export function NodePropertyTable({
   section,
   surface = 'inspector',
@@ -192,7 +211,7 @@ export function NodePropertyTable({
   const columnKeys = Array.from(
     new Set(section.tableRows.flatMap((row) => Object.keys(row.cells)))
   ).filter((key) => section.id !== 'columns' || key !== 'reference');
-  if (surface === 'workbench' && (section.id === 'columns' || section.id === 'inputs-outputs')) {
+  if (surface === 'workbench' && isPropertyRecordsSection(section)) {
     return (
       <PropertyRecords
         section={section}
@@ -232,5 +251,47 @@ export function NodePropertyTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function NodePropertyColumnRecord({
+  section,
+  row,
+  detailKeys,
+  renderTableCell,
+}: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
+  Readonly<{ row: NodePropertyTableRow; detailKeys: readonly string[] }>): JSX.Element {
+  const fields =
+    detailKeys.length === 0 ? null : (
+      <dl className={styles.records.details}>
+        {detailKeys.map((key) => (
+          <div key={key} className={metadataStyles.fact}>
+            <dt className={inspectorVisualClasses.inspectorLabel}>{columnLabel(section, key)}</dt>
+            <dd className={metadataStyles.value}>
+              <PropertyCell
+                section={section}
+                row={row}
+                columnKey={key}
+                renderTableCell={renderTableCell}
+              />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  return (
+    <li key={row.id} data-slot="node-property-column-record">
+      <details data-slot="node-property-column-disclosure" className={styles.records.disclosure}>
+        <summary className={styles.records.trigger}>
+          <ChevronRight
+            data-slot="node-property-column-disclosure-arrow"
+            className={styles.records.arrow}
+            aria-hidden="true"
+          />
+          <span className={styles.records.name}>{row.cells.name || row.id}</span>
+        </summary>
+        {fields}
+      </details>
+    </li>
   );
 }

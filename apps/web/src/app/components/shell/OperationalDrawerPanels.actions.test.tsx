@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BottomOperationalDrawerBody,
   BottomOperationalProblemsPanel,
-  BottomOperationalRunsPanel,
 } from './OperationalDrawerPanels';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 import { resolveCanvasViewCopy } from '../../views/canvas/canvasCopyCatalog';
@@ -22,10 +21,6 @@ function buildContribution(
     copy: {
       problemsAriaLabel: 'Canvas problems',
       noProblemsMessage: 'No current Canvas problems.',
-      runsAriaLabel: 'Canvas runs',
-      runReadyStatus: 'Run ready',
-      runBlockedStatus: 'Run blocked',
-      runActiveStatus: 'Active run',
       previewAriaLabel: 'Canvas execution preview',
       previewAction: 'Create Execution Preview',
       previewReadyStatus: 'Preview ready',
@@ -50,9 +45,6 @@ function buildContribution(
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
     tabs: [
-      { id: 'log', label: 'Log', count: null },
-      { id: 'problems', label: 'Problems', count: 1 },
-      { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 1 },
       { id: 'data', label: 'Data', count: null },
     ],
@@ -73,10 +65,8 @@ function buildContribution(
     runs: {
       activeRunId: null,
       canStartRun: false,
-      controls: null,
       onStartRun: vi.fn(),
       status: 'blocked',
-      summary: 'Preview required before running.',
     },
     preview: {
       status: 'blocked',
@@ -137,71 +127,6 @@ describe('OperationalDrawerPanels action surfaces', () => {
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
-  it('renders run readiness summaries without needing a live run id', async () => {
-    await act(async () => {
-      root.render(<BottomOperationalRunsPanel contribution={buildContribution()} />);
-    });
-
-    expect(container.textContent).toContain('Run blocked');
-    expect(container.textContent).toContain('Preview required before running.');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="runs"
-          contribution={buildContribution({
-            runs: {
-              activeRunId: null,
-              canStartRun: true,
-              controls: null,
-              onStartRun: vi.fn(),
-              status: 'ready',
-              summary: 'Run is ready after the current execution preview.',
-            },
-          })}
-          logBody={<div />}
-        />
-      );
-    });
-
-    expect(container.textContent).toContain('Run ready');
-    expect(container.textContent).toContain('Run is ready after the current execution preview.');
-  });
-
-  it('renders backend-authoritative controls for the observed run', async () => {
-    const onCancel = vi.fn();
-    const contribution = buildContribution({
-      runs: {
-        activeRunId: 'run-active',
-        canStartRun: false,
-        onStartRun: vi.fn(),
-        status: 'active',
-        summary: 'Run run-active is active.',
-        controls: {
-          runId: 'run-active',
-          availability: {
-            cancel: { available: true },
-            recover: { available: false, reason: 'run_active' },
-          },
-          activity: null,
-          outcome: null,
-          failure: null,
-          onCancel,
-          onRecover: vi.fn(),
-        },
-      },
-    });
-
-    await act(async () => {
-      root.render(<BottomOperationalRunsPanel contribution={contribution} />);
-    });
-
-    const cancel = container.querySelector<HTMLButtonElement>('[aria-label="Cancel run"]');
-    expect(cancel).not.toBeNull();
-    act(() => cancel?.click());
-    expect(onCancel).toHaveBeenCalledTimes(1);
-  });
-
   it('delegates explicit selection recovery from Preview', async () => {
     const useWorkspaceScope = vi.fn();
     const contribution = buildContribution({
@@ -241,13 +166,7 @@ describe('OperationalDrawerPanels action surfaces', () => {
     });
 
     await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="preview"
-          contribution={contribution}
-          logBody={null}
-        />
-      );
+      root.render(<BottomOperationalDrawerBody activeTab="preview" contribution={contribution} />);
     });
 
     expect(container.textContent).toContain('Selected nodes');

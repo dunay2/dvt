@@ -12,6 +12,7 @@
  */
 export * from './contracts/planner/DvtSubstraitProfile.v1.js';
 export * from './contracts/planner/DvtSubstraitPlanBinary.v1.js';
+export * from './contracts/planner/DvtSubstraitLiteralRow.v1.js';
 export * from './contracts/planner/DvtSubstraitSemanticDocument.v1.js';
 export * from './contracts/planner/DvtSubstraitCapabilityCatalog.v1.js';
 export * from './contracts/planner/DvtSubstraitCapabilityAdmission.v1.js';

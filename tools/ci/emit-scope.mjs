@@ -8,6 +8,7 @@ import {
   setGitHubOutput,
 } from './scope-config.mjs';
 import { buildCiScopeOutputs } from './ci-scope-outputs.mjs';
+import { resolveWebBrowserMatrix } from './web-browser-matrix-preflight.mjs';
 
 function ensureGitCommitAvailable(ref) {
   if (!ref) return;
@@ -39,7 +40,11 @@ export async function main() {
   }
   const scope = buildCiScopeOutputs(changedFiles, scopeContext, { full });
 
-  for (const [key, value] of Object.entries(scope)) {
+  const browserMatrix = resolveWebBrowserMatrix(scope, { full, changedFiles });
+  for (const [key, value] of Object.entries({
+    ...scope,
+    web_browser_matrix: JSON.stringify(browserMatrix),
+  })) {
     setGitHubOutput(key, value);
   }
 }

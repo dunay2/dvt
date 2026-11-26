@@ -21,18 +21,21 @@ const MECHANICAL_PREPUSH_STEPS = Object.freeze([
   step('verify-changed', 'pnpm', 'verify:changed', '--push-readiness'),
 ]);
 
-const VERIFY_CHANGED_PRE_TEST_STEPS = Object.freeze([
-  step(
-    'knowledge-intake-retirement-check',
-    'pnpm',
-    'planning:db:knowledge-intake:retirement:check'
-  ),
+const VERIFY_CHANGED_MARKDOWN_STEPS = Object.freeze([
   step('docs-gov-locations-changed', 'pnpm', 'docs:gov:locations', '--', '--changed-only'),
   step('docs-gov-filenames-changed', 'pnpm', 'docs:gov:filenames:changed'),
   step('docs-gov-frontmatter-changed', 'pnpm', 'docs:gov:frontmatter:changed'),
   step('arc-evidence-changed', 'pnpm', 'docs:arc:evidence:check', '--', '--changed-only'),
   step('qa-artifact-check', 'pnpm', 'qa:artifact:check'),
   step('lint-md-changed', 'pnpm', 'lint:md:changed'),
+]);
+
+const VERIFY_CHANGED_PRE_TEST_STEPS = Object.freeze([
+  step(
+    'knowledge-intake-retirement-check',
+    'pnpm',
+    'planning:db:knowledge-intake:retirement:check'
+  ),
   step('feature-mechanization-implementation', 'pnpm', 'docs:feature-mechanization:implementation'),
   step('check-changed', 'node', 'scripts/check-changed.cjs'),
 ]);
@@ -135,9 +138,17 @@ function buildPrepushPlan(changedFiles, options = {}) {
   return plan;
 }
 
+function needsMarkdownValidation(files, options) {
+  if (options.completeChangedFiles !== true || options.iteration) return true;
+  const env = options.env ?? process.env;
+  if (env.DOCS_GOV_CHANGED_FILES !== undefined || env.GIT_BINARY !== undefined) return true;
+  return files.some((file) => /\.md$/iu.test(file));
+}
+
 function buildVerifyChangedPlan(files, options = {}) {
   const changedFiles = normalizeChangedFiles(files);
   if (changedFiles.length === 0) return [];
+  const markdownValidation = needsMarkdownValidation(changedFiles, options);
   const plan = [];
   pushStepOnce(plan, VERIFY_CHANGED_PRE_TEST_STEPS[0]);
   if (
@@ -147,6 +158,7 @@ function buildVerifyChangedPlan(files, options = {}) {
   ) {
     pushSteps(plan, PREPUSH_GROUPS.planningDb);
   }
+  if (markdownValidation) pushSteps(plan, VERIFY_CHANGED_MARKDOWN_STEPS);
   pushSteps(
     plan,
     VERIFY_CHANGED_PRE_TEST_STEPS.slice(1).filter(

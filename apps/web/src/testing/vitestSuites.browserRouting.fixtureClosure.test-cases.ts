@@ -4,9 +4,13 @@
  * @reason GH-3765 separates proof contracts without weakening their existing assertions.
  * @consequence The existing architecture entry registers every family in one isolated runtime.
  */
-import { resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { WEB_CYPRESS_NIGHTLY_SPECS, WEB_CYPRESS_SPECS } from '../../cypress.changed';
+import {
+  resolveWebCypressChangedPlan,
+  WEB_CYPRESS_NIGHTLY_SPECS,
+  WEB_CYPRESS_SPECS,
+} from '../../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import {
   browserModules,
@@ -15,6 +19,7 @@ import {
 } from './vitestSuites.browserRouting.moduleGraph';
 
 export function registerBrowserRoutingFixtureClosure(): void {
+  registerBrowserRoutingSupportAdmission();
   describe('browser helper closure admission', () => {
     it.each(
       ['apps/web/cypress.commands.ts', 'apps/web/cypress.supportCapabilities.ts'].flatMap(
@@ -155,6 +160,103 @@ export function registerBrowserRoutingFixtureClosure(): void {
           'apps/web/cypress/support/canvasGraphAuthoring.ts',
         ]).browserCommands.map((entry) => entry.capability)
       ).toEqual(['controlled', 'available']);
+    });
+  });
+}
+
+function collectSupportConsumers(): ReadonlyArray<readonly [string, readonly string[]]> {
+  const graph = new Map(
+    [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+  );
+  const specs = Object.values(WEB_CYPRESS_SPECS).flat();
+  return [...browserModules.keys()]
+    .filter((path) => path.startsWith(resolve('cypress/support') + sep))
+    .map(
+      (helper) =>
+        [
+          `apps/web/${relative(resolve('.'), helper).replaceAll('\\', '/')}`,
+          specs.filter((spec) =>
+            reachesModule(graph, resolve(spec.slice('apps/web/'.length)), helper)
+          ),
+        ] as const
+    )
+    .filter(([, consumers]) => consumers.length > 0);
+}
+
+function assertAdmittedSupportConsumers(helper: string, consumers: readonly string[]): void {
+  expect(consumers.length).toBeGreaterThan(0);
+  const plan = resolveWebVitestChangedSuitePlan([helper]);
+  expect(resolveWebCypressChangedPlan([helper]).vitestFiles).not.toContain(helper);
+  expect(plan.browserFiles.filter((path) => path === helper)).toHaveLength(1);
+  for (const consumer of consumers) {
+    const owners = Object.entries(WEB_CYPRESS_SPECS)
+      .filter(([, paths]) => paths.includes(consumer))
+      .map(([capability]) => capability);
+    expect(owners, consumer).toHaveLength(1);
+    expect(
+      plan.browserCommands.flatMap((command) =>
+        command.specPaths.filter((path) => path === consumer).map(() => command.capability)
+      ),
+      consumer
+    ).toEqual(owners);
+    expect(
+      plan.browserFiles.filter((path) => path === consumer),
+      consumer
+    ).toHaveLength(1);
+  }
+}
+
+function registerBrowserRoutingSupportAdmission(): void {
+  describe('complete physical browser support admission', () => {
+    it.each(collectSupportConsumers())(
+      'retains every actual runtime consumer of %s',
+      assertAdmittedSupportConsumers
+    );
+
+    it.each([
+      'apps/web/cypress/support/screenComposition/focusProofAdjacent.ts',
+      'cypress/support/relationalWorkbench/joinChainAdjacent.ts',
+      'apps\\web\\cypress\\support\\semanticLive\\unknownFixture.ts',
+    ])('rejects unregistered adjacent helpers without borrowing ownership: %s', (path) => {
+      expect(() => resolveWebVitestChangedSuitePlan([path])).toThrow(/not admitted/);
+    });
+
+    it.each([
+      'apps/web/cypress/support/screenComposition/focusProof.ts',
+      'cypress/support/screenComposition/narrowProof.ts',
+      'apps\\web\\cypress\\support\\screenComposition\\startupProof.ts',
+    ])('keeps an exact screen helper out of Vitest in every spelling: %s', (path) => {
+      const browser = resolveWebCypressChangedPlan([path]);
+      expect(browser.vitestFiles).toEqual([]);
+      const plan = resolveWebVitestChangedSuitePlan([path]);
+      expect(plan.commandPlan).toEqual([]);
+      expect(plan.browserCommands).toMatchObject([
+        {
+          capability: 'controlled',
+          specPaths: ['apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'],
+        },
+      ]);
+    });
+
+    it('combines helper and product evidence without treating Cypress support as product code', () => {
+      const helper = 'apps/web/cypress/support/screenComposition/focusProof.ts';
+      const source = 'apps/web/src/app/views/sql/sqlWorksheetInsertions.ts';
+      const product = resolveWebVitestChangedSuitePlan([source]);
+      const paths = [helper, source, helper];
+      const plan = resolveWebVitestChangedSuitePlan(paths);
+      expect(resolveWebCypressChangedPlan(paths).vitestFiles).toEqual([source]);
+      expect(plan.commandPlan).toEqual(product.commandPlan);
+      expect(plan.suites).toEqual(product.suites);
+      expect(plan.browserCommands).toMatchObject([
+        {
+          capability: 'controlled',
+          specPaths: [
+            'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
+            'apps/web/cypress/e2e/sql/sql-worksheet.cy.ts',
+          ],
+        },
+      ]);
+      expect(resolveWebVitestChangedSuitePlan([...paths].reverse())).toEqual(plan);
     });
   });
 }

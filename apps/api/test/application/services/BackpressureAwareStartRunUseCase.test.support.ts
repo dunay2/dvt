@@ -8,7 +8,7 @@ import {
   START_RUN_RESULT_KIND,
   type StartRunAcceptedResult,
 } from '@dvt/contracts';
-import { expect, vi } from 'vitest';
+import { expect, vi, type Mock } from 'vitest';
 
 import type {
   AdmissionTelemetry,
@@ -72,10 +72,10 @@ export type StartRunExecutionResult = Awaited<
   ReturnType<BackpressureAwareStartRunUseCase['execute']>
 >;
 export type DelegateSpy = IStartRunUseCase & {
-  readonly execute: ReturnType<typeof vi.fn>;
+  readonly execute: Mock;
 };
 export type TelemetrySpy = AdmissionTelemetry & {
-  readonly record: ReturnType<typeof vi.fn>;
+  readonly record: Mock;
 };
 export type ExecuteWithoutDelegateOverrides = Omit<
   Partial<StartRunUseCaseDeps>,

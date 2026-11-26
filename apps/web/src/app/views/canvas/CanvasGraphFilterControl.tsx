@@ -36,8 +36,6 @@ export function CanvasGraphFilterControl({
 }: CanvasGraphFilterControlProps): JSX.Element {
   const { model } = binding;
   const activeCount = model.predicates.length;
-  const selectedOptions =
-    model.optionGroups.find((group) => group.dimension === model.draftDimension)?.values ?? [];
 
   return (
     <TooltipProvider delayDuration={250}>
@@ -64,18 +62,31 @@ export function CanvasGraphFilterControl({
 
         <PopoverContent
           data-slot="canvas-graph-filter-control"
+          aria-label={copy.canvasGraphFilterTitle}
           align="end"
           sideOffset={8}
           className={styles.content}
         >
-          <header>
-            <h2 className={styles.title}>{copy.canvasGraphFilterTitle}</h2>
-            <p className={styles.matchSummary} aria-live="polite">
-              {formatCanvasCopyTemplate(copy.canvasGraphFilterMatchSummaryTemplate, {
-                matching: String(model.matchCount),
-                total: String(model.totalCount),
-              })}
-            </p>
+          <header className={styles.header}>
+            <div>
+              <h2 className={styles.title}>{copy.canvasGraphFilterTitle}</h2>
+              <p className={styles.matchSummary} aria-live="polite">
+                {formatCanvasCopyTemplate(copy.canvasGraphFilterMatchSummaryTemplate, {
+                  matching: String(model.matchCount),
+                  total: String(model.totalCount),
+                })}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={styles.iconButton}
+              aria-label={copy.canvasGraphFilterCloseLabel}
+              onClick={() => binding.setOpen(false)}
+            >
+              <X aria-hidden="true" />
+            </Button>
           </header>
 
           <FilterChoiceGroup
@@ -99,84 +110,9 @@ export function CanvasGraphFilterControl({
             }
           />
 
-          <div className={styles.draftGrid}>
-            <label className={styles.fieldLabel}>
-              <span className={styles.mutedLabel}>{copy.canvasGraphFilterDimensionLabel}</span>
-              <select
-                aria-label={copy.canvasGraphFilterDimensionLabel}
-                value={model.draftDimension}
-                className={styles.select}
-                onChange={(event) =>
-                  binding.selectDimension(event.currentTarget.value as CanvasGraphFilterDimension)
-                }
-              >
-                {model.optionGroups.map((group) => (
-                  <option key={group.dimension} value={group.dimension}>
-                    {resolveDimensionLabel(copy, group.dimension)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.fieldLabel}>
-              <span className={styles.mutedLabel}>{copy.canvasGraphFilterValueLabel}</span>
-              <select
-                aria-label={copy.canvasGraphFilterValueLabel}
-                value={model.draftValue}
-                className={styles.select}
-                onChange={(event) => binding.selectValue(event.currentTarget.value)}
-              >
-                {selectedOptions.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className={styles.addButton}
-              aria-label={copy.canvasGraphFilterAddLabel}
-              disabled={model.draftValue.length === 0}
-              onClick={binding.addDraftPredicate}
-            >
-              <Plus aria-hidden="true" />
-            </Button>
-          </div>
+          <FilterDraftFields binding={binding} copy={copy} />
 
-          <div className={styles.predicateList}>
-            {activeCount === 0 ? (
-              <p className={styles.empty}>{copy.canvasGraphFilterEmptyLabel}</p>
-            ) : (
-              model.predicates.map((predicate) => (
-                <div
-                  key={`${predicate.dimension}:${predicate.value}`}
-                  className={styles.predicateRow}
-                >
-                  <span className={styles.predicateText}>
-                    {resolveDimensionLabel(copy, predicate.dimension)}: {predicate.value}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className={styles.removeButton}
-                    aria-label={formatCanvasCopyTemplate(
-                      copy.canvasGraphFilterRemoveLabelTemplate,
-                      {
-                        dimension: resolveDimensionLabel(copy, predicate.dimension),
-                        value: predicate.value,
-                      }
-                    )}
-                    onClick={() => binding.removePredicate(predicate)}
-                  >
-                    <X aria-hidden="true" />
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
+          <FilterPredicates binding={binding} copy={copy} />
 
           <Button
             type="button"
@@ -241,3 +177,89 @@ function resolveDimensionLabel(
 }
 
 export type { CanvasGraphFilterControlProps };
+
+function FilterDraftFields({ binding, copy }: CanvasGraphFilterControlProps): JSX.Element {
+  const { model } = binding;
+  const selectedOptions =
+    model.optionGroups.find((group) => group.dimension === model.draftDimension)?.values ?? [];
+  return (
+    <div className={styles.draftGrid}>
+      <label className={styles.fieldLabel}>
+        <span className={styles.mutedLabel}>{copy.canvasGraphFilterDimensionLabel}</span>
+        <select
+          aria-label={copy.canvasGraphFilterDimensionLabel}
+          value={model.draftDimension}
+          className={styles.select}
+          onChange={(event) =>
+            binding.selectDimension(event.currentTarget.value as CanvasGraphFilterDimension)
+          }
+        >
+          {model.optionGroups.map((group) => (
+            <option key={group.dimension} value={group.dimension}>
+              {resolveDimensionLabel(copy, group.dimension)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.fieldLabel}>
+        <span className={styles.mutedLabel}>{copy.canvasGraphFilterValueLabel}</span>
+        <select
+          aria-label={copy.canvasGraphFilterValueLabel}
+          value={model.draftValue}
+          className={styles.select}
+          onChange={(event) => binding.selectValue(event.currentTarget.value)}
+        >
+          {selectedOptions.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Button
+        type="button"
+        size="icon"
+        variant="outline"
+        className={styles.addButton}
+        aria-label={copy.canvasGraphFilterAddLabel}
+        disabled={model.draftValue.length === 0}
+        onClick={binding.addDraftPredicate}
+      >
+        <Plus aria-hidden="true" />
+      </Button>
+    </div>
+  );
+}
+
+function FilterPredicates({ binding, copy }: CanvasGraphFilterControlProps): JSX.Element {
+  const { model } = binding;
+  const activeCount = model.predicates.length;
+  return (
+    <div className={styles.predicateList}>
+      {activeCount === 0 ? (
+        <p className={styles.empty}>{copy.canvasGraphFilterEmptyLabel}</p>
+      ) : (
+        model.predicates.map((predicate) => (
+          <div key={`${predicate.dimension}:${predicate.value}`} className={styles.predicateRow}>
+            <span className={styles.predicateText}>
+              {resolveDimensionLabel(copy, predicate.dimension)}: {predicate.value}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={styles.iconButton}
+              aria-label={formatCanvasCopyTemplate(copy.canvasGraphFilterRemoveLabelTemplate, {
+                dimension: resolveDimensionLabel(copy, predicate.dimension),
+                value: predicate.value,
+              })}
+              onClick={() => binding.removePredicate(predicate)}
+            >
+              <X aria-hidden="true" />
+            </Button>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}

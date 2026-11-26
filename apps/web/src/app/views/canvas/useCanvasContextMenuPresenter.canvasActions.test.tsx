@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import {
@@ -11,10 +11,10 @@ import {
 } from './useCanvasContextMenuPresenter';
 
 type PresenterCallbackSpies = Readonly<{
-  onCreateAuthoringNode: ReturnType<typeof vi.fn>;
-  onEdgesChange: ReturnType<typeof vi.fn>;
-  onOpenSourceImport: ReturnType<typeof vi.fn>;
-  onOpenCanvasSettings: ReturnType<typeof vi.fn>;
+  onCreateAuthoringNode: Mock;
+  onEdgesChange: Mock;
+  onOpenSourceImport: Mock;
+  onOpenCanvasSettings: Mock;
 }>;
 
 function PresenterHarness({

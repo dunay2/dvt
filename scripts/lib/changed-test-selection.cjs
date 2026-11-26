@@ -135,6 +135,10 @@ function explainCiToolSelection(files) {
       };
 }
 
+function focusedNodeTest(file) {
+  return testStep('test-file:' + file, 'node', '--test', file);
+}
+
 function ciToolSteps(files) {
   if (explainCiToolSelection(files).mode === 'all')
     return [testStep('test-ci-tools', 'pnpm', 'test:ci-tools')];
@@ -153,9 +157,7 @@ function ciToolSteps(files) {
     tests.add('tools/ci/docs-disposition-canon.test.mjs');
   if (files.some(isRepositoryCommandFile))
     tests.add('tools/ci/repository-command-catalog.test.mjs');
-  const steps = [...tests].map((file) =>
-    testStep(`test-${path.posix.basename(file, '.test.mjs')}`, 'node', '--test', file)
-  );
+  const steps = [...tests].map(focusedNodeTest);
   if (files.some(isToolingCryptoContractInput) && !tests.has(TOOLING_CRYPTO_CONTRACT.testPath))
     steps.push(
       testStep(
@@ -235,14 +237,7 @@ function buildFocusedChangedTestPlan(files, options = {}) {
     )
   )
     tests.add('scripts/documentation-publication.test.cjs');
-  pushSteps(
-    plan,
-    [...tests]
-      .sort()
-      .map((file) =>
-        testStep(`test-${path.posix.basename(file, '.test.cjs')}`, 'node', '--test', file)
-      )
-  );
+  pushSteps(plan, [...tests].sort().map(focusedNodeTest));
   if (!options.includeWeb) pushSteps(plan, ci);
   if (
     changedFiles.some((file) =>

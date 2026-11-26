@@ -75,7 +75,12 @@ describe('canvas authoring runtime component architecture', () => {
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftBootstrapSync');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftPersistence');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload({');
-    expect(LIFECYCLE_SOURCE).toContain('executeCreateCanvasDocumentCommand({');
+    expect(LIFECYCLE_SOURCE).toContain('useCanvasProjectCanvasCommands({');
+    const commands = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'useCanvasProjectCanvasCommands.ts'
+    );
+    expect(commands).toContain('executeCreateCanvasDocumentCommand({');
     expect(LIFECYCLE_SOURCE).toContain(
       'Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation'
     );

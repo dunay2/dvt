@@ -228,8 +228,16 @@ describe('shared warehouse connection query', () => {
     );
     try {
       const captured = cache.captureScope();
-      const keyA = queryKeys.workspace.warehouseConnections('tenant', 'project-a', 'dev');
-      const keyB = queryKeys.workspace.warehouseConnections('tenant', 'project-b', 'dev');
+      const keyA = queryKeys.workspace.warehouseConnections({
+        tenantId: 'tenant',
+        projectId: 'project-a',
+        environmentId: 'dev',
+      });
+      const keyB = queryKeys.workspace.warehouseConnections({
+        tenantId: 'tenant',
+        projectId: 'project-b',
+        environmentId: 'dev',
+      });
       mounted.queryClient.setQueryData(keyA, [connection('a')]);
       mounted.queryClient.setQueryData(keyB, [connection('b')]);
       const invalidate = vi.spyOn(mounted.queryClient, 'invalidateQueries');
@@ -264,11 +272,11 @@ describe('shared warehouse connection query', () => {
       await cache.acceptReceipt(scope, connection('new'));
       expect(
         mounted.queryClient.getQueryData(
-          queryKeys.workspace.warehouseConnections(
-            scope.tenantId,
-            scope.projectId,
-            scope.environmentId
-          )
+          queryKeys.workspace.warehouseConnections({
+            tenantId: scope.tenantId,
+            projectId: scope.projectId,
+            environmentId: scope.environmentId,
+          })
         )
       ).toBeUndefined();
     } finally {

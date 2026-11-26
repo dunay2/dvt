@@ -1,4 +1,5 @@
 /** Prepare workspace tab identity, localized copy and navigation callbacks. */
+import { useLayoutEffect, useRef, type FocusEvent, type MouseEvent } from 'react';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabsTemplate } from './CanvasWorkspaceModelTabs.templates';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -71,14 +72,58 @@ export function CanvasWorkspaceModelTabs({
       },
     })),
   ];
+  const activeKey =
+    codeTab?.active === true ? 'code' : tab?.active === true ? `model:${tab.nodeId}` : 'canvas';
+  const stripRef = useRef<HTMLDivElement>(null);
+  const pointerFocus = useRef(false);
+  const selectTab = (key: string) => tabs.find((item) => item.key === key)?.select?.();
+  const focusTab = (event: FocusEvent<HTMLButtonElement>, key: string) => {
+    if (pointerFocus.current) {
+      event.preventDefault();
+      return;
+    }
+    if (key !== 'code' && key === activeKey) selectTab(key);
+  };
+  const activatePointerTab = (event: MouseEvent<HTMLButtonElement>, key: string) => {
+    if (event.button !== 0 || event.ctrlKey) return;
+    event.preventDefault();
+    pointerFocus.current = true;
+    try {
+      event.currentTarget.focus();
+    } finally {
+      pointerFocus.current = false;
+    }
+    if (key !== 'code' || key !== activeKey) selectTab(key);
+  };
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (strip == null) return;
+    const revealSelected = () => {
+      const selected = strip.querySelector('[role="tab"][aria-selected="true"]');
+      if (selected == null) return;
+      const frame = strip.getBoundingClientRect();
+      const selectedFrame = selected.getBoundingClientRect();
+      const offset =
+        selectedFrame.left < frame.left
+          ? selectedFrame.left - frame.left
+          : Math.max(0, selectedFrame.right - frame.right);
+      if (offset !== 0) strip.scrollLeft += offset;
+    };
+    revealSelected();
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(revealSelected);
+    observer?.observe(strip);
+    return () => observer?.disconnect();
+  }, [activeKey, tabs.length]);
   return (
     <CanvasWorkspaceModelTabsTemplate
       tabs={tabs}
-      activeKey={
-        codeTab?.active === true ? 'code' : tab?.active === true ? `model:${tab.nodeId}` : 'canvas'
-      }
+      activeKey={activeKey}
       copy={copy}
-      onSelect={(key) => tabs.find((item) => item.key === key)?.select?.()}
+      stripRef={stripRef}
+      onSelect={selectTab}
+      onTabFocus={focusTab}
+      onTabPointerDown={activatePointerTab}
     />
   );
 }

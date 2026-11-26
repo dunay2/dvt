@@ -8,6 +8,7 @@ import type { CanvasModelPreviewPreparation } from '../canvasDraftLifecycle.type
 import type {
   CanvasRelationalTreeAuthoringContract,
   CanvasRelationalTreeApplyResult,
+  CanvasModelLayoutCapture,
 } from '../canvasRelationalTreeWorkbench.types';
 import type { CanvasRelationalTreeWorkbenchHandle } from '../useCanvasRelationalTreeWorkbenchHandle';
 import {
@@ -18,6 +19,23 @@ import {
 } from './modelSqlDraftState';
 import { useModelSqlAnalysis } from './useModelSqlAnalysis';
 import { applyModelSqlProposal, useModelSqlApplyCommand } from './modelSqlApplyCommand';
+
+function hasCanvasModelSqlVisualConflict(
+  visual: React.RefObject<CanvasRelationalTreeWorkbenchHandle>,
+  setProblem: (value: 'conflict') => void
+): boolean {
+  if (!visual.current?.hasUnappliedChanges) return false;
+  setProblem('conflict');
+  return true;
+}
+
+function isCurrentCanvasModelSqlProposal(
+  proposal: ModelSqlCompilationResponse | null,
+  sql: string,
+  currentSql: string
+): proposal is Extract<ModelSqlCompilationResponse, { status: 'valid' }> {
+  return proposal?.status === 'valid' && currentSql === sql;
+}
 
 export function useCanvasModelSql(
   args: Readonly<{
@@ -31,6 +49,7 @@ export function useCanvasModelSql(
     preparePreview?: CanvasModelPreviewPreparation;
     onOpenData: () => void;
     onApplyingChange?: (applying: boolean) => void;
+    captureGeneratedLayout?: CanvasModelLayoutCapture;
   }>
 ) {
   const [state, dispatch] = useReducer(modelSqlDraftReducer, initialModelSqlDraft);
@@ -117,20 +136,18 @@ export function useCanvasModelSql(
     );
   };
   const generate = async (): Promise<CanvasRelationalTreeApplyResult | null> => {
-    if (args.visual.current?.hasUnappliedChanges) {
-      setProblem('conflict');
-      return null;
-    }
+    if (hasCanvasModelSqlVisualConflict(args.visual, setProblem)) return null;
     const sql = latest.current.sql;
     const proposal = await perform('validate');
-    if (proposal?.status !== 'valid' || latest.current.sql !== sql) return null;
-    if (args.visual.current?.hasUnappliedChanges) {
-      setProblem('conflict');
-      return null;
-    }
+    if (!isCurrentCanvasModelSqlProposal(proposal, sql, latest.current.sql)) return null;
+    if (hasCanvasModelSqlVisualConflict(args.visual, setProblem)) return null;
     try {
+      const retainLayout = args.captureGeneratedLayout?.(proposal.semanticDocument);
       const applied = await command.run((signal) =>
-        applyModelSqlProposal(args.node, args.authoring, proposal, signal)
+        applyModelSqlProposal(args.node, args.authoring, proposal, {
+          signal,
+          onAccepted: retainLayout,
+        })
       );
       if (applied?.outcome === 'rejected') setProblem('applyFailed');
       else if (applied != null)
@@ -150,6 +167,7 @@ export function useCanvasModelSql(
   return {
     state,
     analysis,
+    diagnostics: analysis?.diagnostics ?? state.context?.diagnostics ?? [],
     pending,
     problem,
     dirty: hasModelSqlChanges(state),

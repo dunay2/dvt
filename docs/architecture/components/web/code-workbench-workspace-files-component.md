@@ -223,8 +223,19 @@ flowchart LR
 
 ### Version operation SQL in Git
 
-Project Code's file properties can show a file's Git versions, newest first.
-The current editor flushes its working-tree changes before **Save version**.
+The SQL worksheet can start without a file. Opening a saved query reads its
+operation SQL into the editor and retains the revision that supplied the bytes.
+Saving a new name requires an absent path. Saving back to an open query
+requires its accepted digest. A concurrent edit leaves the worksheet text
+available for recovery. Selecting a historical revision compares it with the
+current buffer and recovery requires an explicit save to update the file.
+The same scoped Git adapter and version-history panel serve both Code and SQL.
+Query execution records belong to the warehouse execution history.
+
+Project Code lists the selected operation file's Git versions directly in
+the file properties panel, newest first. Each commit displays its own date.
+Selecting a commit opens a comparison with the current editor content.
+**Save version** is available once the working tree is synchronized.
 The command verifies the exact synchronized digest and records the bytes in the
 managed Git repository for that workspace scope. Repeating a save of the same
 current content returns the existing tip. The first version starts from bytes

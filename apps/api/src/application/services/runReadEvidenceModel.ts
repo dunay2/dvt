@@ -10,7 +10,10 @@ import {
   type WorkflowSnapshot,
 } from '@dvt/contracts';
 
+import type { RunModelSelection } from '../ports/runtime.js';
+
 import { deriveDvtPostgresPublicationEvidence } from './runDvtPostgresPublicationEvidence.js';
+import { projectRunModelSelection } from './runModelSelection.js';
 
 type TransformationExecutor = 'postgres' | 'dbt';
 
@@ -23,6 +26,7 @@ interface RunGitArtifactRef {
 }
 
 export interface RunReadEvidenceModel {
+  readonly modelSelection?: RunModelSelection;
   readonly executor?: TransformationExecutor;
   readonly currentStepId?: string;
   readonly failedStepId?: string;
@@ -67,6 +71,19 @@ export interface RunReadEvidenceModel {
   };
 }
 
+type RunReadEvidenceDraft = {
+  readonly [Key in keyof RunReadEvidenceModel]?: RunReadEvidenceModel[Key] | undefined;
+};
+
+/** Keep absent evidence absent while type-checking every projected field. */
+function projectDefinedRunEvidence(fields: RunReadEvidenceDraft): RunReadEvidenceModel {
+  const evidence: RunReadEvidenceModel = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) Object.assign(evidence, { [key]: value });
+  }
+  return evidence;
+}
+
 export function deriveRunReadEvidenceModel(args: {
   snapshot: Pick<
     CanonicalRunStatus,
@@ -79,7 +96,10 @@ export function deriveRunReadEvidenceModel(args: {
   runtimeAdapter?: string;
 }): RunReadEvidenceModel {
   const currentAttemptEvents = selectLatestLogicalAttemptEvents(args.events ?? []);
-  const planExtra = readPlanObservabilityExtra(args.planRecord);
+  const plan = readRunPlan(args.planRecord);
+  const planExtra = plan?.observability?.extra;
+  const modelSelection =
+    plan && args.planRecord ? projectRunModelSelection(plan, args.planRecord) : undefined;
   const executor = deriveExecutor(currentAttemptEvents, args.snapshot.execution, planExtra);
   const currentStepId = deriveCurrentStepId(
     args.snapshot.status,
@@ -109,26 +129,27 @@ export function deriveRunReadEvidenceModel(args: {
   const diagnostics = deriveDiagnostics({
     snapshot: args.snapshot,
     currentAttemptEvents,
-    ...(args.planId === undefined ? {} : { planId: args.planId }),
-    ...(args.planRecord === undefined ? {} : { planRecord: args.planRecord }),
-    ...(args.runtimeAdapter === undefined ? {} : { runtimeAdapter: args.runtimeAdapter }),
-    ...(executor === undefined ? {} : { executor }),
-    ...(currentStepId === undefined ? {} : { currentStepId }),
-    ...(failedStepId === undefined ? {} : { failedStepId }),
-    ...(errorReason === undefined ? {} : { errorReason }),
-    ...(materialization === undefined ? {} : { materialization }),
+    planId: args.planId,
+    planRecord: args.planRecord,
+    runtimeAdapter: args.runtimeAdapter,
+    executor,
+    currentStepId,
+    failedStepId,
+    errorReason,
+    materialization,
   });
 
-  return {
-    ...(executor === undefined ? {} : { executor }),
-    ...(currentStepId === undefined ? {} : { currentStepId }),
-    ...(failedStepId === undefined ? {} : { failedStepId }),
-    ...(errorReason === undefined ? {} : { errorReason }),
-    ...(provenance === undefined ? {} : { provenance }),
-    ...(materialization === undefined ? {} : { materialization }),
-    ...(publication === undefined ? {} : { publication }),
-    ...(diagnostics === undefined ? {} : { diagnostics }),
-  };
+  return projectDefinedRunEvidence({
+    modelSelection,
+    executor,
+    currentStepId,
+    failedStepId,
+    errorReason,
+    provenance,
+    materialization,
+    publication,
+    diagnostics,
+  });
 }
 
 function deriveExecutor(
@@ -325,14 +346,14 @@ function deriveDiagnostics(args: {
     'runId' | 'status' | 'execution' | 'startedAt' | 'completedAt'
   >;
   currentAttemptEvents: ReadonlyArray<EventEnvelope>;
-  planId?: string;
-  planRecord?: PlanRecord;
-  runtimeAdapter?: string;
-  executor?: TransformationExecutor;
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  planId: string | undefined;
+  planRecord: PlanRecord | undefined;
+  runtimeAdapter: string | undefined;
+  executor: TransformationExecutor | undefined;
+  currentStepId: string | undefined;
+  failedStepId: string | undefined;
+  errorReason: string | undefined;
+  materialization: MaterializationEvidence | undefined;
 }): RunReadEvidenceModel['diagnostics'] {
   const runId = readNonBlankString(args.snapshot.runId);
   if (runId === undefined) {
@@ -468,50 +489,35 @@ function formatDiagnosticPointer(
 function deriveRunningStepFromSnapshot(
   workflowSnapshot: WorkflowSnapshot | null
 ): string | undefined {
-  if (!workflowSnapshot) {
-    return undefined;
-  }
-
-  let candidateStepId: string | undefined;
-  let candidateStartedAt = '';
-
-  for (const [stepId, step] of Object.entries(workflowSnapshot.steps)) {
-    if (step.status !== 'RUNNING') {
-      continue;
-    }
-
-    const startedAt = step.startedAt ?? '';
-    if (candidateStepId === undefined || startedAt > candidateStartedAt) {
-      candidateStepId = stepId;
-      candidateStartedAt = startedAt;
-    }
-  }
-
-  return candidateStepId;
+  return deriveStepFromSnapshot(workflowSnapshot, 'RUNNING', 'startedAt');
 }
 
 function deriveFailedStepFromSnapshot(
   workflowSnapshot: WorkflowSnapshot | null
 ): string | undefined {
+  return deriveStepFromSnapshot(workflowSnapshot, 'FAILED', 'completedAt');
+}
+
+function deriveStepFromSnapshot(
+  workflowSnapshot: WorkflowSnapshot | null,
+  status: 'RUNNING' | 'FAILED',
+  timestamp: 'startedAt' | 'completedAt'
+): string | undefined {
   if (!workflowSnapshot) {
     return undefined;
   }
-
   let candidateStepId: string | undefined;
-  let candidateCompletedAt = '';
-
+  let candidateTimestamp = '';
   for (const [stepId, step] of Object.entries(workflowSnapshot.steps)) {
-    if (step.status !== 'FAILED') {
+    if (step.status !== status) {
       continue;
     }
-
-    const completedAt = step.completedAt ?? '';
-    if (candidateStepId === undefined || completedAt > candidateCompletedAt) {
+    const stepTimestamp = step[timestamp] ?? '';
+    if (candidateStepId === undefined || stepTimestamp > candidateTimestamp) {
       candidateStepId = stepId;
-      candidateCompletedAt = completedAt;
+      candidateTimestamp = stepTimestamp;
     }
   }
-
   return candidateStepId;
 }
 
@@ -525,14 +531,14 @@ function parseMaterialization(value: unknown) {
   return parsed.success ? parsed.data : undefined;
 }
 
-function readPlanObservabilityExtra(planRecord?: PlanRecord): Record<string, unknown> | undefined {
+function readRunPlan(planRecord?: PlanRecord) {
   if (!planRecord) {
     return undefined;
   }
 
   try {
     const plan = parseExecutionPlan(JSON.parse(planRecord.canonicalPlanJson));
-    return isRecord(plan.observability?.extra) ? plan.observability.extra : undefined;
+    return plan;
   } catch {
     return undefined;
   }

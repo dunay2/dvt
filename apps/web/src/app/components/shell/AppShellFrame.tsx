@@ -21,6 +21,7 @@ type AppShellFrameProps = {
   readonly topBar: ReactNode;
   readonly healthBanner?: ReactNode;
   readonly leftNavigation: ReactNode;
+  readonly operationalWorkspace?: ReactNode;
   readonly bottomDrawer: ReactNode;
   readonly bottomDrawerHeight: number;
   readonly onBottomDrawerHeightChange: (height: number) => void;
@@ -36,6 +37,7 @@ export function AppShellFrame({
   topBar,
   healthBanner,
   leftNavigation,
+  operationalWorkspace,
   bottomDrawer,
   bottomDrawerHeight,
   onBottomDrawerHeightChange,
@@ -45,7 +47,7 @@ export function AppShellFrame({
   skipToMainContentLabel,
 }: AppShellFrameProps) {
   const showLeftNavigation = !focusMode;
-  const showOperationalDrawer = !focusMode && showBottomDrawer;
+  const showOperationalDrawer = !focusMode && showBottomDrawer && operationalWorkspace == null;
   const drawerResize = useOperationalDrawerResize({
     height: bottomDrawerHeight,
     visible: showOperationalDrawer,
@@ -110,7 +112,10 @@ export function AppShellFrame({
                       data-slot="app-shell-outlet"
                       className={styles.outlet}
                     >
-                      {children}
+                      {operationalWorkspace}
+                      <div className={styles.routeContent} hidden={operationalWorkspace != null}>
+                        {children}
+                      </div>
                     </main>
                   </ResizablePanel>
 

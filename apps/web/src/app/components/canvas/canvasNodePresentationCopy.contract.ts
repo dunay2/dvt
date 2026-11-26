@@ -18,6 +18,7 @@ export type CanvasNodePresentationCopy = Readonly<{
   locale?: string;
   sectionLabels?: Readonly<Record<string, string>>;
   sectionEmptyStates?: Readonly<Record<string, string>>;
+  sourceOutputs?: Readonly<{ label: string; emptyState: string }>;
   rowLabels?: Readonly<Record<string, string>>;
   columnLabels?: Readonly<Record<string, string>>;
   valueLabels?: Readonly<Record<string, string>>;
@@ -28,30 +29,52 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNodePresentationCopy {
+  if (!isRecord(value)) return false;
   return (
-    isRecord(value) &&
-    typeof value.columnsLabel === 'string' &&
-    typeof value.declaredColumnsDetailTemplate === 'string' &&
-    typeof value.inheritedColumnsDetailTemplate === 'string' &&
-    typeof value.mixedColumnsDetailTemplate === 'string' &&
-    typeof value.noColumnsDetail === 'string' &&
-    typeof value.codeLabel === 'string' &&
-    typeof value.workspaceCodeDetailTemplate === 'string' &&
-    typeof value.generatedCodeDetailTemplate === 'string' &&
-    (value.canonicalSubstraitCodeDetailTemplate == null ||
-      typeof value.canonicalSubstraitCodeDetailTemplate === 'string') &&
-    (value.invalidCanonicalSubstraitCodeMessage == null ||
-      typeof value.invalidCanonicalSubstraitCodeMessage === 'string') &&
-    typeof value.codeUnavailableMessage === 'string' &&
-    (value.readyStatusLabel == null || typeof value.readyStatusLabel === 'string') &&
-    (value.draftStatusLabel == null || typeof value.draftStatusLabel === 'string') &&
-    (value.authoringTagLabel == null || typeof value.authoringTagLabel === 'string') &&
-    (value.kindLabels == null || isRecord(value.kindLabels)) &&
-    (value.locale == null || typeof value.locale === 'string') &&
-    (value.sectionLabels == null || isRecord(value.sectionLabels)) &&
-    (value.sectionEmptyStates == null || isRecord(value.sectionEmptyStates)) &&
-    (value.rowLabels == null || isRecord(value.rowLabels)) &&
-    (value.columnLabels == null || isRecord(value.columnLabels)) &&
-    (value.valueLabels == null || isRecord(value.valueLabels))
+    REQUIRED_COPY_STRINGS.every((key) => typeof value[key] === 'string') &&
+    OPTIONAL_COPY_STRINGS.every((key) =>
+      isOptionalCopyValue(value[key], (entry) => typeof entry === 'string')
+    ) &&
+    OPTIONAL_COPY_RECORDS.every((key) => isOptionalCopyValue(value[key], isRecord)) &&
+    isOptionalCopyValue(value.sourceOutputs, isSourceOutputsCopy)
   );
+}
+
+const REQUIRED_COPY_STRINGS = [
+  'columnsLabel',
+  'declaredColumnsDetailTemplate',
+  'inheritedColumnsDetailTemplate',
+  'mixedColumnsDetailTemplate',
+  'noColumnsDetail',
+  'codeLabel',
+  'workspaceCodeDetailTemplate',
+  'generatedCodeDetailTemplate',
+  'codeUnavailableMessage',
+] as const;
+
+const OPTIONAL_COPY_STRINGS = [
+  'canonicalSubstraitCodeDetailTemplate',
+  'invalidCanonicalSubstraitCodeMessage',
+  'readyStatusLabel',
+  'draftStatusLabel',
+  'authoringTagLabel',
+  'locale',
+] as const;
+
+const OPTIONAL_COPY_RECORDS = [
+  'kindLabels',
+  'sectionLabels',
+  'sectionEmptyStates',
+  'rowLabels',
+  'columnLabels',
+  'valueLabels',
+] as const;
+
+function isOptionalCopyValue(value: unknown, validate: (entry: unknown) => boolean): boolean {
+  return value == null || validate(value);
+}
+
+function isSourceOutputsCopy(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return typeof value.label === 'string' && typeof value.emptyState === 'string';
 }

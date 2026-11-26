@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { resolveWebCypressChangedPlan } from '../../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import {
   dataHelper,
@@ -24,7 +25,69 @@ import {
 } from './vitestSuites.browserRouting.fixtures';
 import { browserModules } from './vitestSuites.browserRouting.moduleGraph';
 
+const columnViewSourcePaths = [
+  'apps/web/src/app/plugins/graph/GraphNodeColumnViews.tsx',
+  'apps/web/src/app/plugins/graph/GraphNodeColumnViews.module.css',
+];
+
+const columnViewBrowserSpecs = [
+  'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
+];
+
+function isNamedBrowserRegistration(node: ts.Node, name: string): boolean {
+  return (
+    ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === name
+  );
+}
+
+function readBrowserModuleUsage(
+  ast: ts.SourceFile,
+  expected: Readonly<{ path: string; owner: string; target: string; registerName: string }>
+): { referenced: boolean; registrations: number } {
+  let referenced = false;
+  let registrations = 0;
+  const visit = (node: ts.Node): void => {
+    if (expected.path === expected.owner && isNamedBrowserRegistration(node, expected.registerName))
+      registrations++;
+    if (ts.isStringLiteral(node) && node.text.startsWith('.')) {
+      const imported = resolve(dirname(expected.path), node.text);
+      if ([imported, `${imported}.ts`].includes(expected.target)) referenced = true;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  return { referenced, registrations };
+}
+
+function registerColumnViewBrowserCoverage(): void {
+  describe('column view browser coverage', () => {
+    it.each(columnViewSourcePaths)('retains both obligations for %s', (source) => {
+      const plan = resolveWebVitestChangedSuitePlan([source]);
+      expect(plan.browserCommands).toEqual([liveCommand]);
+      expect(plan.browserCommands[0]?.specPaths).toEqual(
+        expect.arrayContaining(columnViewBrowserSpecs)
+      );
+      expect(resolveWebCypressChangedPlan([source]).vitestFiles).toEqual([source]);
+    });
+
+    it('deduplicates mixed browser evidence while retaining only the product paths in Vitest', () => {
+      const files = [...columnViewSourcePaths, ...columnViewBrowserSpecs, ...columnViewSourcePaths];
+      const plan = resolveWebVitestChangedSuitePlan(files);
+      expect(plan.browserCommands).toEqual([liveCommand]);
+      expect(plan.browserCommands[0]?.specPaths).toEqual(liveCommand.specPaths);
+      expect(new Set(plan.browserCommands[0]?.specPaths).size).toBe(liveCommand.specPaths.length);
+      expect(resolveWebCypressChangedPlan(files).vitestFiles).toEqual(columnViewSourcePaths);
+      expect(plan.commandPlan).toEqual(
+        resolveWebVitestChangedSuitePlan(columnViewSourcePaths).commandPlan
+      );
+    });
+  });
+}
+
 export function registerBrowserRoutingSurfaces(): void {
+  registerColumnViewBrowserCoverage();
   describe('browser admission by changed surface', () => {
     it.each([retired, retired.replaceAll('/', '\\'), retired.slice('apps/web/'.length)])(
       'requires the retirement guard and real proof when the retired path changes: %s',
@@ -149,21 +212,14 @@ export function registerBrowserRoutingSurfaces(): void {
       const consumers = new Set<string>();
       let registrations = 0;
       for (const [path, ast] of browserModules) {
-        const visit = (node: ts.Node): void => {
-          if (
-            path === resolve(owner.slice('apps/web/'.length)) &&
-            ts.isCallExpression(node) &&
-            ts.isIdentifier(node.expression) &&
-            node.expression.text === registerName
-          )
-            registrations++;
-          if (ts.isStringLiteral(node) && node.text.startsWith('.')) {
-            const imported = resolve(dirname(path), node.text);
-            if ([imported, `${imported}.ts`].includes(target)) consumers.add(path);
-          }
-          ts.forEachChild(node, visit);
-        };
-        visit(ast);
+        const usage = readBrowserModuleUsage(ast, {
+          path,
+          owner: resolve(owner.slice('apps/web/'.length)),
+          target,
+          registerName,
+        });
+        registrations += usage.registrations;
+        if (usage.referenced) consumers.add(path);
       }
       expect([...consumers]).toEqual([resolve(owner.slice('apps/web/'.length))]);
       expect(registrations).toBe(1);

@@ -38,7 +38,6 @@ import type {
   CanvasExecutionSelectionRecoveryCommands,
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
-import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { RunSnapshot } from '../../ports/runs';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
@@ -143,6 +142,7 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onInspectNode: CanvasInspectorCommand;
+  onRemoveEmptyModel?: (nodeId: string) => void;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onToggleFrozenNode: (nodeId: string) => void;
   onCreateAuthoringNode?: CreateCanvasAuthoringNode;
@@ -175,6 +175,7 @@ export type CanvasShellChromeCommands = {
 };
 
 export type CanvasShellCanvasCommands = {
+  onAddCanvas?: (title: string) => Promise<void>;
   onSelectCanvas?: (canvasId: string) => void;
 };
 
@@ -191,7 +192,6 @@ export type CanvasShellProps = Readonly<{
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
-  runControls: OperationalDrawerRunControls | null;
   workspaceCommands?: CanvasShellWorkspaceCommands;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;

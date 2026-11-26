@@ -5,64 +5,31 @@ import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CanonicalNode } from '../../types/canonical';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
 import type { NodePropertySection } from './nodePropertiesContracts';
 
-const sourceNode: CanonicalNode = {
-  id: 'source.auth',
-  name: 'auth_audit_events',
-  pluginId: 'dvt.warehouse-source',
-  kind: 'dvt:source',
-  role: 'input',
-  status: 'idle',
-  tags: [],
-  metadata: {
-    connectedSourceRef: {
-      schemaVersion: 'connected-source-ref.v1',
-      connectionRef: {
-        schemaVersion: 'connection-ref.v1',
-        connectionId: 'local-postgres-proof',
-        provider: 'postgres',
-      },
-      sourceObjectId: 'relation/dvt/auth_audit_events',
-    },
-  },
-};
-
+const source = { id: 'source.audit' };
+const workspace = 'tenant::project::dev';
+const modelOutput = 'output:edge-model';
+const checkOutput = 'output:edge-check';
 const section: NodePropertySection = {
   id: 'inputs-outputs',
-  label: 'Inputs / Outputs',
+  label: 'Outputs',
   rows: [],
+  emptyState: 'This source has no outgoing connections in the Canvas.',
   tableRows: [
     {
       id: 'input:edge-upstream',
-      cells: {
-        direction: 'Input',
-        node: 'seed_events',
-        nodeId: 'raw-upstream-id',
-        relation: 'lineage',
-      },
+      cells: { node: 'seed_events', relation: 'lineage' },
     },
     {
-      id: 'output:edge-model-1',
-      cells: {
-        direction: 'Output',
-        node: 'Model 1',
-        nodeId: 'model-1-internal-id',
-        relation: 'lineage',
-      },
+      id: modelOutput,
+      cells: { node: 'Monthly audited order totals by customer', relation: 'lineage' },
     },
     {
-      id: 'output:edge-check',
-      cells: {
-        direction: 'Output',
-        node: 'Audit check',
-        nodeId: 'check-internal-id',
-        relation: 'validation',
-      },
+      id: checkOutput,
+      cells: { node: 'Audit check', relation: 'validation' },
     },
   ],
 };
@@ -73,7 +40,6 @@ describe('SourceInputsOutputsPanel', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    useApplicationLanguageStore.setState({ language: 'en' });
     useCanvasInteractionStore.setState({ _hasHydrated: true, canvasLayouts: {} });
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -86,85 +52,50 @@ describe('SourceInputsOutputsPanel', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    useApplicationLanguageStore.setState({ language: 'en' });
   });
 
   function render(targetSection: NodePropertySection = section, canReorder = false): void {
     act(() =>
       root.render(
         <SourceInputsOutputsPanel
-          node={sourceNode}
+          node={source}
           section={targetSection}
           canReorder={canReorder}
-          workspaceLayoutKey="tenant::project::dev"
+          workspaceLayoutKey={workspace}
         />
       )
     );
   }
 
-  it('groups actual Canvas inputs and outputs without synthesizing the physical Source origin', () => {
-    render();
+  function outputRows(): HTMLLIElement[] {
+    return Array.from(container.querySelectorAll<HTMLLIElement>('ul[aria-label="Outputs"] > li'));
+  }
 
-    expect(container.textContent).toContain('Inputs 1');
-    expect(container.textContent).toContain('Outputs 2');
-    expect(container.querySelectorAll('[data-slot="source-relationship-row"]')).toHaveLength(3);
-    expect(container.textContent).not.toContain('local-postgres-proof');
-    expect(container.textContent).not.toContain('postgres');
-  });
+  function projectedOrder(): (string | undefined)[] {
+    return outputRows().map((row) => row.dataset.relationshipId);
+  }
 
-  it('shows useful selected relationship facts but keeps internal node ids out of the normal detail', () => {
-    render();
-
-    const firstOutput = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="output:edge-model-1"]'
-    )!;
-    act(() => {
-      fireEvent.click(firstOutput);
+  it('lists each downstream business name and relation once, omitting inbound records', () => {
+    render({
+      ...section,
+      tableRows: [
+        ...section.tableRows,
+        { id: 'output:empty', cells: { node: '   ' } },
+        { id: 'invalid:identity', cells: { node: 'Unknown relation' } },
+      ],
     });
 
-    const detail = container.querySelector('[data-slot="source-relationship-detail"]');
-    expect(detail?.textContent).toContain('Model 1');
-    expect(detail?.textContent).toContain('Outgoing');
-    expect(detail?.textContent).toContain('auth_audit_events');
-    expect(detail?.textContent).toContain('lineage');
-    expect(detail?.textContent).not.toContain('model-1-internal-id');
+    expect(outputRows().map((row) => [...row.children].map((cell) => cell.textContent))).toEqual([
+      ['Monthly audited order totals by customer', 'lineage'],
+      ['Audit check', 'validation'],
+    ]);
+    expect(container.textContent).not.toContain('seed_events');
+    expect(container.querySelector('button, [role="listbox"], [aria-selected]')).toBeNull();
   });
 
-  it('uses roving keyboard selection across incoming and outgoing relationships', () => {
-    render();
-
-    const upstream = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="input:edge-upstream"]'
-    )!;
-    const firstOutput = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="output:edge-model-1"]'
-    )!;
-    expect(upstream.getAttribute('aria-selected')).toBe('true');
-    expect(upstream.tabIndex).toBe(0);
-    expect(firstOutput.tabIndex).toBe(-1);
-
-    act(() => {
-      upstream.focus();
-      fireEvent.keyDown(upstream, { key: 'ArrowDown' });
-    });
-
-    expect(firstOutput.getAttribute('aria-selected')).toBe('true');
-    expect(firstOutput.tabIndex).toBe(0);
-    expect(document.activeElement).toBe(firstOutput);
-  });
-
-  it('reorders only output rows with pointer and keyboard and persists their presentation', () => {
+  it('reorders outputs by pointer and keyboard while keeping focus and persisting layout order', () => {
     render(section, true);
-
-    const upstream = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="input:edge-upstream"]'
-    )!;
-    const model = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="output:edge-model-1"]'
-    )!;
-    const check = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="output:edge-check"]'
-    )!;
+    const [model, check] = outputRows() as [HTMLLIElement, HTMLLIElement];
     vi.spyOn(check, 'getBoundingClientRect').mockReturnValue({ top: 0, height: 40 } as DOMRect);
     const dataTransfer = { effectAllowed: 'none', dropEffect: 'none', setData: vi.fn() };
 
@@ -178,91 +109,46 @@ describe('SourceInputsOutputsPanel', () => {
       fireEvent.drop(check, { clientY: 36, dataTransfer });
     });
 
-    expect(
-      Array.from(
-        container.querySelectorAll<HTMLElement>('[data-slot="source-relationship-row"]')
-      ).map((row) => row.dataset.relationshipId)
-    ).toEqual(['input:edge-upstream', 'output:edge-check', 'output:edge-model-1']);
-    expect(upstream.draggable).toBe(false);
+    expect(projectedOrder()).toEqual([checkOutput, modelOutput]);
     expect(document.activeElement).toBe(model);
-    expect(container.querySelector('[role="status"]')?.textContent).toContain(
-      'Output reordered: output:edge-model-1'
-    );
 
-    const movedCheck = container.querySelector<HTMLButtonElement>(
-      '[data-relationship-id="output:edge-check"]'
-    )!;
     act(() => {
-      movedCheck.focus();
-      fireEvent.keyDown(movedCheck, { key: 'ArrowDown', altKey: true });
+      check.focus();
+      fireEvent.keyDown(check, { key: 'ArrowDown', altKey: true });
     });
 
-    expect(document.activeElement).toBe(movedCheck);
-    expect(movedCheck.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(check);
+    expect(container.querySelector('[role="status"]')?.textContent).toBe('Moved Audit check.');
+    expect(projectedOrder()).toEqual([modelOutput, checkOutput]);
     expect(
-      useCanvasInteractionStore.getState().canvasLayouts['tenant::project::dev']
-        ?.inspectorListOrdersByNode?.[sourceNode.id]?.outputs
-    ).toEqual(['output:edge-model-1', 'output:edge-check']);
+      useCanvasInteractionStore.getState().canvasLayouts[workspace]?.inspectorListOrdersByNode?.[
+        source.id
+      ]?.outputs
+    ).toEqual([modelOutput, checkOutput]);
     expect(section.tableRows.map((row) => row.id)).toEqual([
       'input:edge-upstream',
-      'output:edge-model-1',
-      'output:edge-check',
+      modelOutput,
+      checkOutput,
     ]);
   });
 
-  it('does not expose output reorder affordances in read-only mode', () => {
-    render();
+  it.each([
+    { writable: false, rows: section.tableRows },
+    { writable: true, rows: section.tableRows.filter((row) => row.id === modelOutput) },
+  ])(
+    'omits sorting affordances when writing is disabled or only one row exists',
+    ({ writable, rows }) => {
+      render({ ...section, tableRows: rows }, writable);
+      expect(container.querySelector('[data-slot="source-relationship-drag-handle"]')).toBeNull();
+      expect(outputRows().every((row) => !row.draggable && !row.hasAttribute('tabindex'))).toBe(
+        true
+      );
+    }
+  );
 
-    expect(container.querySelector('[data-slot="source-relationship-drag-handle"]')).toBeNull();
-    expect(
-      container.querySelector<HTMLButtonElement>('[data-relationship-id="output:edge-model-1"]')
-        ?.draggable
-    ).toBe(false);
-  });
-
-  it('renders zero/zero topology coherently instead of inventing an input', () => {
+  it('shows a useful empty message when the source is not used by another node', () => {
     render({ ...section, tableRows: [] });
-
-    expect(container.textContent).toContain('Inputs 0');
-    expect(container.textContent).toContain('Outputs 0');
-    expect(container.textContent).toContain('No Canvas connections are recorded for this Source.');
-    expect(container.querySelectorAll('[data-slot="source-relationship-row"]')).toHaveLength(0);
-  });
-
-  it('uses localized copy without interpreting translated labels as topology identity', () => {
-    useApplicationLanguageStore.setState({ language: 'es' });
-    render({
-      ...section,
-      tableRows: section.tableRows.map((row) => ({
-        ...row,
-        cells: { ...row.cells, direction: 'Etiqueta traducida' },
-      })),
-    });
-    expect(container.textContent).toContain('Entradas 1');
-    expect(container.textContent).toContain('Salidas 2');
-    expect(container.textContent).toContain('Entrante');
-    expect(container.textContent).not.toContain('Canvas connections');
-  });
-
-  it('ignores malformed relationship rows and selects the next survivor after removal', () => {
-    render({
-      ...section,
-      tableRows: [
-        { id: 'unknown:bad', cells: { node: 'Not a relationship' } },
-        { id: 'output:empty', cells: { node: '   ' } },
-        ...section.tableRows,
-      ],
-    });
-    expect(container.querySelectorAll('[role="option"]')).toHaveLength(3);
-    act(() => {
-      fireEvent.click(container.querySelector('[data-relationship-id="output:edge-model-1"]')!);
-    });
-    render({ ...section, tableRows: [section.tableRows[2]!] });
-    const remaining = container.querySelector<HTMLButtonElement>('[role="option"]')!;
-    expect(remaining.getAttribute('aria-selected')).toBe('true');
-    expect(remaining.tabIndex).toBe(0);
-    expect(
-      container.querySelector('[data-slot="source-relationship-detail"]')?.textContent
-    ).toContain('Audit check');
+    expect(container.textContent).toBe(section.emptyState);
+    expect(container.querySelector('ul')).toBeNull();
   });
 });

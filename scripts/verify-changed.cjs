@@ -120,10 +120,15 @@ async function main(argv = process.argv.slice(2), options = {}) {
             })
           : listLocalChangedFiles({ repoRootPath: root })
       );
+  const env = options.env ?? process.env;
   const plan = args.committedTests
     ? buildFocusedChangedTestPlan(changedFiles)
-    : buildVerifyChangedPlan(changedFiles, { iteration, pushReadiness: args.pushReadiness });
-  const env = options.env ?? process.env;
+    : buildVerifyChangedPlan(changedFiles, {
+        iteration,
+        pushReadiness: args.pushReadiness,
+        completeChangedFiles: options.changedFiles === undefined,
+        env,
+      });
   const ownership =
     args.hostedCiTools === undefined
       ? undefined

@@ -76,12 +76,23 @@ function ContextMenuSubContent({
 
 function ContextMenuContent({
   className,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          if (event.defaultPrevented) return;
+          const content = event.currentTarget as HTMLElement;
+          const ownerDocument = content.ownerDocument;
+          const active = ownerDocument.activeElement;
+          if (active === null) return;
+          if (active === ownerDocument.body || active === ownerDocument.documentElement) return;
+          if (!content.contains(active)) event.preventDefault();
+        }}
         className={cn(
           'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-context-menu-content-available-height) min-w-[8rem] origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md',
           className
@@ -115,28 +126,19 @@ function ContextMenuItem({
   );
 }
 
-function ContextMenuCheckboxItem({
-  className,
-  children,
-  checked,
-  ...props
-}: React.ComponentProps<typeof ContextMenuPrimitive.CheckboxItem>) {
+function ContextMenuCheckboxItem(
+  props: React.ComponentProps<typeof ContextMenuPrimitive.CheckboxItem>
+) {
   return (
     <ContextMenuPrimitive.CheckboxItem
       data-slot="context-menu-checkbox-item"
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
-      checked={checked}
       {...props}
+      className={cn(CONTEXT_MENU_CHOICE_CLASS_NAME, props.className)}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
-        <ContextMenuPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
-        </ContextMenuPrimitive.ItemIndicator>
-      </span>
-      {children}
+      <ContextMenuChoiceIndicator>
+        <CheckIcon className="size-4" />
+      </ContextMenuChoiceIndicator>
+      {props.children}
     </ContextMenuPrimitive.CheckboxItem>
   );
 }
@@ -149,17 +151,12 @@ function ContextMenuRadioItem({
   return (
     <ContextMenuPrimitive.RadioItem
       data-slot="context-menu-radio-item"
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
+      className={cn(CONTEXT_MENU_CHOICE_CLASS_NAME, className)}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
-        <ContextMenuPrimitive.ItemIndicator>
-          <CircleIcon className="size-2 fill-current" />
-        </ContextMenuPrimitive.ItemIndicator>
-      </span>
+      <ContextMenuChoiceIndicator>
+        <CircleIcon className="size-2 fill-current" />
+      </ContextMenuChoiceIndicator>
       {children}
     </ContextMenuPrimitive.RadioItem>
   );
@@ -222,3 +219,13 @@ export {
   ContextMenuSubTrigger,
   ContextMenuRadioGroup,
 };
+
+const CONTEXT_MENU_CHOICE_CLASS_NAME =
+  "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+function ContextMenuChoiceIndicator({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+      <ContextMenuPrimitive.ItemIndicator>{children}</ContextMenuPrimitive.ItemIndicator>
+    </span>
+  );
+}

@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
 import { Link } from 'react-router';
@@ -24,6 +23,8 @@ import {
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import navigationStyles from './components/LeftNavigation.module.css';
+import { useOperationalDrawerContributionStore } from './components/shell/operationalDrawerContributionStore';
+import { buildCanvasRunContribution } from './components/shell/shellRunContribution.test-fixtures';
 import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 
 describe('RootShell chrome', () => {
@@ -113,15 +114,7 @@ describe('RootShell chrome', () => {
       const runs = nav?.querySelector<HTMLAnchorElement>(
         '[data-slot="left-navigation-link"][href="/runs"]'
       );
-      expect(rail?.className).toBe(navigationStyles.rail);
-      expect(nav?.className).toBe(navigationStyles.nav);
-      expect(admin?.classList).toContain(navigationStyles.link);
-      expect(admin?.classList).toContain(navigationStyles.linkInteractive);
-      expect(admin?.getAttribute('aria-current')).toBeNull();
-      expect(admin?.querySelector('[data-slot="left-navigation-caption"]')?.className).toBe(
-        navigationStyles.caption
-      );
-      expect(admin?.textContent).toContain('Admin');
+      expectGlobalRailStyles(rail, nav, admin);
       expect(runs?.getAttribute('aria-current')).toBeNull();
       await act(async () => admin!.focus());
       expect(document.activeElement).toBe(admin);
@@ -149,8 +142,8 @@ describe('RootShell chrome', () => {
       const links = [...rail!.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')];
       expect(links.map((link) => link.getAttribute('href'))).toEqual([
         '/canvas',
-        '/runs',
         '/templates',
+        '/runs',
         '/plugins',
         '/admin',
       ]);
@@ -163,17 +156,7 @@ describe('RootShell chrome', () => {
   });
 
   it('renders Runs list chrome with direct navigation', async () => {
-    const mounted = await withTestQueryClient(
-      createRootShellNode(createHealthyPlatformCapability(), ['/runs'])
-    );
-
-    try {
-      await waitForHealthyShellChrome(mounted);
-      expectRootShellWorkbenchFrameChrome(mounted.container, 'Runs route');
-      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).not.toBeNull();
-    } finally {
-      await mounted.cleanup();
-    }
+    await expectRouteChrome('/runs', 'Runs route', false);
   });
 
   it('navigates from the direct shell rail to Runs', async () => {
@@ -204,18 +187,7 @@ describe('RootShell chrome', () => {
   });
 
   it('renders run detail chrome without changing away from workbench navigation', async () => {
-    const mounted = await withTestQueryClient(
-      createRootShellNode(createHealthyPlatformCapability(), ['/runs/run_123'])
-    );
-
-    try {
-      await waitForHealthyShellChrome(mounted);
-      expect(mounted.container.textContent).toContain('Run detail route');
-      expectRootShellWorkbenchFrameChrome(mounted.container, 'Run detail route');
-      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).not.toBeNull();
-    } finally {
-      await mounted.cleanup();
-    }
+    await expectRouteChrome('/runs/run_123', 'Run detail route', true);
   });
 
   it('clears transient contextual Canvas workbench state after leaving Canvas', async () => {
@@ -302,14 +274,28 @@ describe('RootShell chrome', () => {
     }
   });
 
-  it('renders the bottom operational drawer inside the app shell frame when enabled', async () => {
+  it('preserves the contextual drawer and Canvas when switching to the workbench views', async () => {
     setRootShellBottomDrawer({ visible: true, height: 160 });
+    const contribution = buildCanvasRunContribution({
+      problems: {
+        items: [
+          { id: 'preview', severity: 'warning', message: 'Preview required', detail: 'Draft' },
+        ],
+      },
+    });
     const mounted = await withTestQueryClient(
-      createRootShellNode(createHealthyPlatformCapability())
+      createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
     );
 
     try {
       await waitForShellBootstrapSurface(mounted);
+
+      expect(mounted.container.querySelector('[data-slot="bottom-operational-drawer"]')).toBeNull();
+      await act(async () => {
+        useOperationalDrawerContributionStore
+          .getState()
+          .registerOperationalDrawerContribution(contribution);
+      });
 
       const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
       const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
@@ -322,10 +308,66 @@ describe('RootShell chrome', () => {
       expect(operationalDrawer).not.toBeNull();
       // The region stays named after removing the redundant visible heading row.
       expect(operationalDrawer?.getAttribute('role')).toBe('region');
-      expect(operationalDrawer?.getAttribute('aria-label')).toBe('Operations');
-      expect(bottomDrawer?.textContent).toContain('Start a run to see live run events here.');
+      expect(operationalDrawer?.getAttribute('aria-label')).toBe('Canvas operations');
+      expect(bottomDrawer?.querySelectorAll('[role="tab"]')).toHaveLength(1);
+      const problems = mounted.container.querySelector<HTMLButtonElement>(
+        '#shell-operational-problems'
+      )!;
+      expect(problems.getAttribute('aria-label')).toBe('Problems (1)');
+      await act(async () => fireEvent.click(problems));
+      const workspace = '[data-slot="shell-operational-workspace"]';
+      expect(mounted.container.querySelector(workspace)?.textContent).toContain('Preview required');
+      expect(mounted.container.querySelector('[data-slot="bottom-operational-drawer"]')).toBeNull();
+      await act(async () =>
+        fireEvent.click(mounted.container.querySelector('#shell-operational-log')!)
+      );
+      expect(mounted.container.querySelector(workspace)?.textContent).toContain(
+        'Start a run to see live run events here.'
+      );
+      await act(async () => fireEvent.click(mounted.container.querySelector('a[href="/canvas"]')!));
+      expect(mounted.container.querySelector(workspace)).toBeNull();
+      expect(
+        mounted.container.querySelector('[data-slot="bottom-operational-drawer"]')
+      ).not.toBeNull();
     } finally {
       await mounted.cleanup();
+      useOperationalDrawerContributionStore
+        .getState()
+        .clearOperationalDrawerContribution(contribution);
     }
   });
 });
+
+function expectGlobalRailStyles(
+  rail: Element | null,
+  nav: Element | null | undefined,
+  admin: HTMLAnchorElement | null | undefined
+): void {
+  expect(rail?.className).toBe(navigationStyles.rail);
+  expect(nav?.className).toBe(navigationStyles.nav);
+  expect(admin?.classList).toContain(navigationStyles.link);
+  expect(admin?.classList).toContain(navigationStyles.linkInteractive);
+  expect(admin?.getAttribute('aria-current')).toBeNull();
+  expect(admin?.querySelector('[data-slot="left-navigation-caption"]')?.className).toBe(
+    navigationStyles.caption
+  );
+  expect(admin?.textContent).toContain('Admin');
+}
+
+async function expectRouteChrome(
+  route: string,
+  title: string,
+  assertDetail: boolean
+): Promise<void> {
+  const mounted = await withTestQueryClient(
+    createRootShellNode(createHealthyPlatformCapability(), [route])
+  );
+  try {
+    await waitForHealthyShellChrome(mounted);
+    if (assertDetail) expect(mounted.container.textContent).toContain('Run detail route');
+    expectRootShellWorkbenchFrameChrome(mounted.container, title);
+    expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).not.toBeNull();
+  } finally {
+    await mounted.cleanup();
+  }
+}

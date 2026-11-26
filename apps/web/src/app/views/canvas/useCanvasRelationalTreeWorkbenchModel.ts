@@ -12,11 +12,7 @@ import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 import type { CanonicalNode } from '../../types/canonical';
 
 import { useCanvasRelationalTreeAnalysis } from './useCanvasRelationalTreeAnalysis';
-import {
-  projectCanvasRelationalTreeCatalogue,
-  projectPendingCanvasRelationalTreeCatalogue,
-  projectCanvasRelationalCatalogueSelection,
-} from './canvasRelationalTreeCatalogue';
+import { useCanvasRelationalTreeCatalogue } from './useCanvasRelationalTreeCatalogue';
 import {
   projectCanvasSourceOccurrencePublication,
   unavailableCanvasRelationIds,
@@ -30,6 +26,11 @@ import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTr
 import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasModelCompositionDrop } from './useCanvasModelCompositionDrop';
 import { getPluginPortMap } from '../../plugins/registry';
+import { useCanvasModelBrowserPresentation } from './CanvasModelBrowser';
+import {
+  discoverCanvasDbtModels,
+  guardDiscoveredDbtCompositionApply,
+} from './canvasDbtModelCompositionDiscovery';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
   return (
@@ -47,9 +48,19 @@ export function useCanvasRelationalTreeWorkbenchModel(
   >
 ) {
   const state = useCanvasRelationalTreeDraftState();
+  const browser = useCanvasModelBrowserPresentation();
+  const publication = browser?.fileModels;
+  const discoveries = useMemo(
+    () => discoverCanvasDbtModels(publication?.projection, inputArgs.nodes),
+    [publication?.projection, inputArgs.nodes]
+  );
+  const authoring = useMemo(
+    () => guardDiscoveredDbtCompositionApply(inputArgs.authoring, publication?.refresh),
+    [inputArgs.authoring, publication?.refresh]
+  );
   const query = useCanvasRelationalTreeAnalysis({ ...inputArgs, copies: state.modelCopies });
   const { graph, analysis, result, projection, composition, outputPlanRelationIds } = query;
-  const args = { ...inputArgs, ...graph };
+  const args = { ...inputArgs, ...graph, authoring };
   const pluginPorts = useMemo(() => getPluginPortMap(), []);
   const pendingAuthoring =
     args.authoring != null &&
@@ -74,6 +85,9 @@ export function useCanvasRelationalTreeWorkbenchModel(
     state,
     start: session.start,
     analysis: session.analysis,
+    discoveries,
+    inputs: session.sourceInputRecovery.inputs,
+    occurrences: session.occurrences,
   });
   const { sourceInputRecovery } = session;
   const sourceOutputFieldsByRelationId = useMemo(
@@ -96,36 +110,17 @@ export function useCanvasRelationalTreeWorkbenchModel(
   const selection = useCanvasRelationalSelection(args.transformNode.id, projection);
   const { selectedLocator, selectTreeNode } = selection;
 
-  const catalogue = useMemo(() => {
-    const base =
-      projection == null
-        ? composition?.state === 'pending' || pendingAuthoring
-          ? projectPendingCanvasRelationalTreeCatalogue(sourceInputRecovery.inputs, args.nodes)
-          : []
-        : projectCanvasRelationalTreeCatalogue({
-            inputs: projection.inputs,
-            nodes: args.nodes,
-            root: projection.root,
-          });
-    return projectCanvasRelationalCatalogueSelection({
-      catalogue: base,
-      authoringAvailable,
-      selectedLocator,
-      pending: session.occurrences.pending,
-      selectedOccurrenceId: session.occurrences.selectedId,
-      operations: session.staged.operations,
-    });
-  }, [
-    args.nodes,
-    composition?.state,
-    sourceInputRecovery.inputs,
-    authoringAvailable,
+  const catalogue = useCanvasRelationalTreeCatalogue({
     projection,
-    session.occurrences.pending,
-    session.occurrences.selectedId,
-    session.staged.operations,
+    composition,
+    pendingAuthoring,
+    inputs: sourceInputRecovery.inputs,
+    nodes: args.nodes,
+    authoringAvailable,
     selectedLocator,
-  ]);
+    occurrences: session.occurrences,
+    operations: session.staged.operations,
+  });
   const unavailableMessage =
     analysis.semantic?.state === 'retained'
       ? args.copy.relationalTreeProducerFieldsUnavailableMessage
@@ -139,15 +134,16 @@ export function useCanvasRelationalTreeWorkbenchModel(
               ? args.copy.relationalTreeInputIdentityUnavailableMessage
               : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
-    if (!session.active && projection != null && item.treeLocator != null)
-      selectTreeNode(item.treeLocator);
+    const locator = projection == null ? null : item.treeLocator;
+    if (!session.active && locator != null) selectTreeNode(locator);
     else if (authoringAvailable && item.sourceNodeId != null)
       session.occurrences.add(item.sourceNodeId);
-    else if (projection != null && item.treeLocator != null) selectTreeNode(item.treeLocator);
+    else if (locator != null) selectTreeNode(locator);
   };
 
   return {
     ...graph,
+    layoutDocument: query.persisted.document,
     modelComposition,
     inputRevision: query.inputRevisionFor(sourceInputRecovery.inputs),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),

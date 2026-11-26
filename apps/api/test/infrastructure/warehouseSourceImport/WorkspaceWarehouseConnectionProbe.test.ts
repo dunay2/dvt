@@ -1,31 +1,7 @@
-import { buildRelationalSourceObjectId, type RelationalSourceObjectLocator } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const pgMock = vi.hoisted(() => {
-  const connect = vi.fn<() => Promise<void>>();
-  const end = vi.fn<() => Promise<void>>();
-  const query = vi.fn<
-    (
-      sql: string,
-      values?: readonly unknown[]
-    ) => Promise<{
-      rows: readonly Record<string, unknown>[];
-      fields?: readonly { name: string; dataTypeID?: number }[];
-    }>
-  >();
-  const databaseQuery = vi.fn();
-  const Client = vi.fn(() => ({
-    connect,
-    end,
-    query: (sql: string, values?: readonly unknown[]) =>
-      sql === 'select current_database() as database' ? databaseQuery() : query(sql, values),
-  }));
-
-  return { Client, connect, end, query, databaseQuery };
-});
-
-vi.mock('pg', () => ({
-  Client: pgMock.Client,
+vi.mock('pg', async () => ({
+  Client: (await import('./warehouseConnectionProbe.test.fixtures.js')).pgMock.Client,
 }));
 
 import {
@@ -34,35 +10,22 @@ import {
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 
-function expectedRelationIdentity(
-  name: string,
-  relationType: 'table' | 'view' = 'table'
-): Readonly<{
-  objectId: string;
-  displayName: string;
-  locator: RelationalSourceObjectLocator;
-}> {
-  const locator = {
-    kind: 'relation' as const,
-    catalog: 'dvt',
-    schema: 'public',
-    name,
-    relationType,
-  };
-  return {
-    objectId: buildRelationalSourceObjectId(locator),
-    displayName: name,
-    locator,
-  };
-}
+import {
+  pgMock,
+  expectedRelationIdentity,
+  CATALOG_TARGET,
+} from './warehouseConnectionProbe.test.fixtures.js';
+import {
+  verifyEstimatedProbeMetricScenario,
+  buildProbeMetricFixture,
+} from './WorkspaceWarehouseConnectionProbe.test-cases.js';
 
-const CATALOG_TARGET = {
-  connectionId: 'conn-1',
-  scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
-  type: 'postgres',
-  database: 'dvt',
-  credentialRef: 'postgres:warehouse',
-} as const;
+function createWarehouseProbe(nowIso: string): WorkspaceWarehouseConnectionProbe {
+  return new WorkspaceWarehouseConnectionProbe({
+    credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+    now: () => new Date(nowIso),
+  });
+}
 
 describe('WorkspaceWarehouseConnectionProbe', () => {
   beforeEach(() => {
@@ -82,10 +45,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         { table_catalog: 'dvt', table_schema: 'public', object_count: '8' },
       ],
     });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     const result = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
       kind: 'schema-list',
@@ -108,10 +68,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     async (operation) => {
       pgMock.databaseQuery.mockResolvedValue({ rows: [{ database: 'another_database' }] });
       pgMock.query.mockResolvedValue({ rows: [{ object_count: '0' }] });
-      const probe = new WorkspaceWarehouseConnectionProbe({
-        credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-        now: () => new Date('2026-09-07T12:00:00.000Z'),
-      });
+      const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
       if (operation === 'inspect' || operation === 'test') {
         const result =
@@ -152,10 +109,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         { table_catalog: 'dvt', table_schema: 'public', object_count: '8' },
       ],
     });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
     const firstPage = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
       kind: 'schema-list',
       limit: 1,
@@ -205,46 +159,8 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     expect(pgMock.query).not.toHaveBeenCalled();
   });
   it('filters global name search before loading columns and metrics', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            relation_comment: 'Sales orders.\n  External documentation.',
-            database_user: 'warehouse_reader',
-            relation_kind: 'r',
-            row_count: '128',
-          },
-          {
-            table_catalog: 'dvt',
-            table_schema: 'raw',
-            table_name: 'orders_archive',
-            database_user: 'warehouse_reader',
-            relation_kind: 'r',
-            row_count: '64',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            column_name: 'order_id',
-            column_comment: 'Warehouse <order> identifier.',
-            data_type: 'integer',
-            is_nullable: 'NO',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    buildProbeMetricFixture('globalNameSearch');
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     const result = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
       kind: 'name-search',
@@ -263,14 +179,13 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       ],
       truncated: true,
     });
-    expect(pgMock.query.mock.calls[0]?.[0]).toContain(
-      'position(lower($1) in lower(relation.relname)) > 0'
-    );
+    const relationSql = pgMock.query.mock.calls[0]?.[0];
+    expect(relationSql).toContain('position(lower($1) in lower(relation.relname)) > 0');
     expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['orders', '', '', 2]);
     expect(pgMock.query.mock.calls[1]?.[0]).toContain('selected_relations');
     expect(pgMock.query.mock.calls[1]?.[1]).toEqual([['dvt'], ['public'], ['orders']]);
     expect(pgMock.query).toHaveBeenCalledTimes(3);
-    expect(pgMock.query.mock.calls[0]?.[0]).toContain("obj_description(relation.oid, 'pg_class')");
+    expect(relationSql).toContain("obj_description(relation.oid, 'pg_class')");
     expect(pgMock.query.mock.calls[1]?.[0]).toContain(
       'col_description(relation.oid, attribute.attnum)'
     );
@@ -328,10 +243,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 42 } }] }],
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     await expect(probe.listSourceObjectCatalog(CATALOG_TARGET, request)).resolves.toMatchObject({
       kind: 'object-page',
@@ -353,10 +265,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
 
   it('binds schema pages to the exact catalog and schema', async () => {
     pgMock.query.mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-09-07T12:00:00.000Z');
 
     await expect(
       probe.listSourceObjectCatalog(CATALOG_TARGET, {
@@ -393,10 +302,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         ],
       })
       .mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-08-17T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-08-17T10:00:00.000Z');
 
     await expect(
       probe.previewSourceObjectRows({
@@ -440,10 +346,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         ],
       })
       .mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-08-17T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-08-17T10:00:00.000Z');
 
     await expect(
       probe.previewSourceObjectRows({
@@ -465,10 +368,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-08-17T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-08-17T10:00:00.000Z');
 
     await expect(
       probe.previewSourceObjectRows({
@@ -487,50 +387,9 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
   });
 
   it('returns Postgres relation metrics and column metadata as source objects', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            database_user: 'warehouse_reader',
-            relation_kind: 'r',
-            row_count: '128',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            column_name: 'order_id',
-            data_type: 'integer',
-            is_nullable: 'NO',
-            primary_key: true,
-            unique_column: true,
-            constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
-          },
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            column_name: 'customer',
-            data_type: 'text',
-            is_nullable: 'YES',
-            primary_key: false,
-            unique_column: false,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [{ byte_size: '4096000' }] });
+    buildProbeMetricFixture('relationMetrics');
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     await expect(
       probe.inspectConnection({
@@ -592,55 +451,8 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
   });
 
   it('keeps quoted Postgres identifiers distinct when they differ only by case', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'Orders',
-            relation_kind: 'r',
-            row_count: '2',
-          },
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            relation_kind: 'r',
-            row_count: '3',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'Orders',
-            column_name: 'QuotedId',
-            data_type: 'integer',
-            is_nullable: 'NO',
-            primary_key: false,
-            unique_column: false,
-          },
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            column_name: 'id',
-            data_type: 'integer',
-            is_nullable: 'NO',
-            primary_key: false,
-            unique_column: false,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [{ byte_size: '128' }] })
-      .mockResolvedValueOnce({ rows: [{ byte_size: '192' }] });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    buildProbeMetricFixture('quotedIdentifiers');
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     const result = await probe.inspectConnection({
       type: 'postgres',
@@ -704,10 +516,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '8192' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-07-11T10:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-07-11T10:00:00.000Z');
 
     const result = await probe.inspectConnection({
       scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
@@ -759,10 +568,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockRejectedValueOnce(new Error('permission denied for function pg_total_relation_size'));
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
 
     const result = await probe.inspectConnection({
       scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
@@ -791,254 +597,18 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
   });
 
   it('estimates byte size when Postgres exposes rows and columns but not relation bytes', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders_view',
-            relation_kind: 'v',
-            row_count: '128',
-            byte_size: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders_view',
-            column_name: 'order_id',
-            data_type: 'integer',
-            is_nullable: 'NO',
-            primary_key: false,
-            unique_column: false,
-          },
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders_view',
-            column_name: 'customer',
-            data_type: 'text',
-            is_nullable: 'YES',
-            primary_key: false,
-            unique_column: false,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [{ byte_size: null }] });
-
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
-
-    await expect(
-      probe.inspectConnection({
-        scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
-        name: 'Local Postgres',
-        type: 'postgres',
-        database: 'dvt',
-        credentialRef: 'postgres:warehouse',
-      })
-    ).resolves.toEqual({
-      status: 'passed',
-      checkedAt: '2026-06-27T12:00:00.000Z',
-      sourceObjects: [
-        {
-          ...expectedRelationIdentity('orders_view', 'view'),
-          metricEvidence: {
-            observedAt: '2026-06-27T12:00:00.000Z',
-            observationScope: { kind: 'snapshot' },
-            rowCount: {
-              value: 128,
-              provenance: 'estimated',
-              method: 'provider-statistics',
-              confidence: 'medium',
-            },
-            byteSize: {
-              value: 11904,
-              provenance: 'estimated',
-              method: 'schema-width',
-              confidence: 'low',
-              basis: 'provider-row-storage',
-            },
-          },
-          columns: [
-            { name: 'order_id', type: 'integer', nullable: false },
-            { name: 'customer', type: 'text', nullable: true },
-          ],
-        },
-      ],
-    });
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
+    await verifyEstimatedProbeMetricScenario(probe, 'schemaWidthBytes');
   });
 
   it('falls back to authorized table reads when Postgres row-count statistics are unavailable', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            relation_kind: 'r',
-            row_count: null,
-            byte_size: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            column_name: 'order_id',
-            data_type: 'integer',
-            is_nullable: 'NO',
-            primary_key: false,
-            unique_column: false,
-          },
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            column_name: 'customer',
-            data_type: 'text',
-            is_nullable: 'YES',
-            primary_key: false,
-            unique_column: false,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 128 } }] }],
-      });
-
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
-
-    await expect(
-      probe.inspectConnection({
-        scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
-        name: 'Local Postgres',
-        type: 'postgres',
-        database: 'dvt',
-        credentialRef: 'postgres:warehouse',
-      })
-    ).resolves.toEqual({
-      status: 'passed',
-      checkedAt: '2026-06-27T12:00:00.000Z',
-      sourceObjects: [
-        {
-          ...expectedRelationIdentity('orders'),
-          metricEvidence: {
-            observedAt: '2026-06-27T12:00:00.000Z',
-            observationScope: { kind: 'snapshot' },
-            rowCount: {
-              value: 128,
-              provenance: 'estimated',
-              method: 'query-plan',
-              confidence: 'low',
-            },
-            byteSize: {
-              value: 11904,
-              provenance: 'estimated',
-              method: 'schema-width',
-              confidence: 'low',
-              basis: 'provider-row-storage',
-            },
-          },
-          columns: [
-            { name: 'order_id', type: 'integer', nullable: false },
-            { name: 'customer', type: 'text', nullable: true },
-          ],
-        },
-      ],
-    });
-    expect(pgMock.query.mock.calls[2]?.[0]).toBe(
-      'explain (format json) select * from "public"."orders"'
-    );
-    expect(pgMock.query.mock.calls.flat().join(' ')).not.toContain('count(*)');
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
+    await verifyEstimatedProbeMetricScenario(probe, 'authorizedRowCount');
   });
 
   it('falls back to driver column metadata when catalog column metadata is unavailable', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders',
-            relation_kind: 'r',
-            row_count: null,
-            byte_size: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({
-        rows: [],
-        fields: [
-          { name: 'order_id', dataTypeID: 23 },
-          { name: 'payload', dataTypeID: 3802 },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 10 } }] }],
-      });
-
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
-
-    await expect(
-      probe.inspectConnection({
-        scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
-        name: 'Local Postgres',
-        type: 'postgres',
-        database: 'dvt',
-        credentialRef: 'postgres:warehouse',
-      })
-    ).resolves.toEqual({
-      status: 'passed',
-      checkedAt: '2026-06-27T12:00:00.000Z',
-      sourceObjects: [
-        {
-          ...expectedRelationIdentity('orders'),
-          metricEvidence: {
-            observedAt: '2026-06-27T12:00:00.000Z',
-            observationScope: { kind: 'snapshot' },
-            rowCount: {
-              value: 10,
-              provenance: 'estimated',
-              method: 'query-plan',
-              confidence: 'low',
-            },
-            byteSize: {
-              value: 2850,
-              provenance: 'estimated',
-              method: 'schema-width',
-              confidence: 'low',
-              basis: 'provider-row-storage',
-            },
-          },
-          columns: [
-            { name: 'order_id', type: 'integer', nullable: true },
-            { name: 'payload', type: 'jsonb', nullable: true },
-          ],
-        },
-      ],
-    });
-    expect(pgMock.query.mock.calls[2]?.[0]).toBe('select * from "public"."orders" limit 0');
-    expect(pgMock.query.mock.calls[3]?.[0]).toBe(
-      'explain (format json) select * from "public"."orders"'
-    );
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
+    await verifyEstimatedProbeMetricScenario(probe, 'driverColumns');
   });
 
   it('falls back to driver column metadata when catalog metadata is not authorized', async () => {
@@ -1067,10 +637,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       })
       .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-07-10T21:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-07-10T21:00:00.000Z');
 
     const result = await probe.inspectConnection({
       scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
@@ -1097,10 +664,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
   it('tests connectivity without loading source metrics or scanning source data', async () => {
     pgMock.query.mockResolvedValueOnce({ rows: [{ object_count: '2' }] });
 
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-07-10T21:00:00.000Z'),
-    });
+    const probe = createWarehouseProbe('2026-07-10T21:00:00.000Z');
 
     await expect(
       probe.testConnection({
@@ -1125,83 +689,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
   });
 
   it('measures rows through the authorized data plane when metadata and plan estimates are unavailable', async () => {
-    pgMock.query
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders_view',
-            relation_kind: 'v',
-            row_count: null,
-            byte_size: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            table_catalog: 'dvt',
-            table_schema: 'public',
-            table_name: 'orders_view',
-            column_name: 'order_id',
-            data_type: 'integer',
-            is_nullable: 'NO',
-            primary_key: false,
-            unique_column: false,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ row_count: '7' }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ byte_size: null }] });
-
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-06-27T12:00:00.000Z'),
-    });
-
-    await expect(
-      probe.inspectConnection({
-        scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
-        name: 'Local Postgres',
-        type: 'postgres',
-        database: 'dvt',
-        credentialRef: 'postgres:warehouse',
-      })
-    ).resolves.toEqual({
-      status: 'passed',
-      checkedAt: '2026-06-27T12:00:00.000Z',
-      sourceObjects: [
-        {
-          ...expectedRelationIdentity('orders_view', 'view'),
-          metricEvidence: {
-            observedAt: '2026-06-27T12:00:00.000Z',
-            observationScope: { kind: 'snapshot' },
-            rowCount: {
-              value: 7,
-              provenance: 'measured',
-              method: 'data-scan',
-              confidence: 'exact',
-            },
-            byteSize: {
-              value: 203,
-              provenance: 'estimated',
-              method: 'schema-width',
-              confidence: 'low',
-              basis: 'provider-row-storage',
-            },
-          },
-          columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-        },
-      ],
-    });
-    expect(pgMock.query.mock.calls[3]?.[0]).toBe("set statement_timeout = '2000ms'");
-    expect(pgMock.query.mock.calls[4]?.[0]).toBe(
-      'select count(*)::bigint as row_count from "public"."orders_view"'
-    );
-    expect(pgMock.query.mock.calls[5]?.[0]).toBe('reset statement_timeout');
+    const probe = createWarehouseProbe('2026-06-27T12:00:00.000Z');
+    await verifyEstimatedProbeMetricScenario(probe, 'measuredRows');
   });
 });

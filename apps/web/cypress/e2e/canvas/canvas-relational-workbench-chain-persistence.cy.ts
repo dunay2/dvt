@@ -100,13 +100,21 @@ describe('Workbench chain-persistence', () => {
     });
   }
   it('saves the complete chain before an explicit model sample and reloads it', () => {
-    const assertCardOutput = (): void => {
+    const assertCardOutput = ({
+      input,
+      output,
+      outputColumns,
+    }: Readonly<{ input: string; output: string; outputColumns: string }>): void => {
       const card = '.react-flow__node[data-id="join-transform"]';
       cy.then(() => {
         const { outputs } = savedOutputs();
+        expect(outputs, 'the four-source chain publishes eight fields').to.have.length(8);
         const writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
         const samples = getE2eApiCalls(/\/data-sample$/, 'GET').length;
-        cy.get(`${card} [role="tab"]`).contains(`Output (${outputs.length})`).click();
+        cy.get(`${card} [role="tab"]`)
+          .contains(`${output} (${outputs.length})`)
+          .should('have.attr', 'aria-label', `${outputColumns} (${outputs.length})`)
+          .click();
         cy.get(`${card} [data-slot="graph-node-column-toggle"]`).then(($toggle) => {
           if ($toggle.attr('aria-expanded') === 'false') cy.wrap($toggle).click();
         });
@@ -116,8 +124,8 @@ describe('Workbench chain-persistence', () => {
           );
         });
         cy.get(`${card} [data-slot="graph-node-column-output-state"]`).should('not.exist');
-        cy.get(`${card} [role="tab"]`).contains('Input').click();
-        cy.get(`${card} [role="tab"]`).contains('Output').click();
+        cy.get(`${card} [role="tab"]`).contains(input).click();
+        cy.get(`${card} [role="tab"]`).contains(output).click();
         cy.then(() => {
           expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writes);
           expect(getE2eApiCalls(/\/data-sample$/, 'GET')).to.have.length(samples);
@@ -141,9 +149,11 @@ describe('Workbench chain-persistence', () => {
     cy.get('[data-slot="bottom-operational-drawer-data"] table').should('contain.text', 'C-001');
     cy.screenshot('semantic-editor-data-preview');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
-    assertCardOutput();
+    cy.get('html').should('have.attr', 'lang', 'es');
+    assertCardOutput({ input: 'Entrada', output: 'Salida', outputColumns: 'Columnas de salida' });
     revisitWorkbenchCanvas();
-    assertCardOutput();
+    cy.get('html').should('have.attr', 'lang', 'en');
+    assertCardOutput({ input: 'Input', output: 'Output', outputColumns: 'Output columns' });
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
       'have.length',

@@ -7,9 +7,8 @@ import {
 
 const contribution = {
   tabs: [
-    { id: 'log', label: 'Registro', count: null },
-    { id: 'problems', label: 'Problemas', count: 1 },
-    { id: 'runs', label: 'Ejecuciones', count: 1 },
+    { id: 'preview', label: 'Vista previa', count: 1 },
+    { id: 'data:orders', label: 'Pedidos', count: null },
   ],
 } as unknown as OperationalDrawerContribution;
 
@@ -17,53 +16,52 @@ describe('operational drawer tab visibility', () => {
   beforeEach(() => {
     useOperationalDrawerContributionStore.setState({
       contribution,
-      activeTab: 'problems',
+      activeTab: 'preview',
       hiddenTabs: [],
     });
   });
 
   it('hides the active tab without deleting its contribution and selects its next neighbor', () => {
     useOperationalDrawerContributionStore.getState().setOperationalDrawerTabVisibility({
-      tab: 'problems',
+      tab: 'preview',
       visible: false,
     });
 
     const state = useOperationalDrawerContributionStore.getState();
-    expect(state.hiddenTabs).toEqual(['problems']);
-    expect(state.activeTab).toBe('runs');
-    expect(state.contribution?.tabs.map((tab) => tab.id)).toEqual(['log', 'problems', 'runs']);
+    expect(state.hiddenTabs).toEqual(['preview']);
+    expect(state.activeTab).toBe('data:orders');
+    expect(state.contribution?.tabs.map((tab) => tab.id)).toEqual(['preview', 'data:orders']);
   });
 
-  it('keeps the active tab when another tab closes and allows every tab to be hidden', () => {
+  it('keeps selection when a neighbor closes and clears it when every tab is hidden', () => {
     const command =
       useOperationalDrawerContributionStore.getState().setOperationalDrawerTabVisibility;
-    command({ tab: 'log', visible: false });
-    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('problems');
+    command({ tab: 'data:orders', visible: false });
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('preview');
 
-    command({ tab: 'problems', visible: false });
-    command({ tab: 'runs', visible: false });
+    command({ tab: 'preview', visible: false });
 
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
       activeTab: null,
-      hiddenTabs: ['log', 'problems', 'runs'],
+      hiddenTabs: ['data:orders', 'preview'],
     });
   });
 
   it('restores a hidden tab when it is shown or explicitly selected', () => {
     const command =
       useOperationalDrawerContributionStore.getState().setOperationalDrawerTabVisibility;
-    command({ tab: 'log', visible: false });
-    command({ tab: 'problems', visible: false });
+    command({ tab: 'preview', visible: false });
+    command({ tab: 'data:orders', visible: false });
 
-    command({ tab: 'log', visible: true });
+    command({ tab: 'preview', visible: true });
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'log',
-      hiddenTabs: ['problems'],
+      activeTab: 'preview',
+      hiddenTabs: ['data:orders'],
     });
 
-    useOperationalDrawerContributionStore.getState().selectOperationalDrawerTab('problems');
+    useOperationalDrawerContributionStore.getState().selectOperationalDrawerTab('data:orders');
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'problems',
+      activeTab: 'data:orders',
       hiddenTabs: [],
     });
   });

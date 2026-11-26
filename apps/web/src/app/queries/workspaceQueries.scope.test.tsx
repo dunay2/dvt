@@ -88,11 +88,10 @@ describe('workspace query scope isolation', () => {
     );
 
     try {
-      await waitForReactQuery(
-        () =>
-          observedQuery?.data?.[0]?.path === COLLIDING_PATH &&
-          observedContentQuery?.data?.content.includes('project-a') === true
-      );
+      await waitForInitialWorkspaceScopeReads(() => ({
+        tree: observedQuery,
+        content: observedContentQuery,
+      }));
       expect(subscribers.size).toBe(2);
 
       await act(async () => {
@@ -117,21 +116,25 @@ describe('workspace query scope isolation', () => {
           .getQueryCache()
           .getAll()
           .map((query) => query.queryKey)
-      ).toContainEqual(queryKeys.workspace.fileTree('tenant::project-b::stage'));
+      ).toContainEqual(queryKeys.workspace.forLayout('tenant::project-b::stage').fileTree());
       expect(
-        mounted.queryClient.getQueryData(queryKeys.workspace.fileTree('tenant::project-a::dev'))
-      ).toEqual([expect.objectContaining({ path: COLLIDING_PATH })]);
-      expect(
-        mounted.queryClient.getQueryData(queryKeys.workspace.fileTree('tenant::project-b::stage'))
+        mounted.queryClient.getQueryData(
+          queryKeys.workspace.forLayout('tenant::project-a::dev').fileTree()
+        )
       ).toEqual([expect.objectContaining({ path: COLLIDING_PATH })]);
       expect(
         mounted.queryClient.getQueryData(
-          queryKeys.workspace.fileContent('tenant::project-a::dev', COLLIDING_PATH)
+          queryKeys.workspace.forLayout('tenant::project-b::stage').fileTree()
+        )
+      ).toEqual([expect.objectContaining({ path: COLLIDING_PATH })]);
+      expect(
+        mounted.queryClient.getQueryData(
+          queryKeys.workspace.forLayout('tenant::project-a::dev').fileContent(COLLIDING_PATH)
         )
       ).toEqual(expect.objectContaining({ content: expect.stringContaining('project-a') }));
       expect(
         mounted.queryClient.getQueryData(
-          queryKeys.workspace.fileContent('tenant::project-b::stage', COLLIDING_PATH)
+          queryKeys.workspace.forLayout('tenant::project-b::stage').fileContent(COLLIDING_PATH)
         )
       ).toEqual(expect.objectContaining({ content: expect.stringContaining('project-b') }));
     } finally {
@@ -139,3 +142,20 @@ describe('workspace query scope isolation', () => {
     }
   });
 });
+
+type WorkspaceScopeQueryReads = {
+  tree: ReturnType<typeof useWorkspaceFileTreeQuery> | undefined;
+  content: ReturnType<typeof useWorkspaceFileContentQuery> | undefined;
+};
+
+async function waitForInitialWorkspaceScopeReads(
+  read: () => WorkspaceScopeQueryReads
+): Promise<void> {
+  await waitForReactQuery(() => {
+    const queries = read();
+    return (
+      queries.tree?.data?.[0]?.path === COLLIDING_PATH &&
+      queries.content?.data?.content.includes('project-a') === true
+    );
+  });
+}

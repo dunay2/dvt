@@ -37,6 +37,7 @@ type CanvasWorkbenchDefaultsDto = {
   activeCanvasId: CanvasController['activeCanvasId'];
   executionEnvironmentOptions: CanvasController['executionEnvironmentOptions'];
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
+  canAddCanvasDocument: CanvasController['canAddCanvasDocument'];
   authorizationPermissions: CanvasController['authorizationPermissions'];
   userPermissions: CanvasController['userPermissions'];
   canvasSurfaceStrategy: CanvasController['canvasSurfaceStrategy'];
@@ -162,6 +163,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     activeCanvasId: 'main-canvas',
     executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
     canCreateCanvasDocument: false,
+    canAddCanvasDocument: false,
     authorizationPermissions: buildDefaultCanvasUserPermissions(),
     userPermissions: buildDefaultCanvasUserPermissions(),
     canvasSurfaceStrategy: dvtCanvasSurfaceStrategy,
@@ -238,7 +240,7 @@ export function buildDefaultCanvasControllerState(): CanvasControllerStateDefaul
   };
 }
 
-export function buildDefaultCanvasControllerCallbacks(): Pick<
+type DefaultCanvasControllerCallbacks = Pick<
   CanvasController,
   | 'onNodesChange'
   | 'onEdgesChange'
@@ -281,7 +283,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'reloadLatestDraft'
   | 'setPlanModalOpen'
 > &
-  Pick<CanvasController, 'importedNodeFocusIds'> {
+  Pick<CanvasController, 'importedNodeFocusIds'>;
+
+export function buildDefaultCanvasControllerCallbacks(): DefaultCanvasControllerCallbacks {
   return {
     onNodesChange: vi.fn(),
     onEdgesChange: vi.fn(),

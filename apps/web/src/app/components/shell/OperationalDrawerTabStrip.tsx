@@ -123,50 +123,17 @@ export function OperationalDrawerTabStrip({
           aria-orientation="horizontal"
           aria-label={ariaLabel}
         >
-          {visibleTabs.map((tab) => (
-            <button
+          {visibleTabs.map((tab, index) => (
+            <OperationalDrawerVisibleTab
               key={tab.id}
-              type="button"
-              role="tab"
-              id={`bottom-operational-drawer-tab-${tab.id}`}
-              aria-controls={`bottom-operational-drawer-panel-${tab.id}`}
-              aria-selected={activeTab === tab.id}
-              aria-keyshortcuts="Delete"
-              tabIndex={activeTab === tab.id ? 0 : -1}
-              data-slot="bottom-operational-drawer-tab"
-              data-tab={tab.id}
-              className={styles.tab}
-              data-active={activeTab === tab.id}
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest('[data-tab-close]') != null) {
-                  onCloseTab(tab.id);
-                  return;
-                }
-                onSelectTab(tab.id);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Delete') {
-                  event.preventDefault();
-                  onCloseTab(tab.id);
-                  return;
-                }
-                moveFocus(event, tab.id);
-              }}
-            >
-              <span className={styles.tabLabel}>
-                {tab.label}
-                {tab.count == null ? null : <span> {tab.count}</span>}
-              </span>
-              <span
-                aria-hidden="true"
-                title={closeTabLabel.replace('{tab}', tab.label)}
-                data-slot="bottom-operational-drawer-tab-close"
-                data-tab-close={tab.id}
-                className={styles.tabClose}
-              >
-                <X aria-hidden="true" className={styles.tabCloseIcon} />
-              </span>
-            </button>
+              tab={tab}
+              index={index}
+              activeTab={activeTab}
+              closeTabLabel={closeTabLabel}
+              onCloseTab={onCloseTab}
+              onSelectTab={onSelectTab}
+              moveFocus={moveFocus}
+            />
           ))}
         </div>
       </ContextMenuTrigger>
@@ -177,5 +144,69 @@ export function OperationalDrawerTabStrip({
         </ContextMenuContent>
       )}
     </ContextMenu>
+  );
+}
+
+function OperationalDrawerVisibleTab({
+  tab,
+  index,
+  activeTab,
+  closeTabLabel,
+  onCloseTab,
+  onSelectTab,
+  moveFocus,
+}: Pick<
+  Parameters<typeof OperationalDrawerTabStrip>[0],
+  'activeTab' | 'closeTabLabel' | 'onCloseTab' | 'onSelectTab'
+> &
+  Readonly<{
+    tab: OperationalDrawerTab;
+    index: number;
+    moveFocus: (event: KeyboardEvent<HTMLButtonElement>, tabId: OperationalDrawerTabId) => void;
+  }>) {
+  return (
+    <button
+      key={tab.id}
+      type="button"
+      role="tab"
+      id={`bottom-operational-drawer-tab-${tab.id}`}
+      aria-controls={`bottom-operational-drawer-panel-${tab.id}`}
+      aria-selected={activeTab === tab.id}
+      aria-keyshortcuts="Delete"
+      tabIndex={activeTab === tab.id || (activeTab == null && index === 0) ? 0 : -1}
+      data-slot="bottom-operational-drawer-tab"
+      data-tab={tab.id}
+      className={styles.tab}
+      data-active={activeTab === tab.id}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest('[data-tab-close]') != null) {
+          onCloseTab(tab.id);
+          return;
+        }
+        onSelectTab(tab.id);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Delete') {
+          event.preventDefault();
+          onCloseTab(tab.id);
+          return;
+        }
+        moveFocus(event, tab.id);
+      }}
+    >
+      <span className={styles.tabLabel}>
+        {tab.label}
+        {tab.count == null ? null : <span> {tab.count}</span>}
+      </span>
+      <span
+        aria-hidden="true"
+        title={closeTabLabel.replace('{tab}', tab.label)}
+        data-slot="bottom-operational-drawer-tab-close"
+        data-tab-close={tab.id}
+        className={styles.tabClose}
+      >
+        <X aria-hidden="true" className={styles.tabCloseIcon} />
+      </span>
+    </button>
   );
 }

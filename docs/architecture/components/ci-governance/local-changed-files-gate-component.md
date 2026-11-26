@@ -418,6 +418,8 @@ The allowed differences are those reviewed additions, moved contract suites,
 removal of dead branches and exact duplicate execution, and visible rejection
 of conflicting step identities.
 
+Each focused Node test uses its complete repository-relative path as its step identity. Two suites in different directories may have the same filename. Aggregate steps retain their separate command identities.
+
 The same ID and identical command/arguments/test kind deduplicate. Reusing an ID
 for a different execution rejects the plan; it must not silently discard a
 contract merely because two files share a basename. CI-tool selection is computed

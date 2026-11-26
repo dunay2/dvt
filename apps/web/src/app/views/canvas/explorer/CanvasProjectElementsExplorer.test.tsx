@@ -15,11 +15,13 @@ import type { IDbtProjectGraphQueryPort } from '../../../ports/dbtProjectGraph';
 import { queryKeys } from '../../../queries/queryKeys';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasProjectElementsExplorer } from './CanvasProjectElementsExplorer';
+import { CanvasExplorerDocumentsContext } from './CanvasExplorerDocuments';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import { canvasDbtModelDefinitionId } from '../canvasDbtModelReference';
 import * as modelReferences from '../canvasDbtModelReference';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import type { DragEvent } from 'react';
+import { ApiError } from '../../../services/api/createApiClient';
 
 const binding = {
   schemaVersion: 'canvas-authoring-authority-binding.v1',
@@ -134,6 +136,144 @@ afterEach(async () => {
   mounted = undefined;
   vi.restoreAllMocks();
 });
+
+it('keeps the worksheet name and keyboard focus while the model catalog resolves', async () => {
+  const doc = { id: 'sales', kind: 'transformation' as const, title: 'Sales' };
+  const workspace = { activeId: doc.id, documents: [doc], onAddCanvas: vi.fn() };
+  let publishFiles!: (files: Awaited<ReturnType<IWorkspaceFilesQueryPort['listFiles']>>) => void;
+  listFiles.mockReturnValueOnce(
+    new Promise((resolve) => {
+      publishFiles = resolve;
+    })
+  );
+  mounted = await withTestQueryClient(
+    <AppServicesProvider overrides={services}>
+      <MemoryRouter>
+        <CanvasExplorerDocumentsContext.Provider value={workspace}>
+          <CanvasProjectElementsExplorer enabled items={[]} onInspectNode={onSelect} />
+        </CanvasExplorerDocumentsContext.Provider>
+      </MemoryRouter>
+    </AppServicesProvider>
+  );
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Add canvas' }));
+  });
+  const field = screen.getByRole<HTMLInputElement>('textbox', { name: 'Canvas name' });
+  act(() => {
+    fireEvent.change(field, { target: { value: 'Forecast' } });
+    publishFiles([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
+  });
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null);
+  expect(screen.getByRole('textbox', { name: 'Canvas name' })).toBe(field);
+  expect(document.activeElement).toBe(field);
+  expect(field.value).toBe('Forecast');
+});
+
+it('keeps the same search, query and row disclosure when the initial binding arrives', async () => {
+  let publish!: (files: Awaited<ReturnType<IWorkspaceFilesQueryPort['listFiles']>>) => void;
+  const files = await listFiles();
+  listFiles.mockReturnValueOnce(
+    new Promise((resolve) => {
+      publish = resolve;
+    })
+  );
+  await render(true, [
+    { id: 'native', label: 'Model 1', details: [{ label: 'identifier', value: 'native' }] },
+  ]);
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Details: Model 1' }));
+  });
+  const search = screen.getByRole<HTMLInputElement>('searchbox');
+  act(() => {
+    fireEvent.change(search, { target: { value: 'Model' } });
+    search.focus();
+    publish(files);
+  });
+  await waitForReactQuery(
+    () =>
+      getProjectGraph.mock.calls.length > 0 &&
+      mounted!.container
+        .querySelector('[data-slot="canvas-explorer-models"]')
+        ?.getAttribute('aria-busy') === 'false'
+  );
+  expect(screen.getByRole('searchbox')).toBe(search);
+  expect(search.value).toBe('Model');
+  expect(document.activeElement).toBe(search);
+  expect(
+    screen.getByRole('button', { name: 'Details: Model 1' }).getAttribute('aria-expanded')
+  ).toBe('true');
+});
+
+function projectRefreshFailure(statusCode: number | null): ApiError {
+  return new ApiError({
+    message: 'PRIVATE_BACKEND_PATH',
+    endpoint: '/proof',
+    statusCode,
+    category: statusCode == null ? 'network' : statusCode >= 500 ? 'server' : 'client',
+  });
+}
+
+async function refreshProjectCatalogue(): Promise<void> {
+  await act(async () => {
+    await mounted!.queryClient.refetchQueries({
+      queryKey: queryKeys.workspace.dbtProjectGraphRoot(),
+    });
+  });
+}
+
+it.each([503, null])(
+  'retains same-identity rows for transient refresh %s without admitting placement',
+  async (statusCode) => {
+    await render();
+    await waitForReactQuery(
+      () => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null
+    );
+    const row = screen.getByRole<HTMLButtonElement>('button', { name: /^pedidos(?:\s|$)/ });
+    getProjectGraph.mockRejectedValueOnce(projectRefreshFailure(statusCode));
+    await refreshProjectCatalogue();
+    await waitForReactQuery(() => screen.queryByRole('alert') != null);
+    expect(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ })).toBe(row);
+    expect(row.draggable).toBe(false);
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(mounted!.container.textContent).not.toContain('PRIVATE_BACKEND_PATH');
+    expect(
+      mounted!.container.querySelector('[data-slot="canvas-explorer-model-count"]')
+    ).toBeNull();
+    const setData = vi.fn();
+    act(() => {
+      fireEvent.dragStart(row, { dataTransfer: { setData } });
+    });
+    expect(setData).not.toHaveBeenCalled();
+    await refreshProjectCatalogue();
+    await waitForReactQuery(() => screen.queryByRole('alert') == null);
+    expect(screen.getByRole('button', { name: /^pedidos(?:\s|$)/ })).toBe(row);
+    expect(row.draggable).toBe(true);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(getProjectGraph).toHaveBeenCalledTimes(3);
+    expect(saveFileContent).not.toHaveBeenCalled();
+  }
+);
+
+it.each([401, 403, 404, 422, 'unknown'] as const)(
+  'does not display a cached publication after refresh rejection %s',
+  async (statusCode) => {
+    await render();
+    await waitForReactQuery(
+      () => screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ }) != null
+    );
+    getProjectGraph.mockRejectedValueOnce(
+      statusCode === 'unknown'
+        ? new Error('PRIVATE_BACKEND_PATH')
+        : projectRefreshFailure(statusCode)
+    );
+    await refreshProjectCatalogue();
+    await waitForReactQuery(() => screen.queryByRole('alert') != null);
+    expect(screen.queryByRole('button', { name: /^pedidos(?:\s|$)/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Model 1' })).toBeTruthy();
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(saveFileContent).not.toHaveBeenCalled();
+  }
+);
 
 it('inspects native and actual file definitions without instance admission, navigation or file writes', async () => {
   const createDefinition = vi.spyOn(modelReferences, 'createCanvasDbtModelDefinition');

@@ -43,6 +43,16 @@ function relationNameDetail(node: CanvasRelationalTreeNode): string {
   return node.displayName ?? node.substraitKind;
 }
 
+function sourceReferenceDetail(
+  node: CanvasRelationalTreeNode,
+  copy: CanvasRelationalTreeWorkbenchCopy
+): string {
+  const source = node.physicalSource;
+  if (node.sourceRef == null || source == null) return '';
+  if (node.displayName === source.name || node.displayName === source.qualifiedName) return '';
+  return copy.relationalTreeConnectedSourceTemplate.replace('{source}', source.qualifiedName);
+}
+
 export function resolveCanvasRelationalNodeCopy(
   node: CanvasRelationalTreeNode,
   copy: CanvasRelationalTreeWorkbenchCopy
@@ -56,11 +66,13 @@ export function resolveCanvasRelationalNodeCopy(
       ? copy.relationalTreeFieldTransformationStageSummaryTemplate
       : null;
   const detail =
-    template == null || summary == null
-      ? subtitle
-      : template
-          .replace('{scalar}', String(summary.scalarFieldCount))
-          .replace('{window}', String(summary.windowFieldCount))
-          .replace('{passthrough}', String(summary.passthroughFieldCount));
+    node.operator === 'read'
+      ? sourceReferenceDetail(node, copy)
+      : template == null || summary == null
+        ? subtitle
+        : template
+            .replace('{scalar}', String(summary.scalarFieldCount))
+            .replace('{window}', String(summary.windowFieldCount))
+            .replace('{passthrough}', String(summary.passthroughFieldCount));
   return { ...resolved, title, detail };
 }

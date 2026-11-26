@@ -51,7 +51,7 @@ export const dvtContributions: PluginContributions = {
           translations: { es: 'Plantillas' },
         },
         icon: FileCode2,
-        order: 60,
+        order: 15,
         level: 'extended',
       },
     },

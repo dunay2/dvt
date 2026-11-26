@@ -33,6 +33,9 @@ export type CanvasDraftSession = {
   localNodeCatalog?: Record<string, CanonicalNode>;
   /** Configuration edges retained for registered definitions without a visible card. */
   localDefinitionEdges?: CanvasDraftEdge[];
+  /** Unpublished removal intentions; the acknowledged baseline remains immutable. */
+  removedDefinitionIds?: readonly string[];
+  savingRemovedDefinitionIds?: readonly string[];
 };
 
 export type BootstrapSessionArgs = {

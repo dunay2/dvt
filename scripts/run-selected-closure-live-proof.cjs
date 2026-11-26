@@ -53,7 +53,7 @@ const WORKSPACE_RUNTIME_BUILD_SCRIPT = path.resolve(__dirname, 'build-workspace-
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
 const DEFAULT_SPEC_RELATIVE_PATH =
   'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
-const CYPRESS_IMAGE = 'cypress/included:15.18.1';
+const CYPRESS_IMAGE = 'cypress/included:15.21.2';
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
 const WEB_BIND_HOST = '0.0.0.0';

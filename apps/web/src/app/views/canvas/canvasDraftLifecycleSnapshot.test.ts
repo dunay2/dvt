@@ -43,10 +43,8 @@ describe('canvas draft lifecycle snapshot', () => {
     const payload = buildCurrentDraftPayload(
       { first: { x: 100, y: 100 }, second: { x: 300, y: 100 } },
       draftSession,
-      { kind: 'transformation', title: 'Canvas' },
-      null,
-      [],
-      []
+      { canvas: { kind: 'transformation', title: 'Canvas' }, baseline: null },
+      { canonicalNodes: [], canonicalEdges: [] }
     );
     expect(payload.nodes.map((node) => node.id)).toEqual(
       expect.arrayContaining(['definition', 'first', 'second'])
@@ -77,10 +75,8 @@ describe('canvas draft lifecycle snapshot', () => {
     const payload = buildCurrentDraftPayload(
       {},
       draftSession,
-      { kind: 'transformation', title: 'Canvas' },
-      null,
-      [definition],
-      []
+      { canvas: { kind: 'transformation', title: 'Canvas' }, baseline: null },
+      { canonicalNodes: [definition], canonicalEdges: [] }
     );
     expect(payload.nodeIds).toEqual([]);
     expect(payload.nodePositions).toEqual({});
@@ -135,10 +131,8 @@ describe('canvas draft lifecycle snapshot', () => {
         'dbt-model-1': { x: 420, y: 80 },
       },
       draftSession,
-      { kind: 'dbt', title: 'dbt canvas' },
-      null,
-      [sourceNode],
-      []
+      { canvas: { kind: 'dbt', title: 'dbt canvas' }, baseline: null },
+      { canonicalNodes: [sourceNode], canonicalEdges: [] }
     );
 
     expect(payload.nodeIds).toEqual(['warehouse-source', 'dbt-model-1']);
@@ -171,10 +165,8 @@ describe('canvas draft lifecycle snapshot', () => {
     const payload = buildCurrentDraftPayload(
       { [canonical.id]: { x: 120, y: 80 } },
       draftSession,
-      { kind: 'transformation', title: 'Transform canvas' },
-      null,
-      [canonical],
-      []
+      { canvas: { kind: 'transformation', title: 'Transform canvas' }, baseline: null },
+      { canonicalNodes: [canonical], canonicalEdges: [] }
     );
 
     expect(payload.nodes).toEqual([expect.objectContaining({ name: 'After' })]);

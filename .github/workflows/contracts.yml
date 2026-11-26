@@ -83,7 +83,7 @@ jobs:
           echo "Checking for JSON schema files..."
 
           schema_roots=()
-          [[ -d "docs/architecture/engine/contracts" ]] && schema_roots+=("docs/architecture/engine/contracts")
+          [[ -d "docs/architecture/components/engine/contracts" ]] && schema_roots+=("docs/architecture/components/engine/contracts")
           [[ -d "docs/contracts" ]] && schema_roots+=("docs/contracts")
 
           if [ ${#schema_roots[@]} -eq 0 ]; then

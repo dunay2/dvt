@@ -120,7 +120,7 @@
     "test:planning:db:current-schema": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-current-schema-policy.test.cjs scripts/planning-db/current-mechanization-constraint.test.cjs",
     "test:planning:db:integration": "node --test scripts/planning-db-content.integration.test.cjs scripts/planning-db/current-mechanization-constraint.integration.test.cjs scripts/planning-db/feature-mechanization-declaration.integration.test.cjs",
     "contracts:index:generate": "node scripts/generate-contract-index.cjs",
-    "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- specs/contracts/README.md",
+    "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- docs/architecture/components/engine/contracts/README.md",
     "contracts:rfc2119:validate": "node scripts/validate-rfc2119.cjs",
     "contracts:glossary:validate": "node scripts/validate-glossary-usage.cjs --mode warn",
     "contracts:references:validate": "node scripts/validate-references.cjs",
@@ -212,9 +212,9 @@
     "apps/**/*.{html,css}": [
       "prettier --write"
     ],
-    "specs/contracts/**/*.{md,json}": [
+    "docs/architecture/components/engine/contracts/**/*.{md,json}": [
       "pnpm contracts:index:generate",
-      "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
+      "node -e \"const fs=require('fs');const cp=require('child_process');const p='docs/architecture/components/engine/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "scripts/**/*.{cjs,mjs}": [
       "eslint --fix --config tools/ci/eslint-precommit.config.cjs",
@@ -228,6 +228,9 @@
       "prettier --write"
     ],
     "tools/**/*.ts": [
+      "prettier --write"
+    ],
+    "infra/**/*.{ts,tsx,cjs,mjs}": [
       "prettier --write"
     ],
     "*.{js,json,md,yml,yaml}": [
@@ -261,10 +264,10 @@
     "@testing-library/dom": "^10.4.2",
     "@types/js-yaml": "4.0.9",
     "@types/node": "26.6.6",
-    "@typescript-eslint/eslint-plugin": "^8.72.2",
-    "@typescript-eslint/parser": "^8.72.2",
-    "@vitest/coverage-v8": "3.2.4",
-    "@vitest/ui": "3.2.4",
+    "@typescript-eslint/eslint-plugin": "^8.73.0",
+    "@typescript-eslint/parser": "^8.73.0",
+    "@vitest/coverage-v8": "5.1.1",
+    "@vitest/ui": "5.1.1",
     "ajv": "^8.17.1",
     "ajv-cli": "^5.0.0",
     "ajv-formats": "^3.0.1",
@@ -275,7 +278,7 @@
     "eslint-plugin-import": "^2.29.1",
     "js-yaml": "^4.1.1",
     "lint-staged": "^17.6.0",
-    "markdownlint-cli2": "^0.24.1",
+    "markdownlint-cli2": "^0.24.2",
     "prettier": "^3.10.1",
     "rimraf": "^6.1.3",
     "semver": "^7.7.4",
@@ -283,21 +286,23 @@
     "tsx": "^4.21.0",
     "turbo": "2.11.11",
     "typescript": "5.9.3",
-    "vitest": "3.2.4",
+    "vitest": "5.1.1",
     "zod-to-json-schema": "^3.25.1"
   },
   "pnpm": {
     "overrides": {
       "@types/node": "26.6.6",
-      "vitest": "3.2.4",
-      "@vitest/ui": "3.2.4",
-      "@vitest/coverage-v8": "3.2.4",
-      "@vitest/expect": "3.2.4",
-      "@vitest/runner": "3.2.4",
-      "@vitest/snapshot": "3.2.4",
-      "@vitest/spy": "3.2.4",
+      "@radix-ui/react-dismissable-layer": "1.2.1",
+      "@radix-ui/react-focus-scope": "1.3.1",
+      "vitest": "5.1.1",
+      "@vitest/ui": "5.1.1",
+      "@vitest/coverage-v8": "5.1.1",
+      "@vitest/expect": "5.1.1",
+      "@vitest/runner": "5.1.1",
+      "@vitest/snapshot": "5.1.1",
+      "@vitest/spy": "5.1.1",
       "semver": "7.7.4",
-      "@vitest/utils": "3.2.4",
+      "@vitest/utils": "5.1.1",
       "minimatch@10.2.4": "10.1.2"
     }
   },

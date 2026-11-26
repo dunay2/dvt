@@ -19,6 +19,7 @@ export const canvasViewToolbarCopyByKey = {
   canvasGraphSearchCloseLabel: 'Close graph search',
   canvasGraphFilterLabel: 'Filter graph',
   canvasGraphFilterTitle: 'Graph filters',
+  canvasGraphFilterCloseLabel: 'Close graph filters',
   canvasGraphFilterMatchSummaryTemplate: '{matching} of {total} nodes visible',
   canvasGraphFilterCompositionLabel: 'Combine filters',
   canvasGraphFilterAndLabel: 'All (AND)',

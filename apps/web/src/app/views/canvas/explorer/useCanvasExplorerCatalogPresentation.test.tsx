@@ -4,6 +4,11 @@ import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent, screen } from '@testing-library/dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { createTestQueryClient } from '../../../../testing/reactQueryHarness';
+import { createAppServicesTestOverrides } from '../../../../testing/appServicesTestDoubles';
+import { AppServicesProvider } from '../../../services/AppServicesContext';
+import type { AppServicesOverrides } from '../../../services/composition/appServices';
 import {
   CanvasModelBrowserProvider,
   useCanvasModelBrowserPresentation,
@@ -17,6 +22,8 @@ import { canvasModelNavigationScopeKey } from '../canvasModelNavigationPreferenc
 let root: Root;
 let host: HTMLDivElement;
 let activePresentation: CanvasExplorerCatalogPresentation | undefined;
+let queryClient: QueryClient;
+let services: AppServicesOverrides;
 const items = [
   { id: 'orders', label: 'Orders', details: [{ label: 'object' as const, value: 'raw.orders' }] },
   { id: 'customers', label: 'Customers' },
@@ -59,6 +66,7 @@ function ScopedExplorer({
         cataloguePresentation,
         catalogue: [],
         mode: 'semantic',
+        onBrowse: vi.fn(),
         onSelect: vi.fn(),
         contexts: [],
         selectContext: vi.fn(),
@@ -70,17 +78,28 @@ function ScopedExplorer({
   );
 }
 function render(projectId = 'project', canvasId = 'canvas'): void {
-  act(() => root.render(<ScopedExplorer projectId={projectId} canvasId={canvasId} />));
+  act(() =>
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <AppServicesProvider overrides={services}>
+          <ScopedExplorer projectId={projectId} canvasId={canvasId} />
+        </AppServicesProvider>
+      </QueryClientProvider>
+    )
+  );
 }
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   useApplicationLanguageStore.setState({ language: 'en' });
+  queryClient = createTestQueryClient();
+  services = createAppServicesTestOverrides();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
 });
 afterEach(() => {
   act(() => root.unmount());
+  queryClient.clear();
   host.remove();
   vi.unstubAllGlobals();
 });

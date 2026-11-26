@@ -6,6 +6,8 @@ export type CanvasViewCopy = {
   readonly relationalModelCopyDropLabel: string;
   readonly relationalModelCopyUnavailableMessage: string;
   readonly relationalModelCopyAddLabel: string;
+  readonly relationalModelReferenceAddLabel: string;
+  readonly relationalModelReferenceDropLabel: string;
   readonly sourceOccurrenceFieldsUnavailable: string;
   readonly sourceOccurrenceAdd: string;
   readonly sourceOccurrenceAlias: string;
@@ -102,6 +104,7 @@ export type CanvasViewCopy = {
   readonly canvasGraphSearchCloseLabel: string;
   readonly canvasGraphFilterLabel: string;
   readonly canvasGraphFilterTitle: string;
+  readonly canvasGraphFilterCloseLabel: string;
   readonly canvasGraphFilterMatchSummaryTemplate: string;
   readonly canvasGraphFilterCompositionLabel: string;
   readonly canvasGraphFilterAndLabel: string;
@@ -287,7 +290,9 @@ export type CanvasViewCopy = {
   readonly planPreviewExportJsonAction: string;
   readonly planPreviewStartRunAction: string;
   readonly planPreviewSelectionRejectedTitle: string;
-  readonly planPreviewSelectionRejectedDescription: string;
+  readonly planPreviewAffectedModelLabel: string;
+  readonly planPreviewAffectedModelMessageTemplate: string;
+  readonly planPreviewTechnicalDetailsLabel: string;
   readonly planPreviewPlanInvalidTitle: string;
   readonly planPreviewPlanInvalidDescription: string;
   readonly planPreviewUnknownCodeMessage: string;
@@ -318,9 +323,6 @@ export type CanvasViewCopy = {
   readonly planStatusPreviewNotPersistedMessage: string;
   readonly planStatusPreviewReadyMessage: string;
   readonly operationalDrawerTitle: string;
-  readonly operationalDrawerLogTab: string;
-  readonly operationalDrawerProblemsTab: string;
-  readonly operationalDrawerRunsTab: string;
   readonly operationalDrawerPreviewTab: string;
   readonly operationalDrawerDataTab: string;
   readonly operationalDrawerSemanticTab: string;
@@ -328,12 +330,6 @@ export type CanvasViewCopy = {
   readonly operationalDrawerSemanticTopologyMismatchMessage: string;
   readonly operationalDrawerProblemsAriaLabel: string;
   readonly operationalDrawerNoProblemsMessage: string;
-  readonly operationalDrawerRunsAriaLabel: string;
-  readonly operationalDrawerRunReadyStatus: string;
-  readonly operationalDrawerRunBlockedStatus: string;
-  readonly operationalDrawerRunActiveStatus: string;
-  readonly operationalDrawerActiveRunSummaryTemplate: string;
-  readonly operationalDrawerReadyRunSummary: string;
   readonly operationalDrawerPreviewAriaLabel: string;
   readonly operationalDrawerPreviewAction: string;
   readonly operationalDrawerPreviewReadyStatus: string;
@@ -566,6 +562,7 @@ export type CanvasViewCopy = {
   readonly relationalTreeMissingLabel: string;
   readonly relationalTreeOutputLabel: string;
   readonly relationalTreePrimaryInputLabel: string;
+  readonly relationalTreeConnectedSourceTemplate: string;
   readonly relationalTreePrimarySlotLabel: string;
   readonly relationalTreeProjectOperationLabel: string;
   readonly relationalTreeFieldTransformationStageLabel: string;

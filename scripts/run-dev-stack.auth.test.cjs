@@ -65,6 +65,22 @@ test('local protected-runtime tenant actions include workspace authoring, files,
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:import'));
 });
 
+test('local selected-principal SQL scopes are carried by the authentic signed session', async () => {
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:sql:execute'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:sql-history:view'));
+  const bootstrap = await startLocalProtectedRuntimeAuth({
+    env: { DVT_DEV_PRINCIPAL_ID: 'sql-proof-only' },
+  });
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    assert.equal(payload.sub, 'sql-proof-only');
+    assert.ok(payload.scope.split(' ').includes('workspace:sql:execute'));
+    assert.ok(payload.scope.split(' ').includes('workspace:sql-history:view'));
+  } finally {
+    await bootstrap.close();
+  }
+});
+
 test('seedLocalProtectedRuntimeGrant preserves the project catalog referent for the granted workspace', async () => {
   const queries = [];
   const client = {

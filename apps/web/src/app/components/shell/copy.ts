@@ -35,6 +35,8 @@ export type ShellTopBarCopy = {
   readonly languageEnglish: string;
   readonly languageSpanish: string;
   readonly operationalDrawer: string;
+  readonly operationalDrawerLog: string;
+  readonly operationalDrawerProblems: string;
   readonly closeOperationalDrawer: string;
   readonly closeOperationalDrawerTab: string;
   readonly restoreOperationalDrawerTabs: string;
@@ -111,6 +113,8 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   languageEnglish: { key: 'shell.languageEnglish', fallback: 'English' },
   languageSpanish: { key: 'shell.languageSpanish', fallback: 'Spanish' },
   operationalDrawer: { key: 'shell.operationalDrawer', fallback: 'Operations' },
+  operationalDrawerLog: { key: 'shell.operationalDrawer.log', fallback: 'Log' },
+  operationalDrawerProblems: { key: 'shell.operationalDrawer.problems', fallback: 'Problems' },
   closeOperationalDrawer: {
     key: 'shell.closeOperationalDrawer',
     fallback: 'Close operational drawer',
@@ -199,6 +203,8 @@ const COPY_ES: ShellTopBarCopy = {
   languageEnglish: 'Inglés',
   languageSpanish: 'Español',
   operationalDrawer: 'Operaciones',
+  operationalDrawerLog: 'Registro',
+  operationalDrawerProblems: 'Problemas',
   closeOperationalDrawer: 'Cerrar panel de operaciones',
   closeOperationalDrawerTab: 'Cerrar {tab}',
   restoreOperationalDrawerTabs: 'Mostrar ventanas',
@@ -269,6 +275,8 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     languageEnglish: resolveString(COPY_BY_KEY.languageEnglish, locale),
     languageSpanish: resolveString(COPY_BY_KEY.languageSpanish, locale),
     operationalDrawer: resolveString(COPY_BY_KEY.operationalDrawer, locale),
+    operationalDrawerLog: resolveString(COPY_BY_KEY.operationalDrawerLog, locale),
+    operationalDrawerProblems: resolveString(COPY_BY_KEY.operationalDrawerProblems, locale),
     closeOperationalDrawer: resolveString(COPY_BY_KEY.closeOperationalDrawer, locale),
     closeOperationalDrawerTab: resolveString(COPY_BY_KEY.closeOperationalDrawerTab, locale),
     restoreOperationalDrawerTabs: resolveString(COPY_BY_KEY.restoreOperationalDrawerTabs, locale),

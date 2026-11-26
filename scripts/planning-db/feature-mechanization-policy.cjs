@@ -73,23 +73,46 @@ function createFeatureMechanizationPolicy({ canonicalJson }) {
     return patterns.some((pattern) => surfaceMatchesPattern(surface, pattern));
   }
 
-  function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
+  function pruneForbiddenImplementationExtensions(value, patterns) {
     if (typeof value === 'string') {
       return excludesFeatureMechanizationSurface(value, patterns) ? undefined : value;
     }
     if (Array.isArray(value)) {
       return value
-        .map((item) => pruneForbiddenFeatureMechanizationReferences(item, patterns))
+        .map((item) => pruneForbiddenImplementationExtensions(item, patterns))
         .filter((item) => item !== undefined);
     }
     if (value && typeof value === 'object') {
       return Object.fromEntries(
         Object.entries(value)
-          .map(([key, item]) => [key, pruneForbiddenFeatureMechanizationReferences(item, patterns)])
+          .map(([key, item]) => [key, pruneForbiddenImplementationExtensions(item, patterns)])
           .filter(([, item]) => item !== undefined)
       );
     }
     return value;
+  }
+
+  function mergeFeatureMechanizationSymbols(existing, incoming, command, forbiddenSurfaces) {
+    const identify = (symbol) => `${symbol.path}#${symbol.name}`;
+    const forbidden = (symbol) =>
+      excludesFeatureMechanizationSurface(identify(symbol), forbiddenSurfaces);
+    if (
+      incoming.some(forbidden) ||
+      command.implementationRefs.some((ref) =>
+        excludesFeatureMechanizationSurface(ref, forbiddenSurfaces)
+      )
+    ) {
+      throw new Error('Forbidden implementation reference cannot be recorded.');
+    }
+    const retained = existing.filter((symbol) => !forbidden(symbol));
+    const previousByIdentity = new Map(retained.map((symbol) => [identify(symbol), symbol]));
+    const symbols = command.replaceImplementationRefs
+      ? incoming.map((symbol) => previousByIdentity.get(identify(symbol)) || symbol)
+      : mergeFeatureMechanizationObjectsByKey(retained, incoming, identify);
+    if (symbols.some((symbol) => !symbol.path || !symbol.name)) {
+      throw new Error('Complete symbol path and name are required before recording evidence.');
+    }
+    return symbols;
   }
 
   function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
@@ -97,10 +120,7 @@ function createFeatureMechanizationPolicy({ canonicalJson }) {
     const existing = command.replaceArchitectureGuards
       ? { ...existingFields, architectureGuards: [] }
       : existingFields;
-    const merged = pruneForbiddenFeatureMechanizationReferences(
-      mergeFeatureMechanizationValue(existing, incomingManifest),
-      command.forbiddenImplementationSurfaces
-    );
+    const merged = mergeFeatureMechanizationValue(existing, incomingManifest);
     const retainedForbidden = (existing.forbiddenImplementationSurfaces || []).filter(
       (pattern) =>
         !command.allowedImplementationSurfaces.some((surface) =>
@@ -111,26 +131,27 @@ function createFeatureMechanizationPolicy({ canonicalJson }) {
       retainedForbidden,
       command.forbiddenImplementationSurfaces
     );
-    const symbols = mergeFeatureMechanizationObjectsByKey(
-      (command.replaceImplementationRefs ? [] : existing.symbols || []).filter(
-        (symbol) =>
-          !excludesFeatureMechanizationSurface(
-            `${symbol.path}#${symbol.name}`,
-            command.forbiddenImplementationSurfaces
-          )
-      ),
+    const symbols = mergeFeatureMechanizationSymbols(
+      existing.symbols || [],
       incomingManifest.symbols,
-      (symbol) => `${symbol.path}#${symbol.name}`
+      command,
+      forbiddenImplementationSurfaces
+    );
+    const extensions = Object.fromEntries(
+      Object.entries(existing).filter(([key]) => !(key in incomingManifest))
+    );
+    const typedFields = Object.fromEntries(
+      Object.entries(merged).filter(([key]) => key in incomingManifest)
     );
 
     const reconciled = {
-      ...merged,
+      ...pruneForbiddenImplementationExtensions(extensions, forbiddenImplementationSurfaces),
+      ...typedFields,
       allowedImplementationSurfaces: mergeUniqueValues(
         existing.allowedImplementationSurfaces || [],
         incomingManifest.allowedImplementationSurfaces
       ).filter(
-        (surface) =>
-          !excludesFeatureMechanizationSurface(surface, command.forbiddenImplementationSurfaces)
+        (surface) => !excludesFeatureMechanizationSurface(surface, forbiddenImplementationSurfaces)
       ),
       forbiddenImplementationSurfaces,
       commandQueryRails: mergeFeatureMechanizationObjectsByKey(
@@ -149,13 +170,7 @@ function createFeatureMechanizationPolicy({ canonicalJson }) {
           ),
       symbols,
     };
-    return {
-      ...pruneForbiddenFeatureMechanizationReferences(
-        reconciled,
-        command.forbiddenImplementationSurfaces
-      ),
-      forbiddenImplementationSurfaces,
-    };
+    return structuredClone(reconciled);
   }
 
   return {

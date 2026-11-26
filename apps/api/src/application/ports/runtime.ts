@@ -4,6 +4,7 @@
  */
 import type {
   CanonicalRunStatus,
+  CanvasAuthoringAuthorityBinding,
   DvtPostgresPublicationEvidence,
   EventEnvelope,
   Provider,
@@ -134,6 +135,7 @@ export type RunControlActionAvailabilityDto = RunControlActionAvailability;
 export type RunControlAvailabilityDto = RunControlAvailability;
 
 export type GetRunStatusResult = RunOperationalTruthDto & {
+  readonly modelSelection?: RunModelSelection;
   readonly enriched: boolean;
   readonly providerView?: ProviderRunStatusView;
   readonly snapshotStaleness: RunSnapshotStaleness;
@@ -143,6 +145,11 @@ export type GetRunStatusResult = RunOperationalTruthDto & {
   readonly provenance?: RunProvenanceChain;
   readonly diagnostics?: RunDiagnostics;
 };
+
+export type RunModelSelection = Readonly<{
+  binding: CanvasAuthoringAuthorityBinding;
+  modelIds: readonly string[];
+}>;
 
 export interface IGetRunStatusUseCase {
   execute(

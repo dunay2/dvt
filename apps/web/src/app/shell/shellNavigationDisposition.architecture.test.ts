@@ -36,6 +36,7 @@ describe('shell navigation disposition architecture', () => {
     const rootSource = readAppSource('Root.tsx');
     const topBarSource = readAppSource('components/TopAppBar.tsx');
     const railSource = readAppSource('components/LeftNavigation.tsx');
+    const projectToolsSource = readAppSource('components/shell/ShellProjectMenu.tsx');
     const explorerSource = readAppSource('views/canvas/explorer/CanvasExplorer.tsx');
     const entriesSource = [
       readAppSource('components/shell/ShellProjectMenu.template.tsx'),
@@ -55,7 +56,9 @@ describe('shell navigation disposition architecture', () => {
     expect(railSource).not.toMatch(/useShellRuntime|plugins\/registry|capabilitiesPort/u);
     expect(entriesSource).not.toContain('ShellNavigationEntriesTemplate');
     expect(explorerSource).not.toMatch(/shellNavigationModel|useNavigate|NavLink/u);
-    expect(railSource).toContain('shell-project-code-command');
+    expect(railSource).toContain('<ShellProjectCodeLink');
+    expect(projectToolsSource).toContain('data-slot="shell-project-code-command"');
+    expect(projectToolsSource).toContain('state={canvasCodeRouteEntryState}');
     expect(railSource).not.toContain('ShellActivityRailHost');
     expect(readAppSource('views/canvas/explorer/CanvasExplorer.templates.tsx')).not.toContain(
       'createPortal'

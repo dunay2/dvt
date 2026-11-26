@@ -112,8 +112,12 @@ describe('Canvas project snapshot architecture', () => {
     expect(snapshotSource).toContain('exportFile: exportProjectSnapshot');
     expect(snapshotSource).toContain('validateImport: validateProjectImport');
     expect(snapshotSource).toContain('buildFileName: buildProjectSnapshotFileName');
-    expect(lifecycleSource).toContain('canvasProjectSnapshot.exportFile');
-    expect(lifecycleSource).toContain('executeImportProjectSnapshotCommand({');
+    expect(lifecycleSource).toContain('useCanvasProjectSnapshotCommands({');
+    const commands = readAppSource('views/canvas/useCanvasProjectSnapshotCommands.ts');
+    expect(commands).toContain('canvasProjectSnapshot.exportFile');
+    expect(commands).not.toContain('draftRepository.saveGraphDraft({');
+    expect(commands).not.toContain('saveWorkspaceGraphDraft(');
+    expect(commands).toContain('executeImportProjectSnapshotCommand({');
     expect(lifecycleSource).not.toContain('draftRepository.saveGraphDraft({');
     expect(importCommandSource).toContain('canvasProjectSnapshot.validateImport');
     expect(importCommandSource).toContain('draftRepository.saveGraphDraft({');

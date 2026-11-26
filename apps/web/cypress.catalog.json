@@ -59,6 +59,7 @@
     "apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts",
     "apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts",
     "apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts",
+    "apps/web/cypress/e2e/sql/sql-worksheet.cy.ts",
     "apps/web/cypress/e2e/templates/templates-workbench.cy.ts"
   ],
   "available": [
@@ -72,6 +73,8 @@
     "apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-relational-workbench-cross.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts",
+    "apps/web/cypress/e2e/canvas/canvas-relational-workbench-inspection-layout.cy.ts",
+    "apps/web/cypress/e2e/canvas/canvas-relational-workbench-output-code.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-relational-workbench-viewport.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts",
@@ -105,7 +108,8 @@
   "nativePlatforms": {
     "win32": [
       "apps/web/cypress/e2e/shell/canvas-workbench-coarse-pointer.cy.ts",
-      "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+      "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+      "apps/web/cypress/e2e/sql/sql-worksheet.cy.ts"
     ]
   }
 }

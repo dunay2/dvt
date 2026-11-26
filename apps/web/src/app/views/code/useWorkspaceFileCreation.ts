@@ -52,9 +52,13 @@ export function useWorkspaceFileCreation(
     };
   }, []);
   const current = () => mounted.current && session.getWorkspaceScopeSnapshot() === scope;
-  const treeKey = queryKeys.workspace.fileTree(
-    `${scope.tenantId}::${scope.projectId}::${scope.environmentId}`
-  );
+  const treeKey = queryKeys.workspace
+    .forLayout(`${scope.tenantId}::${scope.projectId}::${scope.environmentId}`)
+    .fileTree();
+
+  function dispatchCurrent(event: () => Parameters<typeof transitionFileCreation>[1]): void {
+    if (current()) dispatch(event());
+  }
 
   async function refresh(path: string) {
     try {
@@ -77,7 +81,30 @@ export function useWorkspaceFileCreation(
       onOpenFile(path);
       dispatch({ type: 'observed' });
     } catch {
-      if (current()) dispatch({ type: 'refreshFailed' });
+      dispatchCurrent(() => ({ type: 'refreshFailed' }));
+    }
+  }
+
+  async function publishFile(path: string, draft: FileCreationDraft): Promise<void> {
+    busy.current = true;
+    dispatch({ type: 'save' });
+    try {
+      const receipt = await command.saveFileContent({
+        path,
+        content: draft.content,
+        expectedRevision: { kind: 'absent' },
+      });
+      if (!current()) return;
+      if (receipt.path !== path) {
+        dispatch({ type: 'unconfirmed' });
+        return;
+      }
+      dispatch({ type: 'publish', path: receipt.path });
+      await refresh(receipt.path);
+    } catch (error) {
+      dispatchCurrent(() => ({ type: 'reject', error: resolveCodeFileCreationFailure(error) }));
+    } finally {
+      busy.current = false;
     }
   }
 
@@ -100,26 +127,7 @@ export function useWorkspaceFileCreation(
       dispatch({ type: 'reject', error: 'invalidPath' });
       return;
     }
-    busy.current = true;
-    dispatch({ type: 'save' });
-    try {
-      const receipt = await command.saveFileContent({
-        path,
-        content: state.draft.content,
-        expectedRevision: { kind: 'absent' },
-      });
-      if (!current()) return;
-      if (receipt.path !== path) {
-        dispatch({ type: 'unconfirmed' });
-        return;
-      }
-      dispatch({ type: 'publish', path: receipt.path });
-      await refresh(receipt.path);
-    } catch (error) {
-      if (current()) dispatch({ type: 'reject', error: resolveCodeFileCreationFailure(error) });
-    } finally {
-      busy.current = false;
-    }
+    await publishFile(path, state.draft);
   }
 
   async function importFile(file: File, folder: string) {
@@ -145,7 +153,7 @@ export function useWorkspaceFileCreation(
     submit,
     importFile,
     begin: (draft) => {
-      if (current()) dispatch({ type: 'begin', draft });
+      dispatchCurrent(() => ({ type: 'begin', draft }));
     },
     edit: (field, value) => dispatch({ type: 'edit', field, value }),
     close: () => {

@@ -15,6 +15,9 @@ export type UserPermissions = {
   canPersistGraphDraft: boolean;
   canManagePlugins: boolean;
   canManageRBAC: boolean;
+  /** An unprojected legacy snapshot grants neither SQL capability. */
+  canExecuteSql?: boolean;
+  canViewSqlHistory?: boolean;
 };
 
 type AuthorizationState = {
@@ -29,6 +32,8 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canPersistGraphDraft: false,
   canManagePlugins: false,
   canManageRBAC: false,
+  canExecuteSql: false,
+  canViewSqlHistory: false,
 };
 
 export const useAuthorizationStore = create<AuthorizationState>()((set) => ({

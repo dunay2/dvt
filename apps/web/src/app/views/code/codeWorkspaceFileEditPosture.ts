@@ -12,6 +12,14 @@ export type CodeWorkspaceFileEditPosture =
   | Readonly<{ kind: 'graph_owned_read_only' }>
   | Readonly<{ kind: 'authority_unavailable_read_only' }>;
 
+function permitsWorkspaceEdit(
+  access: CodeWorkspaceFileAccess | undefined,
+  path: string | undefined
+): boolean {
+  if (access === 'operation-sql') return isWorkspaceOperationSqlPath(path);
+  return access !== 'read-only';
+}
+
 export function resolveCodeWorkspaceFileEditPosture(args: {
   access?: CodeWorkspaceFileAccess;
   authority: 'graph-draft' | 'dbt-project-files' | 'missing' | 'mixed';
@@ -22,20 +30,13 @@ export function resolveCodeWorkspaceFileEditPosture(args: {
     return { kind: 'authority_unavailable_read_only' };
   }
 
-  if (
-    args.access === 'read-only' ||
-    (args.access === 'operation-sql' && !isWorkspaceOperationSqlPath(args.selectedPath))
-  ) {
+  if (!permitsWorkspaceEdit(args.access, args.selectedPath)) {
     return { kind: 'workspace_read_only' };
   }
 
-  if (
-    args.authority === 'graph-draft' &&
-    args.selectedPath !== undefined &&
-    args.graphOwnedPaths.has(args.selectedPath)
-  ) {
-    return { kind: 'graph_owned_read_only' };
-  }
-
-  return { kind: 'editable' };
+  if (args.authority !== 'graph-draft' || args.selectedPath === undefined)
+    return { kind: 'editable' };
+  return args.graphOwnedPaths.has(args.selectedPath)
+    ? { kind: 'graph_owned_read_only' }
+    : { kind: 'editable' };
 }

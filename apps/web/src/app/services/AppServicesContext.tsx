@@ -5,6 +5,8 @@ import type { CapabilitiesPort } from '../ports/capabilities';
 import type { ICanvasTransformDataSampleQueryPort } from '../ports/canvasDataSample';
 import type { ICanvasTransformSqlQueryPort } from '../ports/canvasTransformSql';
 import type { ICanvasModelSqlQueryPort } from '../ports/canvasModelSql';
+import type { IWorksheetCanvasModelQueryPort } from '../ports/worksheetCanvasModel';
+import type { ISqlWorksheetPort } from '../ports/sqlWorksheet';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../ports/graphDbtModelCompilation';
@@ -20,6 +22,7 @@ import type {
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
   IWorkspaceFileHistoryQueryPort,
+  IWorkspaceFileVersionCommandPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceFileDirectoryQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
@@ -29,6 +32,7 @@ import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphD
 import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
 import type { IDbtSelectedModelAnalysisQueryPort } from '../ports/dbtSelectedModelAnalysis';
 import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
+import type { IWorksheetDbtModelCommand } from '../ports/worksheetDbtModel';
 import type { IDbtYamlDescriptionEditPort } from '../ports/dbtYamlDescriptionEdit';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
@@ -51,38 +55,43 @@ export type AppServicesProviderProps = Readonly<{
 }>;
 
 export function AppServicesProvider({ children, overrides }: AppServicesProviderProps) {
+  const overrideInputs = overrides ?? {};
   const value = useMemo(
     () => buildAppServices(overrides),
     [
-      overrides?.apiClient,
-      overrides?.plansService,
-      overrides?.runsService,
-      overrides?.costAttributionSummaryPort,
-      overrides?.workspaceGraphSnapshotQuery,
-      overrides?.workspaceFilesQuery,
-      overrides?.workspaceFileDirectoryQuery,
-      overrides?.workspaceFileHistoryQuery,
-      overrides?.workspaceDiffQuery,
-      overrides?.workspacePluginCatalogQuery,
-      overrides?.workspaceAdminRead,
-      overrides?.warehouseSourceImport,
-      overrides?.warehouseSourceDataSampleQuery,
-      overrides?.canvasTransformDataSampleQuery,
-      overrides?.canvasTransformSqlQuery,
-      overrides?.canvasModelSqlQuery,
-      overrides?.workspaceFileContentCommand,
-      overrides?.graphDbtWorkspaceArtifactPublicationCommand,
-      overrides?.graphDbtModelCompilationQuery,
-      overrides?.workspaceGraphDraftAuthoringPort,
-      overrides?.dbtProjectGraphQueryPort,
-      overrides?.dbtSelectedModelAnalysisQueryPort,
-      overrides?.dbtProjectImportPort,
-      overrides?.dbtYamlDescriptionEditPort,
-      overrides?.capabilitiesPort,
-      overrides?.sessionContext,
-      overrides?.workspaceScopeSelection,
-      overrides?.shellFeedback,
-      overrides?.frontendOperabilitySink,
+      overrideInputs.apiClient,
+      overrideInputs.plansService,
+      overrideInputs.runsService,
+      overrideInputs.costAttributionSummaryPort,
+      overrideInputs.workspaceGraphSnapshotQuery,
+      overrideInputs.workspaceFilesQuery,
+      overrideInputs.workspaceFileDirectoryQuery,
+      overrideInputs.workspaceFileHistoryQuery,
+      overrideInputs.workspaceFileVersionCommand,
+      overrideInputs.workspaceDiffQuery,
+      overrideInputs.workspacePluginCatalogQuery,
+      overrideInputs.workspaceAdminRead,
+      overrideInputs.warehouseSourceImport,
+      overrideInputs.warehouseSourceDataSampleQuery,
+      overrideInputs.canvasTransformDataSampleQuery,
+      overrideInputs.canvasTransformSqlQuery,
+      overrideInputs.canvasModelSqlQuery,
+      overrideInputs.worksheetCanvasModelQuery,
+      overrideInputs.worksheetDbtModelCommand,
+      overrideInputs.sqlWorksheet,
+      overrideInputs.workspaceFileContentCommand,
+      overrideInputs.graphDbtWorkspaceArtifactPublicationCommand,
+      overrideInputs.graphDbtModelCompilationQuery,
+      overrideInputs.workspaceGraphDraftAuthoringPort,
+      overrideInputs.dbtProjectGraphQueryPort,
+      overrideInputs.dbtSelectedModelAnalysisQueryPort,
+      overrideInputs.dbtProjectImportPort,
+      overrideInputs.dbtYamlDescriptionEditPort,
+      overrideInputs.capabilitiesPort,
+      overrideInputs.sessionContext,
+      overrideInputs.workspaceScopeSelection,
+      overrideInputs.shellFeedback,
+      overrideInputs.frontendOperabilitySink,
     ]
   );
 
@@ -95,6 +104,14 @@ function useRequiredAppServicesContext(): AppServices {
     throw new Error('AppServicesProvider is required to consume app services.');
   }
   return context;
+}
+
+export function useSqlWorksheetPort(): ISqlWorksheetPort {
+  return useRequiredAppServicesContext().sqlWorksheet;
+}
+
+export function useWorksheetCanvasModelQuery(): IWorksheetCanvasModelQueryPort {
+  return useRequiredAppServicesContext().worksheetCanvasModelQuery;
 }
 
 export function useWorkspaceGraphSnapshotQueryPort(): IWorkspaceGraphSnapshotQueryPort {
@@ -111,6 +128,10 @@ export function useWorkspaceFileDirectoryQueryPort(): IWorkspaceFileDirectoryQue
 
 export function useWorkspaceFileHistoryQueryPort(): IWorkspaceFileHistoryQueryPort {
   return useRequiredAppServicesContext().workspaceFileHistoryQuery;
+}
+
+export function useWorkspaceFileVersionCommandPort(): IWorkspaceFileVersionCommandPort {
+  return useRequiredAppServicesContext().workspaceFileVersionCommand;
 }
 
 export function useWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
@@ -167,6 +188,10 @@ export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAutho
 
 export function useDbtProjectGraphQueryPort(): IDbtProjectGraphQueryPort {
   return useRequiredAppServicesContext().dbtProjectGraphQueryPort;
+}
+
+export function useWorksheetDbtModelCommand(): IWorksheetDbtModelCommand {
+  return useRequiredAppServicesContext().worksheetDbtModelCommand;
 }
 
 export function useDbtSelectedModelAnalysisQueryPort(): IDbtSelectedModelAnalysisQueryPort {

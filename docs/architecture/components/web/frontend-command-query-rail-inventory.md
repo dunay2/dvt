@@ -216,8 +216,30 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Frontend surfaces:
   - `IWorkspaceFileHistoryQueryPort.getFileHistory`;
   - `useWorkspaceFileHistoryQuery`;
-  - `CodeFileHistoryPanel`.
-- Backend surface: `GET /workspace/file-history/:path`.
+  - `CodeFileHistoryPanel` and the operation history in file properties.
+- Backend surface: `GET /workspace/file-history/:path`, with an optional older
+  commit cursor in the same file lineage.
+
+### `GetWorkspaceFileVersionContent`
+
+- Type: query.
+- Owner: Workspace Version Control's immutable file revision read model.
+- Frontend surface: `IWorkspaceFileHistoryQueryPort.getFileVersionContent`
+  and the Code comparison view.
+- Backend surface: `GET /workspace/file-history/:path/:revision`.
+- Admission: the read grant, workspace and file lineage all match the requested
+  commit. The same `SaveWorkspaceFileContent` rail applies the selected bytes
+  when the operator restores a version.
+
+### `CommitWorkspaceFileVersion`
+
+- Type: command.
+- Owner: Workspace Version Control's scoped Git file reference.
+- Frontend surface: `IWorkspaceFileVersionCommandPort.commitFileVersion`
+  in Code file properties.
+- Backend surface: `POST /workspace/file-history/:path`.
+- Admission: an authorized SQL operation with a synchronized SHA. The command
+  returns the Git commit and reuses the current tip for identical contents.
 
 ### `ListWorkspaceArtifacts`
 

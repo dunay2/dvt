@@ -1,0 +1,77 @@
+/* Owned concern: workbench log and problems occupy the main surface. */
+.title {
+  color: var(--text-strong);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--text-body-line-height);
+}
+.content {
+  flex: 1;
+  min-block-size: 0;
+}
+.runBadge {
+  display: block;
+  max-width: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-meta);
+  line-height: var(--text-meta-line-height);
+}
+
+.bodyMessage {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding-inline: calc(var(--spacing) * 4);
+  text-align: center;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line-height);
+  color: var(--text-subtle);
+}
+
+.logBody {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  flex-direction: column;
+}
+
+.feedHealth {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-bottom: 1px solid var(--border-default);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui-line-height);
+}
+
+.feedHealthBadge {
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  text-transform: uppercase;
+}
+
+.feedHealthMessage {
+  min-width: 0;
+  flex: 1;
+  color: var(--text-subtle);
+}
+
+.feedRetry {
+  height: calc(var(--spacing) * 7);
+  flex-shrink: 0;
+}
+
+.stream {
+  min-height: 0;
+  width: 100%;
+  flex: 1;
+}

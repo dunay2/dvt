@@ -50,6 +50,14 @@ export class ProjectCanvasTransformSqlQuery {
           }),
       provenance: {
         sourceRefs: projection.sourceRefs,
+        ...(closure.literalConnections?.has(closure.transform.id)
+          ? {
+              literalModel: {
+                connectionRef: closure.connectionRef,
+                semanticPlanSha256: closure.semanticDocument.semanticPlan.sha256,
+              },
+            }
+          : {}),
         ...(closure.externalProducers.size === 0
           ? {}
           : {

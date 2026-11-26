@@ -4,7 +4,7 @@ import type {
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
 import {
-  OperationalDrawerCodeToken,
+  OperationalDrawerInlineToken,
   OperationalDrawerSecondaryAction,
   OperationalDrawerSectionKicker,
 } from './OperationalDrawerPanelPrimitives';
@@ -21,28 +21,28 @@ import {
   type OperationalDrawerSelectionRecoveryMessages,
 } from './operationalDrawerSelectionRecoveryMessages';
 
+type OperationalDrawerSelectionRecoveryViewProps = Readonly<{
+  commands: CanvasExecutionSelectionRecoveryCommands;
+  messages: OperationalDrawerSelectionRecoveryMessages;
+  model: CanvasExecutionSelectionRecoveryReadModel;
+}>;
+
 export function OperationalDrawerSelectionRecoveryView({
   commands,
   messages,
   model,
-}: Readonly<{
-  commands: CanvasExecutionSelectionRecoveryCommands;
-  messages: OperationalDrawerSelectionRecoveryMessages;
-  model: CanvasExecutionSelectionRecoveryReadModel;
-}>): JSX.Element {
-  const actionPending = model.pendingStrategy != null;
-
+}: OperationalDrawerSelectionRecoveryViewProps): JSX.Element {
   return (
     <OperationalDrawerRecoverySurface>
       <div>
         <OperationalDrawerSectionKicker>
           {messages.selectionRecoveryTitle}
         </OperationalDrawerSectionKicker>
-        <OperationalDrawerCodeToken dataSlot="bottom-operational-selection-status">
+        <OperationalDrawerInlineToken variant="code" dataSlot="bottom-operational-selection-status">
           {model.status === 'ready'
             ? messages.selectionRecoveryReadyStatus
             : messages.selectionRecoveryBlockedStatus}
-        </OperationalDrawerCodeToken>
+        </OperationalDrawerInlineToken>
       </div>
       <OperationalDrawerRecoveryScopeGrid>
         <OperationalDrawerRecoveryScopeGroup
@@ -76,36 +76,11 @@ export function OperationalDrawerSelectionRecoveryView({
           values={model.lastPreviewRevision == null ? [] : [model.lastPreviewRevision]}
         />
       </OperationalDrawerRecoveryScopeGrid>
-      {model.status === 'blocked' ? (
-        <OperationalDrawerRecoveryActions>
-          {model.canDiscardUnavailable ? (
-            <OperationalDrawerSecondaryAction
-              disabled={actionPending}
-              onClick={commands.discardUnavailable}
-            >
-              {messages.selectionRecoveryDiscardUnavailableAction}
-            </OperationalDrawerSecondaryAction>
-          ) : null}
-          {model.canUseWorkspaceScope ? (
-            <OperationalDrawerSecondaryAction
-              disabled={actionPending}
-              onClick={commands.useWorkspaceScope}
-            >
-              {messages.selectionRecoveryUseWorkspaceScopeAction}
-            </OperationalDrawerSecondaryAction>
-          ) : null}
-          {model.canRefreshAnalysis ? (
-            <OperationalDrawerSecondaryAction
-              disabled={actionPending}
-              onClick={commands.refreshAnalysis}
-            >
-              {model.pendingStrategy === 'refresh_analysis'
-                ? messages.selectionRecoveryRefreshingAnalysisAction
-                : messages.selectionRecoveryRefreshAnalysisAction}
-            </OperationalDrawerSecondaryAction>
-          ) : null}
-        </OperationalDrawerRecoveryActions>
-      ) : null}
+      <OperationalDrawerSelectionRecoveryActions
+        commands={commands}
+        messages={messages}
+        model={model}
+      />
       {model.receipt == null ? null : (
         <OperationalDrawerRecoveryReceipt>
           {formatOperationalDrawerSelectionRecoveryReceipt(model.receipt, messages)}
@@ -117,5 +92,44 @@ export function OperationalDrawerSelectionRecoveryView({
         </OperationalDrawerRecoveryFailure>
       )}
     </OperationalDrawerRecoverySurface>
+  );
+}
+
+function OperationalDrawerSelectionRecoveryActions({
+  commands,
+  messages,
+  model,
+}: OperationalDrawerSelectionRecoveryViewProps): JSX.Element | null {
+  if (model.status !== 'blocked') return null;
+  const actionPending = model.pendingStrategy != null;
+  return (
+    <OperationalDrawerRecoveryActions>
+      {model.canDiscardUnavailable ? (
+        <OperationalDrawerSecondaryAction
+          disabled={actionPending}
+          onClick={commands.discardUnavailable}
+        >
+          {messages.selectionRecoveryDiscardUnavailableAction}
+        </OperationalDrawerSecondaryAction>
+      ) : null}
+      {model.canUseWorkspaceScope ? (
+        <OperationalDrawerSecondaryAction
+          disabled={actionPending}
+          onClick={commands.useWorkspaceScope}
+        >
+          {messages.selectionRecoveryUseWorkspaceScopeAction}
+        </OperationalDrawerSecondaryAction>
+      ) : null}
+      {model.canRefreshAnalysis ? (
+        <OperationalDrawerSecondaryAction
+          disabled={actionPending}
+          onClick={commands.refreshAnalysis}
+        >
+          {model.pendingStrategy === 'refresh_analysis'
+            ? messages.selectionRecoveryRefreshingAnalysisAction
+            : messages.selectionRecoveryRefreshAnalysisAction}
+        </OperationalDrawerSecondaryAction>
+      ) : null}
+    </OperationalDrawerRecoveryActions>
   );
 }

@@ -10,6 +10,8 @@ import {
   prepareCanvasModelCompositionCandidate,
 } from './canvasModelCompositionCandidate';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
+import { readCanvasModelCompositionPhysicalInputs } from './canvasModelCompositionPhysicalAdmission';
+import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 
 async function validGraph(): Promise<
   Awaited<ReturnType<typeof createModelOutputDependencyFixture>>
@@ -22,6 +24,63 @@ async function validGraph(): Promise<
 }
 
 describe('physical Source working-copy admission', () => {
+  it('resolves a connected physical Input even before the receiver has any Reads', async () => {
+    const graph = await validGraph();
+    const receiver = { ...emptyModel(), id: 'unused-receiver' };
+    const context = {
+      nodes: [...graph.nodes, receiver],
+      edges: [
+        ...graph.edges,
+        {
+          id: 'unused-input',
+          sourceId: graph.right.id,
+          targetId: receiver.id,
+          relation: 'lineage' as const,
+        },
+      ],
+    };
+    const before = structuredClone(context);
+    const inputs = readCanvasModelCompositionPhysicalInputs({
+      ...context,
+      targetId: receiver.id,
+      inputs: resolveCanvasDvtCompositionInputs({ ...context, targetNodeId: receiver.id }),
+    });
+    expect(inputs.get(graph.right.id)).toMatchObject({
+      nodeId: graph.right.id,
+      sourceRef: graph.right.metadata?.connectedSourceRef,
+    });
+    expect(inputs.get(graph.right.id)?.fields.length).toBeGreaterThan(0);
+    expect(inputs.has(graph.source.id)).toBe(false);
+    expect(context).toEqual(before);
+  });
+
+  it('refuses ambiguous duplicate physical dependencies instead of picking an arbitrary Input', async () => {
+    const graph = await validGraph();
+    const duplicate = { ...graph.right, id: 'duplicate-physical-definition' };
+    const context = {
+      nodes: [...graph.nodes, duplicate],
+      edges: [
+        ...graph.edges,
+        {
+          id: 'duplicate-input',
+          sourceId: duplicate.id,
+          targetId: graph.consumer.id,
+          relation: 'lineage' as const,
+        },
+      ],
+    };
+    const before = structuredClone(context);
+    const inputs = readCanvasModelCompositionPhysicalInputs({
+      ...context,
+      targetId: graph.consumer.id,
+      inputs: resolveCanvasDvtCompositionInputs({ ...context, targetNodeId: graph.consumer.id }),
+    });
+    expect(inputs.has(graph.right.id)).toBe(true);
+    expect(inputs.get(graph.right.id)).toBeNull();
+    expect(inputs.get(duplicate.id)).toBeNull();
+    expect(context).toEqual(before);
+  });
+
   it('rejects an already incoming physical resource without changing its valid publication', async () => {
     const graph = await validGraph();
     const before = structuredClone(graph);

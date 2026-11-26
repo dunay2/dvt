@@ -101,25 +101,9 @@ describe('CodeView presentation', () => {
     async (outcome) => {
       const firstPath = 'models/staging/stg_orders.sql';
       const nextPath = 'models/staging/stg_customers.sql';
-      let settleRead: (() => void) | undefined;
       const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>();
-      const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>((path) => {
-        const file = {
-          path,
-          name: path.split('/').at(-1)!,
-          language: 'sql',
-          content: `select '${path}' as accepted_path`,
-          contentSha256: (path === firstPath ? 'a' : 'b').repeat(64),
-          lastModified: path === firstPath ? '2026-04-06T00:00:00Z' : '2026-08-12T00:00:00Z',
-        };
-        if (path === firstPath) return Promise.resolve(file);
-        return new Promise((resolve, reject) => {
-          settleRead = () =>
-            outcome === 'preview-error'
-              ? reject(new Error('Selected file cannot be read.'))
-              : resolve(file);
-        });
-      });
+      const selectionRead = buildDeferredFileSelectionRead(firstPath, outcome);
+      const { getFileContent } = selectionRead;
       const options = {
         presentation: 'project-workspace' as const,
         fileScope: defaultDbtFileScope,
@@ -139,42 +123,18 @@ describe('CodeView presentation', () => {
           ...options,
           fileSelectionRequest: { path: nextPath },
         });
-        await waitFor(() => settleRead != null);
+        await waitFor(() => selectionRead.isPending());
         const loading = getByRole(getContainer(), 'region', { name: 'File properties' });
         expect(loading.textContent).toContain(copy.previewLoadingMessage);
         expect(loading.textContent).not.toContain('stg_orders.sql');
         expect(loading.textContent).not.toContain('stg_customers.sql');
         expect(loading.querySelector('time')).toBeNull();
-        await act(async () => settleRead?.());
-        if (outcome === 'loaded') {
-          await waitFor(
-            () =>
-              getContainer()
-                .querySelector('[data-testid="monaco-code-viewer"]')
-                ?.getAttribute('data-path') === nextPath
-          );
-          const accepted = getByRole(getContainer(), 'region', { name: 'File properties' });
-          expect(accepted.textContent).toContain(nextPath);
-          expect(accepted.textContent).not.toContain('stg_orders.sql');
-          expect(accepted.querySelector('time')?.getAttribute('datetime')).toBe(
-            '2026-08-12T00:00:00Z'
-          );
-        } else {
-          await waitFor(
-            () =>
-              getByRole(getContainer(), 'region', {
-                name: 'File properties',
-              }).textContent?.includes(copy.previewErrorTitle) === true
-          );
-          const failed = getByRole(getContainer(), 'region', { name: 'File properties' });
-          expect(failed.textContent).not.toContain('stg_orders.sql');
-          expect(failed.textContent).not.toContain('stg_customers.sql');
-          expect(failed.querySelector('time')).toBeNull();
-        }
+        await act(async () => selectionRead.settle());
+        await expectSettledFileMetadata(outcome, nextPath);
         expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
         expect(saveFileContent).not.toHaveBeenCalled();
       } finally {
-        await act(async () => settleRead?.());
+        await act(async () => selectionRead.settle());
       }
     }
   );
@@ -184,6 +144,7 @@ describe('CodeView presentation', () => {
     await renderCodeView(undefined, true, undefined, {
       workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
       workspaceFileHistoryQuery: {
+        getFileVersionContent: async (path, commitSha) => ({ path, commitSha, content: '' }),
         getFileHistory: async (path) => [
           {
             commitSha: '0123456789abcdef',
@@ -213,45 +174,36 @@ describe('CodeView presentation', () => {
     expect(handoff?.getAttribute('href')).toContain('0123456789abcdef');
   });
 
-  it('renders a governed route empty state when no workspace files are available', async () => {
+  it.each([
+    {
+      title: 'renders a governed route empty state when no workspace files are available',
+      state: 'empty',
+      heading: copy.routeEmptyTitle,
+      message: copy.routeEmptyMessage,
+      listFiles: async () => [],
+    },
+    {
+      title: 'renders a governed route error state when the workspace tree cannot be loaded',
+      state: 'error',
+      heading: copy.routeErrorTitle,
+      message: copy.routeErrorMessage,
+      listFiles: async () => {
+        throw new Error('request failed');
+      },
+    },
+  ])('$title', async ({ state, heading, message, listFiles }) => {
     setupContainer();
-
     await renderCodeView(undefined, true, undefined, {
-      workspaceFilesQuery: buildWorkspaceFilesQueryPort({ listFiles: async () => [] }),
+      workspaceFilesQuery: buildWorkspaceFilesQueryPort({ listFiles }),
     });
-
     await waitFor(
       () =>
-        getContainer()?.querySelector('[data-slot="code-route-empty-state"]') != null &&
-        getContainer().textContent?.includes(copy.routeEmptyTitle) === true
+        getContainer()?.querySelector('[data-slot="code-route-' + state + '-state"]') != null &&
+        getContainer().textContent?.includes(heading) === true
     );
-
     expect(
-      getContainer().querySelector('[data-slot="code-route-empty-state"]')?.textContent
-    ).toContain(copy.routeEmptyMessage);
-    expect(getContainer().textContent).not.toContain(copy.explorerTitle);
-  });
-
-  it('renders a governed route error state when the workspace tree cannot be loaded', async () => {
-    setupContainer();
-
-    await renderCodeView(undefined, true, undefined, {
-      workspaceFilesQuery: buildWorkspaceFilesQueryPort({
-        listFiles: async () => {
-          throw new Error('request failed');
-        },
-      }),
-    });
-
-    await waitFor(
-      () =>
-        getContainer()?.querySelector('[data-slot="code-route-error-state"]') != null &&
-        getContainer().textContent?.includes(copy.routeErrorTitle) === true
-    );
-
-    expect(
-      getContainer().querySelector('[data-slot="code-route-error-state"]')?.textContent
-    ).toContain(copy.routeErrorMessage);
+      getContainer().querySelector('[data-slot="code-route-' + state + '-state"]')?.textContent
+    ).toContain(message);
     expect(getContainer().textContent).not.toContain(copy.explorerTitle);
   });
 
@@ -282,4 +234,64 @@ describe('CodeView presentation', () => {
     ).toContain('models/staging/stg_orders.sql');
     expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
+
+  type DeferredFileSelectionRead = {
+    getFileContent: IWorkspaceFilesQueryPort['getFileContent'];
+    isPending: () => boolean;
+    settle: () => void;
+  };
+
+  function buildDeferredFileSelectionRead(
+    firstPath: string,
+    outcome: 'loaded' | 'preview-error'
+  ): DeferredFileSelectionRead {
+    let settleRead: (() => void) | undefined;
+    const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>((path) => {
+      const file = {
+        path,
+        name: path.split('/').at(-1)!,
+        language: 'sql',
+        content: `select '${path}' as accepted_path`,
+        contentSha256: (path === firstPath ? 'a' : 'b').repeat(64),
+        lastModified: path === firstPath ? '2026-04-06T00:00:00Z' : '2026-08-12T00:00:00Z',
+      };
+      if (path === firstPath) return Promise.resolve(file);
+      return new Promise((resolve, reject) => {
+        settleRead = () =>
+          outcome === 'preview-error'
+            ? reject(new Error('Selected file cannot be read.'))
+            : resolve(file);
+      });
+    });
+    return { getFileContent, isPending: () => settleRead != null, settle: () => settleRead?.() };
+  }
+
+  async function expectSettledFileMetadata(
+    outcome: 'loaded' | 'preview-error',
+    nextPath: string
+  ): Promise<void> {
+    if (outcome === 'loaded') {
+      await waitFor(
+        () =>
+          getContainer()
+            .querySelector('[data-testid="monaco-code-viewer"]')
+            ?.getAttribute('data-path') === nextPath
+      );
+      const accepted = getByRole(getContainer(), 'region', { name: 'File properties' });
+      expect(accepted.textContent).toContain(nextPath);
+      expect(accepted.textContent).not.toContain('stg_orders.sql');
+      expect(accepted.querySelector('time')?.getAttribute('datetime')).toBe('2026-08-12T00:00:00Z');
+    } else {
+      await waitFor(
+        () =>
+          getByRole(getContainer(), 'region', {
+            name: 'File properties',
+          }).textContent?.includes(copy.previewErrorTitle) === true
+      );
+      const failed = getByRole(getContainer(), 'region', { name: 'File properties' });
+      expect(failed.textContent).not.toContain('stg_orders.sql');
+      expect(failed.textContent).not.toContain('stg_customers.sql');
+      expect(failed.querySelector('time')).toBeNull();
+    }
+  }
 });

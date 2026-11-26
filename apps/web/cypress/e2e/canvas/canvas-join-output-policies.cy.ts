@@ -37,9 +37,13 @@ describe('JOIN output policies', () => {
         cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', name)
           .closest('li')
           .as('source');
-        connectWorkbenchProducer('@source', '@join', port);
+        connectWorkbenchProducer({ producer: '@source', consumer: '@join', port: port });
       }
-      connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      connectWorkbenchProducer({
+        producer: '@join',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       let id = '';
       cy.wrap(null, { timeout: 20_000 }).should(() => {

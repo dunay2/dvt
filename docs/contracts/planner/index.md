@@ -30,6 +30,8 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitLiteralRow.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitLiteralRowValues.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProducerReference.v1.ts`

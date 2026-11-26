@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 /** Owned concern: verify Filter UI binding intents and controlled Popover behavior. */
-
 import { fireEvent, getByRole } from '@testing-library/dom';
-import React, { act, useState } from 'react';
+import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -74,9 +73,7 @@ describe('CanvasGraphFilterControl', () => {
         <CanvasGraphFilterControl binding={binding} copy={resolveCanvasViewCopy('es-ES')} />
       );
     });
-    for (const [name, method] of Object.entries(binding)) {
-      if (name !== 'model') expect(method).not.toHaveBeenCalled();
-    }
+    expectBindingUntouched(binding);
 
     expect(document.querySelector('button[aria-label="Filtrar grafo"]')?.textContent).toBe('');
     expect(document.body.textContent).toContain('2 de 2 nodos visibles');
@@ -93,7 +90,7 @@ describe('CanvasGraphFilterControl', () => {
     expect(onAddPredicate).toHaveBeenCalledTimes(1);
   });
 
-  it('opens and closes from the same trigger', () => {
+  it.each(['trigger', 'close button'])('opens and dismisses using the %s', (action) => {
     const onOpenChange = vi.fn();
     function Harness(): JSX.Element {
       const [open, setOpen] = useState(false);
@@ -123,8 +120,13 @@ describe('CanvasGraphFilterControl', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(document.body.textContent).toContain('Filtros del grafo');
 
+    const dialog = getByRole(document.body, 'dialog', { name: 'Filtros del grafo' });
+    const dismiss =
+      action === 'trigger'
+        ? trigger
+        : getByRole(dialog, 'button', { name: 'Cerrar filtros del grafo' });
     act(() => {
-      fireEvent.click(trigger);
+      fireEvent.click(dismiss);
     });
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(document.querySelector('[data-slot="canvas-graph-filter-control"]')).toBeNull();
@@ -138,9 +140,7 @@ describe('CanvasGraphFilterControl', () => {
     const predicate = { dimension: 'status', value: 'failed' } as const;
     const binding = createBinding({ predicates: [predicate] });
     act(() => root.render(<CanvasGraphFilterControl binding={binding} copy={copy} />));
-    for (const [name, method] of Object.entries(binding)) {
-      if (name !== 'model') expect(method).not.toHaveBeenCalled();
-    }
+    expectBindingUntouched(binding);
     expect(
       getByRole(document.body, 'button', { name: copy.canvasGraphFilterAndLabel }).getAttribute(
         'aria-pressed'
@@ -193,9 +193,7 @@ describe('CanvasGraphFilterControl', () => {
       add.click();
       clear.click();
     });
-    for (const [name, method] of Object.entries(binding)) {
-      if (name !== 'model') expect(method).not.toHaveBeenCalled();
-    }
+    expectBindingUntouched(binding);
   });
 
   it('uses all current binding methods after replacement and leaves prior callbacks untouched', () => {
@@ -205,9 +203,7 @@ describe('CanvasGraphFilterControl', () => {
     const replacement = createBinding({ predicates: [predicate] });
     act(() => root.render(<CanvasGraphFilterControl binding={original} copy={copy} />));
     act(() => root.render(<CanvasGraphFilterControl binding={replacement} copy={copy} />));
-    for (const [name, method] of Object.entries(replacement)) {
-      if (name !== 'model') expect(method).not.toHaveBeenCalled();
-    }
+    expectBindingUntouched(replacement);
     const removeLabel = copy.canvasGraphFilterRemoveLabelTemplate
       .replace('{dimension}', copy.canvasGraphFilterStatusDimensionLabel)
       .replace('{value}', predicate.value);
@@ -239,8 +235,12 @@ describe('CanvasGraphFilterControl', () => {
     expect(replacement.setPresentation).toHaveBeenCalledExactlyOnceWith('hide');
     expect(replacement.removePredicate).toHaveBeenCalledExactlyOnceWith(predicate);
     expect(replacement.clear).toHaveBeenCalledOnce();
-    for (const [name, method] of Object.entries(original)) {
-      if (name !== 'model') expect(method).not.toHaveBeenCalled();
-    }
+    expectBindingUntouched(original);
   });
 });
+
+function expectBindingUntouched(binding: CanvasGraphFilterControlBinding): void {
+  for (const [name, method] of Object.entries(binding)) {
+    if (name !== 'model') expect(method).not.toHaveBeenCalled();
+  }
+}

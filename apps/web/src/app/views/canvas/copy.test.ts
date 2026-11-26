@@ -106,9 +106,11 @@ describe('canvas copy catalog', () => {
       useApplicationLanguageStore.getState().configureApplicationLanguage('en');
       expect(copy.inspectorDbtPackageLabel).toBe('Package');
       expect(resolveCanvasViewCopy().inspectorDbtPackageLabel).toBe('Package');
+      expect(formatCanvasNodeRemovedMessage('Orders')).toBe('Removed Orders from the canvas');
       useApplicationLanguageStore.getState().configureApplicationLanguage('es');
       expect(copy.inspectorDbtPackageLabel).toBe('Paquete');
       expect(resolveCanvasViewCopy().inspectorDbtPackageLabel).toBe('Paquete');
+      expect(formatCanvasNodeRemovedMessage('Orders')).toBe('Se quitó Orders del lienzo');
       useApplicationLanguageStore.getState().configureApplicationLanguage('en');
       expect(copy.inspectorDbtPackageLabel).toBe('Package');
       expect(resolveCanvasViewCopy().inspectorDbtPackageLabel).toBe('Package');
@@ -128,8 +130,8 @@ describe('canvas copy catalog', () => {
         [...english[key].matchAll(/\{([^{}]+)\}/g)].map((match) => match[1]).sort()
       );
     }
-    expect(formatCanvasNodeRemovedMessage('Orders', 'en')).toBe('Removed Orders');
-    expect(formatCanvasNodeRemovedMessage('Orders', 'es')).toBe('Se ha eliminado Orders');
+    expect(formatCanvasNodeRemovedMessage('Orders', 'en')).toBe('Removed Orders from the canvas');
+    expect(formatCanvasNodeRemovedMessage('Orders', 'es')).toBe('Se quitó Orders del lienzo');
   });
 
   it('localizes data Preview without confusing it with Run', () => {

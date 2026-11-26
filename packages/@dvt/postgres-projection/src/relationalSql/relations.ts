@@ -1,5 +1,5 @@
 /** SQL lowering dispatch over the pinned protobuf, independent of subtree shape. */
-import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { IndexedRelation, SchemaField } from '@dvt/substrait-analysis';
 
@@ -14,6 +14,7 @@ import type { DvtPostgresOrderKey } from '../sortFetchPostgresProjection.js';
 import { aggregateSql } from './aggregates.js';
 import { expressionSql, predicateSql } from './expressions.js';
 import { joinSql } from './joins.js';
+import { literalRowColumns } from './literalRow.js';
 import { orderClause, sortDirection } from './ordering.js';
 import {
   columnName,
@@ -45,8 +46,16 @@ type Handlers = {
     context: Context
   ) => Body;
 };
+function isFetchBound(expr: Expression): boolean {
+  if (expr.rexType.case !== 'literal') return false;
+  const kind = expr.rexType.value.literalType;
+  if (kind.case !== 'i64') return false;
+  return kind.value >= 0n && kind.value <= 9_223_372_036_854_775_807n;
+}
 const handlers = {
   read: (read) => {
+    if (read.readType.case === 'virtualTable')
+      return { columns: literalRowColumns(read), from: [] };
     if (read.readType.case !== 'namedTable')
       return unsupported('Only named PostgreSQL tables are admitted.');
     return {
@@ -105,12 +114,7 @@ const handlers = {
       ['limitCount', fetch.countExpr],
     ] as const) {
       if (expr == null) continue;
-      if (
-        expr.rexType.case !== 'literal' ||
-        expr.rexType.value.literalType.case !== 'i64' ||
-        expr.rexType.value.literalType.value < 0n ||
-        expr.rexType.value.literalType.value > 9_223_372_036_854_775_807n
-      )
+      if (!isFetchBound(expr))
         return unsupported('Fetch bounds must be non-negative signed i64 literals.');
       limits[name] = expressionSql(expr, scope).ast;
     }

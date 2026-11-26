@@ -622,7 +622,6 @@ use-case separation in the repo. Other packages should mirror this pattern.
 
 | Symbol                     | DDD                    | C&Q          | Legacy      | Notes                                                                                                            |
 | -------------------------- | ---------------------- | ------------ | ----------- | ---------------------------------------------------------------------------------------------------------------- |
-| `IMetricsCollector`        | `PORT`                 | mixed        | `OK`        |                                                                                                                  |
 | `clock.ts` (`SystemClock`) | `INFRA` (`IClock`)     | `QRY`        | `OK`        |                                                                                                                  |
 | `errorUtils.ts`            | `INFRA`                | `QRY` (pure) | `OK`        |                                                                                                                  |
 | `jcs.ts`, `sha256.ts`      | `INFRA`                | `QRY` (pure) | **`SUPER`** | Duplicates `@dvt/contracts/utils`. Should depend on contracts utils rather than re-implementing. Boundary drift. |

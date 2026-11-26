@@ -108,11 +108,8 @@ describe('Code model run parameters', () => {
       confirm().click();
     });
     expect(h.startRun).not.toHaveBeenCalled();
-    await h.click('execute');
     h.preview.mockRejectedValueOnce(new Error('Compilation rejected'));
-    await act(async () => {
-      confirm().click();
-    });
+    await h.click('execute');
     expect(h.preview).toHaveBeenCalledTimes(2);
     expect(h.startRun).not.toHaveBeenCalled();
   });
@@ -140,9 +137,6 @@ describe('Code model run parameters', () => {
       },
     });
     await h.click('execute');
-    await act(async () => {
-      confirm().click();
-    });
     expect(h.startRun).toHaveBeenCalledOnce();
     expect(h.startRun.mock.calls[0]?.[0].planRef).toEqual(planRef);
   });

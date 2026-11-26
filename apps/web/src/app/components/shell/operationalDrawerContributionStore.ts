@@ -4,18 +4,11 @@ import type {
   CanvasExecutionSelectionRecoveryCommands,
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
-import type { RunControlAvailability } from '../../ports/runs';
-import type {
-  RunControlCommandFailure,
-  RunControlCommandOutcome,
-  RunControlCommandRequest,
-} from '../../services/runs/runControlCommandModel';
 import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
 import type { CanvasDataSample } from '../../ports/canvasDataSample';
 import type { ReactNode } from 'react';
 
-export type OperationalDrawerBuiltInTabId =
-  'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
+export type OperationalDrawerBuiltInTabId = 'preview' | 'data' | 'semantic';
 export type OperationalDrawerDataTabId = `data:${string}`;
 export type OperationalDrawerTabId = OperationalDrawerBuiltInTabId | OperationalDrawerDataTabId;
 
@@ -55,26 +48,12 @@ export type OperationalDrawerProblem = Readonly<{
   }> | null;
 }>;
 
-export type OperationalDrawerRunControls = Readonly<{
-  runId: string;
-  availability: RunControlAvailability;
-  activity: RunControlCommandRequest | null;
-  outcome: RunControlCommandOutcome | null;
-  failure: RunControlCommandFailure | null;
-  onCancel: () => void;
-  onRecover: () => void;
-}>;
-
 export type OperationalDrawerContribution = Readonly<{
   source: 'canvas';
   title: string;
   copy: Readonly<{
     problemsAriaLabel: string;
     noProblemsMessage: string;
-    runsAriaLabel: string;
-    runReadyStatus: string;
-    runBlockedStatus: string;
-    runActiveStatus: string;
     previewAriaLabel: string;
     previewAction: string;
     previewReadyStatus: string;
@@ -107,8 +86,6 @@ export type OperationalDrawerContribution = Readonly<{
     canStartRun: boolean;
     onStartRun: () => void;
     status: 'active' | 'ready' | 'blocked';
-    summary: string;
-    controls: OperationalDrawerRunControls | null;
   }>;
   preview: Readonly<{
     status: 'ready' | 'blocked';
@@ -178,7 +155,7 @@ export function setOperationalDrawerTabVisibility(
 export const useOperationalDrawerContributionStore = create<OperationalDrawerContributionState>(
   (set) => ({
     contribution: null,
-    activeTab: 'log',
+    activeTab: null,
     hiddenTabs: [],
     registerOperationalDrawerContribution: (contribution) =>
       set((state) => {

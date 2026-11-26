@@ -10,6 +10,7 @@ import { main } from '../../scripts/run-vitest-changed-suites';
 import { resolveWebEvidenceEnvironment } from '../../scripts/web-evidence-environment';
 
 const { resolveDbt } = vi.hoisted(() => ({ resolveDbt: vi.fn() }));
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   spawnSync: vi.fn(() => ({ status: 0 })),

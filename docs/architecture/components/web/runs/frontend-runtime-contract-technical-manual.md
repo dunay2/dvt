@@ -108,7 +108,7 @@ flowchart LR
 | fetch run snapshot      | `GET /runs/:runId`        | API / Entry | status truth and detail truth        |
 | list run events         | `GET /runs/:runId/events` | API / Entry | ordered timeline feed for monitoring |
 
-## Runs Versus Bottom Operational Drawer
+## Runs And The Log Workbench
 
 `GET /runs/:runId/events` now has two governed frontend consumers, but they do
 not own the same product responsibility:
@@ -118,8 +118,7 @@ not own the same product responsibility:
 - `useConsoleLogStream()` mirrors the active run as a shell-level operational log stream
   companion;
 - only the Runs workspace combines timeline with snapshot authority;
-- the shell drawer must not present itself as the authoritative run-detail
-  surface.
+- the Log workbench is a companion to the authoritative run-detail surface.
 
 Current consumer split:
 
@@ -128,14 +127,14 @@ flowchart LR
   Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
   Events --> Facade["RunWorkspaceFacade.loadRunWorkspace(runId)"]
   Snapshot["GET /runs/:runId"] --> Facade
-  DrawerHook --> Drawer["BottomOperationalDrawer"]
+  DrawerHook --> Log["Log workbench"]
   Facade --> Runs["RunWorkspaceStateView"]
 ```
 
 Authority rules:
 
-1. `BottomOperationalDrawer` may show ordered live lines for the active run.
-2. `BottomOperationalDrawer` must not derive snapshot truth, failure diagnostics,
+1. The Log workbench may show ordered live lines for the active run.
+2. The Log workbench must not derive snapshot truth, failure diagnostics,
    or result evidence on its own.
 3. `RunWorkspaceStateView` owns snapshot truth and timeline degradation
    semantics for `/runs/:runId`.
@@ -226,8 +225,8 @@ The shared copy resolver owns:
 
 It does not change authority:
 
-- `BottomOperationalDrawer` still renders a shell-level operational companion stream;
-- `BottomOperationalDrawer` still owns terminal-style log-line composition for its Log tab;
+- the Log workbench renders the shell-level operational companion stream;
+- the Log workbench owns terminal-style log-line composition;
 - `RunWorkspaceStateView` still owns durable timeline interpretation;
 - snapshot truth, failure diagnostics, and result evidence remain outside the
   shared event-presentation seam.

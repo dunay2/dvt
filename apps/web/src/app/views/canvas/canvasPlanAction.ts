@@ -2,6 +2,7 @@
  * Owned concern: orchestrate Canvas plan-preview persistence before run start
  * without creating authoritative runtime execution identity.
  */
+import { DVT_REJECTIONS } from '@dvt/contracts';
 import type { IPlansPort, PlanPreviewOutcome } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
@@ -89,6 +90,120 @@ function formatPlanActionErrorMessage(error: unknown): string {
     : canvasViewCopy.planUnableToCreateMessage;
 }
 
+type ProtectedDvtPreviewArgs = Pick<
+  CanvasPlanActionArgs,
+  | 'graphDraftCanvasId'
+  | 'canonicalNodes'
+  | 'canonicalEdges'
+  | 'selectionIntent'
+  | 'workspaceNodeIds'
+  | 'plansService'
+  | 'sessionContext'
+> & { execution: Extract<CanvasPlanExecution, { kind: 'dvt_protected_preview' }> };
+
+async function previewProtectedDvtGraph(
+  {
+    graphDraftCanvasId,
+    canonicalNodes,
+    canonicalEdges,
+    selectionIntent,
+    workspaceNodeIds,
+    execution,
+    plansService,
+    sessionContext,
+  }: ProtectedDvtPreviewArgs,
+  fail: (message: string) => CanvasPlanActionResult
+): Promise<CanvasPlanActionResult> {
+  if (graphDraftCanvasId == null) {
+    return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
+  }
+  const dvtProjection = buildProtectedDvtPreviewProjection({
+    canvasId: graphDraftCanvasId,
+    canonicalNodes,
+    canonicalEdges,
+    selectionIntent,
+    workspaceNodeIds,
+  });
+  if (!dvtProjection.ok) {
+    return fail(resolveCanvasExecutionGraphFailureMessage(dvtProjection, canvasViewCopy));
+  }
+  const previewOutcome = await plansService.previewPlan({
+    previewProfile: execution.previewProfile,
+    selection: dvtProjection.selection,
+    context: sessionContext.buildRunContext('preview_context'),
+    provenance: {
+      kind: 'dvt-protected-workspace-graph',
+      canvasId: graphDraftCanvasId,
+    },
+    persist: true,
+  });
+  return {
+    ok: true,
+    draftSignature: dvtProjection.draftSignature,
+    previewOutcome:
+      previewOutcome.kind === 'selection-rejected' &&
+      previewOutcome.rejection.cause === DVT_REJECTIONS.runDispositionUnsupported.cause
+        ? {
+            ...previewOutcome,
+            affectedModel: {
+              nodeId: dvtProjection.selectedRoot.id,
+              name: dvtProjection.selectedRoot.name,
+            },
+          }
+        : attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
+    writtenArtifactPaths: [],
+  };
+}
+
+type GenericGraphPreviewArgs = Readonly<{
+  graphDraftCanvasId: string | null;
+  execution: Extract<CanvasPlanExecution, { kind: 'planner_generic_preview' }>;
+  plannerProjection: Extract<ReturnType<typeof buildCanvasDbtExecutionProjection>, { ok: true }>;
+  writtenArtifactPaths: string[];
+}>;
+
+async function prepareGenericGraphPreview({
+  graphDraftCanvasId,
+  execution,
+  plannerProjection,
+  writtenArtifactPaths,
+}: GenericGraphPreviewArgs): Promise<string | null> {
+  if (graphDraftCanvasId == null) {
+    return canvasViewCopy.planGraphAuthorityRefusedMessage;
+  }
+  if (plannerProjection.kind !== execution.kind) {
+    return canvasViewCopy.canvasExecutionUnavailableMessage;
+  }
+  const artifactProjection = plannerProjection.workspaceArtifacts;
+
+  const publication = await publishGraphDbtWorkspaceArtifacts({
+    canvasId: graphDraftCanvasId,
+    artifacts: artifactProjection.artifacts,
+    workspaceFilesQuery: execution.workspaceFilesQuery,
+    publicationCommand: execution.graphDbtWorkspaceArtifactPublicationCommand,
+  });
+  if (!publication.ok) {
+    if (publication.kind === 'authority_refused') {
+      return canvasViewCopy.planGraphAuthorityRefusedMessage;
+    }
+    return formatCanvasCopyTemplate(canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate, {
+      path: publication.conflictPath,
+    });
+  }
+  writtenArtifactPaths.push(...publication.writtenArtifactPaths);
+
+  const compilation = await execution.graphDbtModelCompilationQuery.compile({
+    canvasId: graphDraftCanvasId,
+    selectors: [...artifactProjection.modelSelectors],
+  });
+  if (compilation.kind !== 'compiled') {
+    return compilation.kind === 'authority_refused'
+      ? canvasViewCopy.planGraphAuthorityRefusedMessage
+      : canvasViewCopy.planGraphDbtCompilationFailedMessage;
+  }
+  return null;
+}
+
 export async function executeCanvasPlanAction({
   graphDraftCanvasId,
   canPlan,
@@ -117,118 +232,123 @@ export async function executeCanvasPlanAction({
   }
 
   try {
-    const flushedDraft = await flushDraftForExecution?.();
-    if (flushedDraft?.ok === false) return fail(flushedDraft.message);
-    if (flushedDraft?.ok === true) {
-      canonicalNodes = flushedDraft.canonicalNodes;
-      canonicalEdges = flushedDraft.canonicalEdges;
-      workspaceNodeIds = flushedDraft.workspaceNodeIds;
-    }
-    if (execution.kind === 'dvt_protected_preview') {
-      if (graphDraftCanvasId == null) {
-        return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
-      }
-      const dvtProjection = buildProtectedDvtPreviewProjection({
-        canvasId: graphDraftCanvasId,
-        canonicalNodes,
-        canonicalEdges,
-        selectionIntent,
-        workspaceNodeIds,
-      });
-      if (!dvtProjection.ok) {
-        return fail(resolveCanvasExecutionGraphFailureMessage(dvtProjection, canvasViewCopy));
-      }
-      const previewOutcome = await plansService.previewPlan({
-        previewProfile: execution.previewProfile,
-        selection: dvtProjection.selection,
-        context: sessionContext.buildRunContext('preview_context'),
-        provenance: {
-          kind: 'dvt-protected-workspace-graph',
-          canvasId: graphDraftCanvasId,
-        },
-        persist: true,
-      });
-      return {
-        ok: true,
-        draftSignature: dvtProjection.draftSignature,
-        previewOutcome: attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
-        writtenArtifactPaths: [],
-      };
-    }
-
-    const plannerProjection = buildCanvasDbtExecutionProjection({
-      strategy: execution,
+    const flushedDraft = await prepareCanvasPlanDraft({
       canonicalNodes,
       canonicalEdges,
-      selectionIntent,
       workspaceNodeIds,
-      executionScope: sessionContext.getWorkspaceScopeSnapshot(),
+      flushDraftForExecution,
     });
-    if (!plannerProjection.ok) {
-      return fail(resolveCanvasExecutionGraphFailureMessage(plannerProjection, canvasViewCopy));
-    }
-    if (execution.kind === 'planner_generic_preview') {
-      if (graphDraftCanvasId == null) {
-        return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
-      }
-      if (plannerProjection.kind !== execution.kind) {
-        return fail(canvasViewCopy.canvasExecutionUnavailableMessage);
-      }
-      const artifactProjection = plannerProjection.workspaceArtifacts;
-
-      const publication = await publishGraphDbtWorkspaceArtifacts({
-        canvasId: graphDraftCanvasId,
-        artifacts: artifactProjection.artifacts,
-        workspaceFilesQuery: execution.workspaceFilesQuery,
-        publicationCommand: execution.graphDbtWorkspaceArtifactPublicationCommand,
-      });
-      if (!publication.ok) {
-        if (publication.kind === 'authority_refused') {
-          return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
-        }
-        return fail(
-          formatCanvasCopyTemplate(canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate, {
-            path: publication.conflictPath,
-          })
-        );
-      }
-      writtenArtifactPaths.push(...publication.writtenArtifactPaths);
-
-      const compilation = await execution.graphDbtModelCompilationQuery.compile({
-        canvasId: graphDraftCanvasId,
-        selectors: [...artifactProjection.modelSelectors],
-      });
-      if (compilation.kind !== 'compiled') {
-        return fail(
-          compilation.kind === 'authority_refused'
-            ? canvasViewCopy.planGraphAuthorityRefusedMessage
-            : canvasViewCopy.planGraphDbtCompilationFailedMessage
-        );
-      }
+    if (!flushedDraft.ok) return fail(flushedDraft.message);
+    canonicalNodes = flushedDraft.canonicalNodes;
+    canonicalEdges = flushedDraft.canonicalEdges;
+    workspaceNodeIds = flushedDraft.workspaceNodeIds;
+    if (execution.kind === 'dvt_protected_preview') {
+      return await previewProtectedDvtGraph(
+        {
+          graphDraftCanvasId,
+          canonicalNodes,
+          canonicalEdges,
+          selectionIntent,
+          workspaceNodeIds,
+          execution,
+          plansService,
+          sessionContext,
+        },
+        fail
+      );
     }
 
-    const previewOutcome = await plansService.previewPlan({
-      previewProfile: execution.previewProfile,
-      graphSource: plannerProjection.graphSource,
-      selection: plannerProjection.selection,
-      context: sessionContext.buildRunContext('preview_context'),
-      ...(execution.kind === 'dbt_project_file_preview'
-        ? {
-            provenance: buildDbtProjectFilePreviewProvenance(
-              execution,
-              plannerProjection.selection.nodeIds
-            ),
-          }
-        : {}),
-      persist: true,
-    });
-    return {
-      ok: true,
-      draftSignature: plannerProjection.draftSignature,
-      previewOutcome: attachSelectionIntentToOutcome(previewOutcome, plannerProjection),
-      writtenArtifactPaths: [...writtenArtifactPaths],
-    };
+    return await previewPlannerGraph(
+      {
+        graphDraftCanvasId,
+        canPlan,
+        canonicalEdges,
+        canonicalNodes,
+        execution,
+        plansService,
+        selectionIntent,
+        sessionContext,
+        workspaceNodeIds,
+      },
+      writtenArtifactPaths,
+      fail
+    );
   } catch (error) {
     return fail(formatPlanActionErrorMessage(error));
   }
+}
+
+async function previewPlannerGraph(
+  {
+    graphDraftCanvasId,
+    canonicalNodes,
+    canonicalEdges,
+    execution,
+    selectionIntent,
+    workspaceNodeIds,
+    sessionContext,
+    plansService,
+  }: CanvasPlanActionArgs & {
+    execution: Exclude<CanvasPlanExecution, { kind: 'not_executable' | 'dvt_protected_preview' }>;
+  },
+  writtenArtifactPaths: string[],
+  fail: (message: string) => CanvasPlanActionResult
+): Promise<CanvasPlanActionResult> {
+  const plannerProjection = buildCanvasDbtExecutionProjection({
+    strategy: execution,
+    canonicalNodes,
+    canonicalEdges,
+    selectionIntent,
+    workspaceNodeIds,
+    executionScope: sessionContext.getWorkspaceScopeSnapshot(),
+  });
+  if (!plannerProjection.ok) {
+    return fail(resolveCanvasExecutionGraphFailureMessage(plannerProjection, canvasViewCopy));
+  }
+  if (execution.kind === 'planner_generic_preview') {
+    const preparationFailure = await prepareGenericGraphPreview({
+      graphDraftCanvasId,
+      execution,
+      plannerProjection,
+      writtenArtifactPaths,
+    });
+    if (preparationFailure != null) return fail(preparationFailure);
+  }
+
+  const previewOutcome = await plansService.previewPlan({
+    previewProfile: execution.previewProfile,
+    graphSource: plannerProjection.graphSource,
+    selection: plannerProjection.selection,
+    context: sessionContext.buildRunContext('preview_context'),
+    ...(execution.kind === 'dbt_project_file_preview'
+      ? {
+          provenance: buildDbtProjectFilePreviewProvenance(
+            execution,
+            plannerProjection.selection.nodeIds
+          ),
+        }
+      : {}),
+    persist: true,
+  });
+  return {
+    ok: true,
+    draftSignature: plannerProjection.draftSignature,
+    previewOutcome: attachSelectionIntentToOutcome(previewOutcome, plannerProjection),
+    writtenArtifactPaths: [...writtenArtifactPaths],
+  };
+}
+
+async function prepareCanvasPlanDraft(
+  args: Pick<
+    CanvasPlanActionArgs,
+    'canonicalNodes' | 'canonicalEdges' | 'workspaceNodeIds' | 'flushDraftForExecution'
+  >
+): Promise<CanvasExecutionDraftGraph> {
+  if (args.flushDraftForExecution) return args.flushDraftForExecution();
+  return {
+    ok: true,
+    canonicalNodes: args.canonicalNodes,
+    canonicalEdges: args.canonicalEdges,
+    workspaceNodeIds: args.workspaceNodeIds,
+  };
 }

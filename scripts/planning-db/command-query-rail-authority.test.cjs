@@ -1,7 +1,10 @@
 /** Owned concern: exact documentary authority eligibility shared by import and writers. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveRailReferenceAuthority } = require('./command-query-rail-authority.cjs');
+const {
+  resolveRailReferenceAuthority,
+  readRailReferenceAuthority,
+} = require('./command-query-rail-authority.cjs');
 const { assertManifestRailReferences } = require('./command-query-rail-catalog.cjs');
 
 const reference = {
@@ -73,4 +76,36 @@ test('multiple evidence rows resolve the same identity without choosing a featur
     resolveRailReferenceAuthority(reference, candidates)
   );
   assert.doesNotThrow(() => assertManifestRailReferences([reference, ...candidates]));
+});
+
+test('prospective local admission rejects an imported authority that its own overlay would hide', async () => {
+  const proposed = { ...reference, featureId: 'EXISTING-FEATURE' };
+  const client = {
+    query: async () => ({
+      rows: [{ ...authority, featureId: 'EXISTING-FEATURE', railSource: 'imported' }],
+    }),
+  };
+  assert.equal(await readRailReferenceAuthority(client, proposed), null);
+});
+
+test('prospective admission retains another exact active authority after excluding its own imported definition', async () => {
+  const proposed = { ...reference, featureId: 'EXISTING-FEATURE' };
+  const client = {
+    query: async () => ({
+      rows: [
+        { ...authority, featureId: 'EXISTING-FEATURE', railSource: 'imported' },
+        {
+          ...authority,
+          railId: 'independent-authority',
+          featureId: 'CANONICAL-FEATURE',
+          railSource: 'imported',
+        },
+      ],
+    }),
+  };
+  assert.deepEqual(await readRailReferenceAuthority(client, proposed), {
+    sourcePath: 'docs/api.md',
+    railType: 'command',
+    normalizedRailName: 'previewplan',
+  });
 });

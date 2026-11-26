@@ -18,7 +18,7 @@ CREATE TABLE architecture.component (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT architecture_component_criticality_check CHECK ((criticality = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'critical'::text]))),
-    CONSTRAINT architecture_component_kind_check CHECK ((kind = ANY (ARRAY['package'::text, 'module'::text, 'port'::text, 'adapter'::text, 'service'::text, 'ui-view'::text, 'workflow'::text, 'dbt-model'::text, 'api'::text]))),
+    CONSTRAINT architecture_component_kind_check CHECK ((kind = ANY (ARRAY['package'::text, 'module'::text, 'port'::text, 'adapter'::text, 'service'::text, 'ui-view'::text, 'workflow'::text, 'dbt-model'::text, 'api'::text, 'documentary-collection'::text]))),
     CONSTRAINT architecture_component_layer_check CHECK ((layer = ANY (ARRAY['domain'::text, 'application'::text, 'adapter'::text, 'ui'::text, 'infra'::text, 'contracts'::text]))),
     CONSTRAINT architecture_component_maturity_score_check CHECK (((maturity_score IS NULL) OR ((maturity_score >= (0)::numeric) AND (maturity_score <= (100)::numeric)))),
     CONSTRAINT architecture_component_parent_self_check CHECK (((parent_component_id IS NULL) OR (parent_component_id <> component_id))),

@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 
 import {
-  OperationalDrawerCodeToken,
+  OperationalDrawerInlineToken,
   OperationalDrawerSectionKicker,
 } from './OperationalDrawerPanelPrimitives';
 
@@ -45,12 +45,13 @@ export function OperationalDrawerRecoveryScopeGroup({
           <span className={selectionRecoveryClassNames.empty}>{emptyLabel}</span>
         ) : (
           values.map((value) => (
-            <OperationalDrawerCodeToken
+            <OperationalDrawerInlineToken
               key={value}
+              variant="code"
               dataSlot="bottom-operational-selection-scope-value"
             >
               {value}
-            </OperationalDrawerCodeToken>
+            </OperationalDrawerInlineToken>
           ))
         )}
       </div>

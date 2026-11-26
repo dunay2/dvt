@@ -6,6 +6,7 @@ import type { useCanvasControllerRuntime } from './useCanvasControllerRuntime';
 import type { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 import type { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
+import { useCanvasMaximumZoom } from './useCanvasZoomColumnDisclosure';
 
 type PresentationArgs = Readonly<{
   environment: ReturnType<typeof useCanvasControllerEnvironment>;
@@ -22,6 +23,7 @@ export function useCanvasControllerPresentation({
   mutationHandlers,
   overlayModel,
 }: PresentationArgs) {
+  const atMaximumZoom = useCanvasMaximumZoom();
   const { store, capabilities } = environment;
   const { workspaceScope, canMutateActiveCanvas, canSelectExecution, authoringRuntime } = runtime;
   const { graphModel, uiScope, visibleScope, executionScope, runDraftSessionCommand } =
@@ -75,6 +77,11 @@ export function useCanvasControllerPresentation({
     canMutateGraph: canMutateActiveCanvas,
     canSelectExecution,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
+    atMaximumZoom,
+    zoomDisclosureScopeKey: JSON.stringify([
+      store.workspaceLayoutKey,
+      runtime.resolvedGraphDraftCanvasId,
+    ]),
   });
 
   return { readModel, inspectorCommands };

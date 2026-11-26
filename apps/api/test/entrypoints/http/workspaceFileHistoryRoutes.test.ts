@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { IWorkspaceFileHistoryRepository } from '../../../src/application/ports/workspaceFileHistory.js';
 import { ListWorkspaceFileHistoryUseCase } from '../../../src/application/services/listWorkspaceFileHistoryUseCase.js';
@@ -28,8 +28,9 @@ describe('workspaceFileHistoryRoutes', () => {
       readonly authenticated?: boolean;
       readonly authorized?: boolean;
       readonly repository?: IWorkspaceFileHistoryRepository;
+      readonly commitFileVersion?: Mock;
     } = {}
-  ): { readonly app: FastifyInstance; readonly authorize: ReturnType<typeof vi.fn> } {
+  ): { readonly app: FastifyInstance; readonly authorize: Mock } {
     const app = Fastify({ logger: false });
     const repository =
       options.repository ??
@@ -44,6 +45,7 @@ describe('workspaceFileHistoryRoutes', () => {
             path: 'models/staging/stg_orders.sql',
           },
         ]),
+        getFileVersionContent: vi.fn().mockResolvedValue('select 1;'),
       } satisfies IWorkspaceFileHistoryRepository);
     const authorize = vi.fn().mockResolvedValue(
       options.authorized === false
@@ -73,6 +75,8 @@ describe('workspaceFileHistoryRoutes', () => {
       } as never,
       authorizer: { authorize } as never,
       listUseCase: new ListWorkspaceFileHistoryUseCase(repository),
+      versionQuery: repository,
+      versionCommand: { commitFileVersion: options.commitFileVersion ?? vi.fn() },
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
@@ -143,6 +147,7 @@ describe('workspaceFileHistoryRoutes', () => {
   it('rejects invalid file-history paths before querying history', async () => {
     const repository = {
       listFileHistory: vi.fn(),
+      getFileVersionContent: vi.fn(),
     } satisfies IWorkspaceFileHistoryRepository;
     const { app } = buildApp({ repository });
 
@@ -160,5 +165,29 @@ describe('workspaceFileHistoryRoutes', () => {
       },
     });
     expect(repository.listFileHistory).not.toHaveBeenCalled();
+  });
+
+  it('requires the workspace write grant and uses the authenticated Git author', async () => {
+    const commitFileVersion = vi
+      .fn()
+      .mockResolvedValue({ kind: 'committed', commitSha: 'a'.repeat(40) });
+    const { app, authorize } = buildApp({ commitFileVersion });
+    const expectedContentSha256 = 'b'.repeat(64);
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/file-history/operations%2Ftarea.task.sql?${SCOPE_QUERY}`,
+      payload: { expectedContentSha256, author: 'spoofed' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ action: { kind: 'command', name: 'workspace:files:save' } }),
+      expect.any(String)
+    );
+    expect(commitFileVersion).toHaveBeenCalledWith(
+      { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+      { path: 'operations/tarea.task.sql', expectedContentSha256, author: 'user-1' }
+    );
+    await app.close();
   });
 });

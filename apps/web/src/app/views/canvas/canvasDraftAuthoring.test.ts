@@ -7,6 +7,7 @@ import {
   serializeCanvasDraftAuthoringSignature,
 } from './canvasDraftAuthoring';
 import { buildAuthoringDraft, buildSaveInput } from './canvasDraftRepository.test.fixtures';
+import { normalizeProjectCanvasDraft } from './canvasProjectCanvasLifecycle';
 import type { CanonicalNode } from '../../types/canonical';
 
 function toCanonicalNodes(draft: ReturnType<typeof buildAuthoringDraft>): CanonicalNode[] {
@@ -187,6 +188,28 @@ describe('canvasDraftAuthoring', () => {
     ]);
   });
 
+  it('recognizes the same acknowledged graph after hydrating its active Canvas and plugin kinds', () => {
+    const draft = buildAuthoringDraft();
+    const hydrated = normalizeProjectCanvasDraft({ ...draft, nodes: toCanonicalNodes(draft) });
+    expect(serializeCanvasDraftAuthoringSignature(hydrated)).toBe(
+      serializeCanvasDraftAuthoringSignature(draft)
+    );
+  });
+
+  it('retains sibling Canvas edits and different plugin kinds in the persistence signature', () => {
+    const active = normalizeProjectCanvasDraft(buildAuthoringDraft());
+    const workspace = active.canvases![0]!;
+    const sibling = { ...workspace, canvas: { ...workspace.canvas, id: 'sibling' } };
+    const withSibling = { ...active, canvases: [workspace, sibling] };
+    const signature = serializeCanvasDraftAuthoringSignature(withSibling);
+    const renamed = { ...sibling, canvas: { ...sibling.canvas, title: 'Edited sibling' } };
+    expect(
+      serializeCanvasDraftAuthoringSignature({ ...active, canvases: [workspace, renamed] })
+    ).not.toBe(signature);
+    const nodes = active.nodes.map((node) => ({ ...node, kind: 'other:transform' }));
+    expect(serializeCanvasDraftAuthoringSignature({ ...withSibling, nodes })).not.toBe(signature);
+  });
+
   it('keeps the persistence signature stable for layout-only position changes', () => {
     const draft = buildSaveInput().draft;
     const layoutOnlyDraft = {
@@ -202,26 +225,10 @@ describe('canvasDraftAuthoring', () => {
     );
   });
 
-  it('keeps the persistence signature stable when edge transport order changes only', () => {
+  it.each(['edges', 'nodes'] as const)('ignores transport order of %s', (collection) => {
     const draft = buildSaveInput().draft;
-    const reorderedEdgesDraft = {
-      ...draft,
-      edges: [...draft.edges].reverse(),
-    };
-
-    expect(serializeCanvasDraftAuthoringSignature(reorderedEdgesDraft)).toBe(
-      serializeCanvasDraftAuthoringSignature(draft)
-    );
-  });
-
-  it('keeps the persistence signature stable when node transport order changes only', () => {
-    const draft = buildSaveInput().draft;
-    const reorderedNodesDraft = {
-      ...draft,
-      nodes: [...draft.nodes].reverse(),
-    };
-
-    expect(serializeCanvasDraftAuthoringSignature(reorderedNodesDraft)).toBe(
+    const reordered = { ...draft, [collection]: [...draft[collection]].reverse() };
+    expect(serializeCanvasDraftAuthoringSignature(reordered)).toBe(
       serializeCanvasDraftAuthoringSignature(draft)
     );
   });

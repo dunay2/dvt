@@ -33,16 +33,19 @@ export type CanvasModelCompositionPublication = Readonly<{
   rootPublication: RelationPublication;
 }>;
 
+function hasNativeModelAuthority(node: CanonicalNode): boolean {
+  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
+}
+
 export function readCanvasModelCompositionPublication(
   node: CanonicalNode,
   nodes: readonly CanonicalNode[],
   edges: readonly CanvasInputBindingEdge[]
 ): CanvasModelCompositionPublication | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform' || node.role !== 'transform')
-    return null;
   try {
-    const contextEdges = projectWorkspaceNodeInstanceEdges(nodes, edges);
     const external = resolveCanvasDbtModelSignature(node);
+    if (external == null && !hasNativeModelAuthority(node)) return null;
+    const contextEdges = projectWorkspaceNodeInstanceEdges(nodes, edges);
     const { document, connection, index } =
       external ??
       resolveCanvasSubstraitGraphBindings({

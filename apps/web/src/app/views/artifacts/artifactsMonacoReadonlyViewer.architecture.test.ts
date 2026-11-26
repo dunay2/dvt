@@ -21,13 +21,16 @@ function readRepoDoc(relativePathFromRepo: string): string {
 }
 
 function collectProductionSourceFiles(root: string): string[] {
-  return readdirSync(root).flatMap((entry) => {
-    const fullPath = path.join(root, entry);
-    if (statSync(fullPath).isDirectory()) {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(root, entry.name);
+    const directory = entry.isSymbolicLink()
+      ? statSync(fullPath).isDirectory()
+      : entry.isDirectory();
+    if (directory) {
       return collectProductionSourceFiles(fullPath);
     }
 
-    if (!/\.(ts|tsx)$/.test(entry) || /\.test\./.test(entry)) {
+    if (!/\.(ts|tsx)$/.test(entry.name) || /\.test\./.test(entry.name)) {
       return [];
     }
 
@@ -93,14 +96,6 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(artifactsView).not.toContain('MonacoCodeViewer');
     expect(artifactsView).not.toContain('@monaco-editor/react');
 
-    expect(workspaceQueries).toContain('classifyWorkspaceArtifact');
-    expect(workspaceQueries).not.toContain('^pipelines\\\\/');
-    expect(workspaceQueries).not.toContain('^models\\\\/');
-    expect(workspaceArtifactPolicy).toContain('WorkspaceArtifactClassification');
-    expect(workspaceArtifactPolicy).toContain('classifyWorkspaceArtifact');
-    expect(workspaceArtifactPolicy).toContain('/^pipelines\\/.+\\.ya?ml$/u');
-    expect(workspaceArtifactPolicy).toContain('/^models\\/.+\\.sql$/u');
-
     expect(artifactPreviewTabs).toContain('ArtifactMonacoPreviewPanel');
     expect(artifactPreviewTabs).not.toContain('MonacoCodeViewer');
     expect(artifactPreviewTabs).not.toContain('@monaco-editor/react');
@@ -129,7 +124,21 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(monacoVisualTokens).toContain('contextmenu: !readOnly');
     expect(monacoViewer).not.toContain('onMount');
     expect(monacoSurface).not.toContain('save');
+  });
 
+  it('keeps artifact classification in the workspace policy', () => {
+    const workspaceQueries = readAppSource('queries/workspaceQueries.ts');
+    const workspaceArtifactPolicy = readAppSource('queries/workspaceArtifactPolicy.ts');
+    expect(workspaceQueries).toContain('classifyWorkspaceArtifact');
+    expect(workspaceQueries).not.toContain('^pipelines\\\\/');
+    expect(workspaceQueries).not.toContain('^models\\\\/');
+    expect(workspaceArtifactPolicy).toContain('WorkspaceArtifactClassification');
+    expect(workspaceArtifactPolicy).toContain('classifyWorkspaceArtifact');
+    expect(workspaceArtifactPolicy).toContain('/^pipelines\\/.+\\.ya?ml$/u');
+    expect(workspaceArtifactPolicy).toContain('/^models\\/.+\\.sql$/u');
+  });
+
+  it('keeps every Canvas Monaco consumer behind its declared shared leaf', () => {
     for (const canvasModule of collectProductionSourceFiles(path.join(APP_ROOT, 'views/canvas'))) {
       const rawSource = readFileSync(canvasModule, 'utf8');
       const source = /monaco/i.test(rawSource)

@@ -3,6 +3,7 @@ import { canvasDraftSessionBaseline } from './canvasDraftSessionBaseline';
 import { canvasDraftSessionWorkingSet, EMPTY_WORKING_SET } from './canvasDraftSessionWorkingSet';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
+import { acknowledgeCanvasDefinitionRemovals } from './canvasDraftDefinitionRemoval';
 import type {
   BootstrapSessionArgs,
   CanvasDraftSession,
@@ -36,6 +37,11 @@ function transition(
     savingWorkingSet: undefined,
     savingBaseRevision: undefined,
     savingLocalNodeCatalog: undefined,
+    savingRemovedDefinitionIds: undefined,
+    removedDefinitionIds:
+      nextSyncState === 'editing' && record?.revision === session.baseline.record?.revision
+        ? session.removedDefinitionIds
+        : undefined,
     localNodeCatalog,
     localDefinitionEdges: retainUnpublishedDefinitionEdges(session, record),
   };
@@ -92,6 +98,7 @@ function markSaving(session: CanvasDraftSession): CanvasDraftSession {
     ...session,
     syncState: 'saving',
     savingWorkingSet: session.workingSet,
+    savingRemovedDefinitionIds: session.removedDefinitionIds,
     savingBaseRevision: session.draftRevision,
     savingLocalNodeCatalog:
       session.localNodeCatalog == null ? undefined : { ...session.localNodeCatalog },
@@ -125,10 +132,17 @@ function normalizeLocalNodeCatalog(
 
 function transitionWithRecord(
   session: CanvasDraftSession,
-  nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving' | 'missing_remote'>,
-  record: CanvasAuthoringDraftRecord,
-  workingSet?: CanvasDraftWorkingSet,
-  localNodeCatalog?: Record<string, CanonicalNode>
+  {
+    nextSyncState,
+    record,
+    workingSet,
+    localNodeCatalog,
+  }: {
+    nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving' | 'missing_remote'>;
+    record: CanvasAuthoringDraftRecord;
+    workingSet?: CanvasDraftWorkingSet;
+    localNodeCatalog?: Record<string, CanonicalNode>;
+  }
 ): CanvasDraftSession {
   return transition(session, {
     nextSyncState,
@@ -155,29 +169,43 @@ function applySaveSuccess(
       savingWorkingSet: undefined,
       savingBaseRevision: undefined,
       savingLocalNodeCatalog: undefined,
+      savingRemovedDefinitionIds: undefined,
     };
   }
 
-  const persistedWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
+  const savedSession = transitionWithRecord(session, {
+    nextSyncState: 'editing',
+    record,
+    ...resolveSavedWorkingSet(session, record),
+  });
+  return {
+    ...savedSession,
+    removedDefinitionIds: acknowledgeCanvasDefinitionRemovals(session, record),
+  };
+}
+
+function resolveSavedWorkingSet(
+  session: CanvasDraftSession,
+  record: CanvasAuthoringDraftRecord
+): Pick<BaselineTransitionArgs, 'workingSet' | 'localNodeCatalog'> {
   const hasEditsWhileSaving =
     session.savingWorkingSet != null &&
     (!canvasDraftSessionWorkingSet.equals(session.savingWorkingSet, session.workingSet) ||
       !localNodeCatalogsEqual(session.savingLocalNodeCatalog, session.localNodeCatalog));
 
-  return transitionWithRecord(
-    session,
-    'editing',
-    record,
-    hasEditsWhileSaving ? session.workingSet : persistedWorkingSet,
-    hasEditsWhileSaving ? session.localNodeCatalog : undefined
-  );
+  return {
+    workingSet: hasEditsWhileSaving
+      ? session.workingSet
+      : canvasDraftSessionWorkingSet.buildFromDraft(record.draft),
+    localNodeCatalog: hasEditsWhileSaving ? session.localNodeCatalog : undefined,
+  };
 }
 
 function applyConflict(
   session: CanvasDraftSession,
   currentRecord: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
-  return transitionWithRecord(session, 'conflict', currentRecord);
+  return transitionWithRecord(session, { nextSyncState: 'conflict', record: currentRecord });
 }
 
 function markRemoteDraftMissing(
@@ -198,28 +226,29 @@ function reloadFromRemote(
 ): CanvasDraftSession {
   const remoteWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
   if (session.syncState === 'missing_remote') {
-    return transitionWithRecord(session, 'editing', record, remoteWorkingSet);
+    return transitionWithRecord(session, {
+      nextSyncState: 'editing',
+      record,
+      workingSet: remoteWorkingSet,
+    });
   }
   if (!hasDirtyLocalAuthoring(session)) {
     return transitionWithRecord(
       { ...session, localDefinitionEdges: undefined },
-      'editing',
-      record,
-      remoteWorkingSet
+      { nextSyncState: 'editing', record, workingSet: remoteWorkingSet }
     );
   }
 
-  return transitionWithRecord(
-    session,
-    'editing',
+  return transitionWithRecord(session, {
+    nextSyncState: 'editing',
     record,
-    mergeRemoteWorkingSetWithLocalAuthoring(
+    workingSet: mergeRemoteWorkingSetWithLocalAuthoring(
       remoteWorkingSet,
       session.workingSet,
       readBaselineWorkingSet(session)
     ),
-    session.localNodeCatalog
-  );
+    localNodeCatalog: session.localNodeCatalog,
+  });
 }
 
 function adoptExternalRevision(
@@ -233,9 +262,11 @@ function adoptExternalRevision(
   return {
     ...session,
     draftRevision,
+    removedDefinitionIds: undefined,
     savingWorkingSet: undefined,
     savingBaseRevision: undefined,
     savingLocalNodeCatalog: undefined,
+    savingRemovedDefinitionIds: undefined,
     syncState:
       session.syncState === 'conflict' || session.syncState === 'saving'
         ? 'editing'
@@ -244,6 +275,7 @@ function adoptExternalRevision(
 }
 
 function hasDirtyLocalAuthoring(session: CanvasDraftSession): boolean {
+  if (session.removedDefinitionIds?.length) return true;
   if (session.localNodeCatalog != null && Object.keys(session.localNodeCatalog).length > 0) {
     return true;
   }

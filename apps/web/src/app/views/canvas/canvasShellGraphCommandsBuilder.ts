@@ -17,6 +17,7 @@ export function buildCanvasShellGraphCommands({
     onViewportChange: graphCommands.handleViewportChange,
     onDrop: graphCommands.handleDrop,
     onInspectNode: graphCommands.handleInspectNode,
+    onRemoveEmptyModel: (nodeId) => graphCommands.handleRemoveNode(nodeId, 'empty-definition'),
     onDragOver: graphCommands.handleDragOver,
     onToggleFrozenNode: graphCommands.handleToggleFrozenNode,
     onCreateAuthoringNode: graphCommands.handleCreateAuthoringNode,

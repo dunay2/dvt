@@ -5,37 +5,33 @@
  * @consequence Import returns focus to Code; project navigation never authors graph state.
  * @version 1.0.0
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
-import { DEFAULT_SOURCE_IMPORT_ENTRY } from '../../components/sourceImportWizard/constants';
+import { useCallback, useMemo, useState } from 'react';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
-import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
-import { CanvasModelEditor } from './CanvasModelEditor';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
-import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
-import { CanvasProjectFilesExplorer } from './explorer/CanvasProjectFilesExplorer';
-import { CanvasProjectElementsExplorer } from './explorer/CanvasProjectElementsExplorer';
-import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
-import type { CanvasShellOpenDataRegistryCommand, CanvasShellProps } from './canvasShell.types';
+import type { CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import { buildCanvasInspectorCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
-import { projectCanvasShellNodes } from './canvasShellNodeProjection';
-import { useCanvasCardPresentation } from './useCanvasCardPresentation';
-import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpressionInspection';
 import { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 import { useCanvasModelSelection } from './useCanvasModelSelection';
+import { CanvasExplorerDocumentsContext } from './explorer/CanvasExplorerDocuments';
 import { useCanvasModelBrowser } from './useCanvasModelBrowser';
 import { CanvasModelBrowserProvider } from './CanvasModelBrowser';
 import { useCanvasCodeWorkbench } from './useCanvasCodeWorkbench';
-import { CanvasCodeRouteEntry } from './CanvasCodeRouteEntry';
+import { CanvasCodeRouteEntry, type CanvasWorkbenchRouteTarget } from './CanvasCodeRouteEntry';
+import { CanvasRunModelRouteEntry } from './CanvasRunModelRouteEntry';
 import { useCanvasOperationDataTab } from './useCanvasOperationDataTab';
+import { useCanvasShellSourceImport } from './useCanvasShellSourceImport';
+import { useCanvasShellGraphPresentation } from './useCanvasShellGraphPresentation';
+import {
+  buildCanvasModelWorkbenchLayout,
+  buildCanvasProjectFilesSurface,
+} from './canvasShellWorkbenchSurfaces';
 import styles from './CanvasShell.module.css';
 
 export default function CanvasShell({
@@ -46,7 +42,6 @@ export default function CanvasShell({
   graphCommands,
   chromeCommands,
   canvasCommands,
-  runControls,
   workspaceCommands,
   canvasContextScreenToFlowPosition,
   sourceImportInitialSelection,
@@ -60,13 +55,14 @@ export default function CanvasShell({
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(language);
   const semanticCopy = resolveCanvasSemanticEditorCopy(language);
+  const projectRoot = workspaceCommands?.projectRoot;
   const focus = useCanvasWorkbenchFocus();
   const model = useCanvasModelSelection(
     panels.activeCanvasId,
     panels.inspectorGraphNodes,
     focus,
     panels.inspectorAuthoring.workspaceScope,
-    workspaceCommands?.projectRoot
+    projectRoot
   );
   const code = useCanvasCodeWorkbench(
     layout,
@@ -77,16 +73,17 @@ export default function CanvasShell({
     panels.inspectorAuthoring.workspaceScope
   );
   const operationData = useCanvasOperationDataTab(semanticCopy);
+  const catalogueUnavailable =
+    panels.inspectorGraphNodes.length === 0 &&
+    ['loading_graph', 'loading_backend', 'blocked_backend', 'error_graph'].includes(
+      chromeState.routeState
+    );
   const modelBrowser = useCanvasModelBrowser({
     canvasId: panels.activeCanvasId,
     nodes: panels.inspectorGraphNodes,
     model,
-    projectRoot: workspaceCommands?.projectRoot,
-    catalogueUnavailable:
-      panels.inspectorGraphNodes.length === 0 &&
-      ['loading_graph', 'loading_backend', 'blocked_backend', 'error_graph'].includes(
-        chromeState.routeState
-      ),
+    projectRoot,
+    catalogueUnavailable,
     inspectorTarget: panels.inspectorTarget,
     showCanvas: code.showCanvas,
     onInspect: graphCommands.onInspectNode,
@@ -103,71 +100,21 @@ export default function CanvasShell({
     },
     [code.showCanvas, model.modelIds, model.open]
   );
-  const { dataSampleTabs, projectNode, openSource } = useCanvasNodeDataSample({
-    activeCanvasId: panels.activeCanvasId,
-    nodes: graph.nodesWithImpact,
-    canonicalNodes: panels.inspectorGraphNodes,
-    canonicalEdges: panels.inspectorGraphEdges,
-    canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
+  const graphPresentation = useCanvasShellGraphPresentation({
+    graph,
+    panels,
+    runSnapshot,
     warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery,
     prepareModelPreview,
+    projectRoot,
+    filePlacementLayoutKey: layout.filePlacementLayoutKey,
+    showCardMetricsLabel: copy.showCardMetricsLabel,
+    previewLabel: semanticCopy.previewAction,
+    modelIds: model.modelIds,
+    openModel,
+    inspectOutput: outputInspection.open,
   });
-  const {
-    visibleMetricNodeIds,
-    sourceAppearanceByNode,
-    contribution: cardAppearance,
-  } = useCanvasCardPresentation(
-    panels,
-    graph.nodesWithImpact,
-    copy.showCardMetricsLabel,
-    workspaceCommands?.projectRoot,
-    layout.filePlacementLayoutKey
-  );
-  const nodes = useMemo(
-    () =>
-      projectCanvasShellNodes(graph.nodesWithImpact, {
-        visibleMetricNodeIds,
-        sourceAppearanceByNode,
-        modelIds: model.modelIds,
-        openModel,
-        inspectOutput: outputInspection.open,
-        previewLabel: semanticCopy.previewAction,
-        projectSample: projectNode,
-        runSnapshot,
-      }),
-    [
-      graph.nodesWithImpact,
-      visibleMetricNodeIds,
-      sourceAppearanceByNode,
-      model.modelIds,
-      openModel,
-      outputInspection.open,
-      semanticCopy.previewAction,
-      projectNode,
-      runSnapshot,
-    ]
-  );
-  const presentedGraph = useMemo(() => ({ ...graph, nodesWithImpact: nodes }), [graph, nodes]);
-  const { inspectorNode, inspectorWorkbenchContributions } = panels;
-  const inspectorContributions = useMemo(
-    () =>
-      buildCanvasInspectorCodeContributions(
-        { inspectorNode, inspectorWorkbenchContributions },
-        graph.nodesWithImpact
-      ),
-    [inspectorNode, inspectorWorkbenchContributions, graph.nodesWithImpact]
-  );
-  const presentedPanels = useMemo(
-    () => ({
-      ...panels,
-      inspectorWorkbenchContributions:
-        cardAppearance == null
-          ? inspectorContributions
-          : [...inspectorContributions, cardAppearance],
-    }),
-    [panels, inspectorContributions, cardAppearance]
-  );
 
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
@@ -179,6 +126,13 @@ export default function CanvasShell({
       return true;
     },
     [code.openProjectCode, model.setActive, outputInspection.workbench]
+  );
+  const onWorkbenchEntry = useCallback(
+    (target: CanvasWorkbenchRouteTarget) => {
+      if (target === 'code') return openProjectCode();
+      modelBrowser.onBrowse(target);
+    },
+    [openProjectCode, modelBrowser.onBrowse]
   );
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
@@ -192,82 +146,66 @@ export default function CanvasShell({
         : document.querySelector<HTMLElement>('[data-slot="shell-project-code-command"]');
     opener?.focus({ preventScroll: true });
   }, []);
-  const sourceImportOptions = useMemo(
-    () => getSourceImportOptions(panels.runtimeCapabilities),
-    [panels.runtimeCapabilities]
-  );
-  const sourceImportContributions = useMemo(
-    () => getSourceImportContributions(panels.runtimeCapabilities),
-    [panels.runtimeCapabilities]
-  );
-  const canOpenDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
-  const sourceImportScope = panels.inspectorAuthoring.workspaceScope;
-  const sourceImportOwnerKey = JSON.stringify([
-    sourceImportScope?.tenantId,
-    sourceImportScope?.projectId,
-    sourceImportScope?.environmentId,
-    panels.activeCanvasId,
-  ]);
-  const sourceImportDialog = useCanvasSourceImportDialogState(
-    canOpenDataRegistry,
-    sourceImportOwnerKey
-  );
-  const retainedSelectionOwner = useRef({
-    selection: sourceImportInitialSelection,
-    ownerKey: sourceImportOwnerKey,
+  const sourceImport = useCanvasShellSourceImport({
+    activeCanvasId: panels.activeCanvasId,
+    scope: panels.inspectorAuthoring.workspaceScope,
+    runtimeCapabilities: panels.runtimeCapabilities,
+    canOpenSourceImport: layout.canOpenSourceImport,
+    initialSelection: sourceImportInitialSelection,
+    onInitialSelectionConsumed: onSourceImportInitialSelectionConsumed,
+    onComplete: graphCommands.onSourceImportComplete,
   });
-  if (retainedSelectionOwner.current.selection !== sourceImportInitialSelection)
-    retainedSelectionOwner.current = {
-      selection: sourceImportInitialSelection,
-      ownerKey: sourceImportOwnerKey,
-    };
-  const retainedInitialSelection =
-    retainedSelectionOwner.current.ownerKey === sourceImportOwnerKey
-      ? sourceImportInitialSelection
-      : undefined;
-  useEffect(() => {
-    if (retainedInitialSelection != null)
-      sourceImportDialog.openCommand?.({
-        intent: 'import-sources',
-        initialSelection: retainedInitialSelection,
-      });
-  }, [sourceImportDialog.openCommand, retainedInitialSelection]);
-  const openSourceImport = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
-    const open = sourceImportDialog.openCommand;
-    return open == null
-      ? undefined
-      : (request = DEFAULT_SOURCE_IMPORT_ENTRY) =>
-          open(
-            request.intent === 'manage-connections'
-              ? request
-              : {
-                  ...request,
-                  initialSelection: request.initialSelection ?? retainedInitialSelection,
-                }
-          );
-  }, [sourceImportDialog.openCommand, retainedInitialSelection]);
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: panels.userPermissions.canEditEdges,
-    canOpenSourceImport: canOpenDataRegistry,
+    canOpenSourceImport: sourceImport.available,
     canOpenCanvasSettings: true,
     authoringNodeKinds: panels.authoringNodeKinds,
     screenToFlowPosition: canvasContextScreenToFlowPosition ?? ((position) => position),
     onCreateAuthoringNode: graphCommands.onCreateAuthoringNode,
     onEdgesChange: graphCommands.onEdgesChange,
     onSetEdgeExecutionGate: graphCommands.onSetEdgeExecutionGate,
-    onOpenSourceImport:
-      sourceImportDialog.openCommand == null
-        ? undefined
-        : (position) =>
-            sourceImportDialog.openCommand?.({
-              intent: 'import-sources',
-              ...(position == null ? {} : { placement: { canvasPosition: position } }),
-            }),
+    onOpenSourceImport: sourceImport.openFromContext,
     onOpenCanvasSettings: openCanvasSettings,
   });
-  const modelData = nodes.find((node) => node.id === model.selected?.id)?.data as
-    DbtNodeData | undefined;
-  const modelWorkspace = { currentId: model.selected?.id ?? null, openIds: model.openModelIds };
+  const workbenchLayout = buildCanvasModelWorkbenchLayout({
+    model,
+    code,
+    panels,
+    nodes: graphPresentation.graph.nodesWithImpact,
+    draftStatus: chromeState.draftStatusState,
+    query: canvasTransformDataSampleQuery,
+    preparePreview: prepareModelPreview,
+    operationData,
+    openSource: graphPresentation.openSource,
+    outputInspection: outputInspection.workbench,
+  });
+  const projectFiles = buildCanvasProjectFilesSurface({
+    code,
+    projectRoot,
+    openProjectCode,
+    openDbtProjectImport: onDbtProjectImported == null ? undefined : openDbtProjectImport,
+  });
+  const { onAddCanvas, onSelectCanvas } = canvasCommands;
+  const explorerDocuments = useMemo(() => {
+    if (!panels.activeCanvasId) return null;
+    if (workbenchLayout.centerSurfaceVisible === true) return null;
+    if (code.active) return null;
+    if (modelBrowser.mode != null) return null;
+    return {
+      activeId: panels.activeCanvasId,
+      documents: panels.canvasDocuments,
+      onAddCanvas,
+      onSelectCanvas,
+    };
+  }, [
+    panels.activeCanvasId,
+    panels.canvasDocuments,
+    workbenchLayout.centerSurfaceVisible,
+    code.active,
+    modelBrowser.mode,
+    onAddCanvas,
+    onSelectCanvas,
+  ]);
 
   return (
     <CanvasModelBrowserProvider
@@ -276,12 +214,8 @@ export default function CanvasShell({
       canvasId={panels.activeCanvasId}
       selectedId={model.selected?.id}
       active={model.active && !code.active}
-      projectRoot={workspaceCommands?.projectRoot}
-      onManageConnections={
-        openSourceImport == null
-          ? undefined
-          : () => openSourceImport({ intent: 'manage-connections' })
-      }
+      projectRoot={projectRoot}
+      onManageConnections={sourceImport.manageConnections}
     >
       <ResizablePanelGroup
         data-slot="canvas-shell-panel-group"
@@ -289,7 +223,21 @@ export default function CanvasShell({
         direction="horizontal"
         className={styles.workspace}
       >
-        <CanvasCodeRouteEntry ownerKey={code.ownerKey} onOpen={openProjectCode} />
+        <CanvasCodeRouteEntry
+          ownerKey={code.ownerKey}
+          modelOwnerKey={
+            catalogueUnavailable ? null : (modelBrowser.scopeKey ?? panels.activeCanvasId)
+          }
+          onOpen={onWorkbenchEntry}
+        />
+        <CanvasRunModelRouteEntry
+          canvasId={panels.activeCanvasId}
+          state={chromeState.routeState}
+          nodes={panels.inspectorGraphNodes}
+          modelIds={model.modelIds}
+          openModel={openModel}
+          inspect={graphCommands.onInspectNode}
+        />
         {layout.surfaceStrategy?.operationalDrawer == null ? null : (
           <CanvasOperationalDrawerContributionRegistrar
             policy={{
@@ -300,166 +248,39 @@ export default function CanvasShell({
             }}
             panels={panels}
             chromeState={chromeState}
-            runControls={runControls}
             onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
             onStartRun={chromeCommands.onRun}
             selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
-            dataSampleTabs={dataSampleTabs}
+            dataSampleTabs={graphPresentation.dataSampleTabs}
             operationDataTab={model.selected == null ? undefined : operationData.tab}
           />
         )}
-        <CanvasShellMainPanel
-          projectFiles={
-            !code.available
-              ? undefined
-              : {
-                  projectRoot: workspaceCommands?.projectRoot,
-                  tree: (
-                    <CanvasProjectFilesExplorer
-                      projectRoot={workspaceCommands?.projectRoot}
-                      onOpenFile={(path) => void openProjectCode(path)}
-                      onImportDbtProject={
-                        onDbtProjectImported == null ? undefined : openDbtProjectImport
-                      }
-                    />
-                  ),
-                  panel:
-                    code.layout.contextualWorkbench?.id === 'project-code'
-                      ? code.layout.contextualWorkbench.panel
-                      : undefined,
-                  active: code.active,
-                  onActivate: openProjectCode,
-                  onCanvas: code.showCanvas,
-                  onClose: code.active ? code.layout.contextualWorkbench?.requestClose : undefined,
-                  renderElements: (input) => (
-                    <CanvasProjectElementsExplorer
-                      {...input}
-                      projectRoot={workspaceCommands?.projectRoot}
-                    />
-                  ),
-                }
-          }
-          layout={
-            model.selected == null || panels.activeCanvasId == null
-              ? {
-                  ...code.layout,
-                  modelWorkspace,
-                  contextualWorkbench:
-                    outputInspection.workbench ?? code.layout.contextualWorkbench,
-                }
-              : {
-                  ...code.layout,
-                  modelWorkspace,
-                  inspectorPanelVisible: model.active ? false : code.layout.inspectorPanelVisible,
-                  contextualWorkbench: model.active
-                    ? undefined
-                    : (outputInspection.workbench ?? code.layout.contextualWorkbench),
-                  centerSurfaceVisible: model.active,
-                  centerSurface: (
-                    <CanvasModelEditor
-                      key={JSON.stringify([
-                        model.scopeKey,
-                        panels.activeCanvasId,
-                        model.selected.id,
-                      ])}
-                      canvasId={panels.activeCanvasId}
-                      workspaceScope={panels.inspectorAuthoring?.workspaceScope}
-                      transformNode={model.selected}
-                      initialView={model.initialView}
-                      nodes={panels.inspectorGraphNodes}
-                      edges={panels.inspectorGraphEdges}
-                      authoring={
-                        panels.relationalTreeAuthoring == null
-                          ? undefined
-                          : {
-                              ...panels.relationalTreeAuthoring,
-                              canEditNode:
-                                panels.relationalTreeAuthoring.canEditNode && modelData != null,
-                              onMapInput: modelData?.onMapCanvasInput,
-                              onRemoveInput: modelData?.onRemoveCanvasInput,
-                            }
-                      }
-                      draftStatus={chromeState.draftStatusState}
-                      query={canvasTransformDataSampleQuery}
-                      onExecuteSource={openSource}
-                      preparePreview={prepareModelPreview}
-                      operationDataHost={operationData.host}
-                      onOpenOperationData={operationData.open}
-                      active={model.active && !code.active}
-                      onSelect={() => {
-                        code.showCanvas();
-                        model.activate();
-                      }}
-                      onShowCanvas={() => {
-                        code.showCanvas();
-                        model.setActive(false);
-                      }}
-                      onClose={() => model.close(model.selected!.id, model.active && !code.active)}
-                    />
-                  ),
-                }
-          }
-          panels={presentedPanels}
-          graph={presentedGraph}
-          chromeState={chromeState}
-          graphCommands={graphCommands}
-          chromeCommands={chromeCommands}
-          onSelectCanvas={canvasCommands.onSelectCanvas}
-          onOpenSourceImport={openSourceImport}
-          onOpenProjectCode={
-            code.available
-              ? () => {
-                  void openProjectCode();
-                }
-              : undefined
-          }
-          onOpenCanvasSettings={openCanvasSettings}
-          onOpenModelEditor={openModel}
-          contextMenuPresenter={contextMenuPresenter}
-          workspaceTask={
-            panels.activeCanvasId == null ||
-            !sourceImportDialog.open ||
-            sourceImportDialog.request == null ? null : (
-              <CanvasSourceImportDialogHost
-                open={sourceImportDialog.open}
-                canvasId={panels.activeCanvasId}
-                onClose={() => {
-                  if (
-                    sourceImportDialog.request != null &&
-                    sourceImportDialog.isCurrent(sourceImportDialog.request)
-                  )
-                    sourceImportDialog.close();
-                }}
-                onRestoreFocus={
-                  sourceImportDialog.request.intent === 'import-sources'
-                    ? contextMenuPresenter.restoreContextMenuOpenerFocus
-                    : () => {
-                        if (sourceImportDialog.request != null)
-                          sourceImportDialog.restoreFocus(sourceImportDialog.request);
-                      }
-                }
-                onComplete={(result, placement) => {
-                  const request = sourceImportDialog.request;
-                  if (
-                    request?.intent !== 'import-sources' ||
-                    !sourceImportDialog.isCurrent(request)
-                  )
-                    return;
-                  graphCommands.onSourceImportComplete(result, placement);
-                  if (request.initialSelection?.kind === 'dbt-source-binding')
-                    onSourceImportInitialSelectionConsumed?.();
-                }}
-                sourceImportOptions={sourceImportOptions}
-                entry={sourceImportDialog.request}
-                placement={
-                  sourceImportDialog.request.intent === 'import-sources'
-                    ? sourceImportDialog.request.placement
-                    : undefined
-                }
-              />
-            )
-          }
-        />
+        <CanvasExplorerDocumentsContext.Provider value={explorerDocuments}>
+          <CanvasShellMainPanel
+            projectFiles={projectFiles}
+            layout={workbenchLayout}
+            panels={graphPresentation.panels}
+            graph={graphPresentation.graph}
+            chromeState={chromeState}
+            graphCommands={graphCommands}
+            chromeCommands={chromeCommands}
+            onSelectCanvas={canvasCommands.onSelectCanvas}
+            onOpenSourceImport={sourceImport.open}
+            onOpenProjectCode={
+              code.available
+                ? () => {
+                    void openProjectCode();
+                  }
+                : undefined
+            }
+            onOpenCanvasSettings={openCanvasSettings}
+            onOpenModelEditor={openModel}
+            contextMenuPresenter={contextMenuPresenter}
+            workspaceTask={sourceImport.renderTask(
+              contextMenuPresenter.restoreContextMenuOpenerFocus
+            )}
+          />
+        </CanvasExplorerDocumentsContext.Provider>
         <CanvasSettingsDialog
           open={canvasSettingsOpen}
           impactOverlayEnabled={chromeState.impactOverlayEnabled}

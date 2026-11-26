@@ -826,7 +826,102 @@ test('feature mechanization rail planner extends existing evidence without resto
     ),
     false
   );
-  assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, []);
+  assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, [
+    'apps/web/src/retiredProjection.ts',
+  ]);
+});
+
+test('feature record rejects a forbidden incoming identity instead of storing a pathless artifact', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['apps/web/cypress/support/model.ts#prepareModel'],
+      extraArgs: ['--forbidden-surface', 'apps/web/cypress/support/**'],
+    })
+  );
+  assert.throws(() => planCurrentFeatureRecord(command), /forbidden.*implementation/i);
+});
+
+test('feature record retains verification sources outside the implementation boundary', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--forbidden-surface', 'scripts/planning-db-operate-tests/**'],
+    })
+  );
+  const planned = planCurrentFeatureRecord(command);
+  assert.deepEqual(planned.rail.rawManifest.symbols[0].unitTests, command.unitTests);
+  assert.deepEqual(
+    validateFeatureMechanizationManifest(planned.rail.rawManifest, 'fixture.md').errors,
+    []
+  );
+});
+
+test('a persisted forbidden boundary still rejects an incoming reference when not repeated', () => {
+  const initial = planCurrentFeatureRecord(parseArgs(featureMechanizationRecordArgs())).rail;
+  initial.rawManifest.forbiddenImplementationSurfaces.push('scripts/restricted/**');
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['scripts/restricted/writer.cjs#record'],
+    })
+  );
+  assert.throws(() => planCurrentFeatureRecord(command, initial), /forbidden.*implementation/i);
+});
+
+test('the effective forbidden boundary removes complete inherited implementation mirrors', () => {
+  const command = parseArgs(featureMechanizationRecordArgs());
+  const initial = planCurrentFeatureRecord(command).rail;
+  const ref = 'scripts/restricted/writer.cjs#record';
+  initial.rawManifest.forbiddenImplementationSurfaces.push('scripts/restricted/**');
+  initial.rawManifest.symbols.push({
+    ...initial.rawManifest.symbols[0],
+    path: ref.split('#')[0],
+    name: 'record',
+  });
+  initial.symbolRefs.push(ref);
+  initial.implementationRefs.push(ref);
+  const planned = planCurrentFeatureRecord(command, initial);
+  assert(!planned.rail.symbolRefs.includes(ref));
+  assert(!planned.rail.implementationRefs.includes(ref));
+  assert(!planned.rail.rawManifest.symbols.some((s) => s.path === ref.split('#')[0]));
+});
+
+test('explicit current replacement still rejects forbidden incoming implementation identities', () => {
+  const initial = planCurrentFeatureRecord(parseArgs(featureMechanizationRecordArgs())).rail;
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['scripts/restricted/writer.cjs#record'],
+      extraArgs: [
+        '--replace-current',
+        'true',
+        '--expected-revision',
+        '0',
+        '--forbidden-surface',
+        'scripts/restricted/**',
+      ],
+    })
+  );
+  assert.throws(() => planCurrentFeatureRecord(command, initial), /forbidden.*implementation/i);
+});
+
+test('identity replacement preserves retained heterogeneous metadata and omits unselected artifacts', () => {
+  const command = parseArgs(featureMechanizationRecordArgs());
+  const initial = planCurrentFeatureRecord(command).rail;
+  const retained = {
+    ...initial.rawManifest.symbols[0],
+    dddOwner: 'Dedicated existing symbol owner',
+    unitTests: ['dedicated verification command'],
+    fowlerSignals: ['Existing symbol-specific rationale'],
+    sourceAnnotation: 'Retain this exact provenance',
+  };
+  initial.rawManifest.symbols = [retained, { name: 'pathlessArtifact' }];
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-implementation-refs', 'true', '--expected-revision', '0'],
+    })
+  );
+  const planned = planCurrentFeatureRecord(replacement, initial);
+  assert.deepEqual(planned.rail.rawManifest.symbols, [retained]);
+  assert.deepEqual(planned.rail.symbolRefs, initial.symbolRefs);
+  assert.deepEqual(planned.rail.rawRail, initial.rawRail);
 });
 
 for (const [label, extraArgs, expected] of [

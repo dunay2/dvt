@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React, { act } from 'react';
-import { fireEvent } from '@testing-library/dom';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, within } from '@testing-library/dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReactFlowProvider } from '@xyflow/react';
 import {
   setupWorkbenchTest,
@@ -15,6 +15,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 
 describe('card Input / Output boundary', () => {
   setupWorkbenchTest();
+  beforeEach(() => useApplicationLanguageStore.setState({ language: 'en' }));
   const columns = [
     { id: 'published', name: 'name', type: 'string', output: true },
     { id: 'excluded', name: 'email', type: 'string', output: false },
@@ -33,6 +34,20 @@ describe('card Input / Output boundary', () => {
       source: { nodeId: 'producer-b', columnId: 'email' },
     },
   ];
+  it.each([
+    ['en', 'Columns', 'Input columns (2)', 'Output columns (1)'],
+    ['es', 'Columnas', 'Columnas de entrada (2)', 'Columnas de salida (1)'],
+  ] as const)(
+    'names the counted columns and both directions in %s',
+    (language, heading, input, output) => {
+      useApplicationLanguageStore.setState({ language });
+      render();
+      const tabs = within(container).getByRole('tablist', { name: heading });
+      expect(within(tabs).getByRole('tab', { name: input })).toBeTruthy();
+      expect(within(tabs).getByRole('tab', { name: output })).toBeTruthy();
+      expect(within(container).getAllByText(heading).length).toBeGreaterThan(0);
+    }
+  );
   it.each([
     ['input', []],
     ['output', []],
@@ -210,7 +225,9 @@ describe('card Input / Output boundary', () => {
           await act(() => useApplicationLanguageStore.setState({ language }));
           const map = vi.fn();
           render(map, { outputState: state, view: 'output' });
-          expect(container.textContent).toContain(`Output (${label})`);
+          expect(container.textContent).toContain(
+            `${language === 'es' ? 'Salida' : 'Output'} (${label})`
+          );
           expect(container.querySelector('[role="status"]')?.textContent).toBe(label);
           expect(container.querySelector('[draggable="true"]')).toBeNull();
           expect(container.querySelector('[data-slot="graph-node-column-row"]')).toBeNull();

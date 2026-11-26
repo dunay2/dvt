@@ -1,14 +1,18 @@
 /** Owned concern: present direct shell destinations and compose the active contextual rail. */
 import { NavLink, useMatch } from 'react-router';
-import { GitFork } from 'lucide-react';
 import type { ShellNavigationItem, ShellNavigationModel } from '../shell/shellNavigationModel';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
-import { canvasCodeRouteEntryState } from '../views/canvas/CanvasCodeRouteEntry';
 import { ShellAbout } from './shell/ShellAbout';
-import { ShellProjectMenu } from './shell/ShellProjectMenu';
+import {
+  isDirectShellLinkActivation,
+  ShellProjectCodeLink,
+  ShellProjectMenu,
+} from './shell/ShellProjectMenu';
 import { ShellModelViewNavigation } from './shell/ShellModelViewNavigation';
 import type { ShellTopBarCopy } from './shell/copy';
+import { ShellOperationalRail } from './shell/ShellOperationalRail';
+import type { ShellOperationalView } from './shell/types';
 import styles from './LeftNavigation.module.css';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
@@ -16,9 +20,13 @@ import { cn } from './ui/utils';
 export function LeftNavigationRail({
   navigationModel,
   copy,
+  operationalView,
+  onOperationalViewChange,
 }: Readonly<{
   navigationModel: ShellNavigationModel;
   copy: ShellTopBarCopy;
+  operationalView?: ShellOperationalView | null;
+  onOperationalViewChange?: (view: ShellOperationalView | null) => void;
 }>) {
   const onCanvasRoute = useMatch('/canvas/*') != null;
   const expanded = useUiLayoutStore((state) => state.canvasExplorer.mode === 'expanded');
@@ -26,54 +34,56 @@ export function LeftNavigationRail({
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
   const codeTab = contribution?.codeTab;
   const registeredModelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
-  const modelTab =
-    contribution?.activeCanvas?.id === registeredModelTab?.canvasId ? registeredModelTab : null;
+  const activeCanvasId = contribution?.activeCanvas?.id;
+  const modelTab = activeCanvasId === registeredModelTab?.canvasId ? registeredModelTab : null;
   const registeredBrowser = useCanvasWorkspaceMenuContributionStore((state) => state.modelBrowser);
-  const modelBrowser =
-    contribution?.activeCanvas?.id === registeredBrowser?.canvasId ? registeredBrowser : null;
+  const modelBrowser = activeCanvasId === registeredBrowser?.canvasId ? registeredBrowser : null;
   const items = [...navigationModel.primaryItems, ...navigationModel.footerItems];
   const canvasItem = items.find((item) => item.to === '/canvas');
+  const adminItem = items.find((item) => item.to === '/admin');
+  const costItem = items.find((item) => item.to === '/cost');
+  const routeActiveOverride = operationalView == null ? undefined : false;
+  const canvasActive = isCanvasRailForeground({
+    operationalView,
+    onCanvasRoute,
+    codeTab,
+    modelTab,
+    modelBrowser,
+  });
   const renderDestination = (item: ShellNavigationItem): JSX.Element => {
     const Icon = item.icon;
     const isCanvas = item.to === '/canvas';
+    const destination = resolveCanvasDestinationAttributes({
+      isCanvas,
+      canvasActive,
+      routeActiveOverride,
+      onCanvasRoute,
+      expanded,
+      codeActive: codeTab?.active === true,
+    });
     return (
       <Tooltip key={item.to}>
         <TooltipTrigger asChild>
           <NavLink
             to={item.to}
-            id={isCanvas ? 'shell-canvas-navigation' : undefined}
+            id={destination.id}
             aria-label={item.label}
-            data-active={
-              isCanvas
-                ? onCanvasRoute &&
-                  codeTab?.active !== true &&
-                  modelTab?.active !== true &&
-                  modelBrowser?.mode == null
-                : undefined
-            }
-            aria-expanded={
-              isCanvas && onCanvasRoute ? expanded && codeTab?.active !== true : undefined
-            }
+            data-active={destination.active}
+            aria-expanded={destination.expanded}
             className={cn(styles.link, styles.linkInteractive)}
             data-slot="left-navigation-link"
             onClick={(event) => {
-              if (
-                !isCanvas ||
-                !onCanvasRoute ||
-                event.defaultPrevented ||
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              )
-                return;
+              if (!isDirectShellLinkActivation(event)) return;
+              onOperationalViewChange?.(null);
+              if (!isCanvas || !onCanvasRoute) return;
               event.preventDefault();
-              // Reuse the published owner callback; opening Elements does not close its session.
-              if (modelBrowser?.mode != null) modelBrowser.onCanvas();
-              else if (codeTab?.active === true) codeTab.onCanvas();
-              else if (modelTab?.active === true) modelTab.onCanvas();
-              dispatch({ type: 'expand' });
+              activateCanvasDestination({
+                operationalView,
+                modelBrowser,
+                codeTab,
+                modelTab,
+                dispatch,
+              });
             }}
           >
             <Icon aria-hidden="true" className={styles.icon} />
@@ -98,66 +108,43 @@ export function LeftNavigationRail({
           >
             {canvasItem == null ? null : renderDestination(canvasItem)}
             {canvasItem == null ? null : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <NavLink
-                    to={canvasItem.to}
-                    state={canvasCodeRouteEntryState}
-                    id="shell-project-code-command"
-                    data-slot="shell-project-code-command"
-                    data-active={onCanvasRoute && codeTab?.active === true}
-                    aria-label={copy.projectCode}
-                    aria-current={false}
-                    aria-expanded={onCanvasRoute && codeTab?.active === true}
-                    aria-controls={
-                      onCanvasRoute && codeTab?.active === true
-                        ? 'canvas-code-workspace-surface'
-                        : undefined
-                    }
-                    aria-disabled={
-                      onCanvasRoute &&
-                      (!contribution?.canOpenProjectCode || contribution.onOpenProjectCode == null)
-                        ? true
-                        : undefined
-                    }
-                    className={cn(styles.link, styles.linkInteractive)}
-                    onClick={(event) => {
-                      if (
-                        !onCanvasRoute ||
-                        event.defaultPrevented ||
-                        event.button !== 0 ||
-                        event.metaKey ||
-                        event.ctrlKey ||
-                        event.shiftKey ||
-                        event.altKey
-                      )
-                        return;
-                      event.preventDefault();
-                      if (contribution?.canOpenProjectCode) contribution.onOpenProjectCode?.();
-                    }}
-                  >
-                    <GitFork aria-hidden="true" className={styles.icon} />
-                    <span className={styles.caption}>{copy.projectCode}</span>
-                  </NavLink>
-                </TooltipTrigger>
-                <TooltipContent side="right">{copy.projectCode}</TooltipContent>
-              </Tooltip>
-            )}
-            {canvasItem == null ? null : (
               <ShellModelViewNavigation
                 tab={modelTab}
                 browser={modelBrowser}
                 available={onCanvasRoute}
-                foreground={codeTab?.active !== true}
+                entryPath={canvasItem.to}
+                foreground={operationalView == null && codeTab?.active !== true}
+                onActivate={() => onOperationalViewChange?.(null)}
                 copy={copy}
               />
             )}
             <div className={cn(styles.nav, styles.destinations)}>
-              {items.filter((item) => item !== canvasItem).map(renderDestination)}
+              {items
+                .filter((item) => item !== canvasItem && item !== adminItem && item !== costItem)
+                .map(renderDestination)}
             </div>
+            {onOperationalViewChange == null ? null : (
+              <ShellOperationalRail
+                onCanvasRoute={onCanvasRoute}
+                operationalView={operationalView ?? null}
+                onOperationalViewChange={onOperationalViewChange}
+                copy={copy}
+              />
+            )}
+            {adminItem == null ? null : renderDestination(adminItem)}
           </nav>
         </div>
         <div className={styles.footer}>
+          {costItem == null ? null : renderDestination(costItem)}
+          {canvasItem == null ? null : (
+            <ShellProjectCodeLink
+              to={canvasItem.to}
+              label={copy.projectCode}
+              onCanvasRoute={onCanvasRoute}
+              foreground={operationalView == null}
+              onActivate={() => onOperationalViewChange?.(null)}
+            />
+          )}
           <ShellProjectMenu copy={copy} />
           <ShellAbout copy={copy} />
         </div>
@@ -167,3 +154,63 @@ export function LeftNavigationRail({
 }
 
 export default LeftNavigationRail;
+
+function resolveCanvasDestinationAttributes(
+  args: Readonly<{
+    isCanvas: boolean;
+    canvasActive: boolean;
+    routeActiveOverride: false | undefined;
+    onCanvasRoute: boolean;
+    expanded: boolean;
+    codeActive: boolean;
+  }>
+) {
+  if (!args.isCanvas)
+    return { id: undefined, active: args.routeActiveOverride, expanded: undefined };
+  return {
+    id: 'shell-canvas-navigation',
+    active: args.canvasActive,
+    expanded: args.onCanvasRoute ? args.expanded && !args.codeActive : undefined,
+  };
+}
+
+function activateCanvasDestination({
+  operationalView,
+  modelBrowser,
+  codeTab,
+  modelTab,
+  dispatch,
+}: Omit<Parameters<typeof isCanvasRailForeground>[0], 'onCanvasRoute'> & {
+  dispatch: ReturnType<typeof useUiLayoutStore.getState>['dispatchCanvasExplorer'];
+}): void {
+  if (operationalView != null) return;
+  // Reuse the published owner callback; opening Elements does not close its session.
+  if (modelBrowser?.mode != null) modelBrowser.onCanvas();
+  else if (codeTab?.active === true) codeTab.onCanvas();
+  else if (modelTab?.active === true) modelTab.onCanvas();
+  dispatch({ type: 'expand' });
+}
+
+function isCanvasRailForeground({
+  operationalView,
+  onCanvasRoute,
+  codeTab,
+  modelTab,
+  modelBrowser,
+}: {
+  operationalView: ShellOperationalView | null | undefined;
+  onCanvasRoute: boolean;
+  codeTab: NonNullable<
+    ReturnType<typeof useCanvasWorkspaceMenuContributionStore.getState>['contribution']
+  >['codeTab'];
+  modelTab: ReturnType<typeof useCanvasWorkspaceMenuContributionStore.getState>['modelTab'];
+  modelBrowser: ReturnType<typeof useCanvasWorkspaceMenuContributionStore.getState>['modelBrowser'];
+}): boolean {
+  return (
+    operationalView == null &&
+    onCanvasRoute &&
+    codeTab?.active !== true &&
+    modelTab?.active !== true &&
+    modelBrowser?.mode == null
+  );
+}

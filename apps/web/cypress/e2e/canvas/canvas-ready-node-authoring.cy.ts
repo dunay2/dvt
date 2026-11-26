@@ -131,7 +131,15 @@ function resolveComputedPaletteColor(value: string): string {
   return `rgb(${channels.join(', ')})`;
 }
 
-function assertComputedColorRole(selector: string, property: string, token: string): void {
+function assertComputedColorRole({
+  selector,
+  property,
+  token,
+}: {
+  selector: string;
+  property: string;
+  token: string;
+}): void {
   cy.get(selector).should(($element) => {
     const element = $element[0]!;
     const style = element.ownerDocument.defaultView!.getComputedStyle(element);
@@ -149,22 +157,12 @@ function assertCanvasComputedAppearance(): void {
     .and('have.css', 'line-height', '20px')
     .and('have.css', 'border-top-width', '1px')
     .and('have.css', 'border-top-style', 'solid');
-  cy.get(sourceCard).should(($card) => {
-    const card = $card[0]!;
-    const window = card.ownerDocument.defaultView!;
-    const style = window.getComputedStyle(card);
-    // jQuery's dimension getter includes React Flow's fit-view scale; the design width does not.
-    expect(style.width).to.equal('384px');
-    const viewport = card.closest('.react-flow__viewport')!;
-    const scale = new window.DOMMatrixReadOnly(window.getComputedStyle(viewport).transform).a;
-    expect(
-      card.getBoundingClientRect().width / scale,
-      'rendered card width in graph units'
-    ).to.be.closeTo(384, 1);
-    expect(style.fontFamily).to.contain('IBM Plex Sans');
-    expect(style.boxShadow, 'raised cards retain low elevation').not.to.equal('none');
+  cy.get(sourceCard).should(assertCanvasSourceCardGeometry);
+  assertComputedColorRole({
+    selector: sourceCard,
+    property: 'background-color',
+    token: '--surface-elevated',
   });
-  assertComputedColorRole(sourceCard, 'background-color', '--surface-elevated');
   cy.get(sourceCard)
     .children()
     .first()
@@ -193,28 +191,12 @@ function assertCanvasComputedAppearance(): void {
     .should('have.css', 'outline-style', 'solid')
     .and('have.css', 'outline-width', '2px')
     .and('have.css', 'outline-offset', '2px');
-  assertComputedColorRole(sourceCard, 'outline-color', '--focus-ring');
-  cy.get('[data-testid="canvas-viewport"]').should(($viewport) => {
-    const viewport = $viewport.get(0);
-    const window = viewport.ownerDocument.defaultView!;
-    const palette = window.getComputedStyle(viewport);
-    for (const [selector, property, token] of [
-      ['.react-flow__controls', 'background-color', '--canvas-controls-surface'],
-      ['.react-flow__controls-button', 'background-color', '--canvas-controls-button-surface'],
-      ['.react-flow__controls-button', 'color', '--canvas-controls-foreground'],
-      ['.react-flow__minimap', 'background-color', '--canvas-minimap-surface'],
-      ['.react-flow__minimap', 'border-top-color', '--canvas-minimap-border'],
-    ] as const) {
-      const surface = viewport.querySelector(selector);
-      expect(surface, selector).not.to.be.null;
-      const expectedColor = palette.getPropertyValue(token).trim();
-      expect(expectedColor, token).not.to.equal('');
-      expect(
-        window.getComputedStyle(surface!).getPropertyValue(property),
-        `${selector} ${property}`
-      ).to.equal(resolveComputedPaletteColor(expectedColor));
-    }
+  assertComputedColorRole({
+    selector: sourceCard,
+    property: 'outline-color',
+    token: '--focus-ring',
   });
+  cy.get('[data-testid="canvas-viewport"]').should(assertCanvasControlsPalette);
   cy.document().should((document) => {
     expect(readRegisteredCssLayers(document), 'actual browser cascade-layer order').to.deep.equal([
       'properties',
@@ -347,6 +329,421 @@ function assertReloadedModelSemanticDocumentUnchanged(originalDocument: unknown)
   });
 }
 
+function assertCanvasControlsPalette($viewport: JQuery<HTMLElement>): void {
+  const viewport = $viewport.get(0);
+  const window = viewport.ownerDocument.defaultView!;
+  const palette = window.getComputedStyle(viewport);
+  for (const [selector, property, token] of [
+    ['.react-flow__controls', 'background-color', '--canvas-controls-surface'],
+    ['.react-flow__controls-button', 'background-color', '--canvas-controls-button-surface'],
+    ['.react-flow__controls-button', 'color', '--canvas-controls-foreground'],
+    ['.react-flow__minimap', 'background-color', '--canvas-minimap-surface'],
+    ['.react-flow__minimap', 'border-top-color', '--canvas-minimap-border'],
+  ] as const) {
+    const surface = viewport.querySelector(selector);
+    expect(surface, selector).not.to.be.null;
+    const expectedColor = palette.getPropertyValue(token).trim();
+    expect(expectedColor, token).not.to.equal('');
+    expect(
+      window.getComputedStyle(surface!).getPropertyValue(property),
+      `${selector} ${property}`
+    ).to.equal(resolveComputedPaletteColor(expectedColor));
+  }
+}
+
+function readNativeChainModel(): {
+  root: IndexedRelation;
+  input: IndexedRelation;
+  fields: IndexedRelation['fields'];
+  types: readonly Type[];
+} {
+  const write = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)!;
+  const document = decodeDvtSubstraitSemanticDocument(
+    semanticDocumentFromWrite(write, 'orphan-transform-1')
+  );
+  const { index, schemas } = deriveSubstraitSchemas(document);
+  const root = index.relations.get(index.rootId)!;
+  const model = readCanvasTransformDependencyModel(root, (id) => index.relations.get(id)!);
+  return {
+    root,
+    input: model.input,
+    fields: root.fields,
+    types: schemas.get(index.rootId)!.map((field) => field.type),
+  };
+}
+
+function assertReopenedNativeChain({
+  edge,
+  node,
+  readState,
+}: {
+  edge: string;
+  node: string;
+  readState: () => { restoredIds: string[]; rootId: string };
+}): void {
+  visitReadyCanvas('/canvas?reload=model-chain');
+  cy.get(edge).should('be.visible');
+  cy.get(node)
+    .contains('[role="tab"]', /^Output/)
+    .click();
+  cy.get(node).contains('button[aria-expanded]', 'Columns').click();
+  cy.get(`${node} [data-slot="graph-node-column-piece"]`).should(($fields) => {
+    expect([...$fields].map((field) => field.dataset.columnName)).to.deep.equal([
+      'total',
+      'order_id',
+    ]);
+    expect([...$fields].map((field) => field.dataset.fieldId)).to.deep.equal([
+      readState().restoredIds[1],
+      readState().restoredIds[0],
+    ]);
+  });
+  cy.get(`${node} [data-slot="graph-node-column-piece"][data-column-name="total"]`)
+    .should('have.attr', 'data-output', 'true')
+    .and('have.attr', 'draggable', 'true')
+    .closest('[data-slot="graph-node-column-row"]')
+    .find('[data-slot="canvas-node-port-handle"][data-port="source"]')
+    .should(($handle) =>
+      expect($handle.attr('data-handleid')).to.equal(
+        'column:source:' +
+          encodeURIComponent('orphan-transform-1') +
+          ':' +
+          encodeURIComponent(readState().restoredIds[1]!)
+      )
+    );
+  openWorkbenchModel('orphan-transform-1');
+  cy.then(() =>
+    cy
+      .get(`[data-operator="project"][data-relation-id="${readState().rootId}"]`)
+      .should('have.length', 1)
+  );
+}
+
+function moveNativeChainTotalOutput(toggle: string): void {
+  cy.get(`${toggle}[data-field-name="total"]`)
+    .closest('[data-slot="relation-output-field"]')
+    .should('have.attr', 'draggable', 'true')
+    .focus()
+    .should('be.focused')
+    .type('{alt}{uparrow}');
+}
+
+function openNativeChainProjection(): void {
+  openWorkbenchModel('orphan-transform-1');
+  dragWorkbenchSource('Transform 1');
+  cy.get('[data-pending="true"][data-operator="read"]').closest('li').as('producer');
+  workbenchOperation('field_transform').click();
+  cy.get('[data-pending-operation="true"]').last().as('projection');
+  connectWorkbenchProducer({ producer: '@producer', consumer: '@projection' });
+  connectWorkbenchProducer({
+    producer: '@projection',
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
+  cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+}
+
+function inspectDbtPaymentAppearance(): void {
+  const rows = '[data-slot="source-card-appearance-rows"]';
+  const payments = '.react-flow__node[data-id="warehouse_payments"]';
+  const columnToggle = `${payments} [data-slot="graph-node-column-toggle"]`;
+  openNodeProperties('warehouse_payments');
+  cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+  cy.get(rows).should('have.attr', 'aria-checked', 'false');
+  cy.get(columnToggle).should('contain.text', 'Columns (2)');
+  cy.get('[data-slot="source-card-appearance-columns"]').click();
+  cy.get(columnToggle).should('not.exist');
+  cy.get('[data-slot="source-card-appearance-columns"]').click();
+  cy.get(columnToggle).should('contain.text', 'Columns (2)').click();
+  const type = `${payments} [data-slot="graph-node-column-type"]`;
+  const nullability = `${payments} [data-slot="graph-node-column-nullability"]`;
+  cy.get(type).first().should('not.have.css', 'display', 'none');
+  cy.get(nullability).first().should('not.have.css', 'display', 'none');
+  cy.get('[data-slot="source-card-appearance-types"]').click();
+  cy.get('[data-slot="source-card-appearance-nullability"]').click();
+  cy.get(type).first().should('have.css', 'display', 'none');
+  cy.get(nullability).first().should('have.css', 'display', 'none');
+  const card = `${payments} [data-slot="graph-node-card"]`;
+  cy.get(card)
+    .invoke('css', 'background-color')
+    .then((before) => {
+      cy.get<HTMLInputElement>('[data-slot="source-card-appearance"] input[type="color"]').then(
+        ($swatch) => {
+          const input = $swatch[0]!;
+          const view = input.ownerDocument.defaultView!;
+          Object.getOwnPropertyDescriptor(view.HTMLInputElement.prototype, 'value')!.set!.call(
+            input,
+            '#c62828'
+          );
+          input.dispatchEvent(new view.Event('input', { bubbles: true }));
+        }
+      );
+      cy.get(card).invoke('css', 'background-color').should('not.equal', before);
+    });
+  cy.get(card)
+    .find('[data-slot="graph-node-card-header"]')
+    .invoke('css', 'background-image')
+    .should('include', 'linear-gradient');
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+}
+
+function inspectDbtSourceAppearance(): void {
+  cy.get('.react-flow__node[data-id="raw_orders"]')
+    .should('contain.text', 'source')
+    .and('not.contain.text', 'dbt:source')
+    .find('[data-slot="graph-node-operational-rail"]')
+    .should('not.exist');
+  openNodeProperties('raw_orders');
+  cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
+  const rows = '[data-slot="source-card-appearance-rows"]';
+  const size = '[data-slot="source-card-appearance-size"]';
+  const rail = '.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-operational-rail"]';
+  cy.get(rows).should('have.attr', 'aria-checked', 'false').focus();
+  cy.press(Cypress.Keyboard.Keys.SPACE);
+  cy.get(rows).should('have.attr', 'aria-checked', 'true').click();
+  cy.get(rail).should('not.exist');
+  cy.get(rows).click();
+  cy.get(rail).should('contain.text', 'Rows').and('not.contain.text', 'Size');
+  cy.get(size).should('have.attr', 'aria-checked', 'false').click();
+  cy.then(() =>
+    expect(
+      getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+      'card preferences stay local'
+    ).to.have.length(0)
+  );
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+  cy.get(
+    '.react-flow__node[data-id="orders_model"] [data-slot="graph-node-operational-rail"]'
+  ).should('not.exist');
+  cy.get('.react-flow__node[data-id="raw_orders"]')
+    .find('[data-slot="graph-node-operational-rail"]')
+    .should('contain.text', 'Rows')
+    .and('contain.text', '18.2k')
+    .and('contain.text', 'Size')
+    .and('contain.text', '3.9 MB');
+}
+
+function findManualNodeProperties({
+  nodeId,
+  config,
+  connectionId,
+}: {
+  nodeId: string;
+  config: Record<string, string>;
+  connectionId?: string;
+}): CanvasDraftSaveRequestBody | undefined {
+  return getE2eApiCalls('/workspace/graph/draft', 'PUT')
+    .map((call) => call.body as CanvasDraftSaveRequestBody)
+    .find((body) => {
+      const node = body.draft.nodes.find((candidate) => candidate.id === nodeId);
+      const expected =
+        connectionId === undefined ? { config } : { config, connectionRef: { connectionId } };
+      return Cypress._.isMatch(node?.metadata ?? {}, expected);
+    });
+}
+
+function assertSavedManualSinkProperties(originalSemanticDocument: unknown): void {
+  const savedSink = findManualNodeProperties({
+    nodeId: 'sink-1',
+    config: {
+      schema: 'published',
+      table: 'orders_monthly',
+      materialization: 'view',
+      writeMode: 'append',
+      database: 'legacy_warehouse',
+      partitionStrategy: 'daily_by_order_date',
+    },
+  });
+  expect(savedSink, 'saved Sink properties').to.not.be.undefined;
+  assertModelSemanticDocumentUnchanged(savedSink!.draft, originalSemanticDocument);
+}
+
+function assertSavedManualSourceProperties(originalSemanticDocument: unknown): void {
+  const savedSource = findManualNodeProperties({
+    nodeId: 'source-1',
+    config: {
+      schema: 'curated',
+      table: 'orders_clean',
+      alias: 'orders_curated',
+      database: 'legacy_warehouse',
+    },
+    connectionId: 'warehouse-b',
+  });
+  expect(savedSource, 'saved Source properties').to.not.be.undefined;
+  assertModelSemanticDocumentUnchanged(savedSource!.draft, originalSemanticDocument);
+}
+
+function prepareManualPropertiesDraft(): unknown {
+  const draft = stubStatefulCanvasDraftAuthoring({
+    authoringGenerated: true,
+    title: 'DVT properties roundtrip',
+  });
+  const modelAuthoring = draft.nodes.find((node) => node.id === 'dvt-transform-1')!.metadata!
+    .transformAuthoring as { semanticDocument: unknown };
+  const originalSemanticDocument = structuredClone(modelAuthoring.semanticDocument);
+  expect(originalSemanticDocument, 'initial canonical Model document').not.to.be.undefined;
+  const sinkConfig = draft.nodes.find((node) => node.id === 'sink-1')!.metadata!.config as {
+    materialization: string;
+    writeMode: string;
+  };
+  sinkConfig.materialization = 'view';
+  sinkConfig.writeMode = 'append';
+  const sourceMetadata = draft.nodes.find((node) => node.id === 'source-1')!.metadata!;
+  delete sourceMetadata.connectedSourceRef;
+  sourceMetadata.connectionRef = {
+    schemaVersion: 'connection-ref.v1',
+    provider: 'postgres',
+    connectionId: 'warehouse-a',
+  };
+  return originalSemanticDocument;
+}
+
+function assertBusinessRelationshipSection(
+  $section: JQuery<HTMLElement>,
+  longRelatedNodeName: string
+): void {
+  const section = $section.get(0);
+  const sectionRect = section.getBoundingClientRect();
+  const records = section.querySelectorAll<HTMLElement>(
+    '[data-slot="node-property-relationship-record"]'
+  );
+
+  expect(section.querySelector('table')).to.equal(null);
+  expect(records).to.have.length(2);
+  expect(section.textContent).to.contain(longRelatedNodeName);
+
+  const window = section.ownerDocument.defaultView!;
+  const panelRect = section
+    .closest('[data-slot="canvas-node-workbench-panel"]')!
+    .getBoundingClientRect();
+  const visibleLeft = Math.max(0, sectionRect.left, panelRect.left);
+  const visibleRight = Math.min(window.innerWidth, sectionRect.right, panelRect.right);
+  const visibleTop = Math.max(0, sectionRect.top, panelRect.top);
+  const visibleBottom = Math.min(window.innerHeight, sectionRect.bottom, panelRect.bottom);
+  records.forEach((record, index) => {
+    assertBusinessRelationshipRecord(record, {
+      index,
+      longRelatedNodeName,
+      visible: { left: visibleLeft, right: visibleRight, top: visibleTop, bottom: visibleBottom },
+    });
+  });
+}
+
+function assertBusinessRelationshipRecord(
+  record: HTMLElement,
+  {
+    index,
+    longRelatedNodeName,
+    visible,
+  }: {
+    index: number;
+    longRelatedNodeName: string;
+    visible: { left: number; right: number; top: number; bottom: number };
+  }
+): void {
+  const summary = record.querySelector<HTMLElement>(
+    '[data-slot="node-property-relationship-summary"]'
+  )!;
+  expect(summary, 'business relationship summary').not.to.equal(null);
+  const [direction, node, relation] = ['direction', 'node', 'relation'].map((slot) => {
+    const value = summary.querySelector<HTMLElement>(
+      `[data-slot="node-property-relationship-${slot}"]`
+    );
+    expect(value, `relationship ${slot}`).not.to.equal(null);
+    return value!;
+  });
+  expect(direction!.textContent).to.equal('Input');
+  expect(node!.textContent).to.equal(index === 0 ? longRelatedNodeName : '-');
+  expect(relation!.textContent?.toLowerCase()).to.equal('lineage');
+  const values = [direction!, node!, relation!];
+  const centers = values.map((value) => {
+    const bounds = value.getBoundingClientRect();
+    return bounds.top + bounds.height / 2;
+  });
+  expect(
+    Math.max(...centers) - Math.min(...centers),
+    'direction, business name and relation share one summary line'
+  ).to.be.lessThan(1);
+  const connection = record.querySelector<HTMLElement>(
+    '[data-slot="node-property-relationship-connection"]'
+  );
+  if (connection != null) {
+    expect(connection.textContent?.trim(), 'connection context').not.to.equal('');
+    expect(connection.getBoundingClientRect().top, 'connection is secondary').to.be.at.least(
+      summary.getBoundingClientRect().bottom
+    );
+    values.push(connection);
+  }
+  for (const value of values) assertBusinessRelationshipValueVisible(value, visible);
+  expect(record.querySelector('dt, dd'), 'no obsolete property-label stack').to.equal(null);
+  assertBusinessRelationshipPrivacy(record);
+}
+
+function assertBusinessRelationshipValueVisible(
+  value: HTMLElement,
+  visible: { left: number; right: number; top: number; bottom: number }
+): void {
+  const bounds = value.getBoundingClientRect();
+  expect(bounds.width, 'business value is visible').to.be.greaterThan(0);
+  expect(bounds.height, 'business value is visible').to.be.greaterThan(0);
+  expect(bounds.left).to.be.at.least(visible.left - 1);
+  expect(bounds.right).to.be.at.most(visible.right + 1);
+  expect(bounds.top).to.be.at.least(visible.top - 1);
+  expect(bounds.bottom).to.be.at.most(visible.bottom + 1);
+  expect(value.scrollWidth, 'complete value fits available width').to.be.at.most(
+    value.clientWidth + 1
+  );
+  expect(value.scrollHeight, 'wrapped value is not clipped').to.be.at.most(value.clientHeight + 1);
+}
+
+function assertBusinessRelationshipPrivacy(record: HTMLElement): void {
+  const accessibleText = [
+    record.textContent,
+    ...[record, ...record.querySelectorAll('*')].flatMap((element) =>
+      ['title', 'aria-label', 'aria-description'].map(
+        (attribute) => element.getAttribute(attribute) ?? ''
+      )
+    ),
+  ].join(' ');
+  for (const id of [
+    'raw_orders',
+    'warehouse_payments',
+    'orders_model',
+    'edge_raw_orders_model',
+    'edge_warehouse_payments_model',
+  ])
+    expect(accessibleText, 'technical graph identities remain private').not.to.include(id);
+}
+
+function assertNativeChainConnectionDraft(): void {
+  const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+    ?.body as CanvasDraftSaveRequestBody;
+  expect(
+    saved.draft.edges.some(
+      (item) => item.sourceId === 'dvt-transform-1' && item.targetId === 'orphan-transform-1'
+    )
+  ).to.equal(true);
+  expect(
+    saved.draft.nodes.find((entry) => entry.id === 'orphan-transform-1')?.metadata ?? {}
+  ).not.to.have.property('transformAuthoring');
+}
+
+function assertCanvasSourceCardGeometry($card: JQuery<HTMLElement>): void {
+  const card = $card[0]!;
+  const window = card.ownerDocument.defaultView!;
+  const style = window.getComputedStyle(card);
+  // jQuery's dimension getter includes React Flow's fit-view scale; the design width does not.
+  expect(style.width).to.equal('384px');
+  const viewport = card.closest('.react-flow__viewport')!;
+  const scale = new window.DOMMatrixReadOnly(window.getComputedStyle(viewport).transform).a;
+  expect(
+    card.getBoundingClientRect().width / scale,
+    'rendered card width in graph units'
+  ).to.be.closeTo(384, 1);
+  expect(style.fontFamily).to.contain('IBM Plex Sans');
+  expect(style.boxShadow, 'raised cards retain low elevation').not.to.equal('none');
+}
+
 describe('Canvas ready node authoring', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
@@ -459,6 +856,8 @@ describe('Canvas ready node authoring', () => {
       .should('have.focus')
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
     cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
+    cy.get('button[aria-label="Close graph filters"]').click();
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
     cy.get(englishTagAction).click();
     cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
     cy.get('button[aria-label="Clear graph filters"]').click();
@@ -485,26 +884,7 @@ describe('Canvas ready node authoring', () => {
     const node = '.react-flow__node[data-id="orphan-transform-1"]';
     const toggle =
       '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-toggle"]';
-    const readModel = (): {
-      root: IndexedRelation;
-      input: IndexedRelation;
-      fields: IndexedRelation['fields'];
-      types: readonly Type[];
-    } => {
-      const write = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)!;
-      const document = decodeDvtSubstraitSemanticDocument(
-        semanticDocumentFromWrite(write, 'orphan-transform-1')
-      );
-      const { index, schemas } = deriveSubstraitSchemas(document);
-      const root = index.relations.get(index.rootId)!;
-      const model = readCanvasTransformDependencyModel(root, (id) => index.relations.get(id)!);
-      return {
-        root,
-        input: model.input,
-        fields: root.fields,
-        types: schemas.get(index.rootId)!.map((field) => field.type),
-      };
-    };
+
     stubStatefulCanvasDraftAuthoring({ authoringGenerated: true, includeLooseNode: true });
     cy.viewport(1700, 1000);
     visitReadyCanvas();
@@ -512,37 +892,14 @@ describe('Canvas ready node authoring', () => {
     cy.get(edge).should('not.exist');
     connectCanvasNodes('Transform 1', 'Orphan Transform');
     cy.get(edge).should('be.visible');
-    cy.wrap(null).should(() => {
-      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
-        ?.body as CanvasDraftSaveRequestBody;
-      expect(
-        saved.draft.edges.some(
-          (item) => item.sourceId === 'dvt-transform-1' && item.targetId === 'orphan-transform-1'
-        )
-      ).to.equal(true);
-      expect(
-        saved.draft.nodes.find((entry) => entry.id === 'orphan-transform-1')?.metadata ?? {}
-      ).not.to.have.property('transformAuthoring');
-    });
+    cy.wrap(null).should(assertNativeChainConnectionDraft);
 
-    openWorkbenchModel('orphan-transform-1');
-    dragWorkbenchSource('Transform 1');
-    cy.get('[data-pending="true"][data-operator="read"]').closest('li').as('producer');
-    workbenchOperation('field_transform').click();
-    cy.get('[data-pending-operation="true"]').last().as('projection');
-    connectWorkbenchProducer('@producer', '@projection');
-    connectWorkbenchProducer(
-      '@projection',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
-    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
-    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    openNativeChainProjection();
     let rootId = '';
     let restoredIds: string[] = [];
     let inputTypes: unknown;
     cy.then(() => {
-      const model = readModel();
+      const model = readNativeChainModel();
       rootId = model.root.binding.relationId;
       expect(model.fields.map((field) => field.displayName)).to.deep.equal(['order_id', 'total']);
       expect(model.fields.map((field) => field.sourceFieldId)).to.deep.equal(
@@ -560,28 +917,25 @@ describe('Canvas ready node authoring', () => {
       .should('have.attr', 'data-included', 'true')
       .click();
     cy.wrap(null).should(() =>
-      expect(readModel().fields.map((field) => field.displayName)).to.deep.equal(['order_id'])
+      expect(readNativeChainModel().fields.map((field) => field.displayName)).to.deep.equal([
+        'order_id',
+      ])
     );
     cy.get(`${toggle}[data-field-name="total"]`)
       .should('have.attr', 'data-included', 'false')
       .and('not.have.attr', 'aria-disabled', 'true')
       .click();
     cy.wrap(null).should(() => {
-      const model = readModel();
+      const model = readNativeChainModel();
       expect(model.fields.map((field) => field.displayName)).to.deep.equal(['order_id', 'total']);
       expect(model.root.binding.relationId).to.equal(rootId);
       expect(model.types, 'source nullability and types retained').to.deep.equal(inputTypes);
       restoredIds = model.fields.map((field) => field.fieldId);
     });
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
-    cy.get(`${toggle}[data-field-name="total"]`)
-      .closest('[data-slot="relation-output-field"]')
-      .should('have.attr', 'draggable', 'true')
-      .focus()
-      .should('be.focused')
-      .type('{alt}{uparrow}');
+    moveNativeChainTotalOutput(toggle);
     cy.wrap(null).should(() => {
-      const model = readModel();
+      const model = readNativeChainModel();
       expect(model.fields.map((field) => field.displayName)).to.deep.equal(['total', 'order_id']);
       expect(model.fields.map((field) => field.fieldId)).to.deep.equal([
         restoredIds[1],
@@ -590,39 +944,7 @@ describe('Canvas ready node authoring', () => {
       expect(model.root.binding.relationId).to.equal(rootId);
     });
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
-    visitReadyCanvas('/canvas?reload=model-chain');
-    cy.get(edge).should('be.visible');
-    cy.get(node)
-      .contains('[role="tab"]', /^Output/)
-      .click();
-    cy.get(node).contains('button[aria-expanded]', 'Columns').click();
-    cy.get(`${node} [data-slot="graph-node-column-piece"]`).should(($fields) => {
-      expect([...$fields].map((field) => field.dataset.columnName)).to.deep.equal([
-        'total',
-        'order_id',
-      ]);
-      expect([...$fields].map((field) => field.dataset.fieldId)).to.deep.equal([
-        restoredIds[1],
-        restoredIds[0],
-      ]);
-    });
-    cy.get(`${node} [data-slot="graph-node-column-piece"][data-column-name="total"]`)
-      .should('have.attr', 'data-output', 'true')
-      .and('have.attr', 'draggable', 'true')
-      .closest('[data-slot="graph-node-column-row"]')
-      .find('[data-slot="canvas-node-port-handle"][data-port="source"]')
-      .should(($handle) =>
-        expect($handle.attr('data-handleid')).to.equal(
-          'column:source:' +
-            encodeURIComponent('orphan-transform-1') +
-            ':' +
-            encodeURIComponent(restoredIds[1]!)
-        )
-      );
-    openWorkbenchModel('orphan-transform-1');
-    cy.then(() =>
-      cy.get(`[data-operator="project"][data-relation-id="${rootId}"]`).should('have.length', 1)
-    );
+    assertReopenedNativeChain({ edge, node, readState: () => ({ restoredIds, rootId }) });
   });
 
   describe('native context-menu boundary', () => {
@@ -695,7 +1017,11 @@ describe('Canvas ready node authoring', () => {
 
     cy.contains('.react-flow__node', 'Src Orders').as('sourceNode').should('be.visible');
     const sourceCard = '.react-flow__node[data-id="src_orders"] [data-slot="graph-node-card"]';
-    assertComputedColorRole(sourceCard, 'border-top-color', '--status-success');
+    assertComputedColorRole({
+      selector: sourceCard,
+      property: 'border-top-color',
+      token: '--status-success',
+    });
     cy.get('@sourceNode')
       .find('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]')
       .should('be.visible')
@@ -706,7 +1032,11 @@ describe('Canvas ready node authoring', () => {
         resolveComputedPaletteColor(style.getPropertyValue('--primary').trim())
       );
     });
-    assertComputedColorRole(sourceCard, 'border-top-color', '--status-success');
+    assertComputedColorRole({
+      selector: sourceCard,
+      property: 'border-top-color',
+      token: '--status-success',
+    });
     cy.get('@sourceNode')
       .should('have.attr', 'aria-label')
       .and('match', /Ready$/);
@@ -715,7 +1045,11 @@ describe('Canvas ready node authoring', () => {
 
     cy.contains('.react-flow__node', 'Model Orders').as('ordersNode').should('be.visible').click();
     const modelCard = '.react-flow__node[data-id="model_orders"] [data-slot="graph-node-card"]';
-    assertComputedColorRole(modelCard, 'border-top-color', '--border-strong');
+    assertComputedColorRole({
+      selector: modelCard,
+      property: 'border-top-color',
+      token: '--border-strong',
+    });
     cy.get(modelCard).should(($card) => {
       const style = $card[0]!.ownerDocument.defaultView!.getComputedStyle($card[0]!);
       expect(style.boxShadow).to.contain(
@@ -840,92 +1174,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-node-workbench-inputs-outputs-content"]')
       .should('be.visible')
       .then(($section) => {
-        const section = $section.get(0);
-        const sectionRect = section.getBoundingClientRect();
-        const records = section.querySelectorAll<HTMLElement>(
-          '[data-slot="node-property-relationship-record"]'
-        );
-
-        expect(section.querySelector('table')).to.equal(null);
-        expect(records).to.have.length(2);
-        expect(section.textContent).to.contain(longRelatedNodeName);
-
-        const window = section.ownerDocument.defaultView!;
-        const panelRect = section
-          .closest('[data-slot="canvas-node-workbench-panel"]')!
-          .getBoundingClientRect();
-        const visibleLeft = Math.max(0, sectionRect.left, panelRect.left);
-        const visibleRight = Math.min(window.innerWidth, sectionRect.right, panelRect.right);
-        const visibleTop = Math.max(0, sectionRect.top, panelRect.top);
-        const visibleBottom = Math.min(window.innerHeight, sectionRect.bottom, panelRect.bottom);
-        records.forEach((record, index) => {
-          const summary = record.querySelector<HTMLElement>(
-            '[data-slot="node-property-relationship-summary"]'
-          )!;
-          expect(summary, 'business relationship summary').not.to.equal(null);
-          const [direction, node, relation] = ['direction', 'node', 'relation'].map((slot) => {
-            const value = summary.querySelector<HTMLElement>(
-              `[data-slot="node-property-relationship-${slot}"]`
-            );
-            expect(value, `relationship ${slot}`).not.to.equal(null);
-            return value!;
-          });
-          expect(direction!.textContent).to.equal('Input');
-          expect(node!.textContent).to.equal(index === 0 ? longRelatedNodeName : '-');
-          expect(relation!.textContent?.toLowerCase()).to.equal('lineage');
-          const values = [direction!, node!, relation!];
-          const centers = values.map((value) => {
-            const bounds = value.getBoundingClientRect();
-            return bounds.top + bounds.height / 2;
-          });
-          expect(
-            Math.max(...centers) - Math.min(...centers),
-            'direction, business name and relation share one summary line'
-          ).to.be.lessThan(1);
-          const connection = record.querySelector<HTMLElement>(
-            '[data-slot="node-property-relationship-connection"]'
-          );
-          if (connection != null) {
-            expect(connection.textContent?.trim(), 'connection context').not.to.equal('');
-            expect(
-              connection.getBoundingClientRect().top,
-              'connection is secondary'
-            ).to.be.at.least(summary.getBoundingClientRect().bottom);
-            values.push(connection);
-          }
-          for (const value of values) {
-            const bounds = value.getBoundingClientRect();
-            expect(bounds.width, 'business value is visible').to.be.greaterThan(0);
-            expect(bounds.height, 'business value is visible').to.be.greaterThan(0);
-            expect(bounds.left).to.be.at.least(visibleLeft - 1);
-            expect(bounds.right).to.be.at.most(visibleRight + 1);
-            expect(bounds.top).to.be.at.least(visibleTop - 1);
-            expect(bounds.bottom).to.be.at.most(visibleBottom + 1);
-            expect(value.scrollWidth, 'complete value fits available width').to.be.at.most(
-              value.clientWidth + 1
-            );
-            expect(value.scrollHeight, 'wrapped value is not clipped').to.be.at.most(
-              value.clientHeight + 1
-            );
-          }
-          expect(record.querySelector('dt, dd'), 'no obsolete property-label stack').to.equal(null);
-          const accessibleText = [
-            record.textContent,
-            ...[record, ...record.querySelectorAll('*')].flatMap((element) =>
-              ['title', 'aria-label', 'aria-description'].map(
-                (attribute) => element.getAttribute(attribute) ?? ''
-              )
-            ),
-          ].join(' ');
-          for (const id of [
-            'raw_orders',
-            'warehouse_payments',
-            'orders_model',
-            'edge_raw_orders_model',
-            'edge_warehouse_payments_model',
-          ])
-            expect(accessibleText, 'technical graph identities remain private').not.to.include(id);
-        });
+        assertBusinessRelationshipSection($section, longRelatedNodeName);
       });
     cy.then(() =>
       expect(
@@ -945,81 +1194,9 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="raw_orders"]')
-      .should('contain.text', 'source')
-      .and('not.contain.text', 'dbt:source')
-      .find('[data-slot="graph-node-operational-rail"]')
-      .should('not.exist');
-    openNodeProperties('raw_orders');
-    cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
-    const rows = '[data-slot="source-card-appearance-rows"]';
-    const size = '[data-slot="source-card-appearance-size"]';
-    const rail =
-      '.react-flow__node[data-id="raw_orders"] [data-slot="graph-node-operational-rail"]';
-    cy.get(rows).should('have.attr', 'aria-checked', 'false').focus();
-    cy.press(Cypress.Keyboard.Keys.SPACE);
-    cy.get(rows).should('have.attr', 'aria-checked', 'true').click();
-    cy.get(rail).should('not.exist');
-    cy.get(rows).click();
-    cy.get(rail).should('contain.text', 'Rows').and('not.contain.text', 'Size');
-    cy.get(size).should('have.attr', 'aria-checked', 'false').click();
-    cy.then(() =>
-      expect(
-        getE2eApiCalls('/workspace/graph/draft', 'PUT'),
-        'card preferences stay local'
-      ).to.have.length(0)
-    );
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get(
-      '.react-flow__node[data-id="orders_model"] [data-slot="graph-node-operational-rail"]'
-    ).should('not.exist');
-    cy.get('.react-flow__node[data-id="raw_orders"]')
-      .find('[data-slot="graph-node-operational-rail"]')
-      .should('contain.text', 'Rows')
-      .and('contain.text', '18.2k')
-      .and('contain.text', 'Size')
-      .and('contain.text', '3.9 MB');
+    inspectDbtSourceAppearance();
 
-    const payments = '.react-flow__node[data-id="warehouse_payments"]';
-    const columnToggle = `${payments} [data-slot="graph-node-column-toggle"]`;
-    openNodeProperties('warehouse_payments');
-    cy.get('[data-slot="canvas-node-workbench-tab-appearance"]').click();
-    cy.get(rows).should('have.attr', 'aria-checked', 'false');
-    cy.get(columnToggle).should('contain.text', 'Columns (2)');
-    cy.get('[data-slot="source-card-appearance-columns"]').click();
-    cy.get(columnToggle).should('not.exist');
-    cy.get('[data-slot="source-card-appearance-columns"]').click();
-    cy.get(columnToggle).should('contain.text', 'Columns (2)').click();
-    const type = `${payments} [data-slot="graph-node-column-type"]`;
-    const nullability = `${payments} [data-slot="graph-node-column-nullability"]`;
-    cy.get(type).first().should('not.have.css', 'display', 'none');
-    cy.get(nullability).first().should('not.have.css', 'display', 'none');
-    cy.get('[data-slot="source-card-appearance-types"]').click();
-    cy.get('[data-slot="source-card-appearance-nullability"]').click();
-    cy.get(type).first().should('have.css', 'display', 'none');
-    cy.get(nullability).first().should('have.css', 'display', 'none');
-    const card = `${payments} [data-slot="graph-node-card"]`;
-    cy.get(card)
-      .invoke('css', 'background-color')
-      .then((before) => {
-        cy.get<HTMLInputElement>('[data-slot="source-card-appearance"] input[type="color"]').then(
-          ($swatch) => {
-            const input = $swatch[0]!;
-            const view = input.ownerDocument.defaultView!;
-            Object.getOwnPropertyDescriptor(view.HTMLInputElement.prototype, 'value')!.set!.call(
-              input,
-              '#c62828'
-            );
-            input.dispatchEvent(new view.Event('input', { bubbles: true }));
-          }
-        );
-        cy.get(card).invoke('css', 'background-color').should('not.equal', before);
-      });
-    cy.get(card)
-      .find('[data-slot="graph-node-card-header"]')
-      .invoke('css', 'background-image')
-      .should('include', 'linear-gradient');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    inspectDbtPaymentAppearance();
 
     cy.get('.react-flow__node[data-id="orders_model"]').as('ordersModel').should('be.visible');
     openNodeProperties('orders_model');
@@ -1040,27 +1217,7 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('roundtrips manual Source and Sink properties without exposing unresolved Model Code', () => {
-    const draft = stubStatefulCanvasDraftAuthoring({
-      authoringGenerated: true,
-      title: 'DVT properties roundtrip',
-    });
-    const modelAuthoring = draft.nodes.find((node) => node.id === 'dvt-transform-1')!.metadata!
-      .transformAuthoring as { semanticDocument: unknown };
-    const originalSemanticDocument = structuredClone(modelAuthoring.semanticDocument);
-    expect(originalSemanticDocument, 'initial canonical Model document').not.to.be.undefined;
-    const sinkConfig = draft.nodes.find((node) => node.id === 'sink-1')!.metadata!.config as {
-      materialization: string;
-      writeMode: string;
-    };
-    sinkConfig.materialization = 'view';
-    sinkConfig.writeMode = 'append';
-    const sourceMetadata = draft.nodes.find((node) => node.id === 'source-1')!.metadata!;
-    delete sourceMetadata.connectedSourceRef;
-    sourceMetadata.connectionRef = {
-      schemaVersion: 'connection-ref.v1',
-      provider: 'postgres',
-      connectionId: 'warehouse-a',
-    };
+    const originalSemanticDocument = prepareManualPropertiesDraft();
 
     visitReadyCanvas();
 
@@ -1074,23 +1231,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('input[name="dvt-source-alias"]').clear().type('orders_curated');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
-      const savedSource = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .find((body) => {
-          const node = body.draft.nodes.find((candidate) => candidate.id === 'source-1');
-          const config = node?.metadata?.config as
-            { alias?: string; database?: string; schema?: string; table?: string } | undefined;
-          return (
-            config?.schema === 'curated' &&
-            config.table === 'orders_clean' &&
-            config.alias === 'orders_curated' &&
-            config.database === 'legacy_warehouse' &&
-            (node?.metadata?.connectionRef as { connectionId?: string } | undefined)
-              ?.connectionId === 'warehouse-b'
-          );
-        });
-      expect(savedSource, 'saved Source properties').to.not.be.undefined;
-      assertModelSemanticDocumentUnchanged(savedSource!.draft, originalSemanticDocument);
+      assertSavedManualSourceProperties(originalSemanticDocument);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
@@ -1106,31 +1247,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('select[name="dvt-sink-write-mode"] option[value="append"]').should('be.disabled');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
-      const savedSink = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .find((body) => {
-          const node = body.draft.nodes.find((candidate) => candidate.id === 'sink-1');
-          const config = node?.metadata?.config as
-            | {
-                database?: string;
-                materialization?: string;
-                partitionStrategy?: string;
-                schema?: string;
-                table?: string;
-                writeMode?: string;
-              }
-            | undefined;
-          return (
-            config?.schema === 'published' &&
-            config.table === 'orders_monthly' &&
-            config.materialization === 'view' &&
-            config.writeMode === 'append' &&
-            config.database === 'legacy_warehouse' &&
-            config.partitionStrategy === 'daily_by_order_date'
-          );
-        });
-      expect(savedSink, 'saved Sink properties').to.not.be.undefined;
-      assertModelSemanticDocumentUnchanged(savedSink!.draft, originalSemanticDocument);
+      assertSavedManualSinkProperties(originalSemanticDocument);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 

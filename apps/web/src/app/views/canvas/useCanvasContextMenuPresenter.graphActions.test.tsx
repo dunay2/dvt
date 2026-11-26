@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import {
@@ -17,9 +17,9 @@ function PresenterHarness({
   onSetEdgeExecutionGate,
   onPresenter,
 }: Readonly<{
-  onCreateAuthoringNode: ReturnType<typeof vi.fn>;
-  onEdgesChange: ReturnType<typeof vi.fn>;
-  onSetEdgeExecutionGate: ReturnType<typeof vi.fn>;
+  onCreateAuthoringNode: Mock;
+  onEdgesChange: Mock;
+  onSetEdgeExecutionGate: Mock;
   onPresenter: (presenter: CanvasContextMenuPresenter) => void;
 }>): null {
   const presenter = useCanvasContextMenuPresenter({
@@ -39,9 +39,9 @@ function PresenterHarness({
 
 describe('useCanvasContextMenuPresenter graph actions', () => {
   let container: HTMLDivElement;
-  let onCreateAuthoringNode: ReturnType<typeof vi.fn>;
-  let onEdgesChange: ReturnType<typeof vi.fn>;
-  let onSetEdgeExecutionGate: ReturnType<typeof vi.fn>;
+  let onCreateAuthoringNode: Mock;
+  let onEdgesChange: Mock;
+  let onSetEdgeExecutionGate: Mock;
   let presenter: CanvasContextMenuPresenter | null;
   let root: Root;
 

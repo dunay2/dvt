@@ -19,9 +19,40 @@ function connectDiscoveredJoin(): void {
     cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', name)
       .closest('li')
       .as('source');
-    connectWorkbenchProducer('@source', '@join', port);
+    connectWorkbenchProducer({ producer: '@source', consumer: '@join', port: port });
   }
-  connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+  connectWorkbenchProducer({
+    producer: '@join',
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
+}
+
+function assertBigintJoinPredicate(selected: Awaited<ReturnType<typeof querySelectedJoin>>): void {
+  expect(selected.conditions, 'authored join predicates').not.to.equal(undefined);
+  const condition = selected.conditions![0]!;
+  expect(condition, 'authored field predicate').not.to.equal(null).and.not.to.equal(undefined);
+  if (condition.kind === 'group') throw new Error('Missing field predicate');
+  if (condition.left.kind !== 'field') throw new Error('Missing field predicate');
+  const right = condition.right!;
+  expect(right, 'right field operand').not.to.equal(undefined);
+  if (right.kind !== 'field') throw new Error('Missing field predicate');
+  const types = readJoinInputFieldTypes(selected);
+  expect(types.get(condition.left.sourceFieldId)).to.equal('i64');
+  expect(types.get(right.sourceFieldId)).to.equal('i64');
+}
+
+function readJoinInputFieldTypes(
+  selected: Awaited<ReturnType<typeof querySelectedJoin>>
+): Map<string, string | undefined> {
+  return new Map(
+    selected.inputs.flatMap((input) =>
+      input.bindings.map((binding) => [
+        binding.fieldId,
+        input.fields[binding.outputOrdinal]!.type.kind.case,
+      ])
+    )
+  );
 }
 
 describe('Canonical operation discovery', () => {
@@ -90,24 +121,7 @@ describe('Canonical operation discovery', () => {
       session.receive(savedOutputs().document);
       try {
         const selected = await querySelectedJoin(session, session.rootId, session.revision);
-        const condition = selected.conditions?.[0];
-        if (
-          condition == null ||
-          condition.kind === 'group' ||
-          condition.left.kind !== 'field' ||
-          condition.right?.kind !== 'field'
-        )
-          throw new Error('Missing field predicate');
-        const types = new Map(
-          selected.inputs.flatMap((input) =>
-            input.bindings.map((binding) => [
-              binding.fieldId,
-              input.fields[binding.outputOrdinal]!.type.kind.case,
-            ])
-          )
-        );
-        expect(types.get(condition.left.sourceFieldId)).to.equal('i64');
-        expect(types.get(condition.right.sourceFieldId)).to.equal('i64');
+        assertBigintJoinPredicate(selected);
       } finally {
         session.dispose();
       }

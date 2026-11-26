@@ -135,6 +135,29 @@ describe('Canvas fan-in connection provenance', () => {
             );
           }
         );
+        if (!conflicting && !reversed) {
+          cy.get('[data-slot="canvas-node-workbench-close"]').click();
+          openProperties('join-transform');
+          cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').click();
+          cy.contains('[data-slot="node-property-relationship-record"]', firstSource.name)
+            .find('button')
+            .click();
+          const target = `.react-flow__node[data-id="${firstSource.id}"]`;
+          cy.get(target).should('not.have.class', 'selected');
+          cy.contains('[data-slot="node-property-relationship-record"]', firstSource.name)
+            .find('button')
+            .dblclick();
+          cy.get(target)
+            .should('have.class', 'selected')
+            .and(($node) => {
+              const viewport = $node[0]!.closest('[data-testid="canvas-viewport"]')!;
+              const view = viewport.getBoundingClientRect();
+              const node = $node[0]!.getBoundingClientRect();
+              const dx = node.left + node.width / 2 - view.left - view.width / 2;
+              const dy = node.top + node.height / 2 - view.top - view.height / 2;
+              expect(Math.hypot(dx, dy), 'distance from viewport center').to.be.lessThan(18);
+            });
+        }
         cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
       });
     }

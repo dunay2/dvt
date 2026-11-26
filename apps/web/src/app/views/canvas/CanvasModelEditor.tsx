@@ -28,27 +28,10 @@ import { CanvasModelSqlEditorAction } from './model-sql/CanvasModelSqlEditorActi
 import { resolveModelSqlCopy } from './model-sql/modelSqlCopy';
 import { useCanvasModelDraftHandle } from './model-sql/useCanvasModelDraftHandle';
 import { useCanvasModelSqlPanelLayout } from './model-sql/useCanvasModelSqlPanelLayout';
+import { useCanvasModelSqlLayout } from './model-sql/useCanvasModelSqlLayout';
 import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 
-export function CanvasModelEditor({
-  canvasId,
-  workspaceScope,
-  transformNode,
-  nodes,
-  edges,
-  authoring,
-  draftStatus,
-  query,
-  preparePreview,
-  operationDataHost,
-  onOpenOperationData,
-  onExecuteSource,
-  onClose,
-  active = true,
-  onSelect,
-  onShowCanvas,
-  initialView = 'semantic',
-}: Readonly<{
+type CanvasModelEditorProps = Readonly<{
   canvasId: string;
   workspaceScope?: WorkspaceScope;
   transformNode: CanonicalNode;
@@ -66,10 +49,103 @@ export function CanvasModelEditor({
   onSelect: () => void;
   onShowCanvas: () => void;
   initialView?: CanvasModelView;
-}>): JSX.Element {
+}>;
+
+export function CanvasModelEditor(props: CanvasModelEditorProps): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const treeCopy = resolveCanvasViewCopy(language);
+  const sqlCopy = resolveModelSqlCopy(language);
+  const sql = useCanvasModelSqlWorkspace(props);
+  const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
+  const navigation = useCanvasModelWorkspaceNavigation(props, sql, copy);
+  return (
+    <CanvasModelEditorTemplate
+      sqlPanelRef={sql.sqlPanelRef}
+      label={`${props.transformNode.name} · ${copy.editor}`}
+      semanticBlocked={sql.sqlApplying}
+      footer={
+        <CanvasModelEditorToolbar
+          modelName={props.transformNode.name}
+          draftStatus={props.draftStatus}
+          sqlOpen={sql.sqlOpen}
+          sqlPanelId={sql.sqlPanelId}
+          copy={sqlCopy}
+          onActionsHost={setActionsHost}
+          onToggleSql={() => sql.setSqlOpen((open) => !open)}
+        />
+      }
+      editor={
+        <CanvasModelSemanticWorkspace
+          canvasId={props.canvasId}
+          transformNode={props.transformNode}
+          nodes={props.nodes}
+          edges={props.edges}
+          authoring={props.authoring}
+          active={props.active ?? true}
+          copy={treeCopy}
+          sqlApplying={sql.sqlApplying}
+          sqlEditorAction={sql.sqlEditorAction}
+          workbench={sql.workbench}
+          codeProjection={sql.codeProjection}
+          layoutKey={sql.layoutKey}
+          layoutTransition={sql.modelLayout.transition}
+          actionsHost={actionsHost}
+          query={props.query}
+          preparePreview={props.preparePreview}
+          operationDataHost={sql.dataOwner === 'operation' ? props.operationDataHost : null}
+          onExecuteSource={
+            props.onExecuteSource == null
+              ? undefined
+              : (...args) => {
+                  sql.setDataOwner('operation');
+                  props.onExecuteSource!(...args);
+                }
+          }
+          onOpenOperationData={() => {
+            sql.setDataOwner('operation');
+            props.onOpenOperationData?.();
+          }}
+        />
+      }
+      sqlOpen={sql.sqlOpen}
+      sql={
+        <CanvasModelSqlWorkspacePanel
+          canvasId={props.canvasId}
+          transformNode={props.transformNode}
+          active={props.active ?? true}
+          authoring={props.authoring}
+          preparePreview={props.preparePreview}
+          operationDataHost={props.operationDataHost}
+          onOpenOperationData={props.onOpenOperationData}
+          workspace={sql}
+        />
+      }
+      guards={
+        <>
+          <CanvasModelNavigationGuard
+            workbench={sql.combinedWorkbench}
+            hasUnpersistedChanges={props.draftStatus.persistence !== 'durable'}
+            onBlocked={navigation.onRouteBlocked}
+          />
+          <CanvasDraftDecisionDialog {...navigation.decision} />
+        </>
+      }
+    />
+  );
+}
+
+function useCanvasModelSqlWorkspace({
+  canvasId,
+  workspaceScope,
+  transformNode,
+  nodes,
+  edges,
+  initialView = 'semantic',
+}: Pick<
+  CanvasModelEditorProps,
+  'canvasId' | 'workspaceScope' | 'transformNode' | 'nodes' | 'edges' | 'initialView'
+>) {
   const sqlQuery = useOptionalCanvasTransformSqlQueryPort();
   const scopeKey =
     workspaceScope == null
@@ -85,6 +161,12 @@ export function CanvasModelEditor({
   const [sqlOpen, setSqlOpen] = useState(initialView === 'sql');
   const sqlPanelRef = useCanvasModelSqlPanelLayout(sqlOpen);
   const [sqlApplying, setSqlApplying] = useState(false);
+  const layoutKey = canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id);
+  const modelLayout = useCanvasModelSqlLayout({
+    layoutKey,
+    node: transformNode,
+    pending: sqlApplying,
+  });
   const sqlPanelId = useId();
   const openSql = useCallback(() => setSqlOpen(true), []);
   const sqlEditorAction = useMemo(
@@ -92,145 +174,274 @@ export function CanvasModelEditor({
     [openSql, sqlPanelId, sqlOpen]
   );
   const [dataOwner, setDataOwner] = useState<'operation' | 'sql'>('operation');
-  const sqlCopy = resolveModelSqlCopy(language);
   const sqlRevision = useMemo(
-    () =>
-      JSON.stringify([
-        scopeKey,
-        canvasId,
-        transformNode.id,
-        nodes.map((node) => [
-          node.id,
-          node.name,
-          node.kind,
-          node.pluginId,
-          node.role,
-          node.definitionId,
-          node.sourceDefinitionId,
-          node.path,
-          node.metadata,
-        ]),
-        edges,
-      ]),
+    () => modelSqlWorkspaceRevision({ scopeKey, canvasId, nodeId: transformNode.id, nodes, edges }),
     [scopeKey, canvasId, transformNode.id, nodes, edges]
   );
-  const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
+  return {
+    scopeKey,
+    codeProjection,
+    workbench,
+    sqlWorkbench,
+    combinedWorkbench,
+    sqlOpen,
+    setSqlOpen,
+    sqlPanelRef,
+    sqlApplying,
+    setSqlApplying,
+    layoutKey,
+    modelLayout,
+    sqlPanelId,
+    openSql,
+    sqlEditorAction,
+    dataOwner,
+    setDataOwner,
+    sqlRevision,
+  };
+}
+
+function modelSqlWorkspaceRevision({
+  scopeKey,
+  canvasId,
+  nodeId,
+  nodes,
+  edges,
+}: Pick<CanvasModelEditorProps, 'canvasId' | 'nodes' | 'edges'> &
+  Readonly<{ scopeKey: string | undefined; nodeId: string }>): string {
+  return JSON.stringify([
+    scopeKey,
+    canvasId,
+    nodeId,
+    nodes.map((node) => [
+      node.id,
+      node.name,
+      node.kind,
+      node.pluginId,
+      node.role,
+      node.definitionId,
+      node.sourceDefinitionId,
+      node.path,
+      node.metadata,
+    ]),
+    edges,
+  ]);
+}
+
+function CanvasModelEditorToolbar({
+  modelName,
+  draftStatus,
+  sqlOpen,
+  sqlPanelId,
+  copy,
+  onActionsHost,
+  onToggleSql,
+}: Readonly<{
+  modelName: string;
+  draftStatus: CanvasDraftStatusState;
+  sqlOpen: boolean;
+  sqlPanelId: string;
+  copy: ReturnType<typeof resolveModelSqlCopy>;
+  onActionsHost: (host: HTMLDivElement | null) => void;
+  onToggleSql: () => void;
+}>): JSX.Element {
+  return (
+    <CanvasModelToolbar
+      data={{
+        modelName: modelName,
+        draftStatus,
+        sqlOpen,
+        sqlPanelId,
+        sqlLabel: sqlOpen ? copy.close : copy.open,
+      }}
+      actions={{
+        onActionsHost: onActionsHost,
+        onToggleSql,
+      }}
+    />
+  );
+}
+
+function CanvasModelSemanticWorkspace({
+  canvasId,
+  transformNode,
+  nodes,
+  edges,
+  authoring,
+  active,
+  copy: treeCopy,
+  sqlApplying,
+  sqlEditorAction,
+  workbench,
+  codeProjection,
+  layoutKey,
+  layoutTransition,
+  actionsHost,
+  query,
+  preparePreview,
+  operationDataHost,
+  onExecuteSource,
+  onOpenOperationData,
+}: Pick<
+  CanvasModelEditorProps,
+  | 'canvasId'
+  | 'transformNode'
+  | 'nodes'
+  | 'edges'
+  | 'authoring'
+  | 'query'
+  | 'preparePreview'
+  | 'operationDataHost'
+  | 'onExecuteSource'
+  | 'onOpenOperationData'
+> &
+  Readonly<{
+    active: boolean;
+    copy: ReturnType<typeof resolveCanvasViewCopy>;
+    sqlApplying: boolean;
+    sqlEditorAction: React.ContextType<typeof CanvasModelSqlEditorAction>;
+    workbench: React.RefObject<CanvasRelationalTreeWorkbenchHandle>;
+    codeProjection: React.ComponentProps<typeof CanvasRelationalTreeWorkbench>['codeProjection'];
+    layoutKey?: string;
+    layoutTransition: React.ComponentProps<
+      typeof CanvasRelationalTreeWorkbench
+    >['layoutTransition'];
+    actionsHost: HTMLDivElement | null;
+  }>): JSX.Element {
+  return (
+    <CanvasModelSqlEditorAction.Provider value={sqlEditorAction}>
+      <CanvasRelationalTreeWorkbench
+        ref={workbench}
+        active={active && !sqlApplying}
+        codeProjection={codeProjection}
+        layoutKey={layoutKey}
+        layoutTransition={layoutTransition}
+        transformNode={transformNode}
+        nodes={nodes}
+        edges={edges}
+        copy={treeCopy}
+        authoring={
+          sqlApplying && authoring != null ? { ...authoring, canEditNode: false } : authoring
+        }
+        actionsHost={actionsHost}
+        preview={{
+          canvasId,
+          query,
+          onExecuteSource,
+          preparePreview,
+          dataHost: operationDataHost,
+          onOpenData: onOpenOperationData,
+        }}
+      />
+    </CanvasModelSqlEditorAction.Provider>
+  );
+}
+
+type CanvasModelSqlWorkspace = ReturnType<typeof useCanvasModelSqlWorkspace>;
+
+function useCanvasModelWorkspaceNavigation(
+  props: Pick<
+    CanvasModelEditorProps,
+    | 'canvasId'
+    | 'transformNode'
+    | 'draftStatus'
+    | 'preparePreview'
+    | 'onClose'
+    | 'onSelect'
+    | 'onShowCanvas'
+    | 'active'
+  >,
+  sql: Pick<
+    CanvasModelSqlWorkspace,
+    'combinedWorkbench' | 'sqlOpen' | 'setSqlOpen' | 'sqlPanelId' | 'sqlApplying' | 'openSql'
+  >,
+  copy: ReturnType<typeof resolveCanvasSemanticEditorCopy>
+) {
   const navigation = useCanvasModelNavigation({
-    workbench: combinedWorkbench,
-    onClose,
-    preparePreview,
-    draftStatus,
+    workbench: sql.combinedWorkbench,
+    onClose: props.onClose,
+    preparePreview: props.preparePreview,
+    draftStatus: props.draftStatus,
     copy,
   });
-  const { onRouteBlocked } = navigation;
   useCanvasModelWorkspaceTab({
-    canvasId,
-    nodeId: transformNode.id,
-    label: transformNode.name,
-    active,
-    onSelect,
-    onCanvas: onShowCanvas,
+    canvasId: props.canvasId,
+    nodeId: props.transformNode.id,
+    label: props.transformNode.name,
+    active: props.active ?? true,
+    onSelect: props.onSelect,
+    onCanvas: props.onShowCanvas,
     views: {
-      active: sqlOpen ? 'sql' : 'semantic',
-      sqlPanelId,
-      disabled: sqlApplying,
-      semantic: () => setSqlOpen(false),
-      sql: openSql,
+      active: sql.sqlOpen ? 'sql' : 'semantic',
+      sqlPanelId: sql.sqlPanelId,
+      disabled: sql.sqlApplying,
+      semantic: () => sql.setSqlOpen(false),
+      sql: sql.openSql,
     },
     onClose: (continuation) => {
-      onSelect();
+      props.onSelect();
       navigation.requestClose(continuation);
     },
   });
+  return navigation;
+}
+
+function CanvasModelSqlWorkspacePanel({
+  canvasId,
+  transformNode,
+  active,
+  authoring,
+  preparePreview,
+  operationDataHost,
+  onOpenOperationData,
+  workspace,
+}: Pick<
+  CanvasModelEditorProps,
+  | 'canvasId'
+  | 'transformNode'
+  | 'authoring'
+  | 'preparePreview'
+  | 'operationDataHost'
+  | 'onOpenOperationData'
+> &
+  Readonly<{
+    active: boolean;
+    workspace: Pick<
+      CanvasModelSqlWorkspace,
+      | 'sqlWorkbench'
+      | 'sqlPanelId'
+      | 'scopeKey'
+      | 'sqlRevision'
+      | 'sqlOpen'
+      | 'workbench'
+      | 'setSqlOpen'
+      | 'setSqlApplying'
+      | 'modelLayout'
+      | 'dataOwner'
+      | 'setDataOwner'
+    >;
+  }>): JSX.Element {
   return (
-    <CanvasModelEditorTemplate
-      sqlPanelRef={sqlPanelRef}
-      label={`${transformNode.name} · ${copy.editor}`}
-      semanticBlocked={sqlApplying}
-      footer={
-        <CanvasModelToolbar
-          data={{
-            modelName: transformNode.name,
-            draftStatus,
-            sqlOpen,
-            sqlPanelId,
-            sqlLabel: sqlOpen ? sqlCopy.close : sqlCopy.open,
-          }}
-          actions={{
-            onActionsHost: setActionsHost,
-            onToggleSql: () => setSqlOpen((open) => !open),
-          }}
-        />
-      }
-      editor={
-        <CanvasModelSqlEditorAction.Provider value={sqlEditorAction}>
-          <CanvasRelationalTreeWorkbench
-            ref={workbench}
-            active={active && !sqlApplying}
-            codeProjection={codeProjection}
-            layoutKey={canvasModelLayoutKey(workspaceScope, canvasId, transformNode.id)}
-            transformNode={transformNode}
-            nodes={nodes}
-            edges={edges}
-            copy={treeCopy}
-            authoring={
-              sqlApplying && authoring != null ? { ...authoring, canEditNode: false } : authoring
-            }
-            actionsHost={actionsHost}
-            preview={{
-              canvasId,
-              query,
-              onExecuteSource:
-                onExecuteSource == null
-                  ? undefined
-                  : (...args) => {
-                      setDataOwner('operation');
-                      onExecuteSource(...args);
-                    },
-              preparePreview,
-              dataHost: dataOwner === 'operation' ? operationDataHost : null,
-              onOpenData: () => {
-                setDataOwner('operation');
-                onOpenOperationData?.();
-              },
-            }}
-          />
-        </CanvasModelSqlEditorAction.Provider>
-      }
-      sqlOpen={sqlOpen}
-      sql={
-        <CanvasModelSqlPanel
-          ref={sqlWorkbench}
-          panelId={sqlPanelId}
-          canvasId={canvasId}
-          node={transformNode}
-          scopeKey={scopeKey}
-          revision={sqlRevision}
-          open={sqlOpen}
-          active={active}
-          visual={workbench}
-          authoring={authoring}
-          preparePreview={preparePreview}
-          onClose={() => setSqlOpen(false)}
-          onApplyingChange={setSqlApplying}
-          dataHost={operationDataHost}
-          ownsData={dataOwner === 'sql'}
-          onOpenData={() => {
-            setDataOwner('sql');
-            onOpenOperationData?.();
-          }}
-        />
-      }
-      guards={
-        <>
-          <CanvasModelNavigationGuard
-            workbench={combinedWorkbench}
-            hasUnpersistedChanges={draftStatus.persistence !== 'durable'}
-            onBlocked={onRouteBlocked}
-          />
-          <CanvasDraftDecisionDialog {...navigation.decision} />
-        </>
-      }
+    <CanvasModelSqlPanel
+      ref={workspace.sqlWorkbench}
+      panelId={workspace.sqlPanelId}
+      canvasId={canvasId}
+      node={transformNode}
+      scopeKey={workspace.scopeKey}
+      revision={workspace.sqlRevision}
+      open={workspace.sqlOpen}
+      active={active}
+      visual={workspace.workbench}
+      authoring={authoring}
+      preparePreview={preparePreview}
+      onClose={() => workspace.setSqlOpen(false)}
+      onApplyingChange={workspace.setSqlApplying}
+      captureGeneratedLayout={workspace.modelLayout.capture}
+      dataHost={operationDataHost}
+      ownsData={workspace.dataOwner === 'sql'}
+      onOpenData={() => {
+        workspace.setDataOwner('sql');
+        onOpenOperationData?.();
+      }}
     />
   );
 }

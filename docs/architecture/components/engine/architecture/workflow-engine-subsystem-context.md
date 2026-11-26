@@ -68,11 +68,9 @@ Declared southbound port surface:
 - `IPlanIntegrityValidator` (`runtime-wired plan integrity gate`)
 - `IRunExecutionContextResolver` (`optional runtime wiring`)
 - `IProjector` (`package-exposed target seam`)
-- `IMetricsCollector` (`source-tree target seam`)
 
-Current runtime telemetry still flows through `IObservability`; that facade is
-not counted inside the seven-port southbound surface, and
-`IMetricsCollector` is not exported from the root `@dvt/engine` package today.
+Current runtime telemetry flows through `IObservability`; that facade is
+not counted inside the six-port southbound surface.
 
 ```mermaid
 flowchart LR
@@ -96,7 +94,6 @@ flowchart LR
   Ports --> Provider["IProviderAdapter (runtime-wired)"]
   Ports --> RunCtx["IRunExecutionContextResolver (optional runtime wiring)"]
   Ports -.-> Projector["IProjector (package-exposed target seam)"]
-  Ports -.-> Metrics["IMetricsCollector (source-tree target seam)"]
   StartRun --> Obs["Observability facade"]
   Command --> Obs
   Signal --> Obs
@@ -114,11 +111,10 @@ Declared southbound ports:
 | `IPlanIntegrityValidator`      | `packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts`      | `runtime-wired plan integrity gate` |
 | `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | `optional runtime wiring`           |
 | `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                   | `package-exposed target seam`       |
-| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`          | `source-tree target seam`           |
 
 Other engine-owned interfaces such as `IRunSnapshotStalenessQuery` and
 `IRunMaintenanceService` remain important local seams, but they are not part of
-the exposed seven-port southbound inventory.
+the exposed six-port southbound inventory.
 
 `IStoredPlanArtifactReader` is deliberately separate from `IRunStateStore` and
 lives in `@dvt/artifacts`: run-state persistence owns ordered run facts, while
@@ -300,5 +296,4 @@ flowchart LR
 - `packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts`
 - `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts`
 - `packages/@dvt/engine/src/ports/IProjector.ts`
-- `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`
 - `packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts`

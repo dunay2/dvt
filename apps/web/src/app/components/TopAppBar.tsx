@@ -30,6 +30,8 @@ export function ShellTopBar({
   connectionStateOverride,
   isConnectionChecking = false,
   routeHeading = null,
+  showCanvasWorkspaceIdentity = true,
+  showDrawerToggle = true,
 }: ShellTopBarProps) {
   const location = useLocation();
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
@@ -44,7 +46,10 @@ export function ShellTopBar({
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy(applicationLanguage);
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
-  const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
+  const showCanvasIdentity =
+    routeHeading == null &&
+    navigationDisposition.reason === 'workbench_route' &&
+    showCanvasWorkspaceIdentity;
   const shellViewControls = resolveShellViewControls(navigationDisposition);
 
   return (
@@ -60,21 +65,23 @@ export function ShellTopBar({
             <AppBrandMark className={styles.appBrandMark} />
           </span>
 
-          {routeHeading != null ? (
+          {routeHeading != null && (
             <div className={styles.routeHeading} data-slot="shell-route-heading">
               <routeHeading.icon aria-hidden="true" className={styles.routeHeadingIcon} />
               <h1 className={styles.routeHeadingTitle}>{routeHeading.title}</h1>
             </div>
-          ) : isWorkbenchShell ? (
-            <CanvasWorkspaceTopBarIdentity />
-          ) : null}
+          )}
+          {showCanvasIdentity && <CanvasWorkspaceTopBarIdentity />}
           <ShellWorkspaceBreadcrumb copy={copy} />
         </div>
 
         <div data-slot="shell-top-bar-command-cluster" className={topAppBarClasses.commandCluster}>
           <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
           <ShellMenu
-            viewControls={shellViewControls}
+            viewControls={{
+              ...shellViewControls,
+              showBottomDrawerToggle: shellViewControls.showBottomDrawerToggle && showDrawerToggle,
+            }}
             bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
             toggleBottomDrawer={toggleBottomDrawer}

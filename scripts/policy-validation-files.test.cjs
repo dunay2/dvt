@@ -4,6 +4,21 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { listMarkdownFiles } = require('./policy-validation-files.cjs');
+const { CONTRACTS_ROOT, requireContractMarkdownFiles } = require('./policy-validation-files.cjs');
+
+test('the canonical Engine contract corpus is current and nonempty', () => {
+  assert.equal(
+    CONTRACTS_ROOT,
+    path.resolve(__dirname, '../docs/architecture/components/engine/contracts')
+  );
+  const files = requireContractMarkdownFiles(listMarkdownFiles(CONTRACTS_ROOT));
+  assert.ok(files.length > 0);
+  assert.ok(files.includes(path.join(CONTRACTS_ROOT, 'engine/RunEvents.v1.md')));
+});
+
+test('required contract admission rejects an empty Markdown corpus', () => {
+  assert.throws(() => requireContractMarkdownFiles([]), /no Markdown|empty.*corpus/iu);
+});
 
 test('listMarkdownFiles recursively returns Markdown files only', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'policy-validation-files-'));

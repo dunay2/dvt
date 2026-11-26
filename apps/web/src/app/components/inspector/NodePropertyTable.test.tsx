@@ -3,6 +3,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NodePropertyTable, type NodePropertyTableProps } from './NodePropertyTable';
+import { InspectorRelationshipFocusContext } from './inspectorRelationshipFocusContext';
 import type { NodePropertySection } from './nodePropertiesContracts';
 
 describe('shared property table cells', () => {
@@ -112,6 +113,36 @@ describe('shared property table cells', () => {
       expect(section).toEqual(original);
     }
   );
+
+  it('focuses the specific relationship on double click or keyboard activation', async () => {
+    const focusNode = vi.fn();
+    const section: NodePropertySection = {
+      id: 'inputs-outputs',
+      label: 'Inputs / Outputs',
+      rows: [],
+      tableRows: ['input', 'output'].map((direction) => ({
+        id: direction,
+        cells: { direction, node: 'dates', nodeId: `dates-${direction}` },
+      })),
+    };
+    act(() =>
+      root.render(
+        <InspectorRelationshipFocusContext.Provider value={focusNode}>
+          <NodePropertyTable section={section} surface="workbench" />
+        </InspectorRelationshipFocusContext.Provider>
+      )
+    );
+    const [input, output] = container.querySelectorAll('button');
+    await act(async () => {
+      input!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    });
+    expect(focusNode).not.toHaveBeenCalled();
+    await act(async () => {
+      input!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+      output!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
+    });
+    expect(focusNode.mock.calls).toEqual([['dates-input'], ['dates-output']]);
+  });
 
   it.each([
     ['inspector', 'columns'],

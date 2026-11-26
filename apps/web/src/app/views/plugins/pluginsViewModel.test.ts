@@ -82,9 +82,7 @@ describe('resolvePluginReadiness', () => {
   it('reports a matched frontend-only plugin as registered and ready', () => {
     const readiness = resolvePluginReadiness(
       reconcile(catalogPlugin('frontend'), contribution('frontend')),
-      undefined,
-      false,
-      null,
+      { capabilities: undefined, loading: false, error: null },
       copy
     );
 
@@ -95,15 +93,17 @@ describe('resolvePluginReadiness', () => {
       runtimeShape: 'frontend-only',
       summary: { label: 'Ready' },
     });
-    expect(readiness.items.find((item) => item.key === 'frontend')?.label).toBe('Loaded');
+    expect(readiness.frontendLabel).toBe('Loaded');
   });
 
   it('reports an available backend-only catalog row without claiming frontend registration', () => {
     const readiness = resolvePluginReadiness(
       reconcile(catalogPlugin('backend-only', 'backend-service')),
-      { plugins: { 'backend-service': { available: true } } },
-      false,
-      null,
+      {
+        capabilities: { plugins: { 'backend-service': { available: true } } },
+        loading: false,
+        error: null,
+      },
       copy
     );
 
@@ -114,16 +114,13 @@ describe('resolvePluginReadiness', () => {
       runtimeShape: 'backend-only',
       summary: { label: 'Ready' },
     });
-    expect(readiness.items.find((item) => item.key === 'frontend')?.label).toBe('Not registered');
-    expect(readiness.items.find((item) => item.key === 'frontend')?.detail).not.toContain('loaded');
+    expect(readiness.frontendLabel).toBe('Not registered');
   });
 
   it('keeps a catalog row without frontend or backend binding visibly unbound', () => {
     const readiness = resolvePluginReadiness(
       reconcile(catalogPlugin('unbound')),
-      undefined,
-      false,
-      null,
+      { capabilities: undefined, loading: false, error: null },
       copy
     );
 
@@ -139,9 +136,7 @@ describe('resolvePluginReadiness', () => {
   it.each(backendStateFixtures)('preserves source-owned backend semantics for $name', (fixture) => {
     const readiness = resolvePluginReadiness(
       reconcile(catalogPlugin('plugin', 'backend'), contribution('plugin')),
-      fixture.capabilities,
-      fixture.loading,
-      fixture.error,
+      { capabilities: fixture.capabilities, loading: fixture.loading, error: fixture.error },
       copy
     );
 

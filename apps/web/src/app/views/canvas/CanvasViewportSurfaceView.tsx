@@ -36,6 +36,7 @@ import type { CanvasGraphSearchViewportBinding } from './canvasGraphSearchContro
 import type { CanvasGraphFilterControlBinding } from './canvasGraphFilterControl.binding';
 import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
+import { useCanvasViewportDragFrames } from './useCanvasViewportDragFrames';
 import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
 import styles from './CanvasViewportSurfaceView.module.css';
 import interactionStyles from './canvasViewportInteraction.module.css';
@@ -110,6 +111,15 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
   return resolveNodeKindRegistration(pluginKind).minimapColor;
 }
 
+type CanvasReactFlowSurfaceProps = Omit<
+  CanvasViewportSurfaceViewProps,
+  | 'viewportRef'
+  | 'resolvedCanvasPalette'
+  | 'contextMenuLabel'
+  | 'nodeHealthPopoverModel'
+  | 'graphFilterController'
+> & { onCloseGraphFilter: () => void };
+
 function CanvasViewportReactFlowSurface({
   canEditEdges,
   canDeleteWithKeyboard,
@@ -135,49 +145,38 @@ function CanvasViewportReactFlowSurface({
   onImpactFocusNodeChange,
   onMiniMapNodeClick,
   graphSearchController,
+  onCloseGraphFilter,
   copy,
-}: Omit<
-  CanvasViewportSurfaceViewProps,
-  | 'viewportRef'
-  | 'resolvedCanvasPalette'
-  | 'contextMenuLabel'
-  | 'nodeHealthPopoverModel'
-  | 'graphFilterController'
->): JSX.Element {
+}: CanvasReactFlowSurfaceProps): JSX.Element {
   const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
+  const dragFrames = useCanvasViewportDragFrames(algebraicDrop.nodes, onNodesChange);
   const interaction = resolveCanvasViewportInteraction(canDeleteWithKeyboard);
   const backgroundAdd = useCanvasBackgroundAddMenuGesture();
-  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
-    onCloseNodeHealthPopover();
-    onImpactFocusNodeChange?.(null);
-    contextMenuPresenter.handlePaneClick(event);
-  };
-  const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
-    _event,
-    node,
-    nodes
-  ) => {
+  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> =
+    function handlePaneClickHandler(event) {
+      onCloseGraphFilter();
+      onCloseNodeHealthPopover();
+      onImpactFocusNodeChange?.(null);
+      contextMenuPresenter.handlePaneClick(event);
+    };
+  const handleNodeDragStart = () => {
     contextMenuPresenter.closeContextMenu();
     onCloseNodeHealthPopover();
-    algebraicDrop.handleNodeDrag(node, nodes);
   };
-  const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (
-    event,
-    node,
-    nodes
-  ) => {
-    contextMenuPresenter.closeContextMenu();
-    onCloseNodeHealthPopover();
-    algebraicDrop.handleNodeDragStop(node, nodes);
-    onNodeDragStop(event, node, nodes);
-  };
-  const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> = (
-    event,
-    edge
-  ) => {
-    onCloseNodeHealthPopover();
-    contextMenuPresenter.handleEdgeContextMenu(event, edge);
-  };
+  const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> =
+    function handleNodeDragHandler(_event, node, nodes) {
+      algebraicDrop.handleNodeDrag(node, nodes);
+    };
+  const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> =
+    function handleNodeDragStopHandler(event, node, nodes) {
+      algebraicDrop.handleNodeDragStop(node, nodes);
+      onNodeDragStop(event, node, nodes);
+    };
+  const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> =
+    function handleEdgeContextMenuHandler(event, edge) {
+      onCloseNodeHealthPopover();
+      contextMenuPresenter.handleEdgeContextMenu(event, edge);
+    };
 
   return (
     <div
@@ -189,21 +188,21 @@ function CanvasViewportReactFlowSurface({
       aria-label={contextSurfaceLabel}
       tabIndex={0}
       className={styles.contextSurface}
-      onDoubleClick={(event) => {
+      onDoubleClick={function onDoubleClickHandler(event) {
         if (backgroundAdd.resolveRequest(event) != null)
           contextMenuPresenter.handleViewportDoubleClick(event);
       }}
-      onFocusCapture={(event) => {
+      onFocusCapture={function onFocusCaptureHandler(event) {
         onImpactFocusNodeChange?.(
           event.target instanceof Element
             ? (event.target.closest<HTMLElement>('.react-flow__node')?.dataset.id ?? null)
             : null
         );
       }}
-      onKeyDownCapture={(event) => {
+      onKeyDownCapture={function onKeyDownCaptureHandler(event) {
         activateFocusedCanvasNodeFromKeyboard(event);
       }}
-      onKeyDown={(event) => {
+      onKeyDown={function onKeyDownHandler(event) {
         if (event.defaultPrevented) {
           return;
         }
@@ -215,13 +214,14 @@ function CanvasViewportReactFlowSurface({
     >
       <ReactFlow
         {...interaction.flow}
-        nodes={algebraicDrop.nodes}
+        nodes={dragFrames.nodes}
         edges={edges}
-        onNodesChange={canMoveNodes ? onNodesChange : undefined}
+        onNodesChange={canMoveNodes ? dragFrames.onNodesChange : undefined}
         onEdgesChange={canEditEdges ? onEdgesChange : undefined}
         onConnect={canEditEdges ? onConnect : undefined}
         onReconnect={canEditEdges ? onReconnect : undefined}
         onPaneClick={handlePaneClick}
+        onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         nodeTypes={nodeTypes}
@@ -239,7 +239,7 @@ function CanvasViewportReactFlowSurface({
         fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
         minZoom={0.35}
         defaultViewport={viewport ?? undefined}
-        onMoveEnd={(event, nextViewport) => {
+        onMoveEnd={function onMoveEndHandler(event, nextViewport) {
           if (event != null) {
             onViewportChange(nextViewport);
           }
@@ -304,6 +304,7 @@ export function CanvasViewportSurfaceView({
           contextMenuPresenter={contextMenuPresenter}
           contextSurfaceLabel={contextSurfaceLabel}
           onCloseNodeHealthPopover={onCloseNodeHealthPopover}
+          onCloseGraphFilter={() => graphFilterController.setOpen(false)}
           graphSearchController={graphSearchController}
           copy={copy}
         />

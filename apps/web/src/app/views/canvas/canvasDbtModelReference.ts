@@ -5,6 +5,7 @@ import {
   readWorkspaceDbtModelReference,
   WorkspaceDbtModelReferenceSchema,
   type DbtProjectGraphProjection,
+  type ConnectionRef,
 } from '@dvt/contracts';
 import { createExternalProducerSignature, indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { resolvePostgresInputDataType, sourceFieldType } from '@dvt/postgres-projection';
@@ -15,26 +16,48 @@ export function canvasDbtModelDefinitionId(canvasId: string, uniqueId: string): 
   return `dbt-model-reference:${canvasId}:${uniqueId}`;
 }
 
-export function createCanvasDbtModelDefinition(
+function currentFileAuthority(
+  projection: DbtProjectGraphProjection
+): Extract<
+  DbtProjectGraphProjection['authorityBinding']['authority'],
+  { kind: 'dbt-project-files' }
+> {
+  if (projection.freshness !== 'fresh' || !projection.capabilities.canPreview)
+    throw new Error('A current previewable file publication is required.');
+  if (projection.authorityBinding.authority.kind !== 'dbt-project-files')
+    throw new Error('The current dbt file authority is required.');
+  return projection.authorityBinding.authority;
+}
+
+function currentDbtConnection(projection: DbtProjectGraphProjection): ConnectionRef {
+  const connection = projection.executionTarget?.connectionRef;
+  if (connection?.provider !== 'postgres') throw new Error('A PostgreSQL connection is required.');
+  return connection;
+}
+
+function fileModelOutput(
   projection: DbtProjectGraphProjection,
   uniqueId: string
-): CanonicalNode {
+): DbtProjectGraphProjection['nodes'][number] {
   const model = projection.nodes.find(
     (node) => node.uniqueId === uniqueId && node.resourceType === 'model'
   );
-  const connectionRef = projection.executionTarget?.connectionRef;
   if (
-    projection.freshness !== 'fresh' ||
-    projection.authorityBinding.authority.kind !== 'dbt-project-files' ||
-    !projection.capabilities.canPreview ||
-    connectionRef?.provider !== 'postgres' ||
     model == null ||
     model.columns.length === 0 ||
     model.columns.some((column) => column.dataType == null)
   )
-    throw new Error(
-      'A current file model with a resolved output contract and PostgreSQL connection is required.'
-    );
+    throw new Error('A resolved file Model output contract is required.');
+  return model;
+}
+
+export function createCanvasDbtModelDefinition(
+  projection: DbtProjectGraphProjection,
+  uniqueId: string
+): CanonicalNode {
+  const authority = currentFileAuthority(projection);
+  const connectionRef = currentDbtConnection(projection);
+  const model = fileModelOutput(projection, uniqueId);
   const reference = WorkspaceDbtModelReferenceSchema.parse({
     schemaVersion: 'workspace-dbt-model-reference.v1',
     canvasId: projection.authorityBinding.canvasId,
@@ -59,10 +82,7 @@ export function createCanvasDbtModelDefinition(
     ...(model.originalFilePath == null
       ? {}
       : {
-          path: resolveDbtProjectWorkspaceFilePath(
-            projection.authorityBinding.authority.projectRoot,
-            model.originalFilePath
-          ),
+          path: resolveDbtProjectWorkspaceFilePath(authority.projectRoot, model.originalFilePath),
         }),
     ...(model.description == null ? {} : { description: model.description }),
     metadata: {

@@ -22,6 +22,7 @@ import {
   openWorkbenchModel,
   connectWorkbenchProducer,
   revisitWorkbenchCanvas,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
@@ -68,12 +69,14 @@ function savedUnion(): SavedUnion {
 }
 
 function addOccurrence(side: 'north' | 'south'): Cypress.Chainable<string> {
+  setWorkbenchInputsOpen(true);
   cy.get(`[data-slot="canvas-relational-tree-source"][data-node-id="source-customers-${side}"]`)
     .should('have.length', 1)
     .closest('li')
     .find('[data-slot="source-occurrence-add"]')
     .should('have.attr', 'aria-disabled', 'false')
     .click();
+  setWorkbenchInputsOpen(false);
   return cy
     .get(`${card}[data-operator="read"][data-pending="true"][aria-selected="true"]`)
     .should('have.length', 1)
@@ -173,10 +176,14 @@ describe('Workbench UNION', () => {
       cy.then(() => {
         ids.forEach((id, port) => {
           cy.get(relationCard(id)).closest('li').as('producer');
-          connectWorkbenchProducer('@producer', '@union', port);
+          connectWorkbenchProducer({ producer: '@producer', consumer: '@union', port: port });
         });
       });
-      connectWorkbenchProducer('@union', '[data-slot="canvas-relational-output-input-port"]', null);
+      connectWorkbenchProducer({
+        producer: '@union',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       applyUnion();
       cy.then(() => {
         first = savedUnion();
@@ -214,7 +221,7 @@ describe('Workbench UNION', () => {
           .find('[data-slot="canvas-relational-input-port"]')
           .should('have.length', 4);
         cy.get(relationCard(id)).closest('li').as('producer');
-        connectWorkbenchProducer('@producer', '@union', 3);
+        connectWorkbenchProducer({ producer: '@producer', consumer: '@union', port: 3 });
       });
       applyUnion();
       cy.then(() => {

@@ -8,6 +8,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 
 const { buildVerifyChangedPlan } = require('./local-validation-plan.cjs');
 
@@ -24,6 +28,56 @@ const MIXED_CHANGED_FILES = [
 ];
 
 const { main, parseArgs, executeVerifyChangedPlan } = require('./verify-changed.cjs');
+
+test('only canonical complete acquisition admits empty Markdown input with the effective environment', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-markdown-plan-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  execFileSync('git', ['init', '--quiet', root]);
+  fs.mkdirSync(path.join(root, '.github/workflows'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.github/workflows/dependency-review.yml'), 'name: Test\n');
+  const plans = [];
+  const inspect = (options) =>
+    main(['--dry-run'], {
+      repoRootPath: root,
+      env: {},
+      printPlan: (_files, plan) => plans.push(plan),
+      ...options,
+    });
+  await inspect({});
+  assert.ok(!plans.at(-1).some((entry) => entry.id === 'lint-md-changed'));
+  await inspect({ env: { DOCS_GOV_CHANGED_FILES: '' } });
+  assert.ok(plans.at(-1).some((entry) => entry.id === 'lint-md-changed'));
+  fs.writeFileSync(path.join(root, 'README.md'), '# Fixture\n');
+  await inspect({});
+  assert.ok(plans.at(-1).some((entry) => entry.id === 'lint-md-changed'));
+  await inspect({ changedFiles: ['.github/workflows/dependency-review.yml'] });
+  assert.ok(plans.at(-1).some((entry) => entry.id === 'lint-md-changed'));
+});
+
+test('empty Markdown selection cannot suppress or mask a native DB failure', async () => {
+  const plan = buildVerifyChangedPlan(['.github/workflows/dependency-review.yml'], {
+    completeChangedFiles: true,
+    env: {},
+  });
+  const native = plan.find((entry) => entry.id === 'feature-mechanization-implementation');
+  assert.deepEqual(native.args, ['docs:feature-mechanization:implementation']);
+  const calls = [];
+  const status = await executeVerifyChangedPlan(plan, {
+    env: {},
+    spawn: (command, args) => {
+      calls.push(commandLabel({ command, args }));
+      return completedChild(args.includes('docs:feature-mechanization:implementation') ? 23 : 0);
+    },
+  });
+  assert.equal(status, 23);
+  assert.equal(calls.at(-1), commandLabel(native));
+  assert.ok(!calls.includes('node scripts/check-changed.cjs'));
+  assert.ok(
+    !plan
+      .filter((entry) => entry.kind === 'test')
+      .some((entry) => calls.includes(commandLabel(entry)))
+  );
+});
 
 test('hosted CI-tool ownership requires explicit committed-test mode', () => {
   assert.equal(parseArgs(['--committed-tests', '--hosted-ci-tools=v1']).hostedCiTools, 'v1');

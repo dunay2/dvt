@@ -81,6 +81,40 @@ display different details. The switch also works on read-only file projections.
 It renders the existing measurement evidence without querying the warehouse or
 saving the semantic model.
 
+## Drag frame boundary
+
+During an exterior card drag, the viewport owns transient geometry for every
+moved selected card. Pointer frames update that local presentation; release
+publishes the final geometry once through the existing settled layout callback.
+Other node changes remain immediate. A Canvas/project scope change, external
+node replacement or removal must not leak or revive a transient position.
+The surface uses the existing catalogue scope identity to delimit that lifetime.
+Moving cards never issues a protected graph save, compilation or execution.
+
+Inside the relational editor, presentation updates must retain stable semantic
+inputs. In particular, an absent staged-operation collection has one stable
+empty identity. Pointer, coordinate and zoom changes alone must not invalidate
+semantic decode/index/projection. Actual document, source, authorization or
+staged-operation changes still invalidate the relevant projection; this is not
+a cache that permits stale semantics.
+
+```mermaid
+flowchart LR
+  Pointer[Pointer frames] --> Geometry[Viewport-local geometry]
+  Geometry --> Render[Cards and edges]
+  Release[Release] --> Settle[One existing settled layout callback]
+  Stable[Unchanged semantic inputs] --> Reuse[Reuse semantic projection]
+  Changed[Changed semantic facts] --> Project[Existing real projection]
+```
+
+The [exterior rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7173316539)
+and [interior rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7173287650)
+require real gesture and projection-call evidence. Tests use the real projector,
+retain semantic invalidation and rendered data, and verify final scoped diagram
+coordinates independently of pan/zoom. Preserve multiselection, immediate
+non-drag changes and all persistence/permission guards. No debounce threshold,
+new operation, store or semantic authority is introduced.
+
 ## Viewport input policy
 
 `SYS-WEB-CANVAS-VIEWPORT` owns the shared `canvasViewportInteraction` policy.
@@ -174,6 +208,24 @@ responsibility is retired as a duplicate of the implemented composition concern.
 The [ownership review](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564854173)
 records the concrete source boundary; it does not declare the feature implemented.
 
+## Column disclosure at maximum zoom
+
+The main Canvas projects card columns and column lineage through
+`RenderCanvasContextualGraphSurface`. The viewport observes the configured
+React Flow zoom limit. At that limit, eligible cards expand their column
+preview while retaining each card's manual disclosure preference. A manual
+close can suppress the preview until the viewport next reaches the limit.
+Leaving maximum zoom removes the temporary expansion. This projection also
+covers read-only graph presentation. The existing viewport and layout rails
+retain their separate persistence responsibilities.
+
+```mermaid
+flowchart LR
+  Camera[Viewport zoom limit] --> Preview[Effective column disclosure]
+  Manual[Manual disclosure preference] --> Preview
+  Preview --> Card[Column preview and visible lineage]
+```
+
 ## Model editor layout persistence
 
 The Model editor reuses `PersistCanvasLayout` and `GetCanvasLayout` through
@@ -197,6 +249,92 @@ Apply compatibility. Active drag frames, cancellation, hydration and scope
 replacement publish nothing. An absent-to-empty position map creates a local
 record once; subsequent equivalent writes are suppressed. Local coordinates
 survive Model close/reopen and browser reload without semantic Apply.
+
+Accepted card removal retains the displayed graph's compact coordinates before
+the owning `ConfigureCanvasDvtNode` command replaces the tree with its editable
+graph. The viewport captures automatic and manually positioned cards by stable
+relation identity, including Output, and publishes through the existing layout
+callback. The layout still derives detail offsets from card sizes. Canceling or
+rejecting a removal proposal publishes nothing. Arrange clears the retained
+coordinates through the same layout command.
+
+### Layout across contextual SQL generation
+
+Common canonical-document reconciliation transfers only coordinates already
+present in the scoped position map. Missing entries remain automatic, including
+Output. A saved visual edit must not turn the previous automatic arrangement
+into fixed anchors. Existing accepted card-removal capture remains its explicit
+policy; cancellation does not acquire that intention.
+
+Generating a Model from its contextual SQL editor preserves the compact
+coordinates of surviving inputs, operations and Output. A changed semantic digest
+is not a layout reset. The Generate owner captures compact placement before
+applying its proposal, then requests preservation explicitly after an accepted,
+non-aborted command. Bind that one-shot intention to the existing workspace,
+Canvas and Model layout key and the previous and confirmed target documents.
+Use the session's existing exact document identity,
+`jcsCanonicalize(document.sidecar)`, for both sides of that match. The sidecar
+includes the plan SHA and authoring IDs: regenerating the same SQL can retain
+the plan SHA while changing those IDs. Comparing the plan SHA alone cannot
+identify the confirmed target document. No additional hash or registry is needed.
+The local adapter reconciles that admitted transition by exact surviving
+relation identity first, then by a unique
+exact correspondence of canonical operation semantics and ordered input
+provenance. Relation anchors and newly allocated local identities do not define
+presentation equivalence. Source and producer contracts, expressions, types and
+the plan environment remain part of the comparison. Labels, tree paths,
+operation kinds or ordinal positions alone cannot establish correspondence.
+
+Ambiguous, changed and unmatched operations are new cards. Place only those
+cards in deterministic free space around the preserved rectangles, accounting
+for card bounds and Output. Do not move surviving cards to make room or use
+Generate as an implicit Arrange. Existing manual overlaps remain user-owned.
+Explicit Arrange retains its current reset behavior.
+
+While the matching SQL apply is in transit, defer common reconciliation. When
+the confirmed target arrives, consume its matching intention once and reconcile
+once. Rejection, abort, cancellation, a different document or a scope or Model
+change cannot publish captured compact positions or attach them to a later
+edit. The capture is local presentation data; it adds no semantic metadata,
+store, query, session or save command. Ordinary reconciliation continues to
+migrate explicit positions only.
+
+The reconciliation changes local coordinates through `PersistCanvasLayout`;
+it never rewrites relation IDs, semantic documents or protected save payloads.
+Close/reopen and local-store rehydration must retain the resulting coordinates.
+SQL validation, preview, concurrency denial and the single protected authoring
+save retain their existing owners. Rejected or stale proposals publish no
+replacement canonical tree and therefore perform no layout transition.
+
+```mermaid
+flowchart LR
+  Ordinary[Ordinary accepted document] --> Manual[Transfer explicit positions only]
+  Generate[Contextual Generate owner] --> Capture[Capture compact positions before apply]
+  Capture --> Accepted[Accepted command and matching scoped target document]
+  Accepted --> Intent[Consume preservation intention once]
+  Intent --> Match[Exact identity or unique semantic correspondence]
+  Match --> Fixed[Surviving cards and Output stay fixed]
+  Intent --> New[Unmatched cards]
+  Fixed --> Place[Place only new rectangles in free space]
+  New --> Place
+  Place --> Local[Existing local layout store]
+  Manual --> Local
+  Local --> Reopen[Close, reopen and rehydrate]
+```
+
+The [prospective rationale and finite Q scope](https://github.com/dunay2/dvt/issues/3951#issuecomment-7170568838)
+govern the change. The real contextual SQL journey must check positions before
+Generate, after its accepted save, after reopening and after reload. Negative
+coverage retains changed or ambiguous SQL correspondence and explicit Arrange.
+The [transition-intention correction](https://github.com/dunay2/dvt/issues/3951#issuecomment-7179666751)
+separates that explicit Generate policy from ordinary automatic reflow. Its
+negative coverage retains missing entries after all native cancellation reasons,
+manual placement, rejected or aborted Generate, mismatched document or scope,
+and repeated acknowledgement without another publication or protected save.
+The [exact-document refinement](https://github.com/dunay2/dvt/issues/3951#issuecomment-7180245280)
+also covers regenerated documents with the same plan SHA and different sidecar
+IDs, and declares their actual controlled browser consumers in the existing
+registry.
 
 One pure Canvas-position value predicate serves store write suppression, outer
 Canvas persistence, and relational layout restoration. Equivalent record or Map
@@ -389,6 +527,12 @@ flowchart LR
 
 ### Source Inspector list order
 
+The Source Inspector projects outgoing Canvas relationships in the **Outputs**
+section. Each row identifies the connected node and the relation. The Source's
+physical origin remains in its resource metadata. A single output is displayed
+as a read-only row. Multiple outputs can be reordered in an editable, hydrated
+layout through the existing Inspector ordering control.
+
 ```mermaid
 stateDiagram-v2
   [*] --> CanonicalOrder
@@ -399,7 +543,7 @@ stateDiagram-v2
   Reconcile --> Ready: order already clean
   PersistCleanOrder --> Ready
   Ready --> PersistMovedOrder: pointer drop or Alt+Arrow
-  PersistMovedOrder --> Ready: keep moved row selected and focused
+  PersistMovedOrder --> Ready: keep moved row focused
 ```
 
 ## Consumers

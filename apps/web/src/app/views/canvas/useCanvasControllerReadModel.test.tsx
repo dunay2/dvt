@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
@@ -10,6 +11,48 @@ import {
 } from './useCanvasControllerReadModel.test-support';
 
 describe('Canvas read model presentation and permissions', () => {
+  it('reverses only zoom-driven column disclosure when leaving maximum zoom', async () => {
+    const args = buildReadModelArgs();
+    const [node] = args.graphModel.nodes;
+    const nodes = [
+      { ...node!, data: { ...node!.data, showColumns: true, columnDisclosureExpanded: false } },
+      {
+        ...node!,
+        id: 'already-open',
+        data: { ...node!.data, showColumns: true, columnDisclosureExpanded: true },
+      },
+    ];
+    const belowMaximum = { ...args, graphModel: { ...args.graphModel, nodes } };
+    const mounted = await renderReadModel(belowMaximum);
+    try {
+      const readDisclosure = (): unknown[] | undefined =>
+        mounted.readState()?.nodesWithImpact.map(({ data }) => data.columnDisclosureExpanded);
+      expect(readDisclosure()).toEqual([false, true]);
+
+      await mounted.rerender({ ...belowMaximum, atMaximumZoom: true });
+      expect(readDisclosure()).toEqual([true, true]);
+      expect(nodes.map(({ data }) => data.columnDisclosureExpanded)).toEqual([false, true]);
+      expect(args.columnActions.onColumnDisclosureChange).not.toHaveBeenCalled();
+
+      await mounted.rerender(belowMaximum);
+      expect(readDisclosure()).toEqual([false, true]);
+
+      await mounted.rerender({ ...belowMaximum, atMaximumZoom: true });
+      const change = readProjectedNodeData(mounted.readState())?.onColumnDisclosureChange;
+      expect(typeof change).toBe('function');
+      act(() => {
+        (change as (id: string, expanded: boolean) => void)(testNode.id, false);
+      });
+      expect(readDisclosure()).toEqual([false, true]);
+      expect(args.columnActions.onColumnDisclosureChange).toHaveBeenCalledWith(testNode.id, false);
+      await mounted.rerender(belowMaximum);
+      await mounted.rerender({ ...belowMaximum, atMaximumZoom: true });
+      expect(readDisclosure()).toEqual([true, true]);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('keeps execution selection handlers when graph mutation and execution selection are allowed', async () => {
     const args = buildReadModelArgs({
       canMutateGraph: true,

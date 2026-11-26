@@ -36,46 +36,39 @@ export function useCanvasRelationalTreeRemoval(
     proposal: CanvasCardRemovalProposal;
     revision: number | undefined;
     permission: string | undefined;
+    onAccepted?: (id: string) => void;
   }> | null>(null);
-  useEffect(
-    () => () => {
+  useEffect(function synchronizeExternalSurface() {
+    return () => {
       consent.current = null;
-    },
-    []
-  );
-  const snapshot = (): CanvasCardRemovalSnapshot => ({
-    document: analysis?.document ?? null,
-    inputIds: args.sourceNodeIds,
-    sources: state.pendingSources,
-    operations: state.stagedOperations,
-    outputRelationId: args.outputRelationId,
-  });
-  const requireWritable = () => {
+    };
+  }, []);
+  const requireWritable = function requireWritableHandler() {
     if (!args.enabled) throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.readOnly);
     if (analysis?.error != null)
       throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.unavailable);
-    if (
-      analysis?.document != null &&
-      (!analysis.session.hasDocument(analysis.document) ||
-        analysis.revision !== analysis.session.revision)
-    )
-      throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
+    assertRemovalAnalysisCurrent(analysis);
   };
-  const accept = (proposal: CanvasCardRemovalProposal) => {
+  const accept = function acceptHandler(
+    proposal: CanvasCardRemovalProposal,
+    onAccepted?: (id: string) => void
+  ) {
     requireWritable();
-    if (!sameSnapshot(proposal.snapshot, snapshot()))
+    if (!sameSnapshot(proposal.snapshot, captureCanvasCardRemovalSnapshot(args)))
       throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
     if (!args.start()) throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.readOnly);
+    onAccepted?.(proposal.target.id);
     state.setJoinDraft(null);
     state.setOperation(null);
     state.slots.resetOperands();
     state.restoreIncomplete({ ...proposal.graph, positions: state.positions });
   };
-  const report = (failure: unknown) =>
-    setError(
+  const report = function reportHandler(failure: unknown) {
+    return setError(
       failure instanceof CanvasCardRemovalError ? failure.code : CARD_REMOVAL_REJECTION.unavailable
     );
-  const cancel = () => {
+  };
+  const cancel = function cancelHandler() {
     consent.current = null;
     setPending(null);
   };
@@ -84,18 +77,20 @@ export function useCanvasRelationalTreeRemoval(
     error,
     cancel,
     clearError: () => setError(null),
-    remove: (id: string) => {
+    remove(id: string, onAccepted?: (id: string) => void) {
       cancel();
       setError(null);
       try {
         requireWritable();
-        const proposal = prepareCanvasCardRemoval(snapshot(), id);
-        if (proposal.dependents.length === 0 && !proposal.disconnectsOutput) accept(proposal);
+        const proposal = prepareCanvasCardRemoval(captureCanvasCardRemovalSnapshot(args), id);
+        if (proposal.dependents.length === 0 && !proposal.disconnectsOutput)
+          accept(proposal, onAccepted);
         else {
           consent.current = {
             proposal,
             revision: analysis?.revision,
             permission: analysis?.permissionIdentity,
+            onAccepted,
           };
           setPending(proposal);
         }
@@ -103,17 +98,13 @@ export function useCanvasRelationalTreeRemoval(
         report(failure);
       }
     },
-    confirm: () => {
+    confirm() {
       const current = consent.current;
       if (current == null) return;
       cancel();
       try {
-        if (
-          current.revision !== analysis?.revision ||
-          current.permission !== analysis?.permissionIdentity
-        )
-          throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
-        accept(current.proposal);
+        assertRemovalConsentCurrent(current, analysis);
+        accept(current.proposal, current.onAccepted);
       } catch (failure) {
         report(failure);
       }
@@ -121,16 +112,47 @@ export function useCanvasRelationalTreeRemoval(
   };
 }
 
+function assertRemovalAnalysisCurrent(
+  analysis: ReturnType<typeof useCanvasRelationAnalysisSession>
+): void {
+  if (analysis?.document == null) return;
+  if (!analysis.session.hasDocument(analysis.document))
+    throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
+  if (analysis.revision !== analysis.session.revision)
+    throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
+}
+
 function sameSnapshot(
   before: CanvasCardRemovalSnapshot,
   after: CanvasCardRemovalSnapshot
 ): boolean {
   return (
-    before.document === after.document &&
-    before.sources === after.sources &&
-    before.operations === after.operations &&
-    before.outputRelationId === after.outputRelationId &&
+    (['document', 'sources', 'operations', 'outputRelationId'] as const).every(
+      (key) => before[key] === after[key]
+    ) &&
     before.inputIds.length === after.inputIds.length &&
     before.inputIds.every((id, index) => id === after.inputIds[index])
   );
+}
+
+function captureCanvasCardRemovalSnapshot(
+  args: Parameters<typeof useCanvasRelationalTreeRemoval>[0]
+): CanvasCardRemovalSnapshot {
+  return {
+    document: args.analysis?.document ?? null,
+    inputIds: args.sourceNodeIds,
+    sources: args.state.pendingSources,
+    operations: args.state.stagedOperations,
+    outputRelationId: args.outputRelationId,
+  };
+}
+
+function assertRemovalConsentCurrent(
+  consent: Readonly<{ revision: number | undefined; permission: string | undefined }>,
+  analysis: ReturnType<typeof useCanvasRelationAnalysisSession>
+): void {
+  if (consent.revision !== analysis?.revision)
+    throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
+  if (consent.permission !== analysis?.permissionIdentity)
+    throw new CanvasCardRemovalError(CARD_REMOVAL_REJECTION.stale);
 }

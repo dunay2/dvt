@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { readArchitectureSources } from '../../testing/vitestSuites.architecture.support';
 
@@ -23,7 +23,7 @@ const RAW_CAPABILITIES_FETCH_PATTERNS = [
   "fetch('/api/capabilities'",
   'fetch("/api/capabilities"',
 ] as const;
-let runtimeSources: Promise<Map<string, string>> | undefined;
+let runtimeSources: ReadonlyMap<string, string>;
 
 function toRelativePath(filePath: string): string {
   return path.relative(ROOT_DIR, filePath).replaceAll('\\', '/');
@@ -53,28 +53,18 @@ function collectSourceFiles(dirPath: string, results: string[]): void {
   }
 }
 
-function readRuntimeSources(): Promise<Map<string, string>> {
-  if (!runtimeSources) {
-    const files: string[] = [];
-    collectSourceFiles(ROOT_DIR, files);
-    runtimeSources = readArchitectureSources(files);
-  }
-  return runtimeSources;
-}
-
 function sourceContainsAnyPattern(source: string, patterns: readonly RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(source));
 }
 
-async function findRuntimeSourcePaths(predicate: (source: string) => boolean): Promise<string[]> {
-  const sources = await readRuntimeSources();
-  return [...sources]
+function findRuntimeSourcePaths(predicate: (source: string) => boolean): string[] {
+  return [...runtimeSources]
     .filter(([, source]) => predicate(source))
     .map(([filePath]) => toRelativePath(filePath));
 }
 
-async function readRuntimeSource(relativePath: string): Promise<string> {
-  const source = (await readRuntimeSources()).get(path.join(ROOT_DIR, relativePath));
+function readRuntimeSource(relativePath: string): string {
+  const source = runtimeSources.get(path.join(ROOT_DIR, relativePath));
   if (source === undefined) throw new Error(`Missing governed runtime source: ${relativePath}`);
   return source;
 }
@@ -85,34 +75,38 @@ function sourceContainsRawCapabilitiesFetch(source: string): boolean {
 }
 
 describe('Query key policy (architecture)', () => {
-  it('keeps warehouse connection request ownership out of the Wizard loader and Inspector', async () => {
+  beforeAll(async () => {
+    const files: string[] = [];
+    collectSourceFiles(ROOT_DIR, files);
+    runtimeSources = await readArchitectureSources(files);
+  });
+
+  it('keeps warehouse connection request ownership out of the Wizard loader and Inspector', () => {
     for (const path of [
       'components/sourceImportWizard/useSourceImportWizardDataLoaders.ts',
       'views/canvas/DvtSourceAuthoringSection.tsx',
     ]) {
-      expect(await readRuntimeSource(path)).not.toMatch(/\.listWarehouseConnections\s*\(/);
+      expect(readRuntimeSource(path)).not.toMatch(/\.listWarehouseConnections\s*\(/);
     }
-    expect(await readRuntimeSource('queries/warehouseConnectionQueries.ts')).toContain(
+    expect(readRuntimeSource('queries/warehouseConnectionQueries.ts')).toContain(
       'port.listWarehouseConnections()'
     );
   });
-  it('forbids inline queryKey arrays in runtime source files', async () => {
-    const offenders = await findRuntimeSourcePaths((source) =>
-      INLINE_QUERY_KEY_PATTERN.test(source)
-    );
+  it('forbids inline queryKey arrays in runtime source files', () => {
+    const offenders = findRuntimeSourcePaths((source) => INLINE_QUERY_KEY_PATTERN.test(source));
 
     expect(offenders).toEqual([]);
   });
 
-  it('forbids runtime consumers from importing removed aggregate store surfaces', async () => {
-    const offenders = await findRuntimeSourcePaths((source) =>
+  it('forbids runtime consumers from importing removed aggregate store surfaces', () => {
+    const offenders = findRuntimeSourcePaths((source) =>
       sourceContainsAnyPattern(source, REMOVED_AGGREGATE_STORE_IMPORT_PATTERNS)
     );
 
     expect(offenders).toEqual([]);
   });
 
-  it('enforces service-factory ownership to composition root and service modules', async () => {
+  it('enforces service-factory ownership to composition root and service modules', () => {
     const allowedFactoryCallers = new Set([
       'services/composition/appServices.ts',
       'services/workspace/workspacePorts.ts',
@@ -120,7 +114,7 @@ describe('Query key policy (architecture)', () => {
       'services/plans/plansService.ts',
     ]);
 
-    const callers = await findRuntimeSourcePaths((source) =>
+    const callers = findRuntimeSourcePaths((source) =>
       sourceContainsAnyPattern(source, SERVICE_FACTORY_CALL_PATTERNS)
     );
     const offenders = callers.filter((filePath) => !allowedFactoryCallers.has(filePath));
@@ -128,21 +122,21 @@ describe('Query key policy (architecture)', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('forbids direct raw fetch of runtime capabilities from app query surfaces', async () => {
-    const offenders = await findRuntimeSourcePaths(sourceContainsRawCapabilitiesFetch);
+  it('forbids direct raw fetch of runtime capabilities from app query surfaces', () => {
+    const offenders = findRuntimeSourcePaths(sourceContainsRawCapabilitiesFetch);
 
     expect(offenders).toEqual([]);
   });
 
-  it('keeps the app capabilities query on a governed composition boundary', async () => {
-    const querySource = await readRuntimeSource('queries/useCapabilitiesQuery.ts');
+  it('keeps the app capabilities query on a governed composition boundary', () => {
+    const querySource = readRuntimeSource('queries/useCapabilitiesQuery.ts');
 
     expect(querySource).toContain('const capabilitiesPort = useCapabilitiesPort()');
     expect(querySource).toContain('createCapabilitiesQueryOptions(capabilitiesPort)');
     expect(querySource).toContain("from '@tanstack/react-query'");
   });
 
-  it('forbids direct useQuery ownership in selected operator views', async () => {
+  it('forbids direct useQuery ownership in selected operator views', () => {
     const governedViewFiles = [
       'plugins/dbt/DbtNodeRenderer.tsx',
       'views/admin/useAdminViewData.ts',
@@ -155,7 +149,7 @@ describe('Query key policy (architecture)', () => {
     ];
     const offenders: string[] = [];
     for (const relativePath of governedViewFiles) {
-      if (/from\s+['"]@tanstack\/react-query['"]/.test(await readRuntimeSource(relativePath))) {
+      if (/from\s+['"]@tanstack\/react-query['"]/.test(readRuntimeSource(relativePath))) {
         offenders.push(relativePath);
       }
     }

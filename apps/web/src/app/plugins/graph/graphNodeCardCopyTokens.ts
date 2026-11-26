@@ -2,6 +2,10 @@
 type GraphNodeCardCopy = Readonly<{
   outputStateLabels: Readonly<Record<'pending' | 'unavailable' | 'unconfigured', string>>;
   columnsLabel: string;
+  inputLabel: string;
+  outputLabel: string;
+  inputColumnsLabel: string;
+  outputColumnsLabel: string;
   rowsLabel: string;
   sizeLabel: string;
   notCalculatedLabel: string;
@@ -110,6 +114,10 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     unconfigured: 'Not configured',
   },
   columnsLabel: 'Columns',
+  inputLabel: 'Input',
+  outputLabel: 'Output',
+  inputColumnsLabel: 'Input columns',
+  outputColumnsLabel: 'Output columns',
   rowsLabel: 'Rows',
   sizeLabel: 'Size',
   notCalculatedLabel: 'Not calculated',
@@ -247,6 +255,10 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     unconfigured: 'Sin configurar',
   },
   columnsLabel: 'Columnas',
+  inputLabel: 'Entrada',
+  outputLabel: 'Salida',
+  inputColumnsLabel: 'Columnas de entrada',
+  outputColumnsLabel: 'Columnas de salida',
   rowsLabel: 'Filas',
   sizeLabel: 'Tamaño',
   notCalculatedLabel: 'No calculado',

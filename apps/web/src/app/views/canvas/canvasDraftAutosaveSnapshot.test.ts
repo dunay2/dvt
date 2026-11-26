@@ -10,23 +10,30 @@ import { canvasDraftSession } from './canvasDraftSession';
 import { runCanvasDraftAutosaveEffect } from './canvasDraftAutosaveScheduling';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
+async function createReceiptPort(
+  outcome: 'saved' | 'conflict'
+): Promise<ReturnType<typeof buildAuthoringPort>> {
+  const port = buildAuthoringPort();
+  if (outcome === 'conflict') {
+    const remote = await port.readGraphDraft();
+    if (remote.kind !== 'ok' || remote.record == null) throw new Error('Missing remote draft');
+    const revision = remote.record.revision;
+    port.saveGraphDraft = vi.fn<typeof port.saveGraphDraft>(async () => ({
+      kind: 'conflict',
+      capability: remote.capability,
+      auditRef: { ...remote.auditRef, action: 'draft_write', outcome: 'conflict' },
+      formatMeta: remote.formatMeta,
+      currentRevision: revision,
+    }));
+  }
+  return port;
+}
+
 describe('autosave snapshot acknowledgement', () => {
   it.each(['saved', 'conflict'] as const)(
     'publishes the actual %s receipt before queued query or session updates',
     async (outcome) => {
-      const port = buildAuthoringPort();
-      if (outcome === 'conflict') {
-        const remote = await port.readGraphDraft();
-        if (remote.kind !== 'ok' || remote.record == null) throw new Error('Missing remote draft');
-        const revision = remote.record.revision;
-        port.saveGraphDraft = vi.fn<typeof port.saveGraphDraft>(async () => ({
-          kind: 'conflict',
-          capability: remote.capability,
-          auditRef: { ...remote.auditRef, action: 'draft_write', outcome: 'conflict' },
-          formatMeta: remote.formatMeta,
-          currentRevision: revision,
-        }));
-      }
+      const port = await createReceiptPort(outcome);
       const repository = createCanvasDraftRepository(port);
       const saveGraphDraft = vi.spyOn(repository, 'saveGraphDraft');
       const record = (await repository.readGraphDraft())!;
@@ -159,10 +166,8 @@ describe('autosave snapshot acknowledgement', () => {
       const payload = buildCurrentDraftPayload(
         record.draft.nodePositions,
         sent,
-        record.draft.canvas,
-        record.draft,
-        [],
-        []
+        { canvas: record.draft.canvas, baseline: record.draft },
+        { canonicalNodes: [], canonicalEdges: [] }
       );
       let current = sent;
       const newerNode = { ...sentNode, name: 'Newer local version' };

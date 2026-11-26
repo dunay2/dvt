@@ -11,6 +11,8 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
 import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';
 
+const EMPTY_STAGED_OPERATIONS: readonly CanvasStagedOperation[] = [];
+
 export function CanvasRelationalTreeLayout({
   outputName,
   root,
@@ -24,13 +26,12 @@ export function CanvasRelationalTreeLayout({
   onManualLayout,
   onOpenOutput,
   occurrences,
-  stagedOperations = [],
+  stagedOperations = EMPTY_STAGED_OPERATIONS,
   selectedStagedOperationId = null,
   onSelectStagedOperation,
   onConnectStagedOperation,
   onDisconnectStagedOperation,
   onDisconnectRelation,
-  onRemoveStagedOperation,
   outputRelationId,
   onConnectOutput,
   onDisconnectOutput,
@@ -38,16 +39,13 @@ export function CanvasRelationalTreeLayout({
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode | null;
-  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select'> & {
-    remove: (id: string) => void;
-  };
+  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select'>;
   stagedOperations?: readonly CanvasStagedOperation[];
   selectedStagedOperationId?: string | null;
   onSelectStagedOperation?: (id: string) => void;
   onConnectStagedOperation?: (id: string, port: number, relationId: string) => void;
   onDisconnectStagedOperation?: (id: string, port: number) => void;
   onDisconnectRelation?: (id: string, port: number) => void;
-  onRemoveStagedOperation?: (id: string) => void;
   outputRelationId?: string | null;
   onConnectOutput?: (relationId: string) => void;
   onDisconnectOutput?: () => void;
@@ -56,22 +54,29 @@ export function CanvasRelationalTreeLayout({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
-  onRemove?: (relationId: string) => void;
+  onRemove?: (relationId: string, onAccepted: (id: string) => void) => void;
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
   onManualLayout?: () => void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
-  const { layout, movement, graphs, expanded, zoomRevealsDetail, toggleDetail } =
-    useCanvasRelationalTreePlacement({
-      root,
-      semanticContext,
-      sourceOutputFieldsByRelationId,
-      stagedOperations,
-      pendingSources: occurrences?.pending,
-      zoom,
-      onManualLayout,
-    });
+  const {
+    layout,
+    movement,
+    graphs,
+    expanded,
+    zoomRevealsDetail,
+    toggleDetail,
+    retainPositionsAfterRemoval,
+  } = useCanvasRelationalTreePlacement({
+    root,
+    semanticContext,
+    sourceOutputFieldsByRelationId,
+    stagedOperations,
+    pendingSources: occurrences?.pending,
+    zoom,
+    onManualLayout,
+  });
   const [selectedConnectionSource, setSelectedConnectionSource] = useState<string | null>(null);
   const effectiveOutputRelationId =
     outputRelationId === undefined ? (root?.relationId ?? null) : outputRelationId;
@@ -130,9 +135,8 @@ export function CanvasRelationalTreeLayout({
         actions={{
           select: onSelect,
           expand: onExpand,
-          remove: onRemove,
+          remove: onRemove == null ? undefined : (id) => onRemove(id, retainPositionsAfterRemoval),
           selectStaged: onSelectStagedOperation,
-          removeStaged: onRemoveStagedOperation,
           selectConnectionSource:
             onConnectStagedOperation == null ? undefined : setSelectedConnectionSource,
           connectOperation:

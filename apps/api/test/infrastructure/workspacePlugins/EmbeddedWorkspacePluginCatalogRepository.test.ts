@@ -60,5 +60,9 @@ describe('EmbeddedWorkspacePluginCatalogRepository', () => {
     expect(executedSql).toContain("'dvt'");
     expect(executedSql).toContain("'monitoring'");
     expect(executedSql).toContain("'cost'");
+    expect(executedSql).toContain("'dvt.http-json'");
+    expect(executedSql).toContain("'dvt.object-file-postgres'");
+    expect(executedSql).toContain("'dvt.warehouse-source'");
+    expect(executedSql).toContain('ON CONFLICT DO NOTHING');
   });
 });

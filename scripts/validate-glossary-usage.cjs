@@ -2,33 +2,36 @@
 
 const fs = require('fs');
 const path = require('path');
+const {
+  CONTRACTS_ROOT,
+  listMarkdownFiles,
+  requireContractMarkdownFiles,
+} = require('./policy-validation-files.cjs');
+const { stripInlineCodeFragments: stripInlineCode } = require('./policy-validation-text.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
-const CONTRACTS_DIR = path.join(ROOT, 'docs', 'architecture', 'engine', 'contracts');
-const GLOSSARY_PATH = path.join(CONTRACTS_DIR, 'engine', 'GlossaryContract.v1.md');
 
 const args = process.argv.slice(2);
 const mode = (getArgValue(args, '--mode') || process.env.GLOSSARY_MODE || 'warn').toLowerCase();
 const failOnFindings =
   mode === 'error' || process.env.GLOSSARY_FAIL === '1' || hasFlag(args, '--fail');
 
-main();
-
-function main() {
-  if (!fs.existsSync(GLOSSARY_PATH)) {
-    console.log('GLOSSARY | glossary source not found, skipping');
-    process.exit(0);
+function main(contractsDir = CONTRACTS_ROOT) {
+  const glossaryPath = path.join(contractsDir, 'engine', 'GlossaryContract.v1.md');
+  if (!fs.existsSync(glossaryPath)) {
+    console.error('GLOSSARY | glossary source not found');
+    process.exit(1);
   }
 
-  const glossarySource = fs.readFileSync(GLOSSARY_PATH, 'utf8');
-  const prohibitedMap = parseProhibitedSynonyms(glossarySource);
+  const glossarySource = fs.readFileSync(glossaryPath, 'utf8');
+  const prohibitedMap = parseProhibitedClaims(glossarySource);
 
   if (prohibitedMap.size === 0) {
-    console.log('GLOSSARY | no prohibited synonyms found in glossary table, skipping');
-    process.exit(0);
+    console.error('GLOSSARY | no prohibited terminology claims found in glossary policy');
+    process.exit(1);
   }
 
-  const files = walkMarkdown(CONTRACTS_DIR).sort();
+  const files = requireContractMarkdownFiles(listMarkdownFiles(contractsDir).sort());
   const findings = [];
 
   for (const file of files) {
@@ -52,16 +55,16 @@ function main() {
       line = stripMarkdownLinks(line);
       if (!line.trim()) continue;
 
-      for (const [canonical, synonyms] of prohibitedMap.entries()) {
-        for (const synonym of synonyms) {
-          const re = new RegExp(`\\b${escapeRegex(synonym)}\\b`, 'gi');
+      for (const [canonical, claims] of prohibitedMap.entries()) {
+        for (const claim of claims) {
+          const re = new RegExp(`\\b${escapeRegex(claim)}\\b`, 'gi');
           let match;
           while ((match = re.exec(line)) !== null) {
             findings.push({
               file: rel,
               line: i + 1,
               column: (match.index || 0) + 1,
-              synonym,
+              claim,
               canonical,
             });
           }
@@ -78,33 +81,33 @@ function main() {
   process.exit(0);
 }
 
-function parseProhibitedSynonyms(source) {
+function parseProhibitedClaims(source) {
   const out = new Map();
   const lines = source.split(/\r?\n/);
-  const start = lines.findIndex((l) => l.trim().toLowerCase() === '## 10) prohibited synonyms');
+  const start = lines.findIndex(
+    (l) => l.trim().toLowerCase() === '## prohibited terminology claims'
+  );
   if (start === -1) return out;
 
   for (let i = start + 1; i < lines.length; i += 1) {
     const line = lines[i].trim();
     if (line.startsWith('## ')) break;
     if (!line.startsWith('|')) continue;
-    if (line.includes('Canonical Term') || line.includes('---')) continue;
-
     const cells = line
       .split('|')
-      .map((c) => c.trim())
-      .filter(Boolean);
-    if (cells.length < 2) continue;
-
-    const canonical = cells[0].toLowerCase();
-    const synonyms = cells[1]
-      .split(',')
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
-
-    if (canonical && synonyms.length > 0) {
-      out.set(canonical, synonyms);
+      .slice(1, -1)
+      .map((c) => c.trim());
+    if (cells.length === 3 && cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
+    if (
+      cells[0]?.toLowerCase() === 'canonical term' &&
+      cells[1]?.toLowerCase() === 'prohibited claim'
+    )
+      continue;
+    if (cells.length !== 3 || cells.some((cell) => !cell) || !/\]\(#[a-z0-9-]+\)/i.test(cells[2])) {
+      throw new Error(`GLOSSARY | malformed prohibited claim policy row at line ${i + 1}`);
     }
+    const [canonical, claim] = cells;
+    out.set(canonical, [...(out.get(canonical) ?? []), claim]);
   }
 
   return out;
@@ -124,29 +127,9 @@ function printReport(fileCount, findings) {
 
   for (const row of rows) {
     console.log(
-      `- ${row.file}:L${row.line}:C${row.column} prohibited term "${row.synonym}" -> prefer canonical "${row.canonical}"`
+      `- ${row.file}:L${row.line}:C${row.column} prohibited term "${row.claim}" -> prefer canonical "${row.canonical}"`
     );
   }
-}
-
-function walkMarkdown(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const out = [];
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walkMarkdown(full));
-      continue;
-    }
-    if (entry.isFile() && entry.name.endsWith('.md')) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-
-function stripInlineCode(line) {
-  return line.replace(/`[^`]*`/g, '');
 }
 
 function stripMarkdownLinks(line) {
@@ -174,3 +157,6 @@ function getArgValue(argvList, flag) {
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+if (require.main === module) main();
+module.exports = { main };

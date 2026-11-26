@@ -5,6 +5,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { buildCanvasNodePresentationCopy } from '../../views/canvas/canvasNodePresentationCopy';
+import { resolveCanvasViewCopy } from '../../views/canvas/canvasCopyCatalog';
 import { NodePropertiesTabs } from './NodePropertiesTabs';
 import type { NodePropertiesReadModel } from './nodePropertiesContracts';
 import { buildNodePropertiesReadModel } from './nodePropertiesReadModel';
@@ -90,14 +92,31 @@ describe('NodePropertiesTabs Source Inputs / Outputs presentation', () => {
     });
   }
 
-  it('uses the Source master/detail body without changing the tab count', () => {
-    render(sourceNode);
+  it.each([
+    sourceNode,
+    { ...sourceNode, kind: 'dbt:source', pluginId: 'dbt' } satisfies CanonicalNode,
+  ])('labels and counts only real outgoing relationships for $kind in Spanish', (source) => {
+    const model = buildNodePropertiesReadModel({
+      node: source,
+      nodes: [source, genericNode],
+      edges: [
+        { id: 'incoming', sourceId: genericNode.id, targetId: source.id, relation: 'lineage' },
+        { id: 'outgoing', sourceId: source.id, targetId: genericNode.id, relation: 'lineage' },
+        { id: 'missing', sourceId: source.id, targetId: 'deleted-model', relation: 'lineage' },
+      ],
+      presentationCopy: buildCanvasNodePresentationCopy(resolveCanvasViewCopy('es'), 'es'),
+    });
+    render(source, model);
 
     expect(container.querySelector('[data-slot="canvas-source-inputs-outputs"]')).not.toBeNull();
     expect(container.querySelector('table')).toBeNull();
     expect(
       container.querySelector('[data-slot="node-inspector-tab-inputs-outputs"]')?.textContent
-    ).toContain('1');
+    ).toBe('Salidas1');
+    const rows = container.querySelectorAll('ul[aria-label="Salidas"] > li');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.textContent).toBe('Orders ModelLinaje');
+    expect(container.textContent).not.toContain('deleted-model');
   });
 
   it('uses compact business relationship summaries for non-Source nodes', () => {

@@ -40,7 +40,7 @@ class CanvasFirstAuthoringLiveProofRunner {
       'cypress/e2e/canvas/canvas-first-authoring-live.cy.ts'
     );
     this.specPath = '/repo/apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts';
-    this.cypressImage = 'cypress/included:15.18.1';
+    this.cypressImage = 'cypress/included:15.21.2';
     this.localAuthHost = '127.0.0.1';
     this.apiBindHost = '0.0.0.0';
     this.webBindHost = '0.0.0.0';

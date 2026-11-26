@@ -48,6 +48,7 @@ import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
 import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
 import EdgeProjectionSource from './canvasViewportEdgeProjection.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
+import WorkbenchSurfacesSource from './canvasShellWorkbenchSurfaces.tsx?raw';
 import ModelEditorSource from './CanvasModelEditor.tsx?raw';
 import ModelTemplateSource from './CanvasModelEditor.templates.tsx?raw';
 import ModelToolbarSource from './CanvasModelToolbar.tsx?raw';
@@ -55,6 +56,7 @@ import ModelDataPanelSource from './CanvasModelDataPanel.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
 import ApplyCommandSource from './canvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
+import CatalogueMemoSource from './useCanvasRelationalTreeCatalogue.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import GraphAuthoringSource from './useCanvasRelationalGraphAuthoring.ts?raw';
 import DraftHydrationSource from './useCanvasRelationalAuthoringDraftHydration.ts?raw';
@@ -81,6 +83,30 @@ import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
 import PresentationNodeSource from './canvasPresentationNode.ts?raw';
+
+function isDisplayNameTarget(node: ts.Node): boolean {
+  if (ts.isParenthesizedExpression(node)) return isDisplayNameTarget(node.expression);
+  if (ts.isPropertyAccessExpression(node)) return node.name.text === 'displayName';
+  return (
+    ts.isElementAccessExpression(node) &&
+    ts.isStringLiteralLike(node.argumentExpression) &&
+    node.argumentExpression.text === 'displayName'
+  );
+}
+
+function displayNameMutationSites(source: string): string[] {
+  const file = ts.createSourceFile('presentation.ts', source, ts.ScriptTarget.Latest, true);
+  const sites: string[] = [];
+  function visit(node: ts.Node): void {
+    ts.forEachChild(node, visit);
+    if (!ts.isBinaryExpression(node)) return;
+    if (node.operatorToken.kind < ts.SyntaxKind.FirstAssignment) return;
+    if (node.operatorToken.kind > ts.SyntaxKind.LastAssignment) return;
+    if (isDisplayNameTarget(node.left)) sites.push(node.getText(file));
+  }
+  visit(file);
+  return sites;
+}
 
 describe('staged editor analysis ownership', () => {
   it('keeps pending Source presentation off Model Input mutation and direct schema edits', () => {
@@ -223,7 +249,17 @@ describe('Canvas relational-tree Workbench architecture', () => {
   });
   it('keeps JOIN type-code suppression in the shared read-only presentation mapper', () => {
     expect(NodePresentationSource).toContain('isCanvasJoinOperation(node.displayName)');
-    expect(NodePresentationSource).not.toMatch(/displayName\s*=|session\.apply|useEffect/);
+    expect(displayNameMutationSites(NodePresentationSource)).toEqual([]);
+    expect(NodePresentationSource).not.toMatch(/session\.apply|useEffect/);
+    for (const [source, writes] of [
+      ['node.displayName = "changed"', 1],
+      ['node.displayName += "suffix"', 1],
+      ['node["displayName"] ??= "name"', 1],
+      ['(node.displayName) = "name"', 1],
+      ['node.displayName === "JOIN"', 0],
+      ['node.displayName == "JOIN"', 0],
+    ] as const)
+      expect(displayNameMutationSites(source)).toHaveLength(writes);
     for (const source of [NodeButtonSource, ModelOutputInspectorSource]) {
       expect(source).toContain('resolveCanvasRelationalNodeCopy');
       expect(source).not.toContain('isCanvasJoinOperation');
@@ -384,6 +420,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(ZoomSource.split('\n').length).toBeLessThan(80);
     expect(DetailSource.split('\n').length).toBeLessThan(100);
     expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
+    expect(CatalogueMemoSource.split('\n').length).toBeLessThan(110);
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
     expect(GraphAuthoringSource.split('\n').length).toBeLessThan(120);
     expect(DraftHydrationSource.split('\n').length).toBeLessThan(80);
@@ -401,6 +438,37 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
     expect(SessionActionsSource.split('\n').length).toBeLessThan(80);
+  });
+
+  it('keeps catalogue memoization limited to the existing read-only projectors', () => {
+    const catalogue = ts.createSourceFile(
+      'catalogue.ts',
+      CatalogueMemoSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
+    const runtimeImports = catalogue.statements.flatMap((statement) =>
+      ts.isImportDeclaration(statement) &&
+      statement.importClause?.isTypeOnly !== true &&
+      ts.isStringLiteral(statement.moduleSpecifier)
+        ? [statement.moduleSpecifier.text]
+        : []
+    );
+    expect(runtimeImports.sort()).toEqual(['./canvasRelationalTreeCatalogue', 'react']);
+    expect(CatalogueMemoSource.match(/\buseMemo\s*\(/g)).toHaveLength(1);
+    for (const projector of [
+      'projectCanvasRelationalTreeCatalogue',
+      'projectPendingCanvasRelationalTreeCatalogue',
+      'projectCanvasRelationalCatalogueSelection',
+    ])
+      expect(CatalogueMemoSource).toMatch(new RegExp(`\\b${projector}\\s*\\(`));
+    expect(CatalogueMemoSource).not.toMatch(
+      /\b(?:useState|useEffect|useQuery|useMutation|useSyncExternalStore|fetch)\s*\(|\.(?:subscribe|apply)\s*\(/
+    );
+    expect(WorkbenchModelSource).toContain('useCanvasRelationalTreeCatalogue(');
+    expect(WorkbenchModelSource).not.toMatch(
+      /\b(?:projectCanvasRelationalTreeCatalogue|projectPendingCanvasRelationalTreeCatalogue|projectCanvasRelationalCatalogueSelection)\s*\(/
+    );
   });
 
   it('does not introduce a second Canvas or semantic write authority', () => {
@@ -444,6 +512,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
     expect(combined).not.toContain('encodeDvtSubstrait');
     expect(combined).not.toContain('create(');
+  });
+
+  it('keeps semantic writes in the existing authoring session', () => {
     expect(AuthoringSessionSource).toContain('createCanvasRelationalTreeApplyCommand');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeExistingSeed');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeRemoval');
@@ -485,7 +556,10 @@ describe('Canvas relational-tree Workbench architecture', () => {
       expect(view).not.toMatch(/\buse(?:State|Effect|Callback|Memo)\s*\(/);
     }
     expect(EdgeProjectionSource).not.toMatch(/Substrait|[Cc]omposition|onActivate/);
-    expect(CanvasShellSource).toContain('<CanvasModelEditor');
+    expect(CanvasShellSource).toContain('buildCanvasModelWorkbenchLayout(');
+    expect(CanvasShellSource).not.toContain('<CanvasModelEditor');
+    expect(WorkbenchSurfacesSource.match(/<CanvasModelEditor\b/g)).toHaveLength(1);
+    expect(WorkbenchSurfacesSource).not.toContain('<CanvasRelationalTreeWorkbench');
     expect(CanvasShellSource).not.toContain('<CanvasRelationalTreeWorkbench');
     expect(CanvasShellSource).not.toContain("selectOperationalDrawerTab('semantic')");
     expect(ModelEditorSource).toContain('<CanvasRelationalTreeWorkbench');

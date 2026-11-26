@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
-
-import React, { act } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import type { Edge, Node } from '@xyflow/react';
 
@@ -42,12 +41,12 @@ type NodeChangeHarness = {
   render: () => Promise<void>;
   cleanup: () => void;
   spies: {
-    setNodes: ReturnType<typeof vi.fn>;
-    setEdges: ReturnType<typeof vi.fn>;
-    setDraftSession: ReturnType<typeof vi.fn>;
-    setSelectedNodes: ReturnType<typeof vi.fn>;
-    setInspectorNode: ReturnType<typeof vi.fn>;
-    onLayoutComplete: ReturnType<typeof vi.fn>;
+    setNodes: Mock;
+    setEdges: Mock;
+    setDraftSession: Mock;
+    setSelectedNodes: Mock;
+    setInspectorNode: Mock;
+    onLayoutComplete: Mock;
   };
 };
 
@@ -70,13 +69,13 @@ function renderHookHost({
   edges?: Edge[];
   selectedNodeIds?: string[];
   inspectorNodeId?: string | null;
-  setNodes?: ReturnType<typeof vi.fn>;
-  setEdges?: ReturnType<typeof vi.fn>;
-  setDraftSession?: ReturnType<typeof vi.fn>;
-  setSelectedNodes?: ReturnType<typeof vi.fn>;
-  reconcileSelectionAfterNodeRemoval?: ReturnType<typeof vi.fn>;
-  setInspectorNode?: ReturnType<typeof vi.fn>;
-  onLayoutComplete?: ReturnType<typeof vi.fn>;
+  setNodes?: Mock;
+  setEdges?: Mock;
+  setDraftSession?: Mock;
+  setSelectedNodes?: Mock;
+  reconcileSelectionAfterNodeRemoval?: Mock;
+  setInspectorNode?: Mock;
+  onLayoutComplete?: Mock;
 }): NodeChangeHarness {
   let latest: LatestHook = null;
   const container = document.createElement('div');
@@ -237,7 +236,18 @@ describe('useCanvasNodeChangeHandlers', () => {
     harness.cleanup();
   });
 
-  it('keeps settled position changes local to the viewport model', async () => {
+  it.each([
+    {
+      title: 'keeps settled position changes local to the viewport model',
+      dragging: false,
+      position: { x: 225, y: 210 },
+    },
+    {
+      title: 'keeps active drag coordinates local when the change carries a position payload',
+      dragging: true,
+      position: { x: 96, y: 72 },
+    },
+  ])('$title', async ({ dragging, position }) => {
     let currentNodes: Node[] = buildNodes();
     const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
       currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
@@ -252,41 +262,13 @@ describe('useCanvasNodeChangeHandlers', () => {
         {
           id: 'source-node',
           type: 'position',
-          dragging: false,
-          position: { x: 225, y: 210 },
+          dragging,
+          position,
         },
       ]);
     });
 
-    expect(currentNodes[0]?.position).toEqual({ x: 225, y: 210 });
-    expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
-    expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
-
-    harness.cleanup();
-  });
-
-  it('keeps active drag coordinates local when the change carries a position payload', async () => {
-    let currentNodes: Node[] = buildNodes();
-    const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
-      currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
-    });
-    const harness = renderHookHost({
-      setNodes,
-    });
-    await harness.render();
-
-    act(() => {
-      harness.latest()?.handleNodesChange([
-        {
-          id: 'source-node',
-          type: 'position',
-          dragging: true,
-          position: { x: 96, y: 72 },
-        },
-      ]);
-    });
-
-    expect(currentNodes[0]?.position).toEqual({ x: 96, y: 72 });
+    expect(currentNodes[0]?.position).toEqual(position);
     expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
     expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
 

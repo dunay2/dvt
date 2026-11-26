@@ -53,7 +53,10 @@ describe('Filter on selected input (controlled API boundary)', () => {
         .focus()
         .type('{del}');
       cy.then(() =>
-        stageWorkbenchUnary('filter', `[data-operator="read"][data-relation-id="${inputId}"]`)
+        stageWorkbenchUnary({
+          operation: 'filter',
+          producer: `[data-operator="read"][data-relation-id="${inputId}"]`,
+        })
       );
       cy.get('[data-slot="canvas-relational-operator-form"] input').type('active');
       cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
@@ -62,7 +65,7 @@ describe('Filter on selected input (controlled API boundary)', () => {
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
         .closest('li')
         .as('join');
-      connectWorkbenchProducer('@filter', '@join', operand);
+      connectWorkbenchProducer({ producer: '@filter', consumer: '@join', port: operand });
       cy.then(() => {
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
       });

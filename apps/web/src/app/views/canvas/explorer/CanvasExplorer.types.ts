@@ -18,6 +18,9 @@ export type CanvasExplorerActivityRail = Readonly<{ codeVisible: boolean }>;
 export type CanvasExplorerHeading = Readonly<{ label: string; contextLabel?: string }>;
 export type CanvasExplorerModelAction = Readonly<{
   label: string;
+  referenceLabel?: string;
+  labelFor?: (id: string) => string;
+  canActivate?: (id: string) => boolean;
   onActivate: (id: string) => unknown;
 }>;
 
@@ -41,6 +44,7 @@ export type CanvasProjectElementsInput = Readonly<{
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
+  onRemoveEmptyModel?: (id: string) => void;
   onImport?: () => void;
   connections?: ReactNode;
 }>;

@@ -8,16 +8,14 @@ describe('resolvePluginsViewCopy', () => {
 
     expect(copy.title).toBe('Plugins');
     expect(copy.frontendFilterNotRegistered).toBe('Frontend no registrado');
-    expect(copy.runtimeShapeBackendOnly).toBe('Solo backend');
-    expect(copy.catalogEntryDetail('catalog-only')).toContain('catalog-only');
-    expect(copy.frontendNotRegisteredDetail).toContain('módulo frontend');
+    expect(copy.backendFilterLabel).toBe('Filtrar por estado del backend');
+    expect(copy.backendUnknownDetail('catalog-only')).toContain('catalog-only');
   });
 
   it('falls back to English for unsupported locales', () => {
     const copy = resolvePluginsViewCopy('fr-FR');
 
     expect(copy.frontendFilterNotRegistered).toBe('Frontend not registered');
-    expect(copy.runtimeShapeUnbound).toBe('Unbound');
-    expect(copy.localOnlyDiagnosticDescription(2)).toContain('2');
+    expect(copy.unboundLabel).toBe('Unbound');
   });
 });

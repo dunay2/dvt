@@ -144,6 +144,16 @@ Only `component` and `source` units may own files. A `module`, `workspace`,
 `domain`, or `system` may aggregate descendants but must not own files
 directly.
 
+Physical ownership does not declare executable implementation. A passive
+documentary collection retains the explicit `documentary-collection`
+architectural kind and its real documentary concern, boundary, consumers and
+evidence. Semantic component-to-document associations remain distinct from file
+ownership. Neither an ownership category, a directory nor review status proves
+an implemented service. Code, executable configuration, schemas, source bindings,
+rail implementations and unknown artifacts retain implementation obligations;
+they cannot enter a documentary collection to avoid them. The Component
+Engineering Record contract owns the strict, current-source admission rules.
+
 ### Quality Model
 
 The quality model evaluates architecture fitness. It joins unit identity,

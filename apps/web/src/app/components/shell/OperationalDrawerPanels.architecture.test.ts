@@ -42,7 +42,7 @@ describe('Operational drawer architecture', () => {
     expect(panelsSource).toContain('OperationalDrawerPanelSurface');
     expect(panelsSource).toContain('OperationalDrawerProblemItem');
     expect(panelsSource).toContain('OperationalDrawerPreviewLayout');
-    expect(panelsSource).toContain('OperationalDrawerRunActiveSummary');
+    expect(panelsSource).not.toContain('RunControlActions');
     expect(panelsSource).not.toContain('className=');
     expect(panelsSource).not.toContain('border-amber-400/40');
     expect(panelsSource).not.toContain('text-[11px]');

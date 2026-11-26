@@ -38,6 +38,8 @@ export const liveWorkloadConsumers = [
 
 export const inspectorConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-inspection-layout.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-output-code.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-viewport.cy.ts',

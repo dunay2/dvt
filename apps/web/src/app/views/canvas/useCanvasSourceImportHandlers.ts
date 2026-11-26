@@ -34,7 +34,7 @@ function requestAuthoritativeDraftRefresh(
 ) {
   queryClient
     .invalidateQueries({
-      queryKey: queryKeys.workspace.graphDraft(workspaceLayoutKey),
+      queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).graphDraft(),
     })
     .catch(() => undefined);
 }

@@ -10,13 +10,14 @@ import type { useCanvasControllerReadModel } from './useCanvasControllerReadMode
 import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import {
-  listProjectCanvasDocuments,
   resolveActiveProjectCanvasId,
+  type ProjectCanvasDocument,
 } from './canvasProjectCanvasLifecycle';
 
 const canvasControllerNodeTypes: NodeTypes = { dbtNode: DbtNodeComponent };
 type CanvasAuthoringRuntime = ReturnType<typeof useCanvasAuthoringRuntime>;
 export type CanvasShellViewModelArgs = Readonly<{
+  canvasDocuments: readonly ProjectCanvasDocument[];
   environment: ReturnType<typeof useCanvasControllerEnvironment>;
   authoringRuntime: CanvasAuthoringRuntime;
   overlayModel: ReturnType<typeof useCanvasOverlayModel>;
@@ -32,7 +33,7 @@ function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime
   return graphError instanceof Error ? graphError.message : null;
 }
 
-function resolveRouteDraftRecord({
+export function resolveRouteDraftRecord({
   draftReadModel,
   draftSession,
 }: Pick<CanvasAuthoringRuntime, 'draftReadModel' | 'draftSession'>) {
@@ -86,10 +87,11 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities, applicationLanguage),
     canvasDocument: routeDraft?.canvas ?? null,
-    canvasDocuments: listProjectCanvasDocuments(routeDraft),
+    canvasDocuments: args.canvasDocuments,
     activeCanvasId: resolveActiveProjectCanvasId(routeDraft),
     executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
     canCreateCanvasDocument: canCreateCanvasDocument && routeDraftRecord == null,
+    canAddCanvasDocument: canCreateCanvasDocument && draftReadModel?.record != null,
     authorizationPermissions: store.userPermissions,
     userPermissions: {
       ...store.userPermissions,
@@ -109,11 +111,17 @@ export function buildCanvasShellViewModel(args: CanvasShellViewModelArgs) {
     canvasSnapToGrid: store.canvasSnapToGrid,
     viewport: store.persistedViewport,
     frozenNodeIds: store.frozenNodeIds,
-    canEditInspectorNode:
-      runtimePolicy.commands.canEditInspectorNode &&
-      inspectorNode != null &&
-      (inspectorNode.role === 'input' || visibleScope.visibleNodeIds.includes(inspectorNode.id)),
+    canEditInspectorNode: canEditPresentedInspectorNode(args),
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
     applyNodeDraft: args.inspectorCommands.applyNodeDraft,
   };
+}
+
+function canEditPresentedInspectorNode(args: CanvasShellViewModelArgs): boolean {
+  if (!args.graphPolicy.runtimePolicy.commands.canEditInspectorNode) return false;
+  const node = args.readModel.inspectorNode;
+  if (node == null) return false;
+  return (
+    node.role === 'input' || args.authoringRuntime.visibleScope.visibleNodeIds.includes(node.id)
+  );
 }

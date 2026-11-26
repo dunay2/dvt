@@ -69,6 +69,28 @@ message, not the same global summary for every row. A Preview rejection belongs
 to the exact draft signature that produced it and expires when that identity
 changes, including when no PlanRef was accepted.
 
+For the protected DVT materialization rejection, `PreviewPlan` evaluates the
+single terminal Transform selected by the confirmed Canvas graph. The Canvas
+keeps that model's identity and display name on the rejected presentation
+outcome. The typed cause identifies this specific failure before the message
+names the selected model. Other failures can have a different subject and do
+not receive a guessed model. `ObservePlanRunReadiness` consumes the same
+subject and retires it with the rejected draft signature.
+
+```mermaid
+flowchart LR
+  Graph[Confirmed Canvas graph] --> Scope[Single requested terminal model]
+  Scope --> Preview[Existing PreviewPlan command]
+  Preview --> Cause[Typed publication rejection]
+  Cause --> Message[Localized correction and affected model]
+  Scope --> Message
+  Message --> Readiness[Existing readiness summary]
+  Message --> Dialog[Preview dialog and technical disclosure]
+```
+
+The dialog presents the correction once and keeps the code and cause
+available through a disclosure. No API request or response contract changes.
+
 Autosave scheduling follows semantic draft identity and revision. Equivalent
 projection objects from unrelated renders must not postpone an authorized save
 indefinitely. Genuine edits restart the bounded debounce; a sent save still
@@ -187,11 +209,12 @@ registration. Acceptance must show a final card with its own instance identity,
 the same definition reference after reload, movement of that card, and no
 automatic edge, SQL copy or new project file.
 
-A registered Model definition remains projectable without a placed card when
-its identity is present in the local catalogue or confirmed draft record. Removing
-the card updates visible `nodeIds` and persists that change while retaining the
-definition for future instances. An unregistered hidden model still blocks
-projectability; registration does not admit a model to execution.
+A registered reusable Model definition remains projectable without a placed card
+when its identity is present in the local catalogue or confirmed draft record.
+Removing an ordinary occurrence updates visible `nodeIds` and persists that
+change while retaining the definition for future instances. The explicit empty
+draft deletion below is a different, bounded intent. An unregistered hidden model
+still blocks projectability; registration does not admit a model to execution.
 
 A registered input owns source configuration. Each explicit catalogue drop
 creates a fresh input identity referencing it via `sourceDefinitionId`. The
@@ -201,6 +224,63 @@ Missing, self, chained and incompatible references fail closed. Removing one
 instance retains its source definition and siblings. Existing placed definitions
 remain valid without migration. These semantics remain on `CreateCanvasNode`
 and `SaveWorkspaceGraphDraft`, with existing permission and concurrency gates.
+
+#### Explicit empty Model draft deletion
+
+`RemoveCanvasNode` and `SaveWorkspaceGraphDraft` also carry the intentional
+removal of one eligible empty Model draft, from its last placed card or an
+accessible Explorer action when it has no card. This reuses the current
+authoring session and protected save; it introduces no parallel write endpoint.
+
+Emptiness is structural: native `pluginId=dvt`, `kind=dvt:transform` and
+`role=transform`, no definition reference or path, and metadata containing only
+display `typeLabel` and optionally empty `config`. Any `transformAuthoring`,
+relational or SQL draft, binding, semantic or other authoring metadata preserves
+the definition. Missing SQL alone is never a deletion criterion. Unknown identity
+or metadata cannot be treated as evidence of emptiness. Nonempty business
+descriptions, non-seed business tags and runtime metric facts also preserve the
+definition. A stale or ineligible selection must report a localized rejection
+and retain the item.
+
+The command revalidates the current session and writable posture before mutation.
+Other placements, relevant edges, producer references from other Substrait plans
+or uses in another Canvas prevent definition removal. It targets only the
+explicitly selected identity in the owning workspace/Canvas; every other empty
+draft, configured Model, reusable definition and sibling Canvas remains intact.
+No startup, hydration or catalogue scan purges drafts merely because they have no
+SQL.
+
+Pending `removedDefinitionIds` belong to the existing `CanvasDraftSession`.
+Projection, catalogue counts, resolver inputs and the complete save payload use
+the same selected-ID exclusion. No separate hidden-item store or independently
+filtered Explorer list represents deletion. The confirmed baseline and revision
+remain unchanged until the existing save receipt acknowledges the snapshot.
+
+```mermaid
+flowchart LR
+  Intent[Explicit card or Explorer deletion] --> Guard[Current structural and reference checks]
+  Guard --> Session[Same CanvasDraftSession intent]
+  Session --> Projection[Catalogue, counter and resolver projection]
+  Session --> Payload[Complete canonical draft without the selected definition]
+  Payload --> Save[Existing guarded SaveWorkspaceGraphDraft]
+  Save --> Receipt[Matching confirmed snapshot]
+  Receipt --> Reload[Existing read and rehydration keep the definition absent]
+```
+
+Rapid deletions compose through the current session command owner, never a stale
+rendered session. A confirmed save retires only the intents represented by that
+snapshot; newer pending edits remain. Failure, conflict, denial or changed
+scope/generation cannot claim persisted deletion, silently rebase the command or
+apply an old intent to another session. Existing guarded recovery remains in
+force. After successful save and reload, Explorer items and their counter derive
+from the same confirmed aggregate and the selected empty definition stays absent.
+
+The mounted session journey must exercise the real deletion command through its
+save payload and rehydration, preserving another empty draft, a configured Model
+and a sibling Canvas. It must not fabricate an independent filtered read list.
+The prospective Q-only design and evidence are tracked in
+[GH-3951](https://github.com/dunay2/dvt/issues/3951#issuecomment-7170273958);
+this requirement does not assert acceptance of an earlier candidate.
 
 Placement identities use the shared `@dvt/crypto` UUID primitive, not the
 secure-context-only browser `crypto.randomUUID` API. The primitive requires
@@ -244,6 +324,123 @@ flowchart LR
   cannot be used as save payloads.
 - Layout can project from authoring positions, but it cannot replace protected
   graph truth.
+
+### Equivalent saved draft representations
+
+The existing draft structural signature compares graph meaning after applying
+the established native kind normalization. A saved `dvt:transform` and its
+rehydrated `transform` representation are equivalent under that policy. An
+omitted Canvas collection and an explicit mirror of the same active Canvas are
+equivalent only when their graph and active Canvas identity agree. Preserve
+sibling canvases and every real semantic, metadata or position change in the
+comparison. Normalization must not discard edits or alter the saved payload.
+
+```mermaid
+flowchart LR
+  Read[Authoritative saved draft] --> Normalize[Kind and equivalent active mirror]
+  Normalize --> Compare[Existing baseline structural signature]
+  Compare --> Same[Unchanged graph: no redundant save]
+  Compare --> Changed[Real change: existing guarded save]
+```
+
+The [bounded rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7172158910)
+requires a real reopen to avoid a second save while sibling Canvas and actual
+graph edits remain distinguishable. This is baseline equivalence within
+`SaveWorkspaceGraphDraft`, with its existing authorization and revision guards.
+
+### Authority-aware Model composition
+
+Composition classifies the actual definition's authority before admitting a
+gesture. A native warehouse Source may retain a descriptive YAML path together
+with its validated `connectedSourceRef` and current published columns. That path
+alone does not make the definition file-authoritative. Native working-copy
+preparation keeps fresh local identities and shared canonical resource and
+dependency references, while excluding path, copied SQL, runtime evidence and
+durable destinations. The original definition remains unchanged.
+
+An already connected physical Source has one admitted incoming dependency and
+may supply zero, one or several local Reads. Adding it from the Model Explorer
+reuses that exact current Input through the existing occurrence command; it does
+not create another working definition or exterior edge. Each Read receives its
+own opaque relation and field identities and a distinct local alias, allowing
+self-joins without changing the Source. The action identifies this intent as
+adding an instance rather than a working copy.
+
+The local alias remains the occurrence title. When it differs from the canonical
+physical table name, presentation may show that actual qualified name as a
+separate description. Read it from the physical Read's named-table identity;
+never turn a dbt reference, an opaque source-object ID or a local alias into a
+physical table. Input and Output column sets belong under a localized Columns
+heading and retain complete accessible labels.
+
+Resolve the canonical physical reference and current publication independently
+from the number of existing Reads. Ambiguous duplicate dependencies, unavailable
+or stale bindings, denied editing and foreign scopes reject without mutation.
+Keep the duplicate-physical-edge guard for actual working-copy admission. Cancel
+discards only the new local occurrences; Apply and reopen retain their identities
+and aliases through the existing Model draft and protected save.
+
+```mermaid
+flowchart LR
+  Catalogue[Model Explorer action or scoped drop] --> Input[One current admitted physical Input]
+  Input --> Reads[Independent local Read identities and aliases]
+  Reads --> Session[Existing discardable Model session]
+  Session --> Cancel[Cancel preserves original Source and previous Reads]
+  Session --> Apply[Apply uses existing guarded save]
+  Apply --> Reopen[One dependency and stable multiple occurrences]
+```
+
+The [bounded occurrence rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7175369225)
+separates this existing Input reuse from independent working-copy creation. It
+adds no command, permission, cache or semantic authority.
+
+A file-owned dbt Model keeps its actual file-model reference and publication.
+Adding it as an input to a native Model uses the existing published producer
+reference; it does not copy SQL or file authority into a native working copy.
+Presentation must identify use of a reference and must not report it as an
+independent copy. Independent copying of a file-owned Model still requires a
+real new file or an admitted conversion, as described by the proposed ADR-0070.
+This bounded reference composition does not rewrite that restriction.
+
+For a file-only dbt definition discovered through the existing authenticated
+project query, the Browser shares one actual discovery snapshot with Explorer
+and the Model workbench. Staging does not register a definition or save. Apply
+re-reads that same query and validates binding, revision, analysis, field
+contract, connection, permission and cancellation before admitting the verified
+reference and its instance/dependency to the private candidate. Cancel leaves
+no definition or save. The [discovery rationale](https://github.com/dunay2/dvt/issues/3951#issuecomment-7172358517)
+does not introduce a second query pipeline or copy SQL/file authority.
+
+Definitions can be selected from the canonical catalogue without an existing
+placed card. Resolve that exact definition and its current publication; do not
+replace an unavailable reference with a guessed physical table, SQL text or
+fabricated signature. Native editable receiver, scope, field/provenance,
+connection, duplicate-resource and cycle checks remain mandatory. A source's
+shape cannot silently change the destination or create a second project drop.
+
+The existing Model transaction stages the accepted native copy or referenced
+input. Cancel, stale source/receiver, denied authorization, validation failure
+and CAS conflict leave no orphan definition or partial edge. Apply publishes
+the admitted candidate through the existing protected save only once.
+
+```mermaid
+flowchart TD
+  Definition[Actual catalogue definition] --> Authority{Canonical authority}
+  Authority --> Native[Native Source or Model]
+  Authority --> File[File-owned dbt Model]
+  Native --> Copy[Validate publication and prepare native copy]
+  File --> Reference[Use existing published producer reference]
+  Copy --> Session[Existing receiver Model transaction]
+  Reference --> Session
+  Session --> Apply[Dependency guards and one protected save]
+  Session --> Cancel[Discard with no orphan or partial edge]
+```
+
+The [prospective rationale and scope](https://github.com/dunay2/dvt/issues/3951#issuecomment-7171704979)
+require the existing integrated Model-composition and browser journeys to cover
+unplaced definitions of both shapes, correct publication after save/reload,
+unchanged original authority and cancellation. Unsupported, stale, cross-scope,
+duplicate-resource and cyclic candidates remain negative cases.
 
 ## Command And Query Rails
 

@@ -84,6 +84,48 @@ function openGraphFilters(): Cypress.Chainable<JQuery<HTMLElement>> {
   return cy.get('[data-slot="canvas-graph-filter-control"]').should('be.visible');
 }
 
+function exerciseReadOnlyGraphSearchAndFilters(): void {
+  openGraphSearch().type('Model');
+  cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '1 / 2');
+  cy.get('.react-flow__node.canvas-graph-search-active-node').should('contain.text', 'Model 1');
+
+  cy.get('[data-slot="canvas-graph-search-control"] input[type="search"]').type('{enter}');
+  cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '2 / 2');
+  cy.get('.react-flow__node.canvas-graph-search-active-node').should('contain.text', 'Model 2');
+  cy.get('[data-slot="canvas-graph-search-control"] input[type="search"]').type('{shift}{enter}');
+  cy.get('.react-flow__node.canvas-graph-search-active-node').should('contain.text', 'Model 1');
+
+  openGraphFilters().within(() => {
+    cy.get('select').eq(0).select('role');
+    cy.get('select').eq(1).select('transform');
+    cy.get('button[aria-label="Add filter"], button[aria-label="Anadir filtro"]').click();
+    cy.contains('2 of 3 nodes visible').should('be.visible');
+    cy.contains('button', /^(Hide|Ocultar)$/).click();
+  });
+  cy.get('.react-flow__node').should('have.length', 2);
+  cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '1 / 2');
+
+  cy.get(
+    'button[aria-label="Close graph filters"], button[aria-label="Cerrar filtros del grafo"]'
+  ).click();
+  cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
+  cy.get('.react-flow__node').should('have.length', 2);
+  openGraphFilters();
+  cy.get('[data-testid="canvas-viewport"]').find('.react-flow__pane').click(90, 420);
+  cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
+  cy.get('.react-flow__node').should('have.length', 2);
+  openGraphFilters();
+
+  cy.get('[data-slot="canvas-graph-filter-control"]')
+    .find(
+      'button[aria-label="Clear graph filters"], button[aria-label="Limpiar filtros del grafo"]'
+    )
+    .click();
+  cy.get('.react-flow__node').should('have.length', 3);
+  cy.get('[data-slot="canvas-graph-search-control"] input[type="search"]').type('{esc}');
+  cy.get('[data-slot="canvas-graph-search-control"]').should('not.exist');
+}
+
 describe('Canvas graph search and filtering live protected runtime', () => {
   beforeEach(function () {
     if (!hasLiveProtectedRuntimeEnv()) {
@@ -128,35 +170,7 @@ describe('Canvas graph search and filtering live protected runtime', () => {
 
     cy.then(() => waitForDraftNodeCount(3, scope)).as('draftBeforeReadOnlyQueries');
 
-    openGraphSearch().type('Model');
-    cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '1 / 2');
-    cy.get('.react-flow__node.canvas-graph-search-active-node').should('contain.text', 'Model 1');
-
-    cy.get('[data-slot="canvas-graph-search-control"] input[type="search"]').type('{enter}');
-    cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '2 / 2');
-    cy.get('.react-flow__node.canvas-graph-search-active-node').should('contain.text', 'Model 2');
-    cy.get('[data-slot="canvas-graph-search-control"] input[type="search"]').type('{shift}{enter}');
-    cy.get('.react-flow__node.canvas-graph-search-active-node').should('contain.text', 'Model 1');
-
-    openGraphFilters().within(() => {
-      cy.get('select').eq(0).select('role');
-      cy.get('select').eq(1).select('transform');
-      cy.get('button[aria-label="Add filter"], button[aria-label="Anadir filtro"]').click();
-      cy.contains('2 of 3 nodes visible').should('be.visible');
-      cy.contains('button', /^(Hide|Ocultar)$/).click();
-    });
-    cy.get('.react-flow__node').should('have.length', 2);
-    cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '1 / 2');
-
-    cy.get('[data-slot="canvas-graph-filter-control"]')
-      .find(
-        'button[aria-label="Clear graph filters"], button[aria-label="Limpiar filtros del grafo"]'
-      )
-      .click();
-    cy.get('.react-flow__node').should('have.length', 3);
-    cy.get('[data-slot="canvas-graph-search-control"] input[type="search"]').type('{esc}');
-    cy.get('[data-slot="canvas-graph-search-control"]').should('not.exist');
-
+    exerciseReadOnlyGraphSearchAndFilters();
     cy.get<DraftSnapshot>('@draftBeforeReadOnlyQueries').then((before) => {
       waitForDraftNodeCount(3, scope).then((after) => {
         expect(after).to.deep.equal(before);

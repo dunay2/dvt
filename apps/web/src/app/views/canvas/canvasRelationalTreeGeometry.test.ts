@@ -25,6 +25,61 @@ function relation(
 }
 
 describe('canvas relational-tree graph geometry', () => {
+  it('retains expanded world coordinates when corresponding operation identities and locators change', () => {
+    const oldRoot = relation('old-project', [
+      { role: 'input', ordinal: 0, node: relation('orders') },
+    ]);
+    const nextRoot = relation('new-project', oldRoot.children);
+    const positions = new Map([
+      ['orders', { x: -400, y: 100 }],
+      ['old-project', { x: 0, y: 100 }],
+      [CANVAS_RELATIONAL_OUTPUT_POSITION_ID, { x: 400, y: 100 }],
+    ]);
+    const sizes = new Map([
+      ['orders', { width: 300, height: 240 }],
+      ['old-project', { width: 300, height: 280 }],
+    ]);
+    const before = layoutCanvasRelationalTree(oldRoot, sizes, positions);
+    const nextPositions = new Map(positions);
+    nextPositions.delete('old-project');
+    nextPositions.set('new-project', positions.get('old-project')!);
+    const nextSizes = new Map(sizes);
+    nextSizes.delete('old-project');
+    nextSizes.set('new-project', sizes.get('old-project')!);
+    const next = layoutCanvasRelationalTree(
+      nextRoot,
+      nextSizes,
+      nextPositions,
+      [],
+      before.expansionFrame
+    );
+    expect(next.nodes.map(({ x, y }) => ({ x, y }))).toEqual(
+      before.nodes.map(({ x, y }) => ({ x, y }))
+    );
+    expect(next.output).toMatchObject({ x: before.output!.x, y: before.output!.y });
+  });
+  it('places a new operation around fixed input and Output rectangles without moving either anchor', () => {
+    const root = relation('new-operation', [
+      { role: 'input', ordinal: 0, node: relation('orders') },
+    ]);
+    const positions = new Map([
+      ['orders', { x: 36, y: 36 }],
+      [CANVAS_RELATIONAL_OUTPUT_POSITION_ID, { x: 332, y: 36 }],
+    ]);
+    const layout = layoutCanvasRelationalTree(root, new Map(), positions);
+    expect(layout.nodes.find((card) => card.node.relationId === 'orders')).toMatchObject(
+      positions.get('orders')!
+    );
+    expect(layout.output).toMatchObject(positions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)!);
+    const operation = layout.nodes[0]!;
+    const output = layout.output!;
+    expect(
+      operation.x + operation.width <= output.x ||
+        output.x + output.width <= operation.x ||
+        operation.y + operation.height <= output.y ||
+        output.y + output.height <= operation.y
+    ).toBe(true);
+  });
   it('measures signed bounds without moving authored cards or Output', () => {
     const positions = new Map([
       ['orders', { x: -400, y: -200 }],

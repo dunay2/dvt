@@ -1,6 +1,6 @@
 import { EXECUTABILITY_REJECTION_CODES } from '@dvt/contracts';
 
-import type { PlanPreviewOutcome } from '../../ports/plans';
+import type { PlanPreviewOutcome, PreviewAffectedModel } from '../../ports/plans';
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
 
@@ -15,6 +15,7 @@ export type CanvasPreviewOutcomeDiagnostic = Readonly<{
   code: string;
   cause?: string;
   reason?: string;
+  affectedModel?: PreviewAffectedModel;
 }>;
 
 export type CanvasPreviewOutcomeProjection = Readonly<{
@@ -35,6 +36,7 @@ function projectDiagnostic(
     code: diagnostic.code,
     ...(diagnostic.cause ? { cause: diagnostic.cause } : {}),
     ...(diagnostic.reason ? { reason: diagnostic.reason } : {}),
+    ...(diagnostic.affectedModel ? { affectedModel: diagnostic.affectedModel } : {}),
   };
 }
 
@@ -52,7 +54,13 @@ export function projectCanvasPreviewOutcome(
       return {
         currentPlan: null,
         readinessBlocker: 'plan_integrity',
-        diagnostic: projectDiagnostic(outcome.rejection, outcome.rejection.code === 'REJECTED'),
+        diagnostic: projectDiagnostic(
+          {
+            ...outcome.rejection,
+            ...(outcome.affectedModel ? { affectedModel: outcome.affectedModel } : {}),
+          },
+          outcome.rejection.code === 'REJECTED'
+        ),
       };
     case 'plan-invalid':
       return {

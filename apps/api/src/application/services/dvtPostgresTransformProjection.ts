@@ -30,6 +30,7 @@ export async function projectDvtPostgresTransform(
   const result = await projectSubstraitProducerGraph({
     targetId: closure.transform.id,
     documents: closure.documents,
+    literalConnections: closure.literalConnections ?? new Map(),
     externalProducers: closure.externalProducers,
     externalProjections: new Map(
       [...closure.externalProducers].map(([id, producer]) => [id, producer.projection])
@@ -48,7 +49,8 @@ export async function projectDvtPostgresTransform(
     ...(relationId == null ? {} : { relationId }),
   });
   const requireAllSources = relationId === undefined && !closure.preview;
-  if (result.projection.inputs.length > 0 || (requireAllSources && closure.sources.length > 0))
+  const expectedInputs = requireAllSources ? closure.sources.length : 0;
+  if (result.projection.inputs.length + expectedInputs > 0)
     requireDvtProjectedSourceCoverage(result.projection.inputs, closure.sources, requireAllSources);
   return {
     sql: result.sql,

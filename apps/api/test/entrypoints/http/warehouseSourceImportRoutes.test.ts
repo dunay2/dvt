@@ -1,1214 +1,40 @@
-/**
- * Owned concern: verify protected warehouse commands and queries at their HTTP boundary.
- * @baseline ADR-0066: a replaced publication cannot satisfy an older Run's sample.
- * @decision Preserve typed conflicts and authorization through the existing source query.
- * @consequence Consumers can distinguish changed publication from unavailable data.
- * @version 1.0.0
- */
-import { createHash } from 'node:crypto';
-import { URLSearchParams } from 'node:url';
-
-import {
-  buildRelationalSourceObjectId,
-  type CanvasAuthoringAuthorityBinding,
-  type SourceObject,
-  type SourceObjectColumn,
-  type SourceObjectConstraint,
-  type SourceObjectCatalogRequest,
-  type SourceObjectCatalogResponse,
-  type SourceObjectMetricEvidence,
-  type WorkspaceGraphDraftScope,
-  type WorkspaceGraphAuthoringDraft,
-  type WorkspaceGraphAuthoringNode,
-} from '@dvt/contracts';
-import Fastify from 'fastify';
-import type { FastifyInstance } from 'fastify';
+import { type WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CanvasAuthoringAuthorityKey } from '../../../src/application/ports/canvasAuthoringAuthority.js';
 import {
-  DuplicateWarehouseConnectionError,
-  WarehouseConnectionNotFoundError,
-  WarehouseSourcePublicationChangedError,
-} from '../../../src/application/ports/warehouseSourceImport.js';
-import type {
-  CreateWarehouseConnectionCatalogInput,
-  IWarehouseConnectionCatalog,
-  IWarehouseConnectionProbe,
-  IWarehouseSourceDataSampleProbe,
-  InspectWarehouseConnectionResult,
-  TestWarehouseConnectionResult,
-  WarehouseConnection,
-  WarehouseConnectionCatalogEntry,
-} from '../../../src/application/ports/warehouseSourceImport.js';
-import {
-  WorkspaceFileNotFoundError,
-  WorkspaceFileRevisionConflictError,
-} from '../../../src/application/ports/workspaceFiles.js';
-import type {
-  DeleteWorkspaceFileContentInput,
-  IWorkspaceFileBatchMutationPort,
-  SaveWorkspaceFileContentInput,
-  WorkspaceFileBatchMutation,
-  WorkspaceFileBatchMutationResult,
-  WorkspaceFileContent,
-  WorkspaceFileDeleteResult,
-  WorkspaceFileEntry,
-  WorkspaceFileSaveResult,
-  WorkspaceStorageScope,
-} from '../../../src/application/ports/workspaceFiles.js';
-import { CreateWarehouseConnectionUseCase } from '../../../src/application/services/createWarehouseConnectionUseCase.js';
-import { GraphDraftWarehouseSourceImportStrategy } from '../../../src/application/services/graphDraftWarehouseSourceImportStrategy.js';
-import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
-import { ListWarehouseConnectionSourceObjectsUseCase } from '../../../src/application/services/listWarehouseConnectionSourceObjectsUseCase.js';
-import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
-import { PreviewWarehouseSourceObjectRowsUseCase } from '../../../src/application/services/previewWarehouseSourceObjectRowsUseCase.js';
-import { RenameWarehouseConnectionUseCase } from '../../../src/application/services/renameWarehouseConnectionUseCase.js';
-import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
-import { ValidatePostgresTransformSqlUseCase } from '../../../src/application/services/validatePostgresTransformSqlUseCase.js';
-import { WarehouseConnectionSourceObjectReader } from '../../../src/application/services/WarehouseConnectionSourceObjectReader.js';
-import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
-import {
-  WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
-  toWarehouseConnectionId,
-} from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+  expectSourceImportRejectedWithoutMutation,
+  expectSourceImportRejection,
+  expectWarehouseAuthorization,
+  placeImportedSourceInstance,
+  buildDisambiguatedCatalogEntries,
+  expectSchemaGroupedYamlContent,
+  injectWarehouseRequest,
+  buildSourceImportPayload,
+  DVT_SOURCE_NODE_ID_PATTERN,
+  ROUTE_SCOPE,
+  measuredMetrics,
+  relationSourceObject,
+  defaultOrdersSourceObject,
+  buildApp,
+} from './warehouseSourceImportRoutes.test-support.js';
 
-const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
-const DVT_SOURCE_NODE_ID_PATTERN =
-  /^dvt_src_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
-
-const ROUTE_SCOPE = {
-  tenantId: 'tenant-a',
-  projectId: 'project-a',
-  environmentId: 'env-a',
-} as const satisfies WorkspaceGraphDraftScope;
-const SOURCE_IMPORT_REQUEST_BASE = {
-  schemaVersion: 'source-import-request.v2',
-  canvasId: 'canvas-a',
-  idempotencyKey: 'source-import-route-test',
-} as const;
-
-function measuredMetrics(rowCount: number, byteSize: number): SourceObjectMetricEvidence {
-  return {
-    observedAt: '2026-07-10T21:00:00.000Z',
-    observationScope: { kind: 'snapshot' },
-    rowCount: {
-      value: rowCount,
-      provenance: 'estimated',
-      method: 'provider-statistics',
-      confidence: 'medium',
-    },
-    byteSize: {
-      value: byteSize,
-      provenance: 'measured',
-      method: 'provider-storage-metadata',
-      confidence: 'exact',
-      basis: 'physical-allocation',
-    },
-  };
-}
-
-function relationSourceObject(
-  input: Readonly<{
-    catalog?: string;
-    schema?: string;
-    name?: string;
-    rowCount?: number;
-    byteSize?: number;
-    columns?: readonly SourceObjectColumn[];
-    constraints?: readonly SourceObjectConstraint[];
-  }> = {}
-): SourceObject {
-  const locator = {
-    kind: 'relation' as const,
-    catalog: input.catalog ?? 'analytics',
-    schema: input.schema ?? 'erp',
-    name: input.name ?? 'orders',
-    relationType: 'table' as const,
-  };
-  return {
-    objectId: buildRelationalSourceObjectId(locator),
-    displayName: locator.name,
-    locator,
-    metricEvidence: measuredMetrics(input.rowCount ?? 42, input.byteSize ?? 4096000),
-    ...(input.columns ? { columns: [...input.columns] } : {}),
-    ...(input.constraints ? { constraints: [...input.constraints] } : {}),
-  };
-}
-
-const defaultOrdersSourceObject = relationSourceObject({
-  columns: [{ name: 'id', type: 'number', nullable: false }],
-  constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['id'] }],
-});
-
-class TestWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
-  private readonly entriesByScope = new Map<string, readonly WarehouseConnectionCatalogEntry[]>();
-
-  public constructor(
-    entries: readonly WarehouseConnectionCatalogEntry[],
-    private readonly saveConnection?: (
-      scope: WorkspaceGraphDraftScope,
-      input: CreateWarehouseConnectionCatalogInput,
-      entries: readonly WarehouseConnectionCatalogEntry[]
-    ) => Promise<void>
-  ) {
-    this.entriesByScope.set(scopeKey(ROUTE_SCOPE), entries);
-  }
-
-  public async listConnections(
-    scope: WorkspaceGraphDraftScope
-  ): Promise<readonly WarehouseConnection[]> {
-    return this.entries(scope).map(
-      ({ sourceObjects: _sourceObjects, credentialRef: _credentialRef, ...connection }) =>
-        connection
-    );
-  }
-
-  public async listSourceObjects(
-    scope: WorkspaceGraphDraftScope,
-    connectionId: string
-  ): Promise<readonly SourceObject[]> {
-    return (await this.getConnection(scope, connectionId)).sourceObjects;
-  }
-
-  public async getConnection(
-    scope: WorkspaceGraphDraftScope,
-    connectionId: string
-  ): Promise<WarehouseConnectionCatalogEntry> {
-    const connection = this.entries(scope).find((entry) => entry.id === connectionId);
-    if (!connection) {
-      throw new WarehouseConnectionNotFoundError(connectionId);
-    }
-
-    return connection;
-  }
-
-  public async createConnection(
-    scope: WorkspaceGraphDraftScope,
-    input: CreateWarehouseConnectionCatalogInput
-  ): Promise<WarehouseConnection> {
-    const entries = this.entries(scope);
-    const id = toWarehouseConnectionId(input.name);
-    const duplicate = entries.some(
-      (entry) =>
-        entry.id.toLowerCase() === id ||
-        entry.name.trim().toLowerCase() === input.name.trim().toLowerCase()
-    );
-    if (duplicate) {
-      throw new DuplicateWarehouseConnectionError(input.name);
-    }
-
-    const entry: WarehouseConnectionCatalogEntry = {
-      id,
-      name: input.name,
-      type: input.type,
-      database: input.database,
-      credentialRef: input.credentialRef,
-      sourceObjects: input.sourceObjects,
-    };
-    const nextEntries = [...entries, entry];
-    this.entriesByScope.set(scopeKey(scope), nextEntries);
-    await this.saveConnection?.(scope, input, nextEntries);
-    const { sourceObjects: _sourceObjects, credentialRef: _credentialRef, ...connection } = entry;
-    return connection;
-  }
-
-  public async renameConnection(
-    scope: WorkspaceGraphDraftScope,
-    connectionId: string,
-    input: { readonly name: string }
-  ): Promise<WarehouseConnection> {
-    const entries = this.entries(scope);
-    const currentIndex = entries.findIndex((entry) => entry.id === connectionId);
-    if (currentIndex < 0) throw new WarehouseConnectionNotFoundError(connectionId);
-    if (
-      entries.some(
-        (entry, index) =>
-          index !== currentIndex &&
-          entry.name.trim().toLowerCase() === input.name.trim().toLowerCase()
-      )
-    ) {
-      throw new DuplicateWarehouseConnectionError(input.name);
-    }
-    const current = entries[currentIndex];
-    if (!current) throw new WarehouseConnectionNotFoundError(connectionId);
-    const renamed = { ...current, name: input.name.trim() };
-    const nextEntries = [...entries];
-    nextEntries[currentIndex] = renamed;
-    this.entriesByScope.set(scopeKey(scope), nextEntries);
-    const { sourceObjects: _sourceObjects, credentialRef: _credentialRef, ...connection } = renamed;
-    return connection;
-  }
-
-  private entries(scope: WorkspaceGraphDraftScope): readonly WarehouseConnectionCatalogEntry[] {
-    return this.entriesByScope.get(scopeKey(scope)) ?? [];
-  }
-}
-
-function scopeKey(scope: WorkspaceGraphDraftScope): string {
-  return `${scope.tenantId}\u0000${scope.projectId}\u0000${scope.environmentId}`;
-}
-
-type TestWarehouseConnectionProbeFailure = Omit<
-  Extract<InspectWarehouseConnectionResult, { readonly status: 'failed' }>,
-  'checkedAt'
-> & {
-  readonly checkedAt?: string;
-};
-
-class TestWarehouseConnectionProbe
-  implements IWarehouseConnectionProbe, IWarehouseSourceDataSampleProbe
-{
-  public constructor(
-    private readonly result: TestWarehouseConnectionProbeFailure | null,
-    private readonly resolveSourceObjects: (
-      input: Parameters<IWarehouseConnectionProbe['inspectConnection']>[0]
-    ) => readonly SourceObject[]
-  ) {}
-
-  public readonly catalogRequests: SourceObjectCatalogRequest[] = [];
-
-  public async listSourceObjectCatalog(
-    input: Parameters<IWarehouseConnectionProbe['listSourceObjectCatalog']>[0],
-    request: SourceObjectCatalogRequest
-  ): Promise<SourceObjectCatalogResponse> {
-    this.catalogRequests.push(request);
-    const objects = this.resolveSourceObjects(input);
-    if (request.kind === 'schema-list') {
-      const counts = new Map<string, { catalog: string; schema: string; objectCount: number }>();
-      for (const sourceObject of objects) {
-        if (sourceObject.locator.kind !== 'relation') continue;
-        const key = JSON.stringify([sourceObject.locator.catalog, sourceObject.locator.schema]);
-        const current = counts.get(key);
-        counts.set(key, {
-          catalog: sourceObject.locator.catalog,
-          schema: sourceObject.locator.schema,
-          objectCount: (current?.objectCount ?? 0) + 1,
-        });
-      }
-      return { kind: 'schema-list', schemas: [...counts.values()], truncated: false };
-    }
-
-    const matches = objects.filter((sourceObject) => {
-      if (sourceObject.locator.kind !== 'relation') return false;
-      return request.kind === 'schema-page'
-        ? sourceObject.locator.catalog === request.catalog &&
-            sourceObject.locator.schema === request.schema
-        : sourceObject.locator.name.toLocaleLowerCase().includes(request.name.toLocaleLowerCase());
-    });
-    return { kind: 'object-page', objects: matches.slice(0, request.limit), truncated: false };
-  }
-
-  public async inspectConnection(
-    _input: Parameters<IWarehouseConnectionProbe['inspectConnection']>[0]
-  ): Promise<InspectWarehouseConnectionResult> {
-    if (this.result) {
-      return { ...this.result, checkedAt: this.result.checkedAt ?? '2026-05-30T00:00:01.000Z' };
-    }
-
-    return {
-      status: 'passed',
-      checkedAt: '2026-05-30T00:00:01.000Z',
-      sourceObjects: this.resolveSourceObjects(_input),
-    };
-  }
-
-  public async testConnection(
-    input: WarehouseConnectionCatalogEntry
-  ): Promise<TestWarehouseConnectionResult> {
-    if (this.result) {
-      return {
-        connectionId: input.id,
-        ...this.result,
-        checkedAt: this.result.checkedAt ?? '2026-05-30T00:00:01.000Z',
-      };
-    }
-
-    return {
-      connectionId: input.id,
-      status: 'passed',
-      checkedAt: '2026-05-30T00:00:01.000Z',
-      objectCount: input.sourceObjects.length,
-    };
-  }
-
-  public async previewSourceObjectRows(
-    input: Parameters<IWarehouseSourceDataSampleProbe['previewSourceObjectRows']>[0]
-  ): ReturnType<IWarehouseSourceDataSampleProbe['previewSourceObjectRows']> {
-    return {
-      columns: [
-        { name: 'order_id', type: 'integer', nullable: false },
-        { name: 'customer', type: 'text', nullable: true },
-      ],
-      rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }].slice(0, input.limit),
-      truncated: input.limit < 2,
-      queriedAt: '2026-08-17T10:00:00.000Z',
-      navigation: 'bounded-first-page',
-    };
-  }
-}
-
-function principal(): Record<string, unknown> {
-  return {
-    principalId: 'user-1',
-    subjectId: 'user-1',
-    issuer: 'issuer',
-    audience: 'audience',
-    principalType: 'user',
-    expiresAt: new Date('2030-01-01T00:00:00Z'),
-    rawScopes: [],
-    assertedTenantIds: ['tenant-a'],
-    assertedProjectIds: ['project-a'],
-  };
-}
-
-function buildApp(
-  options: {
-    readonly catalogEntries?: readonly WarehouseConnectionCatalogEntry[];
-    readonly authenticated?: boolean;
-    readonly authorized?: boolean;
-    readonly saveResult?:
-      | {
-          readonly kind: 'saved';
-          readonly schemaVersion: string;
-          readonly revision: string;
-          readonly updatedAt: string;
-          readonly deduplicated: boolean;
-        }
-      | {
-          readonly kind: 'conflict';
-          readonly currentRevision: string;
-          readonly storedSchemaVersion: string;
-          readonly updatedAt: string | null;
-        }
-      | {
-          readonly kind: 'idempotency_mismatch';
-        };
-    readonly existingSourceFileContent?: string;
-    readonly connectionTestResult?: TestWarehouseConnectionProbeFailure;
-    readonly renameError?: Error;
-    readonly sqlValidationResult?:
-      | { readonly status: 'valid' }
-      | {
-          readonly status: 'invalid' | 'unavailable';
-          readonly diagnostics: readonly {
-            readonly code: 'undefined_column' | 'connection_unavailable';
-            readonly source: 'postgres' | 'connection';
-            readonly message: string;
-          }[];
-        };
-  } = {}
-): {
-  readonly app: FastifyInstance;
-  readonly authorize: ReturnType<typeof vi.fn>;
-  readonly draftStore: {
-    readonly read: ReturnType<typeof vi.fn>;
-    readonly save: ReturnType<typeof vi.fn>;
-  };
-  readonly workspaceFiles: {
-    readonly getFileContent: ReturnType<typeof vi.fn>;
-    readonly saveFileContent: ReturnType<typeof vi.fn>;
-    readonly deleteFileContent: ReturnType<typeof vi.fn>;
-  };
-  readonly validateSql: ReturnType<typeof vi.fn>;
-  readonly probe: TestWarehouseConnectionProbe;
-} {
-  const app = Fastify({ logger: false });
-  const catalogEntries = (
-    options.catalogEntries ?? [
-      {
-        id: 'warehouse-prod',
-        name: 'Production warehouse',
-        type: 'postgres',
-        database: 'analytics',
-        credentialRef: 'postgres:warehouse',
-        sourceObjects: [defaultOrdersSourceObject],
-      },
-    ]
-  ).map((entry) => ({
-    credentialRef: entry.credentialRef ?? `postgres:${entry.id}`,
-    ...entry,
-  }));
-  const draftStore = {
-    read: vi.fn().mockResolvedValue({
-      scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
-      schemaVersion: 'workspace-graph-draft.v1',
-      revision: 'rev-1',
-      updatedAt: '2026-05-30T00:00:00.000Z',
-      draftPayload: {
-        canvas: { id: 'canvas-a', kind: 'canvas', title: 'Canvas' },
-        activeCanvasId: 'canvas-a',
-        nodeIds: [],
-        nodePositions: {},
-        nodes: [],
-        edges: [],
-        canvases: [
-          {
-            canvas: { id: 'canvas-a', kind: 'canvas', title: 'Canvas' },
-            nodeIds: [],
-            nodePositions: {},
-            nodes: [],
-            edges: [],
-          },
-        ],
-      },
-    }),
-    save: vi.fn().mockResolvedValue(
-      options.saveResult ?? {
-        kind: 'saved',
-        schemaVersion: 'workspace-graph-draft.v1',
-        revision: 'rev-2',
-        updatedAt: '2026-05-30T00:00:01.000Z',
-        deduplicated: false,
-      }
-    ),
-  };
-  const workspaceFiles = {
-    listFiles: vi
-      .fn<(scope: WorkspaceStorageScope) => Promise<readonly WorkspaceFileEntry[]>>()
-      .mockResolvedValue([]),
-    getFileContent: vi
-      .fn<(scope: WorkspaceStorageScope, path: string) => Promise<WorkspaceFileContent>>()
-      .mockImplementation(async (_scope, path) => {
-        if (options.existingSourceFileContent !== undefined) {
-          return {
-            path,
-            name: path.split('/').at(-1) ?? path,
-            language: 'yaml',
-            content: options.existingSourceFileContent,
-            contentSha256: sha256(options.existingSourceFileContent),
-            lastModified: '2026-05-30T00:00:00.000Z',
-          };
-        }
-        throw new WorkspaceFileNotFoundError('models/sources/src_erp.yml');
-      }),
-    saveFileContent: vi.fn<
-      (
-        scope: WorkspaceStorageScope,
-        input: SaveWorkspaceFileContentInput
-      ) => Promise<WorkspaceFileSaveResult>
-    >(async (_scope, input) => ({
-      kind: 'saved',
-      disposition: 'created',
-      path: input.path,
-      contentSha256: sha256(input.content),
-      lastModified: '2026-05-30T00:00:01.000Z',
-    })),
-    deleteFileContent: vi.fn<
-      (
-        scope: WorkspaceStorageScope,
-        input: DeleteWorkspaceFileContentInput
-      ) => Promise<WorkspaceFileDeleteResult>
-    >(async (_scope, _input) => ({ kind: 'deleted' })),
-  };
-  const batchMutation: IWorkspaceFileBatchMutationPort = {
-    apply: vi.fn(
-      async (
-        scope: WorkspaceStorageScope,
-        mutation: WorkspaceFileBatchMutation
-      ): Promise<WorkspaceFileBatchMutationResult> => {
-        const writes: { path: string; contentSha256: string }[] = [];
-        for (const write of mutation.writes) {
-          const expected = mutation.expectedFiles.find(
-            (candidate) => candidate.path === write.path
-          );
-          const result = await workspaceFiles.saveFileContent(scope, {
-            path: write.path,
-            content: write.content,
-            expectedRevision: expected?.expectedContentSha256
-              ? { kind: 'content_sha256', value: expected.expectedContentSha256 }
-              : { kind: 'absent' },
-          });
-          if (result.kind === 'conflict') {
-            return {
-              kind: 'conflict',
-              conflicts: [{ path: write.path, currentContentSha256: result.currentContentSha256 }],
-            };
-          }
-          writes.push({ path: write.path, contentSha256: result.contentSha256 });
-        }
-        for (const filePath of mutation.deletes) {
-          const expected = mutation.expectedFiles.find(
-            (candidate) => candidate.path === filePath
-          )?.expectedContentSha256;
-          if (!expected) throw new Error(`Missing rollback revision for ${filePath}`);
-          await workspaceFiles.deleteFileContent(scope, {
-            path: filePath,
-            expectedRevision: { kind: 'content_sha256', value: expected },
-          });
-        }
-        return {
-          kind: 'applied',
-          idempotencyKey: mutation.idempotencyKey,
-          requestHash: sha256(JSON.stringify(mutation)),
-          deduplicated: false,
-          writes,
-          deletes: [...mutation.deletes],
-        };
-      }
-    ),
-  };
-  const catalog = new TestWarehouseConnectionCatalog(
-    catalogEntries,
-    async (scope, _input, entries) => {
-      await workspaceFiles.saveFileContent(scope, {
-        path: WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
-        content: JSON.stringify({ connections: entries }, null, 2),
-        expectedRevision: { kind: 'absent' },
-      });
-    }
-  );
-  if (options.renameError) {
-    vi.spyOn(catalog, 'renameConnection').mockRejectedValue(options.renameError);
-  }
-  const probe = new TestWarehouseConnectionProbe(
-    options.connectionTestResult ?? null,
-    (input) =>
-      catalogEntries.find((entry) => entry.credentialRef === input.credentialRef)
-        ?.sourceObjects ?? [relationSourceObject({ catalog: input.database, schema: 'public' })]
-  );
-  const sourceObjectReader = new WarehouseConnectionSourceObjectReader(catalog, probe);
-  const validateSql = vi.fn().mockResolvedValue(options.sqlValidationResult ?? { status: 'valid' });
-  const authorize = vi.fn().mockResolvedValue(
-    options.authorized === false
-      ? { ok: false, reason: 'ACTION_NOT_GRANTED' }
-      : {
-          ok: true,
-          context: {
-            principal: principal(),
-            scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
-            action: { kind: 'query', name: 'workspace:source-import:view' },
-            requestId: 'req-1',
-            authorizedAt: new Date('2026-05-30T00:00:00Z'),
-          },
-        }
-  );
-
-  registerWarehouseSourceImportRoutes(app, {
-    authenticator: {
-      authenticateBearerToken: vi.fn().mockResolvedValue(
-        options.authenticated === false
-          ? { ok: false, code: 'missing_token' }
-          : {
-              ok: true,
-              principal: principal(),
-            }
-      ),
-    } as never,
-    authorizer: { authorize } as never,
-    listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
-    listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
-    previewSourceRowsUseCase: new PreviewWarehouseSourceObjectRowsUseCase(catalog, probe),
-    createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
-    renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
-    testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
-    validatePostgresTransformSqlUseCase: new ValidatePostgresTransformSqlUseCase({
-      catalog,
-      semanticValidator: { validate: validateSql },
-    }),
-    importSourcesUseCase: new ImportWarehouseSourcesUseCase({
-      sourceObjectReader,
-      authorityPolicy: {
-        resolve: vi.fn(
-          async (key: CanvasAuthoringAuthorityKey): Promise<CanvasAuthoringAuthorityBinding> => ({
-            schemaVersion: 'canvas-authoring-authority-binding.v1',
-            canvasId: key.canvasId,
-            authority: { kind: 'graph-draft' },
-          })
-        ),
-      },
-      graphDraftStrategy: new GraphDraftWarehouseSourceImportStrategy({
-        draftStore: draftStore as never,
-        workspaceFiles,
-        batchMutation,
-        now: () => new Date('2026-05-30T00:00:01.000Z'),
-      }),
-      dbtProjectFilesStrategy: { execute: vi.fn() },
-    }),
-    rateLimit: { max: 100, timeWindow: 60_000 },
-  });
-
-  return { app, authorize, draftStore, workspaceFiles, validateSql, probe };
-}
-
-function sha256(content: string): string {
-  return createHash('sha256').update(content, 'utf8').digest('hex');
-}
+import './warehouseSourceImportRoutes.test-cases.js';
 
 describe('warehouseSourceImportRoutes', () => {
-  it('validates current SQL through the protected governed PostgreSQL rail', async () => {
-    const { app, validateSql } = buildApp();
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/sql-validation?${SCOPE_QUERY}`,
-      payload: {
-        connectionRef: {
-          schemaVersion: 'connection-ref.v1',
-          provider: 'postgres',
-          connectionId: 'warehouse-prod',
-        },
-        sql: 'select * from public.orders',
-      },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: 'valid' });
-    expect(validateSql).toHaveBeenCalledWith({
-      credentialRef: 'postgres:warehouse',
-      sql: ['SELECT *', 'FROM public.orders'].join('\n'),
-    });
-  });
-
-  it('returns a bounded source data sample through the protected view query', async () => {
-    const { app, authorize, probe } = buildApp();
-    const previewRows = vi.spyOn(probe, 'previewSourceObjectRows');
-    const objectId = encodeURIComponent('relation/analytics/erp/orders');
-    const expectedPublicationToken = 'a'.repeat(64);
-
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&objectId=${objectId}&limit=1&expectedPublicationToken=${expectedPublicationToken}`,
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      contractVersion: 1,
-      connectionId: 'warehouse-prod',
-      objectId: 'relation/analytics/erp/orders',
-      columns: [
-        { name: 'order_id', type: 'integer', nullable: false },
-        { name: 'customer', type: 'text', nullable: true },
-      ],
-      rows: [{ values: ['1', 'Ada'] }],
-      limit: 1,
-      truncated: true,
-      provenance: {
-        mode: 'live',
-        sourceRefs: [
-          {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'warehouse-prod',
-              provider: 'postgres',
-            },
-            sourceObjectId: 'relation/analytics/erp/orders',
-          },
-        ],
-        queriedAt: '2026-08-17T10:00:00.000Z',
-        limit: 1,
-        navigation: 'bounded-first-page',
-      },
-    });
-    expect(response.json()).not.toHaveProperty('credentialRef');
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'query', name: 'workspace:source-import:view' },
-      }),
-      expect.any(String)
-    );
-    expect(previewRows).toHaveBeenCalledWith(expect.objectContaining({ expectedPublicationToken }));
-  });
-
-  it('preserves a replaced publication as a conflict without returning its rows', async () => {
-    const { app, authorize, probe } = buildApp();
-    const previewRows = vi
-      .spyOn(probe, 'previewSourceObjectRows')
-      .mockRejectedValue(new WarehouseSourcePublicationChangedError());
-    const expectedPublicationToken = 'a'.repeat(64);
-    const query = new URLSearchParams({
-      objectId: 'relation/analytics/erp/orders',
-      limit: '20',
-      expectedPublicationToken,
-    });
-
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&${query}`,
-    });
-
-    expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({
-      error: { type: 'conflict', reason: 'warehouse_source_publication_changed' },
-    });
-    expect(previewRows).toHaveBeenCalledExactlyOnceWith(
-      expect.objectContaining({ expectedPublicationToken })
-    );
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'query', name: 'workspace:source-import:view' },
-      }),
-      expect.any(String)
-    );
-  });
-
-  it('rejects missing object identity and limits above the governed source sample bound', async () => {
-    const { app } = buildApp();
-    const missingObject = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}`,
-    });
-    const outOfRange = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}&limit=51`,
-    });
-
-    expect(missingObject.statusCode).toBe(400);
-    expect(outOfRange.statusCode).toBe(400);
-  });
-
-  it('does not collapse an unknown governed connection into a generic sample failure', async () => {
-    const { app } = buildApp();
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/missing/source-data-sample?${SCOPE_QUERY}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}`,
-    });
-
-    expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({
-      error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
-    });
-  });
-
-  it('renames a warehouse connection through a dedicated protected command rail', async () => {
-    const { app, authorize } = buildApp();
-
-    const response = await app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
-      payload: { name: 'Finance warehouse' },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      id: 'warehouse-prod',
-      name: 'Finance warehouse',
-      type: 'postgres',
-      database: 'analytics',
-    });
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: 'workspace:source-connection:rename' },
-      }),
-      expect.any(String)
-    );
-  });
-
-  it('returns explicit errors for invalid, duplicate, and unknown connection renames', async () => {
-    const duplicate = buildApp({
-      catalogEntries: [
-        {
-          id: 'warehouse-prod',
-          name: 'Production warehouse',
-          type: 'postgres',
-          database: 'analytics',
-          credentialRef: 'env:DVT_WAREHOUSE_URL',
-          sourceObjects: [defaultOrdersSourceObject],
-        },
-        {
-          id: 'finance-prod',
-          name: 'Finance warehouse',
-          type: 'postgres',
-          database: 'finance',
-          credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
-          sourceObjects: [],
-        },
-      ],
-    });
-
-    const invalidResponse = await duplicate.app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
-      payload: { name: '   ' },
-    });
-    expect(invalidResponse.statusCode).toBe(400);
-
-    const duplicateResponse = await duplicate.app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
-      payload: { name: ' FINANCE WAREHOUSE ' },
-    });
-    expect(duplicateResponse.statusCode).toBe(409);
-    expect(duplicateResponse.json()).toEqual({
-      error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
-    });
-
-    const missingResponse = await duplicate.app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/missing?${SCOPE_QUERY}`,
-      payload: { name: 'Missing connection' },
-    });
-    expect(missingResponse.statusCode).toBe(404);
-    expect(missingResponse.json()).toEqual({
-      error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
-    });
-  });
-
-  it('fails the rename command closed without authentication or its dedicated grant', async () => {
-    const unauthenticated = buildApp({ authenticated: false });
-    const missingTokenResponse = await unauthenticated.app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
-      payload: { name: 'Finance warehouse' },
-    });
-
-    expect(missingTokenResponse.statusCode).toBe(401);
-    expect(missingTokenResponse.json()).toEqual({
-      error: { type: 'unauthorized', reason: 'missing_token' },
-    });
-    expect(unauthenticated.authorize).not.toHaveBeenCalled();
-
-    const denied = buildApp({ authorized: false });
-    const deniedResponse = await denied.app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
-      payload: { name: 'Finance warehouse' },
-    });
-
-    expect(deniedResponse.statusCode).toBe(403);
-    expect(deniedResponse.json()).toEqual({
-      error: { type: 'forbidden', reason: 'action_not_granted' },
-    });
-    expect(denied.authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: 'workspace:source-connection:rename' },
-      }),
-      expect.any(String)
-    );
-  });
-
-  it('returns an explicit conflict when the rename loses its catalog revision race', async () => {
-    const { app } = buildApp({
-      renameError: new WorkspaceFileRevisionConflictError(
-        WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
-        'changed-revision'
-      ),
-    });
-
-    const response = await app.inject({
-      method: 'PATCH',
-      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
-      payload: { name: 'Finance warehouse' },
-    });
-
-    expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({
-      error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
-    });
-  });
-
-  it('creates a warehouse connection through the protected command rail before listing it', async () => {
-    const { app, authorize, workspaceFiles } = buildApp({ catalogEntries: [] });
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
-      payload: {
-        name: 'Finance warehouse',
-        type: 'postgres',
-        database: 'finance',
-        credentialRef: 'postgres:finance-warehouse',
-      },
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json()).toEqual({
-      id: 'finance-warehouse',
-      name: 'Finance warehouse',
-      type: 'postgres',
-      database: 'finance',
-    });
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: 'workspace:source-connection:create' },
-      }),
-      expect.any(String)
-    );
-    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
-      ROUTE_SCOPE,
-      expect.objectContaining({
-        path: '.dvt/warehouse-connections.json',
-        content: expect.not.stringContaining('DVT_FINANCE_WAREHOUSE_URL='),
-        expectedRevision: { kind: 'absent' },
-      })
-    );
-  });
-
-  it('identifies an invalid PostgreSQL credential reference before command side effects', async () => {
-    const { app, workspaceFiles } = buildApp({ catalogEntries: [] });
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
-      payload: {
-        name: 'Unsafe inline URL',
-        type: 'postgres',
-        database: 'finance',
-        credentialRef: 'postgresql://user:password@localhost:5432/finance',
-      },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: {
-        type: 'bad_request',
-        reason: 'invalid_credential_reference',
-        target: 'credentialRef',
-      },
-    });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-  });
-
-  it('rejects duplicate warehouse connection names before mutating the catalog', async () => {
-    const { app, workspaceFiles } = buildApp();
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
-      payload: {
-        name: 'Production warehouse',
-        type: 'postgres',
-        database: 'analytics',
-        credentialRef: 'postgres:duplicate-warehouse',
-      },
-    });
-
-    expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({
-      error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
-    });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-  });
-
-  it('rejects unsupported warehouse adapters without probing credentials', async () => {
-    const { app, workspaceFiles } = buildApp({ catalogEntries: [] });
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
-      payload: {
-        name: 'MySQL legacy',
-        type: 'mysql',
-        database: 'legacy',
-        credentialRef: 'postgres:mysql-warehouse',
-      },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: { type: 'bad_request', reason: 'unsupported_warehouse_adapter', target: 'type' },
-    });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-  });
-
-  it('tests an existing warehouse connection through the protected command rail', async () => {
-    const { app, authorize } = buildApp();
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections/warehouse-prod/test?${SCOPE_QUERY}`,
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
-      connectionId: 'warehouse-prod',
-      status: 'passed',
-      checkedAt: '2026-05-30T00:00:01.000Z',
-      objectCount: 1,
-    });
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: 'workspace:source-connection:test' },
-      }),
-      expect.any(String)
-    );
-  });
-
-  it('returns a failed connection-test result for invalid credentials without exposing secrets', async () => {
-    const { app } = buildApp({
-      connectionTestResult: {
-        status: 'failed',
-        reason: 'invalid_credentials',
-        message: 'The credential reference could not authenticate.',
-      },
-    });
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections/warehouse-prod/test?${SCOPE_QUERY}`,
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      connectionId: 'warehouse-prod',
-      status: 'failed',
-      reason: 'invalid_credentials',
-      message: 'The credential reference could not authenticate.',
-      checkedAt: '2026-05-30T00:00:01.000Z',
-    });
-    expect(response.body).not.toContain('env:');
-  });
-
-  it('rejects connection creation when credential testing fails', async () => {
-    const { app, workspaceFiles } = buildApp({
-      catalogEntries: [],
-      connectionTestResult: {
-        status: 'failed',
-        reason: 'invalid_credentials',
-        message: 'The credential reference could not authenticate.',
-      },
-    });
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
-      payload: {
-        name: 'Finance warehouse',
-        type: 'postgres',
-        database: 'finance',
-        credentialRef: 'postgres:finance-warehouse',
-      },
-    });
-
-    expect(response.statusCode).toBe(422);
-    expect(response.json()).toEqual({
-      error: { type: 'unprocessable_entity', reason: 'warehouse_connection_test_failed' },
-    });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-  });
-
-  it('lists warehouse connections through the protected query rail', async () => {
-    const { app, authorize } = buildApp();
-
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual([
-      {
-        id: 'warehouse-prod',
-        name: 'Production warehouse',
-        type: 'postgres',
-        database: 'analytics',
-      },
-    ]);
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'query', name: 'workspace:source-import:view' },
-      }),
-      expect.any(String)
-    );
-  });
-
-  it('does not return another workspace scope connection catalog', async () => {
-    const { app } = buildApp();
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/workspace/warehouse/connections?tenantId=tenant-a&projectId=project-a&environmentId=env-b',
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual([]);
-  });
-
-  it('passes the canonical schema-list request to the source-object query rail', async () => {
-    const { app, probe } = buildApp();
-
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}&kind=schema-list&limit=25&cursor=next-page`,
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      kind: 'schema-list',
-      schemas: [{ catalog: 'analytics', schema: 'erp', objectCount: 1 }],
-      truncated: false,
-    });
-    expect(probe.catalogRequests).toEqual([
-      { kind: 'schema-list', limit: 25, cursor: 'next-page' },
-    ]);
-  });
-
-  it('passes schema and global name-search projections without compatibility defaults', async () => {
-    const { app, probe } = buildApp();
-
-    const schemaResponse = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}&kind=schema-page&catalog=analytics&schema=erp&limit=10`,
-    });
-    const searchResponse = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}&kind=name-search&name=ord&limit=5&cursor=search-page`,
-    });
-
-    expect(schemaResponse.statusCode).toBe(200);
-    expect(searchResponse.statusCode).toBe(200);
-    expect(schemaResponse.json()).toEqual({
-      kind: 'object-page',
-      objects: [defaultOrdersSourceObject],
-      truncated: false,
-    });
-    expect(searchResponse.json()).toEqual({
-      kind: 'object-page',
-      objects: [defaultOrdersSourceObject],
-      truncated: false,
-    });
-    expect(probe.catalogRequests).toEqual([
-      { kind: 'schema-page', catalog: 'analytics', schema: 'erp', limit: 10 },
-      { kind: 'name-search', name: 'ord', limit: 5, cursor: 'search-page' },
-    ]);
-  });
-
-  it.each([
-    '',
-    '&kind=unknown',
-    '&kind=schema-page&catalog=analytics',
-    '&kind=name-search&name=',
-    '&kind=schema-list&schema=erp',
-    '&kind=schema-list&limit=0',
-    '&kind=schema-list&limit=101',
-    '&kind=schema-list&limit=not-a-number',
-  ])('rejects an invalid source-object catalog query%s', async (query) => {
-    const { app, probe } = buildApp();
-
-    const response = await app.inject({
-      method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}${query}`,
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: { type: 'bad_request', reason: 'invalid_selection', target: 'query' },
-    });
-    expect(probe.catalogRequests).toEqual([]);
-  });
   it('imports selected source objects into the authoritative workspace graph draft', async () => {
     const { app, authorize, workspaceFiles, draftStore } = buildApp();
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      path: `/workspace/sources/import`,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      },
+      }),
     });
 
     expect(response.statusCode).toBe(200);
@@ -1231,13 +57,10 @@ describe('warehouseSourceImportRoutes', () => {
       },
       grouping: 'schema',
     });
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: 'workspace:source-import:import' },
-      }),
-      expect.any(String)
-    );
+    expectWarehouseAuthorization(authorize, {
+      kind: 'command',
+      name: 'workspace:source-import:import',
+    });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       ROUTE_SCOPE,
       expect.objectContaining({
@@ -1264,18 +87,17 @@ describe('warehouseSourceImportRoutes', () => {
   it('hydrates identity-only import requests from catalog-owned metadata', async () => {
     const { app, draftStore } = buildApp();
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      path: `/workspace/sources/import`,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      },
+      }),
     });
 
     expect(response.statusCode).toBe(200);
@@ -1310,62 +132,29 @@ describe('warehouseSourceImportRoutes', () => {
           },
         ],
       });
-      const payload = {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      const payload = buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      };
-      const first = await app.inject({
+      });
+      const first = await injectWarehouseRequest(app, {
         method: 'POST',
-        url: `/workspace/sources/import?${SCOPE_QUERY}`,
+        path: `/workspace/sources/import`,
         payload,
       });
       expect(first.statusCode).toBe(200);
-      const draft: WorkspaceGraphAuthoringDraft = vi.mocked(draftStore.save).mock.calls[0]![0]
-        .draft;
-      const definition = draft.nodes[0]!;
-      const instance = {
-        id: 'placed-orders',
-        sourceDefinitionId: invalidReference ? 'missing-definition' : definition.id,
-        name: definition.name,
-        pluginId: definition.pluginId,
-        kind: definition.kind,
-        role: definition.role,
-        status: definition.status,
-        tags: [],
-      };
-      const nodes = [...draft.nodes, instance];
-      const nodeIds = [instance.id];
-      const nodePositions = { [instance.id]: { x: 420, y: 240 } };
-      const record = await draftStore.read();
-      vi.mocked(draftStore.read).mockResolvedValue({
-        ...record,
-        revision: 'placed-revision',
-        draftPayload: {
-          ...draft,
-          nodes,
-          nodeIds,
-          nodePositions,
-          canvases: draft.canvases?.map((canvas) => ({ ...canvas, nodes, nodeIds, nodePositions })),
-        },
-      });
-      const sourceFile = vi.mocked(workspaceFiles.saveFileContent).mock.calls[0]![1];
-      vi.mocked(workspaceFiles.getFileContent).mockResolvedValue({
-        path: sourceFile.path,
-        name: 'src_erp.yml',
-        language: 'yaml',
-        content: sourceFile.content,
-        contentSha256: sha256(sourceFile.content),
-        lastModified: '2026-10-23T00:00:00.000Z',
+      const { instance, nodeIds, nodePositions } = await placeImportedSourceInstance({
+        draftStore,
+        workspaceFiles,
+        invalidReference,
       });
 
-      const response = await app.inject({
+      const response = await injectWarehouseRequest(app, {
         method: 'POST',
-        url: `/workspace/sources/import?${SCOPE_QUERY}`,
+        path: `/workspace/sources/import`,
         payload: {
           ...payload,
           idempotencyKey: 'source-import-after-placement',
@@ -1406,18 +195,17 @@ describe('warehouseSourceImportRoutes', () => {
     ] as const;
 
     for (const metrics of impossibleMetrics) {
-      const response = await app.inject({
+      const response = await injectWarehouseRequest(app, {
         method: 'POST',
-        url: `/workspace/sources/import?${SCOPE_QUERY}`,
-        payload: {
-          ...SOURCE_IMPORT_REQUEST_BASE,
+        path: `/workspace/sources/import`,
+        payload: buildSourceImportPayload({
           connectionId: 'warehouse-prod',
           objects: [{ objectId: defaultOrdersSourceObject.objectId, ...metrics }],
           groupingStrategy: 'schema',
           includeColumns: true,
           addTests: false,
           addFreshness: false,
-        },
+        }),
       });
 
       expect(response.statusCode).toBe(400);
@@ -1449,18 +237,17 @@ describe('warehouseSourceImportRoutes', () => {
       ],
     });
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      path: `/workspace/sources/import`,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-sandbox',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: false,
         addTests: false,
         addFreshness: false,
-      },
+      }),
     });
 
     expect(response.statusCode).toBe(200);
@@ -1525,11 +312,10 @@ describe('warehouseSourceImportRoutes', () => {
       ],
     });
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      path: `/workspace/sources/import`,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [
           { objectId: relationSourceObject({ catalog: 'analytics' }).objectId },
@@ -1539,7 +325,7 @@ describe('warehouseSourceImportRoutes', () => {
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      },
+      }),
     });
 
     expect(response.statusCode).toBe(200);
@@ -1563,59 +349,30 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('rejects unsupported custom grouping instead of importing with schema semantics', async () => {
-    const { app, draftStore, workspaceFiles } = buildApp();
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+    await expectSourceImportRejectedWithoutMutation({
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'custom',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
+      }),
+      responseBody: {
+        error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
       },
     });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
-    });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
   });
 
   it('keeps schema-grouped YAML sources and imported node metadata distinct when database names disambiguate nodes', async () => {
     const { app, draftStore, workspaceFiles } = buildApp({
-      catalogEntries: [
-        {
-          id: 'warehouse-prod',
-          name: 'Production warehouse',
-          type: 'postgres',
-          database: 'analytics',
-          sourceObjects: [
-            relationSourceObject({
-              catalog: 'analytics',
-              columns: [{ name: 'id', type: 'number', nullable: false }],
-            }),
-            relationSourceObject({
-              catalog: 'finance',
-              rowCount: 24,
-              byteSize: 2048000,
-              columns: [{ name: 'id', type: 'number', nullable: false }],
-            }),
-          ],
-        },
-      ],
+      catalogEntries: buildDisambiguatedCatalogEntries(),
     });
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      path: `/workspace/sources/import`,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [
           { objectId: relationSourceObject({ catalog: 'analytics' }).objectId },
@@ -1625,7 +382,7 @@ describe('warehouseSourceImportRoutes', () => {
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      },
+      }),
     });
 
     expect(response.statusCode).toBe(200);
@@ -1646,35 +403,7 @@ describe('warehouseSourceImportRoutes', () => {
       },
       grouping: 'schema',
     });
-    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
-      ROUTE_SCOPE,
-      expect.objectContaining({
-        path: 'models/sources/src_erp.yml',
-        content: [
-          'version: 2',
-          '',
-          'sources:',
-          '  - name: warehouse_prod_analytics_erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '        columns:',
-          '          - name: id',
-          '            data_type: number',
-          '  - name: warehouse_prod_finance_erp',
-          '    database: finance',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '        columns:',
-          '          - name: id',
-          '            data_type: number',
-          '',
-        ].join('\n'),
-        expectedRevision: { kind: 'absent' },
-      })
-    );
+    expectSchemaGroupedYamlContent(workspaceFiles);
     expect(draftStore.save).toHaveBeenCalledWith(
       expect.objectContaining({
         draft: expect.objectContaining({
@@ -1702,23 +431,20 @@ describe('warehouseSourceImportRoutes', () => {
   it('rejects unknown connections before import', async () => {
     const { app } = buildApp();
 
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+    await expectSourceImportRejection({
+      app,
+      payload: buildSourceImportPayload({
         connectionId: 'missing',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
+      }),
+      expectedStatus: 404,
+      responseBody: {
+        error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
       },
-    });
-
-    expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({
-      error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
     });
   });
 
@@ -1732,18 +458,17 @@ describe('warehouseSourceImportRoutes', () => {
       },
     });
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+      path: `/workspace/sources/import`,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      },
+      }),
     });
 
     expect(response.statusCode).toBe(409);
@@ -1755,66 +480,55 @@ describe('warehouseSourceImportRoutes', () => {
   it('returns a stable conflict when an idempotency key is reused', async () => {
     const { app } = buildApp({ saveResult: { kind: 'idempotency_mismatch' } });
 
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+    await expectSourceImportRejection({
+      app,
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
-      },
-    });
-
-    expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({
-      error: {
-        type: 'conflict',
-        reason: 'workspace_source_import_idempotency_mismatch',
+      }),
+      expectedStatus: 409,
+      responseBody: {
+        error: {
+          type: 'conflict',
+          reason: 'workspace_source_import_idempotency_mismatch',
+        },
       },
     });
   });
 
   it('rejects malformed existing source YAML before mutating the draft', async () => {
-    const { app, draftStore, workspaceFiles } = buildApp({
-      existingSourceFileContent: 'version: 2\nsources:\n  - name: [',
-    });
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
+    await expectSourceImportRejectedWithoutMutation({
+      fixtureOptions: {
+        existingSourceFileContent: 'version: 2\nsources:\n  - name: [',
+      },
+      payload: buildSourceImportPayload({
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
+      }),
+      responseBody: {
+        error: {
+          type: 'bad_request',
+          reason: 'invalid_workspace_source_yaml',
+          target: 'workspace_file',
+        },
       },
     });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: {
-        type: 'bad_request',
-        reason: 'invalid_workspace_source_yaml',
-        target: 'workspace_file',
-      },
-    });
-    expect(draftStore.save).not.toHaveBeenCalled();
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
   });
 
   it('fails closed when the bearer token is missing', async () => {
     const { app } = buildApp({ authenticated: false });
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'GET',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      path: `/workspace/warehouse/connections`,
     });
 
     expect(response.statusCode).toBe(401);
@@ -1824,9 +538,9 @@ describe('warehouseSourceImportRoutes', () => {
   it('fails closed when source import action is denied', async () => {
     const { app } = buildApp({ authorized: false });
 
-    const response = await app.inject({
+    const response = await injectWarehouseRequest(app, {
       method: 'GET',
-      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      path: `/workspace/warehouse/connections`,
     });
 
     expect(response.statusCode).toBe(403);

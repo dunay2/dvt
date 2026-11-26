@@ -4,7 +4,7 @@
  * @decision Keep one owner per reason to change and reuse the existing rails.
  * @consequence Consumers import the real owner without compatibility re-exports.
  */
-import type { UserConfig } from 'vitest/config';
+import type { ViteUserConfig } from 'vitest/config';
 
 import { WEB_VITEST_SUITES, type WebVitestSuiteName } from '../vitest.suites';
 
@@ -16,7 +16,7 @@ export const WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB = 4096;
 
 export const WEB_VITEST_CI_NODE_OPTIONS = `--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`;
 
-export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig {
+export function createWebVitestConfig(suiteName: WebVitestSuiteName): ViteUserConfig {
   const suite = WEB_VITEST_SUITES[suiteName];
   const environment =
     suiteName === 'unit' ||
@@ -42,21 +42,13 @@ function isWebVitestCi(): boolean {
   return process.env.DVT_CI === '1' || process.env.CI === 'true';
 }
 
-function createWebVitestWorkerConfig(): NonNullable<UserConfig['test']> {
+function createWebVitestWorkerConfig(): NonNullable<ViteUserConfig['test']> {
   const ci = isWebVitestCi();
   const workerCount = ci ? WEB_VITEST_CI_WORKER_COUNT : WEB_VITEST_LOCAL_WORKER_COUNT;
   return {
     pool: 'forks',
-    minWorkers: 1,
     maxWorkers: workerCount,
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: true,
-        minForks: 1,
-        maxForks: workerCount,
-        ...(ci ? { execArgv: [WEB_VITEST_CI_NODE_OPTIONS] } : {}),
-      },
-    },
+    isolate: true,
+    ...(ci ? { execArgv: [WEB_VITEST_CI_NODE_OPTIONS] } : {}),
   };
 }

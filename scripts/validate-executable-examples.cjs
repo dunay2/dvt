@@ -4,7 +4,7 @@
  * Validate executable TypeScript examples embedded in contract markdown docs.
  *
  * Scope:
- * - markdown files under docs/architecture/engine/contracts
+ * - markdown files under docs/architecture/components/engine/contracts
  * - fenced code blocks tagged as ts/typescript
  *
  * Behavior:
@@ -16,26 +16,13 @@
 const fs = require('fs');
 const path = require('path');
 const ts = require('typescript');
-
-const CONTRACTS_DIR = path.resolve(__dirname, '..', 'docs', 'architecture', 'engine', 'contracts');
+const {
+  CONTRACTS_ROOT,
+  listMarkdownFiles,
+  requireContractMarkdownFiles,
+} = require('./policy-validation-files.cjs');
 
 const SNIPPET_FENCE = /```(?:ts|typescript)\s*\n([\s\S]*?)```/g;
-
-function walkMarkdownFiles(dir) {
-  const out = [];
-  if (!fs.existsSync(dir)) return out;
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const abs = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walkMarkdownFiles(abs));
-      continue;
-    }
-    if (entry.isFile() && abs.endsWith('.md')) out.push(abs);
-  }
-  return out;
-}
 
 function extractTsSnippets(markdown) {
   const snippets = [];
@@ -152,14 +139,10 @@ function formatDiagnostic(diag, sourceIndex) {
   return `  ❌ [snippet ${sourceIndex}] ${fileName}:${pos.line + 1}:${pos.character + 1} - TS${diag.code} ${message}`;
 }
 
-function main() {
+function main(contractsDir = CONTRACTS_ROOT) {
   console.log('🔎 Validating executable TypeScript examples in contracts...\n');
 
-  const mdFiles = walkMarkdownFiles(CONTRACTS_DIR);
-  if (mdFiles.length === 0) {
-    console.log('ℹ️ No markdown files found under contracts path.');
-    process.exit(0);
-  }
+  const mdFiles = requireContractMarkdownFiles(listMarkdownFiles(contractsDir).sort());
 
   let totalFilesWithSnippets = 0;
   let totalSnippets = 0;
@@ -178,13 +161,6 @@ function main() {
     const diagnostics = [];
     for (const snippet of snippets) {
       const sanitized = sanitizeSnippet(snippet.code);
-
-      if (
-        /\binterface\s+[A-Za-z_$][A-Za-z0-9_$]*\s*\{/.test(sanitized) &&
-        !/^\s*enum\s+/m.test(sanitized)
-      ) {
-        continue;
-      }
 
       const virtualName = `${filePath}.snippet-${snippet.index}.ts`;
       const compiled = compileWithStrategies(sanitized, virtualName);
@@ -218,6 +194,11 @@ function main() {
   console.log(`Diagnostics: ${totalErrors}`);
   console.log('='.repeat(60));
 
+  if (totalSnippets === 0) {
+    console.error('No TypeScript snippets found in required contract corpus.');
+    process.exit(1);
+  }
+
   if (totalErrors > 0) {
     console.error('\n❌ Executable examples validation failed.');
     process.exit(1);
@@ -227,4 +208,5 @@ function main() {
   process.exit(0);
 }
 
-main();
+if (require.main === module) main();
+module.exports = { main };

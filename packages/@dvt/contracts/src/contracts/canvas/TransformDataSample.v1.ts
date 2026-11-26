@@ -11,6 +11,12 @@ import { isSha256HexString } from '../../utils/contractPrimitives.js';
 import { LiveDataPreviewProvenanceSchema } from '../data-access/DataAccess.v1.js';
 import { SourceObjectColumnSchema } from '../source-import/SourceObjectCatalog.js';
 
+import {
+  CanvasLiteralModelProvenanceSchema,
+  hasCanvasModelProvenance,
+  matchesCanvasLiteralPlan,
+} from './CanvasLiteralModelProvenance.v1.js';
+
 export const TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION = 1 as const;
 export const TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT = 20 as const;
 export const TRANSFORM_DATA_SAMPLE_MAX_LIMIT = 50 as const;
@@ -19,6 +25,7 @@ export const TRANSFORM_DATA_SAMPLE_MAX_COLUMNS = 512 as const;
 const NonBlankStringSchema = z.string().trim().min(1);
 const TransformLiveProvenanceSchema = LiveDataPreviewProvenanceSchema.safeExtend({
   sourceRefs: z.array(LiveDataPreviewProvenanceSchema.shape.sourceRefs.element),
+  literalModel: CanvasLiteralModelProvenanceSchema.optional(),
   modelRefs: z
     .array(
       z
@@ -32,8 +39,9 @@ const TransformLiveProvenanceSchema = LiveDataPreviewProvenanceSchema.safeExtend
     )
     .min(1)
     .optional(),
-}).refine((value) => value.sourceRefs.length > 0 || (value.modelRefs?.length ?? 0) > 0, {
-  message: 'LIVE Transform provenance requires a physical source or an authorized model revision.',
+}).refine(hasCanvasModelProvenance, {
+  message:
+    'LIVE Transform provenance requires exact physical, file-model or literal execution authority.',
 });
 
 export const TransformDataSampleRequestSchema = z
@@ -86,6 +94,12 @@ export const TransformDataSampleResponseSchema = z
         path: ['provenance', 'limit'],
       });
     }
+    if (!matchesCanvasLiteralPlan(sample))
+      context.addIssue({
+        code: 'custom',
+        message: 'Literal provenance must match the selected semantic plan.',
+        path: ['provenance', 'literalModel'],
+      });
     sample.rows.forEach((row, rowIndex) => {
       if (row.values.length !== sample.columns.length) {
         context.addIssue({

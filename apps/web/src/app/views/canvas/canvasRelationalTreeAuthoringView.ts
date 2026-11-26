@@ -33,7 +33,7 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   changeDraft: (document: SubstraitDocument) => void;
   selectRelation: (id: string | null) => void;
   reconcileSelection: (id: string | null) => void;
-  remove: (id: string) => void;
+  remove: (id: string, onAccepted?: (id: string) => void) => void;
   dropSource: (id: string) => string | null;
   selectPending: (id: string) => void;
   renamePending: (id: string, alias: string) => boolean;

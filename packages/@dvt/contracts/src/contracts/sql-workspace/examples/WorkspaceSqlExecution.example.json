@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "workspace-sql-execution.v1",
+  "executionId": "8204435199976-ae1fd358c7612a02fdc6d923fd40308e-11111111-1111-4111-8111-111111111111",
+  "status": "succeeded",
+  "sql": "select 1 as answer",
+  "connectionRef": {
+    "schemaVersion": "connection-ref.v1",
+    "connectionId": "warehouse",
+    "provider": "postgres"
+  },
+  "connectionName": "Analytics",
+  "principalId": "editor",
+  "startedAt": "2026-11-25T00:00:00.000Z",
+  "finishedAt": "2026-11-25T00:00:00.023Z",
+  "durationMs": 23,
+  "limit": 100,
+  "rowCount": 1,
+  "truncated": false,
+  "columns": [{ "name": "answer", "type": "integer", "nullable": false }]
+}

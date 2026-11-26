@@ -2,10 +2,17 @@ import type { CanvasControllerReadModelArgs } from './canvasControllerReadModel.
 import { useCanvasColumnLineageModel } from './useCanvasColumnLineageModel';
 import { useCanvasNodeInteractionModel } from './useCanvasNodeInteractionModel';
 import { useCanvasSemanticNodeInputs, useCanvasNodeGeometry } from './useCanvasSemanticNodeInputs';
+import { useCanvasZoomColumnDisclosure } from './useCanvasZoomColumnDisclosure';
 
 export function useCanvasControllerReadModel(args: CanvasControllerReadModelArgs) {
   const { graphModel, visibleScope, uiScope } = args;
-  const semanticGraphNodes = useCanvasSemanticNodeInputs(graphModel.nodes);
+  const zoomDisclosure = useCanvasZoomColumnDisclosure(
+    useCanvasSemanticNodeInputs(graphModel.nodes),
+    args.atMaximumZoom ?? false,
+    args.columnActions.onColumnDisclosureChange,
+    args.zoomDisclosureScopeKey
+  );
+  const semanticGraphNodes = zoomDisclosure.nodes;
   const lineage = useCanvasColumnLineageModel({
     semanticGraphNodes,
     visibleScope,
@@ -15,6 +22,10 @@ export function useCanvasControllerReadModel(args: CanvasControllerReadModelArgs
   });
   const semanticNodes = useCanvasNodeInteractionModel({
     ...args,
+    columnActions: {
+      ...args.columnActions,
+      onColumnDisclosureChange: zoomDisclosure.onColumnDisclosureChange,
+    },
     semanticGraphNodes,
     readOnlyColumnLineageNodeIds: lineage.readOnlyColumnLineageNodeIds,
   });

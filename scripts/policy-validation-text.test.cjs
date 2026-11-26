@@ -12,7 +12,11 @@ test('stripInlineCodeFragments removes inline Markdown code fragments', () => {
 });
 
 test('policy validators import the shared inline-code stripper', () => {
-  const consumers = ['validate-references.cjs', 'validate-rfc2119.cjs'];
+  const consumers = [
+    'validate-references.cjs',
+    'validate-rfc2119.cjs',
+    'validate-glossary-usage.cjs',
+  ];
 
   for (const consumer of consumers) {
     const source = fs.readFileSync(path.join(__dirname, consumer), 'utf8');

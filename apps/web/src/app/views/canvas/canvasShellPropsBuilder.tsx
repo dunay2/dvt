@@ -1,6 +1,7 @@
 /**
  * Owned concern: build the route-owned CanvasShell contract from controller and route posture.
  */
+import { useCallback, useMemo } from 'react';
 import { buildCanvasShellChromeCommands } from './canvasShellChromeCommandsBuilder';
 import { buildCanvasShellGraphCommands } from './canvasShellGraphCommandsBuilder';
 import { buildCanvasShellGraph } from './canvasShellGraphBuilder';
@@ -143,6 +144,7 @@ function buildCanvasShellGraphCommandsArgs({
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
       handleInspectNode: controller.handleInspectNode,
+      handleRemoveNode: controller.handleRemoveNode,
       handleDragOver: controller.handleDragOver,
       handleToggleFrozenNode: controller.handleToggleFrozenNode,
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
@@ -181,7 +183,43 @@ function buildCanvasShellChromeCommandsArgs({
   };
 }
 
-export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): CanvasShellProps {
+function getAddCanvasCommand(
+  kind: string | undefined,
+  available: boolean,
+  create: CanvasShellRouteComposerArgs['controller']['handleCreateCanvasDocument']
+) {
+  if (kind == null || !available) return undefined;
+  return (title: string) => create({ kind, title, mode: 'create_new' });
+}
+
+export function useCanvasShellCanvasCommands({
+  controller,
+  routeViewState,
+}: CanvasShellRouteComposerArgs): CanvasShellProps['canvasCommands'] {
+  const { handleCreateCanvasDocument, handleSelectCanvasDocument } = controller;
+  const kind = routeViewState.canvasDocument?.kind;
+  const available =
+    controller.canAddCanvasDocument &&
+    routeViewState.effectiveUserPermissions.canEditEdges &&
+    !routeViewState.draftAccessPosture.mutationBlocked &&
+    routeViewState.draftSaveStatus !== 'saving';
+  const onAddCanvas = useMemo(
+    () => getAddCanvasCommand(kind, available, handleCreateCanvasDocument),
+    [kind, available, handleCreateCanvasDocument]
+  );
+  const onSelectCanvas = useCallback(
+    (canvasId: string) => {
+      void handleSelectCanvasDocument(canvasId);
+    },
+    [handleSelectCanvasDocument]
+  );
+  return { onAddCanvas, onSelectCanvas };
+}
+
+export function buildCanvasShellProps(
+  args: CanvasShellRouteComposerArgs,
+  canvasCommands: CanvasShellProps['canvasCommands']
+): CanvasShellProps {
   return {
     layout: buildCanvasShellLayout(buildCanvasShellLayoutArgs(args)),
     panels: buildCanvasShellPanels(buildCanvasShellPanelsArgs(args)),
@@ -189,12 +227,7 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     chromeState: buildCanvasShellChromeState(buildCanvasShellChromeStateArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
-    runControls: args.runControls,
     prepareModelPreview: args.controller.flushDraftForExecution,
-    canvasCommands: {
-      onSelectCanvas: (canvasId) => {
-        void args.controller.handleSelectCanvasDocument(canvasId);
-      },
-    },
+    canvasCommands,
   };
 }

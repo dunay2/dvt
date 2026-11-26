@@ -1,12 +1,17 @@
+import { prepareCanvasDbtModelCompositionReference } from './canvasDbtModelCompositionDiscovery';
 import { describe, expect, it } from 'vitest';
-import {
-  DbtProjectGraphProjectionSchema,
-  WorkspaceGraphAuthoringDraftSchema,
-} from '@dvt/contracts';
+import { dbtModelProjection as projection } from './canvasDbtModelReference.test-fixtures';
+import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import {
   createCanvasDbtModelDefinition,
   resolveCanvasDbtModelSignature,
 } from './canvasDbtModelReference';
+import {
+  prepareCanvasModelCompositionCandidate,
+  admitCanvasModelCopiesToSession,
+} from './canvasModelCompositionCandidate';
+import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
+import { getPluginPortMap } from '../../plugins/registry';
 import { createCanvasNodeInstance } from './canvasNodeInstance';
 import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
@@ -18,54 +23,45 @@ import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindi
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { TRANSFORM } from './canvasOutputProjection.test-support';
 
-const projection = DbtProjectGraphProjectionSchema.parse({
-  schemaVersion: 'dbt-project-graph-projection.v1',
-  adapterType: 'postgres',
-  authorityBinding: {
-    schemaVersion: 'canvas-authoring-authority-binding.v1',
-    canvasId: 'file-owner',
-    authority: { kind: 'dbt-project-files', projectRoot: '.' },
-  },
-  freshness: 'fresh',
-  analysisSha256: 'a'.repeat(64),
-  projectRevision: {
-    projectRoot: '.',
-    projectName: 'demo',
-    dbtVersion: '1.10.0',
-    contentSetSha256: 'b'.repeat(64),
-    analyzedAt: '2026-11-04T00:00:00.000Z',
-    analyzerVersion: 'native-dbt',
-  },
-  nodes: [
-    {
-      uniqueId: 'model.demo.clientes',
-      name: 'clientes',
-      resourceType: 'model',
-      packageName: 'demo',
-      originalFilePath: 'models/clientes.sql',
-      columns: [{ name: 'client_id', dataType: 'text' }],
-      tags: [],
-      visualEditability: { status: 'code_only', reasons: ['file-authority'] },
-    },
-  ],
-  edges: [],
-  diagnostics: [],
-  capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 1 },
-  executionTarget: {
-    provider: 'temporal',
-    adapter: 'postgres',
-    targetName: 'default',
-    connectionRef: {
-      schemaVersion: 'connection-ref.v1',
-      provider: 'postgres',
-      connectionId: 'warehouse',
-    },
-    resolutionSource: 'environment-default',
-    credentialRef: 'env:DBT_PROFILES_DIR',
-  },
-});
-
 describe('native file-model definitions and instances', () => {
+  it('registers a discovered definition only inside the complete private Apply candidate', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const definition = createCanvasDbtModelDefinition(projection, 'model.demo.clientes');
+    const discovery = {
+      definition,
+      projectRevisionSha256: projection.projectRevision.contentSetSha256,
+      analysisSha256: projection.analysisSha256,
+      projectRoot: '.',
+    };
+    const copy = prepareCanvasDbtModelCompositionReference({
+      nodes: [definition],
+      sourceId: definition.id,
+      discovery,
+    });
+    const candidate = prepareCanvasModelCompositionCandidate({
+      copy,
+      nodes: [definition, graph.consumer],
+      edges: [],
+      targetId: graph.consumer.id,
+      pluginPorts: getPluginPortMap(),
+    });
+    const session = {
+      ...graph.draftSession,
+      workingSet: { ...graph.draftSession.workingSet, visibleEdges: [] },
+    };
+    const before = structuredClone(session);
+    const applied = admitCanvasModelCopiesToSession({
+      draftSession: session,
+      canonicalNodesById: graph.canonicalNodesById,
+      copies: [candidate.addition],
+      targetId: graph.consumer.id,
+      pluginPorts: getPluginPortMap(),
+    });
+    expect(applied.localNodeCatalog?.[definition.id]).toEqual(definition);
+    expect(applied.localNodeCatalog?.[copy.node.id]?.definitionId).toBe(definition.id);
+    expect(applied.workingSet.visibleNodeIds).not.toContain(definition.id);
+    expect(session).toEqual(before);
+  });
   it('retains one file reference across independent persisted placements without edges or copied SQL', () => {
     const definition = createCanvasDbtModelDefinition(projection, 'model.demo.clientes');
     const first = createCanvasNodeInstance(definition, new Set(), 'first');
@@ -152,5 +148,66 @@ describe('native file-model definitions and instances', () => {
       )
     ).toThrow();
     expect(() => createCanvasDbtModelDefinition(projection, 'model.demo.missing')).toThrow();
+  });
+
+  it('stages an unplaced dbt definition as a linked input and preserves file authority on Apply', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const definition = createCanvasDbtModelDefinition(projection, 'model.demo.clientes');
+    const nodes = [definition, graph.consumer];
+    const copy = prepareCanvasDbtModelCompositionReference({ sourceId: definition.id, nodes });
+    const candidate = prepareCanvasModelCompositionCandidate({
+      copy,
+      nodes,
+      edges: [],
+      targetId: graph.consumer.id,
+      pluginPorts: getPluginPortMap(),
+    });
+    expect(copy.node.id).not.toBe(definition.id);
+    expect(copy.node.definitionId).toBe(definition.id);
+    expect(copy.node.metadata?.dbtModelReference).toEqual(definition.metadata?.dbtModelReference);
+    expect(copy.node.metadata?.transformAuthoring).toBeUndefined();
+    expect(candidate.input.producer?.nodeId).toBe(copy.node.id);
+    expect(candidate.input.fields.map((field) => field.name)).toEqual(['client_id']);
+    const session = {
+      ...graph.draftSession,
+      workingSet: { ...graph.draftSession.workingSet, visibleEdges: [] },
+    };
+    const before = structuredClone(session);
+    const applied = admitCanvasModelCopiesToSession({
+      draftSession: session,
+      canonicalNodesById: new Map([...graph.canonicalNodesById, [definition.id, definition]]),
+      copies: [candidate.addition],
+      targetId: graph.consumer.id,
+      pluginPorts: getPluginPortMap(),
+    });
+    expect(applied.localNodeCatalog?.[copy.node.id]?.definitionId).toBe(definition.id);
+    expect(applied.workingSet.visibleEdges).toContainEqual(
+      expect.objectContaining({ sourceId: copy.node.id, targetId: graph.consumer.id })
+    );
+    expect(session).toEqual(before);
+    expect(applied.localNodeCatalog?.[definition.id]).toBeUndefined();
+  });
+
+  it('rejects a changed linked publication before any dependency is committed', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const definition = createCanvasDbtModelDefinition(projection, 'model.demo.clientes');
+    const copy = prepareCanvasDbtModelCompositionReference({
+      sourceId: definition.id,
+      nodes: [definition],
+    });
+    const changed = createCanvasDbtModelDefinition(projection, 'model.demo.clientes');
+    expect(() =>
+      prepareCanvasModelCompositionCandidate({
+        copy,
+        nodes: [changed, graph.consumer],
+        edges: [],
+        targetId: graph.consumer.id,
+        pluginPorts: getPluginPortMap(),
+      })
+    ).toThrow();
+    expect(() =>
+      prepareCanvasDbtModelCompositionReference({ sourceId: graph.consumer.id, nodes: graph.nodes })
+    ).toThrow();
+    expect(graph.draftSession.localNodeCatalog).toBeUndefined();
   });
 });

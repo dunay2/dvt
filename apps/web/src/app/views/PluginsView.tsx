@@ -5,6 +5,7 @@ import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame
 import { PLUGIN_REGISTRY } from '../plugins/registry';
 import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
 import { useWorkspacePluginCatalogQuery } from '../queries/workspaceQueries';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 import { reconcilePluginCatalog } from './plugins/pluginCatalogReconciliation';
 import { PluginsPrimarySurface, PluginsViewHeader } from './plugins/PluginsRouteWorkbench';
@@ -22,7 +23,8 @@ export default function PluginsView() {
     error: pluginCatalogError,
     isLoading: pluginCatalogLoading,
   } = useWorkspacePluginCatalogQuery();
-  const copy = resolvePluginsViewCopy();
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolvePluginsViewCopy(language);
   const reconciliation = useMemo(
     () =>
       pluginCatalog === undefined
@@ -42,14 +44,7 @@ export default function PluginsView() {
 
   return (
     <RouteWorkbenchFrame
-      header={
-        <PluginsViewHeader
-          capabilities={capabilities}
-          copy={copy}
-          reconciliation={reconciliation}
-        />
-      }
-      bodyContainerClassName="space-y-6"
+      header={<PluginsViewHeader copy={copy} probeStatus={probeStatus} />}
       slots={{
         primarySurface: (
           <PluginsPrimarySurface
@@ -59,7 +54,6 @@ export default function PluginsView() {
             copy={copy}
             pluginCatalogError={pluginCatalogError}
             pluginCatalogLoading={pluginCatalogLoading}
-            probeStatus={probeStatus}
             reconciliation={reconciliation}
           />
         ),

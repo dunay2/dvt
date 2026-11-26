@@ -1,12 +1,10 @@
-import {
-  getE2eApiCalls,
-  installE2eApiFetchStub,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
+import { getE2eApiCalls, installE2eApiFetchStub } from '../../support/e2eApiStub';
+import { registerEmptyModelDeletionJourney } from '../../support/emptyModelDeletion';
 import {
   connectWorkbenchProducer,
   stageWorkbenchUnary,
   visitWorkbenchCanvas,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import {
   workbenchOperation,
@@ -16,6 +14,7 @@ import { form, openEditor } from '../../support/relationalWorkbench/operatorEdit
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('model-session', () => {
+  registerEmptyModelDeletionJourney();
   afterEach(() => {
     // A failed assertion must not leave this test's dirty Model blocking the next navigation.
     const discard = '[data-slot="canvas-draft-discard"]';
@@ -104,19 +103,24 @@ describe('model-session', () => {
   });
   it('keeps editing or applies local composition changes before closing the Model', () => {
     openEditor();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      expect(initialWrites, 'opening a hydrated Model is read-only').to.equal(0);
     });
-    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    stageWorkbenchUnary({
+      operation: 'aggregate',
+      producer: '[data-operator="join"]',
+      disconnectOutput: true,
+    });
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-operator="aggregate"]').closest('li').as('aggregate');
-    connectWorkbenchProducer(
-      '@aggregate',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '@aggregate',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -162,19 +166,24 @@ describe('model-session', () => {
   });
   it('discards local composition changes before closing the Model', () => {
     openEditor();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
     let initialWrites = 0;
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      expect(initialWrites, 'opening a hydrated Model is read-only').to.equal(0);
     });
-    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    stageWorkbenchUnary({
+      operation: 'aggregate',
+      producer: '[data-operator="join"]',
+      disconnectOutput: true,
+    });
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-operator="aggregate"]').closest('li').as('aggregate');
-    connectWorkbenchProducer(
-      '@aggregate',
-      '[data-slot="canvas-relational-output-input-port"]',
-      null
-    );
+    connectWorkbenchProducer({
+      producer: '@aggregate',
+      consumer: '[data-slot="canvas-relational-output-input-port"]',
+      port: null,
+    });
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -202,7 +211,9 @@ describe('model-session', () => {
         expect(Math.abs(properties.top - tree.top)).to.be.lessThan(2);
       });
     });
+    setWorkbenchInputsOpen(true);
     cy.get('[data-slot="canvas-relational-tree-source"]').should('have.attr', 'draggable', 'false');
+    setWorkbenchInputsOpen(false);
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');

@@ -6,11 +6,16 @@ import type {
   IWorkspaceFileHistoryRepository,
   WorkspaceFileHistoryEntry,
 } from '../ports/workspaceFileHistory.js';
+import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 export class ListWorkspaceFileHistoryUseCase {
   public constructor(private readonly repository: IWorkspaceFileHistoryRepository) {}
 
-  public async execute(path: string): Promise<readonly WorkspaceFileHistoryEntry[]> {
-    return this.repository.listFileHistory(path);
+  public async execute(
+    scope: WorkspaceStorageScope,
+    path: string,
+    before?: string
+  ): Promise<readonly WorkspaceFileHistoryEntry[]> {
+    return this.repository.listFileHistory(scope, path, before);
   }
 }

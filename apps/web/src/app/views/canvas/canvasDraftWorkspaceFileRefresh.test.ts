@@ -47,10 +47,10 @@ describe('Canvas draft workspace-file refresh', () => {
     await cache.refreshWorkspaceFilesAfterSourceRemoval();
 
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(1, {
-      queryKey: queryKeys.workspace.fileTree('tenant::project::dev'),
+      queryKey: queryKeys.workspace.forLayout('tenant::project::dev').fileTree(),
     });
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(2, {
-      queryKey: queryKeys.workspace.fileContentRoot('tenant::project::dev'),
+      queryKey: queryKeys.workspace.forLayout('tenant::project::dev').fileContentRoot(),
     });
   });
 

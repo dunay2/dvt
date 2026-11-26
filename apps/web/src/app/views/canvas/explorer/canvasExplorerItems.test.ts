@@ -9,6 +9,23 @@ import {
 import type { CanonicalNode } from '../../../types/canonical';
 
 describe('Canvas explorer node projection', () => {
+  it('marks a retained empty native Model as a draft without disabling Canvas opening', () => {
+    const node: CanonicalNode = {
+      id: 'saved-model-4',
+      name: 'Model4',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+    const before = JSON.stringify(node);
+    const item = projectCanvasExplorerModels([node])[0]!;
+    expect(item.publicationState).toBe('draft');
+    expect(item.disabled).not.toBe(true);
+    expect(item.draggable).not.toBe(false);
+    expect(JSON.stringify(node)).toBe(before);
+  });
   it.each([
     { path: 'models/orders.sql', source: false, format: 'sql' },
     { path: 'models/ORDERS.SQL', source: true, format: 'sql' },

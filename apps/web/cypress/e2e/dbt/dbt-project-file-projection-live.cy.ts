@@ -3,186 +3,40 @@
  * files, protected HTTP, server-side dbt parse, and browser rendering.
  */
 import {
-  ConnectedSourceRefSchema,
-  DbtProjectGraphProjectionSchema,
-  DvtTransformAuthoringAuthorityV1Schema,
-  TransformSqlProjectionResponseSchema,
-  type DbtProjectGraphProjection,
-  type WorkspaceGraphAuthoringDraft,
-} from '@dvt/contracts';
-
-import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
-import type { CanonicalEdge, CanonicalNode } from '../../../src/app/types/canonical';
-import { createCanvasDbtModelDefinition } from '../../../src/app/views/canvas/canvasDbtModelReference';
-import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canvas/canvasDraftAuthoring';
-import { resolveCanvasDvtCompositionInputs } from '../../../src/app/views/canvas/canvasDvtCompositionInputCatalog';
-import { applyDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtTransformAuthoringAuthority';
-import { configureCanvasStagedComposition } from '../../../src/app/views/canvas/canvasStagedCompositionConfiguration';
-import { createPendingSourceOccurrence } from '../../../src/app/views/canvas/relational-source-occurrence/pendingSourceOccurrence';
-import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
-import { buildScenarioDraft } from '../../support/canvasDrafts/scenario';
+  readInitialProjectRevision,
+  assertProjectedResourceCards,
+  inspectSourceColumns,
+  inspectReadOnlyModelCode,
+  inspectModelProperties,
+} from '../../support/dbtFileProjection/inspection';
+import { inspectMixedModel, seedMixedModel } from '../../support/dbtFileProjection/mixedModelSql';
+import {
+  assertFileAuthority,
+  CANVAS_ID,
+  INVALID_CANVAS_ID,
+  INVALID_PROJECT_CONFIG,
+  INVALID_PROJECT_ROOT,
+  PROJECT_FILES,
+  PROJECT_ROOT,
+  visitProjectCanvas,
+} from '../../support/dbtFileProjection/project';
+import {
+  placeProjectReferences,
+  assertIndependentMetrics,
+  inspectAndRemoveRestoredReference,
+  assertRemainingReferences,
+} from '../../support/dbtFileProjection/references';
 import {
   adoptLiveDbtProjectFileAuthority,
   replaceLiveWorkspaceFile,
-  requestLiveDbtProjectGraph,
   seedLiveWorkspaceFiles,
 } from '../../support/dbtProjectLive';
 import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
-  buildAuthorizationHeaders,
-  buildBearerAuth,
-  buildDraftReadUrl,
-} from '../../support/liveProtectedRequest';
-import {
   hasLiveProtectedRuntimeEnv,
   readLiveWorkspaceFile,
-  resolveLiveWorkspaceSession,
-  visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
-import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
-
-const PROJECT_ROOT = 'analytics-file-projection';
-const INVALID_PROJECT_ROOT = 'analytics-invalid';
-const CANVAS_ID = 'analytics-file-projection-files';
-const INVALID_CANVAS_ID = 'analytics-invalid-files';
-const MIXED_MODEL_ID = 'mixed-file-model-transform';
-
-const INVALID_PROJECT_CONFIG = `
-name: analytics_invalid
-version: '1.0.0'
-config-version: 2
-profile: dvt_live_proof
-model-paths: ['../outside-project']
-`;
-
-const PROJECT_FILES: Readonly<Record<string, string>> = {
-  [`${PROJECT_ROOT}/dbt_project.yml`]: `
-name: analytics
-version: '1.0.0'
-config-version: 2
-profile: dvt_live_proof
-model-paths: ['models']
-seed-paths: ['seeds']
-snapshot-paths: ['snapshots']
-clean-targets: ['target', 'dbt_packages']
-`,
-  [`${PROJECT_ROOT}/models/schema.yml`]: `
-version: 2
-sources:
-  - name: raw
-    schema: public
-    tables:
-      - name: orders
-        description: Governed order intake
-        columns:
-          - name: order_id
-            data_type: integer
-            description: Stable order identifier
-          - name: customer_id
-            data_type: text
-models:
-  - name: orders
-    description: Curated orders model
-    columns:
-      - name: order_id
-        data_type: integer
-        tests:
-          - not_null
-          - unique
-      - name: customer_id
-        data_type: text
-exposures:
-  - name: orders_dashboard
-    label: Orders dashboard
-    type: dashboard
-    maturity: high
-    url: https://example.invalid/orders
-    depends_on:
-      - ref('orders')
-    owner:
-      name: Analytics
-      email: analytics@example.invalid
-`,
-  [`${PROJECT_ROOT}/models/orders.sql`]: `
-select
-  1::integer as order_id,
-  'customer-1'::text as customer_id
-from {{ source('raw', 'orders') }}
-`,
-  [`${PROJECT_ROOT}/seeds/country_codes.csv`]: `code,name
-ES,Spain
-PT,Portugal
-`,
-  [`${PROJECT_ROOT}/snapshots/orders_snapshot.sql`]: `
-{% snapshot orders_snapshot %}
-{{ config(target_schema='snapshots', unique_key='order_id', strategy='check', check_cols=['customer_id']) }}
-select * from {{ ref('orders') }}
-{% endsnapshot %}
-`,
-};
-
 type DragPoint = Readonly<{ x: number; y: number }>;
-
-/** Build real canonical JOIN semantics from a current file publication and the LIVE source fixture. */
-function buildMixedFileModelDraft(
-  projection: DbtProjectGraphProjection
-): WorkspaceGraphAuthoringDraft {
-  const seed = buildCanvasAuthoringDraft({
-    authoringGenerated: true,
-    terminalTransformPreview: true,
-    sourceDatabaseName: livePostgresDatabaseName(),
-  });
-  const source = projectWorkspaceGraphAuthoringDraftSemanticGraph(seed).canonicalNodes.find(
-    (node) => node.id === 'source-1'
-  )!;
-  const producer = createCanvasDbtModelDefinition(projection, 'model.analytics.orders');
-  const model: CanonicalNode = {
-    id: MIXED_MODEL_ID,
-    name: 'Mixed file model',
-    pluginId: 'dvt',
-    kind: 'dvt:transform',
-    role: 'transform',
-    status: 'idle',
-    tags: ['authoring'],
-    metadata: {},
-  };
-  const edges: CanonicalEdge[] = [source, producer].map((input) => ({
-    id: `${input.id}-mixed-model`,
-    sourceId: input.id,
-    targetId: model.id,
-    relation: 'lineage',
-  }));
-  const inputs = resolveCanvasDvtCompositionInputs({
-    nodes: [source, producer, model],
-    edges,
-    targetNodeId: model.id,
-  });
-  expect(inputs, 'one physical source and one current file publication').to.have.length(2);
-  const sources = inputs.map(createPendingSourceOccurrence);
-  const configured = configureCanvasStagedComposition(
-    {
-      id: 'mixed-inner-join',
-      operation: 'inner_join',
-      inputs: sources.map((input) => input.read.binding.relationId),
-    },
-    inputs,
-    sources,
-    []
-  );
-  if (configured.semanticDocument == null) throw new Error('The real mixed JOIN was not admitted.');
-  const configuredModel = applyDvtSubstraitSemanticDocument(model, configured.semanticDocument);
-  return buildScenarioDraft({
-    canvas: seed.canvas,
-    nodes: [source, producer, configuredModel].map(projectCanonicalNodeToAuthoringNode),
-    edges,
-    nodePositions: {
-      [source.id]: { x: 50, y: 70 },
-      [producer.id]: { x: 50, y: 300 },
-      [model.id]: { x: 500, y: 170 },
-    },
-  });
-}
 
 function buildMouseEvent(
   point: DragPoint,
@@ -191,7 +45,7 @@ function buildMouseEvent(
 ): MouseEventInit {
   return {
     bubbles: true,
-    button: buttons === 0 ? 0 : 0,
+    button: 0,
     buttons,
     cancelable: true,
     clientX: point.x,
@@ -250,41 +104,50 @@ function expectProjectedCardsNotToOverlap(): void {
   });
 }
 
-function placeCatalogueResource(resourceId: string, ordinal: number): void {
-  cy.get(`[data-element-id="${resourceId}"]`)
-    .filter(':visible')
-    .should('have.prop', 'draggable', true)
-    .then(($row) => {
-      cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow').then(($surface) => {
-        cy.window().then((window) => {
-          const transfer = new window.DataTransfer();
-          const bounds = $surface[0]!.getBoundingClientRect();
-          const options = {
-            bubbles: true,
-            cancelable: true,
-            dataTransfer: transfer,
-            clientX: bounds.left + 220 + ordinal * 90,
-            clientY: bounds.top + 180 + ordinal * 70,
-          };
-          $row[0]!.dispatchEvent(new window.DragEvent('dragstart', options));
-          $surface[0]!.dispatchEvent(new window.DragEvent('dragover', options));
-          $surface[0]!.dispatchEvent(new window.DragEvent('drop', options));
-          $row[0]!.dispatchEvent(new window.DragEvent('dragend', options));
-        });
-      });
-    });
+const modelSelector = '.react-flow__node[data-id="model.analytics.orders"]';
+
+function savedModelPosition(window: Cypress.AUTWindow): DragPoint | undefined {
+  const saved = JSON.parse(window.localStorage.getItem('dvt-web-canvas-interaction') ?? '{}') as {
+    state?: { canvasLayouts?: Record<string, { nodePositions: Record<string, DragPoint> }> };
+  };
+  return Object.values(saved.state?.canvasLayouts ?? {})
+    .map((layout) => layout.nodePositions['model.analytics.orders'])
+    .find((position) => position !== undefined);
 }
 
-type ResourcePlacement = Readonly<{ id: string; resourceId: string }>;
-function readSavedPlacements(window: Cypress.AUTWindow): ResourcePlacement[] {
-  const persisted = JSON.parse(
-    window.localStorage.getItem('dvt-web-canvas-interaction') ?? '{}'
-  ) as {
-    state?: { canvasLayouts?: Record<string, { resourceInstances?: ResourcePlacement[] }> };
-  };
-  return Object.entries(persisted.state?.canvasLayouts ?? {})
-    .filter(([key]) => key.includes(CANVAS_ID) && key.endsWith(PROJECT_ROOT))
-    .flatMap(([, layout]) => layout.resourceInstances ?? []);
+function assertCoordinates(actual: DragPoint, expected: DragPoint): void {
+  expect(actual.x, 'Canvas x').to.be.closeTo(expected.x, 0.001);
+  expect(actual.y, 'Canvas y').to.be.closeTo(expected.y, 0.001);
+}
+
+function modelPosition(node: HTMLElement): DragPoint {
+  const matrix = new DOMMatrix(node.style.transform);
+  return { x: matrix.m41, y: matrix.m42 };
+}
+
+function assertModelPositionSurvivesReload(): void {
+  cy.get<HTMLElement>(modelSelector).then(($node) => {
+    const original = $node[0]!.getBoundingClientRect();
+    dragNode('model.analytics.orders');
+    cy.get<HTMLElement>(modelSelector).should(($moved) => {
+      const rect = $moved[0]!.getBoundingClientRect();
+      expect(
+        Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top)
+      ).to.be.greaterThan(20);
+    });
+  });
+  cy.get<HTMLElement>(modelSelector).then(($node) => {
+    const settled = modelPosition($node[0]!);
+    cy.window().should((window) => {
+      const saved = savedModelPosition(window);
+      expect(saved, 'persisted drag-stop coordinates').not.to.be.undefined;
+      assertCoordinates(saved!, settled);
+    });
+    cy.reload();
+    cy.get<HTMLElement>(modelSelector, { timeout: 60_000 }).should(($restored) => {
+      assertCoordinates(modelPosition($restored[0]!), settled);
+    });
+  });
 }
 
 describe('dbt project file projection live vertical', () => {
@@ -312,344 +175,33 @@ describe('dbt project file projection live vertical', () => {
     cy.intercept('POST', '**/workspace/files/**', (request) => {
       observedFileWrites.push(request.url);
     });
-    readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
-      expect(response.status).to.equal(200);
-      expect(response.body).to.have.property(
-        'content',
-        PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
-      );
-      cy.wrap(response.body)
-        .its('contentSha256')
-        .should('match', /^[a-f0-9]{64}$/)
-        .as('openedModelRevision');
-    });
-    cy.viewport(1500, 900);
-    requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
-      const body = response.body as {
-        readonly freshness?: unknown;
-        readonly diagnostics?: unknown;
-      };
-      expect(response.status).to.equal(200);
-      expect(body.freshness, JSON.stringify(body.diagnostics)).to.equal('fresh');
-    });
-    visitWithLiveWorkspaceSession(
-      `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
-      {
-        onBeforeLoad(window) {
-          window.localStorage.setItem(
-            'dvt-web-application-language',
-            JSON.stringify({ state: { language: 'en' }, version: 0 })
-          );
-        },
-      }
-    );
-
-    cy.get('.react-flow__node[data-id="source.analytics.raw.orders"]', {
-      timeout: 60_000,
-    })
-      .should('be.visible')
-      .and('contain.text', 'orders');
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .should('be.visible')
-      .find('[data-slot="graph-node-column-toggle"]')
-      .should('contain.text', 'Columns (2)');
-    openWorkbenchProperties('model.analytics.orders');
-    cy.get('[data-slot="canvas-card-metrics-switch"]')
-      .should('have.attr', 'aria-checked', 'false')
-      .click();
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="graph-node-operational-rail"]')
-      .within(() => {
-        cy.contains('Rows').should('be.visible');
-        cy.contains('Size').should('be.visible');
-      });
-    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__node').should(
-      'have.length',
-      7
-    );
-    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__controls-fitview').click();
-    cy.get('.react-flow__node[data-id="seed.analytics.country_codes"]').should('be.visible');
-    cy.get('.react-flow__node[data-id="snapshot.analytics.orders_snapshot"]').should('be.visible');
-    cy.get('.react-flow__node[data-id="exposure.analytics.orders_dashboard"]').should('be.visible');
-    cy.get('.react-flow__node[data-id^="test.analytics.not_null_orders_order_id."]')
-      .should('be.visible')
-      .and('contain.text', 'Not Null Orders Order Id');
-    cy.get('.react-flow__node[data-id^="test.analytics.unique_orders_order_id."]')
-      .should('be.visible')
-      .and('contain.text', 'Unique Orders Order Id');
-    cy.get('.react-flow__edge').should('have.length.greaterThan', 0);
+    readInitialProjectRevision();
+    visitProjectCanvas();
+    assertProjectedResourceCards();
     expectProjectedCardsNotToOverlap();
-
-    cy.wrap(null).should(() => {
-      expect(observedRequests.some((url) => url.includes('/workspace/dbt/graph?'))).to.equal(true);
-    });
-    cy.window().should((window) => {
-      expect(
-        window.performance
-          .getEntriesByType('resource')
-          .some((entry) => entry.name.includes('/workspace/graph/draft')),
-        'no graph-draft request during file-authoritative rendering'
-      ).to.equal(false);
-    });
+    assertFileAuthority(observedRequests);
     cy.get('[data-slot="dbt-project-file-projection-notice"]')
       .should('be.visible')
       .and('contain.text', 'require code');
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
-
-    cy.get('[data-slot="canvas-explorer-sources-toggle"]').should('not.exist');
-    cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
-      .click()
-      .should('have.attr', 'aria-expanded', 'true');
-    cy.get('[data-element-id="source.analytics.raw.orders"]')
-      .filter(':visible')
-      .should('be.enabled')
-      .and('have.prop', 'draggable', true);
-    openWorkbenchProperties('source.analytics.raw.orders');
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('contain.text', 'orders');
-    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .should('contain.text', 'order_id')
-      .and('contain.text', 'customer_id');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__node').should(
-      'have.length',
-      7
-    );
+    inspectSourceColumns();
     cy.then(() => expect(observedFileWrites).to.deep.equal([]));
-
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
-      const node = $node[0];
-      if (node === undefined) throw new Error('Expected the projected model before movement.');
-      const rect = node.getBoundingClientRect();
-      cy.wrap({ left: rect.left, top: rect.top }).as('originalModelPosition');
-    });
-    dragNode('model.analytics.orders');
-    cy.get<{ left: number; top: number }>('@originalModelPosition').then((original) => {
-      cy.get('.react-flow__node[data-id="model.analytics.orders"]').should(($node) => {
-        const node = $node[0];
-        if (node === undefined) throw new Error('Expected the moved projected model.');
-        const rect = node.getBoundingClientRect();
-        expect(
-          Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top)
-        ).to.be.greaterThan(20);
-      });
-    });
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
-      const node = $node[0];
-      if (node === undefined) throw new Error('Expected the settled projected model.');
-      const transform = new DOMMatrix(node.style.transform);
-      const position = { x: transform.m41, y: transform.m42 };
-      cy.wrap(position).as('settledModelPosition');
-      cy.window().should((window) => {
-        const saved = JSON.parse(
-          window.localStorage.getItem('dvt-web-canvas-interaction') ?? '{}'
-        ) as {
-          state?: {
-            canvasLayouts?: Record<
-              string,
-              { nodePositions: Record<string, { x: number; y: number }> }
-            >;
-          };
-        };
-        const positions = Object.values(saved.state?.canvasLayouts ?? {}).map(
-          (layout) => layout.nodePositions['model.analytics.orders']
-        );
-        const savedPosition = positions.find((candidate) => candidate != null);
-        expect(savedPosition, 'persisted drag-stop coordinates').not.to.equal(undefined);
-        expect(savedPosition?.x).to.be.closeTo(position.x, 0.001);
-        expect(savedPosition?.y).to.be.closeTo(position.y, 0.001);
-      });
-    });
-    cy.wait(400);
-    cy.reload();
-    cy.get<{ x: number; y: number }>('@settledModelPosition').then((settled) => {
-      cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
-        ($node) => {
-          const node = $node[0];
-          if (node === undefined) throw new Error('Expected the restored projected model.');
-          const transform = new DOMMatrix(node.style.transform);
-          expect(transform.m41, 'restored Canvas x').to.be.closeTo(settled.x, 0.001);
-          expect(transform.m42, 'restored Canvas y').to.be.closeTo(settled.y, 0.001);
-        }
-      );
-    });
-
-    // Inspect the node with one click, then request its Code section explicitly.
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="graph-node-card-title"]')
-      .click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
-      .should('be.visible')
-      .click()
-      .and('have.attr', 'aria-selected', 'true');
-
-    // Properties Code inspects the authoritative file without changing it.
-    cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
-      .should('be.visible')
-      .and('have.attr', 'data-file-path', `${PROJECT_ROOT}/models/orders.sql`);
-    cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
-    cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 })
-      .find('.view-lines')
-      .invoke('text')
-      .should((editorText) => {
-        expect(editorText.replaceAll('\u00a0', ' ')).to.match(
-          /source\(\s*'raw'\s*,\s*'orders'\s*\)/
-        );
-      });
-    cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
-    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
-      .should('have.prop', 'readOnly', true)
-      .and('be.focused');
-    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type(
-      'blocked_projection_edit',
-      { force: true, delay: 0 }
-    );
-    cy.get('@openedModelRevision').then((revision) => {
-      readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
-        expect(response.status).to.equal(200);
-        expect(response.body).to.have.property(
-          'content',
-          PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
-        );
-        expect(response.body).to.have.property('contentSha256', revision);
-        expect(observedFileWrites).to.deep.equal([]);
-      });
-    });
-    cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
-
-    // Other Properties sections remain in the same node context.
-    cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-help"]')
-      .should('be.visible')
-      .and('have.attr', 'aria-label');
-    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .should('contain.text', 'order_id')
-      .and('contain.text', 'integer')
-      .and('contain.text', 'customer_id');
-    cy.get('[data-slot="canvas-node-workbench-tab-tests"]').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .should('contain.text', 'Value is present')
-      .and('contain.text', 'blocks run');
-
-    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
-
-    // The shared context menu keeps one Properties entry for node inspection.
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="graph-node-card-title"]')
-      .rightclick();
-    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 })
-      .should('be.visible')
-      .within(() => {
-        cy.contains('[role="menuitem"]', 'Properties').should('be.visible');
-        cy.contains('[role="menuitem"]', 'Open code').should('not.exist');
-      });
-    cy.get('body').type('{esc}', { force: true });
-    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    assertModelPositionSurvivesReload();
+    inspectReadOnlyModelCode(observedFileWrites);
+    inspectModelProperties();
   });
-
   it('creates, restores, inspects and removes independent source and model references without SQL writes', () => {
     const writes: string[] = [];
     cy.intercept({ method: '+(POST|PUT|DELETE)', url: '**/workspace/**' }, (request) => {
       writes.push(request.url);
     });
-    visitWithLiveWorkspaceSession(
-      `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
-      {
-        onBeforeLoad(window) {
-          window.localStorage.setItem(
-            'dvt-web-application-language',
-            JSON.stringify({ state: { language: 'en' }, version: 0 })
-          );
-        },
-      }
-    );
-    cy.get('[data-element-id="model.analytics.orders"]', { timeout: 60_000 }).should(
-      'have.prop',
-      'draggable',
-      true
-    );
-    cy.get('.react-flow__node')
-      .should('have.length.greaterThan', 0)
-      .its('length')
-      .as('definitionCardCount');
-    placeCatalogueResource('source.analytics.raw.orders', 0);
-    placeCatalogueResource('source.analytics.raw.orders', 1);
-    placeCatalogueResource('model.analytics.orders', 2);
-    placeCatalogueResource('model.analytics.orders', 3);
-    cy.window().should((window) => {
-      expect(readSavedPlacements(window)).to.have.length(4);
-    });
-    cy.window().then((window) => {
-      const placed = readSavedPlacements(window);
-      expect(new Set(placed.map((entry) => entry.id)).size).to.equal(4);
-      cy.wrap(placed).as('resourceInstances');
-    });
-    cy.get<number>('@definitionCardCount').then((count) => {
-      cy.get('.react-flow__node').should('have.length', count + 4);
-    });
-    cy.get<ResourcePlacement[]>('@resourceInstances').then((instances) => {
-      const [first, second] = instances.filter(
-        (entry) => entry.resourceId === 'model.analytics.orders'
-      );
-      if (!first || !second) throw new Error('Two placed model references are required.');
-      openWorkbenchProperties(first.id);
-      cy.get('[data-slot="canvas-card-metrics-switch"]').click();
-      cy.get('[data-slot="canvas-node-workbench-close"]').click();
-      cy.get(
-        `.react-flow__node[data-id="${first.id}"] [data-slot="graph-node-operational-rail"]`
-      ).should('exist');
-      cy.get(
-        `.react-flow__node[data-id="${second.id}"] [data-slot="graph-node-operational-rail"]`
-      ).should('not.exist');
-      cy.get(
-        '.react-flow__node[data-id="model.analytics.orders"] [data-slot="graph-node-operational-rail"]'
-      ).should('not.exist');
-    });
+    visitProjectCanvas();
+    placeProjectReferences();
+    assertIndependentMetrics();
     cy.reload();
-    cy.get<ResourcePlacement[]>('@resourceInstances').then((instances) => {
-      for (const instance of instances)
-        cy.get(`.react-flow__node[data-id="${instance.id}"]`, { timeout: 60_000 }).should('exist');
-      const instance = instances.find((entry) => entry.resourceId === 'model.analytics.orders')!;
-      cy.get(
-        `.react-flow__node[data-id="${instance.id}"] [data-slot="graph-node-operational-rail"]`
-      ).should('exist');
-      cy.get(`.react-flow__node[data-id="${instance.id}"]`)
-        .find('[data-slot="graph-node-card-title"]')
-        .click();
-      cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should(
-        'be.visible'
-      );
-      cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-      cy.get('[data-slot="workspace-file-code-editor"]').should(
-        'have.attr',
-        'data-file-path',
-        `${PROJECT_ROOT}/models/orders.sql`
-      );
-      cy.get('[data-slot="canvas-node-workbench-close"]').click();
-      cy.get(`.react-flow__node[data-id="${instance.id}"]`)
-        .find('[data-slot="graph-node-card-title"]')
-        .rightclick();
-      cy.get('[data-slot="canvas-node-context-menu"]')
-        .contains('[role="menuitem"]', 'Delete')
-        .click();
-      cy.get(`.react-flow__node[data-id="${instance.id}"]`).should('not.exist');
-      cy.get('.react-flow__node[data-id="model.analytics.orders"]').should('exist');
-      for (const sibling of instances.filter((entry) => entry.id !== instance.id))
-        cy.get(`.react-flow__node[data-id="${sibling.id}"]`).should('exist');
-    });
+    inspectAndRemoveRestoredReference();
     cy.reload();
-    cy.get<number>('@definitionCardCount').then((count) => {
-      cy.get('.react-flow__node', { timeout: 60_000 }).should('have.length', count + 3);
-    });
-    cy.window().should((window) => {
-      expect(readSavedPlacements(window)).to.have.length(3);
-    });
+    assertRemainingReferences();
     for (const [path, content] of Object.entries(PROJECT_FILES)) {
       readLiveWorkspaceFile(path).then((response) => {
         expect(response.status).to.equal(200);
@@ -666,14 +218,7 @@ describe('dbt project file projection live vertical', () => {
     cy.intercept({ method: '+(POST|PUT|DELETE)', url: '**/workspace/**' }, (request) => {
       writes.push(request.url);
     });
-    visitWithLiveWorkspaceSession('/canvas', {
-      onBeforeLoad(window) {
-        window.localStorage.setItem(
-          'dvt-web-application-language',
-          JSON.stringify({ state: { language: 'en' }, version: 0 })
-        );
-      },
-    });
+    visitProjectCanvas('/canvas');
     cy.get('a[data-slot="left-navigation-link"][href="/canvas"]').should(
       'have.attr',
       'aria-expanded',
@@ -704,155 +249,8 @@ describe('dbt project file projection live vertical', () => {
   });
 
   it('shows authorized SQL for a native JOIN of a real file model and physical source without executing rows', () => {
-    let draftRevision: string;
-    let semanticPlanSha256: string;
-    let projection: DbtProjectGraphProjection;
-    let compiledProjection: ReturnType<typeof TransformSqlProjectionResponseSchema.parse>;
-    let sourceRef: ReturnType<typeof ConnectedSourceRefSchema.parse>;
-    let persistedDraftRecord: unknown;
-    const fileWrites: string[] = [];
-    const rowReads: string[] = [];
-
-    // This guards the original failure: the browser had a producer signature but no authorized SQL.
-    requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID)
-      .then((response) => {
-        expect(response.status).to.equal(200);
-        projection = DbtProjectGraphProjectionSchema.parse(response.body);
-        const draft = buildMixedFileModelDraft(projection);
-        const model = draft.nodes.find((node) => node.id === MIXED_MODEL_ID)!;
-        semanticPlanSha256 = DvtTransformAuthoringAuthorityV1Schema.parse(
-          model.metadata?.transformAuthoring
-        ).semanticDocument.semanticPlan.sha256;
-        sourceRef = ConnectedSourceRefSchema.parse(
-          draft.nodes.find((node) => node.id === 'source-1')?.metadata?.connectedSourceRef
-        );
-        return seedLiveSelectedClosureDraft({ draft });
-      })
-      .then((revision) => {
-        draftRevision = revision;
-        return cy
-          .request({
-            method: 'GET',
-            url: buildDraftReadUrl(resolveLiveWorkspaceSession()),
-            headers: buildAuthorizationHeaders(),
-            auth: buildBearerAuth(),
-          })
-          .then((response) => {
-            expect(response.status).to.equal(200);
-            expect(response.body.record.revision).to.equal(draftRevision);
-            persistedDraftRecord = response.body.record;
-          });
-      });
-
-    cy.intercept(
-      'GET',
-      `**/workspace/graph/canvases/main-canvas/transforms/${MIXED_MODEL_ID}/sql?*`
-    ).as('mixedModelSql');
-    cy.intercept('POST', '**/workspace/files/**', (request) => {
-      fileWrites.push(request.url);
-    });
-    cy.intercept('GET', '**/workspace/graph/**/data-sample?*', (request) => {
-      rowReads.push(request.url);
-    });
-    cy.viewport(1500, 900);
-    visitWithLiveWorkspaceSession('/canvas', {
-      onBeforeLoad(window) {
-        window.localStorage.setItem(
-          'dvt-web-application-language',
-          JSON.stringify({ state: { language: 'en' }, version: 0 })
-        );
-      },
-    });
-    openWorkbenchProperties(MIXED_MODEL_ID);
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
-    cy.wait('@mixedModelSql', { timeout: 60_000 }).then(({ request, response }) => {
-      expect(response?.statusCode).to.equal(200);
-      const sql = TransformSqlProjectionResponseSchema.parse(response?.body);
-      expect(Object.fromEntries(new URL(request.url).searchParams)).to.deep.equal({
-        ...resolveLiveWorkspaceSession(),
-        semanticPlanSha256,
-        presentation: 'readable',
-      });
-      expect(sql.presentation, 'explicit readable presentation envelope').not.to.equal(undefined);
-      expect(sql).to.include({
-        canvasId: 'main-canvas',
-        transformNodeId: MIXED_MODEL_ID,
-        draftRevision,
-        semanticPlanSha256,
-      });
-      expect(sql.provenance.sourceRefs).to.deep.equal([sourceRef]);
-      expect(sql.provenance.modelRefs).to.have.length(1);
-      const { analysisSha256, ...modelIdentity } = sql.provenance.modelRefs![0]!;
-      expect(modelIdentity).to.deep.equal({
-        canvasId: CANVAS_ID,
-        uniqueId: 'model.analytics.orders',
-        contentSetSha256: projection.projectRevision.contentSetSha256,
-      });
-      // Native compilation includes compiled SQL in the analysis identity; parse is a different phase.
-      expect(
-        analysisSha256,
-        'compiled analysis differs from the parse-only resource snapshot'
-      ).not.to.equal(projection.analysisSha256);
-      expect(sql.sql)
-        .to.match(/\bjoin\b/i)
-        .and.contain('customer-1');
-      expect(sql.sql)
-        .to.match(/raw"?\."?orders/)
-        .and.match(/public"?\."?orders/);
-      compiledProjection = sql;
-    });
-    cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines .view-line', {
-      timeout: 20_000,
-    })
-      .should('contain.text', 'customer-1')
-      .and(($lines) => {
-        // Monaco stores each display line separately; concatenation would turn "i0" + "JOIN" into "i0JOIN".
-        const displayedSql = $lines
-          .toArray()
-          .map((line) => line.textContent ?? '')
-          .join('\n');
-        expect(displayedSql, 'Monaco displays the protected SQL projection').to.match(/\bjoin\b/i);
-      });
-    // This deterministic fixture must revalidate the same complete compiled result on explicit reselect.
-    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
-    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
-    cy.wait('@mixedModelSql', { timeout: 60_000 }).then(({ request, response }) => {
-      expect(response?.statusCode).to.equal(200);
-      expect(Object.fromEntries(new URL(request.url).searchParams)).to.deep.equal({
-        ...resolveLiveWorkspaceSession(),
-        semanticPlanSha256,
-        presentation: 'readable',
-      });
-      expect(TransformSqlProjectionResponseSchema.parse(response?.body)).to.deep.equal(
-        compiledProjection
-      );
-    });
-    cy.then(() => {
-      expect(fileWrites, 'inspection does not write project artifacts').to.deep.equal([]);
-      expect(rowReads, 'SQL inspection does not execute row Preview').to.deep.equal([]);
-    });
-    // A real read checks both content and revision without intercepting the draft protocol.
-    cy.request({
-      method: 'GET',
-      url: buildDraftReadUrl(resolveLiveWorkspaceSession()),
-      headers: buildAuthorizationHeaders(),
-      auth: buildBearerAuth(),
-    }).then((response) => {
-      expect(response.status).to.equal(200);
-      expect(
-        response.body.record,
-        'inspection preserves the exact saved draft and revision'
-      ).to.deep.equal(persistedDraftRecord);
-    });
-    readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
-      expect(response.body).to.have.property(
-        'content',
-        PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
-      );
-    });
+    seedMixedModel().then(inspectMixedModel);
   });
-
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {
     seedLiveWorkspaceFiles({
       [`${INVALID_PROJECT_ROOT}/dbt_project.yml`]: INVALID_PROJECT_CONFIG.replace(
@@ -868,34 +266,15 @@ describe('dbt project file projection live vertical', () => {
     cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
       observedRequests.push(request.url);
     });
-    visitWithLiveWorkspaceSession(
-      `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`,
-      {
-        onBeforeLoad(window) {
-          window.localStorage.setItem(
-            'dvt-web-application-language',
-            JSON.stringify({ state: { language: 'en' }, version: 0 })
-          );
-        },
-      }
+    visitProjectCanvas(
+      `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`
     );
-
     cy.get('[data-slot="dbt-project-file-projection-notice"]', { timeout: 60_000 })
       .should('be.visible')
       .and('contain.text', 'dbt project analysis is unavailable')
       .and('contain.text', 'dbt_project_invalid');
     cy.get('.react-flow__node').should('not.exist');
     cy.location('search').should('contain', 'authority=dbt-project-files');
-    cy.wrap(null).should(() => {
-      expect(observedRequests.some((url) => url.includes('/workspace/dbt/graph?'))).to.equal(true);
-    });
-    cy.window().should((window) => {
-      expect(
-        window.performance
-          .getEntriesByType('resource')
-          .some((entry) => entry.name.includes('/workspace/graph/draft')),
-        'no graph-draft request during file-authoritative rendering'
-      ).to.equal(false);
-    });
+    assertFileAuthority(observedRequests);
   });
 });

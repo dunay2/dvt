@@ -1,5 +1,5 @@
 /** Owned concern: derive displayed relational geometry and bind card movement to its layout session. */
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 import { useRelationalCardMovement } from './relational-layout/useRelationalCardMovement';
 import {
@@ -39,7 +39,8 @@ export function useCanvasRelationalTreePlacement({
     stagedOperations
   );
   const session = useRelationalLayout();
-  const { projectLayout, expanded, toggleDetail } = session;
+  const { projectLayout, expanded, toggleDetail, displayedCards, retainPositionsAfterRemoval } =
+    session;
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
   const detachedSources = useMemo(
     () => pendingSources?.map(projectPendingSourceOccurrence) ?? [],
@@ -70,6 +71,17 @@ export function useCanvasRelationalTreePlacement({
     [root, sizes, detached, projectLayout]
   );
   const movableCards = useMemo(() => projectCanvasRelationalMovableCards(layout), [layout]);
+  useLayoutEffect(() => {
+    displayedCards.current = movableCards;
+  }, [displayedCards, movableCards]);
   const movement = useRelationalCardMovement(movableCards, zoom, session, onManualLayout);
-  return { layout, movement, graphs: detail.graphs, expanded, zoomRevealsDetail, toggleDetail };
+  return {
+    layout,
+    movement,
+    graphs: detail.graphs,
+    expanded,
+    zoomRevealsDetail,
+    toggleDetail,
+    retainPositionsAfterRemoval,
+  };
 }

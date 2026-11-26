@@ -2,9 +2,13 @@
 import type { PlatformConnectionState } from '../../../capabilities/platform-health';
 import type { ShellRouteHeading } from '../../shell/shellNavigationModel';
 
+export type ShellOperationalView = 'log' | 'problems';
+
 export type ShellTopBarProps = {
   readonly connectionDetail?: string | null;
   readonly connectionStateOverride?: PlatformConnectionState | null;
   readonly isConnectionChecking?: boolean;
   readonly routeHeading?: ShellRouteHeading | null;
+  readonly showCanvasWorkspaceIdentity?: boolean;
+  readonly showDrawerToggle?: boolean;
 };

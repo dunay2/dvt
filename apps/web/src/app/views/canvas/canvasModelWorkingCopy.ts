@@ -19,7 +19,7 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import { copyCanvasSemanticDocument } from './canvasSemanticDocumentCopy';
-import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
+import { readCanvasPhysicalCopyMetadata } from './canvasModelCompositionPhysicalAdmission';
 import { readCanvasModelCompositionPublication } from './canvasModelCompositionInput';
 import { readCanvasInputBindings } from './canvasInputBindings';
 
@@ -45,14 +45,31 @@ function dependencyMetadata(edge: CanonicalEdge): Record<string, unknown> {
   };
 }
 
-function sourceContext(args: CopyContext) {
-  const source = args.nodes.find((node) => node.id === args.sourceId);
-  if (
-    source == null ||
-    source.path != null ||
+function transformCopyMetadata(source: CanonicalNode, args: CopyContext): Record<string, unknown> {
+  if (source.path != null) throw new Error('Independent copying requires native Model authority.');
+  if (!readCanvasModelCompositionPublication(source, args.nodes, args.edges))
+    throw new Error('Native Model publication is unavailable.');
+  const authority = readDvtTransformAuthoringAuthority(source);
+  if (!authority) throw new Error('Native semantic authority is unavailable.');
+  return { transformAuthoring: authority };
+}
+
+function copyMetadata(source: CanonicalNode, args: CopyContext): Record<string, unknown> {
+  if (source.kind === 'dvt:source' && ['dvt', 'dvt.warehouse-source'].includes(source.pluginId))
+    return readCanvasPhysicalCopyMetadata(source);
+  return transformCopyMetadata(source, args);
+}
+
+function ownsFileModel(source: CanonicalNode): boolean {
+  return (
     readWorkspaceDbtModelReference(source) != null ||
     source.metadata?.authority === 'dbt-project-files'
-  )
+  );
+}
+
+function sourceContext(args: CopyContext) {
+  const source = args.nodes.find((node) => node.id === args.sourceId);
+  if (!source || ownsFileModel(source))
     throw new Error('Independent copying requires native Model authority.');
   const edges = projectWorkspaceNodeInstanceEdges(args.nodes, args.edges).filter(
     (edge) => edge.targetId === source.id
@@ -63,41 +80,14 @@ function sourceContext(args: CopyContext) {
     )
   )
     throw new Error('Working copies require lossless native data dependencies.');
-  let metadata: Record<string, unknown>;
-  if (
-    source.kind === 'dvt:source' &&
-    source.role === 'input' &&
-    ['dvt', 'dvt.warehouse-source'].includes(source.pluginId)
-  ) {
-    if (
-      resolveCanvasPhysicalCompositionInput(source, { sourceId: source.id, targetId: source.id }) ==
-      null
-    )
-      throw new Error('Physical Model publication is unavailable.');
-    metadata = Object.fromEntries(
-      ['columns', 'schema', 'tableName', 'connectedSourceRef'].map((key) => [
-        key,
-        source.metadata?.[key],
-      ])
-    );
-    const authority = readDvtTransformAuthoringAuthority(source);
-    if (authority != null) metadata.transformAuthoring = authority;
-  } else if (
-    source.kind === 'dvt:transform' &&
-    source.pluginId === 'dvt' &&
-    source.role === 'transform'
-  ) {
-    if (readCanvasModelCompositionPublication(source, args.nodes, args.edges) == null)
-      throw new Error('Native Model publication is unavailable.');
-    const authority = readDvtTransformAuthoringAuthority(source);
-    if (authority == null) throw new Error('Native semantic authority is unavailable.');
-    metadata = { transformAuthoring: authority };
-  } else throw new Error('Unsupported independent Model authority.');
-  return { source, edges, metadata };
+  return { source, edges, metadata: copyMetadata(source, args) };
 }
 
 export function canvasModelCopySourceSignature(args: CopyContext): string {
-  const { source, edges, metadata } = sourceContext(args);
+  return sourceSignature(sourceContext(args));
+}
+
+function sourceSignature({ source, edges, metadata }: ReturnType<typeof sourceContext>): string {
   return jcsCanonicalize({
     id: source.id,
     kind: source.kind,
@@ -114,7 +104,8 @@ export function canvasModelCopySourceSignature(args: CopyContext): string {
 }
 
 export function prepareCanvasModelWorkingCopy(args: CopyContext): CanvasModelWorkingCopy {
-  const { source, edges, metadata } = sourceContext(args);
+  const context = sourceContext(args);
+  const { source, edges, metadata } = context;
   const names = new Set(args.nodes.map((node) => node.name));
   let ordinal = 2;
   let name: string;
@@ -146,7 +137,7 @@ export function prepareCanvasModelWorkingCopy(args: CopyContext): CanvasModelWor
   }
   return {
     sourceId: source.id,
-    sourceSignature: canvasModelCopySourceSignature(args),
+    sourceSignature: sourceSignature(context),
     node,
     edges: edges.map((edge) => ({
       id: randomUuidV4(),

@@ -392,12 +392,15 @@ describe('Central project Code workflow files', () => {
         .contains('button', resolveCanvasViewCopy(language).planPreviewCloseLabel)
         .click();
       cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
-      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="problems"]').click();
+      cy.get('#shell-operational-problems').click();
       cy.get('[data-slot="bottom-operational-drawer-problems"]')
         .contains(reason)
         .should('be.visible');
-      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]').click();
-      cy.get('[data-slot="bottom-operational-drawer-runs"]').contains(reason).should('be.visible');
+      cy.get('#shell-operational-problems').click();
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
+      cy.get('[data-slot="bottom-operational-drawer-preview"]')
+        .contains(reason)
+        .should('be.visible');
       cy.get('[data-slot="shell-run-command"]').should('be.disabled');
       cy.then(() => {
         expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(1);

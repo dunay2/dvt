@@ -14,7 +14,8 @@
       "types": "./dist/substrait.d.ts",
       "import": "./dist/substrait.js",
       "default": "./dist/substrait.js"
-    }
+    },
+    "./examples/workspace-sql-execution.json": "./src/contracts/sql-workspace/examples/WorkspaceSqlExecution.example.json"
   },
   "private": true,
   "license": "MIT",
@@ -29,7 +30,7 @@
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "5.1.1"
   },
   "dependencies": {
     "@buf/substrait_substrait.bufbuild_es": "2.14.0-20260816025439-ce0808dab3ac.1",

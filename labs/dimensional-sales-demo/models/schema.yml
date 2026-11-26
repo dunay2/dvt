@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: star_fact_sales
+    description: Hechos con grano de una línea de pedido.
+    columns:
+      - name: sales_line_id
+        data_tests: [not_null, unique]
+  - name: snowflake_fact_sales
+    description: Los mismos hechos con dimensiones normalizadas.
+    columns:
+      - name: sales_line_id
+        data_tests: [not_null, unique]
+  - name: snowflake_dim_country
+    columns:
+      - name: country_code
+        data_tests: [not_null, unique]
+  - name: snowflake_dim_category
+    columns:
+      - name: category_id
+        data_tests: [not_null, unique]
+  - name: snowflake_dim_subcategory
+    columns:
+      - name: subcategory_id
+        data_tests: [not_null, unique]

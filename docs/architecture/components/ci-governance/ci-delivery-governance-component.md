@@ -99,6 +99,11 @@ Command/query rail:
    matrix reader. Projection booleans are read with `fromJSON`; same-named
    flags from distinct policy projections retain their own semantics. Package
    grouping in `tools/ci/package-test-matrix.mjs` has no Git or output side effects.
+   The public scope module delegates pure package-manifest comparison to
+   `package-json-scope.mjs` and mode-specific capability output to
+   `workflow-scope-projection.mjs`. These modules acquire no Git facts and
+   define no parallel path or command catalog. Unknown manifest shapes retain
+   conservative fanout; the existing optional crypto-input scan remains lazy.
 4. Generated-doc single-writer policy remains owned by
    `docs/generated-docs-policy.json` and its checker, not by the CI delivery
    action plan text.

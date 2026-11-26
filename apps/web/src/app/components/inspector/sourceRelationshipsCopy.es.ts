@@ -1,25 +1,6 @@
 import type { sourceRelationshipsCopyEn } from './sourceRelationshipsCopy.en';
 
 export const sourceRelationshipsCopyEs = {
-  canvasConnections: 'Conexiones del Canvas',
-  total: 'total',
-  inputs: 'Entradas',
-  outputs: 'Salidas',
-  noInputs: 'Sin conexiones de Canvas aguas arriba',
-  noOutputs: 'Sin conexiones de Canvas aguas abajo',
-  noConnections: 'No hay conexiones de Canvas registradas para este origen.',
-  selectedInput: 'entrada seleccionada',
-  selectedOutput: 'salida seleccionada',
-  currentSource: 'Origen actual',
-  connectedNode: 'Nodo conectado',
-  direction: 'Dirección',
-  incoming: 'Entrante',
-  outgoing: 'Saliente',
-  from: 'Desde',
-  to: 'Hacia',
-  relation: 'Relación',
-  listLabel: 'Relaciones del Canvas',
-  reorder: 'Reordenar salida',
-  reorderHint: 'Arrastra o pulsa Alt+Arriba/Abajo para reordenar salidas.',
-  reordered: 'Salida reordenada',
+  reorderHint: 'Arrastra para reordenar o usa Alt con las flechas arriba y abajo.',
+  reordered: (name) => `Se movió ${name}.`,
 } satisfies typeof sourceRelationshipsCopyEn;

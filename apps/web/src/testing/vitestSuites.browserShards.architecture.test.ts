@@ -13,6 +13,7 @@ import {
 import { main } from '../../scripts/run-vitest-changed-suites';
 import { parseChangedSuiteArgs } from '../../scripts/changed-suite-args';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   spawnSync: vi.fn(() => ({ status: 0 })),

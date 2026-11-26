@@ -22,10 +22,12 @@ const LIFECYCLE_TYPES_SOURCE = readArchitectureSiblingSource(
 
 describe('canvasDraftQueryCache architecture', () => {
   it('keeps graph-draft cache key ownership in the dedicated cache seam', () => {
-    expect(CACHE_SOURCE).toContain('queryKeys.workspace.graphDraft');
-    expect(PERSISTENCE_RUNTIME_SOURCE).not.toContain('queryKeys.workspace.graphDraft');
-    expect(RELOAD_HYDRATION_SOURCE).not.toContain('queryKeys.workspace.graphDraft');
-    expect(RECOVERY_ACTIONS_SOURCE).not.toContain('queryKeys.workspace.graphDraft');
+    expect(CACHE_SOURCE).toContain(
+      'queryKeys.workspace.forLayout(workspaceLayoutKey).graphDraft()'
+    );
+    expect(PERSISTENCE_RUNTIME_SOURCE).not.toContain('.graphDraft(');
+    expect(RELOAD_HYDRATION_SOURCE).not.toContain('.graphDraft(');
+    expect(RECOVERY_ACTIONS_SOURCE).not.toContain('.graphDraft(');
     expect(LIFECYCLE_TYPES_SOURCE).not.toContain('setQueryData');
   });
 });

@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 /** Catalogue drops edit the open Model transaction; they never navigate or write before Apply. */
 import React, { act } from 'react';
+import {
+  WorkspaceDbtModelReferenceSchema,
+  allocateDvtRelationId,
+  allocateDvtFieldId,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
@@ -13,6 +18,10 @@ import { createModelOutputDependencyFixture } from './canvasModelOutputDependenc
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 import { CanvasModelBrowser, type CanvasModelBrowserPresentation } from './CanvasModelBrowser';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import { dbtModelProjection } from './canvasDbtModelReference.test-fixtures';
+import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
+import { canvasDbtModelDefinitionId } from './canvasDbtModelReference';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 
 async function dropModel(id: string, scopeKey?: string): Promise<void> {
   const event = new MouseEvent('drop', { bubbles: true, cancelable: true });
@@ -32,7 +41,128 @@ async function dropModel(id: string, scopeKey?: string): Promise<void> {
 
 describe('working Models inside the open Model', () => {
   setupWorkbenchTest();
-  it('rejects an incoming physical Source before editing and refreshes admission for a new receiver', async () => {
+  it('keeps file-only discovery private through Cancel and refreshes once for Apply', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const projection = DbtProjectGraphProjectionSchema.parse({
+      ...dbtModelProjection,
+      executionTarget: {
+        ...dbtModelProjection.executionTarget,
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse-main',
+        },
+      },
+    });
+    const refresh = vi.fn(async () => projection);
+    const apply = vi.fn<CanvasRelationalTreeAuthoringContract['onApplyNodeDraft']>(() => ({
+      outcome: 'no_changes',
+    }));
+    const context: CanvasModelBrowserPresentation = {
+      scopeKey: 'project/native',
+      mode: 'semantic',
+      onSelect: () => false,
+      catalog: () => null,
+      cataloguePresentation: {
+        query: '',
+        open: true,
+        expandedIds: new Set(),
+        onQuery: () => {},
+        onOpenChange: () => {},
+        onToggleDetails: () => {},
+      },
+      fileModels: { projection, refresh },
+    };
+    const id = canvasDbtModelDefinitionId(
+      projection.authorityBinding.canvasId,
+      'model.demo.clientes'
+    );
+    await act(async () =>
+      root.render(
+        <CanvasModelBrowser.Provider value={context}>
+          <CanvasRelationalTreeWorkbench
+            transformNode={graph.producer}
+            nodes={graph.nodes}
+            edges={graph.edges}
+            copy={COPY}
+            authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+          />
+        </CanvasModelBrowser.Provider>
+      )
+    );
+    await dropModel(id, context.scopeKey!);
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(refresh).not.toHaveBeenCalled();
+    expect(apply).not.toHaveBeenCalled();
+    await dropModel(id, context.scopeKey!);
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .click()
+    );
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(apply).toHaveBeenCalledTimes(1);
+    const staged = apply.mock.calls[0]?.[2]?.modelCopies?.[0]?.copy;
+    expect(staged).toMatchObject({ discovery: { definition: { id } }, node: { definitionId: id } });
+    expect(graph.nodes.some((node) => node.id === id)).toBe(false);
+  });
+  it('uses the registered dbt publication as a private linked Input and Cancel discards it', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const definition = {
+      ...graph.producer,
+      id: 'registered-clientes',
+      name: 'clientes',
+      path: 'models/clientes.sql',
+      metadata: {
+        dbtModelReference: WorkspaceDbtModelReferenceSchema.parse({
+          schemaVersion: 'workspace-dbt-model-reference.v1',
+          canvasId: 'file-owner',
+          uniqueId: 'model.demo.clientes',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            provider: 'postgres',
+            connectionId: 'warehouse-main',
+          },
+          relationId: allocateDvtRelationId(),
+          fields: [
+            { fieldId: allocateDvtFieldId(), name: 'client_id', dataType: 'text', nullable: true },
+          ],
+        }),
+      },
+    };
+    const apply = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.producer}
+          nodes={[...graph.nodes, definition]}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+        />
+      )
+    );
+    await dropModel(definition.id);
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
+    expect(container.querySelector('[data-pending="true"]')?.textContent).toContain('clientes');
+    expect(apply).not.toHaveBeenCalled();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
+    expect(apply).not.toHaveBeenCalled();
+    expect(definition.metadata.dbtModelReference.uniqueId).toBe('model.demo.clientes');
+    expect('transformAuthoring' in definition.metadata).toBe(false);
+  });
+
+  it('reuses an incoming physical Source occurrence and refreshes admission for a new receiver', async () => {
     const graph = await createModelOutputDependencyFixture();
     const apply = vi.fn();
     let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -47,12 +177,12 @@ describe('working Models inside the open Model', () => {
       return null;
     }
     await act(async () => root.render(<Host target={graph.consumer} />));
-    expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(false);
+    expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(true);
     await act(async () => {
-      expect(model!.modelComposition.copy(graph.right.id)).toBe(false);
+      expect(model!.modelComposition.copy(graph.right.id)).toBe(true);
     });
-    expect(model!.session.active).toBe(false);
-    expect(model!.session.occurrences.pending).toHaveLength(0);
+    expect(model!.session.active).toBe(true);
+    expect(model!.session.occurrences.pending).toHaveLength(1);
     await act(async () => root.render(<Host target={graph.producer} />));
     expect(model!.modelComposition.nodeIds.has(graph.right.id)).toBe(true);
     expect(apply).not.toHaveBeenCalled();

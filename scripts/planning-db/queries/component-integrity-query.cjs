@@ -3,8 +3,14 @@ const { appendComponentPairFilter, appendFilter } = require('../query-filter.cjs
 const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 const {
+  FeatureMechanizationGitDiffReader,
+} = require('../../lib/feature-mechanization-git-diff.cjs');
+const {
   createCurrentComponentFilesReadModelComponent,
 } = require('./current-component-files-query.cjs');
+const {
+  createDocumentaryComponentReadModelComponent,
+} = require('./documentary-component-query.cjs');
 
 function createComponentIntegrityReadModelComponent(deps = {}) {
   const { schemaName } = deps.schema || require('../../planning-db-schema.cjs');
@@ -65,11 +71,30 @@ function createComponentIntegrityReadModelComponent(deps = {}) {
           select 1 from unnest($1::text[]) as current_file(path)
           where current_file.path = component.repo_path
             or left(current_file.path, length(component.repo_path) + 1) = component.repo_path || '/'
-        )`;
+        )
+      union all
+      select * from jsonb_to_recordset($2::jsonb) as documentary(
+        finding_kind text, severity text, component_id text, component_name text,
+        finding_state text, path text, related_component_id text, relation_id text,
+        evidence_count integer, action_hint text, source_view text, metadata jsonb
+      )`;
   }
 
   async function readComponentIntegrityRows(client, filters = {}) {
-    const params = [createCurrentComponentFilesReadModelComponent(deps).readGitSourceInventory()];
+    const currentDeps = {
+      ...deps,
+      gitReader: deps.gitReader || new FeatureMechanizationGitDiffReader(),
+    };
+    const params = [
+      createCurrentComponentFilesReadModelComponent(currentDeps).readGitSourceInventory(),
+    ];
+    params.push(
+      JSON.stringify(
+        await createDocumentaryComponentReadModelComponent(
+          currentDeps
+        ).readDocumentaryIntegrityRows(client)
+      )
+    );
     const predicates = [];
     appendFilter(predicates, params, 'finding_kind', filters.kind);
     appendFilter(predicates, params, 'severity', filters.severity);

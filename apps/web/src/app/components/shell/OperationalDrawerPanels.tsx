@@ -1,7 +1,6 @@
 /** Owned concern: render route-contributed operational drawer panels. */
 import type { ReactNode } from 'react';
 
-import { RunControlActions } from '../runs/RunControlActions';
 import { OperationalDrawerDataSamplePanel } from './OperationalDrawerDataSamplePanel';
 import {
   OperationalDrawerEmptyState,
@@ -11,9 +10,6 @@ import {
   OperationalDrawerPrimaryAction,
   OperationalDrawerProblemItem,
   OperationalDrawerProblemList,
-  OperationalDrawerRunActiveSummary,
-  OperationalDrawerRunLayout,
-  OperationalDrawerRunStatusSummary,
   OperationalDrawerTabPanel,
 } from './OperationalDrawerPanelPrimitives';
 import type {
@@ -49,54 +45,6 @@ export function BottomOperationalProblemsPanel({
             />
           ))}
         </OperationalDrawerProblemList>
-      )}
-    </OperationalDrawerPanelSurface>
-  );
-}
-
-export function BottomOperationalRunsPanel({
-  contribution,
-}: Readonly<{ contribution: OperationalDrawerContribution }>): JSX.Element {
-  return (
-    <OperationalDrawerPanelSurface
-      dataSlot="bottom-operational-drawer-runs"
-      ariaLabel={contribution.copy.runsAriaLabel}
-      textSm
-    >
-      {contribution.runs.activeRunId == null ? (
-        <OperationalDrawerRunStatusSummary
-          statusLabel={
-            contribution.runs.status === 'ready'
-              ? contribution.copy.runReadyStatus
-              : contribution.runs.status === 'blocked'
-                ? contribution.copy.runBlockedStatus
-                : contribution.copy.runActiveStatus
-          }
-          summary={contribution.runs.summary}
-        />
-      ) : (
-        <OperationalDrawerRunLayout
-          actions={
-            contribution.runs.controls == null ? null : (
-              <RunControlActions
-                runId={contribution.runs.controls.runId}
-                availability={contribution.runs.controls.availability}
-                activity={contribution.runs.controls.activity}
-                outcome={contribution.runs.controls.outcome}
-                failure={contribution.runs.controls.failure}
-                onCancel={contribution.runs.controls.onCancel}
-                onRecover={contribution.runs.controls.onRecover}
-                compact={false}
-              />
-            )
-          }
-        >
-          <OperationalDrawerRunActiveSummary
-            activeRunId={contribution.runs.activeRunId}
-            statusLabel={contribution.copy.runActiveStatus}
-            summary={contribution.runs.summary}
-          />
-        </OperationalDrawerRunLayout>
       )}
     </OperationalDrawerPanelSurface>
   );
@@ -148,21 +96,13 @@ export function BottomOperationalPreviewPanel({
 export function BottomOperationalDrawerBody({
   activeTab,
   contribution,
-  logBody,
 }: Readonly<{
   activeTab: OperationalDrawerTabId | null;
   contribution: OperationalDrawerContribution | null;
-  logBody: ReactNode;
-}>): JSX.Element {
-  if (contribution == null) {
-    return <>{logBody}</>;
-  }
-
+}>): JSX.Element | null {
+  if (contribution == null) return null;
   const renderTabBody = (tab: OperationalDrawerTab): ReactNode => {
     if (tab.content !== undefined) return tab.content;
-    if (tab.id === 'problems')
-      return <BottomOperationalProblemsPanel contribution={contribution} />;
-    if (tab.id === 'runs') return <BottomOperationalRunsPanel contribution={contribution} />;
     if (tab.id === 'preview') return <BottomOperationalPreviewPanel contribution={contribution} />;
     if (tab.dataSample !== undefined) {
       return (
@@ -173,7 +113,7 @@ export function BottomOperationalDrawerBody({
         />
       );
     }
-    return logBody;
+    return null;
   };
 
   return (

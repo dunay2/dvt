@@ -28,6 +28,7 @@ import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import LoginView from './views/LoginView';
 import PluginsView from './views/PluginsView';
+import SqlView from './views/SqlView';
 
 const SemanticWorkbenchLab = lazy(() => import('./labs/SemanticWorkbenchLab'));
 const RelationalCompositionLab = lazy(() => import('./labs/RelationalCompositionLab'));
@@ -153,21 +154,14 @@ function createPluginRoute(
   );
 }
 
-export function createAppRoutes(): RouteObject[] {
-  const routeViews = getRouteViews();
-  const pluginRoutes = routeViews.map<RouteObject>((view) => {
-    const routeHandle = requireViewRouteHandle(view);
-
-    return {
-      id: view.id,
-      path: normalizeChildPath(view.path),
-      element: createPluginRoute(view.id, view.pluginId, view.component, routeHandle),
-      errorElement: createElement(AppRouteErrorBoundary),
-      handle: routeHandle,
-    };
-  });
-  const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));
-  const shellRoutes: RouteObject[] = [
+function createStaticShellRoutes(pluginRoutePaths: ReadonlySet<string | undefined>): RouteObject[] {
+  return [
+    {
+      id: 'shell.sql',
+      path: 'sql',
+      component: SqlView,
+      routeHandle: createStaticShellRouteHandle('SQL worksheet'),
+    },
     {
       id: 'shell.plugins',
       path: 'plugins',
@@ -192,6 +186,22 @@ export function createAppRoutes(): RouteObject[] {
         createElement(route.component)
       ),
     }));
+}
+
+export function createAppRoutes(): RouteObject[] {
+  const routeViews = getRouteViews();
+  const pluginRoutes = routeViews.map<RouteObject>((view) => {
+    const routeHandle = requireViewRouteHandle(view);
+    return {
+      id: view.id,
+      path: normalizeChildPath(view.path),
+      element: createPluginRoute(view.id, view.pluginId, view.component, routeHandle),
+      errorElement: createElement(AppRouteErrorBoundary),
+      handle: routeHandle,
+    };
+  });
+  const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));
+  const shellRoutes = createStaticShellRoutes(pluginRoutePaths);
 
   return [
     {

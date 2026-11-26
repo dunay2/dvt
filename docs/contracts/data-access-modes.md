@@ -54,6 +54,18 @@ The negative proof for this contract rejects AUTO/HYBRID, a LIVE request with LO
 
 ## Source LIVE preview
 
+### Independent SQL worksheet
+
+The independent `/sql` worksheet is a separate explicit read intent under
+`ExecuteWorkspaceSql`, `ListWorkspaceSqlExecutions` and
+`GetWorkspaceSqlExecution` (#3951). It executes one authorized PostgreSQL SELECT
+against a selected scoped warehouse connection, with bounded transient rows and
+persistent SQL/terminal metadata history. It does not select a LOCAL generation,
+acquire working data, create a model or save a project file. History excludes row
+values; rerunning a historical query reads the current provider state. Its
+`workspace:sql:execute` and `workspace:sql-history:view` permissions are explicit
+and independent of Run. See the [SQL worksheet component](../architecture/components/api/sql-worksheet-component.md).
+
 `PreviewWarehouseSourceObjectRows` returns required LIVE `provenance` in the
 existing `SourceDataSampleResponse`. This is an in-place hard cut: `sampledAt`
 is removed from Source responses, not accepted as a legacy alternative.

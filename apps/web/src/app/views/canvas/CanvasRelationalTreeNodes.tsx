@@ -26,9 +26,7 @@ export function CanvasRelationalTreeNodes({
   expanded: ReadonlySet<string>;
   zoomRevealsDetail: boolean;
   toggleDetail: (id: string) => void;
-  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select'> & {
-    remove: (id: string) => void;
-  };
+  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select'>;
   stagedOperations: readonly CanvasStagedOperation[];
   selectedStagedOperationId: string | null;
   selectedLocator: string;
@@ -39,7 +37,6 @@ export function CanvasRelationalTreeNodes({
     expand?: (locator: string) => void;
     remove?: (relationId: string) => void;
     selectStaged?: (id: string) => void;
-    removeStaged?: (id: string) => void;
     selectConnectionSource?: (relationId: string) => void;
     connectOperation?: (id: string, port: number, relationId: string) => void;
   }>;
@@ -96,13 +93,7 @@ export function CanvasRelationalTreeNodes({
                   : actions.select
             }
             onExpand={sourceOccurrencePending || staged != null ? undefined : actions.expand}
-            onRemove={
-              staged != null
-                ? () => actions.removeStaged?.(staged.id)
-                : sourceOccurrencePending
-                  ? occurrences?.remove
-                  : actions.remove
-            }
+            onRemove={actions.remove}
             pending={visuallyPending}
             stagedOperation={staged}
             semanticGraph={graphs.get(placed.node.locator)}

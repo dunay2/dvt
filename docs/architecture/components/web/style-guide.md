@@ -58,6 +58,12 @@ The global base is dark ink and steel surfaces with cobalt emphasis, Lucide for
 functional icons, IBM Plex Sans for interface text and IBM Plex Mono for code and
 technical identifiers. Provider marks are allowed only for an identified provider.
 
+Native scrollbars use the shared base theme and its muted text color. Horizontal
+and vertical tracks are thin. Fine-pointer devices reveal the thumb on hover or
+visible keyboard focus, with stable layout. Touch and forced-color modes keep
+their visible affordance. The shared ScrollArea uses the same thin thumb and
+color with its existing visibility behavior.
+
 ## Canvas personalisation
 
 | Rule | Requirement                                                                                               |

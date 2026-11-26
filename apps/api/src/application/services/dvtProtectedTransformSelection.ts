@@ -1,12 +1,30 @@
 /** Validate protected dependency selection independently of semantic projection. */
 import {
   DVT_SINK_NODE_KINDS,
-  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   WorkspaceGraphAuthoringDraftSchema,
   resolveWorkspaceNodeInstances,
   readWorkspaceDbtModelReference,
+  DvtTransformAuthoringAuthorityV1Schema,
+  isSourceFreeDvtSubstraitDocumentV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
+
+import { requireDvtSelectionEdges } from './dvtProtectedSelectionEdges.js';
+
+type SelectionNode = WorkspaceGraphAuthoringDraft['nodes'][number];
+
+function isDvtSource(node: SelectionNode): boolean {
+  if (!['dvt', 'dvt.warehouse-source'].includes(node.pluginId)) return false;
+  return node.kind === 'dvt:source' && node.role === 'input';
+}
+
+function hasIndependentPublication(node: SelectionNode): boolean {
+  if (readWorkspaceDbtModelReference(node)) return true;
+  const authority = DvtTransformAuthoringAuthorityV1Schema.safeParse(
+    node.metadata?.['transformAuthoring']
+  );
+  return authority.success && isSourceFreeDvtSubstraitDocumentV1(authority.data.semanticDocument);
+}
 
 export type DvtTransformSelection = Readonly<{
   draft: WorkspaceGraphAuthoringDraft;
@@ -15,7 +33,7 @@ export type DvtTransformSelection = Readonly<{
   previewTargetId?: string;
 }>;
 
-type ProtectedTransformSelection = Readonly<{
+export type ProtectedTransformSelection = Readonly<{
   draft: WorkspaceGraphAuthoringDraft;
   sources: Readonly<WorkspaceGraphAuthoringDraft['nodes']>;
   transforms: Readonly<WorkspaceGraphAuthoringDraft['nodes']>;
@@ -23,6 +41,34 @@ type ProtectedTransformSelection = Readonly<{
   sink?: WorkspaceGraphAuthoringDraft['nodes'][number];
   edges: Readonly<WorkspaceGraphAuthoringDraft['edges']>;
 }>;
+
+function selectReceiver(
+  transforms: readonly SelectionNode[],
+  previewId: string | undefined
+): SelectionNode {
+  if (previewId !== undefined) {
+    const target = transforms.find((node) => node.id === previewId);
+    if (!target)
+      throw new Error('Selection must contain DVT Sources and one rooted consumer closure.');
+    return target;
+  }
+  const native = transforms.filter((node) => readWorkspaceDbtModelReference(node) == null);
+  if (native.length !== 1)
+    throw new Error('Operational workloads require exactly one Transform authority.');
+  return native[0]!;
+}
+
+function selectSink(nodes: readonly SelectionNode[], preview: boolean): SelectionNode | undefined {
+  const sinks = nodes.filter(
+    (node) =>
+      node.pluginId === 'dvt' &&
+      node.role === 'output' &&
+      DVT_SINK_NODE_KINDS.some((kind) => kind === node.kind)
+  );
+  if (sinks.length > (preview ? 0 : 1))
+    throw new Error('Operational selection admits at most one explicit Sink.');
+  return sinks[0];
+}
 
 export function selectProtectedDvtTransforms(
   input: DvtTransformSelection
@@ -34,85 +80,23 @@ export function selectProtectedDvtTransforms(
     'node'
   );
   const edges = selectExact(draft.edges, input.selectedEdgeIds, 'edge');
-  const sources = nodes.filter(
-    (node) =>
-      (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source') &&
-      node.kind === 'dvt:source' &&
-      node.role === 'input'
-  );
+  const sources = nodes.filter(isDvtSource);
   const transforms = nodes.filter(
-    (node) => node.pluginId === 'dvt' && node.kind === 'transform' && node.role === 'transform'
-  );
-  const sinks = nodes.filter(
     (node) =>
       node.pluginId === 'dvt' &&
-      DVT_SINK_NODE_KINDS.some((kind) => node.kind === kind) &&
-      node.role === 'output'
+      node.role === 'transform' &&
+      ['transform', 'dvt:transform'].includes(node.kind)
   );
-  if (sinks.length > 1 || (input.previewTargetId != null && sinks.length > 0)) {
-    throw new Error('Operational selection admits at most one explicit Sink.');
-  }
-  const sink = sinks[0];
-  const nativeTransforms = transforms.filter(
-    (node) => readWorkspaceDbtModelReference(node) == null
-  );
-  if (input.previewTargetId == null && nativeTransforms.length !== 1) {
-    throw new Error('Operational workloads require exactly one Transform authority.');
-  }
-  const transform =
-    input.previewTargetId == null
-      ? nativeTransforms[0]
-      : transforms.find((node) => node.id === input.previewTargetId);
-  if (
-    (sources.length === 0 &&
-      !transforms.some((node) => readWorkspaceDbtModelReference(node) != null)) ||
-    transform == null ||
-    nodes.length !== sources.length + transforms.length + sinks.length
-  ) {
+  const preview = input.previewTargetId != null;
+  const sink = selectSink(nodes, preview);
+  const transform = selectReceiver(transforms, input.previewTargetId);
+  const classified = sources.length + transforms.length + Number(sink != null);
+  const published = sources.length > 0 || transforms.some(hasIndependentPublication);
+  if (!published || classified !== nodes.length)
     throw new Error('Selection must contain DVT Sources and one rooted consumer closure.');
-  }
-  if (
-    input.previewTargetId == null &&
-    draft.edges.some(
-      (edge) =>
-        isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge) &&
-        (edge.sourceId === (sink?.id ?? transform.id) ||
-          (sink !== undefined && edge.sourceId === transform.id && edge.targetId !== sink.id))
-    )
-  ) {
-    throw new Error('Selected DVT publication must be terminal in the protected Canvas.');
-  }
-
-  if (sink !== undefined) {
-    const inputs = edges.filter((edge) => edge.targetId === sink.id);
-    if (inputs.length !== 1 || inputs[0]!.sourceId !== transform.id) {
-      throw new Error('Sink requires exactly one edge from its semantic Transform.');
-    }
-  }
-
-  const producerIds = new Set([...sources, ...transforms].map((node) => node.id));
-  const consumerIds = new Set([...transforms, ...sinks].map((node) => node.id));
-  const selectedEdgeIds = new Set(input.selectedEdgeIds);
-  if (
-    new Set(edges.map((edge) => JSON.stringify([edge.sourceId, edge.targetId]))).size !==
-      edges.length ||
-    edges.some(
-      (edge) =>
-        !producerIds.has(edge.sourceId) ||
-        !consumerIds.has(edge.targetId) ||
-        edge.relation !== 'lineage' ||
-        !isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
-    ) ||
-    draft.edges.some(
-      (edge) =>
-        consumerIds.has(edge.targetId) &&
-        isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge) &&
-        !selectedEdgeIds.has(edge.id)
-    )
-  ) {
-    throw new Error('Selection must contain every effective producer dependency exactly once.');
-  }
-  return { draft, sources, transforms, transform, edges, ...(sink === undefined ? {} : { sink }) };
+  const selection = { draft, sources, transforms, transform, edges, ...(sink ? { sink } : {}) };
+  requireDvtSelectionEdges(selection, preview);
+  return selection;
 }
 
 function selectExact<T extends { readonly id: string }>(

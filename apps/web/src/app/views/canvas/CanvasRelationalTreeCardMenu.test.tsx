@@ -10,6 +10,10 @@ import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { repeatedOccurrenceDraft } from './relational-source-occurrence/occurrence.test.fixtures';
+import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
+import { CanvasRelationalTreeNodeButton } from './CanvasRelationalTreeNodeButton';
 
 const node: CanvasRelationalTreeNode = {
   locator: 'rel:digest:sort',
@@ -43,6 +47,53 @@ describe('CanvasRelationalTreeCardMenu', () => {
     document.body.querySelectorAll('[data-radix-menu-content]').forEach((item) => item.remove());
     container.remove();
   });
+
+  it.each(['en', 'es'])(
+    'keeps the alias as the tree name and describes its physical source in %s',
+    (language) => {
+      const document = repeatedOccurrenceDraft();
+      document.sidecar.relations.find((binding) => binding.sourceRef != null)!.displayName =
+        'places_alias';
+      const indexed = indexSubstraitRelations(document);
+      if (!indexed.ok) throw indexed.error;
+      const read = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'alias' })
+        .children[0]!.node;
+      act(() =>
+        root.render(
+          <CanvasRelationalTreeNodeButton
+            placed={{
+              node: read,
+              parentLocator: null,
+              role: 'primary',
+              ordinal: 0,
+              siblingCount: 2,
+              level: 1,
+              x: 0,
+              y: 0,
+              width: 240,
+              height: 76,
+            }}
+            selected={false}
+            copy={resolveCanvasViewCopy(language)}
+            detailed={false}
+            movable={false}
+            onSelect={vi.fn()}
+          />
+        )
+      );
+      const card = container.querySelector<HTMLButtonElement>('[role="treeitem"]')!;
+      expect(card.getAttribute('aria-label')).toBe(
+        `${language === 'es' ? 'Entrada principal' : 'Primary input'}: places_alias`
+      );
+      const description = container.querySelector('[data-slot="canvas-relational-source-detail"]')!;
+      expect(description.textContent).toBe(
+        `${language === 'es' ? 'Fuente conectada' : 'Connected source'}: public.places`
+      );
+      expect(card.getAttribute('aria-describedby')).toBe(description.id);
+      act(() => card.focus());
+      expect(window.document.activeElement).toBe(card);
+    }
+  );
 
   it('opens the application menu and dispatches edit and removal for a unary card', async () => {
     const onExpand = vi.fn();

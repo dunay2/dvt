@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 import { DVT_REJECTIONS, parsePlanPreviewRejectedOutcome } from '@dvt/contracts';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
 
@@ -26,9 +26,7 @@ const SCOPED_VALID_PLAN_REF = {
   planRef: VALID_PLAN_REF,
 };
 
-function createAcceptedPreviewDeps(
-  buildPlan: ReturnType<typeof vi.fn>
-): ReturnType<typeof createPreviewDeps> {
+function createAcceptedPreviewDeps(buildPlan: Mock): ReturnType<typeof createPreviewDeps> {
   return createPreviewDeps({
     planner: { buildPlan },
     planStore: {

@@ -2,18 +2,18 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { screen, within } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanPreviewOutcome } from '../ports/plans';
 import { resolveCanvasViewCopy } from '../views/canvas/copy';
 import { PlanPreviewModal } from './PlanPreviewModal';
+import styles from './planPreview/PlanPreview.module.css';
 import {
   getApplicationLanguage,
   useApplicationLanguageStore,
 } from '../stores/applicationLanguageStore';
-
-const MESSAGES = resolveCanvasViewCopy('en');
 
 describe('PlanPreviewModal rejected outcomes', () => {
   let container: HTMLDivElement;
@@ -46,17 +46,20 @@ describe('PlanPreviewModal rejected outcomes', () => {
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   });
 
-  async function renderOutcome(outcome: PlanPreviewOutcome): Promise<void> {
+  async function renderOutcome(
+    outcome: PlanPreviewOutcome,
+    startRunMessage = 'Preview blocked'
+  ): Promise<void> {
     await act(async () => {
       root.render(
         <PlanPreviewModal
           open={true}
           onClose={vi.fn()}
           outcome={outcome}
-          messages={MESSAGES}
+          messages={resolveCanvasViewCopy(getApplicationLanguage())}
           plan={outcome.kind === 'plan-invalid' ? outcome.plan : null}
           startRunDisabled={true}
-          startRunMessage="Preview blocked"
+          startRunMessage={startRunMessage}
           onStartRun={vi.fn()}
         />
       );
@@ -76,13 +79,53 @@ describe('PlanPreviewModal rejected outcomes', () => {
     const modal = document.querySelector('[data-testid="plan-preview-modal"]');
     const text = modal?.textContent ?? '';
 
-    expect(text).toContain('Execution Preview rejected');
+    expect(text).toContain('Could not create the execution preview');
     expect(text).toContain('Select at least one executable resource.');
     expect(text).toContain('selection.empty');
     expect(text).not.toContain('Execution Preview identity');
     expect(text).not.toContain(mockExecutionPlan.planId);
     expect(text).not.toContain('Execution steps');
     expect(text).not.toContain('Start Run');
+    expect(modal?.querySelector('[data-slot="plan-preview-affected-model"]')).toBeNull();
+  });
+
+  it('names the affected model and shows the Spanish correction once', async () => {
+    const previous = getApplicationLanguage();
+    const message =
+      'La materialización actual impide ejecutar. En Propiedades, cambia Materialización a Tabla y configura el destino. Si usas Efímero, conecta el modelo a un destino de tipo tabla.';
+    try {
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
+      await renderOutcome(
+        {
+          kind: 'selection-rejected',
+          rejection: {
+            code: 'REJECTED',
+            cause: 'dvt_run_disposition_unsupported',
+            reason: 'internal planner detail',
+          },
+          affectedModel: { nodeId: 'orders', name: 'Ventas por cliente' },
+        },
+        message
+      );
+      const dialog = screen.getByRole('dialog', {
+        name: 'No se pudo crear la vista previa de ejecución',
+        description: message,
+      });
+      const content = within(dialog);
+      const alert = content.getByRole('alert');
+      expect(alert.textContent).toContain('Modelo afectado');
+      expect(within(alert).getByText('Ventas por cliente').dataset.slot).toBe(
+        'plan-preview-affected-model'
+      );
+      expect(content.getAllByText(message)).toHaveLength(1);
+      expect(dialog.textContent).not.toContain('internal planner detail');
+      const disclosure = content.getByRole('group');
+      expect(disclosure.hasAttribute('open')).toBe(false);
+      expect(within(disclosure).getByText('Detalles técnicos').tagName).toBe('SUMMARY');
+      expect(disclosure.textContent).toContain('dvt_run_disposition_unsupported');
+    } finally {
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage(previous));
+    }
   });
 
   it('localizes DVT rejection causes and updates an open Preview when language changes', async () => {
@@ -123,9 +166,9 @@ describe('PlanPreviewModal rejected outcomes', () => {
     const longValues = modal?.querySelectorAll('[data-testid="plan-preview-long-value"]');
     const reason = longValues?.item((longValues?.length ?? 1) - 1);
 
-    expect(modal?.className).toContain('max-h-[92vh]');
-    expect(diagnosticBody?.className).toContain('overflow-y-auto');
-    expect(reason?.className).toContain('break-all');
+    expect(modal?.className).toContain(styles.dialogNarrow);
+    expect(diagnosticBody?.className).toContain(styles.rejectionScrollRegion);
+    expect(reason?.className).toContain(styles.fieldValueLong);
   });
 
   it('renders an invalid plan with exact identity and a disabled Start Run command', async () => {

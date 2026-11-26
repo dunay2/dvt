@@ -21,7 +21,7 @@ export function useCanvasDraftBaseline({
     [draftRepository, queryClient, workspaceLayoutKey]
   );
   const graphDraftQuery = useQuery({
-    queryKey: queryKeys.workspace.graphDraft(workspaceLayoutKey),
+    queryKey: queryKeys.workspace.forLayout(workspaceLayoutKey).graphDraft(),
     queryFn: () => draftRepository.readGraphDraftState(),
   });
 

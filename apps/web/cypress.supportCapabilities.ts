@@ -9,7 +9,106 @@ import {
   type WebCypressCapability,
 } from './cypress.catalog';
 
-export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+const WORKSHEET_CONSUMER = {
+  controlledSpecs: ['apps/web/cypress/e2e/sql/sql-worksheet.cy.ts'],
+} as const;
+
+const SCREEN_COMPOSITION_CONSUMER = {
+  controlledSpecs: ['apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'],
+} as const;
+
+type BrowserCoverage =
+  readonly WebCypressCapability[] | Readonly<{ controlledSpecs: readonly string[] }>;
+
+export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
+  'apps/web/cypress/support/canvasHappyPathCatalog.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+  },
+  'apps/web/cypress/support/canvasHappyPathFileModels.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+  },
+  'apps/web/cypress/support/canvasHappyPathTextSelection.ts': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
+      'apps/web/cypress/e2e/shell/shell-context-menu.cy.ts',
+    ],
+  },
+  'apps/web/cypress/support/canvasHappyPathPlacement.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts'],
+  },
+  'apps/web/src/app/plugins/graph/GraphNodeColumnViews.tsx': ['available'],
+  'apps/web/src/app/plugins/graph/GraphNodeColumnViews.module.css': ['available'],
+  'apps/web/cypress/support/dbtModelComposition.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-composition.cy.ts'],
+  },
+  'apps/web/cypress/support/literalModelConversion.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/worksheetCanvasModel.test-fixtures.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/canvas/canvasModelLayoutSignatures.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
+  },
+  'apps/web/src/app/views/canvas/canvasModelLayoutReconciliation.ts': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
+    ],
+  },
+  'apps/web/src/app/views/canvas/model-sql/useCanvasModelSqlLayout.ts': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
+    ],
+  },
+  'apps/web/src/app/views/canvas/model-sql/modelSqlApplyCommand.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
+  },
+  'apps/web/src/app/views/canvas/canvasRelationalUnplacedCards.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts'],
+  },
+  'apps/web/src/app/views/canvas/CanvasModelLayoutSession.tsx': {
+    controlledSpecs: [
+      'apps/web/cypress/e2e/canvas/canvas-model-sql-authoring.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
+    ],
+  },
+  'apps/web/src/app/views/SqlView.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheet.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetHeader.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetActions.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetWorkbench.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetOutputPanel.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetNotices.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheet.module.css': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetToolbar.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetMonaco.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetExplorer.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetResults.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetHistory.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheet.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheetCatalogue.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheetProjectCatalogue.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useSqlWorksheetReferences.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheet.types.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetCatalogueQueries.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetCopy.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetState.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetInsertions.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlWorksheetDbtModels.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetConversion.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/SqlWorksheetConversion.module.css': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/sqlConversionMessages.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/WorksheetCanvasModelForm.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useWorksheetCanvasModel.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/useWorksheetCanvasPublication.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/worksheetCanvasModelMessages.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/sql/worksheetCanvasModelRequest.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/SqlWorksheetFiles.tsx': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/SqlWorksheetFiles.module.css': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/sqlWorksheetFileAccess.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/views/code/sqlWorksheetFileMessages.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/ports/sqlWorksheet.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/services/sql/sqlWorksheet.api.ts': WORKSHEET_CONSUMER,
+  'apps/web/src/app/services/sql/sqlWorksheetResponses.ts': WORKSHEET_CONSUMER,
   'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/node/chromiumNetworkDiagnostics.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/node/chromiumNetworkProjection.ts': ['controlled', 'available', 'unavailable'],
@@ -28,8 +127,15 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
   'apps/web/cypress/support/canvasGraphAuthoring.ts': ['controlled', 'available'],
   'apps/web/cypress/support/canvasFirstAuthoring.ts': ['available'],
   'apps/web/cypress/support/dbtProjectLive.ts': ['available'],
+  'apps/web/cypress/support/dbtFileProjection/inspection.ts': ['available'],
+  'apps/web/cypress/support/dbtFileProjection/mixedModelSql.ts': ['available'],
+  'apps/web/cypress/support/dbtFileProjection/project.ts': ['available'],
+  'apps/web/cypress/support/dbtFileProjection/references.ts': ['available'],
   'apps/web/cypress/support/codeWorkbench/bootstrap.ts': ['controlled'],
   'apps/web/cypress/support/modelSqlAuthoring.ts': ['controlled'],
+  'apps/web/cypress/support/emptyModelDeletion.ts': {
+    controlledSpecs: ['apps/web/cypress/e2e/canvas/canvas-model-session.cy.ts'],
+  },
   'apps/web/cypress/support/e2eApiStub.ts': CAPABILITIES,
   'apps/web/cypress/support/nativeKeyboard.ts': ['controlled', 'available'],
   'apps/web/cypress/support/shellWorkbench/browserEmulation.ts': ['controlled'],
@@ -37,6 +143,10 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
   'apps/web/cypress/support/shellWorkbench/accessibilityAssertions.ts': ['controlled'],
   'apps/web/cypress/support/shellWorkbench/viewportGeometry.ts': ['controlled'],
   'apps/web/cypress/support/shellWorkbench/dependencyDirection.ts': ['controlled'],
+  'apps/web/cypress/support/screenComposition/focusProof.ts': SCREEN_COMPOSITION_CONSUMER,
+  'apps/web/cypress/support/screenComposition/narrowProof.ts': SCREEN_COMPOSITION_CONSUMER,
+  'apps/web/cypress/support/screenComposition/scenario.ts': SCREEN_COMPOSITION_CONSUMER,
+  'apps/web/cypress/support/screenComposition/startupProof.ts': SCREEN_COMPOSITION_CONSUMER,
   'apps/web/cypress/support/workspaceSession.ts': CAPABILITIES,
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',
@@ -69,13 +179,18 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/relationalWorkbench/joinChain.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operationMenu.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/persistence.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/columns.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/cardOutputControls.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/materializationDrawer.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/sampleGridInteractions.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/savedOutputs.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/emptyOutputs.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/fieldSelection.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/geometry.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/relationalWorkbench/inspectorCodeLayout.ts': ['available'],
   'apps/web/cypress/support/relationalWorkbench/pointer.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/pendingComposition.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/formulaLineageJourney.ts': [
@@ -83,8 +198,13 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCa
     'available',
   ],
   'apps/web/cypress/support/relationalWorkbench/transformFormulaJourney.ts': ['available'],
+  'apps/web/cypress/support/relationalWorkbench/transformChainJourney.ts': [
+    'controlled',
+    'available',
+  ],
   'apps/web/cypress/support/relationalWorkbench/transformTreeJourney.ts': ['available'],
   'apps/web/cypress/support/semanticLive/fixture.ts': ['available'],
+  'apps/web/cypress/support/semanticLive/unsupportedFixture.ts': ['available'],
   'apps/web/cypress/support/semanticLive/canonicalAssertions.ts': ['available'],
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/semanticLive/progressive.ts': ['available'],

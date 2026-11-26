@@ -36,11 +36,9 @@ describe('card and Inspector responsibility boundaries', () => {
   it('shares property facts and cell rendering across explicit presentation variants', () => {
     const section = source('../../components/inspector/NodePropertySectionView.tsx');
     const table = source('../../components/inspector/NodePropertyTable.tsx');
-    const detail = source('../../components/inspector/SourceRelationshipDetail.tsx');
     expect(section).toContain('NodePropertyFacts');
-    expect(detail).toContain('NodePropertyFacts');
     expect(section).toContain('NodePropertyTable');
-    for (const content of [section, table, detail]) {
+    for (const content of [section, table]) {
       expect(content).not.toMatch(/className="|\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);
       expect(content).not.toMatch(/useStore|useState|useEffect|runDraftSessionCommand/);
     }
@@ -88,32 +86,39 @@ describe('card and Inspector responsibility boundaries', () => {
         ts.ScriptTarget.Latest,
         true
       );
-      const imports = ast.statements.filter(ts.isImportDeclaration);
-      const policy = imports.find(
-        (entry) =>
-          ts.isStringLiteral(entry.moduleSpecifier) &&
-          entry.moduleSpecifier.text === './canvasDvtMaterializationPolicy'
-      )?.importClause?.namedBindings;
-      const binding =
-        policy != null && ts.isNamedImports(policy)
-          ? policy.elements.find(
-              (entry) =>
-                (entry.propertyName ?? entry.name).text === 'withDvtTransformMaterialization'
-            )?.name.text
-          : undefined;
+      const binding = findMaterializationPolicyBinding(ast);
       expect(binding, `${file} imports the shared transition`).toBeDefined();
-      const calls: ts.CallExpression[] = [];
-      const visit = (node: ts.Node): void => {
-        if (
-          ts.isCallExpression(node) &&
-          ts.isIdentifier(node.expression) &&
-          node.expression.text === binding
-        )
-          calls.push(node);
-        ts.forEachChild(node, visit);
-      };
-      visit(ast);
+      const calls = collectPolicyCalls(ast, binding);
       expect(calls, `${file} delegates its disposition update`).toHaveLength(1);
     }
   });
 });
+
+function findMaterializationPolicyBinding(ast: ts.SourceFile): string | undefined {
+  const imports = ast.statements.filter(ts.isImportDeclaration);
+  const policy = imports.find(
+    (entry) =>
+      ts.isStringLiteral(entry.moduleSpecifier) &&
+      entry.moduleSpecifier.text === './canvasDvtMaterializationPolicy'
+  )?.importClause?.namedBindings;
+  return policy != null && ts.isNamedImports(policy)
+    ? policy.elements.find(
+        (entry) => (entry.propertyName ?? entry.name).text === 'withDvtTransformMaterialization'
+      )?.name.text
+    : undefined;
+}
+
+function collectPolicyCalls(ast: ts.SourceFile, binding: string | undefined): ts.CallExpression[] {
+  const calls: ts.CallExpression[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+      if (ts.isIdentifier(expression)) {
+        if (expression.text === binding) calls.push(node);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  return calls;
+}

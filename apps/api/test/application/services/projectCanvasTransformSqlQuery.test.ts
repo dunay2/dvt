@@ -75,11 +75,14 @@ function harness(
   >;
   request: TransformSqlProjectionRequest;
 }> {
-  const read = vi.fn(async () => ({
-    schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-    revision: 'saved-revision',
-    draftPayload: draft,
-  }));
+  const read = vi.fn(
+    async () =>
+      ({
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        revision: 'saved-revision',
+        draftPayload: draft,
+      }) as const
+  );
   const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
     planner: new PlannerFacade(),
     workspaceGraphDraftStore: { read } as never,

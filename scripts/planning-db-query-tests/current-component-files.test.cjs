@@ -42,6 +42,44 @@ function authority(rows = [unit()]) {
   };
 }
 
+test('ownership facts retain the complete candidate while full file reads still validate mandatory associations', async (t) => {
+  const repo = repository(t);
+  const c = authority();
+  const query = c.query.bind(c);
+  c.query = async (sql) =>
+    sql.includes('architecture.component_source_responsibility')
+      ? {
+          rows: [
+            {
+              componentId: 'SYS-TEST',
+              responsibilityId: 'RESP-MISSING',
+              path: 'missing.ts',
+              symbol: 'missing',
+              role: 'implements',
+              testPaths: ['model.test.ts'],
+              responsibilityComponentId: 'SYS-TEST',
+              description: 'Missing implementation',
+              status: 'approved',
+            },
+          ],
+        }
+      : query(sql);
+  const read = createCurrentComponentFilesReadModelComponent({ gitReader: repo.reader() });
+  const facts = await read.readCurrentComponentOwnership(c);
+  assert.deepEqual(facts.files.map((file) => file.path).sort(), ['model.ts', 'retired.ts']);
+  assert.ok(facts.files.every((file) => file.component_unit === 'SYS-TEST'));
+  assert.equal(
+    c.calls.filter((sql) => sql.includes('architecture.component_source_responsibility')).length,
+    0
+  );
+  const full = await read.readCurrentComponentFiles(c);
+  assert.ok(
+    full.errors.some((error) =>
+      error.includes('Missing mandatory responsibility source: missing.ts')
+    )
+  );
+});
+
 test('file and profile consumers receive canonical atomic associations and evidence from one model', async (t) => {
   const repo = repository(t);
   repo.write('model.ts', 'export class Store { read() { return 1; } }\n');

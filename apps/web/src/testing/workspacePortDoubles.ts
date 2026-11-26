@@ -767,49 +767,10 @@ export function createMockWarehouseSourceImportPort(
         request.cursor === undefined ? 0 : Number.parseInt(request.cursor, 10) || 0;
 
       if (request.kind === 'schema-list') {
-        const schemasByIdentity = new Map<
-          string,
-          { catalog: string; schema: string; objectCount: number }
-        >();
-        for (const sourceObject of sourceObjects) {
-          if (sourceObject.locator.kind !== 'relation') continue;
-          const key = `${sourceObject.locator.catalog}\0${sourceObject.locator.schema}`;
-          const current = schemasByIdentity.get(key);
-          schemasByIdentity.set(key, {
-            catalog: sourceObject.locator.catalog,
-            schema: sourceObject.locator.schema,
-            objectCount: (current?.objectCount ?? 0) + 1,
-          });
-        }
-        const schemas = [...schemasByIdentity.values()].sort(
-          (left, right) =>
-            left.catalog.localeCompare(right.catalog) || left.schema.localeCompare(right.schema)
-        );
-        const page = schemas.slice(startIndex, startIndex + request.limit);
-        const nextIndex = startIndex + page.length;
-        return nextIndex < schemas.length
-          ? {
-              kind: 'schema-list',
-              schemas: page,
-              truncated: true,
-              nextCursor: String(nextIndex),
-            }
-          : { kind: 'schema-list', schemas: page, truncated: false };
+        return buildMockSchemaCatalogPage(sourceObjects, startIndex, request.limit);
       }
 
-      const matches =
-        request.kind === 'schema-page'
-          ? sourceObjects.filter(
-              (sourceObject) =>
-                sourceObject.locator.kind === 'relation' &&
-                sourceObject.locator.catalog === request.catalog &&
-                sourceObject.locator.schema === request.schema
-            )
-          : sourceObjects.filter((sourceObject) =>
-              sourceObject.displayName
-                .toLocaleLowerCase()
-                .includes(request.name.toLocaleLowerCase())
-            );
+      const matches = filterMockSourceObjects(sourceObjects, request);
       const objects = matches.slice(startIndex, startIndex + request.limit);
       const nextIndex = startIndex + objects.length;
       return nextIndex < matches.length
@@ -848,7 +809,7 @@ function toMockWarehouseConnectionId(name: string): string {
   let previousWasSeparator = false;
 
   for (const char of name.trim().toLowerCase()) {
-    const isAllowed = (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
+    const isAllowed = isMockConnectionIdCharacter(char);
     if (isAllowed) {
       connectionId += char;
       previousWasSeparator = false;
@@ -888,6 +849,9 @@ export function createMockWorkspaceFileHistoryQueryPort(
 ): IWorkspaceFileHistoryQueryPort {
   return {
     getFileHistory: async (path) => state.fileHistory[path]?.map((entry) => ({ ...entry })) ?? [],
+    getFileVersionContent: async () => {
+      throw new Error('File version missing from test fixture');
+    },
   };
 }
 
@@ -907,13 +871,7 @@ export function createMockWorkspaceFileContentCommandPort(
           lastModified: existing.lastModified,
         };
       }
-      const revisionMatches =
-        input.expectedRevision.kind === 'absent'
-          ? existing == null
-          : existing?.contentSha256 === input.expectedRevision.value;
-      if (!revisionMatches) {
-        throw new WorkspaceFileRevisionConflictError(input.path);
-      }
+      assertMockFileRevision(existing, input);
 
       const name = input.path.split('/').pop() ?? input.path;
       const updated: FileContent = {
@@ -961,4 +919,75 @@ export function createMockWorkspacePorts(
     workspaceFileHistoryQuery: createMockWorkspaceFileHistoryQueryPort(state),
     workspaceFileContentCommand: createMockWorkspaceFileContentCommandPort(state),
   };
+}
+
+function buildMockSchemaCatalogPage(
+  sourceObjects: readonly ReturnType<typeof toMockSourceObject>[],
+  startIndex: number,
+  limit: number
+): Awaited<ReturnType<IWarehouseSourceImportPort['listSourceObjectCatalog']>> {
+  const schemasByIdentity = new Map<
+    string,
+    { catalog: string; schema: string; objectCount: number }
+  >();
+  for (const sourceObject of sourceObjects) {
+    if (sourceObject.locator.kind !== 'relation') continue;
+    const key = `${sourceObject.locator.catalog}\0${sourceObject.locator.schema}`;
+    const current = schemasByIdentity.get(key);
+    schemasByIdentity.set(key, {
+      catalog: sourceObject.locator.catalog,
+      schema: sourceObject.locator.schema,
+      objectCount: (current?.objectCount ?? 0) + 1,
+    });
+  }
+  const schemas = [...schemasByIdentity.values()].sort(
+    (left, right) =>
+      left.catalog.localeCompare(right.catalog) || left.schema.localeCompare(right.schema)
+  );
+  const page = schemas.slice(startIndex, startIndex + limit);
+  const nextIndex = startIndex + page.length;
+  return nextIndex < schemas.length
+    ? {
+        kind: 'schema-list',
+        schemas: page,
+        truncated: true,
+        nextCursor: String(nextIndex),
+      }
+    : { kind: 'schema-list', schemas: page, truncated: false };
+}
+
+function filterMockSourceObjects(
+  sourceObjects: readonly ReturnType<typeof toMockSourceObject>[],
+  request: Exclude<
+    Parameters<IWarehouseSourceImportPort['listSourceObjectCatalog']>[1],
+    { kind: 'schema-list' }
+  >
+) {
+  return request.kind === 'schema-page'
+    ? sourceObjects.filter(
+        (sourceObject) =>
+          sourceObject.locator.kind === 'relation' &&
+          sourceObject.locator.catalog === request.catalog &&
+          sourceObject.locator.schema === request.schema
+      )
+    : sourceObjects.filter((sourceObject) =>
+        sourceObject.displayName.toLocaleLowerCase().includes(request.name.toLocaleLowerCase())
+      );
+}
+
+function isMockConnectionIdCharacter(char: string): boolean {
+  return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
+}
+
+function assertMockFileRevision(
+  existing: FileContent | undefined,
+  input: Parameters<IWorkspaceFileContentCommandPort['saveFileContent']>[0]
+): void {
+  const revisionMatches =
+    input.expectedRevision.kind === 'absent'
+      ? existing == null
+      : existing?.contentSha256 === input.expectedRevision.value;
+  if (!revisionMatches) {
+    throw new WorkspaceFileRevisionConflictError(input.path);
+  }
 }

@@ -688,3 +688,16 @@ test('buildVerifyChangedPlan runs changed CI tooling tests directly and deduped'
   );
   assert.ok(!labels.includes('pnpm test:ci-tools'));
 });
+
+test('distinct real suites with the same basename each retain one execution', () => {
+  const files = [
+    'scripts/planning-db/documentary-component.test.cjs',
+    'scripts/planning-db-query-tests/documentary-component.test.cjs',
+    'scripts/planning-db-operate-tests/documentary-component.test.cjs',
+  ];
+  const plan = buildFocusedChangedTestPlan([...files, files[0]]);
+  const executions = effectiveNodeTestFiles(plan);
+  for (const file of files)
+    assert.equal(executions.filter((entry) => entry === file).length, 1, file);
+  assert.equal(new Set(plan.map((step) => step.id)).size, plan.length);
+});

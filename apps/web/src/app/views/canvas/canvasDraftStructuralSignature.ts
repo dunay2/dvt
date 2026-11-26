@@ -25,30 +25,35 @@ function compareAuthoringNodes(
   return left.id.localeCompare(right.id);
 }
 
+export function toWorkspaceGraphAuthoringNodeKind(
+  node: Pick<WorkspaceGraphAuthoringDraft['nodes'][number], 'kind' | 'pluginId'>
+): string {
+  const pluginPrefix = `${node.pluginId}:`;
+  return node.kind.startsWith(pluginPrefix) ? node.kind.slice(pluginPrefix.length) : node.kind;
+}
+
+function structuralWorkspace(
+  workspace: Pick<WorkspaceGraphAuthoringDraft, 'canvas' | 'nodeIds' | 'nodes' | 'edges'>
+) {
+  return {
+    canvas: workspace.canvas,
+    nodeIds: workspace.nodeIds,
+    nodes: [...workspace.nodes].sort(compareAuthoringNodes).map((node) => ({
+      ...node,
+      kind: toWorkspaceGraphAuthoringNodeKind(node),
+    })),
+    edges: [...workspace.edges].sort(compareAuthoringEdges),
+  };
+}
+
 export function serializeWorkspaceGraphAuthoringDraftStructuralSignature(
   draft: WorkspaceGraphAuthoringDraft
 ): string {
-  const nodes = [...draft.nodes].sort(compareAuthoringNodes);
-  const edges = [...draft.edges].sort(compareAuthoringEdges);
-  const signaturePayload = toCanvasAuthoringSerializableValue({
-    canvas: {
-      id: draft.canvas.id,
-      kind: draft.canvas.kind,
-      title: draft.canvas.title,
-      environmentId: draft.canvas.environmentId,
-      defaultPermission: draft.canvas.defaultPermission,
-    },
-    activeCanvasId: draft.activeCanvasId,
-    canvases: draft.canvases?.map((workspace) => ({
-      canvas: workspace.canvas,
-      nodeIds: workspace.nodeIds,
-      nodes: [...workspace.nodes].sort(compareAuthoringNodes),
-      edges: [...workspace.edges].sort(compareAuthoringEdges),
-    })),
-    nodeIds: [...draft.nodeIds],
-    nodes,
-    edges,
-  });
-
-  return JSON.stringify(signaturePayload);
+  const active = structuralWorkspace(draft);
+  const activeCanvasId = draft.activeCanvasId ?? draft.canvas.id;
+  const canvases =
+    draft.canvases?.map(structuralWorkspace) ?? (activeCanvasId ? [active] : undefined);
+  return JSON.stringify(
+    toCanvasAuthoringSerializableValue({ ...active, activeCanvasId, canvases })
+  );
 }

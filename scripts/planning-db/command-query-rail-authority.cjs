@@ -29,7 +29,8 @@ function resolveRailReferenceAuthority(reference, candidates) {
 async function readRailReferenceAuthority(client, reference) {
   const result = await client.query(
     `with declarations as (
-      select imported.rail_id, imported.rail_type, imported.normalized_rail_name,
+      select imported.feature_id, 'imported'::text as rail_source,
+        imported.rail_id, imported.rail_type, imported.normalized_rail_name,
         imported.source_path, imported.rail_status, imported.raw_rail, imported.implementation_refs
       from ${schemaName}.command_query_rails imported
       where not exists (
@@ -38,15 +39,21 @@ async function readRailReferenceAuthority(client, reference) {
           and local.normalized_rail_name = imported.normalized_rail_name
       )
       union all
-      select rail_id, rail_type, normalized_rail_name, source_path, rail_status, raw_rail, implementation_refs
+      select feature_id, 'local'::text as rail_source,
+        rail_id, rail_type, normalized_rail_name, source_path, rail_status, raw_rail, implementation_refs
       from ${schemaName}.feature_mechanization_local_rails
-    ) select rail_id as "railId", rail_type as "railType", normalized_rail_name as "normalizedRailName",
+    ) select feature_id as "featureId", rail_source as "railSource",
+      rail_id as "railId", rail_type as "railType", normalized_rail_name as "normalizedRailName",
       source_path as "sourcePath", rail_status as "railStatus", raw_rail as "rawRail",
       jsonb_array_length(implementation_refs) as "implementationRefCount"
     from declarations where source_path = $1 and rail_type = $2 and normalized_rail_name = $3`,
     [reference.rawRail.authorityRef, reference.railType, reference.normalizedRailName]
   );
-  return resolveRailReferenceAuthority(reference, result.rows);
+  const prospectiveAuthorities = result.rows.filter(
+    (candidate) =>
+      candidate.railSource !== 'imported' || candidate.featureId !== reference.featureId
+  );
+  return resolveRailReferenceAuthority(reference, prospectiveAuthorities);
 }
 
 module.exports = {

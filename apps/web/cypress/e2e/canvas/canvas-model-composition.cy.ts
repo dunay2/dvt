@@ -1,6 +1,7 @@
 /** Prove independent producer composition, cancellation and durable reload through the real UI. */
 import {
   DvtTransformAuthoringAuthorityV1Schema,
+  DvtRelationalAuthoringDraftV1Schema,
   WorkspaceGraphDraftReadResponseSchema,
   WorkspaceGraphDraftSaveRequestSchema,
 } from '@dvt/contracts';
@@ -12,9 +13,17 @@ import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canv
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubCanvasDraftSave } from '../../support/canvasDraftAuthoring';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
+import {
+  assertSavedDbtComposition,
+  stubDbtComposition,
+  stubDiscoveredDbtComposition,
+  captureDiscoveredDbtComposition,
+  type DbtCompositionSeed,
+} from '../../support/dbtModelComposition';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
+  openWorkbenchModel,
   revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
@@ -52,7 +61,168 @@ function dragModel(id: string): void {
   });
 }
 
+function assertIndependentModelCopy({
+  originalIds,
+  originalDocument,
+}: Readonly<{
+  originalIds: ReadonlySet<string>;
+  originalDocument: ReturnType<
+    typeof DvtTransformAuthoringAuthorityV1Schema.parse
+  >['semanticDocument'];
+}>): string {
+  const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+  expect(calls, 'one complete composition save').to.have.length(1);
+  const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
+  const copies = saved.nodes.filter((node) => !originalIds.has(node.id));
+  expect(copies, 'the canceled copy was never published').to.have.length(1);
+  const copy = copies[0]!;
+  expect(saved.nodeIds, 'copy is an admitted producer, not a hidden definition').to.include(
+    copy.id
+  );
+  expect(copy.definitionId).to.equal(undefined);
+  expect(copy.path).to.equal(undefined);
+  expect(copy.metadata?.resultTarget).to.equal(undefined);
+  const copied = DvtTransformAuthoringAuthorityV1Schema.parse(
+    copy.metadata?.transformAuthoring
+  ).semanticDocument;
+  expect(copied.semanticPlan).to.deep.equal(originalDocument.semanticPlan);
+  expect(
+    copied.sidecar.relations.every(
+      (binding) =>
+        !originalDocument.sidecar.relations.some(
+          (before) => before.relationId === binding.relationId
+        )
+    )
+  ).to.equal(true);
+  expect(
+    saved.edges.some((edge) => edge.sourceId === copy.id && edge.targetId === receiver)
+  ).to.equal(true);
+  expect(
+    saved.nodes.find((node) => node.id === receiver)?.metadata?.relationalAuthoringDraft
+  ).to.have.property('sources');
+  return copy.id;
+}
+
+function assertSavedPhysicalOccurrences(
+  initial: ReturnType<typeof stubWorkbenchScenario>,
+  source: ReturnType<typeof stubWorkbenchScenario>['nodes'][number]
+): Readonly<{
+  ids: string[];
+  aliases: string[];
+  writesBeforeReload: number;
+  ledgerFingerprint: string;
+}> {
+  const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+  expect(calls, 'one actual protected composition save').to.have.length(1);
+  const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
+  expect(
+    saved.nodes.map((node) => node.id).sort(),
+    'no working definition was copied'
+  ).to.deep.equal(initial.nodes.map((node) => node.id).sort());
+  expect(
+    saved.nodes.find((node) => node.id === source.id),
+    'original Source unchanged'
+  ).to.deep.equal(source);
+  expect(saved.edges, 'the same single physical dependency').to.deep.equal(initial.edges);
+  const target = saved.nodes.find((node) => node.id === receiver)!;
+  const draft = DvtRelationalAuthoringDraftV1Schema.parse(
+    target.metadata?.relationalAuthoringDraft
+  );
+  const sources = draft.sources.filter((read) => read.sourceNodeId === source.id);
+  expect(sources, 'two independent local Reads').to.have.length(2);
+  const ids = sources.map((read) => read.relationId);
+  const aliases = sources.map((read) => read.displayName);
+  expect(new Set(ids).size).to.equal(2);
+  expect(new Set(aliases).size).to.equal(2);
+  const before = DvtTransformAuthoringAuthorityV1Schema.parse(
+    initial.nodes.find((node) => node.id === receiver)!.metadata?.transformAuthoring
+  ).semanticDocument;
+  expect(
+    ids.every((id) => !before.sidecar.relations.some((read) => read.relationId === id))
+  ).to.equal(true);
+  return {
+    ids,
+    aliases,
+    writesBeforeReload: calls.length,
+    ledgerFingerprint: JSON.stringify(calls),
+  };
+}
+
 describe('Model composition inside the selected Model', () => {
+  it('registers a file-only published model on one Apply and reopens the same linked input', () => {
+    const seed = stubDiscoveredDbtComposition();
+    let saved: DbtCompositionSeed;
+    let instanceId = '';
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    openModel();
+    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
+    cy.get(action).filter(':visible').should('be.enabled');
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/dbt/graph', 'GET'),
+        'one catalogue acquisition'
+      ).to.have.length(1)
+    );
+    dragModel(seed.definitionId);
+    cy.get(pending).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+    cy.get(pending).should('not.exist');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.then(() => expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1));
+    cy.get(action).filter(':visible').focus();
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
+    cy.wrap(null).should(() => {
+      saved = captureDiscoveredDbtComposition(seed);
+      instanceId = assertSavedDbtComposition(saved);
+    });
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/dbt/graph', 'GET'),
+        'one pre-Apply revalidation'
+      ).to.have.length(2)
+    );
+    revisitWorkbenchCanvas(() => visitWorkbenchCanvas());
+    openModel();
+    cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
+    cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+      'have.text',
+      seed.receiverName
+    );
+    cy.then(() => expect(assertSavedDbtComposition(saved)).to.equal(instanceId));
+  });
+
+  it('links clientes as a dbt input and reopens the same file definition after one Apply', () => {
+    const seed = stubDbtComposition();
+    let instanceId = '';
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    openModel();
+    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
+    cy.get(action).filter(':visible').should('be.enabled');
+    dragModel(seed.definitionId);
+    cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+    cy.get(pending).should('not.exist');
+    cy.get(action).filter(':visible').focus();
+    pressNativeKey('Enter');
+    cy.get(pending).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
+    cy.wrap(null).should(() => {
+      instanceId = assertSavedDbtComposition(seed);
+    });
+    revisitWorkbenchCanvas(() => visitWorkbenchCanvas());
+    openModel();
+    cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+      'have.text',
+      seed.receiverName
+    );
+    cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
+    cy.then(() => expect(assertSavedDbtComposition(seed)).to.equal(instanceId));
+  });
+
   it('cancels privately, then applies an independent Model copy and reopens its own semantics', () => {
     const initial = stubWorkbenchScenario('saved-join');
     const original = initial.nodes.find((node) => node.id === receiver)!;
@@ -63,7 +233,8 @@ describe('Model composition inside the selected Model', () => {
     let copyId = '';
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
-    openModel();
+    openWorkbenchModel();
+    cy.get(row(receiver)).should('be.visible').and('have.attr', 'aria-pressed', 'true');
     dragModel(receiver);
     cy.get(pending).should('have.length', 1);
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
@@ -74,37 +245,7 @@ describe('Model composition inside the selected Model', () => {
     cy.screenshot('model-composition-private', { capture: 'viewport' });
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {
-      const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
-      expect(calls, 'one complete composition save').to.have.length(1);
-      const saved = WorkspaceGraphDraftSaveRequestSchema.parse(calls[0]!.body).draft;
-      const copies = saved.nodes.filter((node) => !originalIds.has(node.id));
-      expect(copies, 'the canceled copy was never published').to.have.length(1);
-      const copy = copies[0]!;
-      copyId = copy.id;
-      expect(saved.nodeIds, 'copy is an admitted producer, not a hidden definition').to.include(
-        copy.id
-      );
-      expect(copy.definitionId).to.equal(undefined);
-      expect(copy.path).to.equal(undefined);
-      expect(copy.metadata?.resultTarget).to.equal(undefined);
-      const copied = DvtTransformAuthoringAuthorityV1Schema.parse(
-        copy.metadata?.transformAuthoring
-      ).semanticDocument;
-      expect(copied.semanticPlan).to.deep.equal(originalDocument.semanticPlan);
-      expect(
-        copied.sidecar.relations.every(
-          (binding) =>
-            !originalDocument.sidecar.relations.some(
-              (before) => before.relationId === binding.relationId
-            )
-        )
-      ).to.equal(true);
-      expect(
-        saved.edges.some((edge) => edge.sourceId === copy.id && edge.targetId === receiver)
-      ).to.equal(true);
-      expect(
-        saved.nodes.find((node) => node.id === receiver)?.metadata?.relationalAuthoringDraft
-      ).to.have.property('sources');
+      copyId = assertIndependentModelCopy({ originalIds, originalDocument });
     });
     cy.get('[data-slot="canvas-model-editor"]:visible').should('contain.text', original.name);
     // A fresh page must reinstall the controlled transport, rather than falling through to the live API.
@@ -125,6 +266,22 @@ describe('Model composition inside the selected Model', () => {
       'have.length',
       2
     );
+    openModel(receiver);
+    const editor = '[data-slot="canvas-model-editor"]:visible';
+    const pendingRead = '[data-pending="true"]';
+    cy.get(editor).then(($editor) => {
+      const before = $editor.find(pendingRead).length;
+      dragModel(copyId);
+      cy.get(pending).should('have.length', before + 1);
+      cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+        'have.text',
+        original.name
+      );
+      cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+      cy.get(editor).should(($current) =>
+        expect($current.find(pendingRead)).to.have.length(before)
+      );
+    });
   });
 
   it('offers the same command by keyboard for a Source Model without selecting another Model', () => {
@@ -132,6 +289,15 @@ describe('Model composition inside the selected Model', () => {
     const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
     const context = {
       ...initial,
+      nodes: initial.nodes.map((node) =>
+        node.id === source.id
+          ? { ...node, name: 'sales_calendar', path: 'models/sources/src_demo_sales_stage.yml' }
+          : node
+      ),
+      nodeIds: initial.nodeIds.filter((id) => id !== source.id),
+      nodePositions: Object.fromEntries(
+        Object.entries(initial.nodePositions).filter(([id]) => id !== source.id)
+      ),
       edges: initial.edges.filter(
         (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
       ),
@@ -167,8 +333,12 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
+    dragModel(source.id);
+    cy.get(pending).should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
+    cy.get(pending).should('not.exist');
     cy.get(
-      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: ${source.name}"]`
+      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: sales_calendar"]`
     )
       .filter(':visible')
       .focus();
@@ -180,17 +350,45 @@ describe('Model composition inside the selected Model', () => {
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
 
-  it('does not advertise or stage an already incoming physical Source', () => {
+  it('reuses one incoming physical dependency for action and drag occurrences through Cancel, Apply and reopen', () => {
     const initial = stubWorkbenchScenario('saved-join');
     const source = initial.nodes.find((node) => node.role === 'input')!;
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    cy.get(row(source.id)).should('have.attr', 'draggable', 'false');
-    cy.get(
-      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: ${source.name}"]`
-    ).should('not.exist');
+    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add instance: ${source.name}"]`;
+    let saved: ReturnType<typeof assertSavedPhysicalOccurrences>;
+    cy.get(row(source.id)).should('have.attr', 'draggable', 'true');
+    cy.get(action).filter(':visible').should('be.enabled').focus();
+    pressNativeKey('Enter');
+    dragModel(source.id);
+    cy.get(pending).should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get(action).filter(':visible').click();
+    dragModel(source.id);
+    cy.get(pending).should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
+    cy.wrap(null).should(() => {
+      saved = assertSavedPhysicalOccurrences(initial, source);
+    });
+    revisitWorkbenchCanvas(() => visitWorkbenchCanvas());
+    openModel();
+    cy.get(pending)
+      .should('have.length', 2)
+      .then(($cards) => {
+        expect(
+          [...$cards].map((card) => card.getAttribute('data-relation-id')).sort()
+        ).to.deep.equal([...saved.ids].sort());
+        for (const alias of saved.aliases) expect($cards.text()).to.contain(alias);
+      });
+    cy.then(() => {
+      const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+      expect(calls.length - saved.writesBeforeReload, 'reload adds zero draft writes').to.equal(0);
+      expect(JSON.stringify(calls), 'the acknowledged write ledger remains intact').to.equal(
+        saved.ledgerFingerprint
+      );
+    });
   });
 });

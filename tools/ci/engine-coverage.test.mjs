@@ -35,7 +35,7 @@ test('the public command enables coverage in the installed Vitest CLI', () => {
 });
 
 test('engine coverage uses the root policy and includes unexecuted source', async () => {
-  const [{ vitestConfig: engine }, { vitestConfig: repository }] = await Promise.all([
+  const [{ test: engine }, { test: repository }] = await Promise.all([
     resolveConfig({ root: engineRoot, config: engineConfig }),
     resolveConfig({ root, config: path.join(root, 'vitest.config.ts') }),
   ]);
@@ -47,7 +47,7 @@ test('engine coverage uses the root policy and includes unexecuted source', asyn
     lines: 65,
   });
   assert.equal(engine.coverage.provider, 'v8');
-  assert.equal(engine.coverage.all, true);
+  assert.equal(engine.coverage.all, undefined);
   assert.equal(engine.coverage.clean, true);
   assert.deepEqual(engine.coverage.include, ['src/**/*.ts']);
   assert.deepEqual(engine.include, ['test/**/*.test.ts']);
@@ -87,7 +87,7 @@ test('real Vitest rejects low coverage and stale reports, then passes the covere
     `
       import engine from ${JSON.stringify(path.relative(fixture, engineConfig).replaceAll('\\', '/'))};
       export default { ...engine, root: ${JSON.stringify(fixture)}, test: {
-        ...engine.test, maxWorkers: 1, minWorkers: 1, fileParallelism: false
+        ...engine.test, maxWorkers: 1, fileParallelism: false
       } };
     `
   );
@@ -106,7 +106,7 @@ test('real Vitest rejects low coverage and stale reports, then passes the covere
     spawnSync(
       process.execPath,
       [
-        require.resolve('vitest/vitest.mjs'),
+        path.join(path.dirname(require.resolve('vitest/package.json')), 'vitest.mjs'),
         'run',
         ...coverageArguments(),
         '--config',

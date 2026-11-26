@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const bootstrapMocks = vi.hoisted(() => {
   const poolEnd = vi.fn().mockResolvedValue(undefined);
-  const poolCtor = vi.fn().mockImplementation(() => ({
-    end: poolEnd,
-  }));
+  const poolCtor = vi.fn().mockImplementation(function () {
+    return { end: poolEnd };
+  });
 
   const lineageStore = {
     enqueue: vi.fn(),
@@ -17,14 +17,18 @@ const bootstrapMocks = vi.hoisted(() => {
   const stateStoreGetLineageOutboxStore = vi.fn().mockReturnValue(lineageStore);
   const stateStoreClose = vi.fn().mockResolvedValue(undefined);
   const stateStoreMigrate = vi.fn().mockResolvedValue(undefined);
-  const stateStoreCtor = vi.fn().mockImplementation((config: unknown) => ({
-    close: stateStoreClose,
-    migrate: stateStoreMigrate,
-    getLineageOutboxStore: stateStoreGetLineageOutboxStore,
-    config,
-  }));
+  const stateStoreCtor = vi.fn().mockImplementation(function (config: unknown) {
+    return {
+      close: stateStoreClose,
+      migrate: stateStoreMigrate,
+      getLineageOutboxStore: stateStoreGetLineageOutboxStore,
+      config,
+    };
+  });
 
-  const sinkCtor = vi.fn().mockImplementation((config: unknown) => ({ config }));
+  const sinkCtor = vi.fn().mockImplementation(function (config: unknown) {
+    return { config };
+  });
 
   return {
     poolEnd,

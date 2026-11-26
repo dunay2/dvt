@@ -1,17 +1,17 @@
 /** Resolve dependency ownership once for presentation, authoring and execution adapters. */
-import {
-  ConnectionRefSchema,
-  type ConnectedSourceRef,
-  type ConnectionRef,
-  type DvtInputBindingsV1,
-} from '@dvt/contracts';
+import type { ConnectedSourceRef, ConnectionRef, DvtInputBindingsV1 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import { SubstraitAnalysisError, type SubstraitDocument } from './document.js';
 import { resolveProducerDocuments } from './producerDocuments.js';
 import { resolveProducerInput } from './producerInput.js';
+import { resolveProducerLeafConnection } from './producerLeafConnection.js';
 import { requireProducerPublication } from './producerPublication.js';
-import { indexSubstraitRelations, type SubstraitRelationIndex } from './relationIndex.js';
+import {
+  indexSubstraitRelations,
+  type IndexedRelation,
+  type SubstraitRelationIndex,
+} from './relationIndex.js';
 
 export type ProducerGraph = Readonly<{
   targetId: string;
@@ -23,6 +23,7 @@ export type ProducerGraph = Readonly<{
     inputBindings?: DvtInputBindingsV1;
   }>[];
   sourcePublications?: ReadonlyMap<string, ReadonlySet<string>>;
+  literalConnections?: ReadonlyMap<string, ConnectionRef>;
   externalProducers?: ReadonlyMap<
     string,
     Readonly<{ document: SubstraitDocument; connection: ConnectionRef }>
@@ -34,100 +35,98 @@ export type ResolvedProducer = Readonly<{
   connection: ConnectionRef;
 }>;
 
-export function resolveProducerGraph(graph: ProducerGraph): ReadonlyMap<string, ResolvedProducer> {
+type Producer = Pick<ResolvedProducer, 'document' | 'index'>;
+
+function reject(message: string): never {
+  throw new SubstraitAnalysisError('invalid_binding', message);
+}
+
+function authorizedDocuments(graph: ProducerGraph): ReadonlyMap<string, SubstraitDocument> {
   const available = new Map(graph.documents);
   for (const [id, producer] of graph.externalProducers ?? []) {
     if (available.has(id) || graph.sources.has(id))
-      throw new SubstraitAnalysisError(
-        'invalid_binding',
-        'An external producer cannot replace another authority.'
-      );
+      reject('An external producer cannot replace another authority.');
     available.set(id, producer.document);
   }
-  const documents = resolveProducerDocuments(graph.targetId, available);
+  return resolveProducerDocuments(graph.targetId, available);
+}
+
+function directDependencies(graph: ProducerGraph): Map<string, Set<string>> {
   const incoming = new Map<string, Set<string>>();
   for (const edge of graph.edges) {
     const ids = incoming.get(edge.targetId) ?? new Set<string>();
     ids.add(edge.sourceId);
     incoming.set(edge.targetId, ids);
   }
+  return incoming;
+}
+
+function indexProducer(document: SubstraitDocument): Producer {
+  const indexed = indexSubstraitRelations(document);
+  if (!indexed.ok) throw indexed.error;
+  return { document, index: indexed.index };
+}
+
+function physicalConnection(
+  sources: ProducerGraph['sources'],
+  dependencies: ReadonlySet<string>,
+  source: ConnectedSourceRef | undefined
+): ConnectionRef {
+  if (!source) return reject('Physical input has no unique authorized direct dependency.');
+  const signature = jcsCanonicalize(source);
+  const matches = Array.from(dependencies, (id) => sources.get(id)).filter(
+    (candidate) => candidate != null && jcsCanonicalize(candidate) === signature
+  );
+  if (matches.length !== 1)
+    return reject('Physical input has no unique authorized direct dependency.');
+  return matches[0]!.connectionRef;
+}
+
+function commonConnection(connections: readonly ConnectionRef[]): ConnectionRef {
+  const first = connections[0];
+  if (!first || connections.some((ref) => jcsCanonicalize(ref) !== jcsCanonicalize(first)))
+    return reject('Producer inputs must share one execution connection.');
+  return first;
+}
+
+function inputConnection(
+  entry: IndexedRelation,
+  graph: ProducerGraph,
+  dependencies: ReadonlySet<string>,
+  resolved: ReadonlyMap<string, ResolvedProducer>
+): ConnectionRef {
+  const ref = entry.binding.producerRef;
+  if (!ref) return physicalConnection(graph.sources, dependencies, entry.binding.sourceRef);
+  if (!dependencies.has(ref.nodeId))
+    return reject('Producer reference has no authorized direct dependency.');
+  const parent = resolved.get(ref.nodeId);
+  if (!parent) return reject('Producer authority is outside the authorized closure.');
+  resolveProducerInput(entry, parent.document);
+  return parent.connection;
+}
+
+export function resolveProducerGraph(graph: ProducerGraph): ReadonlyMap<string, ResolvedProducer> {
+  // The document resolver has already checked cycles and ordered dependencies before consumers.
+  const documents = authorizedDocuments(graph);
+  if (!documents.has(graph.targetId))
+    return reject('Producer authority is outside the authorized closure.');
+  const incoming = directDependencies(graph);
   const resolved = new Map<string, ResolvedProducer>();
-  const visiting = new Set<string>();
-  const stack = [{ id: graph.targetId, ready: false }];
-  const reject = (message: string): never => {
-    throw new SubstraitAnalysisError('invalid_binding', message);
-  };
-  while (stack.length > 0) {
-    const item = stack.pop()!;
-    if (resolved.has(item.id)) continue;
-    const document = documents.get(item.id);
-    if (document == null) reject('Producer authority is outside the authorized closure.');
-    const indexed = indexSubstraitRelations(document!);
-    if (!indexed.ok) throw indexed.error;
-    const external = graph.externalProducers?.get(item.id);
-    if (external != null) {
-      const root = indexed.index.relations.get(indexed.index.rootId)!;
-      if (
-        indexed.index.relations.size !== 1 ||
-        root.relation.relType.case !== 'read' ||
-        root.binding.sourceRef != null ||
-        root.binding.producerRef != null ||
-        (incoming.get(item.id)?.size ?? 0) !== 0
-      )
-        reject('An external publication must be a resolved leaf Read signature.');
-      resolved.set(item.id, {
-        document: document!,
-        index: indexed.index,
-        connection: ConnectionRefSchema.parse(external.connection),
-      });
+  for (const [id, document] of documents) {
+    const producer = indexProducer(document);
+    const dependencies = incoming.get(id) ?? new Set<string>();
+    const leaf = resolveProducerLeafConnection(graph, id, producer, dependencies);
+    if (leaf) {
+      resolved.set(id, { ...producer, connection: leaf });
       continue;
     }
-    const reads = [...indexed.index.relations.values()].filter(
+    const reads = [...producer.index.relations.values()].filter(
       (entry) => entry.relation.relType.case === 'read'
     );
-    if (!item.ready) {
-      if (visiting.has(item.id)) reject('Producer dependencies contain a cycle.');
-      visiting.add(item.id);
-      stack.push({ ...item, ready: true });
-      for (const entry of reads) {
-        const producer = entry.binding.producerRef;
-        if (producer == null) continue;
-        if (!incoming.get(item.id)?.has(producer.nodeId))
-          reject('Producer reference has no authorized direct dependency.');
-        stack.push({ id: producer.nodeId, ready: false });
-      }
-      continue;
-    }
-    const connections: ConnectionRef[] = [];
-    for (const entry of reads) {
-      const producer = entry.binding.producerRef;
-      if (producer != null) {
-        const upstream = resolved.get(producer.nodeId)!;
-        resolveProducerInput(entry, upstream.document);
-        connections.push(upstream.connection);
-      } else {
-        const source = entry.binding.sourceRef;
-        const matches = [...(incoming.get(item.id) ?? [])].flatMap((id) => {
-          const ref = graph.sources.get(id);
-          return ref != null && source != null && jcsCanonicalize(ref) === jcsCanonicalize(source)
-            ? [ref]
-            : [];
-        });
-        if (matches.length !== 1)
-          reject('Physical input has no unique authorized direct dependency.');
-        connections.push(matches[0]!.connectionRef);
-      }
-    }
-    const connection = connections[0];
-    if (
-      connection == null ||
-      connections.some((ref) => jcsCanonicalize(ref) !== jcsCanonicalize(connection))
-    )
-      reject('Producer inputs must share one execution connection.');
-    const current = { document: document!, index: indexed.index, connection: connection! };
-    requireProducerPublication(graph, item.id, current);
-    resolved.set(item.id, current);
-    visiting.delete(item.id);
+    const connections = reads.map((entry) => inputConnection(entry, graph, dependencies, resolved));
+    const current = { ...producer, connection: commonConnection(connections) };
+    requireProducerPublication(graph, id, current);
+    resolved.set(id, current);
   }
   return resolved;
 }

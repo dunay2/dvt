@@ -11,8 +11,11 @@ import { sessionRoute } from './sessionRoute.js';
 
 export function registerProtectedSessionRoutes(
   app: FastifyInstance,
-  env: Env,
-  protectedModule: ProtectedRuntimeModule
+  env: Pick<
+    Env,
+    'DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX' | 'DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS'
+  >,
+  protectedModule: Pick<ProtectedRuntimeModule, 'authenticator'>
 ): void {
   const rateLimit = {
     max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,

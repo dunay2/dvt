@@ -94,7 +94,8 @@ describe('CanvasShell architecture', () => {
     const shell = imports('CanvasShell.tsx');
     expect(shell).toEqual(
       expect.arrayContaining([
-        './canvasShellNodeProjection',
+        './useCanvasShellGraphPresentation',
+        './canvasShellWorkbenchSurfaces',
         './useCanvasModelSelection',
         './useCanvasCodeWorkbench',
         './useCanvasOperationDataTab',
@@ -107,8 +108,16 @@ describe('CanvasShell architecture', () => {
         )
       )
     ).toEqual([]);
+    expect(shell).not.toContain('./canvasShellNodeProjection');
+    expect(imports('useCanvasShellGraphPresentation.ts')).toContain('./canvasShellNodeProjection');
     expect(imports('CanvasWorkspaceModelTabs.tsx')).not.toContain('../../components/ui/tabs');
-    expect(imports('CanvasWorkspaceModelTabs.tsx')).not.toContain('react');
+    expect(
+      imports('CanvasWorkspaceModelTabs.tsx').filter(
+        (path) =>
+          /services\/|ports\/|stores\//.test(path) &&
+          path !== '../../stores/applicationLanguageStore'
+      )
+    ).toEqual([]);
     const controller = ts.createSourceFile(
       'CanvasWorkspaceModelTabs.tsx',
       readArchitectureSiblingSource(import.meta.dirname, 'CanvasWorkspaceModelTabs.tsx'),
@@ -256,8 +265,18 @@ describe('CanvasShell architecture', () => {
   });
 
   it('keeps contextual source import hosted outside the shell composition state', () => {
-    expect(CANVAS_SHELL_SOURCE).toContain('CanvasSourceImportDialogHost');
-    expect(CANVAS_SHELL_SOURCE).toContain('useCanvasSourceImportDialogState');
+    const sourceImport = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'useCanvasShellSourceImport.tsx'
+    );
+    expect(CANVAS_SHELL_SOURCE).toContain("from './useCanvasShellSourceImport'");
+    for (const dependency of [
+      './CanvasSourceImportDialogHost',
+      './useCanvasSourceImportDialogState',
+    ]) {
+      expect(sourceImport).toContain(`from '${dependency}'`);
+      expect(CANVAS_SHELL_SOURCE).not.toContain(`from '${dependency}'`);
+    }
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       "import SourceImportWizard from '../../components/SourceImportWizard'"
     );

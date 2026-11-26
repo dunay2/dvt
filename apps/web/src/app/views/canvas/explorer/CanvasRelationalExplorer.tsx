@@ -29,9 +29,9 @@ export function CanvasRelationalExplorer({
   children: ReactNode;
 }>): JSX.Element {
   const browser = useCanvasModelBrowserPresentation();
-  const explorerCopy = resolveCanvasExplorerCopy(
-    useApplicationLanguageStore((state) => state.language)
-  );
+  const language = useApplicationLanguageStore((state) => state.language);
+  const explorerCopy = resolveCanvasExplorerCopy(language);
+  const viewCopy = resolveCanvasViewCopy(language);
   const catalogue = (
     <CanvasRelationalTreeSourceCatalogue
       items={model.catalogue}
@@ -46,12 +46,12 @@ export function CanvasRelationalExplorer({
   return (
     <CanvasExplorer
       heading={
-        browser?.mode == null
+        browser == null
           ? undefined
           : { label: explorerCopy.explorerTitle, contextLabel: explorerCopy.project }
       }
       elements={
-        browser?.mode == null ? (
+        browser == null ? (
           catalogue
         ) : (
           <>
@@ -60,11 +60,17 @@ export function CanvasRelationalExplorer({
                 ? undefined
                 : {
                     ...model.modelComposition,
-                    label: resolveCanvasViewCopy().relationalModelCopyAddLabel,
+                    label: viewCopy.relationalModelCopyAddLabel,
+                    referenceLabel: viewCopy.relationalModelReferenceAddLabel,
+                    labelFor: (id) =>
+                      model.modelComposition.occurrenceNodeIds.has(id)
+                        ? viewCopy.sourceOccurrenceAdd
+                        : model.modelComposition.linkedNodeIds.has(id)
+                          ? viewCopy.relationalModelReferenceAddLabel
+                          : viewCopy.relationalModelCopyAddLabel,
                     copy: (id) => {
                       const accepted = model.modelComposition.copy(id);
-                      if (!accepted)
-                        toast.error(resolveCanvasViewCopy().relationalModelCopyUnavailableMessage);
+                      if (!accepted) toast.error(viewCopy.relationalModelCopyUnavailableMessage);
                       return accepted;
                     },
                   }

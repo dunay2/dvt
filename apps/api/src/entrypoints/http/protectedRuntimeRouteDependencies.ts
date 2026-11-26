@@ -24,6 +24,7 @@ import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/servi
 import { ProjectCanvasModelSqlContextQuery } from '../../application/services/projectCanvasModelSqlContextQuery.js';
 import { ProjectCanvasSqlPresentation } from '../../application/services/projectCanvasSqlPresentation.js';
 import { ProjectCanvasTransformSqlQuery } from '../../application/services/projectCanvasTransformSqlQuery.js';
+import { ProposeWorksheetCanvasModel } from '../../application/services/proposeWorksheetCanvasModel.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedDvtPreviewSelectionService } from '../../application/services/resolveAuthorizedDvtPreviewSelection.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
@@ -60,14 +61,7 @@ export type ProtectedRuntimeRouteDependencies = ReturnType<
   typeof buildProtectedRuntimeRouteDependencies
 >;
 
-export function buildProtectedRuntimeRouteDependencies(
-  options: BuildProtectedRuntimeRouteDependenciesOptions
-) {
-  const { observability, protectedModule } = options;
-  const runtimeAuth = {
-    authenticator: protectedModule.authenticator,
-    authorizer: protectedModule.authorizer,
-  };
+function buildRunControlDependencies(protectedModule: ProtectedRuntimeModule) {
   const executionContextRequirementResolver = new StoredPlanRunExecutionContextRequirementResolver(
     protectedModule.planStore,
     protectedModule.runExecutionContextBindingPolicy
@@ -83,6 +77,23 @@ export function buildProtectedRuntimeRouteDependencies(
     clock: protectedModule.systemClock,
     idempotency,
   });
+  return {
+    executionContextRequirementResolver,
+    idempotency,
+    startDispatchResolver,
+    cancellationReceipts,
+  };
+}
+
+type RunControlDependencies = ReturnType<typeof buildRunControlDependencies>;
+
+function buildRunQueries(
+  options: BuildProtectedRuntimeRouteDependenciesOptions,
+  shared: RunControlDependencies
+) {
+  const { observability, protectedModule } = options;
+  const { executionContextRequirementResolver, startDispatchResolver, cancellationReceipts } =
+    shared;
   const getRunStatusUseCase = new GetRunStatusUseCase(
     protectedModule.engine,
     protectedModule.runEnrichmentService,
@@ -98,6 +109,43 @@ export function buildProtectedRuntimeRouteDependencies(
     cancellationReceipts,
     protectedModule.planValidator
   );
+  return {
+    getRunStatusUseCase,
+    getRunEventsUseCase: new GetRunEventsUseCase(protectedModule.stateStore.read),
+    listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
+  };
+}
+
+function buildRunCommands(protectedModule: ProtectedRuntimeModule, shared: RunControlDependencies) {
+  const {
+    executionContextRequirementResolver,
+    idempotency,
+    startDispatchResolver,
+    cancellationReceipts,
+  } = shared;
+  return {
+    cancelRunUseCase: new CancelRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore.read,
+      cancellationReceipts,
+      startDispatchResolver
+    ),
+    recoverRunUseCase: new RecoverRunUseCase({
+      engine: protectedModule.engine,
+      stateStore: protectedModule.stateStore.read,
+      planStore: protectedModule.planStore,
+      executionContextReader: protectedModule.runExecutionContextReferenceReader,
+      executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
+      executionContextRequirementResolver,
+      startRunIntentStore: protectedModule.startRunIntentStore,
+      runMaintenanceService: protectedModule.runMaintenanceService,
+      idempotency,
+    }),
+    signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
+  };
+}
+
+function buildWarehouseQueries(protectedModule: ProtectedRuntimeModule) {
   const warehouseConnectionProbe = new WorkspaceWarehouseConnectionProbe({
     credentialResolver: protectedModule.postgresCredentialResolver,
     now: () => new Date(),
@@ -112,6 +160,58 @@ export function buildProtectedRuntimeRouteDependencies(
       credentialResolver: protectedModule.postgresCredentialResolver,
     }),
   });
+  return {
+    warehouseConnectionProbe,
+    previewWarehouseSourceObjectRowsUseCase,
+    validatePostgresTransformSqlUseCase,
+  };
+}
+
+type WarehouseQueries = ReturnType<typeof buildWarehouseQueries>;
+
+function buildCanvasModelQueries(
+  protectedModule: ProtectedRuntimeModule,
+  warehouse: WarehouseQueries,
+  canvasTransformProjection: ResolveCanvasTransformProjection
+) {
+  const { warehouseConnectionProbe } = warehouse;
+  const modelSqlCatalog = new ListWarehouseConnectionSourceObjectsUseCase(
+    new WarehouseConnectionSourceObjectReader(
+      protectedModule.warehouseConnectionCatalog,
+      warehouseConnectionProbe
+    )
+  );
+  const modelSqlInputs = new ResolveCanvasModelSqlInputs({
+    projection: canvasTransformProjection,
+    modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
+    physical: new ResolveCanvasModelSqlPhysicalInput({
+      authorizer: protectedModule.authorizer,
+      catalog: modelSqlCatalog,
+    }),
+  });
+  const modelSqlContext = new ProjectCanvasModelSqlContextQuery({
+    authorizer: protectedModule.authorizer,
+    connectionCatalog: protectedModule.warehouseConnectionCatalog,
+    store: protectedModule.workspaceGraphDraftStore,
+    authorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
+    inputs: modelSqlInputs,
+  });
+  const worksheetCanvasModelQuery = new ProposeWorksheetCanvasModel({
+    store: protectedModule.workspaceGraphDraftStore,
+    authorizer: protectedModule.authorizer,
+    authorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
+    connectionCatalog: protectedModule.warehouseConnectionCatalog,
+    catalog: modelSqlCatalog,
+    projection: canvasTransformProjection,
+    modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
+    inputs: modelSqlInputs,
+  });
+  const modelSqlCompilation = new CompileCanvasModelSqlQuery(modelSqlContext);
+  return { modelSqlContext, modelSqlCompilation, worksheetCanvasModelQuery };
+}
+
+function buildCanvasQueries(protectedModule: ProtectedRuntimeModule, warehouse: WarehouseQueries) {
+  const { validatePostgresTransformSqlUseCase } = warehouse;
   const previewGraphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
     planner: protectedModule.planner,
     workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
@@ -131,24 +231,8 @@ export function buildProtectedRuntimeRouteDependencies(
       validator: validatePostgresTransformSqlUseCase,
     }),
   });
-  const modelSqlContext = new ProjectCanvasModelSqlContextQuery({
-    store: protectedModule.workspaceGraphDraftStore,
-    authorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
-    inputs: new ResolveCanvasModelSqlInputs({
-      projection: canvasTransformProjection,
-      modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
-      physical: new ResolveCanvasModelSqlPhysicalInput({
-        authorizer: protectedModule.authorizer,
-        catalog: new ListWarehouseConnectionSourceObjectsUseCase(
-          new WarehouseConnectionSourceObjectReader(
-            protectedModule.warehouseConnectionCatalog,
-            warehouseConnectionProbe
-          )
-        ),
-      }),
-    }),
-  });
-  const modelSqlCompilation = new CompileCanvasModelSqlQuery(modelSqlContext);
+  const model = buildCanvasModelQueries(protectedModule, warehouse, canvasTransformProjection);
+  const { modelSqlCompilation } = model;
   const previewCanvasTransformRowsUseCase = new PreviewCanvasTransformRowsUseCase({
     projection: canvasTransformProjection,
     sqlDraftProjection: new PrepareCanvasSqlDraftProjection(modelSqlCompilation),
@@ -158,6 +242,16 @@ export function buildProtectedRuntimeRouteDependencies(
       now: () => new Date(),
     }),
   });
+  return {
+    previewGraphDraftResolver,
+    queries: { ...model, previewCanvasTransformRowsUseCase, projectCanvasTransformSqlQuery },
+  };
+}
+
+function buildPreviewQuery(
+  protectedModule: ProtectedRuntimeModule,
+  previewGraphDraftResolver: ResolveAuthorizedExecutableSubgraphService
+) {
   const cas = protectedModule.contentAddressedArtifactRuntime;
   const dvtPreviewSelectionResolver =
     cas === undefined
@@ -183,46 +277,34 @@ export function buildProtectedRuntimeRouteDependencies(
     planValidator: protectedModule.planValidator,
     previewSelectionResolver,
   });
+  return previewPlanUseCase;
+}
 
+export function buildProtectedRuntimeRouteDependencies(
+  options: BuildProtectedRuntimeRouteDependenciesOptions
+) {
+  const { observability, protectedModule } = options;
+  const sharedRun = buildRunControlDependencies(protectedModule);
+  const warehouse = buildWarehouseQueries(protectedModule);
+  const canvas = buildCanvasQueries(protectedModule, warehouse);
   return {
-    cancelRunUseCase: new CancelRunUseCase(
-      protectedModule.engine,
-      protectedModule.stateStore.read,
-      cancellationReceipts,
-      startDispatchResolver
-    ),
+    ...buildRunQueries(options, sharedRun),
+    ...buildRunCommands(protectedModule, sharedRun),
+    ...warehouse,
+    ...canvas.queries,
     compilePlanUseCase: new CompilePlanUseCase({ planner: protectedModule.planCompilePlanner }),
     getCostAttributionSummaryUseCase: new GetCostAttributionSummaryUseCase(
       protectedModule.stateStore.read
     ),
-    getRunEventsUseCase: new GetRunEventsUseCase(protectedModule.stateStore.read),
-    getRunStatusUseCase,
     importPlanUseCase: new ImportPlanUseCase({
       planResolver: protectedModule.executablePlanResolver,
     }),
-    listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
-    previewCanvasTransformRowsUseCase,
-    projectCanvasTransformSqlQuery,
-    modelSqlContext,
-    modelSqlCompilation,
-    previewWarehouseSourceObjectRowsUseCase,
-    previewPlanUseCase,
-    validatePostgresTransformSqlUseCase,
+    previewPlanUseCase: buildPreviewQuery(protectedModule, canvas.previewGraphDraftResolver),
     observability,
-    recoverRunUseCase: new RecoverRunUseCase({
-      engine: protectedModule.engine,
-      stateStore: protectedModule.stateStore.read,
-      planStore: protectedModule.planStore,
-      executionContextReader: protectedModule.runExecutionContextReferenceReader,
-      executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
-      executionContextRequirementResolver,
-      startRunIntentStore: protectedModule.startRunIntentStore,
-      runMaintenanceService: protectedModule.runMaintenanceService,
-      idempotency,
-    }),
-    runtimeAuth,
-    signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
-    warehouseConnectionProbe,
+    runtimeAuth: {
+      authenticator: protectedModule.authenticator,
+      authorizer: protectedModule.authorizer,
+    },
     workspaceGraphDraftTelemetry: new ObservabilityWorkspaceGraphDraftTelemetry({ observability }),
   };
 }

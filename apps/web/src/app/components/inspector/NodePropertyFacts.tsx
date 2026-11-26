@@ -1,4 +1,4 @@
-/** Shared label/value template for property sections and relationship details. */
+/** Shared label/value template for property sections. */
 import type { ReactNode } from 'react';
 import { inspectorVisualClasses } from './inspectorVisualTokens';
 import styles from './InspectorMetadata.module.css';
@@ -8,7 +8,7 @@ export function NodePropertyFacts({
   layout = 'workbench',
 }: Readonly<{
   rows: readonly Readonly<{ label: string; value: ReactNode }>[];
-  layout?: 'inspector' | 'workbench' | 'relationship' | 'compact';
+  layout?: 'inspector' | 'workbench' | 'compact';
 }>): JSX.Element {
   return (
     <dl className={styles.facts} data-layout={layout}>

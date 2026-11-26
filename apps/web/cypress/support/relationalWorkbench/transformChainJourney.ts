@@ -52,11 +52,11 @@ export function connectStagedTransformChain(
     .find('[data-field-selection="output"]')
     .should('have.length', 1)
     .and('contain.text', outputName);
-  connectWorkbenchProducer(
-    `${stagedCards}:last`,
-    '[data-slot="canvas-relational-output-input-port"]',
-    null
-  );
+  connectWorkbenchProducer({
+    producer: `${stagedCards}:last`,
+    consumer: '[data-slot="canvas-relational-output-input-port"]',
+    port: null,
+  });
   cy.get('[data-slot="canvas-relational-output-input-port"]').should(
     'have.attr',
     'data-connected',

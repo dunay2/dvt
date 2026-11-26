@@ -9,26 +9,26 @@ import {
 import { queryKeys } from './queryKeys';
 
 const { analysis } = contextFixture();
-const key = queryKeys.workspace.dbtSelectedModelAnalysis(
-  'tenant',
-  'project',
-  'dev',
-  analysis.authorityBinding.canvasId,
-  analysis.projectRevision.projectRoot,
-  analysis.selectedUniqueId,
-  `${analysis.analysisSha256}:${analysis.projectRevision.contentSetSha256}`
-);
+const key = queryKeys.workspace.dbtSelectedModelAnalysis({
+  tenantId: 'tenant',
+  projectId: 'project',
+  environmentId: 'dev',
+  canvasId: analysis.authorityBinding.canvasId,
+  projectRoot: analysis.projectRevision.projectRoot,
+  selectedUniqueId: analysis.selectedUniqueId,
+  revisionToken: `${analysis.analysisSha256}:${analysis.projectRevision.contentSetSha256}`,
+});
 
 function projectKey(projectId: string): typeof key {
-  return queryKeys.workspace.dbtSelectedModelAnalysis(
-    key[2],
-    projectId,
-    key[4],
-    key[5],
-    key[6],
-    key[7],
-    key[8]
-  );
+  return queryKeys.workspace.dbtSelectedModelAnalysis({
+    tenantId: key[2],
+    projectId: projectId,
+    environmentId: key[4],
+    canvasId: key[5],
+    projectRoot: key[6],
+    selectedUniqueId: key[7],
+    revisionToken: key[8],
+  });
 }
 
 describe('durable selected-model query evidence', () => {

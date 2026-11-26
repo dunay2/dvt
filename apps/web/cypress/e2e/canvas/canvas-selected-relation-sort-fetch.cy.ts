@@ -63,13 +63,16 @@ describe('Selected input Sort/Fetch (controlled API boundary)', () => {
         .focus()
         .trigger('keydown', { key: 'Delete' });
       cy.then(() =>
-        stageWorkbenchUnary('sort', `[data-relation-id="${inputId}"][data-operator="read"]`)
+        stageWorkbenchUnary({
+          operation: 'sort',
+          producer: `[data-relation-id="${inputId}"][data-operator="read"]`,
+        })
       );
       cy.get(`${form} button[type="submit"]`).click();
       cy.get('[data-operator="sort"]').then(($node) => {
         sortId = $node.attr('data-relation-id')!;
       });
-      stageWorkbenchUnary('fetch', '[data-operator="sort"]');
+      stageWorkbenchUnary({ operation: 'fetch', producer: '[data-operator="sort"]' });
       cy.contains(`${form} label`, /^LIMIT$/)
         .find('input')
         .clear()
@@ -80,7 +83,7 @@ describe('Selected input Sort/Fetch (controlled API boundary)', () => {
       });
       cy.get('[data-operator="fetch"]').closest('li').as('fetch');
       cy.get('[data-operator="join"]').closest('li').as('join');
-      connectWorkbenchProducer('@fetch', '@join', operand);
+      connectWorkbenchProducer({ producer: '@fetch', consumer: '@join', port: operand });
       cy.then(() => {
         expect(baseline.index.relations.has(sortId)).to.equal(false);
         expect(baseline.index.relations.has(fetchId)).to.equal(false);

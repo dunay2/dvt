@@ -49,12 +49,11 @@ editing workflow control flow. The shipped example is the relational PostgreSQL
 capability in `@dvt/adapter-postgres`, exercised through separate Temporal
 baseline, transformation, and Postgres integration lanes.
 
-The engine documentation tracks seven declared southbound seams. Four are
+The engine documentation tracks six declared southbound seams. Four are
 unconditionally runtime-wired in the current delivery path. One
 (`IRunExecutionContextResolver`) is wired only when the composition root
-provides it. `IProjector` remains a package-exposed target seam, while
-`IMetricsCollector` currently exists only as a source-tree target seam because
-the shipped package surface still routes telemetry through `IObservability`.
+provides it. `IProjector` remains a package-exposed target seam. The shipped
+package routes telemetry through the existing `IObservability` facade.
 Concrete test doubles (`InMemoryProviderAdapter`, `InMemoryRunStateStore`,
 `InMemoryStartRunIntentStore`) are engine-internal unit-test aids that model
 real provider ids. Production adapters live in separate packages. Blue nodes
@@ -103,15 +102,14 @@ ports, and their relationships.
 
 ## Declared Southbound Port Surface
 
-| Port                           | Current posture               | Notes                                                                                           |
-| ------------------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------- |
-| `IRunStateStore`               | `runtime-wired`               | Canonical state/event/snapshot seam                                                             |
-| `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam                                                                          |
-| `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                           |
-| `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes the artifacts-owned plan reader                             |
-| `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional start-run seam; wired only when the composition root provides it                    |
-| `IProjector`                   | `package-exposed target seam` | Declared seam; mainline still uses `SnapshotProjector` directly                                 |
-| `IMetricsCollector`            | `source-tree target seam`     | Declared in source; not exported from the package root. Mainline still injects `IObservability` |
+| Port                           | Current posture               | Notes                                                                        |
+| ------------------------------ | ----------------------------- | ---------------------------------------------------------------------------- |
+| `IRunStateStore`               | `runtime-wired`               | Canonical state/event/snapshot seam                                          |
+| `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam                                                       |
+| `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                        |
+| `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes the artifacts-owned plan reader          |
+| `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional start-run seam; wired only when the composition root provides it |
+| `IProjector`                   | `package-exposed target seam` | Declared seam; mainline still uses `SnapshotProjector` directly              |
 
 ```mermaid
 flowchart TB
@@ -175,7 +173,6 @@ flowchart TB
     IPF["IPlanIntegrityValidator<br/>(runtime-wired)"]:::port
     IREC["IRunExecutionContextResolver<br/>(optional runtime wiring)"]:::port
     IPROJ["IProjector<br/>(package-exposed target seam)"]:::port
-    IMC["IMetricsCollector<br/>(source-tree target seam)"]:::port
   end
 
   subgraph Adapters["Concrete Adapters"]

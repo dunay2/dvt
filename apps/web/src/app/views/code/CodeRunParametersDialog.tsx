@@ -16,14 +16,13 @@ import styles from './CodeModelCommandBar.module.css';
 
 type Copy = ReturnType<typeof resolveCodeModelCommandCopy>;
 type Props = Readonly<{
-  command: 'compile' | 'execute';
+  command: 'compile' | 'execute' | 'parameters';
   definitions: RunParameterDefinition[];
   overrides: RunParameterOverride[];
   environmentId: string;
   busy: boolean;
   modelName: string;
   copy: Copy;
-  onEdit: () => void;
   onCancel: () => void;
   onConfirm: (values: RunParameterOverride[]) => Promise<void>;
   returnFocus: () => void;
@@ -38,7 +37,6 @@ export function CodeRunParametersDialog(props: Props) {
   const valid = rows.every(({ input }) => input.valid);
   const { copy } = props;
   function edit(name: string, patch: ParameterDraft) {
-    props.onEdit();
     setDrafts((previous) => ({ ...previous, [name]: { ...previous[name], ...patch } }));
   }
   return (
@@ -89,9 +87,11 @@ export function CodeRunParametersDialog(props: Props) {
             <Button type="submit" size="sm" disabled={!valid || props.busy}>
               {props.busy
                 ? copy.compiling
-                : props.command === 'compile'
-                  ? copy.confirmCompile
-                  : copy.confirmExecute}
+                : {
+                    compile: copy.confirmCompile,
+                    execute: copy.confirmExecute,
+                    parameters: copy.saveParameters,
+                  }[props.command]}
             </Button>
           </div>
         </form>

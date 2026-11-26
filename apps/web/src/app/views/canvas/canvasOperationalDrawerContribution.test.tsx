@@ -21,7 +21,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       const contribution = buildCanvasOperationalDrawerContribution({
         policy: {
           ...props.layout.surfaceStrategy!.operationalDrawer!,
-          tabs: allowData ? ['log', 'data'] : ['log'],
+          tabs: allowData ? ['data'] : [],
         },
         canPlan: false,
         activeRunId: null,
@@ -62,9 +62,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
 
     expect(contribution.tabs).toEqual([
-      { id: 'log', label: 'Log', count: null },
-      { id: 'problems', label: 'Problems', count: 2 },
-      { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 2 },
       { id: 'semantic', label: 'Relational tree', count: null },
     ]);
@@ -90,7 +87,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       activeRunId: null,
       canStartRun: false,
       status: 'blocked',
-      summary: 'Preview required before running.',
     });
     expect(contribution.preview).toMatchObject({
       status: 'blocked',
@@ -126,49 +122,16 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       onStartRun: vi.fn(),
     });
 
-    expect(contribution.tabs.find((tab) => tab.id === 'problems')?.count).toBe(0);
-    expect(contribution.tabs.find((tab) => tab.id === 'runs')?.count).toBeNull();
     expect(contribution.tabs.find((tab) => tab.id === 'preview')?.count).toBeNull();
     expect(contribution.problems.items).toEqual([]);
     expect(contribution.runs).toMatchObject({
       status: 'ready',
-      summary: 'Run is ready after the current execution preview.',
     });
     expect(contribution.preview).toMatchObject({
       status: 'ready',
       summary: 'Preview ready.',
       blockers: [],
     });
-  });
-
-  it('projects only explicitly supplied backend run controls', () => {
-    const props = buildCanvasShellProps({ panels: { activeRunId: 'run-active' } });
-    const runControls = {
-      runId: 'run-active',
-      availability: {
-        cancel: { available: true as const },
-        recover: { available: false as const, reason: 'run_active' as const },
-      },
-      activity: null,
-      outcome: null,
-      failure: null,
-      onCancel: vi.fn(),
-      onRecover: vi.fn(),
-    };
-
-    const contribution = buildCanvasOperationalDrawerContribution({
-      policy: props.layout.surfaceStrategy!.operationalDrawer!,
-      canPlan: props.panels.userPermissions.canPlan,
-      activeRunId: 'run-active',
-      runControls,
-      canPlanGraph: props.chromeState.canPlanGraph,
-      canStartRun: props.chromeState.canStartRun,
-      planRunReadiness: props.chromeState.planRunReadiness,
-      onPreviewExecutionPlan: vi.fn(),
-      onStartRun: vi.fn(),
-    });
-
-    expect(contribution.runs.controls).toBe(runControls);
   });
 
   it('projects one stable data tab for every opened card', () => {
@@ -326,8 +289,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       copy: {
         problemsAriaLabel: 'Problemas del Canvas',
         noProblemsMessage: 'No hay problemas actuales en el Canvas.',
-        runsAriaLabel: 'Ejecuciones del Canvas',
-        runBlockedStatus: 'Ejecución bloqueada',
         previewAriaLabel: 'Vista previa de ejecución del Canvas',
         previewAction: 'Crear Execution Preview',
         previewBlockedStatus: 'Vista previa bloqueada',
@@ -335,9 +296,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         severity: { info: 'Información', warning: 'Advertencia', error: 'Error' },
       },
       tabs: [
-        { id: 'log', label: 'Registro', count: null },
-        { id: 'problems', label: 'Problemas', count: 2 },
-        { id: 'runs', label: 'Ejecuciones', count: 1 },
         { id: 'preview', label: 'Vista previa', count: 2 },
         { id: 'semantic', label: 'Árbol relacional', count: null },
       ],

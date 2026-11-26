@@ -1,5 +1,5 @@
 /** Owned concern: present compact, accessible model commands using shared visual tokens. */
-import { Hammer, LoaderCircle, Play } from 'lucide-react';
+import { Hammer, LoaderCircle, Play, SlidersHorizontal } from 'lucide-react';
 import { useId, type Ref } from 'react';
 import { Link } from 'react-router';
 
@@ -15,6 +15,7 @@ export type CodeModelCommandBarProps = Readonly<{
   parameterized?: boolean;
   compileRef?: Ref<HTMLButtonElement>;
   executeRef?: Ref<HTMLButtonElement>;
+  parametersRef?: Ref<HTMLButtonElement>;
   unavailable: boolean;
   blockedReason: string;
   phase: 'idle' | 'compiling' | 'running';
@@ -23,26 +24,14 @@ export type CodeModelCommandBarProps = Readonly<{
   runId?: string;
   compile: () => Promise<void>;
   execute: () => Promise<void>;
+  configureParameters: () => void;
 }>;
 
 /** Compile and Run share a toolbar; only an accepted current plan enables execution. */
 export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
   const copy = resolveCodeModelCommandCopy(props.language);
   const descriptionId = useId();
-  const status =
-    props.phase === 'compiling'
-      ? copy.compiling
-      : props.phase === 'running'
-        ? copy.running
-        : !props.synchronized
-          ? copy.saveFirst
-          : props.unavailable
-            ? props.blockedReason
-            : props.compiled
-              ? copy.ready
-              : props.parameterized
-                ? copy.parameterReady
-                : copy.compileFirst;
+  const status = resolveCodeModelCommandStatus(props, copy);
   return (
     <div
       className={styles.bar}
@@ -86,6 +75,22 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
           )}
           {copy.execute}
         </Button>
+        {props.parameterized && (
+          <Button
+            ref={props.parametersRef}
+            type="button"
+            className={styles.command}
+            variant="ghost"
+            size="sm"
+            data-slot="code-configure-model-parameters"
+            aria-haspopup="dialog"
+            disabled={!props.canCompile}
+            onClick={props.configureParameters}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            {copy.parametersAction}
+          </Button>
+        )}
       </div>
       <span className={styles.status} id={descriptionId} role="status" title={copy.scope}>
         {status}
@@ -95,15 +100,17 @@ export function CodeModelCommandBar(props: CodeModelCommandBarProps) {
           {copy.viewRun}
         </Link>
       )}
-      <details className={styles.help}>
-        <summary>{copy.parametersHelp}</summary>
-        <p>{copy.declarationHint}</p>
-        <pre>
-          {
-            'config:\n  meta:\n    dvt:\n      run_parameters:\n        - name: cutoff_date\n          type: date\n          defaultValue: "2026-01-01"'
-          }
-        </pre>
-      </details>
     </div>
   );
+}
+
+function resolveCodeModelCommandStatus(
+  props: CodeModelCommandBarProps,
+  copy: ReturnType<typeof resolveCodeModelCommandCopy>
+): string {
+  if (props.phase === 'compiling') return copy.compiling;
+  if (props.phase === 'running') return copy.running;
+  if (!props.synchronized) return copy.saveFirst;
+  if (props.unavailable) return props.blockedReason;
+  return props.compiled ? copy.ready : copy.compileFirst;
 }

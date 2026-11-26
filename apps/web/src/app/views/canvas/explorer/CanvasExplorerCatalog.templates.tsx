@@ -14,6 +14,8 @@ import { useCanvasNodeActivation } from '../../../components/canvas/useCanvasNod
 import type { CanvasExplorerCopy, CanvasExplorerModelAction } from './CanvasExplorer.types';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import styles from './CanvasExplorer.module.css';
+import { CanvasExplorerRemoveEmptyModelAction } from './CanvasExplorerRemoveEmptyModelAction';
+import { CanvasExplorerModelStatus } from './CanvasExplorerModelStatus';
 
 /** Shared disclosure structure for project connection and model sections. */
 export function CanvasExplorerSection({
@@ -79,6 +81,7 @@ function CanvasExplorerModelRow({
   onSelect,
   onDragStart,
   modelAction,
+  onRemoveEmptyModel,
 }: Readonly<{
   id: string;
   item: CanvasExplorerItem;
@@ -89,17 +92,31 @@ function CanvasExplorerModelRow({
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
+  onRemoveEmptyModel?: (id: string) => void;
 }>): JSX.Element {
   const unavailable = disabled || item.disabled;
   const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
   const draggable = !unavailable && item.draggable !== false && onDragStart != null;
+  const actionLabel =
+    modelAction?.labelFor?.(item.id) ??
+    (item.definitionIdentity == null
+      ? modelAction?.label
+      : (modelAction?.referenceLabel ?? modelAction?.label));
   const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
   const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
   const formatId = `${id}-${encodeURIComponent(item.id)}-format`;
   const sqlFile = item.definitionFormat === 'sql';
-  const descriptions = [item.isSource ? sourceId : null, sqlFile ? formatId : null]
-    .filter(Boolean)
-    .join(' ');
+  const badges = [
+    { present: item.isSource, id: sourceId, className: styles.property, label: copy.source },
+    { present: sqlFile, id: formatId, className: styles.format, label: copy.sql },
+    {
+      present: item.publicationState === 'draft',
+      id: `${id}-${encodeURIComponent(item.id)}-draft`,
+      className: styles.property,
+      label: copy.unpublishedDefinition,
+    },
+  ].filter((badge) => badge.present);
+  const descriptions = badges.map((badge) => badge.id).join(' ');
   const selected = item.selected === true;
   const description = item.description?.trim();
   return (
@@ -128,18 +145,13 @@ function CanvasExplorerModelRow({
           <span className={styles.itemText}>
             <span className={styles.titleLine} data-slot="canvas-explorer-model-title">
               <span className={styles.name}>{item.label}</span>
-              {item.isSource || sqlFile ? (
+              {badges.length > 0 ? (
                 <span className={styles.facets}>
-                  {item.isSource ? (
-                    <span id={sourceId} className={styles.property}>
-                      {copy.source}
+                  {badges.map((badge) => (
+                    <span key={badge.id} id={badge.id} className={badge.className}>
+                      {badge.label}
                     </span>
-                  ) : null}
-                  {sqlFile ? (
-                    <span id={formatId} className={styles.format}>
-                      {copy.sql}
-                    </span>
-                  ) : null}
+                  ))}
                 </span>
               ) : null}
             </span>
@@ -149,8 +161,8 @@ function CanvasExplorerModelRow({
           <button
             type="button"
             className={styles.headerAction}
-            aria-label={`${modelAction.label}: ${item.label}`}
-            title={`${modelAction.label}: ${item.label}`}
+            aria-label={`${actionLabel}: ${item.label}`}
+            title={`${actionLabel}: ${item.label}`}
             onClick={(event) => {
               event.stopPropagation();
               modelAction.onActivate(item.id);
@@ -159,6 +171,12 @@ function CanvasExplorerModelRow({
             <CopyPlus aria-hidden="true" />
           </button>
         ) : null}
+        <CanvasExplorerRemoveEmptyModelAction
+          item={item}
+          copy={copy}
+          disabled={disabled}
+          onRemove={onRemoveEmptyModel}
+        />
         {item.details?.length ? (
           <button
             type="button"
@@ -202,10 +220,12 @@ export function CanvasExplorerListTemplate({
   onDragStart,
   modelAction,
   onAddModel,
+  onRemoveEmptyModel,
   connections,
   status,
   countKnown,
   pending,
+  hasModels,
 }: Readonly<{
   items: readonly CanvasExplorerItem[];
   open: boolean;
@@ -220,14 +240,16 @@ export function CanvasExplorerListTemplate({
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
+  onRemoveEmptyModel?: (id: string) => void;
   connections?: ReactNode;
   status?: ReactNode;
   countKnown: boolean;
   pending: boolean;
+  hasModels: boolean;
 }>): JSX.Element {
   const id = useId();
   return (
-    <div className={styles.listPanel}>
+    <>
       {connections}
       <CanvasExplorerSection
         title={copy.models}
@@ -238,19 +260,25 @@ export function CanvasExplorerListTemplate({
         onOpenChange={onOpenChange}
         busy={pending}
         action={
-          <button
-            type="button"
-            className={styles.headerAction}
-            aria-label={copy.addModel}
-            title={copy.addModel}
-            disabled={disabled || onAddModel == null}
-            onClick={(event) => onAddModel?.(event.currentTarget)}
-          >
-            <Plus aria-hidden="true" />
-          </button>
+          <>
+            <CanvasExplorerModelStatus
+              status={hasModels ? status : undefined}
+              pending={pending}
+              label={copy.details}
+            />
+            <button
+              type="button"
+              className={styles.headerAction}
+              aria-label={copy.addModel}
+              title={copy.addModel}
+              disabled={disabled || onAddModel == null}
+              onClick={(event) => onAddModel?.(event.currentTarget)}
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          </>
         }
       >
-        {status}
         <label className={styles.search}>
           <Search aria-hidden="true" />
           <input
@@ -261,6 +289,7 @@ export function CanvasExplorerListTemplate({
             placeholder={copy.search}
           />
         </label>
+        {hasModels ? null : status}
         <ul className={styles.list}>
           {items.map((item) => (
             <CanvasExplorerModelRow
@@ -274,6 +303,7 @@ export function CanvasExplorerListTemplate({
               onSelect={onSelect}
               onDragStart={onDragStart}
               modelAction={modelAction}
+              onRemoveEmptyModel={onRemoveEmptyModel}
             />
           ))}
         </ul>
@@ -281,6 +311,6 @@ export function CanvasExplorerListTemplate({
           <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>
         ) : null}
       </CanvasExplorerSection>
-    </div>
+    </>
   );
 }

@@ -1,125 +1,143 @@
-/**
- * Owned concern: adapt protected workspace file-history query rails to HTTP.
- */
-import path from 'node:path';
-
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+/** Owned concern: adapt scoped workspace version command and query ports to HTTP. */
+import type { FastifyInstance, FastifyReply } from 'fastify';
 
 import { AUTHORIZATION_ACTION } from '../../application/ports/accessDecision.js';
-import type { IAuthenticator } from '../../application/ports/auth.js';
-import { InvalidWorkspacePathError } from '../../application/ports/workspaceFiles.js';
-import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import type {
+  IWorkspaceFileHistoryRepository,
+  IWorkspaceFileVersionCommandPort,
+} from '../../application/ports/workspaceFileHistory.js';
+import {
+  InvalidWorkspacePathError,
+  WorkspaceFileNotFoundError,
+} from '../../application/ports/workspaceFiles.js';
 import type { ListWorkspaceFileHistoryUseCase } from '../../application/services/listWorkspaceFileHistoryUseCase.js';
 
-import { authorizeExecutionScope } from './authorizeExecutionScope.js';
-import { extractBearerToken } from './extractBearerToken.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue } from './routeParseIssue.js';
-import {
-  parseRequiredEnvironmentScope,
-  type EnvironmentScopeQuery,
-} from './routeParserPrimitives.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
+import {
+  authorizeWorkspaceFilesRequest,
+  type WorkspaceFilesAuthorizationDeps,
+  type WorkspaceFilesQuery,
+} from './workspaceFilesRequestScope.js';
 
-const ALLOWED_HISTORY_EXTENSIONS = new Set([
-  '.cjs',
-  '.css',
-  '.html',
-  '.js',
-  '.json',
-  '.md',
-  '.mjs',
-  '.sql',
-  '.ts',
-  '.tsx',
-  '.txt',
-  '.yaml',
-  '.yml',
-]);
+type WorkspaceFileHistoryRouteDeps = WorkspaceFilesAuthorizationDeps &
+  Readonly<{
+    listUseCase: ListWorkspaceFileHistoryUseCase;
+    versionQuery: Pick<IWorkspaceFileHistoryRepository, 'getFileVersionContent'>;
+    versionCommand: IWorkspaceFileVersionCommandPort;
+    rateLimit: { readonly max: number; readonly timeWindow: number };
+  }>;
 
-type WorkspaceFileHistoryPathParams = {
-  readonly path: string;
-};
-
-type WorkspaceFileHistoryRouteDeps = {
-  readonly authenticator: IAuthenticator;
-  readonly authorizer: AuthorizeCommandScopeService;
-  readonly listUseCase: ListWorkspaceFileHistoryUseCase;
-  readonly rateLimit: { readonly max: number; readonly timeWindow: number };
-};
+type HistoryPath = Readonly<{ path: string }>;
+type HistoryQuery = WorkspaceFilesQuery & Readonly<{ before?: string }>;
+const INVALID_HISTORY_PATH_PARTS = new Set(['', '.', '..']);
 
 export function registerWorkspaceFileHistoryRoutes(
   app: FastifyInstance,
   deps: WorkspaceFileHistoryRouteDeps
 ): void {
-  app.get<{ Params: WorkspaceFileHistoryPathParams; Querystring: EnvironmentScopeQuery }>(
+  const routeOptions = { config: { rateLimit: deps.rateLimit } };
+  app.get<{ Params: HistoryPath; Querystring: HistoryQuery }>(
     RUNTIME_ROUTE_PATH.workspaceFileHistory,
-    { config: { rateLimit: deps.rateLimit } },
+    routeOptions,
     async (request, reply) => {
-      const authorized = await authorizeWorkspaceFileHistoryRequest(request, reply, deps);
+      const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
       if (!authorized) return;
-
       try {
-        const workspacePath = parseWorkspaceHistoryPath(request.params.path);
-        reply.code(200).send(await deps.listUseCase.execute(workspacePath));
+        const path = parseHistoryPath(request.params.path);
+        reply.send(await deps.listUseCase.execute(authorized.scope, path, request.query.before));
       } catch (error) {
-        if (error instanceof InvalidWorkspacePathError) {
-          httpErrorTranslation.respond(
-            reply,
-            httpErrorTranslation.parse.issue(
-              badRequestIssue(HTTP_ERROR_REASON.invalidWorkspacePath, { target: 'path' })
-            )
-          );
-          return;
-        }
-
-        throw error;
+        respondVersionFailure(reply, error);
       }
     }
   );
+  app.get<{ Params: HistoryPath & { revision: string }; Querystring: WorkspaceFilesQuery }>(
+    RUNTIME_ROUTE_PATH.workspaceFileVersion,
+    routeOptions,
+    async (request, reply) => {
+      const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
+      if (!authorized) return;
+      try {
+        const path = parseHistoryPath(request.params.path);
+        const { revision } = request.params;
+        const content = await deps.versionQuery.getFileVersionContent(
+          authorized.scope,
+          path,
+          revision
+        );
+        if (content === null) throw new WorkspaceFileNotFoundError(path);
+        reply.send({ path, commitSha: revision, content });
+      } catch (error) {
+        respondVersionFailure(reply, error);
+      }
+    }
+  );
+  registerWorkspaceFileVersionCommand(app, deps);
 }
 
-function parseWorkspaceHistoryPath(requestPath: string): string {
-  const workspacePath = decodeURIComponent(requestPath).replaceAll('\\', '/').trim();
-  const segments = workspacePath.split('/');
-  if (
-    workspacePath.length === 0 ||
-    workspacePath.startsWith('/') ||
-    segments.some((segment) => segment.length === 0 || segment === '..') ||
-    !ALLOWED_HISTORY_EXTENSIONS.has(path.extname(workspacePath).toLowerCase())
-  ) {
-    throw new InvalidWorkspacePathError(requestPath);
-  }
-
-  return workspacePath;
-}
-
-async function authorizeWorkspaceFileHistoryRequest(
-  request: FastifyRequest<{ Querystring: EnvironmentScopeQuery }>,
-  reply: FastifyReply,
-  deps: Pick<WorkspaceFileHistoryRouteDeps, 'authenticator' | 'authorizer'>
-): Promise<boolean> {
-  const parsed = parseRequiredEnvironmentScope(request.query);
-  if (!parsed.ok) {
-    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
-    return false;
-  }
-
-  const auth = await authorizeExecutionScope({
-    authenticator: deps.authenticator,
-    authorizer: deps.authorizer,
-    token: extractBearerToken(request.headers.authorization),
-    requestId: request.id,
-    requestedScope: {
-      ...parsed.value,
-      action: AUTHORIZATION_ACTION.workspaceFilesView,
-    },
+function registerWorkspaceFileVersionCommand(
+  app: FastifyInstance,
+  deps: WorkspaceFileHistoryRouteDeps
+): void {
+  const routeOptions = { config: { rateLimit: deps.rateLimit } };
+  app.post<{
+    Params: HistoryPath;
+    Querystring: WorkspaceFilesQuery;
+    Body: { expectedContentSha256?: unknown };
+  }>(RUNTIME_ROUTE_PATH.workspaceFileHistory, routeOptions, async (request, reply) => {
+    const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps, {
+      action: AUTHORIZATION_ACTION.workspaceFilesSave,
+    });
+    if (!authorized) return;
+    const expected = request.body?.expectedContentSha256;
+    if (typeof expected !== 'string' || !/^[a-f0-9]{64}$/.test(expected)) {
+      httpErrorTranslation.respond(
+        reply,
+        httpErrorTranslation.parse.issue(
+          badRequestIssue(HTTP_ERROR_REASON.invalidWorkspaceFileRevision, {
+            target: 'expectedContentSha256',
+          })
+        )
+      );
+      return;
+    }
+    try {
+      const path = parseHistoryPath(request.params.path);
+      const result = await deps.versionCommand.commitFileVersion(authorized.scope, {
+        path,
+        expectedContentSha256: expected,
+        author: authorized.context.principal.subjectId,
+      });
+      if (result.kind === 'conflict') {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.workspaceFiles.revisionConflict());
+        return;
+      }
+      reply.send(result);
+    } catch (error) {
+      respondVersionFailure(reply, error);
+    }
   });
-  if (!auth.ok) {
-    httpErrorTranslation.respond(reply, auth.response);
-    return false;
-  }
+}
 
-  return true;
+function parseHistoryPath(path: string): string {
+  if (path.split(/[\\/]/).some((part) => INVALID_HISTORY_PATH_PARTS.has(part))) {
+    throw new InvalidWorkspacePathError(path);
+  }
+  return path;
+}
+
+function respondVersionFailure(reply: FastifyReply, error: unknown): void {
+  if (error instanceof WorkspaceFileNotFoundError) {
+    httpErrorTranslation.respond(reply, httpErrorTranslation.workspaceFiles.notFound());
+    return;
+  }
+  if (!(error instanceof InvalidWorkspacePathError)) throw error;
+  httpErrorTranslation.respond(
+    reply,
+    httpErrorTranslation.parse.issue(
+      badRequestIssue(HTTP_ERROR_REASON.invalidWorkspacePath, { target: 'path' })
+    )
+  );
 }

@@ -3,6 +3,8 @@ import { stubStatefulCanvasDraftAuthoring } from '../canvasDraftAuthoring';
 import { stubE2eJsonApi } from '../e2eApiStub';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../workspaceSession';
 
+import { setWorkbenchInputsOpen } from './navigation';
+
 export function stubPendingComposition(type: 'string' | 'bigint' = 'string'): void {
   cy.viewport(1400, 900);
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
@@ -50,8 +52,10 @@ export function openPendingRelationalOperationChooser(): void {
   cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
+  setWorkbenchInputsOpen(true);
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+  setWorkbenchInputsOpen(false);
   cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
   cy.get('[role="listbox"]').should('be.visible');
 }

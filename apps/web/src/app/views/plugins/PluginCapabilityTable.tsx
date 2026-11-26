@@ -1,34 +1,29 @@
 /** Owned concern: render reconciled plugin catalog rows and selected detail. */
-import { useMemo, useState } from 'react';
-
-import { CheckCircle2, Info, Radio, Search, XCircle } from 'lucide-react';
+import { CheckCircle2, CircleAlert, Clock, Info } from 'lucide-react';
+import { useId, useState } from 'react';
 
 import { StatusIndicator } from '../../components/domain';
-import { Badge } from '../../components/ui/badge';
-import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { cn } from '../../components/ui/utils';
 import {
-  routeWorkbenchFieldClassName,
-  routeWorkbenchMutedTextClassName,
-  routeWorkbenchPanelClassName,
-  routeWorkbenchSectionTitleClassName,
-  routeWorkbenchSubtleTextClassName,
-} from '../../components/workbench/RouteWorkbenchFrame';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
+import { cn } from '../../components/ui/utils';
+import { routeWorkbenchPanelClassName } from '../../components/workbench/RouteWorkbenchFrame';
+import { routeWorkbenchDenseTableClasses as dense } from '../../components/workbench/routeWorkbenchTableTokens';
 
 import type { PluginCatalogReconciliation } from './pluginCatalogReconciliation';
 import type { PluginsViewCopy } from './pluginsViewCopy';
 import {
   type PluginBackendState,
   type PluginCapabilitiesSnapshot,
-  type PluginReadiness,
-  type PluginReadinessItem,
-  type PluginSurfaceState,
   resolvePluginReadiness,
 } from './pluginsViewModel';
-
-type BackendFilter = 'all' | 'available' | 'blocked' | 'degraded' | 'pending' | 'not-required';
-type FrontendFilter = 'all' | 'registered' | 'not-registered' | 'unbound';
 
 type PluginCapabilityTableProps = Readonly<{
   capabilities: PluginCapabilitiesSnapshot | undefined;
@@ -38,38 +33,30 @@ type PluginCapabilityTableProps = Readonly<{
   entries: readonly PluginCatalogReconciliation[];
 }>;
 
-type PluginCapabilityRow = Readonly<{
+type PluginCapabilityRow = ReturnType<typeof resolvePluginReadiness> & {
   entry: PluginCatalogReconciliation;
-  readiness: PluginReadiness;
-  frontend: PluginReadinessItem;
-  backend: PluginReadinessItem;
-  operational: PluginReadinessItem;
-}>;
+};
+type BackendFilter = 'all' | 'available' | 'blocked' | 'degraded' | 'pending' | 'not-required';
 
-function resolveStatusIcon(state: PluginSurfaceState) {
-  if (state === 'ok') return <CheckCircle2 className="size-3" />;
-  if (state === 'warning') return <Radio className="size-3" />;
-  if (state === 'error') return <XCircle className="size-3" />;
-  return <Info className="size-3" />;
-}
+const backendFilterByState = {
+  available: 'available',
+  unavailable: 'blocked',
+  unknown: 'degraded',
+  pending: 'pending',
+  'probe-unavailable': 'degraded',
+  'not-required': 'not-required',
+  'not-bound': 'blocked',
+} as const satisfies Record<PluginBackendState, BackendFilter>;
 
 function resolveBackendFilter(state: PluginBackendState): BackendFilter {
-  if (state === 'available') return 'available';
-  if (state === 'unavailable' || state === 'not-bound') return 'blocked';
-  if (state === 'pending') return 'pending';
-  if (state === 'not-required') return 'not-required';
-  return 'degraded';
+  return backendFilterByState[state];
 }
 
-function requiredReadinessItem(
-  readiness: PluginReadiness,
-  key: PluginReadinessItem['key']
-): PluginReadinessItem {
-  const item = readiness.items.find((candidate) => candidate.key === key);
-  if (!item) {
-    throw new Error(`Plugin readiness projection is missing ${key} state.`);
-  }
-  return item;
+const statusIcons = { ok: CheckCircle2, error: CircleAlert, warning: Clock, degraded: Info };
+
+function resolveStatusIcon(state: keyof typeof statusIcons) {
+  const Icon = statusIcons[state];
+  return <Icon aria-hidden="true" className="size-3" />;
 }
 
 function createCapabilityRows({
@@ -79,310 +66,263 @@ function createCapabilityRows({
   copy,
   entries,
 }: PluginCapabilityTableProps): PluginCapabilityRow[] {
-  return entries.map((entry) => {
-    const readiness = resolvePluginReadiness(
+  return entries.map((entry) => ({
+    entry,
+    ...resolvePluginReadiness(
       entry,
-      capabilities,
-      capabilitiesLoading,
-      capabilitiesError,
+      { capabilities: capabilities, loading: capabilitiesLoading, error: capabilitiesError },
       copy
-    );
-    return {
-      entry,
-      readiness,
-      frontend: requiredReadinessItem(readiness, 'frontend'),
-      backend: requiredReadinessItem(readiness, 'backend'),
-      operational: requiredReadinessItem(readiness, 'executable'),
-    };
-  });
-}
-
-function matchesFrontendFilter(row: PluginCapabilityRow, filter: FrontendFilter): boolean {
-  if (filter === 'all') return true;
-  if (filter === 'unbound') return row.readiness.runtimeShape === 'unbound';
-  return row.readiness.frontendPresence === filter;
+    ),
+  }));
 }
 
 function filterCapabilityRows(
   rows: readonly PluginCapabilityRow[],
-  searchText: string,
-  backendFilter: BackendFilter,
-  frontendFilter: FrontendFilter
-): PluginCapabilityRow[] {
-  const normalizedSearch = searchText.trim().toLowerCase();
-
+  search: string,
+  frontend: string,
+  backend: BackendFilter
+) {
   return rows.filter((row) => {
-    const { catalog, localContribution } = row.entry;
-    const searchable = [
+    const { catalog, backendPluginId, localContribution } = row.entry;
+    if (!matchesCapabilityFrontend(row, frontend)) return false;
+    if (backend !== 'all' && resolveBackendFilter(row.backendState) !== backend) return false;
+    const searchValues = [
       catalog.id,
       catalog.name,
-      catalog.backendPluginId,
+      backendPluginId,
       ...(catalog.capabilities ?? []),
-      ...(localContribution?.nodeKinds?.map((kind) => kind.kind) ?? []),
-    ]
-      .filter((value): value is string => value != null)
-      .join(' ')
-      .toLowerCase();
-
-    return (
-      (normalizedSearch.length === 0 || searchable.includes(normalizedSearch)) &&
-      (backendFilter === 'all' ||
-        resolveBackendFilter(row.readiness.backendState) === backendFilter) &&
-      matchesFrontendFilter(row, frontendFilter)
-    );
+      ...(localContribution?.nodeKinds?.map(({ kind }) => kind) ?? []),
+    ];
+    return !search || searchValues.some((value) => value?.toLowerCase().includes(search));
   });
 }
 
-function PluginTaxonomy({
-  emptyCopy,
-  title,
-  valueClassName,
-  values,
-}: Readonly<{
-  emptyCopy: string;
-  title: string;
-  valueClassName?: string;
-  values: readonly string[] | undefined;
-}>) {
+function PluginTaxonomy({ label, values }: { label: string; values?: readonly string[] }) {
+  if (!values?.length) return null;
   return (
-    <div className="space-y-2">
-      <div className={routeWorkbenchSectionTitleClassName}>{title}</div>
-      {(values?.length ?? 0) > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {values?.map((value) => (
-            <Badge
-              key={value}
-              variant="outline"
-              className={cn(routeWorkbenchFieldClassName, 'text-xs', valueClassName)}
-            >
-              {value}
-            </Badge>
-          ))}
-        </div>
-      ) : (
-        <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{emptyCopy}</p>
-      )}
-    </div>
+    <dl>
+      <dt className={cn(dense.mutedText, 'font-medium')}>{label}</dt>
+      <dd className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+        {values.map((value) => (
+          <code key={value} className="min-w-0 break-all text-xs">
+            {value}
+          </code>
+        ))}
+      </dd>
+    </dl>
   );
-}
-
-function runtimeShapeLabel(row: PluginCapabilityRow, copy: PluginsViewCopy): string {
-  const labels = {
-    'frontend-only': copy.runtimeShapeFrontendOnly,
-    'frontend-and-backend': copy.runtimeShapeFrontendAndBackend,
-    'backend-only': copy.runtimeShapeBackendOnly,
-    unbound: copy.runtimeShapeUnbound,
-  } as const;
-  return labels[row.readiness.runtimeShape];
 }
 
 function PluginCapabilityDetail({
   copy,
   row,
-}: Readonly<{ copy: PluginsViewCopy; row: PluginCapabilityRow | undefined }>) {
-  if (!row) {
-    return (
-      <Card
-        data-slot="plugin-capability-detail"
-        className={cn(routeWorkbenchPanelClassName, 'p-5')}
-      >
-        <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.noPluginMatches}</p>
-      </Card>
-    );
-  }
-
+  id,
+}: Readonly<{
+  copy: PluginsViewCopy;
+  row: PluginCapabilityRow;
+  id: string;
+}>) {
   const { catalog, localContribution } = row.entry;
-  const { readiness } = row;
-
   return (
-    <Card data-slot="plugin-capability-detail" className={cn(routeWorkbenchPanelClassName, 'p-5')}>
-      <div className="space-y-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="font-semibold text-(--text-strong)">{catalog.name}</h2>
-            <p className={cn('font-mono text-xs', routeWorkbenchSubtleTextClassName)}>
-              {catalog.id}
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-                {copy.versionLabel}: {catalog.version}
-              </Badge>
-              <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-                {runtimeShapeLabel(row, copy)}
-              </Badge>
-            </div>
-          </div>
-          <StatusIndicator
-            state={readiness.summary.state}
-            label={readiness.summary.label}
-            icon={resolveStatusIcon(readiness.summary.state)}
-          />
-        </div>
-
-        <div className="grid gap-3">
-          {readiness.items.map((item) => (
-            <div
-              key={item.key}
-              data-slot={`plugin-readiness-${item.key}`}
-              className={cn(routeWorkbenchFieldClassName, 'rounded-lg p-3')}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <div className={routeWorkbenchSectionTitleClassName}>{item.title}</div>
-                  <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{item.detail}</p>
-                </div>
-                <StatusIndicator
-                  state={item.state}
-                  label={item.label}
-                  icon={resolveStatusIcon(item.state)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <PluginTaxonomy
-            title={copy.capabilitiesTitle}
-            emptyCopy={copy.noCapabilities}
-            values={catalog.capabilities}
-          />
-          <PluginTaxonomy
-            title={copy.nodeKindsTitle}
-            emptyCopy={copy.noNodeKinds}
-            valueClassName="font-mono text-[10px]"
-            values={localContribution?.nodeKinds?.map((kind) => kind.kind)}
-          />
-        </div>
+    <aside
+      id={id}
+      aria-labelledby={`${id}-title`}
+      data-slot="plugin-capability-detail"
+      className={cn(
+        routeWorkbenchPanelClassName,
+        'min-w-0 space-y-3 rounded-md border p-3 text-sm'
+      )}
+    >
+      <div>
+        <h2 id={`${id}-title`} className="font-semibold">
+          {catalog.name}
+        </h2>
+        <p className={dense.mutedText}>
+          {copy.versionLabel} {catalog.version}
+        </p>
       </div>
-    </Card>
+      {row.diagnostic ? <p className="break-words">{row.diagnostic}</p> : null}
+      <PluginTaxonomy label={copy.capabilitiesTitle} values={catalog.capabilities} />
+      <PluginTaxonomy
+        label={copy.nodeKindsTitle}
+        values={localContribution?.nodeKinds?.map(({ kind }) => kind)}
+      />
+    </aside>
   );
 }
 
 export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
-  const [searchText, setSearchText] = useState('');
-  const [backendFilter, setBackendFilter] = useState<BackendFilter>('all');
-  const [frontendFilter, setFrontendFilter] = useState<FrontendFilter>('all');
-  const [selectedPluginId, setSelectedPluginId] = useState<string | null>(
-    props.entries[0]?.catalog.id ?? null
+  const { copy } = props;
+  const [search, setSearch] = useState('');
+  const [frontend, setFrontend] = useState('all');
+  const [backend, setBackend] = useState<BackendFilter>('all');
+  const [selectedId, setSelectedId] = useState<string>();
+  const detailId = useId();
+  const rows = filterCapabilityRows(
+    createCapabilityRows(props),
+    search.trim().toLowerCase(),
+    frontend,
+    backend
   );
-
-  const rows = useMemo(() => createCapabilityRows(props), [props]);
-  const visibleRows = useMemo(
-    () => filterCapabilityRows(rows, searchText, backendFilter, frontendFilter),
-    [backendFilter, frontendFilter, rows, searchText]
-  );
-  const selectedRow =
-    visibleRows.find((row) => row.entry.catalog.id === selectedPluginId) ?? visibleRows[0];
+  const selectedRow = rows.find(({ entry }) => entry.catalog.id === selectedId) ?? rows[0];
 
   return (
     <div
       data-slot="plugin-capability-table"
-      className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]"
+      className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]"
     >
-      <Card className={cn(routeWorkbenchPanelClassName, 'p-4')}>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label
-            className={cn(
-              'relative flex min-w-0 flex-1 items-center',
-              routeWorkbenchMutedTextClassName
-            )}
-          >
-            <Search className="pointer-events-none absolute left-3 size-4" />
-            <Input
-              data-slot="plugin-catalog-search"
-              value={searchText}
-              onChange={(event) => setSearchText(event.currentTarget.value)}
-              placeholder={props.copy.searchPlaceholder}
-              className={cn(routeWorkbenchFieldClassName, 'pl-9')}
-            />
-          </label>
-          <select
-            data-slot="plugin-frontend-state-filter"
-            value={frontendFilter}
-            onChange={(event) => setFrontendFilter(event.currentTarget.value as FrontendFilter)}
-            className={cn(routeWorkbenchFieldClassName, 'h-9 rounded-md px-3 text-sm')}
-          >
-            <option value="all">{props.copy.frontendFilterAll}</option>
-            <option value="registered">{props.copy.frontendFilterRegistered}</option>
-            <option value="not-registered">{props.copy.frontendFilterNotRegistered}</option>
-            <option value="unbound">{props.copy.frontendFilterUnbound}</option>
-          </select>
-          <select
-            data-slot="plugin-backend-state-filter"
-            value={backendFilter}
-            onChange={(event) => setBackendFilter(event.currentTarget.value as BackendFilter)}
-            className={cn(routeWorkbenchFieldClassName, 'h-9 rounded-md px-3 text-sm')}
-          >
-            <option value="all">{props.copy.backendFilterAll}</option>
-            <option value="available">{props.copy.backendFilterAvailable}</option>
-            <option value="blocked">{props.copy.backendFilterBlocked}</option>
-            <option value="degraded">{props.copy.backendFilterDegraded}</option>
-            <option value="pending">{props.copy.backendFilterPending}</option>
-            <option value="not-required">{props.copy.backendFilterNotRequired}</option>
-          </select>
-        </div>
-
-        <div className="mt-4 overflow-x-auto rounded-lg border border-(--border-default)">
-          <div className="grid min-w-[45rem] grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem_5rem] gap-3 bg-(--surface-app) px-3 py-2 text-xs font-semibold uppercase text-(--text-muted)">
-            <span>{props.copy.pluginColumn}</span>
-            <span>{props.copy.frontendColumn}</span>
-            <span>{props.copy.backendColumn}</span>
-            <span>{props.copy.operationalColumn}</span>
-            <span>{props.copy.routesColumn}</span>
-          </div>
-          {visibleRows.length > 0 ? (
-            visibleRows.map((row) => (
-              <button
-                type="button"
-                key={row.entry.catalog.id}
-                data-slot="plugin-capability-row"
-                data-plugin-id={row.entry.catalog.id}
-                data-runtime-shape={row.readiness.runtimeShape}
-                data-frontend-presence={row.readiness.frontendPresence}
-                data-backend-state={row.readiness.backendState}
-                data-operational-state={row.readiness.operationalState}
-                onClick={() => setSelectedPluginId(row.entry.catalog.id)}
-                className={cn(
-                  'grid min-w-[45rem] w-full grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem_5rem] gap-3 border-t border-(--border-default) px-3 py-3 text-left text-sm',
-                  selectedRow?.entry.catalog.id === row.entry.catalog.id
-                    ? 'bg-(--surface-elevated)'
-                    : 'bg-(--surface-panel) hover:bg-(--surface-app)'
-                )}
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-medium text-(--text-strong)">
-                    {row.entry.catalog.name}
-                  </span>
-                  <span
-                    className={cn(
-                      'block truncate font-mono text-xs',
-                      routeWorkbenchSubtleTextClassName
-                    )}
+      <div className="min-w-0 space-y-3">
+        <CapabilityFilterControls
+          copy={copy}
+          search={search}
+          onSearch={setSearch}
+          frontend={frontend}
+          onFrontend={setFrontend}
+          backend={backend}
+          onBackend={setBackend}
+        />
+        <div className={cn(routeWorkbenchPanelClassName, 'rounded-md border')}>
+          <Table aria-label={copy.title}>
+            <TableHeader className="bg-[var(--surface-elevated)]">
+              <TableRow>
+                <TableHead scope="col" className="h-8 w-full px-3">
+                  {copy.pluginColumn}
+                </TableHead>
+                <TableHead scope="col" className="h-8">
+                  {copy.frontendTitle}
+                </TableHead>
+                <TableHead scope="col" className="h-8">
+                  {copy.backendTitle}
+                </TableHead>
+                <TableHead scope="col" className="h-8">
+                  {copy.operationalTitle}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => {
+                const { id, name } = row.entry.catalog;
+                const selected = selectedRow?.entry.catalog.id === id;
+                return (
+                  <TableRow
+                    key={id}
+                    data-slot="plugin-capability-row"
+                    data-plugin-id={id}
+                    data-state={selected ? 'selected' : undefined}
+                    data-runtime-shape={row.runtimeShape}
+                    data-frontend-presence={row.frontendPresence}
+                    data-backend-state={row.backendState}
+                    data-operational-state={row.operationalState}
                   >
-                    {row.entry.catalog.id}
-                  </span>
-                </span>
-                <span>{row.frontend.label}</span>
-                <span>{row.backend.label}</span>
-                <span>{row.operational.label}</span>
-                <span>{row.entry.localContribution?.views?.length ?? 0}</span>
-              </button>
-            ))
-          ) : (
-            <div
-              className={cn(
-                'border-t border-(--border-default) px-3 py-6 text-sm',
-                routeWorkbenchMutedTextClassName
-              )}
-            >
-              {props.copy.noPluginMatches}
-            </div>
-          )}
+                    <TableCell className="p-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-pressed={selected}
+                        aria-controls={detailId}
+                        onClick={() => setSelectedId(id)}
+                        className="h-auto w-full justify-start px-2 py-1 text-left whitespace-normal"
+                      >
+                        <span className="min-w-0 break-words">
+                          <span className="block font-medium">{name}</span>
+                          {id !== name ? (
+                            <code className={cn(dense.subtleText, 'block break-all text-xs')}>
+                              {id}
+                            </code>
+                          ) : null}
+                        </span>
+                      </Button>
+                    </TableCell>
+                    <TableCell className="py-1">{row.frontendLabel}</TableCell>
+                    <TableCell className="py-1">{row.backendLabel}</TableCell>
+                    <TableCell className="py-1">
+                      <StatusIndicator
+                        state={row.summary.state}
+                        label={row.summary.label}
+                        icon={resolveStatusIcon(row.summary.state)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className={dense.emptyCell}>
+                    {copy.noPluginMatches}
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
         </div>
-      </Card>
+      </div>
+      {selectedRow ? <PluginCapabilityDetail copy={copy} row={selectedRow} id={detailId} /> : null}
+    </div>
+  );
+}
 
-      <PluginCapabilityDetail copy={props.copy} row={selectedRow} />
+/** Unbound rows retain the broader not-registered filter membership. */
+function matchesCapabilityFrontend(row: PluginCapabilityRow, frontend: string): boolean {
+  if (frontend === 'all') return true;
+  const state = row.runtimeShape === 'unbound' ? 'unbound' : row.frontendPresence;
+  return frontend === state || frontend === row.frontendPresence;
+}
+
+function CapabilityFilterControls({
+  copy,
+  search,
+  onSearch,
+  frontend,
+  onFrontend,
+  backend,
+  onBackend,
+}: Readonly<{
+  copy: PluginsViewCopy;
+  search: string;
+  onSearch: (value: string) => void;
+  frontend: string;
+  onFrontend: (value: string) => void;
+  backend: BackendFilter;
+  onBackend: (value: BackendFilter) => void;
+}>) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <Input
+        data-slot="plugin-catalog-search"
+        type="search"
+        aria-label={copy.searchPlaceholder}
+        placeholder={copy.searchPlaceholder}
+        value={search}
+        onChange={(event) => onSearch(event.currentTarget.value)}
+        className={dense.field}
+      />
+      <select
+        data-slot="plugin-frontend-state-filter"
+        aria-label={copy.frontendFilterLabel}
+        value={frontend}
+        onChange={(event) => onFrontend(event.currentTarget.value)}
+        className={dense.field}
+      >
+        <option value="all">{copy.frontendFilterAll}</option>
+        <option value="registered">{copy.frontendFilterRegistered}</option>
+        <option value="not-registered">{copy.frontendFilterNotRegistered}</option>
+        <option value="unbound">{copy.frontendFilterUnbound}</option>
+      </select>
+      <select
+        data-slot="plugin-backend-state-filter"
+        aria-label={copy.backendFilterLabel}
+        value={backend}
+        onChange={(event) => onBackend(event.currentTarget.value as BackendFilter)}
+        className={dense.field}
+      >
+        <option value="all">{copy.backendFilterAll}</option>
+        <option value="available">{copy.backendFilterAvailable}</option>
+        <option value="blocked">{copy.backendFilterBlocked}</option>
+        <option value="degraded">{copy.backendFilterDegraded}</option>
+        <option value="pending">{copy.backendFilterPending}</option>
+        <option value="not-required">{copy.backendFilterNotRequired}</option>
+      </select>
     </div>
   );
 }

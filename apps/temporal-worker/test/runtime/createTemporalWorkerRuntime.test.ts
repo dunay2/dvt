@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import type { TemporalWorkerHostConfig, TemporalWorkerRunResult } from '@dvt/adapter-temporal';
 import { LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND } from '@dvt/contracts';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
 import { resolveTemporalWorkerRunExecutionContextReaderOptions } from '../../src/runtime/temporalWorkerRuntimeResources.js';
@@ -454,7 +454,7 @@ function createEnv(
   };
 }
 
-function buildBaseEnv(): {
+type RuntimeTestEnvironment = {
   NODE_ENV: 'test' | 'production';
   LOG_LEVEL: 'info';
   SERVICE_NAME: string;
@@ -495,7 +495,9 @@ function buildBaseEnv(): {
   DVT_DBT_BUNDLE_FILE_ROOT: string | undefined;
   DVT_CAS_FILE_ROOT: string | undefined;
   DVT_WORKSPACE_FILES_ROOT: string | undefined;
-} {
+};
+
+function buildBaseEnv(): RuntimeTestEnvironment {
   return {
     NODE_ENV: 'test' as const,
     LOG_LEVEL: 'info' as const,
@@ -541,23 +543,23 @@ function buildBaseEnv(): {
 }
 
 function createRuntimeFixture(): {
-  abortPendingOperations: ReturnType<typeof vi.fn>;
-  closeStateStore: ReturnType<typeof vi.fn>;
-  connection: { close: ReturnType<typeof vi.fn> };
+  abortPendingOperations: Mock;
+  closeStateStore: Mock;
+  connection: { close: Mock };
   host: {
-    start: ReturnType<typeof vi.fn>;
-    shutdown: ReturnType<typeof vi.fn>;
+    start: Mock;
+    shutdown: Mock;
     getRunCompletion: ReturnType<typeof vi.fn<() => Promise<TemporalWorkerRunResult> | null>>;
   };
-  hostShutdown: ReturnType<typeof vi.fn>;
-  hostStart: ReturnType<typeof vi.fn>;
-  migrate: ReturnType<typeof vi.fn>;
+  hostShutdown: Mock;
+  hostStart: Mock;
+  migrate: Mock;
   stateStore: {
-    migrate: ReturnType<typeof vi.fn>;
-    close: ReturnType<typeof vi.fn>;
-    abortPendingOperations: ReturnType<typeof vi.fn>;
-    bootstrapRunTx: ReturnType<typeof vi.fn>;
-    appendAndEnqueueTx: ReturnType<typeof vi.fn>;
+    migrate: Mock;
+    close: Mock;
+    abortPendingOperations: Mock;
+    bootstrapRunTx: Mock;
+    appendAndEnqueueTx: Mock;
   };
 } {
   const migrate = vi.fn(async () => undefined);

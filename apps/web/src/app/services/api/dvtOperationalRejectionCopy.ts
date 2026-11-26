@@ -42,7 +42,7 @@ const COPY: Record<
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'The model configuration is invalid. Review its properties.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
-      'This result type can be saved, but execution currently supports a table result or an ephemeral model connected to one table Sink.',
+      'The current materialization blocks execution. In Properties, set Materialization to Table and configure its destination. To use Ephemeral, connect the model to a table destination.',
     [DVT_REJECTIONS.runSinkRequired.messageKey]:
       'Connect the ephemeral model to a table Sink before execution.',
     [DVT_REJECTIONS.runSinkTransformDispositionInvalid.messageKey]:
@@ -83,7 +83,7 @@ const COPY: Record<
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'La configuración del modelo no es válida. Revisa sus propiedades.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
-      'Este tipo de resultado se puede guardar; la ejecución admite actualmente un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla.',
+      'La materialización actual impide ejecutar. En Propiedades, cambia Materialización a Tabla y configura el destino. Si usas Efímero, conecta el modelo a un destino de tipo tabla.',
     [DVT_REJECTIONS.runSinkRequired.messageKey]:
       'Conecta el modelo efímero a un Sink de tabla antes de ejecutar.',
     [DVT_REJECTIONS.runSinkTransformDispositionInvalid.messageKey]:

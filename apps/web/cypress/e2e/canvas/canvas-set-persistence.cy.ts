@@ -36,9 +36,13 @@ describe('SET persistence', () => {
       cy.get('[data-pending-operation="true"]').as('set');
       for (const port of [0, 1]) {
         cy.get('[data-operator="read"]').eq(port).closest('li').as('input');
-        connectWorkbenchProducer('@input', '@set', port);
+        connectWorkbenchProducer({ producer: '@input', consumer: '@set', port: port });
       }
-      connectWorkbenchProducer('@set', '[data-slot="canvas-relational-output-input-port"]', null);
+      connectWorkbenchProducer({
+        producer: '@set',
+        consumer: '[data-slot="canvas-relational-output-input-port"]',
+        port: null,
+      });
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       let identities: readonly string[];
       cy.wrap(null).should(() => {

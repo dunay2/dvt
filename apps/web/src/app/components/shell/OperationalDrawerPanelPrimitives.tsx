@@ -16,11 +16,6 @@ const operationalDrawerPanelClassNames = {
     'h-fit rounded border border-amber-400/50 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-100',
   codeToken: 'rounded border border-amber-400/40 px-2 py-0.5 font-mono text-[11px] text-amber-100',
   detailCode: 'mt-1 block font-mono text-[11px] text-[var(--text-muted)]',
-  runSummary: 'grid gap-1',
-  runLayout: 'flex flex-wrap items-center justify-between gap-3',
-  runSummaryLabel: 'text-[var(--text-muted)]',
-  runSummaryValue: 'font-mono text-[var(--text-strong)]',
-  runSummaryText: 'text-[var(--text-default)]',
   previewLayout: 'flex flex-wrap items-start gap-3',
   previewContent: 'min-w-0 flex-1',
   previewSummary: 'mt-1 text-[var(--text-default)]',
@@ -28,6 +23,11 @@ const operationalDrawerPanelClassNames = {
   sectionKicker: 'text-[11px] font-semibold uppercase text-[var(--text-muted)]',
   tabPanel: 'min-w-0 flex-1',
   dataNotice: 'mb-2 text-xs text-[var(--text-muted)]',
+} as const;
+
+const operationalDrawerInlineTokenVariants = {
+  warning: { element: 'span', className: operationalDrawerPanelClassNames.warningBadge },
+  code: { element: 'code', className: operationalDrawerPanelClassNames.codeToken },
 } as const;
 
 export function OperationalDrawerPanelSurface({
@@ -71,17 +71,20 @@ export function OperationalDrawerDataNotice({
   return <p className={operationalDrawerPanelClassNames.dataNotice}>{children}</p>;
 }
 
-export function OperationalDrawerWarningBadge({
+export function OperationalDrawerInlineToken({
   children,
   dataSlot,
+  variant,
 }: Readonly<{
   children: ReactNode;
   dataSlot: string;
+  variant: keyof typeof operationalDrawerInlineTokenVariants;
 }>): JSX.Element {
+  const { element: Token, className } = operationalDrawerInlineTokenVariants[variant];
   return (
-    <span data-slot={dataSlot} className={operationalDrawerPanelClassNames.warningBadge}>
+    <Token data-slot={dataSlot} className={className}>
       {children}
-    </span>
+    </Token>
   );
 }
 
@@ -104,9 +107,12 @@ export function OperationalDrawerProblemItem({
 }>): JSX.Element {
   return (
     <li className={operationalDrawerPanelClassNames.problemItem}>
-      <OperationalDrawerWarningBadge dataSlot="bottom-operational-problem-severity">
+      <OperationalDrawerInlineToken
+        variant="warning"
+        dataSlot="bottom-operational-problem-severity"
+      >
         {severityLabel}
-      </OperationalDrawerWarningBadge>
+      </OperationalDrawerInlineToken>
       <span className={operationalDrawerPanelClassNames.problemMessageFrame}>
         <span className={operationalDrawerPanelClassNames.problemMessage}>{message}</span>
         <OperationalDrawerDetailCode>{detail}</OperationalDrawerDetailCode>
@@ -133,64 +139,10 @@ export function OperationalDrawerDetailCode({
   );
 }
 
-export function OperationalDrawerCodeToken({
-  children,
-  dataSlot,
-}: Readonly<{
-  children: ReactNode;
-  dataSlot: string;
-}>): JSX.Element {
-  return (
-    <code data-slot={dataSlot} className={operationalDrawerPanelClassNames.codeToken}>
-      {children}
-    </code>
-  );
-}
-
 export function OperationalDrawerSectionKicker({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={operationalDrawerPanelClassNames.sectionKicker}>{children}</div>;
-}
-
-export function OperationalDrawerRunActiveSummary({
-  activeRunId,
-  statusLabel,
-  summary,
-}: Readonly<{ activeRunId: string; statusLabel: string; summary?: string }>): JSX.Element {
-  return (
-    <div className={operationalDrawerPanelClassNames.runSummary}>
-      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
-      <code className={operationalDrawerPanelClassNames.runSummaryValue}>{activeRunId}</code>
-      {summary == null ? null : (
-        <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
-      )}
-    </div>
-  );
-}
-
-export function OperationalDrawerRunLayout({
-  actions,
-  children,
-}: Readonly<{ actions: ReactNode; children: ReactNode }>): JSX.Element {
-  return (
-    <div className={operationalDrawerPanelClassNames.runLayout}>
-      {children}
-      {actions}
-    </div>
-  );
-}
-
-export function OperationalDrawerRunStatusSummary({
-  statusLabel,
-  summary,
-}: Readonly<{ statusLabel: string; summary: string }>): JSX.Element {
-  return (
-    <div className={operationalDrawerPanelClassNames.runSummary}>
-      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
-      <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
-    </div>
-  );
 }
 
 export function OperationalDrawerPreviewLayout({
@@ -221,9 +173,13 @@ export function OperationalDrawerPreviewSummary({
       {blockers.length > 0 ? (
         <div className={operationalDrawerPanelClassNames.previewBlockers}>
           {blockers.map((blocker) => (
-            <OperationalDrawerCodeToken key={blocker} dataSlot="bottom-operational-preview-blocker">
+            <OperationalDrawerInlineToken
+              key={blocker}
+              variant="code"
+              dataSlot="bottom-operational-preview-blocker"
+            >
               {blocker}
-            </OperationalDrawerCodeToken>
+            </OperationalDrawerInlineToken>
           ))}
         </div>
       ) : null}
@@ -256,18 +212,18 @@ export function OperationalDrawerPrimaryAction({
   );
 }
 
-export function OperationalDrawerSecondaryAction({
-  children,
-  disabled = false,
-  onClick,
-}: Readonly<{
-  children: ReactNode;
-  disabled?: boolean;
-  onClick: () => void;
-}>): JSX.Element {
+export function OperationalDrawerSecondaryAction(
+  props: Readonly<{ children: ReactNode; disabled?: boolean; onClick: () => void }>
+): JSX.Element {
   return (
-    <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
-      {children}
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={props.disabled ?? false}
+      onClick={props.onClick}
+    >
+      {props.children}
     </Button>
   );
 }

@@ -75,6 +75,43 @@ test('bounded plan rejects invalid limits before spawning', async () => {
   }
 });
 
+test('finite default retains the complete scope without renewing between steps', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const deadlines = [];
+  let finish;
+  const execution = executeCommandPlan(
+    [
+      { id: 'complete-proof', command: 'proof' },
+      { id: 'final-check', command: 'final' },
+    ],
+    {
+      env: {},
+      processRef: new EventEmitter(),
+      spawnProcess: (name, _command, _args, options) => {
+        deadlines.push(Number(options.env.DVT_VALIDATION_DEADLINE_MS));
+        return {
+          name,
+          child: {},
+          completion:
+            name === 'complete-proof'
+              ? new Promise((resolve) => {
+                  finish = resolve;
+                })
+              : Promise.resolve({ code: 0, signal: null }),
+        };
+      },
+      terminateProcess: async () => {},
+      log: () => {},
+    }
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  t.mock.timers.tick(140 * 60_000);
+  await new Promise((resolve) => setImmediate(resolve));
+  finish({ code: 0, signal: null });
+  assert.equal(await execution, 0);
+  assert.deepEqual(deadlines, [1000 + 180 * 60_000, 1000 + 180 * 60_000]);
+});
+
 test('bounded plan stops on caller signals and preserves cleanup failure', async () => {
   for (const [signal, code] of [
     ['SIGINT', 130],

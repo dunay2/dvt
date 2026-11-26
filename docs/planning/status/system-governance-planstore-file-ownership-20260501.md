@@ -2,16 +2,21 @@
 title: System Governance Plan-Store Navigation
 status: Review
 owner: Architecture / Docs / Delivery
-last_reviewed: 2026-08-17
+last_reviewed: 2026-11-24
 planning_type: status
 ---
 
 # System Governance Plan-Store Navigation
 
-> Generated from Planning DB authority. Do not edit this projection by hand.
+Planning DB owns the current PlanStore component identities and semantic
+ownership. Git owns the current files. This page supplies operator query routes;
+it does not copy component status, hierarchy, file inventory, or totals.
 
-This page intentionally contains no file inventory or copied totals. Query the
-current DB read models and generated Git ownership projection instead.
+Documentation, decisions, reviews, and risks belong to the concrete contract,
+artifact, API, PostgreSQL, Engine, or Temporal boundary they govern. A shared
+documentation category does not establish an implementation component or replace
+those owners. Verification associations can name another component's tests
+without changing ownership of the complete test file.
 
 ## Mandatory Queries
 
@@ -22,14 +27,7 @@ pnpm planning:db:query files --domain SYS-PLANSTORE --limit 1000 --no-refresh
 pnpm planning:db:query filesystem-coverage --no-refresh
 ```
 
-## Component Navigation
-
-- `SYS-PLANSTORE` — Plan-store domain (`review`)
-- `SYS-PLANSTORE-API-COMPOSITION` — API plan-store composition and resolvers (`review`)
-- `SYS-PLANSTORE-ARTIFACTS-PORTS` — Plan-store artifacts ports and runtime readers (`review`)
-- `SYS-PLANSTORE-CONTRACTS` — Plan-store contracts (`review`)
-- `SYS-PLANSTORE-DOCS-RISK` — Plan-store docs, reviews, risk, and evidence (`review`)
-- `SYS-PLANSTORE-ENGINE-FETCH` — Engine plan artifact fetch and plan-ref policy (`review`)
-- `SYS-PLANSTORE-POSTGRES` — Postgres plan-store adapter implementation (`review`)
-- `SYS-PLANSTORE-ROOT` — Plan-store root component (`superseded`)
-- `SYS-PLANSTORE-TEMPORAL-COMPOSITION` — Temporal plan-store composition and plan-ref workflow boundary (`review`)
+Use the returned component identity to inspect its current profile, required
+tests, responsibilities, and relations. The queries retain unresolved ownership
+and evidence as explicit findings; a navigation page cannot establish acceptance
+or turn a physical fallback owner into a cohesive component.

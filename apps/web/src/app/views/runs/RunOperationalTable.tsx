@@ -21,6 +21,7 @@ import {
 import { cn } from '../../components/ui/utils';
 import { routeWorkbenchDenseTableClasses } from '../../components/workbench/routeWorkbenchTableTokens';
 import { getRunStatusTone } from './runStatesModel';
+import { canInspectRunResult, runModelsHref, runResultsHref } from './runDetailNavigation';
 import {
   type RunOperationalRow,
   type RunOperationalSortColumn,
@@ -83,6 +84,22 @@ export function RunOperationalTable({
                 onRecover={() => runControls.recoverRun(row.original.runId)}
               />
             ) : null}
+          </div>
+        ),
+      },
+      {
+        id: 'explore',
+        header: copy.runTableHeaders.explore,
+        cell: ({ row: { original: run } }) => (
+          <div className={styles.destinations}>
+            <Link to={runModelsHref(run.runId)} aria-label={copy.modelLinkLabel(run.runId)}>
+              {copy.modelLink}
+            </Link>
+            {canInspectRunResult(run.status) && (
+              <Link to={runResultsHref(run.runId)} aria-label={copy.resultsLinkLabel(run.runId)}>
+                {copy.resultsLink}
+              </Link>
+            )}
           </div>
         ),
       },

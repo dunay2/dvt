@@ -5,10 +5,18 @@
  * @consequence Phased CI keeps the same configuration and full Vitest route.
  * @version 1.0.0
  */
+/**
+ * Owned concern: validate Vitest catalog ownership and CI command wiring.
+ * @baseline GH-3540: the catalog owns suites, not browser execution.
+ * @decision GH-3583: preserve primary commands across separate evidence lifecycles.
+ * @consequence Phased CI keeps the same configuration and full Vitest route.
+ * @version 1.0.0
+ */
 import { promises as fsPromises, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { load } from 'js-yaml';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createVitest } from 'vitest/node';
 
 import { classifyWebVitestFile } from '../../vitest/classification';
 import {
@@ -18,6 +26,7 @@ import {
 } from '../../vitest/runtimeConfig';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_CHANGED_SUITE_COMMANDS } from '../../vitest/commands';
+import { matchesWebVitestSuite } from '../../vitest/coverage';
 import {
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
@@ -48,6 +57,28 @@ afterEach(() => {
 });
 
 describe('web Vitest suite catalog', () => {
+  it.each(['presentation', 'monaco', 'shell-session', 'workspace-services'] as const)(
+    'proves native configured %s discovery equals the coverage inventory',
+    async (suite) => {
+      const context = await createVitest({
+        root: webRoot,
+        config: resolve(webRoot, `vitest.${suite}.config.ts`),
+        watch: false,
+        run: true,
+      });
+      try {
+        const discovered = (await context.globTestSpecifications())
+          .map((spec) => relative(webRoot, spec.moduleId).replaceAll('\\', '/'))
+          .sort();
+        const expected = readWebVitestFiles().filter((file) => matchesWebVitestSuite(suite, file));
+        expect(discovered.length).toBeGreaterThan(0);
+        expect(discovered).toEqual(expected.sort());
+      } finally {
+        await context.close();
+      }
+    }
+  );
+
   it.each(['unit', 'architecture', 'canvas-unit', 'canvas-architecture'] as const)(
     'uses Node by default for the %s suite without changing its file ownership',
     (suiteName) => {
@@ -152,16 +183,6 @@ describe('web Vitest suite catalog', () => {
     ) as {
       scripts: Record<string, string>;
     };
-    const workflow = readFileSync(
-      resolve(webRoot, '..', '..', '.github/workflows/test.yml'),
-      'utf8'
-    );
-    const ciWorkflow = readFileSync(
-      resolve(webRoot, '..', '..', '.github/workflows/ci.yml'),
-      'utf8'
-    );
-    const ciNodeOptionsLine = `NODE_OPTIONS: ${WEB_VITEST_CI_NODE_OPTIONS}`;
-
     expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
     expect(packageJson.scripts['test:deps']).toBe(
       'node ../../scripts/skip-pretest-if-ci.cjs || node ../../scripts/build-workspace-runtime-deps.cjs @dvt/web --include-package @dvt/planner'
@@ -182,29 +203,6 @@ describe('web Vitest suite catalog', () => {
     );
     expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
-    // test-suite-outcome.test.mjs owns event routing and exactly-once hosted
-    // primary coverage; this catalog guard owns delegates, configs and heap parity.
-    const webJob = (
-      load(workflow) as {
-        jobs: Record<
-          string,
-          {
-            env?: Record<string, string>;
-            steps: Array<{
-              run?: string;
-              env?: Record<string, string>;
-            }>;
-          }
-        >;
-      }
-    ).jobs['web-frontend-tests'];
-    if (!webJob) throw new Error('Missing governed Web test job');
-    expect(webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
-    for (const step of webJob.steps.filter((step) => step.run)) {
-      expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
-    }
-    expect(ciWorkflow).toContain(ciNodeOptionsLine);
-
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
       expect(packageJson.scripts[`test:${suiteName}`]).toBe(
         `pnpm run test:deps && pnpm run test:${suiteName}:run`
@@ -232,6 +230,40 @@ describe('web Vitest suite catalog', () => {
     expect(readFileSync(resolve(webRoot, 'vitest.config.ts'), 'utf8')).toContain(
       "createWebVitestConfig('all')"
     );
+  });
+
+  it('keeps governed CI heap settings aligned with the suite catalog', () => {
+    const workflow = readFileSync(
+      resolve(webRoot, '..', '..', '.github/workflows/test.yml'),
+      'utf8'
+    );
+    const ciWorkflow = readFileSync(
+      resolve(webRoot, '..', '..', '.github/workflows/ci.yml'),
+      'utf8'
+    );
+    const ciNodeOptionsLine = `NODE_OPTIONS: ${WEB_VITEST_CI_NODE_OPTIONS}`;
+    // test-suite-outcome.test.mjs owns event routing and exactly-once hosted
+    // primary coverage; this catalog guard owns delegates, configs and heap parity.
+    const webJob = (
+      load(workflow) as {
+        jobs: Record<
+          string,
+          {
+            env?: Record<string, string>;
+            steps: Array<{
+              run?: string;
+              env?: Record<string, string>;
+            }>;
+          }
+        >;
+      }
+    ).jobs['web-frontend-tests'];
+    if (!webJob) throw new Error('Missing governed Web test job');
+    expect(webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    for (const step of webJob.steps.filter((step) => step.run)) {
+      expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    }
+    expect(ciWorkflow).toContain(ciNodeOptionsLine);
   });
 
   it.each(WEB_VITEST_PRIMARY_SUITE_NAMES)(
@@ -280,20 +312,14 @@ describe('web Vitest suite catalog', () => {
           include: WEB_VITEST_SUITES[suiteName].include,
           exclude: WEB_VITEST_SUITES[suiteName].exclude,
           pool: 'forks',
-          minWorkers: 1,
           maxWorkers: workerCount,
-          poolOptions: {
-            forks: {
-              singleFork: false,
-              isolate: true,
-              minForks: 1,
-              maxForks: workerCount,
-            },
-          },
+          isolate: true,
         });
-        expect(config?.poolOptions?.forks?.execArgv, suiteName).toEqual(
+        expect(config?.execArgv, suiteName).toEqual(
           context === 'local' ? undefined : [WEB_VITEST_CI_NODE_OPTIONS]
         );
+        expect(config, suiteName).not.toHaveProperty('poolOptions');
+        expect(config, suiteName).not.toHaveProperty('minWorkers');
         expect(config?.testTimeout, suiteName).toBeUndefined();
         expect(config?.hookTimeout, suiteName).toBeUndefined();
         expect(config?.retry, suiteName).toBeUndefined();

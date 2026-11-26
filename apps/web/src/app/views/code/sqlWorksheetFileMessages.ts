@@ -1,0 +1,38 @@
+/** Operator-facing labels for worksheet files and their Git revisions. */
+export const worksheetFileMessages = {
+  es: {
+    title: 'Archivos SQL y Git',
+    saved: 'Consultas guardadas',
+    choose: 'Elegir consulta',
+    open: 'Abrir consulta',
+    replace: 'Reemplazar el texto del editor',
+    name: 'Guardar en operations/',
+    save: 'Guardar consulta',
+    committed: 'Archivo guardado.',
+    close: 'Cerrar',
+    forbidden: 'No tienes permiso para acceder a este archivo.',
+    unavailable: 'No se pudo confirmar el archivo.',
+    conflict: 'El archivo cambió. Guarda la consulta con otro nombre o abre la versión actual.',
+    changed:
+      'El editor cambió mientras se abría el archivo. Vuelve a abrirlo si deseas reemplazar el texto.',
+    empty: 'Todavía no hay consultas guardadas.',
+    loading: 'Cargando archivos…',
+  },
+  en: {
+    title: 'SQL files and Git',
+    saved: 'Saved queries',
+    choose: 'Choose a query',
+    open: 'Open query',
+    replace: 'Replace editor text',
+    name: 'Save in operations/',
+    save: 'Save query',
+    committed: 'File saved.',
+    close: 'Close',
+    forbidden: 'You do not have access to this file.',
+    unavailable: 'The file could not be confirmed.',
+    conflict: 'The file changed. Save the query under another name or open the current version.',
+    changed: 'The editor changed while opening the file. Open it again to replace the text.',
+    empty: 'No saved queries yet.',
+    loading: 'Loading files…',
+  },
+};

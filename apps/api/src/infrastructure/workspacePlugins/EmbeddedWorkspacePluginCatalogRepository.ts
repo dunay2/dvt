@@ -30,6 +30,11 @@ export class EmbeddedWorkspacePluginCatalogRepository implements IWorkspacePlugi
 
   public async migrate(): Promise<void> {
     const schema = quoteIdentifier(this.schema);
+    await this.createCatalogStorage(schema);
+    await this.seedBuiltInPlugins(schema);
+  }
+
+  private async createCatalogStorage(schema: string): Promise<void> {
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${schema}.workspace_plugins (
@@ -69,6 +74,9 @@ export class EmbeddedWorkspacePluginCatalogRepository implements IWorkspacePlugi
           plugin_id
         );
     `);
+  }
+
+  private async seedBuiltInPlugins(schema: string): Promise<void> {
     await this.pool.query(`
       INSERT INTO ${schema}.workspace_plugins
         (tenant_id, project_id, environment_id, plugin_id, display_name, version, description,
@@ -81,6 +89,18 @@ export class EmbeddedWorkspacePluginCatalogRepository implements IWorkspacePlugi
         (NULL, NULL, NULL, 'dvt', 'DVT', '1.0.0',
          'Built-in DVT transformation authoring surfaces.',
          '["canvas.render", "canvas.edit", "plan.preview"]'::jsonb,
+         '[]'::jsonb, NULL, TRUE, 'embedded-bootstrap'),
+        (NULL, NULL, NULL, 'dvt.http-json', 'DVT HTTP JSON', '1.0.0',
+         'HTTP JSON acquisition nodes and execution preview.',
+         '["canvas.render", "canvas.edit", "plan.preview"]'::jsonb,
+         '[]'::jsonb, 'dvt.http-json', TRUE, 'embedded-bootstrap'),
+        (NULL, NULL, NULL, 'dvt.object-file-postgres', 'DVT Object-file PostgreSQL', '1.0.0',
+         'Object-file load nodes for PostgreSQL and execution preview.',
+         '["canvas.render", "canvas.edit", "plan.preview"]'::jsonb,
+         '[]'::jsonb, 'dvt.object-file-postgres', TRUE, 'embedded-bootstrap'),
+        (NULL, NULL, NULL, 'dvt.warehouse-source', 'DVT Warehouse Source', '1.0.0',
+         'Built-in warehouse source import and Canvas presentation.',
+         '["canvas.render"]'::jsonb,
          '[]'::jsonb, NULL, TRUE, 'embedded-bootstrap'),
         (NULL, NULL, NULL, 'monitoring', 'Monitoring', '1.0.0',
          'Built-in run monitoring and diagnostics surfaces.',

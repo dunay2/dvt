@@ -2,6 +2,7 @@
 import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
+  setWorkbenchInputsOpen,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperationSearch } from '../../support/relationalWorkbench/operationMenu';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
@@ -9,6 +10,36 @@ import { panWorkbenchViewport } from '../../support/relationalWorkbench/pointer'
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const trigger = '[data-slot="canvas-operation-menu-trigger"]';
+
+function resolveModelBackgroundPlacement(surface: HTMLElement): {
+  pointerPosition: { x: number; y: number };
+  expectedPosition: { x: number; y: number };
+} {
+  const bounds = surface.getBoundingClientRect();
+  const content = surface.querySelector<HTMLElement>(
+    '[data-slot="canvas-relational-tree"], [data-slot="canvas-relational-tree-draft"]'
+  )!;
+  const background = new Set<Element | null>([
+    surface,
+    content,
+    surface.querySelector('[data-slot="canvas-relational-tree-layout"]'),
+  ]);
+  let point: { x: number; y: number } | undefined;
+  for (let y = 8; y < bounds.height && point == null; y += 24) {
+    for (let x = 8; x < bounds.width && point == null; x += 24) {
+      if (background.has(surface.ownerDocument.elementFromPoint(bounds.left + x, bounds.top + y)))
+        point = { x, y };
+    }
+  }
+  expect(point, 'visible background belonging to this Model viewport').not.to.equal(undefined);
+  const contentBounds = content.getBoundingClientRect();
+  const zoom = Number.parseFloat(content.style.zoom);
+  const expectedPosition = {
+    x: (bounds.left + point!.x - contentBounds.left) / zoom,
+    y: (bounds.top + point!.y - contentBounds.top) / zoom,
+  };
+  return { pointerPosition: point!, expectedPosition };
+}
 
 function addFilterFromBackground(viewportSelector: string): void {
   let expectedPosition = { x: 0, y: 0 };
@@ -24,31 +55,10 @@ function addFilterFromBackground(viewportSelector: string): void {
   });
   cy.get(viewportSelector).then(($viewport) => {
     const surface = $viewport[0]!;
-    const bounds = surface.getBoundingClientRect();
-    const content = surface.querySelector<HTMLElement>(
-      '[data-slot="canvas-relational-tree"], [data-slot="canvas-relational-tree-draft"]'
-    )!;
-    const background = new Set<Element | null>([
-      surface,
-      content,
-      surface.querySelector('[data-slot="canvas-relational-tree-layout"]'),
-    ]);
-    let point: { x: number; y: number } | undefined;
-    for (let y = 8; y < bounds.height && point == null; y += 24) {
-      for (let x = 8; x < bounds.width && point == null; x += 24) {
-        if (background.has(surface.ownerDocument.elementFromPoint(bounds.left + x, bounds.top + y)))
-          point = { x, y };
-      }
-    }
-    expect(point, 'visible background belonging to this Model viewport').not.to.equal(undefined);
-    pointerPosition = point!;
-    const contentBounds = content.getBoundingClientRect();
-    const zoom = Number.parseFloat(content.style.zoom);
-    expectedPosition = {
-      x: (bounds.left + point!.x - contentBounds.left) / zoom,
-      y: (bounds.top + point!.y - contentBounds.top) / zoom,
-    };
-    cy.get(viewportSelector).dblclick(point!.x, point!.y);
+    const placement = resolveModelBackgroundPlacement(surface);
+    pointerPosition = placement.pointerPosition;
+    expectedPosition = placement.expectedPosition;
+    cy.get(viewportSelector).dblclick(pointerPosition.x, pointerPosition.y);
   });
   workbenchOperationSearch().should('be.focused').type('{esc}');
   cy.get('[role="listbox"]').should('not.exist');
@@ -128,8 +138,10 @@ describe('Compact semantic operation menu', () => {
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
   });
   it('chooses the exact JOIN by search and keyboard, then cancels without persisting it', () => {
+    setWorkbenchInputsOpen(true);
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+    setWorkbenchInputsOpen(false);
     cy.get(trigger).click();
     for (const heading of ['Combine', 'Transform', 'Order and limit']) {
       cy.contains('[cmdk-group-heading]', heading).should('exist');
@@ -156,7 +168,9 @@ describe('Compact semantic operation menu', () => {
       expect(bounds.right).to.be.at.most(820);
     });
     cy.screenshot('compact-operation-menu');
+    setWorkbenchInputsOpen(true);
     cy.get('[data-slot="canvas-relational-tree-source"]').first().click();
+    setWorkbenchInputsOpen(false);
     cy.get('[role="listbox"]').should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();

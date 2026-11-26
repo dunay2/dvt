@@ -152,9 +152,23 @@ describe('Code graph query request lifetime', () => {
       expect(failed).toBe(true);
       expect(getProjectGraph).not.toHaveBeenCalled();
       expect(
-        queryKeys.workspace.dbtProjectGraph('t', 'p', 'dev', 'canvas', 'root', 'sha-a')
+        queryKeys.workspace.dbtProjectGraph({
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          canvasId: 'canvas',
+          projectRoot: 'root',
+          revisionToken: 'sha-a',
+        })
       ).not.toEqual(
-        queryKeys.workspace.dbtProjectGraph('t', 'p', 'dev', 'canvas', 'root', 'sha-b')
+        queryKeys.workspace.dbtProjectGraph({
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          canvasId: 'canvas',
+          projectRoot: 'root',
+          revisionToken: 'sha-b',
+        })
       );
     } finally {
       await mounted.cleanup();

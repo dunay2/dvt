@@ -99,10 +99,11 @@ function assertCompactTemplatesPresentation(): void {
       '[data-slot="templates-preview-panel"] h2 svg'
     )!;
     expect(previewIcon.getBoundingClientRect().width).to.equal(spacing * 4);
-    const lastProfile = Array.from(catalog.querySelectorAll('button')).at(-1)!;
-    expect(
-      catalog.getBoundingClientRect().bottom - lastProfile.getBoundingClientRect().bottom
-    ).to.be.at.most(spacing * 4);
+    const finalCatalogSection = catalog.lastElementChild!;
+    expect(finalCatalogSection.getAttribute('aria-label')).to.equal('Project models');
+    const trailingCatalogSpace =
+      catalog.getBoundingClientRect().bottom - finalCatalogSection.getBoundingClientRect().bottom;
+    expect(trailingCatalogSpace).to.be.within(0, spacing * 4);
     const schedule = window.document.querySelector('input[name="schedule"]')!;
     const helper = schedule.previousElementSibling!;
     expect(
@@ -111,55 +112,60 @@ function assertCompactTemplatesPresentation(): void {
   });
 }
 
+function stubWritableTemplateProject(): { root: string; files: Map<string, FileContent> } {
+  stubTemplatesRouteBootstrapApis();
+  const { project, file } = contextFixture();
+  const root = 'inline_code_demo';
+  const config = {
+    ...file,
+    path: root + '/dbt_project.yml',
+    name: 'dbt_project.yml',
+    language: 'yaml',
+    content: 'name: demo',
+    contentSha256: sha256HexUtf8('name: demo'),
+  };
+  const files = new Map<string, FileContent>([[config.path, config]]);
+  stubProjectFiles(files);
+  stubE2eApi('GET', /\/workspace\/files\/.+/, ({ url }) => ({
+    body: files.get(decodeURIComponent(url.pathname.slice('/workspace/files/'.length))),
+  }));
+  stubE2eJsonApi('GET', '/workspace/dbt/graph', project);
+  stubE2eApi('POST', /\/workspace\/files\/.+/, ({ url, body }) => {
+    const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
+    const { content, expectedRevision } = body as SaveWorkspaceFileContentInput;
+    const prior = files.get(path);
+    expect(expectedRevision).to.deep.equal(
+      prior ? { kind: 'content_sha256', value: prior.contentSha256 } : { kind: 'absent' }
+    );
+    const contentSha256 = sha256HexUtf8(content);
+    files.set(path, {
+      path,
+      name: path.split('/').at(-1)!,
+      language: path.endsWith('.sql') ? 'sql' : 'json',
+      content,
+      contentSha256,
+      lastModified: file.lastModified,
+    });
+    return {
+      body: {
+        kind: 'saved',
+        disposition: prior ? 'updated' : 'created',
+        path,
+        contentSha256,
+        lastModified: file.lastModified,
+      },
+    };
+  });
+  return { root, files };
+}
+
 describe('Templates workbench', () => {
   beforeEach(() => {
     cy.viewport(1400, 900);
   });
 
   it('inserts a verified model, reopens a saved variation and creates its generated SQL', () => {
-    stubTemplatesRouteBootstrapApis();
-    const { project, file } = contextFixture();
-    const root = 'inline_code_demo';
-    const config = {
-      ...file,
-      path: root + '/dbt_project.yml',
-      name: 'dbt_project.yml',
-      language: 'yaml',
-      content: 'name: demo',
-      contentSha256: sha256HexUtf8('name: demo'),
-    };
-    const files = new Map<string, FileContent>([[config.path, config]]);
-    stubProjectFiles(files);
-    stubE2eApi('GET', /\/workspace\/files\/.+/, ({ url }) => ({
-      body: files.get(decodeURIComponent(url.pathname.slice('/workspace/files/'.length))),
-    }));
-    stubE2eJsonApi('GET', '/workspace/dbt/graph', project);
-    stubE2eApi('POST', /\/workspace\/files\/.+/, ({ url, body }) => {
-      const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
-      const { content, expectedRevision } = body as SaveWorkspaceFileContentInput;
-      const prior = files.get(path);
-      expect(expectedRevision).to.deep.equal(
-        prior ? { kind: 'content_sha256', value: prior.contentSha256 } : { kind: 'absent' }
-      );
-      const contentSha256 = sha256HexUtf8(content);
-      files.set(path, {
-        path,
-        name: path.split('/').at(-1)!,
-        language: path.endsWith('.sql') ? 'sql' : 'json',
-        content,
-        contentSha256,
-        lastModified: file.lastModified,
-      });
-      return {
-        body: {
-          kind: 'saved',
-          disposition: prior ? 'updated' : 'created',
-          path,
-          contentSha256,
-          lastModified: file.lastModified,
-        },
-      };
-    });
+    const { root, files } = stubWritableTemplateProject();
     visitInEnglish('/templates');
     cy.get('input[aria-label="Find templates"]').type('Latest record');
     cy.contains('button', 'Latest record per key').click();

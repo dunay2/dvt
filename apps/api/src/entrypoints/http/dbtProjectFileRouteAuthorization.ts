@@ -6,6 +6,7 @@ import {
   buildEnvironmentAccessScope,
 } from '../../application/ports/accessDecision.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
+import type { AuthorizedExecutionContext } from '../../application/ports/authContract.js';
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
@@ -35,18 +36,17 @@ export function parseDbtProjectFileScope(
   const tenantId = TenantId.parse(input.tenantId ?? '');
   const projectId = ProjectId.parse(input.projectId ?? '');
   const environmentId = EnvironmentId.parse(input.environmentId ?? '');
-  if (!tenantId.ok || !projectId.ok || !environmentId.ok) {
-    return {
-      ok: false,
-      issue: badRequestIssue(invalidReason, {
-        target: 'query',
-      }),
-    };
-  }
+  if (!tenantId.ok) return invalidDbtProjectFileScope(invalidReason);
+  if (!projectId.ok) return invalidDbtProjectFileScope(invalidReason);
+  if (!environmentId.ok) return invalidDbtProjectFileScope(invalidReason);
   return {
     ok: true,
     value: buildEnvironmentAccessScope(tenantId.value, projectId.value, environmentId.value),
   };
+}
+
+function invalidDbtProjectFileScope(reason: HttpErrorReason): RouteParseResult<never> {
+  return { ok: false, issue: badRequestIssue(reason, { target: 'query' }) };
 }
 
 export async function authorizeDbtProjectFileRequest(
@@ -56,7 +56,9 @@ export async function authorizeDbtProjectFileRequest(
   accessScope: ReturnType<typeof buildEnvironmentAccessScope>,
   fileAction:
     typeof AUTHORIZATION_ACTION.workspaceFilesView | typeof AUTHORIZATION_ACTION.workspaceFilesSave
-): Promise<{ readonly scope: WorkspaceStorageScope } | false> {
+): Promise<
+  { readonly scope: WorkspaceStorageScope; readonly context: AuthorizedExecutionContext } | false
+> {
   const auth = await authorizeExecutionScope({
     authenticator: deps.authenticator,
     authorizer: deps.authorizer,
@@ -86,6 +88,7 @@ export async function authorizeDbtProjectFileRequest(
   }
 
   return {
+    context: auth.context,
     scope: {
       tenantId: accessScope.tenantId.value,
       projectId: accessScope.projectId.value,

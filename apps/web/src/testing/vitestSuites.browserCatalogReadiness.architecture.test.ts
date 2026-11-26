@@ -16,6 +16,7 @@ import { resolveWebEvidenceEnvironment } from '../../scripts/web-evidence-enviro
 import { resolveWebVitestChangedSuitePlan } from '../../vitest/changedPlan';
 import { WEB_VITEST_GOVERNANCE_TEST_PATHS } from '../../vitest/paths';
 
+vi.mock('../../scripts/changed-suite-impact', () => ({ readWebVitestImpactWitness: () => null }));
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   spawnSync: vi.fn(() => ({ status: 0 })),
@@ -152,7 +153,11 @@ describe('catalog admission at the local execution boundary', () => {
       [catalogPath, 'apps/web/src/app/bootstrap/AuthRouteGate.tsx', changed, added, catalogPath]
     );
     expect(plan.browserCommands.flatMap((entry) => entry.specPaths)).toEqual(
-      catalog.controlled.filter((spec) => [changed, added, ...native].includes(spec))
+      catalog.controlled.filter(
+        (spec) =>
+          [changed, added].includes(spec) ||
+          (native.includes(spec) && spec.startsWith('apps/web/cypress/e2e/shell/'))
+      )
     );
   });
 

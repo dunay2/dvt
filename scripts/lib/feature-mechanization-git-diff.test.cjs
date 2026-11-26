@@ -14,6 +14,26 @@ const { FeatureMechanizationGitDiffReader } = require('../check-feature-mechaniz
 
 const { repository } = require('./feature-mechanization-git-fixture.cjs');
 
+test('byte evidence preserves binary source in the worktree and selected Git without mutable cache exposure', (t) => {
+  const repo = repository(t);
+  const committed = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0xff, 0x62, 10]);
+  const dirty = Buffer.from([0xff, 0xd8, 0xff, 0, 0x81]);
+  repo.write('asset.png', committed);
+  const head = repo.commit(repo.base);
+  repo.write('asset.png', dirty);
+  for (const [reader, expected] of [
+    [repo.reader(), dirty],
+    [repo.reader({ headRef: head }), committed],
+  ]) {
+    const bytes = reader.readSourceBytes('asset.png');
+    assert.deepEqual(bytes, expected);
+    bytes.fill(0);
+    assert.deepEqual(reader.readSourceBytes('asset.png'), expected);
+    assert.equal(reader.readSource('asset.png'), expected.toString('utf8'));
+    assert.throws(() => reader.readSourceBytes('missing.png'), /Missing selected Git path/);
+  }
+});
+
 test('committed source acquisition batches real blobs and retains the existing decoded content', (t) => {
   const repo = repository(t);
   const names = Array.from({ length: 16 }, (_, index) => `source ${index} caf\u00e9.ts`);

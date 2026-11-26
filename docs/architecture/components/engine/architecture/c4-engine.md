@@ -17,7 +17,6 @@
 - [IPlanIntegrityValidator.ts](../../../../packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts)
 - [IRunExecutionContextResolver.ts](../../../../packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts)
 - [IProjector.ts](../../../../packages/@dvt/engine/src/ports/IProjector.ts)
-- [IMetricsCollector.ts](../../../../packages/@dvt/engine/src/metrics/IMetricsCollector.ts)
 - [ADR-0029](../../../adr/ADR-0029-run-maintenance-service.md)
 - [ADR-0030](../../../adr/ADR-0030-pre-dispatch-intent-log.md)
 
@@ -155,10 +154,10 @@ UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ## 4. Declared Port Surface
 
 The C4 runtime views above emphasize deployed interactions. The table and
-diagram below capture the broader declared southbound surface: seven exposed
-ports, of which five are runtime-wired in the current delivery path and two
-remain intentionally exposed as target-line seams even though they do not yet
-map to a dedicated deployed runtime boundary.
+diagram below capture the broader declared southbound surface: six exposed
+ports. Four are unconditionally runtime-wired, one is wired when a Run context
+reference exists, and the projector remains an exposed target seam without a
+dedicated deployed runtime boundary.
 
 ```mermaid
 flowchart LR
@@ -168,7 +167,6 @@ flowchart LR
   Engine --> Plan["IPlanIntegrityValidator<br/>(runtime-wired)"]
   Engine --> RunCtx["IRunExecutionContextResolver<br/>(runtime-wired when ref exists)"]
   Engine -.-> Proj["IProjector<br/>(target-line exposed)"]
-  Engine -.-> Metrics["IMetricsCollector<br/>(target-line exposed)"]
   Engine --> ObsFacade["IObservability<br/>(current telemetry facade)"]
 ```
 
@@ -180,10 +178,9 @@ flowchart LR
 | `IPlanIntegrityValidator`      | `runtime-wired`       | Plan integrity gate using the artifacts-owned reader            |
 | `IRunExecutionContextResolver` | `runtime-wired`       | Conditional start-run seam                                      |
 | `IProjector`                   | `target-line exposed` | Declared seam; mainline still uses `SnapshotProjector` directly |
-| `IMetricsCollector`            | `target-line exposed` | Declared seam; mainline still injects `IObservability`          |
 
 `IObservability` is the current telemetry facade in the shipped runtime. It is
-shown for runtime truthfulness, but it is not part of the seven-port inventory.
+shown for runtime truthfulness, but it is not part of the six-port inventory.
 
 ## 5. Reading Notes
 

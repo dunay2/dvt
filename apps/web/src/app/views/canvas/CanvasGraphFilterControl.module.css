@@ -78,6 +78,13 @@
   margin-block-end: 1rem;
 }
 
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .title {
   font-size: 0.875rem;
   font-weight: 600;
@@ -165,7 +172,7 @@
   white-space: nowrap;
 }
 
-.removeButton {
+.iconButton {
   width: 1.5rem;
   height: 1.5rem;
   flex-shrink: 0;

@@ -36,7 +36,7 @@ export function selectAst(
       targetList: columns.map((val, ordinal) => ({
         ResTarget: { name: columnName(ordinal), val },
       })),
-      fromClause: from,
+      ...(from.length > 0 ? { fromClause: from } : {}),
       op: 'SETOP_NONE',
       limitOption: 'LIMIT_OPTION_DEFAULT',
       ...clauses,

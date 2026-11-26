@@ -4,10 +4,14 @@
 import { execFile } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
+import { classifyPackageJsonChange, failClosedPackageJsonChange } from './package-json-scope.mjs';
+export { classifyPackageJsonChange, isRuntimeFanoutCommand } from './package-json-scope.mjs';
 import {
-  classifyPackageScriptCommand,
-  isGovernanceToolingCommand,
-} from './repository-command-catalog.mjs';
+  projectContractScope,
+  projectPrQualityScope,
+  projectTestScope,
+  projectWorkflowScope,
+} from './workflow-scope-projection.mjs';
 import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
 import { EXECUTABLE_CI_TOOL_TESTS, isToolingCryptoContractInput } from './ci-tool-test-catalog.mjs';
 
@@ -281,12 +285,6 @@ const WORKSPACE_PACKAGE_FILES = new Set(
   )
 );
 
-const TEXT_METADATA_FIELDS = new Set(['version', 'description', 'homepage', 'repository', 'bugs']);
-const OBJECT_METADATA_FIELDS = new Map([
-  ['repository', ['type', 'url', 'directory']],
-  ['bugs', ['url', 'email']],
-]);
-
 const TEST_ROOT_BUILD_PATTERNS = [
   ...ROOT_CONFIG_PATTERNS,
   'vitest.config.ts',
@@ -417,13 +415,16 @@ export const CONTRACT_SCOPE_PATTERNS = {
   contracts_relevant: [
     'packages/@dvt/contracts/**',
     'packages/@dvt/engine/test/contracts/**',
-    'docs/architecture/engine/contracts/**',
+    'docs/architecture/components/engine/contracts/**',
     'docs/adr/**',
     '.golden/**',
     'scripts/compare-hashes.cjs',
     'scripts/db-migrate.cjs',
     'scripts/neo4j/**',
-    'scripts/validate-contracts.cjs',
+    'packages/@dvt/cli/validate-contracts.cjs',
+    'scripts/validate-glossary-usage.cjs',
+    'scripts/policy-validation-files.cjs',
+    'scripts/policy-validation-text.cjs',
     '.github/workflows/contracts.yml',
     ...ROOT_CONFIG_PATTERNS,
   ],
@@ -435,7 +436,7 @@ export const CONTRACT_SCOPE_PATTERNS = {
   ],
   golden_relevant: [
     'packages/@dvt/engine/test/contracts/**',
-    'docs/architecture/engine/contracts/**',
+    'docs/architecture/components/engine/contracts/**',
     '.golden/**',
     'scripts/compare-hashes.cjs',
     'scripts/db-migrate.cjs',
@@ -445,7 +446,7 @@ export const CONTRACT_SCOPE_PATTERNS = {
   ],
   hash_compare_relevant: [
     'packages/@dvt/engine/test/contracts/**',
-    'docs/architecture/engine/contracts/**',
+    'docs/architecture/components/engine/contracts/**',
     '.golden/**',
     'scripts/compare-hashes.cjs',
     'scripts/db-migrate.cjs',
@@ -568,141 +569,6 @@ export function matchesAnyPattern(path, patterns) {
   return patterns.some((pattern) => matchesPattern(path, pattern));
 }
 
-function stripScripts(packageJson) {
-  const rest = { ...(packageJson ?? {}) };
-  delete rest.scripts;
-  return rest;
-}
-
-function stripNonRuntimeMetadata(packageJson) {
-  const rest = stripScripts(packageJson);
-  delete rest['lint-staged'];
-  for (const [field, value] of Object.entries(rest)) {
-    if (isDisplayMetadata(field, value)) delete rest[field];
-  }
-  return rest;
-}
-
-function isRecord(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isDisplayMetadata(field, value) {
-  if (TEXT_METADATA_FIELDS.has(field) && typeof value === 'string') return true;
-  if (field === 'keywords') {
-    return Array.isArray(value) && value.every((keyword) => typeof keyword === 'string');
-  }
-  const fields = OBJECT_METADATA_FIELDS.get(field);
-  if (!fields || !isRecord(value) || Object.keys(value).length === 0) return false;
-  if (field === 'repository' && typeof value.url !== 'string') return false;
-  return Object.entries(value).every(
-    ([key, entry]) => fields.includes(key) && typeof entry === 'string'
-  );
-}
-
-function stableJson(value) {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableJson).join(',')}]`;
-  }
-
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value)
-      .sort((left, right) => left.localeCompare(right))
-      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
-      .join(',')}}`;
-  }
-
-  return JSON.stringify(value);
-}
-
-export function isRuntimeFanoutCommand(commandClass) {
-  return (
-    commandClass.runtimeFanout === true ||
-    commandClass.domain === 'runtime-capability' ||
-    commandClass.domain === 'unknown'
-  );
-}
-
-function isLifecycleScript(name) {
-  return /^(pre|post)?(install|pack|publish|version)$/u.test(name) || name === 'prepare';
-}
-
-function isDeterminismJobScript(name) {
-  return name === 'lint:determinism' || name === 'test:determinism' || name === 'test:replay';
-}
-
-export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) {
-  if ([previousPackageJson, nextPackageJson].some((value) => !isRecord(value))) {
-    return failClosedPackageJsonChange('PACKAGE_JSON_OBJECT_REQUIRED');
-  }
-  if (
-    [previousPackageJson.scripts, nextPackageJson.scripts].some(
-      (value) =>
-        value !== undefined &&
-        (!isRecord(value) || Object.values(value).some((command) => typeof command !== 'string'))
-    )
-  ) {
-    return failClosedPackageJsonChange('PACKAGE_JSON_SCRIPTS_OBJECT_REQUIRED');
-  }
-  const previousScripts = previousPackageJson?.scripts ?? {};
-  const nextScripts = nextPackageJson?.scripts ?? {};
-  const changedScriptNames = [
-    ...new Set([...Object.keys(previousScripts), ...Object.keys(nextScripts)]),
-  ]
-    .filter((name) => previousScripts[name] !== nextScripts[name])
-    .sort((left, right) => left.localeCompare(right));
-  const commandClasses = changedScriptNames.map((name) =>
-    classifyPackageScriptCommand(name, nextScripts[name] ?? previousScripts[name] ?? '')
-  );
-  const nonScriptChange =
-    stableJson(stripScripts(previousPackageJson)) !== stableJson(stripScripts(nextPackageJson));
-  const developerWorkflowMetadataChange =
-    stableJson(previousPackageJson?.['lint-staged']) !==
-    stableJson(nextPackageJson?.['lint-staged']);
-  const runtimeMetadataChange =
-    stableJson(stripNonRuntimeMetadata(previousPackageJson)) !==
-    stableJson(stripNonRuntimeMetadata(nextPackageJson));
-  const dependencySensitive = runtimeMetadataChange;
-  const lifecycleSensitive = changedScriptNames.some(isLifecycleScript);
-  const rootBuildSensitive =
-    runtimeMetadataChange ||
-    lifecycleSensitive ||
-    commandClasses.some((commandClass) => isRuntimeFanoutCommand(commandClass));
-  const governanceToolingOnly =
-    !rootBuildSensitive &&
-    commandClasses.length > 0 &&
-    commandClasses.every((commandClass) => isGovernanceToolingCommand(commandClass));
-
-  return {
-    metadataOnly:
-      !runtimeMetadataChange && !developerWorkflowMetadataChange && changedScriptNames.length === 0,
-    changedScriptNames,
-    commandClasses,
-    nonScriptChange,
-    developerWorkflowMetadataChange,
-    packageScriptsOnly: changedScriptNames.length > 0 && !nonScriptChange,
-    dependencySensitive,
-    lifecycleSensitive,
-    rootBuildSensitive,
-    governanceToolingOnly,
-    ciToolingSensitive:
-      developerWorkflowMetadataChange ||
-      commandClasses.some((commandClass) =>
-        ['ci-tooling', 'developer-workflow', 'test-tooling'].includes(commandClass.domain)
-      ),
-    determinismSensitive: changedScriptNames.some(isDeterminismJobScript),
-    temporalCapabilitySensitive: commandClasses.some(
-      (commandClass) => commandClass.domain === 'runtime-capability'
-    ),
-    postgresCapabilitySensitive: commandClasses.some(
-      (commandClass) => commandClass.domain === 'runtime-capability'
-    ),
-    contractCapabilitySensitive: commandClasses.some(
-      (commandClass) => commandClass.domain === 'contracts'
-    ),
-  };
-}
-
 function buildFilesForPathPolicy(changedFiles, scopeContext = {}) {
   return changedFiles.map(normalizePath).filter((path) => {
     const change = scopeContext[path];
@@ -748,119 +614,27 @@ export function computeBooleanScope(changedFiles, scopePatterns, scopeContext = 
 
   return scope;
 }
-
 export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext = {}) {
   const scopePatterns = SCOPE_MODES[mode];
-  if (!scopePatterns) {
-    throw new TypeError(`UNSUPPORTED_MODE: ${mode ?? 'undefined'}`);
-  }
-
+  if (!scopePatterns) throw new TypeError(`UNSUPPORTED_MODE: ${mode ?? 'undefined'}`);
   const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
   const { runtimeWorkspaceFanout, ...repositoryValidationScope } = computeRepositoryValidationScope(
     changedFiles,
     scopeContext
   );
-  const packageJsonChange = scopeContext['package.json'];
-
-  if (mode === 'contracts') {
-    return {
-      ...scope,
-      contracts_relevant: Boolean(
-        scope.contracts_relevant || packageJsonChange?.contractCapabilitySensitive
-      ),
-      determinism_relevant: Boolean(
-        scope.determinism_relevant || packageJsonChange?.determinismSensitive
-      ),
-      contract_capability_changed: Boolean(
-        scope.contracts_relevant ||
-        scope.determinism_relevant ||
-        scope.golden_relevant ||
-        packageJsonChange?.contractCapabilitySensitive
-      ),
-      hash_compare_relevant: Boolean(scope.hash_compare_relevant),
-    };
-  }
-
-  if (mode === 'pr-quality') {
-    return {
-      ...scope,
-      ...repositoryValidationScope,
-      temporal_changed: Boolean(scope.temporal_changed || runtimeWorkspaceFanout),
-      temporal_transformation_changed: Boolean(
-        scope.temporal_transformation_changed || runtimeWorkspaceFanout
-      ),
-      temporal_postgres_changed: Boolean(scope.temporal_postgres_changed || runtimeWorkspaceFanout),
-      root_build_sensitive: Boolean(
-        scope.root_build_sensitive ||
-        runtimeWorkspaceFanout ||
-        packageJsonChange?.rootBuildSensitive
-      ),
-      ci_tooling_changed: Boolean(
-        scope.ci_tooling_changed || packageJsonChange?.ciToolingSensitive
-      ),
-      governance_tooling_changed: Boolean(
-        scope.governance_tooling_changed || packageJsonChange?.governanceToolingOnly
-      ),
-      temporal_capability_changed: Boolean(
-        scope.temporal_changed ||
-        scope.temporal_transformation_changed ||
-        scope.temporal_postgres_changed ||
-        runtimeWorkspaceFanout ||
-        packageJsonChange?.temporalCapabilitySensitive
-      ),
-      postgres_capability_changed: Boolean(
-        scope.postgres_capability_changed ||
-        scope.adapter_postgres_changed ||
-        scope.temporal_postgres_changed ||
-        runtimeWorkspaceFanout ||
-        packageJsonChange?.postgresCapabilitySensitive
-      ),
-    };
-  }
-
-  if (mode === 'test') {
-    const rootBuildSensitive = Boolean(
-      scope.root_build_sensitive ||
-      scope.root_config ||
-      runtimeWorkspaceFanout ||
-      packageJsonChange?.rootBuildSensitive
+  const packageJsonChange = scopeContext['package.json'] ?? {};
+  if (mode === 'contracts') return projectContractScope(scope, packageJsonChange);
+  if (mode === 'pr-quality')
+    return projectPrQualityScope(
+      scope,
+      repositoryValidationScope,
+      runtimeWorkspaceFanout,
+      packageJsonChange
     );
-    const determinismRelevant = Boolean(
-      scope.determinism_relevant ||
-      packageJsonChange?.determinismSensitive ||
-      packageJsonChange?.rootBuildSensitive
-    );
-    return {
-      ...scope,
-      root_build_sensitive: rootBuildSensitive,
-      postgres_capability_changed: Boolean(
-        scope.postgres_capability_changed || packageJsonChange?.postgresCapabilitySensitive
-      ),
-      determinism_relevant: determinismRelevant,
-      coverage_relevant: Boolean(
-        scope.coverage_relevant || scope.engine || determinismRelevant || rootBuildSensitive
-      ),
-    };
-  }
-
-  return {
-    ...scope,
-    ...repositoryValidationScope,
-    security_analysis_relevant: Boolean(
-      scope.security_analysis_relevant ||
-      packageJsonChange?.dependencySensitive ||
-      packageJsonChange?.lifecycleSensitive ||
-      packageJsonChange?.rootBuildSensitive ||
-      packageJsonChange?.ciToolingSensitive
-    ),
-    ci_tool_executable_contracts_relevant: Boolean(
-      scope.ci_tool_executable_contracts_relevant ||
-      buildFilesForPathPolicy(changedFiles, scopeContext).some(isToolingCryptoContractInput) ||
-      packageJsonChange?.dependencySensitive ||
-      packageJsonChange?.ciToolingSensitive ||
-      packageJsonChange?.governanceToolingOnly
-    ),
-  };
+  if (mode === 'test') return projectTestScope(scope, runtimeWorkspaceFanout, packageJsonChange);
+  return projectWorkflowScope(scope, repositoryValidationScope, packageJsonChange, () =>
+    buildFilesForPathPolicy(changedFiles, scopeContext).some(isToolingCryptoContractInput)
+  );
 }
 
 export function computeWorkspaceMatrix(changedFiles, options = {}) {
@@ -907,27 +681,6 @@ export async function readJsonAtGitRef(ref, filePath) {
     encoding: 'utf8',
   });
   return JSON.parse(stdout);
-}
-
-function failClosedPackageJsonChange(error) {
-  return {
-    metadataOnly: false,
-    changedScriptNames: [],
-    commandClasses: [],
-    nonScriptChange: true,
-    developerWorkflowMetadataChange: false,
-    packageScriptsOnly: false,
-    dependencySensitive: true,
-    lifecycleSensitive: true,
-    rootBuildSensitive: true,
-    governanceToolingOnly: false,
-    ciToolingSensitive: true,
-    temporalCapabilitySensitive: true,
-    postgresCapabilitySensitive: true,
-    contractCapabilitySensitive: true,
-    failClosed: true,
-    error: error instanceof Error ? error.message : String(error),
-  };
 }
 
 async function readPackageJsonChange(filePath, options) {

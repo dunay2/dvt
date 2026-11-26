@@ -15,7 +15,7 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
-test('contracts package publishes only governed compiled package entrypoints', () => {
+test('contracts package publishes two compiled entrypoints and the shared SQL execution example', () => {
   const packageJson = readJson(packageJsonPath);
 
   assert.equal(packageJson.name, '@dvt/contracts');
@@ -34,6 +34,8 @@ test('contracts package publishes only governed compiled package entrypoints', (
       import: './dist/substrait.js',
       default: './dist/substrait.js',
     },
+    './examples/workspace-sql-execution.json':
+      './src/contracts/sql-workspace/examples/WorkspaceSqlExecution.example.json',
   });
 
   assert.equal(packageJson.scripts.build, 'tsc -b tsconfig.json');

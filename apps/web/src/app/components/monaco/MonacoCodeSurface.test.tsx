@@ -4,12 +4,10 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it, vi } from 'vitest';
 import MonacoCodeSurface from './MonacoCodeSurface';
-import MonacoDiffSurface from './MonacoDiffSurface';
 import type { MonacoCodeEditorMount } from './MonacoCodeEditor';
 
 const capture = vi.hoisted(() => ({
   code: vi.fn(),
-  diff: vi.fn(),
   attach: vi.fn(),
   dispose: vi.fn(),
 }));
@@ -19,10 +17,6 @@ vi.mock('./monacoInlineReferences', () => ({
 vi.mock('@monaco-editor/react', () => ({
   default: (props: unknown) => {
     capture.code(props);
-    return null;
-  },
-  DiffEditor: (props: unknown) => {
-    capture.diff(props);
     return null;
   },
   useMonaco: () => null,
@@ -182,7 +176,7 @@ describe('shared Monaco edit boundary', () => {
     }
   });
 
-  it('registers the shared SQL palette before mounting readonly, editable and diff surfaces', async () => {
+  it('registers the shared SQL palette before mounting readonly and editable surfaces', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const root = createRoot(document.createElement('div'));
     const sql = "select '30 days'";
@@ -190,10 +184,6 @@ describe('shared Monaco edit boundary', () => {
     const surfaces = [
       [<MonacoCodeSurface {...codeProps} readOnly />, capture.code],
       [<MonacoCodeSurface {...codeProps} readOnly={false} />, capture.code],
-      [
-        <MonacoDiffSurface ariaLabel="SQL diff" language="sql" original={sql} modified={sql} />,
-        capture.diff,
-      ],
     ] as const;
     try {
       for (const [surface, capturedProps] of surfaces) {

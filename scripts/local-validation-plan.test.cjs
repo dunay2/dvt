@@ -25,6 +25,47 @@ function labelsFor(files) {
   return buildVerifyChangedPlan(files).map(commandLabel);
 }
 
+const markdownGateIds = [
+  'docs-gov-locations-changed',
+  'docs-gov-filenames-changed',
+  'docs-gov-frontmatter-changed',
+  'arc-evidence-changed',
+  'qa-artifact-check',
+  'lint-md-changed',
+];
+
+test('a complete non-Markdown frontier removes only the six empty-input Markdown processes', () => {
+  const files = Object.freeze(['.github/workflows/dependency-review.yml']);
+  const conservative = buildVerifyChangedPlan(files, { env: {} });
+  const complete = buildVerifyChangedPlan(files, { completeChangedFiles: true, env: {} });
+  assert.equal(conservative.filter((entry) => markdownGateIds.includes(entry.id)).length, 6);
+  assert.deepEqual(
+    complete,
+    conservative.filter((entry) => !markdownGateIds.includes(entry.id))
+  );
+  assert.ok(complete.some((entry) => entry.id === 'feature-mechanization-implementation'));
+});
+
+test('mixed Markdown, partial inventories, iteration and declared overrides retain all six processes', () => {
+  const files = ['.github/workflows/dependency-review.yml'];
+  for (const [inputs, options] of [
+    [[...files, 'docs\\deleted.MD'], { completeChangedFiles: true, env: {} }],
+    [files, {}],
+    [files, { completeChangedFiles: false }],
+    [files, { completeChangedFiles: true, iteration: true }],
+    [files, { completeChangedFiles: true, env: { DOCS_GOV_CHANGED_FILES: '' } }],
+    [files, { completeChangedFiles: true, env: { DOCS_GOV_CHANGED_FILES: 'README.md' } }],
+    [files, { completeChangedFiles: true, env: { DOCS_GOV_CHANGED_FILES: 'config.yml' } }],
+    [files, { completeChangedFiles: true, env: { GIT_BINARY: 'custom-git' } }],
+  ]) {
+    const plan = buildVerifyChangedPlan(Object.freeze(inputs), options);
+    assert.deepEqual(
+      plan.filter((entry) => markdownGateIds.includes(entry.id)).map((entry) => entry.id),
+      markdownGateIds
+    );
+  }
+});
+
 const packagePath = path.resolve(__dirname, '../package.json');
 const packageScripts = JSON.parse(fs.readFileSync(packagePath, 'utf8')).scripts;
 

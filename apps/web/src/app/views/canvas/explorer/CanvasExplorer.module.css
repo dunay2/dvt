@@ -151,6 +151,7 @@
   }
 }
 .categoryHeader {
+  position: relative;
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
@@ -160,6 +161,61 @@
   min-width: 0;
   margin: 0;
   font: inherit;
+}
+.modelStatus {
+  display: grid;
+  place-items: center;
+  flex: 0 0 calc(var(--spacing) * 5);
+  height: calc(var(--spacing) * 7);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+}
+.modelStatus:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+.modelStatus > svg {
+  width: calc(var(--spacing) * 3.5);
+  height: calc(var(--spacing) * 3.5);
+}
+.modelStatusError,
+.modelStatus[data-state='error'] > .modelStatusLoading,
+.modelStatus:has([role='alert']) > .modelStatusLoading {
+  display: none;
+}
+.modelStatus[data-state='error'] > .modelStatusError,
+.modelStatus:has([role='alert']) > .modelStatusError {
+  display: block;
+  color: var(--status-danger);
+}
+.modelStatusMessage {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.modelStatus[data-dismissed='false']:is(:hover, :focus-within) .modelStatusMessage:not(:empty) {
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  padding: calc(var(--spacing) * 2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-panel);
+  color: var(--text-default);
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+.modelStatusMessage p {
+  margin: 0;
+  color: inherit;
 }
 .headerAction {
   display: grid;

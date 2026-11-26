@@ -11,6 +11,7 @@ import {
   CanvasWorkspaceMenuControls,
 } from './CanvasWorkspaceMenuControls';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
 import {
@@ -210,6 +211,171 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(container.textContent).not.toContain('Import');
   });
 
+  it.each(['canvas', 'model'] as const)(
+    'activates the selected %s tab once when a pointer gesture also moves focus',
+    async (kind) => {
+      const select = vi.fn();
+      await act(async () =>
+        root.render(
+          <CanvasWorkspaceModelTabs
+            canvasTitle="Sales"
+            onShowCanvas={select}
+            tab={{
+              canvasId: 'sales',
+              nodeId: 'model',
+              label: 'Customers',
+              active: kind === 'model',
+              onSelect: select,
+              onCanvas: select,
+              onClose: vi.fn(),
+            }}
+          />
+        )
+      );
+      const tab = container.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')!;
+      await act(async () => {
+        fireEvent.mouseDown(tab, { button: 0, ctrlKey: false });
+        tab.focus();
+      });
+      expect(select).toHaveBeenCalledExactlyOnceWith();
+      select.mockClear();
+      await act(async () => fireEvent.mouseDown(tab, { button: 0, ctrlKey: false }));
+      expect(select).toHaveBeenCalledExactlyOnceWith();
+      select.mockClear();
+      await act(async () => {
+        fireEvent.mouseDown(tab, { button: 2 });
+        fireEvent.mouseDown(tab, { button: 0, ctrlKey: true });
+      });
+      expect(select).not.toHaveBeenCalled();
+    }
+  );
+
+  it('selects each inactive destination once and retains keyboard reentry without repeating Code', async () => {
+    const select = vi.fn();
+    function WorkspaceTabs(): JSX.Element {
+      const [active, setActive] = React.useState('canvas');
+      const activate = (key: string): void => {
+        select(key);
+        setActive(key);
+      };
+      return (
+        <CanvasWorkspaceModelTabs
+          canvasTitle="Sales"
+          onShowCanvas={() => activate('canvas')}
+          codeTab={{
+            active: active === 'code',
+            onSelect: () => activate('code'),
+            onCanvas: vi.fn(),
+          }}
+          tab={{
+            canvasId: 'sales',
+            nodeId: 'model',
+            label: 'Customers',
+            active: active === 'model',
+            onSelect: () => activate('model'),
+            onCanvas: vi.fn(),
+            onClose: vi.fn(),
+          }}
+        />
+      );
+    }
+    await act(async () => root.render(<WorkspaceTabs />));
+    for (const label of ['Customers', 'Code', 'Sales']) {
+      const tab = within(container).getByRole('tab', { name: label });
+      select.mockClear();
+      await act(async () => fireEvent.mouseDown(tab, { button: 0, ctrlKey: false }));
+      await act(async () => tab.focus());
+      expect(select).toHaveBeenCalledTimes(1);
+    }
+    const model = within(container).getByRole('tab', { name: 'Customers' });
+    select.mockClear();
+    await act(async () => model.focus());
+    expect(select).toHaveBeenCalledExactlyOnceWith('model');
+    select.mockClear();
+    await act(async () => {
+      model.blur();
+      model.focus();
+    });
+    expect(select).toHaveBeenCalledExactlyOnceWith('model');
+    const code = within(container).getByRole('tab', { name: 'Code' });
+    await act(async () => fireEvent.mouseDown(code, { button: 0, ctrlKey: false }));
+    select.mockClear();
+    await act(async () => fireEvent.mouseDown(code, { button: 0, ctrlKey: false }));
+    expect(select).not.toHaveBeenCalled();
+  });
+
+  it('reveals the selected tab on entry and resize and releases its observer on exit', async () => {
+    let selectedLeft = 160;
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element
+    ) {
+      const left = this.getAttribute('aria-selected') === 'true' ? selectedLeft : 0;
+      return {
+        left,
+        right: left + 100,
+        top: 0,
+        bottom: 30,
+        width: 100,
+        height: 30,
+        x: left,
+        y: 0,
+        toJSON: () => ({}),
+      };
+    });
+    const disconnect = vi.fn();
+    let resize: (() => void) | undefined;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          resize = callback;
+        }
+        observe = vi.fn();
+        disconnect = disconnect;
+      }
+    );
+    try {
+      await act(async () => root.render(<CanvasWorkspaceModelTabs canvasTitle="Sales" />));
+      const strip = container.querySelector<HTMLDivElement>('.canvas-workspace-model-tabs')!;
+      expect(strip.scrollLeft).toBe(160);
+      selectedLeft = -40;
+      resize?.();
+      expect(strip.scrollLeft).toBe(120);
+      await act(async () => root.render(null));
+      expect(disconnect).toHaveBeenCalledOnce();
+    } finally {
+      rect.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('observes the workspace tab strip once when it is mounted inside the shell identity', async () => {
+    useCanvasWorkspaceMenuContributionStore.getState().registerCanvasWorkspaceMenuContribution({
+      activeCanvas: { id: 'sales', kind: 'transformation', title: 'Sales' },
+      canExportProjectSnapshot: false,
+      canImportProjectSnapshot: false,
+    });
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe = observe;
+        disconnect = disconnect;
+      }
+    );
+    try {
+      await act(async () => root.render(<CanvasWorkspaceTopBarIdentity />));
+      expect(observe).toHaveBeenCalledExactlyOnceWith(
+        container.querySelector('.canvas-workspace-model-tabs')
+      );
+      await act(async () => root.render(null));
+      expect(disconnect).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each([
     ['en', 'Code'],
     ['es', 'Código'],
@@ -395,5 +561,118 @@ describe('CanvasWorkspaceMenuControls', () => {
     latestContribution?.onOpenProjectCode?.();
     expect(firstCommand).not.toHaveBeenCalled();
     expect(latestCommand).toHaveBeenCalledTimes(1);
+  });
+
+  it('excludes foreign Canvas tabs and commands from the active top-bar context', async () => {
+    const previous = useCanvasWorkspaceMenuContributionStore.getState();
+    const foreignCommand = vi.fn();
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        activeCanvas: { id: 'sales', kind: 'transformation', title: 'Sales' },
+        canExportProjectSnapshot: false,
+        canImportProjectSnapshot: false,
+      },
+      modelTab: {
+        canvasId: 'foreign',
+        nodeId: 'model',
+        label: 'Foreign Model',
+        active: true,
+        onSelect: foreignCommand,
+        onCanvas: foreignCommand,
+        onClose: foreignCommand,
+      },
+      modelTabList: {
+        canvasId: 'foreign',
+        tabs: [
+          {
+            nodeId: 'other',
+            label: 'Foreign saved Model',
+            onSelect: foreignCommand,
+            onClose: foreignCommand,
+          },
+        ],
+      },
+      modelBrowser: {
+        canvasId: 'foreign',
+        mode: 'semantic',
+        onBrowse: foreignCommand,
+        onCanvas: foreignCommand,
+      },
+    });
+    try {
+      await act(async () => root.render(<CanvasWorkspaceTopBarIdentity />));
+      const tabs = within(container).getAllByRole('tab');
+      expect(tabs.map((tab) => tab.textContent)).toEqual(['Sales']);
+      await act(async () => fireEvent.mouseDown(tabs[0]!, { button: 0, ctrlKey: false }));
+      expect(foreignCommand).not.toHaveBeenCalled();
+      expect(
+        container
+          .querySelector('[data-slot="shell-active-canvas-identity"]')
+          ?.getAttribute('data-canvas-id')
+      ).toBe('sales');
+    } finally {
+      useCanvasWorkspaceMenuContributionStore.setState({
+        modelTab: previous.modelTab,
+        modelTabList: previous.modelTabList,
+        modelBrowser: previous.modelBrowser,
+      });
+    }
+  });
+
+  it('keeps captured delegates current and retires unavailable commands', async () => {
+    const commands = (): Record<
+      'export' | 'import' | 'select' | 'close',
+      ReturnType<typeof vi.fn<() => void>>
+    > => ({
+      export: vi.fn<() => void>(),
+      import: vi.fn<() => void>(),
+      select: vi.fn<() => void>(),
+      close: vi.fn<() => void>(),
+    });
+    const first = commands();
+    const latest = commands();
+    const base = { canExportProjectSnapshot: true, canImportProjectSnapshot: true };
+    const render = (value: CanvasWorkspaceMenuContribution): Promise<void> =>
+      act(async () => root.render(<CanvasWorkspaceMenuContributionRegistrar {...value} />));
+    const contribution = (value: ReturnType<typeof commands>): CanvasWorkspaceMenuContribution => ({
+      ...base,
+      onExportProjectSnapshot: value.export,
+      onImportProjectSnapshotFile: value.import,
+      onSelectCanvas: value.select,
+      codeTab: {
+        active: true,
+        onSelect: value.select,
+        onCanvas: value.select,
+        onClose: value.close,
+      },
+    });
+    await render(contribution(first));
+    const captured = useCanvasWorkspaceMenuContributionStore.getState().contribution!;
+    await render(contribution(latest));
+    expect(useCanvasWorkspaceMenuContributionStore.getState().contribution).toBe(captured);
+    const file = new File(['{}'], 'snapshot.json', { type: 'application/json' });
+    captured.onExportProjectSnapshot!();
+    captured.onImportProjectSnapshotFile!(file);
+    captured.onSelectCanvas!('sales');
+    captured.codeTab!.onClose!();
+    expect(latest.export).toHaveBeenCalledExactlyOnceWith();
+    expect(latest.import).toHaveBeenCalledExactlyOnceWith(file);
+    expect(latest.select).toHaveBeenCalledExactlyOnceWith('sales');
+    expect(latest.close).toHaveBeenCalledExactlyOnceWith();
+    for (const callback of Object.values(first)) expect(callback).not.toHaveBeenCalled();
+    await render({
+      ...base,
+      codeTab: { active: true, onSelect: latest.select, onCanvas: latest.select },
+    });
+    const current = useCanvasWorkspaceMenuContributionStore.getState().contribution!;
+    expect(current).not.toHaveProperty('onExportProjectSnapshot');
+    expect(current).not.toHaveProperty('onImportProjectSnapshotFile');
+    expect(current.onSelectCanvas).toBeUndefined();
+    expect(current.codeTab).not.toHaveProperty('onClose');
+    captured.onExportProjectSnapshot!();
+    captured.onImportProjectSnapshotFile!(file);
+    captured.onSelectCanvas!('sales');
+    captured.codeTab!.onClose!();
+    for (const callback of Object.values(latest)) expect(callback).toHaveBeenCalledTimes(1);
   });
 });

@@ -47,6 +47,7 @@ export const inspectorVisualClasses = {
   contextPanelTabsList: 'justify-start rounded-md border border-slate-700 bg-transparent p-1',
   contextPanelTabsTrigger:
     'text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white',
+  contextPanelWorkbenchTabs: 'gap-3',
   // Keep the track size constant so revealing the thumb does not shift the tabs.
   contextPanelWorkbenchTabScroll:
     'min-w-0 flex-1 flex-nowrap overflow-x-auto [scrollbar-width:thin] [scrollbar-color:var(--text-muted)_transparent] ' +
@@ -130,37 +131,15 @@ export const inspectorPropertyClasses = {
 
 export const inspectorRelationshipClasses = {
   root: inspectorPropertyClasses.section,
-  layout:
-    'grid min-h-[36rem] grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)',
-  master: 'min-w-0 border-r border-(--border-subtle) p-3',
-  header: 'mb-4 flex items-center justify-between gap-2',
-  title: 'text-sm font-semibold text-(--text-strong)',
-  count: 'text-xs text-(--text-muted)',
+  empty: inspectorVisualClasses.inspectorLabel,
   accessible: 'sr-only',
-  groups: 'space-y-5',
-  group: 'space-y-2',
-  groupTitle: 'text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)',
-  rows: 'space-y-1',
-  row: 'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
-  selected: 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)',
-  unselected:
-    'border-transparent bg-(--surface-elevated) text-(--text-default) hover:bg-(--surface-selected)',
+  rows: inspectorPropertyClasses.records.relationship,
+  row: `relative flex items-center gap-2 ${inspectorPropertyClasses.records.relationshipCard} ${inspectorControlTypography}`,
+  sortable:
+    'cursor-grab hover:bg-(--surface-selected) focus-visible:outline-(--focus-ring) focus-visible:outline-2 focus-visible:-outline-offset-2 active:cursor-grabbing',
   drop: 'pointer-events-none absolute left-1 right-1 h-0.5 bg-(--status-info)',
   placement: { before: 'top-0', after: 'bottom-0' },
-  handle: 'size-4 shrink-0 cursor-grab text-(--text-muted)',
-  direction:
-    'flex size-6 shrink-0 items-center justify-center rounded-md bg-(--surface-selected) font-mono text-xs text-(--status-info)',
-  name: 'min-w-0 flex-1 truncate font-medium',
-  badge: 'shrink-0 px-1.5 py-0 text-[10px]',
-  detail: 'min-w-0 p-5',
-  detailBody: 'space-y-6',
-  detailHeader: 'flex items-start justify-between gap-3',
-  detailTitle: 'min-w-0 flex-1 truncate text-lg font-semibold text-(--text-strong)',
-  caption: 'shrink-0 text-[10px] text-(--text-muted)',
-  topology:
-    'flex items-center gap-3 rounded-lg border border-(--border-default) bg-(--surface-elevated) p-4',
-  node: 'min-w-0 flex-1 rounded-lg border border-(--border-default) bg-(--surface-selected) px-3 py-3',
-  nodeName: 'truncate text-sm font-semibold text-(--text-strong)',
-  nodeCaption: 'mt-1 text-[10px] text-(--text-muted)',
-  arrow: 'shrink-0 text-lg text-(--status-info)',
+  handle: 'size-3.5 shrink-0 text-(--text-muted)',
+  name: `flex-1 [overflow-wrap:anywhere] ${inspectorPropertyClasses.records.name}`,
+  relation: inspectorPropertyClasses.records.relationshipMeta,
 } as const;

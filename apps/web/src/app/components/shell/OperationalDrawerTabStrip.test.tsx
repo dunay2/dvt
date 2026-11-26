@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OperationalDrawerTabStrip } from './OperationalDrawerTabStrip';
 
 const visibleTabs = [
-  { id: 'log' as const, label: 'Registro', count: null },
-  { id: 'runs' as const, label: 'Ejecuciones', count: 1 },
+  { id: 'preview' as const, label: 'Vista previa', count: null },
+  { id: 'semantic' as const, label: 'Árbol relacional', count: 1 },
 ];
 const hiddenTabs = [{ id: 'data' as const, label: 'Datos', count: null }];
 
@@ -37,7 +37,7 @@ describe('OperationalDrawerTabStrip', () => {
     await act(async () => {
       root.render(
         <OperationalDrawerTabStrip
-          activeTab="log"
+          activeTab="preview"
           ariaLabel="Operaciones del Canvas"
           closeTabLabel="Cerrar {tab}"
           hiddenTabs={hiddenTabs}
@@ -50,16 +50,16 @@ describe('OperationalDrawerTabStrip', () => {
       );
     });
 
-    const close = container.querySelector<HTMLElement>('[data-tab-close="log"]');
+    const close = container.querySelector<HTMLElement>('[data-tab-close="preview"]');
     expect(close?.closest('[role="tab"]')).not.toBeNull();
     await act(async () => fireEvent.click(close!));
-    expect(onCloseTab).toHaveBeenCalledWith('log');
+    expect(onCloseTab).toHaveBeenCalledWith('preview');
     expect(onSelectTab).not.toHaveBeenCalled();
 
     await act(async () =>
-      fireEvent.keyDown(container.querySelector('[data-tab="runs"]')!, { key: 'Delete' })
+      fireEvent.keyDown(container.querySelector('[data-tab="semantic"]')!, { key: 'Delete' })
     );
-    expect(onCloseTab).toHaveBeenCalledWith('runs');
+    expect(onCloseTab).toHaveBeenCalledWith('semantic');
   });
 
   it('restores a hidden tab from the strip context menu', async () => {
@@ -67,7 +67,7 @@ describe('OperationalDrawerTabStrip', () => {
     await act(async () => {
       root.render(
         <OperationalDrawerTabStrip
-          activeTab="log"
+          activeTab="preview"
           ariaLabel="Operaciones del Canvas"
           closeTabLabel="Cerrar {tab}"
           hiddenTabs={hiddenTabs}

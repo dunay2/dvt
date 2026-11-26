@@ -6,15 +6,94 @@
  * @version 1.0.0
  */
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
+import { useCallback, useMemo } from 'react';
+import { ApiError } from '../../services/api/createApiClient';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileTreeQuery,
 } from '../../queries/workspaceQueries';
 import {
-  flattenCodeWorkspaceFiles,
-  resolveProjectRootScopedCodeWorkspaceFileTree,
-} from './codeViewFileSelection';
+  discoverProjectConfiguration,
+  projectConfigurationBinding,
+  type ConfigurationDiscovery,
+} from './workspaceDbtProjectConfiguration';
+
+function currentProjectPublication(
+  binding: DbtProjectFilesAuthorityBinding | undefined,
+  data: DbtProjectGraphProjection | undefined
+): DbtProjectGraphProjection | undefined {
+  if (binding == null || data?.freshness !== 'fresh') return undefined;
+  if (data.authorityBinding.canvasId !== binding.canvasId) return undefined;
+  const authority = data.authorityBinding.authority;
+  return authority.kind === 'dbt-project-files' &&
+    authority.projectRoot === binding.authority.projectRoot
+    ? data
+    : undefined;
+}
+
+type FileTreeQuery = ReturnType<typeof useWorkspaceFileTreeQuery>;
+type FileContentQuery = ReturnType<typeof useWorkspaceFileContentQuery>;
+type ProjectGraphQuery = ReturnType<typeof useDbtProjectGraphQuery>;
+type ContextStatus = 'ready' | 'loading' | 'unavailable';
+type ConfigurationSnapshot = Readonly<{
+  discovery: ConfigurationDiscovery;
+  query: FileContentQuery;
+  binding: DbtProjectFilesAuthorityBinding | undefined;
+}>;
+
+function transientProjectRefreshFailure(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.category === 'network' || (error.statusCode ?? 0) >= 500)
+  );
+}
+
+function projectPublicationSnapshot(
+  binding: DbtProjectFilesAuthorityBinding | undefined,
+  query: Pick<ProjectGraphQuery, 'data' | 'isSuccess' | 'error'>
+) {
+  const publication = currentProjectPublication(binding, query.data);
+  return {
+    projection: query.isSuccess ? publication : undefined,
+    displayProjection:
+      query.isSuccess || transientProjectRefreshFailure(query.error) ? publication : undefined,
+  };
+}
+
+function acceptedQueryStatus(
+  required: boolean,
+  query: Pick<FileTreeQuery, 'status' | 'fetchStatus'>,
+  accepted: boolean
+): ContextStatus {
+  if (!required) return 'ready';
+  switch (query.status) {
+    case 'error':
+      return 'unavailable';
+    case 'pending':
+      return 'loading';
+    case 'success':
+      if (!accepted) return 'unavailable';
+  }
+  return query.fetchStatus === 'fetching' ? 'loading' : 'ready';
+}
+
+function projectContextStatuses(
+  tree: FileTreeQuery,
+  configuration: ConfigurationSnapshot,
+  graph: ProjectGraphQuery,
+  projection: DbtProjectGraphProjection | undefined
+): ContextStatus[] {
+  return [
+    configuration.discovery.count > 1 ? 'unavailable' : acceptedQueryStatus(true, tree, true),
+    acceptedQueryStatus(
+      configuration.discovery.path != null,
+      configuration.query,
+      configuration.binding != null
+    ),
+    acceptedQueryStatus(configuration.binding != null, graph, projection != null),
+  ];
+}
 
 export function useWorkspaceDbtProjectContext({
   enabled = true,
@@ -22,47 +101,28 @@ export function useWorkspaceDbtProjectContext({
   canvasId,
 }: Readonly<{ enabled?: boolean; projectRoot?: string; canvasId?: string }> = {}) {
   const tree = useWorkspaceFileTreeQuery({ enabled });
-  const entries =
-    projectRoot == null
-      ? (tree.data ?? [])
-      : resolveProjectRootScopedCodeWorkspaceFileTree(tree.data ?? [], projectRoot);
-  const configurations = flattenCodeWorkspaceFiles(entries).filter(
-    (entry) => entry.name === 'dbt_project.yml'
-  );
-  const configPath =
-    enabled && tree.isSuccess && configurations.length === 1 ? configurations[0]?.path : undefined;
+  const discovery = discoverProjectConfiguration(tree, projectRoot, enabled);
+  const configPath = discovery.path;
   const config = useWorkspaceFileContentQuery(configPath);
-  const resolution =
-    configPath == null || !config.isSuccess || config.data.path !== configPath
-      ? undefined
-      : config.data.authoringAuthority;
-  const accepted = resolution?.kind === 'resolved' ? resolution.binding : undefined;
-  const binding: DbtProjectFilesAuthorityBinding | undefined =
-    accepted?.authority.kind === 'dbt-project-files' &&
-    (canvasId == null || accepted.canvasId === canvasId)
-      ? { ...accepted, authority: accepted.authority }
-      : undefined;
+  const binding = useMemo(
+    () => projectConfigurationBinding(configPath, config, canvasId),
+    [configPath, config.isSuccess, config.data, canvasId]
+  );
   const graph = useDbtProjectGraphQuery(binding, { enabled });
-  const projection =
-    graph.isSuccess &&
-    graph.data.freshness === 'fresh' &&
-    graph.data.authorityBinding.canvasId === binding?.canvasId &&
-    graph.data.authorityBinding.authority.kind === 'dbt-project-files' &&
-    graph.data.authorityBinding.authority.projectRoot === binding.authority.projectRoot
-      ? graph.data
-      : undefined;
-  const unavailable =
-    enabled &&
-    (tree.isError ||
-      configurations.length > 1 ||
-      (configPath != null && (config.isError || (config.isSuccess && binding == null))) ||
-      (binding != null && (graph.isError || (graph.isSuccess && projection == null))));
-  const loading =
-    enabled &&
-    !unavailable &&
-    (tree.isPending ||
-      tree.isFetching ||
-      (configPath != null && (config.isPending || config.isFetching)) ||
-      (binding != null && (graph.isPending || graph.isFetching)));
-  return { binding, projection, unavailable, loading };
+  const { projection, displayProjection } = projectPublicationSnapshot(binding, graph);
+  const statuses = projectContextStatuses(
+    tree,
+    { discovery, query: config, binding },
+    graph,
+    projection
+  );
+  const unavailable = enabled && statuses.includes('unavailable');
+  const loading = enabled && !unavailable && statuses.includes('loading');
+  const { refetch } = graph;
+  const refresh = useCallback(async (): Promise<DbtProjectGraphProjection | undefined> => {
+    if (binding == null) return undefined;
+    const current = await refetch();
+    return current.isSuccess ? currentProjectPublication(binding, current.data) : undefined;
+  }, [binding, refetch]);
+  return { binding, projection, displayProjection, unavailable, loading, refresh };
 }

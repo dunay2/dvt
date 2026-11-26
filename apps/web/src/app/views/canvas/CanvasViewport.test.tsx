@@ -432,12 +432,18 @@ describe('CanvasViewport', () => {
       elementsSelectable: true,
       deleteKeyCode: null,
       disableKeyboardA11y: false,
-      onNodesChange,
+      onNodesChange: expect.any(Function),
       onEdgesChange: undefined,
       onConnect: undefined,
       onReconnect: undefined,
       edgesReconnectable: false,
     });
+    const move = { type: 'position' as const, id: 'read-only-node', position: { x: 42, y: 35 } };
+    const update = xyflowState.lastReactFlowProps?.onNodesChange as typeof onNodesChange;
+    act(() => {
+      update([move]);
+    });
+    expect(onNodesChange.mock.calls).toEqual([[[move]]]);
   });
 
   it('suspends global node deletion while a contextual workbench owns keyboard input', async () => {

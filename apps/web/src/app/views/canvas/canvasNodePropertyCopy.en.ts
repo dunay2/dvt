@@ -1,5 +1,9 @@
 /** English copy for node property sections. */
 export const nodePropertyCopyEn = {
+  sourceOutputs: {
+    label: 'Outputs',
+    emptyState: 'This source has no outgoing connections in the Canvas.',
+  },
   sectionLabels: {
     general: 'Overview',
     columns: 'Columns',

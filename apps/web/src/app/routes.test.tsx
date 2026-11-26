@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-
 import { fireEvent } from '@testing-library/dom';
 import { createAppServicesTestOverrides } from '../testing/appServicesTestDoubles';
 import { act } from 'react';
@@ -218,20 +217,7 @@ describe('app routes', () => {
   it.each(['server', 'schema', 'local'] as const)(
     'keeps %s session failure recovery neutral through the real query and route boundaries',
     async (failure) => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn(async (input: RequestInfo | URL) => {
-          const url = String(input);
-          if (url.endsWith('/session') && failure === 'server') return buildEmptyJsonResponse(500);
-          if (url.endsWith('/session') && failure === 'local') {
-            throw new Error('Private diagnostic detail');
-          }
-          if (url.endsWith('/workspace/context') && failure === 'schema') {
-            return buildEmptyJsonResponse();
-          }
-          return buildAuthenticatedRouteResponse(url) ?? buildEmptyJsonResponse();
-        })
-      );
+      vi.stubGlobal('fetch', buildSessionFailureFetch(failure));
       const router = createMemoryRouter(createAppRoutes(), { initialEntries: ['/canvas'] });
       const queryClient = createTestQueryClient();
       await act(async () => {
@@ -520,8 +506,8 @@ describe('app routes', () => {
     expect(container.querySelector('[data-slot="shell-active-surface"]')).toBeNull();
     expect(readLeftNavigationCaptions(container)).toEqual([
       'Canvas',
-      'Runs',
       'Templates',
+      'Runs',
       'Plugins',
       'Admin',
     ]);
@@ -596,30 +582,8 @@ describe('app routes', () => {
     expect(lineageRoute).toBeUndefined();
     expect(diffRoute).toBeUndefined();
     expect(artifactsRoute).toBeUndefined();
-    expect(runsRoute?.id).toBe('monitoring.runs');
-    expect(runsRoute?.handle).toMatchObject({
-      routeBootstrap: {
-        mode: 'published',
-      },
-    });
-    expect(costRoute?.id).toBe('cost.dashboard');
-    expect(costRoute?.handle).toMatchObject({
-      routeBootstrap: {
-        mode: 'published',
-      },
-    });
-    expect(pluginsRoute?.id).toBe('shell.plugins');
-    expect(pluginsRoute?.handle).toMatchObject({
-      routeBootstrap: {
-        mode: 'static',
-      },
-    });
-    expect(adminRoute?.id).toBe('shell.admin');
-    expect(adminRoute?.handle).toMatchObject({
-      routeBootstrap: {
-        mode: 'static',
-      },
-    });
+    expectPublishedRouteBootstrap(runsRoute, costRoute);
+    expectStaticRouteBootstrap(pluginsRoute, adminRoute);
   });
 
   it('contains plugin route render failures below the application shell', () => {
@@ -674,3 +638,55 @@ describe('app routes', () => {
     ROUTE_INTEGRATION_TIMEOUT_MS
   );
 });
+
+function buildSessionFailureFetch(
+  failure: 'server' | 'schema' | 'local'
+): (input: RequestInfo | URL) => Promise<Response> {
+  return vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith('/session') && failure === 'server') return buildEmptyJsonResponse(500);
+    if (url.endsWith('/session') && failure === 'local') {
+      throw new Error('Private diagnostic detail');
+    }
+    if (url.endsWith('/workspace/context') && failure === 'schema') {
+      return buildEmptyJsonResponse();
+    }
+    return buildAuthenticatedRouteResponse(url) ?? buildEmptyJsonResponse();
+  });
+}
+
+function expectPublishedRouteBootstrap(
+  runsRoute: ReturnType<typeof findChildRouteByPath>,
+  costRoute: ReturnType<typeof findChildRouteByPath>
+): void {
+  expect(runsRoute?.id).toBe('monitoring.runs');
+  expect(runsRoute?.handle).toMatchObject({
+    routeBootstrap: {
+      mode: 'published',
+    },
+  });
+  expect(costRoute?.id).toBe('cost.dashboard');
+  expect(costRoute?.handle).toMatchObject({
+    routeBootstrap: {
+      mode: 'published',
+    },
+  });
+}
+
+function expectStaticRouteBootstrap(
+  pluginsRoute: ReturnType<typeof findChildRouteByPath>,
+  adminRoute: ReturnType<typeof findChildRouteByPath>
+): void {
+  expect(pluginsRoute?.id).toBe('shell.plugins');
+  expect(pluginsRoute?.handle).toMatchObject({
+    routeBootstrap: {
+      mode: 'static',
+    },
+  });
+  expect(adminRoute?.id).toBe('shell.admin');
+  expect(adminRoute?.handle).toMatchObject({
+    routeBootstrap: {
+      mode: 'static',
+    },
+  });
+}

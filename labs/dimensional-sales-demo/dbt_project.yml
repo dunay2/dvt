@@ -1,0 +1,18 @@
+name: dimensional_sales_demo
+version: '1.0.0'
+config-version: 2
+profile: code_inline_demo
+
+models:
+  dimensional_sales_demo:
+    +materialized: table
+    shared:
+      +schema: demo_sales_stage
+      +materialized: view
+    star:
+      +schema: demo_sales_star
+    snowflake:
+      +schema: demo_sales_snowflake
+    comparison:
+      +schema: demo_sales_star
+      +materialized: view

@@ -22,6 +22,15 @@ the semantic authority for architecture, component relations, rails, and
 mechanization. Routine governance refresh derives local inspection artifacts
 from Git and does not import or rebuild Planning DB.
 
+The local file/component indexes, coverage report, and remediation queue
+classify that Git inventory against the checked-in governance unit manifest.
+Their ownership labels and reporting-only findings describe this local
+classification; they do not attest current Planning DB architecture, component
+closure, or SRP acceptance. Consult the native current-ownership and
+implementation-evidence queries for those decisions. Queue entries are inspection
+findings, not GitHub delivery tasks, and cannot create, assign, or close such
+tasks. Retain the findings when correcting a bounded local coverage rule.
+
 ## Governing Sources
 
 - `AGENTS.md`
