@@ -39,15 +39,9 @@ function prepareUnsupportedDraftInspection(): WorkspaceGraphAuthoringNode | unde
   return initialNode;
 }
 
-function inspectUnsupportedDraftAuthority(
-  initialNode: WorkspaceGraphAuthoringNode | undefined
-): void {
-  let writesBeforeInspection = 0;
+function inspectUnsupportedDraftAuthority(): void {
   cy.get('[data-testid="canvas-viewport"]').should('be.visible');
   cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
-  cy.then(() => {
-    writesBeforeInspection = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
-  });
   cy.get('.react-flow__node[data-id="transform-customers"]')
     .should('be.visible')
     .find('[data-slot="canvas-node-shell"]')
@@ -58,29 +52,11 @@ function inspectUnsupportedDraftAuthority(
     .should('be.visible')
     .and('contain.text', 'Semantic operation unavailable')
     .and('contain.text', 'stored semantics were left unchanged');
-  cy.wrap(null).should(() => {
-    const inspectionWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT');
-    expect(inspectionWrites, 'Properties inspection keeps the draft revision').to.have.length(
-      writesBeforeInspection
-    );
-    inspectionWrites.forEach((call) => {
-      const inspectedNode = (
-        call.body as {
-          draft: {
-            nodes: Array<{
-              id: string;
-              name: string;
-              metadata?: Record<string, unknown>;
-            }>;
-          };
-        }
-      ).draft.nodes.find((node) => node.id === 'transform-customers');
-      expect(inspectedNode?.name, 'inspection keeps the stored name').to.equal(initialNode?.name);
-      expect(
-        inspectedNode?.metadata?.transformAuthoring,
-        'inspection preserves authority'
-      ).to.deep.equal(initialNode?.metadata?.transformAuthoring);
-    });
+  cy.then(() => {
+    expect(
+      getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+      'Properties inspection keeps the draft revision'
+    ).to.have.length(0);
   });
 }
 
@@ -120,7 +96,7 @@ function applyCommonFieldWithoutChangingAuthority(
 describe('Canvas unsupported Substrait inspection', () => {
   it('keeps Canvas operable and preserves canonical authority after a common-field edit', () => {
     const initialNode = prepareUnsupportedDraftInspection();
-    inspectUnsupportedDraftAuthority(initialNode);
+    inspectUnsupportedDraftAuthority();
     applyCommonFieldWithoutChangingAuthority(initialNode);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__controls-fitview').click();
