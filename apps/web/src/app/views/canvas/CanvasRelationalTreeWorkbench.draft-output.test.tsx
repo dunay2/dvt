@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React, { act } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
 
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
@@ -91,7 +91,11 @@ describe('Model Output in an active relational draft', () => {
   });
 });
 
-async function renderDraftWorkbench() {
+async function renderDraftWorkbench(): Promise<{
+  sourceId: string;
+  apply: Mock<() => { outcome: 'no_changes' }>;
+  projectTransformSql: Mock;
+}> {
   const graph = occurrenceGraph();
   const apply = vi.fn(() => ({ outcome: 'no_changes' as const }));
   const projectTransformSql = vi.fn();
