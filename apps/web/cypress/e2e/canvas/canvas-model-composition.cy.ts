@@ -21,6 +21,7 @@ import {
   type DbtCompositionSeed,
 } from '../../support/dbtModelComposition';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchModel,
   revisitWorkbenchCanvas,
@@ -227,7 +228,9 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openWorkbenchModel();
-    cy.get(row(receiver)).should('be.visible').and('have.attr', 'aria-pressed', 'true');
+    cy.get(row(receiver)).should('be.visible').and('have.attr', 'aria-pressed', 'true').focus();
+    pressNativeKey('Enter');
+    cy.get(pending).should('not.exist');
     dragModel(receiver);
     cy.get(pending).should('have.length', 1);
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
