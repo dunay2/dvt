@@ -18,9 +18,9 @@ import {
   type SqlCompilationState,
   type SqlScope,
 } from './context.js';
-import { readSourceOccurrence } from './occurrence.js';
 import { sourcePredicate } from './predicates.js';
-import { mergeSourceScopes, resolveSourceInput, sourceAlias } from './references.js';
+import { mergeSourceScopes, sourceAlias } from './references.js';
+import { bindSourceRange } from './sourceBinding.js';
 
 type SelectSource = (node: PostgresAstNode, depth: number) => SqlScope;
 const joinTypes: Readonly<Record<string, JoinRel_JoinType>> = {
@@ -103,8 +103,7 @@ export function sourceFromSyntax(
         'ONLY is outside the logical-input source profile.',
         range
       );
-    const binding = resolveSourceInput(state.context.inputs, range, sourceAlias(range['alias']));
-    return readSourceOccurrence(state, binding);
+    return bindSourceRange(state, range);
   }
   if (node['JoinExpr'] != null) {
     const join = sqlObject(node['JoinExpr']);

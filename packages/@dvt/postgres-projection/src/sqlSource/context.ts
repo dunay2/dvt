@@ -38,11 +38,6 @@ export type ModelSqlSourceContext = Readonly<{
   currentDocument?: SubstraitDocument | null;
   retainedDocuments?: readonly SubstraitDocument[];
 }>;
-export type SqlInputBinding = Readonly<{
-  input: ModelSqlSourceInput;
-  qualifier: string;
-  physicalPath?: readonly string[];
-}>;
 export type SqlNameBinding = Readonly<{
   name: string;
   qualifier: string | null;

@@ -13,7 +13,6 @@ import {
   sourceOutputFields,
   type ModelSqlSourceInput,
   type SqlCompilationState,
-  type SqlInputBinding,
   type SqlScope,
 } from './context.js';
 import { checkedSourceAnalysis } from './provenance.js';
@@ -85,7 +84,8 @@ function admitRetainedRead(
 
 export function readSourceOccurrence(
   state: SqlCompilationState,
-  { input, qualifier, physicalPath }: SqlInputBinding
+  input: ModelSqlSourceInput,
+  qualifier: string
 ): SqlScope {
   sourceBudget(state);
   if (input.columns.length === 0)
@@ -147,11 +147,6 @@ export function readSourceOccurrence(
   const published = projectSourcePublication(state, entry, input);
   return {
     entry: published,
-    bindings: input.columns.map((column, ordinal) => ({
-      name: column.name,
-      qualifier,
-      ...(physicalPath == null ? {} : { physicalPath }),
-      ordinal,
-    })),
+    bindings: input.columns.map((column, ordinal) => ({ name: column.name, qualifier, ordinal })),
   };
 }

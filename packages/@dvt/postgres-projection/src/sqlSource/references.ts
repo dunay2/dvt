@@ -4,7 +4,6 @@ import {
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { create } from '@bufbuild/protobuf';
-import { buildRelationalSourceObjectId } from '@dvt/contracts';
 
 import type { PostgresAstNode } from '../postgresAst.js';
 
@@ -13,60 +12,11 @@ import {
   sourceError,
   sqlList,
   sqlObject,
-  type ModelSqlSourceInput,
   type SqlCompilationState,
-  type SqlInputBinding,
   type SqlNameBinding,
   type SqlScope,
   type SqlNameScope,
 } from './context.js';
-
-function matchesPhysicalPath(input: ModelSqlSourceInput, path: readonly string[]): boolean {
-  if (!('sourceRef' in input.source)) return false;
-  const { names, sourceRef } = input.source;
-  if (
-    path.length === 3 &&
-    sourceRef.sourceObjectId !==
-      buildRelationalSourceObjectId({
-        kind: 'relation',
-        catalog: path[0]!,
-        schema: path[1]!,
-        name: path[2]!,
-        relationType: 'table',
-      })
-  )
-    return false;
-  const object = path.length === 3 ? path.slice(1) : path;
-  return object.every((part, index) => part === names[names.length - object.length + index]);
-}
-
-export function resolveSourceInput(
-  inputs: readonly ModelSqlSourceInput[],
-  range: PostgresAstNode,
-  alias: string | null
-): SqlInputBinding {
-  const table = range['relname'];
-  if (typeof table !== 'string')
-    return sourceError('unknown_input', 'Expected a prepared Model input name.', range);
-  const path = [range['catalogname'], range['schemaname'], table].filter(
-    (part): part is string => typeof part === 'string'
-  );
-  const logical = path.length === 1 ? inputs.find((input) => input.sqlName === table) : undefined;
-  if (logical != null) return { input: logical, qualifier: alias ?? table };
-
-  const physical = inputs.filter((input) => matchesPhysicalPath(input, path));
-  const input =
-    physical.length === 1 ? physical[0] : physical.find((item) => item.sqlName === alias);
-  if (input == null)
-    return sourceError(
-      physical.length > 1 ? 'ambiguous_reference' : 'unknown_input',
-      physical.length > 1
-        ? 'The physical name matches multiple prepared inputs. Use a unique logical name or alias.'
-        : 'The SQL input is outside the prepared Model context.',
-      range
-    );
-  return { input, qualifier: alias ?? table, ...(alias == null ? { physicalPath: path } : {}) };
-}
 
 export function matchesSqlQualifier(binding: SqlNameBinding, parts: readonly string[]): boolean {
   if (parts.length === 0) return true;
