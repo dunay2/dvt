@@ -84,12 +84,13 @@ export function sourceError(
   );
 }
 export function sqlObject(value: unknown): PostgresAstNode {
-  if (value == null || typeof value !== 'object' || Array.isArray(value))
-    return sourceError(
-      'unsupported_sql',
-      'Expected PostgreSQL syntax in the admitted source profile.'
-    );
-  return value as PostgresAstNode;
+  if (value != null && typeof value === 'object') {
+    if (!Array.isArray(value)) return value as PostgresAstNode;
+  }
+  return sourceError(
+    'unsupported_sql',
+    'Expected PostgreSQL syntax in the admitted source profile.'
+  );
 }
 export function sqlList(value: unknown): readonly unknown[] {
   if (value == null) return [];
@@ -170,13 +171,11 @@ export function consumeSourceOrdinal(
   scope: SqlNameScope,
   ordinal: number
 ): void {
-  const field = scope.schema[ordinal];
-  if (
-    field == null ||
-    field.type.kind.case == null ||
-    !['string', 'bool', 'i64', 'fp64', 'precisionTimestampTz'].includes(field.type.kind.case)
-  )
-    sourceError('unknown_type', 'The referenced field has no admitted canonical type.');
+  const unknownType = 'The referenced field has no admitted canonical type.';
+  const field = scope.schema[ordinal] ?? sourceError('unknown_type', unknownType);
+  const kind = field.type.kind.case ?? '';
+  if (!['string', 'bool', 'i64', 'fp64', 'precisionTimestampTz'].includes(kind))
+    sourceError('unknown_type', unknownType);
   for (const id of field.sourceFieldIds) {
     const origin = state.readOrigins.get(id);
     if (origin != null)

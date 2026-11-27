@@ -2,6 +2,7 @@
 import {
   JoinRel_JoinType,
   RelSchema,
+  type Rel,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { create } from '@bufbuild/protobuf';
 
@@ -16,6 +17,7 @@ import {
   sqlList,
   sqlObject,
   type SqlCompilationState,
+  type SqlNameBinding,
   type SqlScope,
 } from './context.js';
 import { sourcePredicate } from './predicates.js';
@@ -29,6 +31,53 @@ const joinTypes: Readonly<Record<string, JoinRel_JoinType>> = {
   JOIN_RIGHT: JoinRel_JoinType.RIGHT,
   JOIN_FULL: JoinRel_JoinType.OUTER,
 };
+
+function sourceJoinType(join: PostgresAstNode | undefined): JoinRel_JoinType | null {
+  if (join == null) return null;
+  const kind = String(join['jointype']);
+  if (join['quals'] != null) {
+    const type = joinTypes[kind];
+    if (type != null) return type;
+  } else if (kind === 'JOIN_INNER') {
+    return null;
+  }
+  return sourceError(
+    'unsupported_sql',
+    'This JOIN requires an admitted type and explicit ON.',
+    join
+  );
+}
+
+function buildSourceJoin(
+  state: SqlCompilationState,
+  input: Readonly<{
+    left: SqlScope;
+    right: SqlScope;
+    bindings: readonly SqlNameBinding[];
+    relAnchor: number;
+  }>,
+  join?: PostgresAstNode
+): Rel {
+  const { left, right, bindings, relAnchor } = input;
+  const operands = {
+    common: { relAnchor },
+    left: left.entry.relation,
+    right: right.entry.relation,
+  };
+  const type = sourceJoinType(join);
+  if (type == null) return create(RelSchema, { relType: { case: 'cross', value: operands } });
+
+  // ON sees both input schemas before the outer join applies its NULL extension.
+  const schema = [
+    ...state.schemas.get(left.entry.binding.relationId)!,
+    ...state.schemas.get(right.entry.binding.relationId)!,
+  ];
+  const expression = sourcePredicate(state, { bindings, schema }, sqlObject(join?.['quals']));
+  return create(RelSchema, {
+    relType: { case: 'join', value: { ...operands, type, expression } },
+  });
+}
+
 export function combineSqlSources(
   state: SqlCompilationState,
   left: SqlScope,
@@ -37,43 +86,12 @@ export function combineSqlSources(
 ): SqlScope {
   const bindings = mergeSourceScopes(left, right);
   const identity = nextSourceRelation(state);
-  const common = { relAnchor: identity.relAnchor };
   const fields = [...left.entry.fields, ...right.entry.fields];
-  const cross = join == null || join['quals'] == null;
-  const type = join == null ? JoinRel_JoinType.INNER : joinTypes[String(join['jointype'])];
-  if (type == null || (cross && type !== JoinRel_JoinType.INNER))
-    return sourceError(
-      'unsupported_sql',
-      'This JOIN requires an admitted type and explicit ON.',
-      join
-    );
-  // ON sees both input schemas before the outer join applies its NULL extension.
-  const schema = [
-    ...state.schemas.get(left.entry.binding.relationId)!,
-    ...state.schemas.get(right.entry.binding.relationId)!,
-  ];
-  const predicate = cross
-    ? null
-    : sourcePredicate(state, { bindings, schema }, sqlObject(join!['quals']));
-  const relation = cross
-    ? create(RelSchema, {
-        relType: {
-          case: 'cross',
-          value: { common, left: left.entry.relation, right: right.entry.relation },
-        },
-      })
-    : create(RelSchema, {
-        relType: {
-          case: 'join',
-          value: {
-            common,
-            left: left.entry.relation,
-            right: right.entry.relation,
-            type,
-            expression: predicate!,
-          },
-        },
-      });
+  const relation = buildSourceJoin(
+    state,
+    { left, right, bindings, relAnchor: identity.relAnchor },
+    join
+  );
   const entry = appendSourceRelation(state, {
     relation,
     binding: identity,
@@ -86,6 +104,43 @@ export function combineSqlSources(
   });
   return { entry, bindings };
 }
+
+function sourceRange(state: SqlCompilationState, range: PostgresAstNode): SqlScope {
+  if (range['inh'] === false)
+    return sourceError(
+      'unsupported_sql',
+      'ONLY is outside the prepared-input source profile.',
+      range
+    );
+  return bindSourceRange(state, range);
+}
+
+function assertDirectJoin(join: PostgresAstNode): void {
+  if (join['isNatural'] !== true && sqlList(join['usingClause']).length === 0) {
+    if (join['join_using_alias'] == null && join['alias'] == null) return;
+  }
+  sourceError(
+    'unsupported_sql',
+    'NATURAL, USING and aliased JOINs are outside the source profile.',
+    join
+  );
+}
+
+function sourceSubquery(subquery: PostgresAstNode, select: SelectSource, depth: number): SqlScope {
+  if (subquery['lateral'] === true)
+    return sourceError('unsupported_sql', 'LATERAL is outside the source profile.', subquery);
+  const scope = select(sqlObject(subquery['subquery']), depth);
+  const qualifier = sourceAlias(subquery['alias']);
+  return {
+    entry: scope.entry,
+    bindings: scope.entry.fields.map((field) => ({
+      name: field.displayName!,
+      qualifier,
+      ordinal: field.outputOrdinal,
+    })),
+  };
+}
+
 export function sourceFromSyntax(
   state: SqlCompilationState,
   node: PostgresAstNode,
@@ -95,29 +150,10 @@ export function sourceFromSyntax(
   sourceBudget(state);
   if (depth > 64)
     return sourceError('unsupported_sql', 'Query nesting exceeds the source profile.', node);
-  if (node['RangeVar'] != null) {
-    const range = sqlObject(node['RangeVar']);
-    if (range['inh'] === false)
-      return sourceError(
-        'unsupported_sql',
-        'ONLY is outside the logical-input source profile.',
-        range
-      );
-    return bindSourceRange(state, range);
-  }
+  if (node['RangeVar'] != null) return sourceRange(state, sqlObject(node['RangeVar']));
   if (node['JoinExpr'] != null) {
     const join = sqlObject(node['JoinExpr']);
-    if (
-      join['isNatural'] === true ||
-      sqlList(join['usingClause']).length > 0 ||
-      join['join_using_alias'] != null ||
-      join['alias'] != null
-    )
-      return sourceError(
-        'unsupported_sql',
-        'NATURAL, USING and aliased JOINs are outside the source profile.',
-        join
-      );
+    assertDirectJoin(join);
     return combineSqlSources(
       state,
       sourceFromSyntax(state, sqlObject(join['larg']), select, depth + 1),
@@ -125,21 +161,8 @@ export function sourceFromSyntax(
       join
     );
   }
-  if (node['RangeSubselect'] != null) {
-    const subquery = sqlObject(node['RangeSubselect']);
-    if (subquery['lateral'] === true)
-      return sourceError('unsupported_sql', 'LATERAL is outside the source profile.', subquery);
-    const scope = select(sqlObject(subquery['subquery']), depth + 1);
-    const qualifier = sourceAlias(subquery['alias']);
-    return {
-      entry: scope.entry,
-      bindings: scope.entry.fields.map((field) => ({
-        name: field.displayName!,
-        qualifier,
-        ordinal: field.outputOrdinal,
-      })),
-    };
-  }
+  if (node['RangeSubselect'] != null)
+    return sourceSubquery(sqlObject(node['RangeSubselect']), select, depth + 1);
   return sourceError(
     'unsupported_sql',
     'FROM requires a prepared input, admitted JOIN or uncorrelated SELECT.',

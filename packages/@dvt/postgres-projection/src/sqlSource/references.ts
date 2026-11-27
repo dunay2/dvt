@@ -89,17 +89,15 @@ export function sourceFieldExpression(ordinal: number): Expression {
 export function sourceAlias(value: unknown): string | null {
   if (value == null) return null;
   const alias = sqlObject(value);
-  if (
-    sqlList(alias['colnames']).length > 0 ||
-    typeof alias['aliasname'] !== 'string' ||
-    alias['aliasname'].length === 0
-  )
-    return sourceError(
-      'unsupported_sql',
-      'Column-list aliases are outside the source profile.',
-      alias
-    );
-  return alias['aliasname'];
+  if (sqlList(alias['colnames']).length === 0) {
+    const name = alias['aliasname'];
+    if (typeof name === 'string' && name.length > 0) return name;
+  }
+  return sourceError(
+    'unsupported_sql',
+    'Column-list aliases are outside the source profile.',
+    alias
+  );
 }
 export function mergeSourceScopes(
   left: SqlScope,
