@@ -100,6 +100,7 @@ export function CanvasModelBrowserProvider({
               ...item,
               draggable: composition?.nodeIds.has(item.id) === true,
             }))}
+            hideAddModel
             canDragModel={(id) => composition?.nodeIds.has(id) === true}
             onDragStart={(id, event) => startCompositionDrag(composition, scopeKey, id, event)}
             presentation={cataloguePresentation}

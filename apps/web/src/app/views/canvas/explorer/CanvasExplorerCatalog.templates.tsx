@@ -197,6 +197,7 @@ export function CanvasExplorerListTemplate({
   onQuery,
   onSelect,
   onDragStart,
+  hideAddModel,
   onAddModel,
   onRemoveEmptyModel,
   connections,
@@ -216,6 +217,7 @@ export function CanvasExplorerListTemplate({
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
+  hideAddModel?: boolean;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onRemoveEmptyModel?: (id: string) => void;
   connections?: ReactNode;
@@ -243,14 +245,14 @@ export function CanvasExplorerListTemplate({
               pending={pending}
               label={copy.details}
             />
-            {onAddModel == null ? null : (
+            {hideAddModel ? null : (
               <button
                 type="button"
                 className={styles.headerAction}
                 aria-label={copy.addModel}
                 title={copy.addModel}
-                disabled={disabled}
-                onClick={(event) => onAddModel(event.currentTarget)}
+                disabled={disabled || onAddModel == null}
+                onClick={(event) => onAddModel?.(event.currentTarget)}
               >
                 <Plus aria-hidden="true" />
               </button>

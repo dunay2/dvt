@@ -15,6 +15,7 @@ export function CanvasExplorerList({
   onSelect,
   disabled,
   onDragStart,
+  hideAddModel,
   onAddModel,
   onRemoveEmptyModel,
   onImport,
@@ -29,6 +30,7 @@ export function CanvasExplorerList({
   onSelect: (id: string) => unknown;
   disabled?: boolean;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
+  hideAddModel?: boolean;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onRemoveEmptyModel?: (id: string) => void;
   onImport?: () => void;
@@ -91,6 +93,7 @@ export function CanvasExplorerList({
       }}
       disabled={disabled}
       onDragStart={onDragStart}
+      hideAddModel={hideAddModel}
       onAddModel={onAddModel}
       onRemoveEmptyModel={onRemoveEmptyModel}
       status={

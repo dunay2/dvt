@@ -30,6 +30,7 @@ export function CanvasProjectElementsExplorerView({
   presentation,
   onDragStart,
   canDragModel,
+  hideAddModel,
   onAddModel,
   onRemoveEmptyModel,
   onImport,
@@ -98,6 +99,7 @@ export function CanvasProjectElementsExplorerView({
         key={JSON.stringify([catalogueScopeKey, projectRoot])}
         items={mergeCanvasExplorerModels(items, models)}
         presentation={presentation}
+        hideAddModel={hideAddModel}
         onAddModel={onAddModel}
         onRemoveEmptyModel={onRemoveEmptyModel}
         onImport={onImport}
