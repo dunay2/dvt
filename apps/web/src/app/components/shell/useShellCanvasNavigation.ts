@@ -21,19 +21,29 @@ export function useShellCanvasNavigation(operationalView: ShellOperationalView |
 }
 
 function projectCanvasRailPosture(
-  { codeTab, modelTab, modelBrowser }: ReturnType<typeof useCanvasRailContributions>,
+  contributions: ReturnType<typeof useCanvasRailContributions>,
   operationalView: ShellOperationalView | null | undefined,
   canActivateCanvas: boolean,
   expanded: boolean
 ) {
-  const codeActive = codeTab?.active === true;
-  const workbenchForeground = operationalView == null && !codeActive;
+  const surface = activeCanvasRailSurface(contributions, operationalView);
   return {
-    workbenchForeground,
-    canvasExpanded: canActivateCanvas ? expanded && !codeActive : undefined,
-    canvasActive:
-      workbenchForeground && canActivateCanvas && !modelTab?.active && modelBrowser?.mode == null,
+    workbenchForeground: surface === 'canvas' || surface === 'model',
+    canvasExpanded: canActivateCanvas
+      ? expanded && contributions.codeTab?.active !== true
+      : undefined,
+    canvasActive: canActivateCanvas && surface === 'canvas',
   };
+}
+
+function activeCanvasRailSurface(
+  { codeTab, modelTab, modelBrowser }: ReturnType<typeof useCanvasRailContributions>,
+  operationalView: ShellOperationalView | null | undefined
+): 'operational' | 'code' | 'model' | 'canvas' {
+  if (operationalView != null) return 'operational';
+  if (codeTab?.active === true) return 'code';
+  if (modelTab?.active === true || modelBrowser?.mode != null) return 'model';
+  return 'canvas';
 }
 
 function useCanvasRailRoute(): { onCanvasRoute: boolean; canActivateCanvas: boolean } {

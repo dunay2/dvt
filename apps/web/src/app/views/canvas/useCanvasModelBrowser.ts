@@ -30,6 +30,7 @@ import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
 import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
 import { readCanvasModelNavigationPreference } from './canvasModelNavigationPreference';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 function readCanvasModelTab(canvasId: string | null) {
   const tab = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
@@ -97,15 +98,23 @@ export function useCanvasModelBrowser({
   }, [owner]);
   const mode = choice?.owner === owner ? choice.mode : null;
   const selectedId = model.selected?.id;
+  const browserCanvasId = catalogueUnavailable ? null : canvasId;
+  const revealCanvas = useCallback(() => {
+    showCanvas();
+    model.setActive(false);
+  }, [showCanvas, model.setActive]);
+  const reportInspectionFailure = useCallback(() => {
+    if (currentOwner.current === owner)
+      toast.error(resolveCanvasViewCopy(language).routeErrorTitle);
+  }, [language, owner]);
   const onCanvas = useCallback(
     function showBrowserCanvas() {
       if (currentOwner.current !== owner) return;
       setChoice(null);
       setPendingContext(null);
-      showCanvas();
-      model.setActive(false);
+      revealCanvas();
     },
-    [owner, showCanvas, model.setActive]
+    [owner, revealCanvas]
   );
   const onSelect = useCallback(
     (
@@ -129,8 +138,7 @@ export function useCanvasModelBrowser({
         toast.info(resolveCanvasSemanticEditorCopy(language).semanticEditorUnavailable);
         return false;
       }
-      showCanvas();
-      model.setActive(false);
+      revealCanvas();
       return onInspect(request, preferredTab ?? (view === 'sql' ? 'code' : null));
     },
     [
@@ -143,16 +151,15 @@ export function useCanvasModelBrowser({
       model.modelIds,
       selectedId,
       model.open,
-      model.setActive,
-      showCanvas,
+      revealCanvas,
       onInspect,
     ]
   );
   const onBrowse = useCallback(
     function browseModelView(view: CanvasModelView) {
       if (currentOwner.current !== owner) return;
-      if (canvasId == null || catalogueUnavailable) return;
-      const currentTab = readCanvasModelTab(canvasId);
+      if (browserCanvasId == null) return;
+      const currentTab = readCanvasModelTab(browserCanvasId);
       if (currentTab?.browsingDisabled) return;
 
       setChoice({ owner, mode: view });
@@ -171,16 +178,14 @@ export function useCanvasModelBrowser({
         sourceLabel,
       });
       if (request != null) {
-        onSelect(request, null, view);
+        Promise.resolve(onSelect(request, null, view)).catch(reportInspectionFailure);
       } else {
-        showCanvas();
-        model.setActive(false);
+        revealCanvas();
       }
     },
     [
-      canvasId,
+      browserCanvasId,
       owner,
-      catalogueUnavailable,
       catalogue,
       nodes,
       inspectorTarget,
@@ -189,20 +194,20 @@ export function useCanvasModelBrowser({
       model.scopeKey,
       cataloguePresentation.query,
       sourceLabel,
+      reportInspectionFailure,
       onSelect,
-      showCanvas,
-      model.setActive,
+      revealCanvas,
     ]
   );
   useEffect(
     function registerBrowserContribution() {
-      if (canvasId == null || catalogueUnavailable) return;
-      const browser = { canvasId, mode, onBrowse, onCanvas };
+      if (browserCanvasId == null) return;
+      const browser = { canvasId: browserCanvasId, mode, onBrowse, onCanvas };
       const store = useCanvasWorkspaceMenuContributionStore.getState();
       store.registerModelBrowser(browser);
       return () => store.clearModelBrowser(browser);
     },
-    [canvasId, catalogueUnavailable, mode, onBrowse, onCanvas]
+    [browserCanvasId, mode, onBrowse, onCanvas]
   );
   const picker = pendingContext?.owner === owner ? pendingContext : null;
   const contexts = picker?.contexts.filter((item) => model.modelIds.has(item.nodeId)) ?? [];
