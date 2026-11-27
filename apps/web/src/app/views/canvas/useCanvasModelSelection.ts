@@ -8,6 +8,7 @@ import { canOpenCanvasRelationalTreeWorkbench } from './useCanvasRelationalTreeW
 import {
   useCanvasWorkspaceMenuContributionStore,
   type CanvasModelView,
+  type CanvasModelWorkspaceTabContribution,
 } from './canvasWorkspaceMenuContributionStore';
 import { MAX_CANVAS_MODEL_TABS, canvasModelWorkspaceTabIds } from './canvasWorkspaceTabs';
 import type { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
@@ -25,13 +26,54 @@ type Selection = Readonly<{
   opened: readonly OpenModel[];
 }>;
 
-export function useCanvasModelSelection(
-  canvasId: string | null,
-  nodes: readonly CanonicalNode[],
-  focus: ReturnType<typeof useCanvasWorkbenchFocus>,
-  workspaceScope?: WorkspaceScope,
-  projectRoot?: string
-) {
+function planModelTabSelection(
+  opened: readonly OpenModel[],
+  nodeId: string,
+  view: CanvasModelView | undefined,
+  current: CanvasModelWorkspaceTabContribution | null
+): readonly OpenModel[] | null {
+  const existing = opened.find(({ id }) => id === nodeId);
+  if (existing == null && opened.length >= MAX_CANVAS_MODEL_TABS) return null;
+  const next = { id: nodeId, view: view ?? existing?.view ?? 'semantic' } as const;
+  const tabs = opened.map((tab) => updateModelTabView(tab, next, current));
+  return existing == null ? [...tabs, next] : tabs;
+}
+
+function updateModelTabView(
+  tab: OpenModel,
+  next: OpenModel,
+  current: CanvasModelWorkspaceTabContribution | null
+): OpenModel {
+  if (tab.id === next.id) return next;
+  if (tab.id === current?.nodeId && current.views != null) {
+    return { ...tab, view: current.views.active };
+  }
+  return tab;
+}
+
+function selectPublishedModel(
+  tab: CanvasModelWorkspaceTabContribution,
+  view: CanvasModelView | undefined
+): void {
+  tab.onSelect();
+  if (view != null && tab.views?.disabled !== true) tab.views?.[view]();
+}
+
+export function useCanvasModelSelection({
+  canvasId,
+  nodes,
+  focus,
+  workspaceScope,
+  projectRoot,
+  onActivate,
+}: Readonly<{
+  canvasId: string | null;
+  nodes: readonly CanonicalNode[];
+  focus: ReturnType<typeof useCanvasWorkbenchFocus>;
+  workspaceScope?: WorkspaceScope;
+  projectRoot?: string;
+  onActivate?: () => void;
+}>) {
   const scopeKey = canvasModelNavigationScopeKey(workspaceScope, canvasId, projectRoot);
   const owner = useMemo(() => ({}), [canvasId, scopeKey, projectRoot]);
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -76,10 +118,11 @@ export function useCanvasModelSelection(
     (nodeId: string): void => {
       const state = current.current;
       if (state?.owner !== owner || state.selectedId !== nodeId) return;
-      syncCanvasInspectedModel(state.workspaceScope, nodeId);
       setActive(true);
+      onActivate?.();
+      syncCanvasInspectedModel(state.workspaceScope, nodeId);
     },
-    [owner]
+    [owner, onActivate]
   );
   const open = useCallback(
     (nodeId: string, view?: CanvasModelView, fromTab = false) => {
@@ -102,8 +145,7 @@ export function useCanvasModelSelection(
           : null;
       if (state.selectedId === nodeId) {
         if (currentTab != null) {
-          currentTab.onSelect();
-          if (view != null && currentTab.views?.disabled !== true) currentTab.views?.[view]();
+          selectPublishedModel(currentTab, view);
         } else {
           if (view != null)
             commit(
@@ -118,18 +160,10 @@ export function useCanvasModelSelection(
       const select = () => {
         const latest = current.current;
         if (latest?.owner !== owner || !latest.modelIds.has(nodeId)) return;
-        const existing = latest.opened.find(({ id }) => id === nodeId);
-        if (existing == null && latest.opened.length >= MAX_CANVAS_MODEL_TABS) return;
-        const next = { id: nodeId, view: view ?? existing?.view ?? 'semantic' };
-        const tabs = latest.opened.map((tab) =>
-          tab.id === nodeId
-            ? next
-            : tab.id === currentTab?.nodeId && currentTab.views != null
-              ? { ...tab, view: currentTab.views.active }
-              : tab
-        );
+        const tabs = planModelTabSelection(latest.opened, nodeId, view, currentTab);
+        if (tabs == null) return;
         if (!fromTab) capture(undefined, nodeId);
-        if (!commit(nodeId, existing == null ? [...tabs, next] : tabs)) return;
+        if (!commit(nodeId, tabs)) return;
         activate(nodeId);
         rememberCanvasModelNavigation(scopeKey, nodeId);
         if (!fromTab) enter('[data-slot="canvas-model-editor"]');
@@ -148,7 +182,8 @@ export function useCanvasModelSelection(
       const remaining = state.opened.filter(({ id }) => id !== nodeId);
       const closedCurrent = state.selectedId === nodeId;
       const neighbour = remaining[index] ?? remaining.at(-1);
-      const nextId = closedCurrent ? (visible ? (neighbour?.id ?? null) : null) : state.selectedId;
+      const replacementId = visible ? (neighbour?.id ?? null) : null;
+      const nextId = closedCurrent ? replacementId : state.selectedId;
       if (!commit(nextId, remaining)) return;
       if (closedCurrent && nextId != null) {
         activate(nextId);
@@ -159,6 +194,36 @@ export function useCanvasModelSelection(
     },
     [owner, commit, activate, enter, restore, scopeKey]
   );
+  useCanvasModelTabList({ canvasId, eligible, opened, open, close });
+  return {
+    scopeKey,
+    modelIds,
+    selected,
+    openModelIds: opened.map(({ id }) => id),
+    initialView: opened.find(({ id }) => id === selected?.id)?.view,
+    active,
+    activate: () => {
+      if (selected != null) activate(selected.id);
+    },
+    open,
+    close,
+    setActive,
+  };
+}
+
+function useCanvasModelTabList({
+  canvasId,
+  eligible,
+  opened,
+  open,
+  close,
+}: Readonly<{
+  canvasId: string | null;
+  eligible: ReadonlyMap<string, CanonicalNode>;
+  opened: readonly OpenModel[];
+  open: (id: string, view?: CanvasModelView, fromTab?: boolean) => void;
+  close: (id: string, visible: boolean) => void;
+}>): void {
   useLayoutEffect(() => {
     if (canvasId == null || opened.length === 0) return;
     const store = useCanvasWorkspaceMenuContributionStore.getState();
@@ -178,19 +243,4 @@ export function useCanvasModelSelection(
     store.registerModelTabList(list);
     return () => store.clearModelTabList(list);
   }, [canvasId, eligible, opened, open, close]);
-
-  return {
-    scopeKey,
-    modelIds,
-    selected,
-    openModelIds: opened.map(({ id }) => id),
-    initialView: opened.find(({ id }) => id === selected?.id)?.view,
-    active,
-    activate: () => {
-      if (selected != null) activate(selected.id);
-    },
-    open,
-    close,
-    setActive,
-  };
 }

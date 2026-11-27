@@ -119,7 +119,6 @@ export function useCanvasModelBrowser({
       const view = requestedView ?? editorView ?? mode;
       const nodeId = requestedModelId(request, model.modelIds);
       if (view != null && nodeId != null) {
-        showCanvas();
         const target = resolveCanvasModelNavigationTarget(nodeId, nodes, selectedId);
         if (target.kind === 'contexts')
           setPendingContext({ owner, view, contexts: target.contexts });
@@ -172,7 +171,7 @@ export function useCanvasModelBrowser({
         sourceLabel,
       });
       if (request != null) {
-        void onSelect(request, null, view);
+        onSelect(request, null, view);
       } else {
         showCanvas();
         model.setActive(false);
@@ -208,7 +207,7 @@ export function useCanvasModelBrowser({
   const picker = pendingContext?.owner === owner ? pendingContext : null;
   const contexts = picker?.contexts.filter((item) => model.modelIds.has(item.nodeId)) ?? [];
   const selectContext = (nodeId: string): void => {
-    if (picker == null || currentOwner.current !== picker.owner) return;
+    if (picker?.owner !== currentOwner.current) return;
     if (!contexts.some((item) => item.nodeId === nodeId)) return;
     setPendingContext(null);
     model.open(nodeId, picker.view);

@@ -27,6 +27,7 @@ const first: CanonicalNode = {
 const second = { ...first, id: 'model-2', name: 'Model 2' };
 const source: CanonicalNode = { ...first, id: 'source', kind: 'dvt:source', role: 'input' };
 const focus = { capture: vi.fn(), enter: vi.fn(), restore: vi.fn() };
+const onModelActivated = vi.fn();
 const showCanvas = vi.fn();
 const inspect = vi.fn();
 const tabViews = {
@@ -52,13 +53,19 @@ function Harness({
   nodes?: readonly CanonicalNode[];
   target?: CanvasInspectorResource;
 }): null {
-  model = useCanvasModelSelection(
+  model = useCanvasModelSelection({
     canvasId,
     nodes,
     focus,
-    { tenantId: 'tenant', projectId, environmentId: 'dev', targetAdapter: 'temporal' },
-    'root'
-  );
+    workspaceScope: {
+      tenantId: 'tenant',
+      projectId,
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
+    projectRoot: 'root',
+    onActivate: onModelActivated,
+  });
   browser = useCanvasModelBrowser({
     canvasId,
     catalogueUnavailable: unavailable,
@@ -241,17 +248,21 @@ it('recovers a missing target through the remembered Model, then the first avail
   expect(inspect).not.toHaveBeenCalled();
 });
 
-it('retains the current Model until its owner accepts replacement', async () => {
+it('leaves Code in the foreground until the current Model owner accepts replacement', async () => {
   render();
   act(() => model.open(first.id));
+  act(() => model.setActive(false));
+  onModelActivated.mockClear();
   const resume = deferReplacement();
-  browse('sql');
-  await act(() => browser.onSelect(second.id));
+  await act(() => browser.onSelect(second.id, null, 'sql'));
   expect(model.selected?.id).toBe(first.id);
-  expect(model.initialView).toBe('semantic');
+  expect(model.active).toBe(false);
+  expect(showCanvas).not.toHaveBeenCalled();
+  expect(onModelActivated).not.toHaveBeenCalled();
   resume();
   expect(model.selected?.id).toBe(second.id);
   expect(model.initialView).toBe('sql');
+  expect(onModelActivated).toHaveBeenCalledOnce();
 });
 
 it('opens the next Model in the actual active view after its toolbar changes SQL visibility', async () => {

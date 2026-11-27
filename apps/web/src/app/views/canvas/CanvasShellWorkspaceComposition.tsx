@@ -1,6 +1,7 @@
 /** Owned concern: compose existing Canvas, Model and Code workspace surfaces without changing their DOM or lifetime. */
 import type { ReactNode } from 'react';
 import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
+import { useCanvasModelRouteEntryPending } from './CanvasCodeRouteEntry';
 import { CanvasShellWorkspaceSurfaces } from './CanvasShellMainPanelFrame';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import type { CanvasShellLayout, CanvasShellPanels } from './canvasShell.types';
@@ -68,10 +69,14 @@ export function CanvasShellWorkspaceBody({
   codeVisible,
 }: CanvasShellSurfaceInput & { viewport: ReactNode; codeVisible: boolean }): JSX.Element {
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
+  const pendingModelEntry = useCanvasModelRouteEntryPending();
+  const canvasViewport = pendingModelEntry ? null : viewport;
   return (
     <CanvasShellWorkspaceSurfaces
       viewport={
-        modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
+        modelWorkspaceOpen || workspaceTask != null
+          ? canvasViewport
+          : (layout.centerSurface ?? canvasViewport)
       }
       editor={modelWorkspaceOpen ? layout.centerSurface : null}
       modelWorkspace={layout.modelWorkspace}

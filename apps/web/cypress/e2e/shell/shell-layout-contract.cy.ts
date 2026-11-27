@@ -109,7 +109,7 @@ function assertShellCanvasEntries(
     .and('have.attr', 'href', '/canvas')
     .and(($entry) => {
       const entry = $entry[0]!;
-      expect(entry.closest('[hidden], [inert], [aria-hidden="true"]')).to.equal(null);
+      expect(entry.closest('[hidden], [inert], [aria-hidden="true"]')).to.be.null;
       expect(entry.getAttribute('aria-expanded')).to.be.oneOf(['true', 'false']);
       expect(
         entry.getAttribute('aria-current'),
@@ -122,9 +122,8 @@ function assertShellCanvasEntries(
         'one shell control identity'
       ).to.have.length(1);
       if (entry.getAttribute('aria-expanded') === 'true') {
-        expect(
-          entry.ownerDocument.getElementById(entry.getAttribute('aria-controls')!)
-        ).not.to.equal(null);
+        expect(entry.ownerDocument.getElementById(entry.getAttribute('aria-controls')!)).not.to.be
+          .null;
       }
     })
     .focus()
@@ -153,6 +152,34 @@ function assertSelectedNavigation(activeSurface: 'canvas' | 'code' | CanvasModel
     });
     expect(selected, 'one visually selected destination').to.have.length(1);
     expect(selected[0]).to.equal(rail.querySelector(destination));
+  });
+}
+
+function enterSemanticWithoutCanvas(): void {
+  const semantic = '[data-slot="shell-model-semantic-command"]';
+  const canvasPane =
+    '[data-slot="canvas-workspace-surface"][aria-hidden="false"] [data-testid="canvas-viewport"]';
+  const canvasRail = '[data-slot="left-navigation-link"][href="/canvas"][data-active="true"]';
+  const intermediate: string[] = [];
+  let observer: MutationObserver;
+  cy.document().then((document) => {
+    observer = new MutationObserver(() => {
+      if (document.querySelector(canvasPane)) intermediate.push('Canvas panel');
+      if (document.querySelector(canvasRail)) intermediate.push('Canvas shortcut');
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-hidden', 'data-active'],
+    });
+  });
+  cy.get(semantic).click();
+  cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+  cy.get(semantic).should('have.attr', 'aria-pressed', 'true');
+  cy.then(() => {
+    observer.disconnect();
+    expect(intermediate, 'Canvas must stay out of the foreground').to.deep.equal([]);
   });
 }
 function assertNavigationTargetGeometry(): void {
@@ -222,10 +249,10 @@ function assertRailFillsShell(): void {
       window.document.querySelectorAll<HTMLElement>('[data-slot="left-navigation-link"]')
     );
 
-    expect(body, 'shell body').to.not.equal(null);
-    expect(wrapper, 'rail wrapper').to.not.equal(null);
-    expect(rail, 'left navigation rail').to.not.equal(null);
-    expect(nav, 'left navigation nav').to.not.equal(null);
+    expect(body, 'shell body').to.not.be.null;
+    expect(wrapper, 'rail wrapper').to.not.be.null;
+    expect(rail, 'left navigation rail').to.not.be.null;
+    expect(nav, 'left navigation nav').to.not.be.null;
     expect(links.length, 'navigation link count').to.be.greaterThan(2);
 
     const bodyRect = body!.getBoundingClientRect();
@@ -414,7 +441,7 @@ function assertResizedDrawerSurvivesReopenAndReload(saveCount: number): void {
         $reopened[0]!.getBoundingClientRect().height,
         'close and reveal retain size'
       ).to.be.closeTo(rememberedHeight, 2);
-      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.lengthOf(saveCount);
     });
     // Reload creates a new Window; retain the controlled API transport without reseeding layout.
     const sessionReads = getE2eApiCalls('/session', 'GET').length;
@@ -426,7 +453,7 @@ function assertResizedDrawerSurvivesReopenAndReload(saveCount: number): void {
         'reload retains the resized height'
       ).to.be.closeTo(rememberedHeight, 2);
       expect(getE2eApiCalls('/session', 'GET').length).to.be.greaterThan(sessionReads);
-      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.lengthOf(saveCount);
     });
   });
 }
@@ -555,6 +582,20 @@ describe('Shell layout contract', () => {
     });
   });
 
+  it('enters Semantic directly from SQL and project Git Code', () => {
+    stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
+    stubShellRetainedFile();
+    visitShellRouteWithUiLayout('/canvas');
+    openWorkbenchModel();
+    cy.get('[data-slot="shell-model-sql-command"]').click();
+    cy.get('[data-slot="sql-worksheet-editor"]').should('be.visible');
+    enterSemanticWithoutCanvas();
+    cy.location('pathname').should('equal', '/canvas');
+    cy.get('[data-slot="shell-project-code-command"]').click();
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
+    enterSemanticWithoutCanvas();
+  });
+
   it('keeps shell Canvas and Git entries across retained surfaces and respects pending Model edits', () => {
     // Navigation belongs to the shell, independently of retained Canvas, Code and Model panels.
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
@@ -638,8 +679,8 @@ describe('Shell layout contract', () => {
       const content = row.nextElementSibling!.getBoundingClientRect();
       const surface = row.parentElement!.getBoundingClientRect();
       const closeControl = row.querySelector(close)!;
-      expect(row.querySelector('[role="tablist"]')).not.to.equal(null);
-      expect(closeControl.closest('[role="tablist"]')).to.equal(null);
+      expect(row.querySelector('[role="tablist"]')).not.to.be.null;
+      expect(closeControl.closest('[role="tablist"]')).to.be.null;
       expect(bounds.height, 'one controls row at desktop width').to.be.at.most(44);
       expect(content.top).to.be.closeTo(bounds.bottom, 1);
       expect(content.height, 'remaining height belongs to content').to.be.closeTo(
@@ -737,7 +778,7 @@ describe('Shell layout contract', () => {
         expect($current.find('[aria-pressed="true"]').attr('data-semantic-node-id')).to.equal(
           selectedExpression
         );
-        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.lengthOf(saveCount);
       });
       cy.get(expressionTab).should('have.attr', 'aria-selected', 'true');
       cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should(

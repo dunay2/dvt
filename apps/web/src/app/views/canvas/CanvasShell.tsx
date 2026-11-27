@@ -57,13 +57,6 @@ export default function CanvasShell({
   const semanticCopy = resolveCanvasSemanticEditorCopy(language);
   const projectRoot = workspaceCommands?.projectRoot;
   const focus = useCanvasWorkbenchFocus();
-  const model = useCanvasModelSelection(
-    panels.activeCanvasId,
-    panels.inspectorGraphNodes,
-    focus,
-    panels.inspectorAuthoring.workspaceScope,
-    projectRoot
-  );
   const code = useCanvasCodeWorkbench(
     layout,
     panels.activeCanvasId,
@@ -72,6 +65,14 @@ export default function CanvasShell({
     workspaceCommands,
     panels.inspectorAuthoring.workspaceScope
   );
+  const model = useCanvasModelSelection({
+    canvasId: panels.activeCanvasId,
+    nodes: panels.inspectorGraphNodes,
+    focus,
+    workspaceScope: panels.inspectorAuthoring.workspaceScope,
+    projectRoot,
+    onActivate: code.showCanvas,
+  });
   const operationData = useCanvasOperationDataTab(semanticCopy);
   const catalogueUnavailable =
     panels.inspectorGraphNodes.length === 0 &&
@@ -95,10 +96,9 @@ export default function CanvasShell({
   const openModel = useCallback(
     (nodeId: string) => {
       if (!model.modelIds.has(nodeId)) return;
-      code.showCanvas();
       model.open(nodeId);
     },
-    [code.showCanvas, model.modelIds, model.open]
+    [model.modelIds, model.open]
   );
   const graphPresentation = useCanvasShellGraphPresentation({
     graph,
@@ -223,13 +223,6 @@ export default function CanvasShell({
         direction="horizontal"
         className={styles.workspace}
       >
-        <CanvasCodeRouteEntry
-          ownerKey={code.ownerKey}
-          modelOwnerKey={
-            catalogueUnavailable ? null : (modelBrowser.scopeKey ?? panels.activeCanvasId)
-          }
-          onOpen={onWorkbenchEntry}
-        />
         <CanvasRunModelRouteEntry
           canvasId={panels.activeCanvasId}
           state={chromeState.routeState}
@@ -256,30 +249,38 @@ export default function CanvasShell({
           />
         )}
         <CanvasExplorerDocumentsContext.Provider value={explorerDocuments}>
-          <CanvasShellMainPanel
-            projectFiles={projectFiles}
-            layout={workbenchLayout}
-            panels={graphPresentation.panels}
-            graph={graphPresentation.graph}
-            chromeState={chromeState}
-            graphCommands={graphCommands}
-            chromeCommands={chromeCommands}
-            onSelectCanvas={canvasCommands.onSelectCanvas}
-            onOpenSourceImport={sourceImport.open}
-            onOpenProjectCode={
-              code.available
-                ? () => {
-                    void openProjectCode();
-                  }
-                : undefined
+          <CanvasCodeRouteEntry
+            ownerKey={code.ownerKey}
+            modelOwnerKey={
+              catalogueUnavailable ? null : (modelBrowser.scopeKey ?? panels.activeCanvasId)
             }
-            onOpenCanvasSettings={openCanvasSettings}
-            onOpenModelEditor={openModel}
-            contextMenuPresenter={contextMenuPresenter}
-            workspaceTask={sourceImport.renderTask(
-              contextMenuPresenter.restoreContextMenuOpenerFocus
-            )}
-          />
+            onOpen={onWorkbenchEntry}
+          >
+            <CanvasShellMainPanel
+              projectFiles={projectFiles}
+              layout={workbenchLayout}
+              panels={graphPresentation.panels}
+              graph={graphPresentation.graph}
+              chromeState={chromeState}
+              graphCommands={graphCommands}
+              chromeCommands={chromeCommands}
+              onSelectCanvas={canvasCommands.onSelectCanvas}
+              onOpenSourceImport={sourceImport.open}
+              onOpenProjectCode={
+                code.available
+                  ? () => {
+                      void openProjectCode();
+                    }
+                  : undefined
+              }
+              onOpenCanvasSettings={openCanvasSettings}
+              onOpenModelEditor={openModel}
+              contextMenuPresenter={contextMenuPresenter}
+              workspaceTask={sourceImport.renderTask(
+                contextMenuPresenter.restoreContextMenuOpenerFocus
+              )}
+            />
+          </CanvasCodeRouteEntry>
         </CanvasExplorerDocumentsContext.Provider>
         <CanvasSettingsDialog
           open={canvasSettingsOpen}

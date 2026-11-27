@@ -111,10 +111,7 @@ export function buildCanvasModelWorkbenchLayout({
         operationDataHost={operationData.host}
         onOpenOperationData={operationData.open}
         active={foreground}
-        onSelect={() => {
-          code.showCanvas();
-          model.activate();
-        }}
+        onSelect={model.activate}
         onShowCanvas={() => {
           code.showCanvas();
           model.setActive(false);
