@@ -36,9 +36,26 @@ export function CanvasRelationalTreeAuthoring({
     actions.reconcileSelection,
     data.selectedPendingId != null || modelOutput.open
   );
+  const closeOutput = (): void => modelOutput.setOpen(false);
+  const inspectCard =
+    <Input, Result extends string | null | void>(
+      action: (input: Input) => Result
+    ): ((input: Input) => Result) =>
+    (input) => {
+      const result = action(input);
+      if (result !== null) closeOutput();
+      return result;
+    };
+  const viewportActions = {
+    ...actions,
+    selectRelation: inspectCard(actions.selectRelation),
+    selectPending: inspectCard(actions.selectPending),
+    selectStagedOperation: inspectCard(actions.selectStagedOperation),
+    stageOperation: inspectCard(actions.stageOperation),
+    dropSource: inspectCard(actions.dropSource),
+  };
   const expand = (id: string | null): void => {
-    modelOutput.setOpen(false);
-    actions.selectRelation(id);
+    viewportActions.selectRelation(id);
     onExpandedChange(true);
   };
   return (
@@ -48,13 +65,13 @@ export function CanvasRelationalTreeAuthoring({
         <CanvasRelationalTreeOperationShelf
           copy={copy}
           editable
-          onStageOperation={actions.stageOperation}
+          onStageOperation={viewportActions.stageOperation}
         />
       }
       viewport={
         <CanvasRelationalTreeDraftViewport
           data={data}
-          actions={actions}
+          actions={viewportActions}
           copy={copy}
           projection={projection}
           sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
@@ -80,7 +97,7 @@ export function CanvasRelationalTreeAuthoring({
               copy={copy}
               onOutputChange={actions.changeDraft}
               onPendingOutputChange={modelOutput.setPending}
-              onClose={() => modelOutput.setOpen(false)}
+              onClose={closeOutput}
             />
           ) : null}
         </>
