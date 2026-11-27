@@ -182,6 +182,9 @@ describe('Workbench SQL inspection', () => {
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').as('operationEditor', {
       type: 'static',
     });
+    cy.get(
+      '[data-slot="canvas-relational-tree-workbench"] button[aria-label="Fit graph to view"]'
+    ).click();
     cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
     cy.get('@operationEditor').should('not.be.visible');
     cy.get('[data-slot="canvas-model-output-inspector"]').within(() => {

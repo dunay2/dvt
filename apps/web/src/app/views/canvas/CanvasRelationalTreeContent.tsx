@@ -60,7 +60,8 @@ function CanvasRelationalTreeContentView(
   }
 ): JSX.Element {
   const { model } = props;
-  if (model.authoringAvailable && (model.projection == null || model.session.active)) {
+  const showsDraft = model.projection == null || model.session.active;
+  if (model.authoringAvailable && showsDraft) {
     return (
       <CanvasRelationalTreeAuthoring
         {...props.authoringView}
@@ -82,18 +83,5 @@ function CanvasRelationalTreeContentView(
         {model.unavailableMessage}
       </section>
     );
-  return (
-    <CanvasRelationalTreeInspection
-      model={model}
-      authoring={props.authoring}
-      transformNode={props.transformNode}
-      nodes={props.nodes}
-      edges={props.edges}
-      codeProjection={props.codeProjection}
-      copy={props.copy}
-      expanded={props.expanded}
-      onExpandedChange={props.onExpandedChange}
-      modelOutput={props.modelOutput}
-    />
-  );
+  return <CanvasRelationalTreeInspection {...props} />;
 }

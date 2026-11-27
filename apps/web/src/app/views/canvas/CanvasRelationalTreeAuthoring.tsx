@@ -36,6 +36,11 @@ export function CanvasRelationalTreeAuthoring({
     actions.reconcileSelection,
     data.selectedPendingId != null || modelOutput.open
   );
+  const expand = (id: string | null): void => {
+    modelOutput.setOpen(false);
+    actions.selectRelation(id);
+    onExpandedChange(true);
+  };
   return (
     <CanvasRelationalTreeAuthoringTemplate
       label={copy.relationalTreeCanvasLabel}
@@ -53,11 +58,7 @@ export function CanvasRelationalTreeAuthoring({
           copy={copy}
           projection={projection}
           sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
-          onExpandRelation={(id) => {
-            modelOutput.setOpen(false);
-            actions.selectRelation(id);
-            onExpandedChange(true);
-          }}
+          onExpandRelation={expand}
           onOpenOutput={() => modelOutput.setOpen(true)}
         />
       }

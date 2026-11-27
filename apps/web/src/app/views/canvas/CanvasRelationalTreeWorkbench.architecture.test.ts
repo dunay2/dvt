@@ -372,7 +372,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     );
     expect(ApplyDraftSource).not.toMatch(/JSX|\.tsx|onApplyNodeDraft/);
   });
-  it('keeps query consumption, catalogue, graph and contextual detail in bounded components', () => {
+  it('keeps query consumption and graph inspection in bounded components', () => {
     expect(InspectionSource.split('\n').length).toBeLessThan(80);
     expect(InspectionModelSource.split('\n').length).toBeLessThan(120);
     expect(InspectionPanelSource.split('\n').length).toBeLessThan(100);
@@ -421,6 +421,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(UseViewportSource.split('\n').length).toBeLessThan(130);
     expect(ZoomSource.split('\n').length).toBeLessThan(80);
     expect(DetailSource.split('\n').length).toBeLessThan(100);
+  });
+
+  it('keeps draft preparation, session actions and editing in bounded components', () => {
     expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
     expect(CatalogueMemoSource.split('\n').length).toBeLessThan(110);
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
