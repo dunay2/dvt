@@ -53,11 +53,15 @@ describe('CanvasRelationalTreeOutput', () => {
       '[data-slot="canvas-relational-tree-output-open"]'
     )!;
 
-    act(() => fireEvent.click(card));
+    act(() => {
+      fireEvent.click(card);
+    });
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(onInspectConnection).not.toHaveBeenCalled();
 
-    act(() => fireEvent.click(port));
+    act(() => {
+      fireEvent.click(port);
+    });
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(onInspectConnection).toHaveBeenCalledTimes(1);
     expect(onDisconnect).not.toHaveBeenCalled();
