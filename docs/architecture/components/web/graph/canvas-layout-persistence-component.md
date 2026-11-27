@@ -158,6 +158,12 @@ Nested viewports consume only their own gestures. Pointer property activation
 does not reveal or recenter a card. The session retains camera and zoom across
 inspection/editing; camera movement never changes card world coordinates.
 
+When Generate Model changes the relational tree, layout reconciliation retains
+the positions of matched cards and the model Output. The geometry places each
+new connected card upstream of its downstream card with enough space for the
+connection. Collision resolution uses the vertical axis to keep retained
+positions intact. The layout and camera keep their existing owners.
+
 `useCanvasRelationalTreeViewport` owns measured fit and zoom orchestration.
 `useRelationalViewportCamera` adapts the existing session camera to content
 translation, pan deltas and guarded keyboard-focus reveal. Pointer pan remains

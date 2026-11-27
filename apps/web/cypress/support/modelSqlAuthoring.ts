@@ -15,6 +15,7 @@ import { sha256HexUtf8 } from '@dvt/crypto';
 import {
   compileModelSqlSource,
   pgColumnRef,
+  pgNullTest,
   pgRangeVar,
   sourceFieldType,
 } from '@dvt/postgres-projection';
@@ -36,6 +37,7 @@ import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from './e2eApiStub';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from './workspaceSession';
 
 export const modelSqlSource = 'SELECT country FROM customers';
+export const filteredModelSqlSource = `${modelSqlSource} WHERE country IS NOT NULL`;
 
 type ModelSqlScenario = Readonly<{
   model: WorkspaceGraphAuthoringNode;
@@ -91,7 +93,7 @@ function prepareModelSqlJourney(regenerate: boolean): ModelSqlScenario {
     if (canonical == null) throw new Error('Expected a native Model fixture.');
     model.metadata = applyDvtSubstraitSemanticDocument(
       canonical,
-      encodeDvtSubstraitSemanticDocument(compileJourneyModelSql(model, sourceRef))
+      encodeDvtSubstraitSemanticDocument(compileJourneyModelSql(model, sourceRef).document)
     ).metadata;
   }
   const canvasId = draft.canvas.id;
@@ -150,7 +152,9 @@ function stubModelSqlCompilation(
 ): void {
   stubE2eApi('POST', `${prefix}/sql-compilation`, ({ body }) => {
     const input = ModelSqlCompilationRequestSchema.parse(body);
-    const document = regenerate ? compileJourneyModelSql(model, sourceRef) : semantic;
+    const { document, inputAdditions } = regenerate
+      ? compileJourneyModelSql(model, sourceRef, input.sql)
+      : { document: semantic, inputAdditions: [{ nodeId: source.id, columnId: 'country' }] };
     const compiled = deriveSubstraitSchemas(document);
     const outputFieldId = compiled.index.relations.get(compiled.index.rootId)!.fields[0]!.fieldId;
     return {
@@ -164,7 +168,7 @@ function stubModelSqlCompilation(
         normalizedSql: input.sql,
         semanticDocument: encodeDvtSubstraitSemanticDocument(document),
         columns: [{ id: outputFieldId, name: 'country', dataType: 'string', nullable: true }],
-        inputAdditions: [{ nodeId: source.id, columnId: 'country' }],
+        inputAdditions,
         diagnostics: [],
       }),
     };
@@ -203,8 +207,11 @@ function stubModelSqlPreview({ sourceRef, semantic, target, prefix }: ModelSqlSc
 
 function compileJourneyModelSql(
   model: WorkspaceGraphAuthoringNode,
-  sourceRef: ReturnType<typeof ConnectedSourceRefSchema.parse>
-): SubstraitDocument {
+  sourceRef: ReturnType<typeof ConnectedSourceRefSchema.parse>,
+  sql = modelSqlSource
+): ReturnType<typeof compileModelSqlSource> {
+  if (sql !== modelSqlSource && sql !== filteredModelSqlSource)
+    throw new Error(`Unexpected Model SQL layout fixture query: ${sql}`);
   const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
   const node = projectAuthoringNodeToCanonical(
     saved == null
@@ -227,6 +234,9 @@ function compileJourneyModelSql(
         op: 'SETOP_NONE',
         targetList: [{ ResTarget: { val: pgColumnRef('country') } }],
         fromClause: [pgRangeVar({ table: 'customers' })],
+        ...(sql === filteredModelSqlSource
+          ? { whereClause: pgNullTest(pgColumnRef('country'), true) }
+          : {}),
       },
     },
     {
@@ -245,5 +255,5 @@ function compileJourneyModelSql(
         },
       ],
     }
-  ).document;
+  );
 }

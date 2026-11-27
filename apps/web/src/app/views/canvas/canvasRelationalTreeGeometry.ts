@@ -20,7 +20,7 @@ export type {
 } from './canvasRelationalTreeGeometryMetrics';
 export const CANVAS_RELATIONAL_OUTPUT_POSITION_ID = 'canvas-relational-output';
 const NODE_HEIGHT = 76;
-const OUTPUT_GAP = 64;
+const CONNECTED_CARD_GAP = 64;
 const OUTPUT_WIDTH = 156;
 
 export type CanvasRelationalTreeLayout = CanvasRelationalTreeNodeSize &
@@ -52,8 +52,9 @@ export function layoutCanvasRelationalTree(
       : undefined;
   const effectivePositions = expanded?.positions ?? positions;
   const first = root ?? detached[0];
+  const outputPosition = effectivePositions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID);
   const output = {
-    ...(effectivePositions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID) ?? { x: 320, y: 36 }),
+    ...(outputPosition ?? { x: 320, y: 36 }),
     width: OUTPUT_WIDTH,
     height: NODE_HEIGHT,
     inputLocator: null as string | null,
@@ -65,46 +66,50 @@ export function layoutCanvasRelationalTree(
     sizes
   );
   const nodes: CanvasRelationalTreePlacedNode[] = [];
-  const positionFor = (node: CanvasRelationalTreeNode): CardPosition =>
-    effectivePositions.get(node.relationId ?? node.locator) ?? {
-      x: columnLeft[depths.get(node.locator) ?? 0]!,
-      y: rows.get(node.locator)!,
-    };
 
   const place = (
     node: CanvasRelationalTreeNode,
     parent: Pick<
       CanvasRelationalTreePlacedNode,
       'parentLocator' | 'role' | 'ordinal' | 'siblingCount'
-    >
+    >,
+    downstreamX: number
   ): void => {
     const depth = depths.get(node.locator) ?? 0;
-    const { x, y } = positionFor(node);
+    const size = sizeFor(node);
+    const position = effectivePositions.get(node.relationId ?? node.locator) ?? {
+      x: Math.min(columnLeft[depth]!, downstreamX - size.width - CONNECTED_CARD_GAP),
+      y: rows.get(node.locator)!,
+    };
     nodes.push({
       node,
-      x,
-      y,
-      ...sizeFor(node),
+      ...position,
+      ...size,
       level: rootDepth - depth + 1,
       ...parent,
     });
 
     node.children.forEach((child) => {
-      place(child.node, {
-        parentLocator: node.locator,
-        role: child.role,
-        ordinal: child.ordinal,
-        siblingCount: node.children.length,
-      });
+      place(
+        child.node,
+        {
+          parentLocator: node.locator,
+          role: child.role,
+          ordinal: child.ordinal,
+          siblingCount: node.children.length,
+        },
+        position.x
+      );
     });
   };
 
-  if (root != null) place(root, { parentLocator: null, role: null, ordinal: 0, siblingCount: 1 });
+  const rootParent = { parentLocator: null, role: null, ordinal: 0, siblingCount: 1 };
+  if (root != null) place(root, rootParent, outputPosition?.x ?? Number.POSITIVE_INFINITY);
   const rootNode = nodes[0];
   if (rootNode != null) {
     output.inputLocator = rootNode.node.locator;
-    if (!effectivePositions.has(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)) {
-      output.x = rootNode.x + rootNode.width + OUTPUT_GAP;
+    if (outputPosition == null) {
+      output.x = rootNode.x + rootNode.width + CONNECTED_CARD_GAP;
       output.y = rootNode.y;
     }
   }
@@ -125,15 +130,10 @@ export function layoutCanvasRelationalTree(
     })
   );
   const bounds = [...nodes, output];
-  const fixed = new Set(
-    bounds.filter((card) =>
-      effectivePositions.has(
-        'node' in card
-          ? (card.node.relationId ?? card.node.locator)
-          : CANVAS_RELATIONAL_OUTPUT_POSITION_ID
-      )
-    )
+  const fixed = new Set<(typeof bounds)[number]>(
+    nodes.filter(({ node }) => effectivePositions.has(node.relationId ?? node.locator))
   );
+  if (outputPosition != null) fixed.add(output);
   placeUnanchoredCanvasCards(bounds, fixed);
   return {
     expansionFrame: expanded?.frame,

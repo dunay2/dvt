@@ -6,7 +6,11 @@ import {
   installE2eApiFetchStub,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
-import { modelSqlSource, stubModelSqlAuthoring } from '../../support/modelSqlAuthoring';
+import {
+  filteredModelSqlSource,
+  modelSqlSource,
+  stubModelSqlAuthoring,
+} from '../../support/modelSqlAuthoring';
 import {
   readWorkbenchCardPosition,
   verifyCompleteTreeFit,
@@ -70,7 +74,65 @@ describe('Model SQL authoring', () => {
     assertModelWorldPositions(positions);
     cy.screenshot('model-sql-regeneration-layout-retained', { capture: 'viewport' });
   });
+  it('places a new SQL Filter upstream of the retained Output without refitting', () => {
+    const { model, prefix } = stubModelSqlAuthoring(true);
+    const retained = new Map<string, { x: number; y: number }>();
+    const output = '[data-slot="canvas-relational-tree-output-open"]';
+    const read = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
+    selectModel(model);
+    cy.viewport(1500, 900);
+    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    moveWorkbenchCard(output, 20, 26);
+    for (const selector of [read, output]) {
+      cy.get(selector).then(($card) => retained.set(selector, readWorkbenchCardPosition($card[0])));
+    }
+    openContextualModelSql();
+    cy.get(`${panel} .monaco-editor .view-lines`).should('contain.text', 'country');
+    replaceModelSql(filteredModelSqlSource);
+    cy.contains(`${panel} button`, 'Generate Model').should('be.enabled').click();
+    waitForE2eApiCall(`${prefix}/sql-compilation`, 'POST');
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    assertGeneratedFilterLayout(read, output, retained);
+  });
 });
+
+function assertGeneratedFilterLayout(
+  read: string,
+  output: string,
+  retained: ReadonlyMap<string, { x: number; y: number }>
+): void {
+  const stage = '[data-slot="canvas-relational-tree-node"]';
+  const selectors = [
+    read,
+    `${stage}[data-operator="filter"]`,
+    `${stage}[data-operator="project"]`,
+    output,
+  ];
+  cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($viewport) => {
+    const viewport = $viewport[0]!.getBoundingClientRect();
+    const cards = selectors.map((selector) => {
+      const card = $viewport.find(selector);
+      expect(card, selector).to.have.length(1);
+      const position = readWorkbenchCardPosition(card[0]);
+      const anchor = retained.get(selector);
+      if (anchor != null) {
+        expect(position.x, `${selector} retained x`).to.be.closeTo(anchor.x, 0.001);
+        expect(position.y, `${selector} retained y`).to.be.closeTo(anchor.y, 0.001);
+      }
+      const bounds = card[0]!.getBoundingClientRect();
+      expect(bounds.left).to.be.at.least(viewport.left);
+      expect(bounds.right).to.be.at.most(viewport.right);
+      expect(bounds.top).to.be.at.least(viewport.top);
+      expect(bounds.bottom).to.be.at.most(viewport.bottom);
+      return bounds;
+    });
+    const [source, filter, project, modelOutput] = cards;
+    expect(source!.left).to.be.lessThan(filter!.left);
+    expect(filter!.left).to.be.lessThan(project!.left);
+    expect(project!.right).to.be.lessThan(modelOutput!.left);
+  });
+}
 
 function regenerateWithoutMoving(
   journey: ModelSqlJourney,
@@ -292,6 +354,11 @@ function generateSemanticModel(journey: ModelSqlJourney): void {
 }
 
 function editSqlWithPreviousResults(): void {
+  replaceModelSql(physicalSql);
+  cy.contains('[data-slot="canvas-model-data"]', 'Previous results').should('be.visible');
+}
+
+function replaceModelSql(nextSql: string): void {
   cy.get(`${panel} .monaco-editor .view-lines`).click(80, 9);
   cy.get(`${panel} .monaco-editor textarea.inputarea`).should('be.focused');
   cy.then(() =>
@@ -310,10 +377,9 @@ function editSqlWithPreviousResults(): void {
   cy.then(() =>
     Cypress.automation('remote:debugger:protocol', {
       command: 'Input.insertText',
-      params: { text: physicalSql },
+      params: { text: nextSql },
     })
   );
-  cy.contains('[data-slot="canvas-model-data"]', 'Previous results').should('be.visible');
 }
 
 function assertPendingOutputIsNotSaved(): void {

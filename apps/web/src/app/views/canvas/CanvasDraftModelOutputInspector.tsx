@@ -53,9 +53,7 @@ export function CanvasDraftModelOutputInspector({
         root={terminal.root}
         draftAnalysis={draftAnalysis}
         editable={false}
-        sqlOutput={
-          <p role="status">{resolveCanvasViewCopy(language).inspectorModelSqlApplyHint}</p>
-        }
+        sqlOutput={<output>{resolveCanvasViewCopy(language).inspectorModelSqlApplyHint}</output>}
       />
     </CanvasOperationInspectorTabs>
   );

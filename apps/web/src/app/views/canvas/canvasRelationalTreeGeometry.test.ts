@@ -73,12 +73,32 @@ describe('canvas relational-tree graph geometry', () => {
     expect(layout.output).toMatchObject(positions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)!);
     const operation = layout.nodes[0]!;
     const output = layout.output!;
-    expect(
-      operation.x + operation.width <= output.x ||
-        output.x + output.width <= operation.x ||
-        operation.y + operation.height <= output.y ||
-        output.y + output.height <= operation.y
-    ).toBe(true);
+    expect(operation.x + operation.width).toBeLessThan(output.x);
+    expect(operation.y).toBeGreaterThan(layout.nodes[1]!.y + layout.nodes[1]!.height);
+  });
+
+  it('keeps new stages before an anchored Output when the generated tree grows', () => {
+    const root = relation('transform', [
+      {
+        role: 'input',
+        ordinal: 0,
+        node: relation('filter', [{ role: 'input', ordinal: 0, node: relation('orders') }]),
+      },
+    ]);
+    const orders = { x: 36, y: 36 };
+    const output = { x: 620, y: 36 };
+    const positions = new Map([
+      ['orders', orders],
+      [CANVAS_RELATIONAL_OUTPUT_POSITION_ID, output],
+    ]);
+    const layout = layoutCanvasRelationalTree(root, new Map(), positions);
+    const [transform, filter, input] = layout.nodes;
+    expect(input).toMatchObject(orders);
+    expect(layout.output).toMatchObject(output);
+    expect(transform!.x + transform!.width).toBeLessThan(output.x);
+    expect(filter!.x + filter!.width).toBeLessThan(transform!.x);
+    expect(filter!.y).toBeGreaterThan(input!.y + input!.height);
+    expect(layout).toEqual(layoutCanvasRelationalTree(root, new Map(), positions));
   });
   it('measures signed bounds without moving authored cards or Output', () => {
     const positions = new Map([
