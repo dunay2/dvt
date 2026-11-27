@@ -255,6 +255,10 @@ describe('Workbench SQL inspection', () => {
       .should('contain.text', 'No canonical relational tree is available.')
       .find('[data-slot="relation-output-field"]')
       .should('not.exist');
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-collapse"]'
+    ).click();
+    cy.get('@operationEditor').should('be.visible');
     cy.then(() => {
       expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(0);
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);

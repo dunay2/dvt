@@ -79,6 +79,17 @@ export function CanvasRelationalTreeOutput({
       className={portStyles.centeredInputPort}
     />
   );
+  const connectionPort =
+    connected && onDisconnect != null ? (
+      <RelationalConnectionMenu
+        removeLabel={copy.canvasContextMenuRemoveEdgeLabel}
+        onDisconnect={onDisconnect}
+      >
+        {inputPort}
+      </RelationalConnectionMenu>
+    ) : (
+      inputPort
+    );
   return (
     <div
       data-slot="canvas-relational-tree-output"
@@ -102,16 +113,7 @@ export function CanvasRelationalTreeOutput({
           {content}
         </button>
       )}
-      {onConnect == null && onDisconnect == null ? null : connected && onDisconnect != null ? (
-        <RelationalConnectionMenu
-          removeLabel={copy.canvasContextMenuRemoveEdgeLabel}
-          onDisconnect={onDisconnect}
-        >
-          {inputPort}
-        </RelationalConnectionMenu>
-      ) : (
-        inputPort
-      )}
+      {(onConnect != null || onDisconnect != null) && connectionPort}
     </div>
   );
 }
