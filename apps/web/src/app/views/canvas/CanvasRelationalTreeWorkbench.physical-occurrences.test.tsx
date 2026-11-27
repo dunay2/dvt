@@ -145,13 +145,17 @@ async function clickAction(name: string): Promise<void> {
 describe('Explorer physical Input occurrences', () => {
   setupWorkbenchTest();
 
-  it('adds an unused connected Source by named action and drop, then applies and reopens one self-join', async () => {
+  it('adds two Reads of a connected Source by dropping, then applies and reopens a self-join', async () => {
     useApplicationLanguageStore.setState({ language: 'es' });
     const graph = emptyPhysicalGraph(),
       before = structuredClone(graph);
     const scenario = physicalScenario(graph);
     await scenario.render();
-    await clickAction('Añadir instancia: sales_calendar');
+    const sourceRow = screen.getByRole('button', { name: 'sales_calendar', exact: true });
+    expect(sourceRow.getAttribute('draggable')).toBe('true');
+    expect(screen.queryByRole('button', { name: 'Añadir instancia: sales_calendar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Añadir modelo' })).toBeNull();
+    await dropPhysicalSource(graph.source.id);
     await dropPhysicalSource(graph.source.id);
     const pending = pendingReads();
     expect(pending).toHaveLength(2);
@@ -205,7 +209,7 @@ describe('Explorer physical Input occurrences', () => {
     const before = structuredClone(graph),
       scenario = physicalScenario(graph);
     await scenario.render();
-    await clickAction('Add instance: Places');
+    await dropPhysicalSource(graph.source.id);
     await dropPhysicalSource(graph.source.id);
     expect(pendingReads()).toHaveLength(2);
     await clickAction('Cancel');

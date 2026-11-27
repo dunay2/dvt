@@ -3,7 +3,7 @@
  * Reason: catalogue rows and metadata disclosure evolve independently of retained docking.
  * Corner invariant: disclosure never selects or places a model; click inspection and drag retain their owners.
  */
-import { Box, Search, Plus, CopyPlus, ChevronRight, ChevronDown } from 'lucide-react';
+import { Box, Search, Plus, ChevronRight, ChevronDown } from 'lucide-react';
 import { useId, type DragEvent, type JSX, type ReactNode } from 'react';
 import {
   Collapsible,
@@ -11,7 +11,7 @@ import {
   CollapsibleContent,
 } from '../../../components/ui/collapsible';
 import { useCanvasNodeActivation } from '../../../components/canvas/useCanvasNodeActivation';
-import type { CanvasExplorerCopy, CanvasExplorerModelAction } from './CanvasExplorer.types';
+import type { CanvasExplorerCopy } from './CanvasExplorer.types';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 import styles from './CanvasExplorer.module.css';
 import { CanvasExplorerRemoveEmptyModelAction } from './CanvasExplorerRemoveEmptyModelAction';
@@ -80,7 +80,6 @@ function CanvasExplorerModelRow({
   disabled,
   onSelect,
   onDragStart,
-  modelAction,
   onRemoveEmptyModel,
 }: Readonly<{
   id: string;
@@ -91,17 +90,11 @@ function CanvasExplorerModelRow({
   disabled?: boolean;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  modelAction?: CanvasExplorerModelAction;
   onRemoveEmptyModel?: (id: string) => void;
 }>): JSX.Element {
   const unavailable = disabled || item.disabled;
   const activation = useCanvasNodeActivation(unavailable ? undefined : () => onSelect(item.id));
   const draggable = !unavailable && item.draggable !== false && onDragStart != null;
-  const actionLabel =
-    modelAction?.labelFor?.(item.id) ??
-    (item.definitionIdentity == null
-      ? modelAction?.label
-      : (modelAction?.referenceLabel ?? modelAction?.label));
   const detailsId = `${id}-${encodeURIComponent(item.id)}-details`;
   const sourceId = `${id}-${encodeURIComponent(item.id)}-source`;
   const formatId = `${id}-${encodeURIComponent(item.id)}-format`;
@@ -157,20 +150,6 @@ function CanvasExplorerModelRow({
             </span>
           </span>
         </button>
-        {draggable && modelAction != null ? (
-          <button
-            type="button"
-            className={styles.headerAction}
-            aria-label={`${actionLabel}: ${item.label}`}
-            title={`${actionLabel}: ${item.label}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              modelAction.onActivate(item.id);
-            }}
-          >
-            <CopyPlus aria-hidden="true" />
-          </button>
-        ) : null}
         <CanvasExplorerRemoveEmptyModelAction
           item={item}
           copy={copy}
@@ -218,7 +197,6 @@ export function CanvasExplorerListTemplate({
   onQuery,
   onSelect,
   onDragStart,
-  modelAction,
   onAddModel,
   onRemoveEmptyModel,
   connections,
@@ -238,7 +216,6 @@ export function CanvasExplorerListTemplate({
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  modelAction?: CanvasExplorerModelAction;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onRemoveEmptyModel?: (id: string) => void;
   connections?: ReactNode;
@@ -266,16 +243,18 @@ export function CanvasExplorerListTemplate({
               pending={pending}
               label={copy.details}
             />
-            <button
-              type="button"
-              className={styles.headerAction}
-              aria-label={copy.addModel}
-              title={copy.addModel}
-              disabled={disabled || onAddModel == null}
-              onClick={(event) => onAddModel?.(event.currentTarget)}
-            >
-              <Plus aria-hidden="true" />
-            </button>
+            {onAddModel == null ? null : (
+              <button
+                type="button"
+                className={styles.headerAction}
+                aria-label={copy.addModel}
+                title={copy.addModel}
+                disabled={disabled}
+                onClick={(event) => onAddModel(event.currentTarget)}
+              >
+                <Plus aria-hidden="true" />
+              </button>
+            )}
           </>
         }
       >
@@ -302,7 +281,6 @@ export function CanvasExplorerListTemplate({
               disabled={disabled}
               onSelect={onSelect}
               onDragStart={onDragStart}
-              modelAction={modelAction}
               onRemoveEmptyModel={onRemoveEmptyModel}
             />
           ))}

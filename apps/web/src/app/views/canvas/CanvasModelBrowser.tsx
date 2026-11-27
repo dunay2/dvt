@@ -26,12 +26,8 @@ export type CanvasModelBrowserPresentation = Readonly<{
   catalog: (
     composition?: Readonly<{
       nodeIds: ReadonlySet<string>;
-      copy: (id: string) => boolean;
-      label: string;
-      referenceLabel?: string;
       linkedNodeIds?: ReadonlySet<string>;
       occurrenceNodeIds?: ReadonlySet<string>;
-      labelFor?: (id: string) => string;
     }>
   ) => ReactNode;
   cataloguePresentation: CanvasExplorerCatalogPresentation;
@@ -104,19 +100,7 @@ export function CanvasModelBrowserProvider({
               ...item,
               draggable: composition?.nodeIds.has(item.id) === true,
             }))}
-            modelAction={
-              composition == null
-                ? undefined
-                : {
-                    label: composition.label,
-                    ...(composition.labelFor == null ? {} : { labelFor: composition.labelFor }),
-                    ...(composition.referenceLabel == null
-                      ? {}
-                      : { referenceLabel: composition.referenceLabel }),
-                    onActivate: composition.copy,
-                    canActivate: (id) => composition.nodeIds.has(id),
-                  }
-            }
+            canDragModel={(id) => composition?.nodeIds.has(id) === true}
             onDragStart={(id, event) => startCompositionDrag(composition, scopeKey, id, event)}
             presentation={cataloguePresentation}
             catalogueScopeKey={canvasId ?? undefined}

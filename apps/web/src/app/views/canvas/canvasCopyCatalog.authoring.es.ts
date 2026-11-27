@@ -3,8 +3,6 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 export const canvasViewAuthoringCopyEs = {
   showCardMetricsLabel: 'Mostrar métricas en la tarjeta',
   relationalModelCopyDropLabel: 'Añadir una copia independiente a',
-  relationalModelCopyAddLabel: 'Añadir copia de trabajo',
-  relationalModelReferenceAddLabel: 'Usar como entrada',
   relationalModelReferenceDropLabel: 'Usar el modelo dbt vinculado como entrada de',
   relationalModelCopyUnavailableMessage:
     'No se puede añadir este modelo aquí. Revisa su publicación actual, las entradas y el permiso de edición.',

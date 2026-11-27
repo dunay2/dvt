@@ -14,8 +14,6 @@ import { useCanvasModelBrowserPresentation } from '../CanvasModelBrowser';
 import { CanvasModelInputsPalette } from './CanvasModelInputsPalette';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import { resolveCanvasViewCopy } from '../copy';
-import { toast } from 'sonner';
 
 export function CanvasRelationalExplorer({
   model,
@@ -31,7 +29,6 @@ export function CanvasRelationalExplorer({
   const browser = useCanvasModelBrowserPresentation();
   const language = useApplicationLanguageStore((state) => state.language);
   const explorerCopy = resolveCanvasExplorerCopy(language);
-  const viewCopy = resolveCanvasViewCopy(language);
   const catalogue = (
     <CanvasRelationalTreeSourceCatalogue
       items={model.catalogue}
@@ -55,26 +52,7 @@ export function CanvasRelationalExplorer({
           catalogue
         ) : (
           <>
-            {browser.catalog(
-              pending
-                ? undefined
-                : {
-                    ...model.modelComposition,
-                    label: viewCopy.relationalModelCopyAddLabel,
-                    referenceLabel: viewCopy.relationalModelReferenceAddLabel,
-                    labelFor: (id) =>
-                      model.modelComposition.occurrenceNodeIds.has(id)
-                        ? viewCopy.sourceOccurrenceAdd
-                        : model.modelComposition.linkedNodeIds.has(id)
-                          ? viewCopy.relationalModelReferenceAddLabel
-                          : viewCopy.relationalModelCopyAddLabel,
-                    copy: (id) => {
-                      const accepted = model.modelComposition.copy(id);
-                      if (!accepted) toast.error(viewCopy.relationalModelCopyUnavailableMessage);
-                      return accepted;
-                    },
-                  }
-            )}
+            {browser.catalog(pending ? undefined : model.modelComposition)}
             <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
           </>
         )

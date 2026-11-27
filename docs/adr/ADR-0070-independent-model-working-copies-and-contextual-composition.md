@@ -71,6 +71,9 @@ another catalogue. Connections remain shared project resources.
 | Drop inside Model 1's semantic workbench      | Prepare an independent working definition and a local Read towards that copy inside Model 1; keep Model 1 active. |
 | Connect that local Read to an operation input | Use the existing typed port, dependency and cycle admission.                                                      |
 
+The Models catalogue inside the semantic workbench adds cards by drop. The
+project-level command to create a Model remains available in the project Canvas.
+
 The drop preview names the destination and whether it will create a working copy
 or add one to the open Model. Nested surfaces consume their accepted drop; it
 must not bubble into a second project creation. Read-only, unavailable, ambiguous
@@ -151,7 +154,7 @@ this ADR alone does not declare an implementation or replace that authority.
 | -------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Native copy and subsequent edits | Hidden authority; Value Object and copy policy | Semantic equivalence, independent IDs, original unchanged, valid producer field remapping and copied dependency context. |
 | Workbench drop                   | Boundary drift; application transaction        | Receiver stays active, one candidate, Apply/Cancel and no orphan nodes/edges.                                            |
-| Destination arbitration          | Duplicate semantics; typed intent              | Nested drop is consumed once; click never creates; keyboard add uses the same admitted intent.                           |
+| Destination arbitration          | Duplicate semantics; typed intent              | One nested drop stages one card. Activating a Model row selects it. The workbench catalogue has no add button.           |
 | Denied or stale context          | Policy and protected port                      | Permission, scope, ambiguity, invalid authority, unavailable dependencies and CAS rejection publish nothing.             |
 | File authority and output        | Separate authority boundaries                  | No shared-file fork claim, inherited durable destination or borrowed execution evidence.                                 |
 | Save and reload                  | Aggregate / repository                         | Real contract roundtrip and browser workflow through the protected application.                                          |

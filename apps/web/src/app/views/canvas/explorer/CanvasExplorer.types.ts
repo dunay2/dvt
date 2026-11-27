@@ -16,14 +16,6 @@ export type CanvasExplorerCopy = ReturnType<typeof resolveCanvasExplorerCopy>;
 export type CanvasExplorerNavigationAction = 'elements' | 'git';
 export type CanvasExplorerActivityRail = Readonly<{ codeVisible: boolean }>;
 export type CanvasExplorerHeading = Readonly<{ label: string; contextLabel?: string }>;
-export type CanvasExplorerModelAction = Readonly<{
-  label: string;
-  referenceLabel?: string;
-  labelFor?: (id: string) => string;
-  canActivate?: (id: string) => boolean;
-  onActivate: (id: string) => unknown;
-}>;
-
 export type CanvasExplorerCatalogPresentation = Readonly<{
   query: string;
   open: boolean;
@@ -42,7 +34,7 @@ export type CanvasProjectElementsInput = Readonly<{
   catalogueScopeKey?: string;
   presentation?: CanvasExplorerCatalogPresentation;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  modelAction?: CanvasExplorerModelAction;
+  canDragModel?: (id: string) => boolean;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onRemoveEmptyModel?: (id: string) => void;
   onImport?: () => void;

@@ -21,7 +21,6 @@ import {
   type DbtCompositionSeed,
 } from '../../support/dbtModelComposition';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
-import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchModel,
   revisitWorkbenchCanvas,
@@ -156,8 +155,6 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
-    cy.get(action).filter(':visible').should('be.enabled');
     cy.then(() =>
       expect(
         getE2eApiCalls('/workspace/dbt/graph', 'GET'),
@@ -170,8 +167,7 @@ describe('Model composition inside the selected Model', () => {
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.then(() => expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1));
-    cy.get(action).filter(':visible').focus();
-    pressNativeKey('Enter');
+    dragModel(seed.definitionId);
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {
       saved = captureDiscoveredDbtComposition(seed);
@@ -199,15 +195,12 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
-    cy.get(action).filter(':visible').should('be.enabled');
     dragModel(seed.definitionId);
     cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
-    cy.get(action).filter(':visible').focus();
-    pressNativeKey('Enter');
+    dragModel(seed.definitionId);
     cy.get(pending).should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {
@@ -284,7 +277,7 @@ describe('Model composition inside the selected Model', () => {
     });
   });
 
-  it('offers the same command by keyboard for a Source Model without selecting another Model', () => {
+  it('stages an unplaced physical Source by repeated drops while the receiver stays open', () => {
     const initial = buildCanvasAuthoringDraft({ substraitNInputJoin: true });
     const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
     const context = {
@@ -337,12 +330,7 @@ describe('Model composition inside the selected Model', () => {
     cy.get(pending).should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
-    cy.get(
-      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: sales_calendar"]`
-    )
-      .filter(':visible')
-      .focus();
-    pressNativeKey('Enter');
+    dragModel(source.id);
     cy.get(pending).should('have.length', 1);
     cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
@@ -350,23 +338,27 @@ describe('Model composition inside the selected Model', () => {
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
 
-  it('reuses one incoming physical dependency for action and drag occurrences through Cancel, Apply and reopen', () => {
+  it('reuses one physical dependency for repeated drops through Cancel, Apply and reopen', () => {
     const initial = stubWorkbenchScenario('saved-join');
     const source = initial.nodes.find((node) => node.role === 'input')!;
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add instance: ${source.name}"]`;
     let saved: ReturnType<typeof assertSavedPhysicalOccurrences>;
     cy.get(row(source.id)).should('have.attr', 'draggable', 'true');
-    cy.get(action).filter(':visible').should('be.enabled').focus();
-    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-explorer-models"]:visible button[aria-label="Add model"]').should(
+      'not.exist'
+    );
+    cy.get(`[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"]:visible`)
+      .find(`button[aria-label="Add instance: ${source.name}"]`)
+      .should('not.exist');
+    dragModel(source.id);
     dragModel(source.id);
     cy.get(pending).should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
-    cy.get(action).filter(':visible').click();
+    dragModel(source.id);
     dragModel(source.id);
     cy.get(pending).should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
