@@ -24,6 +24,14 @@ import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 const panel = '[data-slot="canvas-model-sql"]';
 const sql = modelSqlSource;
+const stageCard = '[data-slot="canvas-relational-tree-node"]';
+const readCard = `${stageCard}[data-operator="read"]`;
+const filterCard = `${stageCard}[data-operator="filter"]`;
+const projectCard = `${stageCard}[data-operator="project"]`;
+const outputCard = '[data-slot="canvas-relational-tree-output-open"]';
+const workbenchViewport = '[data-slot="canvas-relational-tree-viewport"]';
+const collapseSqlButton = 'button[aria-label="Collapse SQL panel"]';
+const saveStatus = '[data-slot="canvas-model-save-status"]';
 const physicalSql = 'SELECT customers.country FROM public.customers';
 
 type ModelSqlJourney = ReturnType<typeof stubModelSqlAuthoring> & { writesBefore: number };
@@ -44,16 +52,12 @@ describe('Model SQL authoring', () => {
   });
   it('keeps Model world positions through two SQL generations, close and reload', () => {
     const journey = { ...stubModelSqlAuthoring(true), writesBefore: 0 };
-    const selectors = [
-      '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
-      '[data-slot="canvas-relational-tree-node"][data-operator="project"]',
-      '[data-slot="canvas-relational-tree-output-open"]',
-    ];
+    const selectors = [readCard, projectCard, outputCard];
     const positions = new Map<string, { x: number; y: number }>();
     selectModel(journey.model);
-    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+    cy.get(collapseSqlButton).last().click();
     for (const selector of selectors) {
-      verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+      verifyCompleteTreeFit(workbenchViewport);
       moveWorkbenchCard(selector, 30, 45);
       cy.get(selector).then(($card) =>
         positions.set(selector, readWorkbenchCardPosition($card[0]))
@@ -77,13 +81,11 @@ describe('Model SQL authoring', () => {
   it('places a new SQL Filter upstream of the retained Output without refitting', () => {
     const { model, prefix } = stubModelSqlAuthoring(true);
     const retained = new Map<string, { x: number; y: number }>();
-    const output = '[data-slot="canvas-relational-tree-output-open"]';
-    const read = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
     selectModel(model);
     cy.viewport(1500, 900);
-    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
-    moveWorkbenchCard(output, 20, 26);
-    for (const selector of [read, output]) {
+    cy.get(collapseSqlButton).last().click();
+    moveWorkbenchCard(outputCard, 20, 26);
+    for (const selector of [readCard, outputCard]) {
       cy.get(selector).then(($card) => retained.set(selector, readWorkbenchCardPosition($card[0])));
     }
     openContextualModelSql();
@@ -91,25 +93,16 @@ describe('Model SQL authoring', () => {
     replaceModelSql(filteredModelSqlSource);
     cy.contains(`${panel} button`, 'Generate Model').should('be.enabled').click();
     waitForE2eApiCall(`${prefix}/sql-compilation`, 'POST');
-    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
-    cy.get('button[aria-label="Collapse SQL panel"]').last().click();
-    assertGeneratedFilterLayout(read, output, retained);
+    cy.get(saveStatus).should('have.text', 'Synced');
+    assertGeneratedFilterLayout(retained);
   });
 });
 
 function assertGeneratedFilterLayout(
-  read: string,
-  output: string,
   retained: ReadonlyMap<string, { x: number; y: number }>
 ): void {
-  const stage = '[data-slot="canvas-relational-tree-node"]';
-  const selectors = [
-    read,
-    `${stage}[data-operator="filter"]`,
-    `${stage}[data-operator="project"]`,
-    output,
-  ];
-  cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($viewport) => {
+  const selectors = [readCard, filterCard, projectCard, outputCard];
+  cy.get(workbenchViewport).should(($viewport) => {
     const viewport = $viewport[0]!.getBoundingClientRect();
     const cards = selectors.map((selector) => {
       const card = $viewport.find(selector);
@@ -139,7 +132,7 @@ function regenerateWithoutMoving(
   positions: ReadonlyMap<string, { x: number; y: number }>
 ): void {
   let previousOperation = '';
-  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]')
+  cy.get(projectCard)
     .invoke('attr', 'data-relation-id')
     .then((id) => {
       previousOperation = id!;
@@ -149,12 +142,12 @@ function regenerateWithoutMoving(
   });
   openContextualModelSql();
   cy.contains(`${panel} button`, 'Generate Model').should('be.enabled').click();
-  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.get(saveStatus).should('have.text', 'Synced');
   cy.wrap(null).should(() =>
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(journey.writesBefore + 1)
   );
-  cy.get('button[aria-label="Collapse SQL panel"]').last().click();
-  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(($card) =>
+  cy.get(collapseSqlButton).last().click();
+  cy.get(projectCard).should(($card) =>
     expect($card.attr('data-relation-id')).not.to.equal(previousOperation)
   );
   assertModelWorldPositions(positions);
@@ -339,7 +332,7 @@ function generateSemanticModel(journey: ModelSqlJourney): void {
     expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(1);
   });
   cy.get('[data-slot="canvas-relational-tree-output"]').should('be.visible');
-  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.get(saveStatus).should('have.text', 'Synced');
   cy.then(() =>
     cy.writeFile(
       '../../.dvt/evidence/gh3944/saved-browser-draft.json',
@@ -348,9 +341,9 @@ function generateSemanticModel(journey: ModelSqlJourney): void {
       ).draft
     )
   );
-  cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+  cy.get(collapseSqlButton).last().click();
   cy.get('button[aria-label="Open Model SQL"]').should('have.attr', 'aria-expanded', 'false');
-  cy.get('[data-slot="canvas-relational-tree-output-open"]').should('be.visible').click();
+  cy.get(outputCard).should('be.visible').click();
 }
 
 function editSqlWithPreviousResults(): void {
@@ -412,7 +405,7 @@ function assertPendingOutputIsNotSaved(): void {
   cy.then(() =>
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesOnClose)
   );
-  cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
+  cy.get(outputCard).click();
   cy.get(
     '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-sql-tab"]'
   ).should('be.enabled');
@@ -452,7 +445,7 @@ function assertContextualSqlRetainsBuffer(prefix: string, expectedSql: string): 
     expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(executionCount);
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saveCount);
   });
-  cy.get('button[aria-label="Collapse SQL panel"]').last().click();
+  cy.get(collapseSqlButton).last().click();
 }
 
 function reloadSavedModel(model: ModelSqlJourney['model']): void {
@@ -475,7 +468,7 @@ function reloadSavedModel(model: ModelSqlJourney['model']): void {
     40,
     18
   );
-  cy.get('[data-slot="canvas-relational-tree-output-open"]').should('be.visible').click();
+  cy.get(outputCard).should('be.visible').click();
   cy.get('[data-slot="canvas-model-output-inspector"]')
     .should('be.visible')
     .find('[data-slot="canvas-operation-output-tab"]')

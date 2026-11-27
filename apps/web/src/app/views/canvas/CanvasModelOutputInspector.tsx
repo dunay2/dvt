@@ -52,7 +52,7 @@ export function CanvasModelOutputInspector({
   const [editing, setEditing] = useCanvasInspectorEditing(relationId);
   const output =
     relationId == null ? (
-      <p role="status">{copy.relationalTreeUnavailableMessage}</p>
+      <output>{copy.relationalTreeUnavailableMessage}</output>
     ) : (
       <CanvasRelationOutputs
         relationId={relationId}
@@ -86,7 +86,7 @@ export function CanvasModelOutputInspector({
     >
       <h4 className="mb-2 text-xs font-semibold text-(--text-strong)">{labels.operations}</h4>
       {root == null ? (
-        <p role="status">{copy.relationalTreeUnavailableMessage}</p>
+        <output>{copy.relationalTreeUnavailableMessage}</output>
       ) : (
         <ModelOutputComposition root={root} copy={copy} />
       )}

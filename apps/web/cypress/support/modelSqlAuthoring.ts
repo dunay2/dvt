@@ -105,18 +105,7 @@ function prepareModelSqlJourney(regenerate: boolean): ModelSqlScenario {
 
 function stubModelSqlContext({ model, source, sourceRef, target, prefix }: ModelSqlScenario): void {
   stubE2eApi('GET', `${prefix}/sql-context`, () => {
-    const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
-    const currentModel = projectAuthoringNodeToCanonical(
-      saved == null
-        ? model
-        : WorkspaceGraphDraftSaveRequestSchema.parse(saved.body).draft.nodes.find(
-            (node) => node.id === model.id
-          )!
-    );
-    const document =
-      currentModel == null
-        ? null
-        : readDvtTransformAuthoringAuthority(currentModel)?.semanticDocument;
+    const document = readJourneySemanticEnvelope(model);
     const semanticSha = document?.semanticPlan.sha256 ?? null;
     return {
       body: ModelSqlContextResponseSchema.parse({
@@ -212,15 +201,7 @@ function compileJourneyModelSql(
 ): ReturnType<typeof compileModelSqlSource> {
   if (sql !== modelSqlSource && sql !== filteredModelSqlSource)
     throw new Error(`Unexpected Model SQL layout fixture query: ${sql}`);
-  const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
-  const node = projectAuthoringNodeToCanonical(
-    saved == null
-      ? model
-      : WorkspaceGraphDraftSaveRequestSchema.parse(saved.body).draft.nodes.find(
-          (candidate) => candidate.id === model.id
-        )!
-  );
-  const semantic = node == null ? null : readDvtTransformAuthoringAuthority(node)?.semanticDocument;
+  const semantic = readJourneySemanticEnvelope(model);
   const currentDocument = semantic == null ? null : decodeDvtSubstraitSemanticDocument(semantic);
   const retainedRead =
     currentDocument == null
@@ -256,4 +237,19 @@ function compileJourneyModelSql(
       ],
     }
   );
+}
+
+function readJourneySemanticEnvelope(
+  model: WorkspaceGraphAuthoringNode
+): ReturnType<typeof encodeDvtSubstraitSemanticDocument> | undefined {
+  const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
+  const authoringNode =
+    saved == null
+      ? model
+      : WorkspaceGraphDraftSaveRequestSchema.parse(saved.body).draft.nodes.find(
+          (candidate) => candidate.id === model.id
+        );
+  if (authoringNode == null) return undefined;
+  const node = projectAuthoringNodeToCanonical(authoringNode);
+  return node == null ? undefined : readDvtTransformAuthoringAuthority(node)?.semanticDocument;
 }

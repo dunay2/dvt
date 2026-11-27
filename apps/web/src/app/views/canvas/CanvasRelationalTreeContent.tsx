@@ -1,7 +1,9 @@
 /** Owned concern: present the active authoring or inspection view of one Model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
+import type {
+  CanvasRelationalTreeAuthoringContract,
+  CanvasRelationalTreeWorkbenchCopy,
+} from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasJoinTypeChangeProvider } from './CanvasJoinTypeChangeContext';
 import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
