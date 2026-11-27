@@ -151,8 +151,8 @@ describe('Explorer physical Input occurrences', () => {
       before = structuredClone(graph);
     const scenario = physicalScenario(graph);
     await scenario.render();
-    const sourceRow = screen.getByRole('button', { name: 'sales_calendar', exact: true });
-    expect(sourceRow.getAttribute('draggable')).toBe('true');
+    const sourceRow = container.querySelector(`[data-element-id="${graph.source.id}"]`);
+    expect(sourceRow?.getAttribute('draggable')).toBe('true');
     expect(screen.queryByRole('button', { name: 'Añadir instancia: sales_calendar' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Añadir modelo' })).toBeNull();
     await dropPhysicalSource(graph.source.id);
