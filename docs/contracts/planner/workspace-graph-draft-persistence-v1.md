@@ -230,6 +230,13 @@ existing protected draft boundary. No new version or migration is introduced.
 Completed relational authoring retains nonempty `positions` in the existing v1
 DTO but omits `outputRelationId`. Absence is allowed only when `sources` and
 `operations` are empty: the current canonical semantic root owns Output.
+
+`SaveWorkspaceGraphDraft` admits disconnected Output and pending cards so authors
+can reopen and continue. Operational `PreviewPlan` and `StartRun` require
+completed relational authoring. Pending sources, pending operations, or an
+explicitly disconnected Output block operational selection, including when a
+canonical document is retained for editing. Layout-only metadata does not block
+an otherwise executable Model.
 `outputRelationId: null` means explicitly disconnected, while a string denotes
 pending explicit wiring. Coordinates are signed finite numbers and confer no
 semantic authority. Crossing the world origin is valid; Infinity, -Infinity and

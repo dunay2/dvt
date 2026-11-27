@@ -61,6 +61,24 @@ function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjec
 }
 
 describe('N-input protected Preview intent', () => {
+  it('keeps retained semantics editable while an unfinished Model cannot be selected for a Plan', () => {
+    const input = fixture(2);
+    const model = input.canonicalNodes.at(-1)!;
+    const layout = { version: 'v1', sources: [], operations: [], positions: { p: { x: 1, y: 1 } } };
+    const withAuthoring = (relationalAuthoringDraft: object) => ({
+      ...input,
+      canonicalNodes: input.canonicalNodes.map((node) =>
+        node === model
+          ? { ...node, metadata: { ...node.metadata, relationalAuthoringDraft } }
+          : node
+      ),
+    });
+    expect(buildProtectedDvtPreviewProjection(withAuthoring(layout)).ok).toBe(true);
+    expect(
+      buildProtectedDvtPreviewProjection(withAuthoring({ ...layout, outputRelationId: null })).ok
+    ).toBe(false);
+  });
+
   it.each([true, false])(
     'admits an instance without a diagram edge to its definition (definition visible=%s)',
     (visible) => {

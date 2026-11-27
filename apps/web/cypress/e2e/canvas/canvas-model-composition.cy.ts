@@ -10,6 +10,7 @@ import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/w
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
 import { buildDraftReadOkResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import { buildProtectedDvtPreviewProjection } from '../../../src/app/views/canvas/canvasDvtPreviewProjection';
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubCanvasDraftSave } from '../../support/canvasDraftAuthoring';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
@@ -20,7 +21,7 @@ import {
   captureDiscoveredDbtComposition,
   type DbtCompositionSeed,
 } from '../../support/dbtModelComposition';
-import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
   openWorkbenchModel,
@@ -146,6 +147,101 @@ function assertSavedPhysicalOccurrences(
     writesBeforeReload: calls.length,
     ledgerFingerprint: JSON.stringify(calls),
   };
+}
+
+function assertSavedUnfinishedComposition(
+  request: unknown,
+  sourceId: string,
+  expectedIds: readonly string[]
+): void {
+  const { draft } = WorkspaceGraphDraftSaveRequestSchema.parse(request);
+  const metadata = draft.nodes.find((node) => node.id === receiver)?.metadata;
+  const pendingDraft = DvtRelationalAuthoringDraftV1Schema.parse(
+    metadata?.relationalAuthoringDraft
+  );
+  expect(pendingDraft.outputRelationId).to.equal(null);
+  expect(pendingDraft.sources.map((source) => source.relationId)).to.have.members(expectedIds);
+  expect(
+    DvtTransformAuthoringAuthorityV1Schema.safeParse(metadata?.transformAuthoring).success
+  ).to.equal(true);
+  const producerIds = [...new Set(pendingDraft.sources.map((source) => source.sourceNodeId))];
+  expect(producerIds, 'one dependency shared by the two Reads').to.have.length(1);
+  expect(draft.nodeIds).not.to.include(sourceId);
+  expect(
+    draft.edges.filter((edge) => edge.sourceId === producerIds[0] && edge.targetId === receiver)
+  ).to.have.length(1);
+  const graph = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
+  expect(
+    buildProtectedDvtPreviewProjection({
+      canvasId: draft.activeCanvasId ?? draft.canvas.id ?? null,
+      canonicalNodes: graph.canonicalNodes,
+      canonicalEdges: graph.canonicalEdges,
+      workspaceNodeIds: draft.nodeIds,
+      selectionIntent: { mode: 'explicit', nodeIds: [receiver] },
+    }).ok,
+    'the retained document cannot be used to execute the unfinished model'
+  ).to.equal(false);
+}
+
+function stubUnplacedSource() {
+  const initial = buildCanvasAuthoringDraft({ substraitNInputJoin: true });
+  const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
+  const context = {
+    ...initial,
+    nodes: initial.nodes.map((node) =>
+      node.id === source.id
+        ? { ...node, name: 'sales_calendar', path: 'models/sources/src_demo_sales_stage.yml' }
+        : node
+    ),
+    nodeIds: initial.nodeIds.filter((id) => id !== source.id),
+    nodePositions: Object.fromEntries(
+      Object.entries(initial.nodePositions).filter(([id]) => id !== source.id)
+    ),
+    edges: initial.edges.filter(
+      (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
+    ),
+  };
+  const { canonicalNodes } = projectWorkspaceGraphAuthoringDraftSemanticGraph(context);
+  const draft = normalizeProjectCanvasDraft({
+    ...context,
+    nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
+  });
+  const response = WorkspaceGraphDraftReadResponseSchema.parse(
+    buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
+      record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
+        draft,
+        revision: 'rev-e2e-graph-ready',
+      }),
+    })
+  );
+  stubShellBootstrapApis({
+    capabilities: {
+      body: {
+        apiVersion: '1.0.0',
+        minFrontendVersion: '0.0.1',
+        plugins: { dvt: { available: true } },
+      },
+    },
+  });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+  });
+  stubE2eApi('GET', '/workspace/graph/draft', () => {
+    const write = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
+    if (write == null) return { body: response };
+    const { draft: saved } = WorkspaceGraphDraftSaveRequestSchema.parse(write.body);
+    return {
+      body: buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
+        record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
+          draft: saved,
+          revision: 'rev-e2e-graph-ready-2',
+        }),
+      }),
+    };
+  });
+  stubCanvasDraftSave();
+  return source;
 }
 
 describe('Model composition inside the selected Model', () => {
@@ -280,52 +376,8 @@ describe('Model composition inside the selected Model', () => {
     });
   });
 
-  it('stages an unplaced physical Source by repeated drops while the receiver stays open', () => {
-    const initial = buildCanvasAuthoringDraft({ substraitNInputJoin: true });
-    const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
-    const context = {
-      ...initial,
-      nodes: initial.nodes.map((node) =>
-        node.id === source.id
-          ? { ...node, name: 'sales_calendar', path: 'models/sources/src_demo_sales_stage.yml' }
-          : node
-      ),
-      nodeIds: initial.nodeIds.filter((id) => id !== source.id),
-      nodePositions: Object.fromEntries(
-        Object.entries(initial.nodePositions).filter(([id]) => id !== source.id)
-      ),
-      edges: initial.edges.filter(
-        (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
-      ),
-    };
-    const { canonicalNodes } = projectWorkspaceGraphAuthoringDraftSemanticGraph(context);
-    const draft = normalizeProjectCanvasDraft({
-      ...context,
-      nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
-    });
-    const response = WorkspaceGraphDraftReadResponseSchema.parse(
-      buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
-        record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
-          draft,
-          revision: 'rev-e2e-graph-ready',
-        }),
-      })
-    );
-    stubShellBootstrapApis({
-      capabilities: {
-        body: {
-          apiVersion: '1.0.0',
-          minFrontendVersion: '0.0.1',
-          plugins: { dvt: { available: true } },
-        },
-      },
-    });
-    stubE2eJsonApi('GET', '/workspace/context', {
-      defaultWorkspace: E2E_PROJECT_WORKSPACE,
-      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-    });
-    stubE2eJsonApi('GET', '/workspace/graph/draft', response);
-    stubCanvasDraftSave();
+  it('saves an unfinished Model with two Reads of an unplaced Source when closing the editor', () => {
+    const source = stubUnplacedSource();
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
@@ -333,12 +385,39 @@ describe('Model composition inside the selected Model', () => {
     cy.get(pending).should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
-    dragModel(source.id);
-    cy.get(pending).should('have.length', 1);
-    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
-    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
-    cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'not.have.attr',
+      'data-connected'
+    );
+    dragModel(source.id);
+    dragModel(source.id);
+    const pendingReads = `${pending}[data-operator="read"]`;
+    let ids: string[];
+    cy.get(pendingReads)
+      .should('have.length', 2)
+      .then(($reads) => {
+        ids = [...$reads].map((read) => read.getAttribute('data-relation-id')!);
+      });
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[data-slot="canvas-draft-apply"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.wrap(null).should(() => {
+      const writes = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+      expect(writes, 'one protected draft save').to.have.length(1);
+      assertSavedUnfinishedComposition(writes[0]!.body, source.id, ids);
+    });
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get(pendingReads).should(($reads) => {
+      expect([...$reads].map((read) => read.getAttribute('data-relation-id'))).to.have.members(ids);
+    });
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'not.have.attr',
+      'data-connected'
+    );
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1));
   });
 
   it('reuses one physical dependency for repeated drops through Cancel, Apply and reopen', () => {

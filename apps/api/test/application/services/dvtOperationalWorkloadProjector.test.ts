@@ -2,6 +2,7 @@ import {
   DVT_REJECTIONS,
   DvtOperationalWorkloadContractV1,
   KNOWN_STEP_KINDS,
+  WorkspaceGraphAuthoringDraftSchema,
   type ConnectionRef,
   type ConnectedSourceRef,
   type DvtSubstraitSemanticDocumentV1,
@@ -190,6 +191,34 @@ describe('DvtOperationalWorkloadProjector', () => {
       target: { schema: 'analytics', relation: 'orders_result' },
     });
     expect(workload).toHaveProperty('publicationBoundaries', []);
+  });
+
+  it.each([
+    { state: 'disconnected Output', outputRelationId: null, operations: [] },
+    {
+      state: 'pending Filter',
+      outputRelationId: 'pending-filter',
+      operations: [{ relationId: 'pending-filter', operation: 'filter', inputs: [null] }],
+    },
+  ])('rejects Run with $state and retained semantics', ({ state: _state, ...pending }) => {
+    const saved = runDraft();
+    const model = saved.nodes.find((node) => node.id === 'transform-a')!;
+    const withAuthoring = (relationalAuthoringDraft: object) =>
+      WorkspaceGraphAuthoringDraftSchema.parse({
+        ...saved,
+        nodes: saved.nodes.map((node) =>
+          node === model
+            ? { ...node, metadata: { ...node.metadata, relationalAuthoringDraft } }
+            : node
+        ),
+      });
+    const layout = { version: 'v1', sources: [], operations: [], positions: { p: { x: 1, y: 1 } } };
+    const projector = new DvtOperationalWorkloadProjector();
+    expect(projector.project(input({ draft: withAuthoring(layout) })).ok).toBe(true);
+    expect(projector.project(input({ draft: withAuthoring({ ...layout, ...pending }) }))).toEqual({
+      ok: false,
+      ...DVT_REJECTIONS.previewWorkloadProjectionFailed,
+    });
   });
 
   it.each([
