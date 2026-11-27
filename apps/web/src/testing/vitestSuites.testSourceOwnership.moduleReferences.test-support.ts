@@ -22,6 +22,14 @@ export function moduleQueryKind(reference: string): 'plain' | 'source' | 'worker
   return 'uncertain';
 }
 
+function hasOnlyTypeSpecifiers(
+  bindings: ts.NamedImportBindings | ts.NamedExportBindings | undefined
+): boolean {
+  if (bindings == null) return false;
+  if (!ts.isNamedImports(bindings) && !ts.isNamedExports(bindings)) return false;
+  return bindings.elements.length > 0 && bindings.elements.every((item) => item.isTypeOnly);
+}
+
 export function moduleReferences(facts: TestSourceFacts): {
   conservative: Set<string>;
   runtime: Set<string>;
@@ -72,22 +80,13 @@ export function moduleReferences(facts: TestSourceFacts): {
       explicit.add(node.argument.literal.text);
     }
     if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
-      const clause = node.importClause,
-        bindings = clause?.namedBindings;
-      conservative.add(node.moduleSpecifier.text);
-      explicit.add(node.moduleSpecifier.text);
-      const allTypes =
-        !clause?.name &&
-        bindings &&
-        ts.isNamedImports(bindings) &&
-        bindings.elements.length > 0 &&
-        bindings.elements.every((item) => item.isTypeOnly);
-      if (
-        clause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
-        !allTypes &&
-        !node.moduleSpecifier.text.includes('?raw')
-      )
-        runtime.add(node.moduleSpecifier.text);
+      const clause = node.importClause;
+      const specifier = node.moduleSpecifier.text;
+      conservative.add(specifier);
+      explicit.add(specifier);
+      const typeOnly = clause?.phaseModifier === ts.SyntaxKind.TypeKeyword;
+      const allTypes = !clause?.name && hasOnlyTypeSpecifiers(clause?.namedBindings);
+      if (!typeOnly && !allTypes && !specifier.includes('?raw')) runtime.add(specifier);
     }
     if (
       ts.isExportDeclaration(node) &&
@@ -96,12 +95,8 @@ export function moduleReferences(facts: TestSourceFacts): {
     ) {
       conservative.add(node.moduleSpecifier.text);
       explicit.add(node.moduleSpecifier.text);
-      const allTypes =
-        node.exportClause &&
-        ts.isNamedExports(node.exportClause) &&
-        node.exportClause.elements.length > 0 &&
-        node.exportClause.elements.every((item) => item.isTypeOnly);
-      if (!node.isTypeOnly && !allTypes) runtime.add(node.moduleSpecifier.text);
+      if (!node.isTypeOnly && !hasOnlyTypeSpecifiers(node.exportClause))
+        runtime.add(node.moduleSpecifier.text);
     }
     if (
       ts.isImportEqualsDeclaration(node) &&
