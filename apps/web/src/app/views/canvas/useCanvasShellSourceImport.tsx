@@ -54,6 +54,11 @@ export function useCanvasShellSourceImport({
     }
   }, [openRequest, retainedSelection]);
 
+  const manageConnections = useMemo(
+    () => (open == null ? undefined : () => open({ intent: 'manage-connections' })),
+    [open]
+  );
+
   const open = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
     if (openRequest == null) return undefined;
     return (request = DEFAULT_SOURCE_IMPORT_ENTRY) => {
@@ -110,7 +115,7 @@ export function useCanvasShellSourceImport({
     available,
     open,
     openFromContext,
-    manageConnections: open == null ? undefined : () => open({ intent: 'manage-connections' }),
+    manageConnections,
     renderTask,
   };
 }

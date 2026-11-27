@@ -5,7 +5,14 @@
  * @consequence Native input controls remain independently available in the Model workspace.
  * @version 1.0.0
  */
-import { createContext, useContext, useMemo, type ReactNode, type DragEvent } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  type ReactNode,
+  type DragEvent,
+} from 'react';
 import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget';
 import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
 import type { CanonicalNode } from '../../types/canonical';
@@ -28,7 +35,8 @@ export type CanvasModelBrowserPresentation = Readonly<{
       nodeIds: ReadonlySet<string>;
       linkedNodeIds?: ReadonlySet<string>;
       occurrenceNodeIds?: ReadonlySet<string>;
-    }>
+    }>,
+    modelInputs?: ReactNode
   ) => ReactNode;
   cataloguePresentation: CanvasExplorerCatalogPresentation;
   fileModels?: CanvasDbtModelPublication;
@@ -72,9 +80,10 @@ export function CanvasModelBrowserProvider({
   onManageConnections?: () => void;
   children: ReactNode;
 }>): JSX.Element {
-  const { scopeKey, cataloguePresentation, catalogue } = navigation;
+  const { scopeKey, mode, onSelect, cataloguePresentation, catalogue } = navigation;
+  const enabled = active && selectedId != null;
   const projectContext = useWorkspaceDbtProjectContext({
-    enabled: active && selectedId != null,
+    enabled,
     projectRoot,
   });
   const items = useMemo(() => {
@@ -86,31 +95,56 @@ export function CanvasModelBrowserProvider({
       draggable: false,
     }));
   }, [nodes, catalogue, selectedId]);
+  const catalog = useCallback<CanvasModelBrowserPresentation['catalog']>(
+    (composition, modelInputs) => (
+      <CanvasProjectElementsExplorerView
+        projectContext={projectContext}
+        enabled={enabled}
+        projectRoot={projectRoot}
+        items={items.map((item) => ({
+          ...item,
+          draggable: composition?.nodeIds.has(item.id) === true,
+        }))}
+        hideAddModel
+        canDragModel={(id) => composition?.nodeIds.has(id) === true}
+        onDragStart={(id, event) => startCompositionDrag(composition, scopeKey, id, event)}
+        presentation={cataloguePresentation}
+        catalogueScopeKey={canvasId ?? undefined}
+        onInspectNode={onSelect}
+        connections={
+          <>
+            <CanvasWarehouseConnections onManage={onManageConnections} />
+            {modelInputs}
+          </>
+        }
+      />
+    ),
+    [
+      projectContext,
+      enabled,
+      projectRoot,
+      items,
+      scopeKey,
+      cataloguePresentation,
+      canvasId,
+      onSelect,
+      onManageConnections,
+    ]
+  );
+  const { projection, refresh } = projectContext;
+  const value = useMemo(
+    () => ({
+      scopeKey,
+      mode,
+      onSelect,
+      cataloguePresentation,
+      catalog,
+      fileModels: { projection, refresh },
+    }),
+    [scopeKey, mode, onSelect, cataloguePresentation, catalog, projection, refresh]
+  );
   return (
-    <CanvasModelBrowser.Provider
-      value={{
-        ...navigation,
-        fileModels: { projection: projectContext.projection, refresh: projectContext.refresh },
-        catalog: (composition) => (
-          <CanvasProjectElementsExplorerView
-            projectContext={projectContext}
-            enabled={active && selectedId != null}
-            projectRoot={projectRoot}
-            items={items.map((item) => ({
-              ...item,
-              draggable: composition?.nodeIds.has(item.id) === true,
-            }))}
-            hideAddModel
-            canDragModel={(id) => composition?.nodeIds.has(id) === true}
-            onDragStart={(id, event) => startCompositionDrag(composition, scopeKey, id, event)}
-            presentation={cataloguePresentation}
-            catalogueScopeKey={canvasId ?? undefined}
-            onInspectNode={navigation.onSelect}
-            connections={<CanvasWarehouseConnections onManage={onManageConnections} />}
-          />
-        ),
-      }}
-    >
+    <CanvasModelBrowser.Provider value={value}>
       {children}
       <CanvasModelContextPicker
         contexts={navigation.contexts}

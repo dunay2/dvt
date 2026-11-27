@@ -29,6 +29,7 @@ export function CanvasRelationalExplorer({
   const browser = useCanvasModelBrowserPresentation();
   const language = useApplicationLanguageStore((state) => state.language);
   const explorerCopy = resolveCanvasExplorerCopy(language);
+  const composition = pending ? undefined : model.modelComposition;
   const catalogue = (
     <CanvasRelationalTreeSourceCatalogue
       items={model.catalogue}
@@ -48,14 +49,12 @@ export function CanvasRelationalExplorer({
           : { label: explorerCopy.explorerTitle, contextLabel: explorerCopy.project }
       }
       elements={
-        browser == null ? (
-          catalogue
-        ) : (
-          <>
-            {browser.catalog(pending ? undefined : model.modelComposition)}
-            <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
-          </>
-        )
+        browser == null
+          ? catalogue
+          : browser.catalog(
+              composition,
+              <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
+            )
       }
     >
       {children}

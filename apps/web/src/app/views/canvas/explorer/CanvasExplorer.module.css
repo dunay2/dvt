@@ -14,7 +14,7 @@
 }
 .paletteAction {
   flex-shrink: 0;
-  margin: var(--spacing);
+  justify-content: flex-start;
   font-size: var(--text-ui-caption);
   line-height: var(--text-ui-caption-line-height);
 }
@@ -251,7 +251,7 @@
   flex-direction: column;
   min-height: 0;
   min-width: 0;
-  gap: calc(var(--spacing) * 3);
+  gap: var(--spacing);
   padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 3);
   overflow: auto;
   font-size: var(--text-ui);
@@ -260,9 +260,9 @@
 .catalogSection {
   min-width: 0;
 }
-.catalogSection + .catalogSection {
+.catalogSection ~ .catalogSection {
   border-top: 1px solid var(--border-subtle);
-  padding-top: calc(var(--spacing) * 2);
+  padding-top: var(--spacing);
 }
 .sectionToggle {
   display: flex;

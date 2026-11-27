@@ -582,6 +582,26 @@ describe('Shell layout contract', () => {
     });
   });
 
+  it('keeps Model inputs beside Connections with compact spacing', () => {
+    stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
+    visitShellRouteWithUiLayout('/canvas');
+    openWorkbenchModel();
+    const input = '[data-slot="canvas-model-inputs-command"]';
+    const explorer =
+      '[data-slot="canvas-model-editor"] [data-slot="canvas-explorer-panel"]:visible';
+    cy.get(explorer).should(($panel) => {
+      const connections = $panel.find('[data-slot="canvas-explorer-connections"]')[0]!;
+      const modelInputs = $panel.find(input)[0]!;
+      const models = $panel.find('[data-slot="canvas-explorer-models"]')[0]!;
+      const inputsBounds = modelInputs.getBoundingClientRect();
+      expect(inputsBounds.top - connections.getBoundingClientRect().bottom).to.be.within(0, 8);
+      expect(models.getBoundingClientRect().top - inputsBounds.bottom).to.be.within(0, 8);
+    });
+    cy.get(`${explorer} ${input}`).focus();
+    pressNativeKey('Enter');
+    cy.get(`${explorer} ${input}`).should('have.attr', 'aria-expanded', 'true');
+  });
+
   it('enters Semantic directly from SQL and project Git Code', () => {
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
     stubShellRetainedFile();
