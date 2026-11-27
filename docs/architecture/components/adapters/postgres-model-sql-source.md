@@ -62,7 +62,15 @@ service, connection configuration or warehouse migration is introduced.
 
 ## Source and identity admission
 
-SQL names refer to explicitly prepared logical Model inputs. Names are syntax;
+SQL names refer to prepared Model inputs in the current protected context.
+An unqualified logical identifier takes precedence. A physical Source can also
+be addressed by a unique table name, schema and table, or its published catalog,
+schema and table. PostgreSQL quoting and aliases apply. Qualified columns and
+stars can use the relation path supplied in FROM when that relation has no alias.
+When several prepared Read occurrences share a physical name, an explicit alias
+can select a unique matching logical occurrence. Ambiguous references are rejected.
+The same published fields and source identity apply through either spelling.
+Names are syntax;
 Read occurrences, SourceRefs, producerRefs and FieldIds retain their real
 identities. Unknown, ambiguous, stale, unauthorized and cross-connection inputs
 fail closed. A similarly named physical table is not a fallback authority.
@@ -166,6 +174,13 @@ SQL results use the existing compact sample grid: search and actions precede
 rows, with identity, counts and LIVE provenance in the footer. Revision and
 execution semantics remain available in its disclosure. No additional heading,
 summary block or query controller consumes the data drawer's working area.
+
+Generate compiles the current buffer independently of loaded preview rows. If
+compilation detects a stale context, the editor may refresh it once and compile
+the same buffer against that context. Revision, cancellation and buffer guards
+remain active across both attempts. A second stale response or other denial
+leaves the SQL available to edit. Retained rows stay attributed to the previous
+execution until explicitly refreshed.
 
 Only one owner publishes into the data host at a time. Buffer, scope, Model or
 input changes invalidate compilation receipts and mark retained rows stale.

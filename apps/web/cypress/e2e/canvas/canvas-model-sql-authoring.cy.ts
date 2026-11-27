@@ -20,6 +20,7 @@ import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 const panel = '[data-slot="canvas-model-sql"]';
 const sql = modelSqlSource;
+const physicalSql = 'SELECT customers.country FROM public.customers';
 
 type ModelSqlJourney = ReturnType<typeof stubModelSqlAuthoring> & { writesBefore: number };
 
@@ -31,9 +32,10 @@ describe('Model SQL authoring', () => {
     typeAndRetainSql(journey.prefix);
     validateAndExecuteSqlDraft(journey);
     assertDataRetainedAcrossViews(journey);
+    editSqlWithPreviousResults();
     generateSemanticModel(journey);
     assertPendingOutputIsNotSaved();
-    assertContextualSqlRetainsBuffer(journey.prefix);
+    assertContextualSqlRetainsBuffer(journey.prefix, physicalSql);
     reloadSavedModel(journey.model);
   });
   it('keeps Model world positions through two SQL generations, close and reload', () => {
@@ -257,7 +259,7 @@ function assertDataRetainedAcrossViews(journey: ModelSqlJourney): void {
 }
 
 function generateSemanticModel(journey: ModelSqlJourney): void {
-  const { model } = journey;
+  const { model, prefix } = journey;
   cy.contains(`${panel} button`, 'Generate Model').should('be.enabled').click();
   cy.wrap(null).should(() => {
     const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT');
@@ -266,6 +268,13 @@ function generateSemanticModel(journey: ModelSqlJourney): void {
     const authority = saved.nodes.find((node) => node.id === model.id)!.metadata!
       .transformAuthoring;
     expect(authority).to.have.property('semanticDocument');
+  });
+  cy.then(() => {
+    expect(getE2eApiCalls(`${prefix}/sql-compilation`, 'POST').at(-1)?.body).to.have.property(
+      'sql',
+      physicalSql
+    );
+    expect(getE2eApiCalls(`${prefix}/data-sample`, 'POST')).to.have.length(1);
   });
   cy.get('[data-slot="canvas-relational-tree-output"]').should('be.visible');
   cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
@@ -280,6 +289,31 @@ function generateSemanticModel(journey: ModelSqlJourney): void {
   cy.get('button[aria-label="Collapse SQL panel"]').last().click();
   cy.get('button[aria-label="Open Model SQL"]').should('have.attr', 'aria-expanded', 'false');
   cy.get('[data-slot="canvas-relational-tree-output-open"]').should('be.visible').click();
+}
+
+function editSqlWithPreviousResults(): void {
+  cy.get(`${panel} .monaco-editor .view-lines`).click(80, 9);
+  cy.get(`${panel} .monaco-editor textarea.inputarea`).should('be.focused');
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Input.dispatchKeyEvent',
+      params: {
+        type: 'rawKeyDown',
+        key: 'a',
+        code: 'KeyA',
+        windowsVirtualKeyCode: 65,
+        nativeVirtualKeyCode: 65,
+        modifiers: 2,
+      },
+    })
+  );
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Input.insertText',
+      params: { text: physicalSql },
+    })
+  );
+  cy.contains('[data-slot="canvas-model-data"]', 'Previous results').should('be.visible');
 }
 
 function assertPendingOutputIsNotSaved(): void {
@@ -326,7 +360,7 @@ function assertPendingOutputIsNotSaved(): void {
   });
 }
 
-function assertContextualSqlRetainsBuffer(prefix: string): void {
+function assertContextualSqlRetainsBuffer(prefix: string, expectedSql: string): void {
   cy.get('[data-slot="canvas-model-sql-edit"]')
     .should('be.visible')
     .and('have.attr', 'aria-expanded', 'false');
@@ -344,7 +378,7 @@ function assertContextualSqlRetainsBuffer(prefix: string): void {
     .should('be.visible')
     .find('.view-lines')
     .should(($lines) => {
-      expect($lines.text().replaceAll('\u00a0', ' ').trim()).to.equal(sql);
+      expect($lines.text().replaceAll('\u00a0', ' ').trim()).to.equal(expectedSql);
     });
   cy.get('[data-slot="canvas-model-sql-edit"]').should('have.attr', 'aria-expanded', 'true');
   cy.then(() => {

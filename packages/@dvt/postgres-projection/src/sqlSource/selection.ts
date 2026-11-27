@@ -14,7 +14,7 @@ import {
   type SqlCompilationState,
   type SqlScope,
 } from './context.js';
-import { resolveSourceOrdinal, sqlIdentifier } from './references.js';
+import { matchesSqlQualifier, resolveSourceOrdinal, sqlIdentifier } from './references.js';
 
 export type SqlTargetSelection = Readonly<{ name: string; ordinal: number }>;
 export function selectSourceTargets(
@@ -32,12 +32,10 @@ export function selectSourceTargets(
     const reference = node['ColumnRef'] == null ? null : sqlObject(node['ColumnRef']);
     const parts = reference == null ? [] : sqlList(reference['fields']);
     if (parts.length > 0 && Object.hasOwn(sqlObject(parts.at(-1)), 'A_Star')) {
-      if (item['name'] != null || parts.length > 2)
+      if (item['name'] != null || parts.length > 4)
         sourceError('unsupported_sql', 'Unsupported star projection.', item);
-      const qualifier = parts.length === 2 ? sqlIdentifier(parts[0]) : null;
-      const fields = scope.bindings.filter(
-        (binding) => qualifier == null || qualifier === binding.qualifier
-      );
+      const qualifier = parts.slice(0, -1).map(sqlIdentifier);
+      const fields = scope.bindings.filter((binding) => matchesSqlQualifier(binding, qualifier));
       if (fields.length === 0)
         sourceError('unknown_input', 'Qualified star is outside the prepared scope.', reference!);
       for (const field of fields) {

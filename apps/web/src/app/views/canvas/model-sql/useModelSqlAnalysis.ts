@@ -1,6 +1,23 @@
 /** Fence explicit async SQL actions by current buffer, scope and cancellation. */
 import { useEffect, useRef, useState } from 'react';
+import type { ModelSqlCompilationResponse, ModelSqlContextResponse } from '@dvt/contracts';
 import { CanvasModelSqlQueryError, type ModelSqlFailure } from '../../../ports/canvasModelSql';
+
+export async function compileWithCurrentModelSqlContext(
+  context: ModelSqlContextResponse,
+  compile: (context: ModelSqlContextResponse) => Promise<ModelSqlCompilationResponse>,
+  refresh: () => Promise<ModelSqlContextResponse>,
+  isCurrent: () => boolean
+): Promise<ModelSqlCompilationResponse | null> {
+  try {
+    return await compile(context);
+  } catch (error) {
+    if (!(error instanceof CanvasModelSqlQueryError) || error.reason !== 'stale') throw error;
+    if (!isCurrent()) return null;
+    const refreshed = await refresh();
+    return isCurrent() ? compile(refreshed) : null;
+  }
+}
 
 export function useModelSqlAnalysis(revision: string) {
   const current = useRef({

@@ -38,7 +38,17 @@ export type ModelSqlSourceContext = Readonly<{
   currentDocument?: SubstraitDocument | null;
   retainedDocuments?: readonly SubstraitDocument[];
 }>;
-export type SqlNameBinding = Readonly<{ name: string; qualifier: string | null; ordinal: number }>;
+export type SqlInputBinding = Readonly<{
+  input: ModelSqlSourceInput;
+  qualifier: string;
+  physicalPath?: readonly string[];
+}>;
+export type SqlNameBinding = Readonly<{
+  name: string;
+  qualifier: string | null;
+  physicalPath?: readonly string[];
+  ordinal: number;
+}>;
 export type SqlScope = Readonly<{ entry: IndexedRelation; bindings: readonly SqlNameBinding[] }>;
 export type SqlNameScope = Readonly<{
   bindings: readonly SqlNameBinding[];

@@ -3,9 +3,10 @@
 import React, { act } from 'react';
 import { getByRole, queryByRole, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
-import { MODEL_SQL_MAX_LENGTH } from '@dvt/contracts';
+import { MODEL_SQL_MAX_LENGTH, ModelSqlContextResponseSchema } from '@dvt/contracts';
+import { CanvasModelSqlQueryError } from '../../../ports/canvasModelSql';
 import { container, dataHost, mount } from './CanvasModelSqlPanel.test-support';
-import { proposal } from './modelSqlProtocol.test-fixtures';
+import { modelSqlContext, proposal } from './modelSqlProtocol.test-fixtures';
 import type { CanvasModelLayoutCapture } from '../canvasRelationalTreeWorkbench.types';
 
 vi.mock('../../../components/monaco/MonacoCodeEditor', () => ({
@@ -92,6 +93,38 @@ describe('Model SQL panel', () => {
     expect(getByRole(container, 'alert').textContent).toContain('rejected');
     expect(capture).toHaveBeenCalledOnce();
     expect(retain).not.toHaveBeenCalled();
+  });
+
+  it('refreshes stale compilation once and generates with previous rows still loaded', async () => {
+    const h = await mount();
+    await h.type('SELECT orders_id FROM orders');
+    await h.click('Execute');
+    const sql = 'SELECT orders_id FROM raw.orders';
+    await h.type(sql);
+    expect(dataHost.textContent).toContain('These rows are from a previous execution');
+    const contextSha256 = 'b'.repeat(64);
+    h.query.context.mockResolvedValueOnce(
+      ModelSqlContextResponseSchema.parse({ ...modelSqlContext, contextSha256 })
+    );
+    h.query.compile.mockRejectedValueOnce(new CanvasModelSqlQueryError('stale'));
+    await h.click('Generate Model');
+    expect(h.query.compile).toHaveBeenCalledTimes(2);
+    expect(h.query.compile.mock.calls[1]![0]).toMatchObject({ sql, contextSha256 });
+    expect(h.query.preview).toHaveBeenCalledOnce();
+    expect(h.onApplyNodeDraft).toHaveBeenCalledOnce();
+  });
+
+  it('preserves the SQL when the context changes again during generation', async () => {
+    const h = await mount();
+    const sql = 'SELECT orders_id FROM raw.orders';
+    await h.type(sql);
+    h.query.compile.mockRejectedValue(new CanvasModelSqlQueryError('stale'));
+    await h.click('Generate Model');
+    expect(h.query.compile).toHaveBeenCalledTimes(2);
+    expect(h.query.preview).not.toHaveBeenCalled();
+    expect(h.onApplyNodeDraft).not.toHaveBeenCalled();
+    expect(getByRole(container, 'textbox')).toHaveProperty('value', sql);
+    expect(getByRole(container, 'alert').textContent).toContain('Refresh inputs');
   });
   it.each(['accepted', 'aborted'] as const)(
     'publishes captured Generate layout only after a live acknowledgement (%s)',

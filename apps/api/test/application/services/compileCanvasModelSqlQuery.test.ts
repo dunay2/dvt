@@ -43,10 +43,32 @@ describe('CompileCanvasModelSql', () => {
     expect(h.projection.execute).not.toHaveBeenCalled();
   });
   it.each([
+    'SELECT client.client_id AS client_id, client.country AS country FROM raw.client',
+    'SELECT raw.client.client_id, raw.client.country FROM "raw"."client"',
+    'SELECT raw.client.* FROM raw.client',
+  ])('compiles a prepared physical reference with its original provenance: %s', async (sql) => {
+    const h = await fixture();
+    const result = await h.query.execute({ ...h.input, sql }, sqlAuth);
+    if (result.status !== 'valid') throw new Error(JSON.stringify(result.diagnostics));
+    expect(result.columns.map(({ name }) => name)).toEqual(['client_id', 'country']);
+    expect(result.inputAdditions).toEqual([
+      { nodeId: 'source-client', columnId: 'client_id' },
+      { nodeId: 'source-client', columnId: 'country' },
+    ]);
+    expect(result.semanticDocument.sidecar.relations).toContainEqual(
+      expect.objectContaining({
+        sourceRef: h.draft.nodes.find((node) => node.id === 'source-client')?.metadata
+          ?.connectedSourceRef,
+      })
+    );
+  });
+  it.each([
     'SELECT FROM',
     'DELETE FROM client',
     'SELECT upper(country) FROM client',
     'SELECT country FROM public.client',
+    'SELECT country FROM unrelated.raw.client',
+    'SELECT raw.client.country FROM raw.client AS c',
   ])('rejects syntax or unrepresentable SQL atomically: %s', async (sql) => {
     const h = await fixture();
     const result = await h.query.execute({ ...h.input, sql }, sqlAuth);
@@ -123,7 +145,7 @@ describe('CompileCanvasModelSql', () => {
           ...sqlTarget,
           draftRevision: limited.draftRevision,
           contextSha256: limited.contextSha256,
-          sql: 'SELECT client_id FROM client',
+          sql: 'SELECT client_id FROM raw.client',
         },
         sqlAuth
       )

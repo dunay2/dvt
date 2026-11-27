@@ -1,4 +1,4 @@
-/** Bind FROM and JOIN syntax to admitted logical input occurrences. */
+/** Bind FROM and JOIN syntax to prepared input occurrences. */
 import {
   JoinRel_JoinType,
   RelSchema,
@@ -20,7 +20,7 @@ import {
 } from './context.js';
 import { readSourceOccurrence } from './occurrence.js';
 import { sourcePredicate } from './predicates.js';
-import { mergeSourceScopes, sourceAlias } from './references.js';
+import { mergeSourceScopes, resolveSourceInput, sourceAlias } from './references.js';
 
 type SelectSource = (node: PostgresAstNode, depth: number) => SqlScope;
 const joinTypes: Readonly<Record<string, JoinRel_JoinType>> = {
@@ -97,26 +97,14 @@ export function sourceFromSyntax(
     return sourceError('unsupported_sql', 'Query nesting exceeds the source profile.', node);
   if (node['RangeVar'] != null) {
     const range = sqlObject(node['RangeVar']);
-    if (range['schemaname'] != null || range['catalogname'] != null)
-      return sourceError(
-        'unknown_input',
-        'Use the prepared logical input name, not a physical schema or catalog.',
-        range
-      );
     if (range['inh'] === false)
       return sourceError(
         'unsupported_sql',
         'ONLY is outside the logical-input source profile.',
         range
       );
-    const input = state.context.inputs.find((candidate) => candidate.sqlName === range['relname']);
-    if (input == null)
-      return sourceError(
-        'unknown_input',
-        'The SQL input is outside the prepared Model context.',
-        range
-      );
-    return readSourceOccurrence(state, input, sourceAlias(range['alias']) ?? input.sqlName);
+    const binding = resolveSourceInput(state.context.inputs, range, sourceAlias(range['alias']));
+    return readSourceOccurrence(state, binding);
   }
   if (node['JoinExpr'] != null) {
     const join = sqlObject(node['JoinExpr']);
