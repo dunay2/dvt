@@ -1,7 +1,6 @@
 /**
- * Owned concern: present and activate the final Model Output card.
- * Reason: its activating button must also own native drag capture.
- * Corner invariant: the connection port remains an independent sibling control.
+ * Owned concern: present the Model Output card and capture its activation and drag gestures.
+ * The sibling input port owns connection gestures.
  */
 import { Table2 } from 'lucide-react';
 import {
