@@ -87,6 +87,41 @@ describe('CompileCanvasModelSql', () => {
       )
     ).rejects.toMatchObject({ code: 'stale_context' });
   });
+  it('projects the editable seed only for the context query and keeps the compilation identity', async () => {
+    const h = modelSqlHarness();
+    const initial = await h.query.execute(sqlTarget, sqlAuth);
+    const compiler = new CompileCanvasModelSqlQuery(h.query);
+    const sql = 'SELECT country FROM raw.client';
+    const input = {
+      ...sqlTarget,
+      draftRevision: initial.draftRevision,
+      contextSha256: initial.contextSha256,
+      sql,
+    };
+    const proposal = await compiler.execute(input, sqlAuth);
+    if (proposal.status !== 'valid') throw new Error('Expected a valid Model fixture.');
+    const target = h.draft.nodes.find((node) => node.id === sqlTarget.transformNodeId)!;
+    target.metadata = {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument: proposal.semanticDocument,
+      },
+    };
+
+    const editor = await h.query.execute(sqlTarget, sqlAuth);
+    const { prepared, response } = await compiler.prepare(
+      { ...input, contextSha256: editor.contextSha256 },
+      sqlAuth
+    );
+    expect(editor.sql).toContain('client');
+    expect(prepared.response).toMatchObject({
+      contextSha256: editor.contextSha256,
+      draftRevision: editor.draftRevision,
+      sql: null,
+    });
+    expect(response.status).toBe('valid');
+  });
   it('does not coerce an unknown publication type into a supported one', async () => {
     const h = modelSqlHarness();
     h.draft.nodes[1]!.metadata = {

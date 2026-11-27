@@ -34,12 +34,11 @@ const joinTypes: Readonly<Record<string, JoinRel_JoinType>> = {
 
 function sourceJoinType(join: PostgresAstNode | undefined): JoinRel_JoinType | null {
   if (join == null) return null;
-  const kind = String(join['jointype']);
-  if (join['quals'] != null) {
-    const type = joinTypes[kind];
-    if (type != null) return type;
-  } else if (kind === 'JOIN_INNER') {
-    return null;
+  const kind = join['jointype'];
+  const type = typeof kind === 'string' ? joinTypes[kind] : undefined;
+  if (type != null) {
+    if (join['quals'] != null) return type;
+    if (type === JoinRel_JoinType.INNER) return null;
   }
   return sourceError(
     'unsupported_sql',

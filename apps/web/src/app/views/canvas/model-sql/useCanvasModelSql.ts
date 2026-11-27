@@ -179,13 +179,13 @@ export function useCanvasModelSql(
       return null;
     }
   };
-  const pending = command.applying ? 'generate' : request.busy ? state.pending : null;
+  const pendingQuery = request.busy ? state.pending : null;
   const analysis = currentModelSqlAnalysis(state);
   return {
     state,
     analysis,
     diagnostics: analysis?.diagnostics ?? state.context?.diagnostics ?? [],
-    pending,
+    pending: command.applying ? 'generate' : pendingQuery,
     problem,
     dirty: hasModelSqlChanges(state),
     staleData:
