@@ -136,7 +136,6 @@ function normalizeCruiseModules(modules) {
 
 function importBindingNames(importClause, { includeTypeOnly = true } = {}) {
   if (!importClause) return [];
-  if (!includeTypeOnly && importClause.phaseModifier === ts.SyntaxKind.TypeKeyword) return [];
   const bindings = [];
   if (importClause.name) bindings.push(importClause.name.text);
   if (importClause.namedBindings && ts.isNamespaceImport(importClause.namedBindings)) {
@@ -178,11 +177,12 @@ function analyzeLocalImportSemantics(module, contents) {
       current.hasSideEffectOnly = true;
     } else {
       const allBindingNames = importBindingNames(clause);
-      const runtimeBindingNames = importBindingNames(clause, { includeTypeOnly: false });
-      const hasRuntimeUse = runtimeBindingNames.some((name) => countIdentifier(parsed, name) > 1);
+      const typeOnly = clause.phaseModifier === ts.SyntaxKind.TypeKeyword;
+      const runtimeNames = typeOnly ? [] : importBindingNames(clause, { includeTypeOnly: false });
+      const hasRuntimeUse = runtimeNames.some((name) => countIdentifier(parsed, name) > 1);
       current.hasRuntimeUse ||= hasRuntimeUse;
       current.hasTypeUse ||= allBindingNames.some((name) => countIdentifier(parsed, name) > 1);
-      current.hasUnusedValue ||= runtimeBindingNames.length > 0 && !hasRuntimeUse;
+      current.hasUnusedValue ||= runtimeNames.length > 0 && !hasRuntimeUse;
     }
     analysis.set(specifier, current);
   }
