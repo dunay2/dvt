@@ -1,7 +1,13 @@
 /** Prove whole-query rejection at the source namespace and profile boundaries. */
 import { describe, expect, it } from 'vitest';
 
-import { pgColumnRef, pgQualifiedColumnRef, pgRangeVar, pgString } from '../src/postgresAst.js';
+import {
+  pgColumnRef,
+  pgQualifiedColumnRef,
+  pgRangeVar,
+  pgString,
+  type PostgresAstNode,
+} from '../src/postgresAst.js';
 import { sourceFieldType } from '../src/postgresInputType.js';
 import { compileModelSqlSource } from '../src/sqlSource/compile.js';
 
@@ -80,7 +86,7 @@ describe('Model SQL source admission', () => {
   });
 
   it('checks the catalog qualifier against the exact connected Source identity', () => {
-    const ast = (catalog: string) =>
+    const ast = (catalog: string): PostgresAstNode =>
       sqlSelect(
         [sqlTarget(sqlField('country'))],
         [{ RangeVar: { catalogname: catalog, schemaname: 'public', relname: 'client' } }]
