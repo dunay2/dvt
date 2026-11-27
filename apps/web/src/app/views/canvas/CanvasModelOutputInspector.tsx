@@ -17,6 +17,10 @@ import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentat
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
+  CanvasStagedAnalysisProvider,
+  type CanvasStagedAnalysisBinding,
+} from './CanvasStagedAnalysisProvider';
+import {
   CanvasRelationalTreeEditorFrame,
   useCanvasInspectorEditing,
 } from './CanvasRelationalTreeEditorFrame';
@@ -25,6 +29,7 @@ export function CanvasModelOutputInspector({
   modelName,
   sqlOutput,
   root,
+  draftAnalysis,
   copy,
   editable,
   onOutputChange,
@@ -33,19 +38,29 @@ export function CanvasModelOutputInspector({
 }: Readonly<{
   modelName: string;
   sqlOutput?: ReactNode;
-  root: CanvasRelationalTreeNode;
+  root: CanvasRelationalTreeNode | null;
+  draftAnalysis?: Readonly<{ binding: CanvasStagedAnalysisBinding; document: SubstraitDocument }>;
   copy: CanvasRelationalTreeWorkbenchCopy;
   editable: boolean;
   onOutputChange: (document: SubstraitDocument) => void | boolean;
   onPendingOutputChange: (pending: boolean) => void;
   onClose: () => void;
-}>): JSX.Element | null {
-  const relationId = root.relationId;
+}>): JSX.Element {
+  const relationId = root?.relationId;
   const language = useApplicationLanguageStore((state) => state.language);
   const labels = resolveCanvasSemanticEditorCopy(language);
   const [editing, setEditing] = useCanvasInspectorEditing(relationId);
-  if (relationId == null) return null;
-  const steps = projectCanvasModelComposition(root);
+  const output =
+    relationId == null ? (
+      <p role="status">{copy.relationalTreeUnavailableMessage}</p>
+    ) : (
+      <CanvasRelationOutputs
+        relationId={relationId}
+        disabled={!editable}
+        onChange={onOutputChange}
+        onPendingChange={onPendingOutputChange}
+      />
+    );
 
   return (
     <CanvasRelationalTreeEditorFrame
@@ -57,47 +72,64 @@ export function CanvasModelOutputInspector({
       dataSlot="canvas-model-output-inspector"
       initialTab="output"
       editing={editing && editable}
-      onEdit={editable ? () => setEditing(true) : undefined}
+      onEdit={editable && relationId != null ? () => setEditing(true) : undefined}
       sqlOutput={sqlOutput}
       output={
-        <CanvasRelationOutputs
-          relationId={relationId}
-          disabled={!editable}
-          onChange={onOutputChange}
-          onPendingChange={onPendingOutputChange}
-        />
+        draftAnalysis == null ? (
+          output
+        ) : (
+          <CanvasStagedAnalysisProvider {...draftAnalysis} scope={`${relationId}:model-output`}>
+            {output}
+          </CanvasStagedAnalysisProvider>
+        )
       }
     >
       <h4 className="mb-2 text-xs font-semibold text-(--text-strong)">{labels.operations}</h4>
-      <ol className="space-y-2" data-slot="canvas-model-composition-steps">
-        {steps.map((step, index) => {
-          const presentation = resolveCanvasRelationalNodeCopy(step.node, copy);
-          const Icon = step.kind === 'input' ? Database : presentation.presentation.icon;
-          return (
-            <li
-              key={step.locator}
-              data-kind={step.kind}
-              data-operator={step.node.operator}
-              className="flex items-start gap-3 rounded-md border border-(--border-subtle) bg-(--surface-elevated) px-3 py-2.5"
-            >
-              <span className="grid size-6 shrink-0 place-items-center rounded-full border border-(--border-default) text-[10px] text-(--text-muted)">
-                {index + 1}
-              </span>
-              <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-(--status-info)" />
-              <span className="min-w-0">
-                <span className="block truncate text-xs font-semibold text-(--text-strong)">
-                  {presentation.title}
-                </span>
-                {step.kind === 'input' || presentation.detail.length === 0 ? null : (
-                  <span className="block truncate text-[11px] text-(--text-muted)">
-                    {presentation.detail}
-                  </span>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      {root == null ? (
+        <p role="status">{copy.relationalTreeUnavailableMessage}</p>
+      ) : (
+        <ModelOutputComposition root={root} copy={copy} />
+      )}
     </CanvasRelationalTreeEditorFrame>
+  );
+}
+
+function ModelOutputComposition({
+  root,
+  copy,
+}: Readonly<{
+  root: CanvasRelationalTreeNode;
+  copy: CanvasRelationalTreeWorkbenchCopy;
+}>): JSX.Element {
+  return (
+    <ol className="space-y-2" data-slot="canvas-model-composition-steps">
+      {projectCanvasModelComposition(root).map((step, index) => {
+        const presentation = resolveCanvasRelationalNodeCopy(step.node, copy);
+        const Icon = step.kind === 'input' ? Database : presentation.presentation.icon;
+        return (
+          <li
+            key={step.locator}
+            data-kind={step.kind}
+            data-operator={step.node.operator}
+            className="flex items-start gap-3 rounded-md border border-(--border-subtle) bg-(--surface-elevated) px-3 py-2.5"
+          >
+            <span className="grid size-6 shrink-0 place-items-center rounded-full border border-(--border-default) text-[10px] text-(--text-muted)">
+              {index + 1}
+            </span>
+            <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-(--status-info)" />
+            <span className="min-w-0">
+              <span className="block truncate text-xs font-semibold text-(--text-strong)">
+                {presentation.title}
+              </span>
+              {step.kind === 'input' || presentation.detail.length === 0 ? null : (
+                <span className="block truncate text-[11px] text-(--text-muted)">
+                  {presentation.detail}
+                </span>
+              )}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

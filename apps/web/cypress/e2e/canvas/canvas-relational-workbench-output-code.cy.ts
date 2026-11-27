@@ -172,6 +172,50 @@ describe('Workbench SQL inspection', () => {
       };
     });
   });
+  it('opens draft Output without replacing the operation editor or acquiring SQL', () => {
+    cy.viewport(1400, 900);
+    visitWorkbenchCanvas();
+    openWorkbenchModel();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
+    cy.get('[data-slot="canvas-relational-edit"]:visible').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').as('operationEditor', {
+      type: 'static',
+    });
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
+    cy.get('@operationEditor').should('not.be.visible');
+    cy.get('[data-slot="canvas-model-output-inspector"]').within(() => {
+      cy.get('[data-slot="canvas-operation-output-tab"]').should(
+        'have.attr',
+        'aria-selected',
+        'true'
+      );
+      cy.get('[data-slot="relation-output-field"]:visible').should('have.length.at.least', 1);
+      cy.get('[data-slot="canvas-operation-properties-tab"]').should('be.visible');
+      cy.get('[data-slot="canvas-operation-sql-tab"]').click();
+      cy.contains('Apply the model changes before generating SQL.').should('be.visible');
+      cy.get('[data-slot="canvas-relational-collapse"]').click();
+    });
+    cy.get('@operationEditor').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').focus();
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-model-output-inspector"]').should('be.visible');
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-collapse"]'
+    ).click();
+    cy.get('[data-slot="canvas-relational-output-edge-action"]').focus();
+    cy.press(Cypress.Keyboard.Keys.DELETE);
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
+    cy.get('[data-slot="canvas-model-output-inspector"] [data-value="output"]:visible')
+      .should('contain.text', 'No canonical relational tree is available.')
+      .find('[data-slot="relation-output-field"]')
+      .should('not.exist');
+    cy.then(() => {
+      expect(getE2eApiCalls(SQL_ENDPOINT, 'GET')).to.have.length(0);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+  });
   it('acquires SQL explicitly in Model Output and keeps Code usable across viewport sizes', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();

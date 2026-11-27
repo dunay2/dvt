@@ -21,14 +21,15 @@ local edit presentation or its handoff to the existing Model transaction.
 
 ## Physical responsibilities
 
-| Surface                             | Owned concern                                              |
-| ----------------------------------- | ---------------------------------------------------------- |
-| `CanvasRelationalTreeSideInspector` | Select the one visible relational inspector                |
-| `CanvasOperationInspectorTabs`      | Retain Model-scoped relation and tab presentation          |
-| `CanvasRelationalTreeEditorFrame`   | Present tabs, edit state and close control                 |
-| `CanvasTransformInspector`          | Inspect Transform properties and calculated outputs        |
-| `CanvasModelOutputInspector`        | Inspect final Model composition and fields                 |
-| `CanvasModelSqlOutput`              | Explicit protected SQL projection and logical-editor entry |
+| Surface                             | Owned concern                                               |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `CanvasRelationalTreeSideInspector` | Select the one visible relational inspector                 |
+| `CanvasOperationInspectorTabs`      | Retain Model-scoped relation and tab presentation           |
+| `CanvasRelationalTreeEditorFrame`   | Present tabs, edit state and close control                  |
+| `CanvasTransformInspector`          | Inspect Transform properties and calculated outputs         |
+| `CanvasModelOutputInspector`        | Inspect final Model composition and fields                  |
+| `CanvasDraftModelOutputInspector`   | Present the current draft Output through the same inspector |
+| `CanvasModelSqlOutput`              | Explicit protected SQL projection and logical-editor entry  |
 
 These existing functions and components live under
 `apps/web/src/app/views/canvas/`. Domain analysis, command acceptance, persistence
@@ -45,6 +46,12 @@ Closing issues no semantic save, SQL request or Model Apply. Previously
 acknowledged edits remain acknowledged. The Workbench's separate staged
 transaction keeps its explicit Apply/Cancel and navigation lifecycle; hiding an
 inspector does not implicitly apply or replace that transaction.
+
+The final Output card opens inspection in both the applied and staged views.
+During a staged edit, the inspector reads the connected draft producer and
+retains the operation editor and its local form state while hidden. A
+disconnected or unresolved output exposes its current availability. Protected
+SQL remains tied to the acknowledged Model revision and requires Apply first.
 
 ```mermaid
 stateDiagram-v2
@@ -64,10 +71,10 @@ stateDiagram-v2
 query port, retaining scope, semantic digest, optional relation identity and
 original/readable simplification evidence.
 
-One explicit SQL action also opens the Model's logical editor through its
-existing scoped presentation context. `ProjectCanvasModelSqlContext` prepares
-logical input names. Physical SQL is never copied into that buffer; projection
-failure cannot prevent the independent authoring entry. Typing remains local.
+One explicit SQL action opens the Model SQL editor through its existing scoped
+presentation context. `ProjectCanvasModelSqlContext` prepares the logical seed.
+The buffer also accepts the physical names of those prepared inputs. Projection
+failure leaves the editor entry available. Typing remains local.
 The existing Model Apply chain and `SaveWorkspaceGraphDraft` retain command
 acceptance and persistence.
 
@@ -92,6 +99,8 @@ a set operation needs the input schema, or the removal changes the final output.
 - Closing after an acknowledged alias preserves that accepted change.
 - Closing an inspector during a separate staged Model transaction retains the
   central Apply/Cancel contract.
+- Selecting the final Output card during a staged edit opens the Model
+  inspector by pointer or keyboard and retains the operation's pending inputs.
 - SQL projection starts only on its explicit action. Late results remain bound
   to their original relation, Model, scope and semantic digest.
 - Generated SQL retains original/readable presentation, simplification evidence,

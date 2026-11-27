@@ -6,7 +6,7 @@ import type {
   CanvasRelationalTreeAuthoringActions,
 } from './canvasRelationalTreeAuthoringView';
 import { RelationalViewportSurface } from './relational-layout/RelationalViewportSurface';
-import { useCanvasRelationalDraftProjection } from './useCanvasRelationalDraftProjection';
+import type { useCanvasRelationalDraftProjection } from './useCanvasRelationalDraftProjection';
 
 import {
   readCanvasRelationalOperationDrag,
@@ -21,34 +21,21 @@ function DraftViewport({
   copy,
   data,
   actions,
+  projection,
+  onOpenOutput,
   onExpandRelation,
   sourceOutputFieldsByRelationId,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   data: CanvasRelationalTreeAuthoringDto;
   actions: CanvasRelationalTreeAuthoringActions;
+  projection: ReturnType<typeof useCanvasRelationalDraftProjection>;
+  onOpenOutput: () => void;
   onExpandRelation: (relationId: string | null) => void;
   sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
 }>): JSX.Element {
-  const {
-    selectedRelationId,
-    draft: joinDraft,
-    operation,
-    pendingSources,
-    nodes,
-    edges,
-    transformNode,
-  } = data;
-  const {
-    projection: draftProjection,
-    selectedLocator,
-    relationIdFor,
-  } = useCanvasRelationalDraftProjection(
-    { edges, joinDraft, nodes, operation, transformNode },
-    selectedRelationId,
-    actions.reconcileSelection,
-    data.selectedPendingId != null
-  );
+  const { draft: joinDraft, pendingSources, transformNode } = data;
+  const { projection: draftProjection, selectedLocator, relationIdFor } = projection;
   const viewport = useCanvasRelationalTreeViewport();
 
   const { setPosition } = useRelationalLayout();
@@ -107,6 +94,7 @@ function DraftViewport({
             outputRelationId={data.outputRelationId}
             onConnectOutput={actions.connectOutput}
             onDisconnectOutput={actions.disconnectOutput}
+            onOpenOutput={onOpenOutput}
             outputName={transformNode.name}
             root={draftProjection?.root ?? null}
             selectedLocator={selectedLocator}

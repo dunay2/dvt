@@ -67,6 +67,7 @@ function CanvasRelationalTreeContentView(
         onPendingConditionChange={props.onPendingConditionChange}
         expanded={props.expanded}
         onExpandedChange={props.onExpandedChange}
+        modelOutput={props.modelOutput}
         copy={props.copy}
         sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
       />

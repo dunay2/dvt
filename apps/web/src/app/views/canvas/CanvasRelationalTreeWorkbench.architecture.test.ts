@@ -37,6 +37,7 @@ import ContentSource from './CanvasRelationalTreeContent.tsx?raw';
 import MovementSource from './relational-layout/useRelationalCardMovement.ts?raw';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
 import AuthoringSource from './CanvasRelationalTreeAuthoring.tsx?raw';
+import OperationDraftInspectorSource from './CanvasRelationalOperationDraftInspector.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
@@ -135,7 +136,7 @@ describe('staged editor analysis ownership', () => {
         /resolveCanvasStagedProducerDocument\(/g
       )
     ).toHaveLength(1);
-    expect(source('CanvasRelationalTreeAuthoring.tsx')).toContain(
+    expect(source('CanvasRelationalOperationDraftInspector.tsx')).toContain(
       "actions.updateStagedOperation(staged.id, 'reconfigure')"
     );
     expect(source('useCanvasRelationalAuthoringDraftHydration.ts')).toContain(
@@ -145,6 +146,7 @@ describe('staged editor analysis ownership', () => {
     for (const name of [
       'CanvasStagedOperationInspector.tsx',
       'CanvasRelationalTreeAuthoring.tsx',
+      'CanvasRelationalOperationDraftInspector.tsx',
     ]) {
       expect(source(name)).not.toMatch(
         /createCanonicalComposition|configureCanvasStagedComposition|restoreCanvasOperationConfiguration/
@@ -431,6 +433,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(ExistingDraftSource.split('\n').length).toBeLessThan(80);
     expect(ExistingSeedSource.split('\n').length).toBeLessThan(80);
     expect(AuthoringSource.split('\n').length).toBeLessThan(140);
+    expect(OperationDraftInspectorSource.split('\n').length).toBeLessThan(110);
     expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
@@ -504,6 +507,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
       ZoomSource,
       DetailSource,
       AuthoringSource,
+      OperationDraftInspectorSource,
       DraftViewportSource,
       OperationShelfSource,
       InlineEditorSource,

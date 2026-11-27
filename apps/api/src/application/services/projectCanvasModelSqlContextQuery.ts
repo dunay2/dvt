@@ -183,8 +183,7 @@ export class ProjectCanvasModelSqlContextQuery implements ICanvasModelSqlContext
 
   private async readDraft(scope: Scope, canvasId: string) {
     const stored = await this.deps.store.read(scope);
-    if (!stored || stored.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION)
-      return unavailable();
+    if (stored?.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION) return unavailable();
     if (jcsCanonicalize(stored.scope) !== jcsCanonicalize(scope)) return unavailable();
     const parsed = WorkspaceGraphAuthoringDraftSchema.safeParse(stored.draftPayload);
     if (!parsed.success) return unavailable();
