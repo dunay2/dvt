@@ -41,7 +41,7 @@ describe('source occurrence component boundaries', () => {
           /@dvt\/|[Cc]ommand|[Ss]ession|[Aa]nalysis|\/stores\/|[Pp]olicy/u
         );
         if (statement.moduleSpecifier.text === 'react')
-          expect(statement.importClause?.isTypeOnly).toBe(true);
+          expect(statement.importClause?.phaseModifier).toBe(ts.SyntaxKind.TypeKeyword);
       }
     }
   );

@@ -91,7 +91,7 @@ describe('useCanvasNodeAuthoringHandlers architecture', () => {
         .statements.some(
           (statement) =>
             ts.isImportDeclaration(statement) &&
-            statement.importClause?.isTypeOnly !== true &&
+            statement.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
             ts.isStringLiteral(statement.moduleSpecifier) &&
             statement.moduleSpecifier.text === './useCanvasNodeRemovalHandlers'
         )

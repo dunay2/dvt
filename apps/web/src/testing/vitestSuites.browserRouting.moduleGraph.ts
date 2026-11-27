@@ -30,7 +30,7 @@ export function runtimeImports(path: string, ast: ts.SourceFile): string[] {
       !ts.isImportDeclaration(statement) ||
       !ts.isStringLiteral(statement.moduleSpecifier) ||
       !statement.moduleSpecifier.text.startsWith('.') ||
-      statement.importClause?.isTypeOnly
+      statement.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword
     )
       return [];
     const clause = statement.importClause;

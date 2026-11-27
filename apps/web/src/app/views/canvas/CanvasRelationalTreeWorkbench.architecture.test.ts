@@ -204,7 +204,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
         file.statements.some(
           (statement) =>
             ts.isImportDeclaration(statement) &&
-            statement.importClause?.isTypeOnly !== true &&
+            statement.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
             ts.isStringLiteral(statement.moduleSpecifier) &&
             statement.moduleSpecifier.text === './canvasDvtSubstraitOutputProjection'
         )
@@ -385,7 +385,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     );
     const runtimeImports = workbench.statements.flatMap((statement) =>
       ts.isImportDeclaration(statement) &&
-      statement.importClause?.isTypeOnly !== true &&
+      statement.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
       ts.isStringLiteral(statement.moduleSpecifier)
         ? [statement.moduleSpecifier.text]
         : []
@@ -455,7 +455,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     );
     const runtimeImports = catalogue.statements.flatMap((statement) =>
       ts.isImportDeclaration(statement) &&
-      statement.importClause?.isTypeOnly !== true &&
+      statement.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
       ts.isStringLiteral(statement.moduleSpecifier)
         ? [statement.moduleSpecifier.text]
         : []

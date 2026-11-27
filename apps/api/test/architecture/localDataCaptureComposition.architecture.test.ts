@@ -25,7 +25,7 @@ function invokedImports(relative: string): Set<string> {
     if (
       !ts.isImportDeclaration(node) ||
       !ts.isStringLiteral(node.moduleSpecifier) ||
-      node.importClause?.isTypeOnly
+      node.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword
     )
       continue;
     const bindings = node.importClause?.namedBindings;

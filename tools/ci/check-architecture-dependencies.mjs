@@ -176,9 +176,10 @@ function analyzeLocalImportSemantics(module, contents) {
       current.hasSideEffectOnly = true;
     } else {
       const allBindingNames = importBindingNames(statement.importClause);
-      const runtimeBindingNames = statement.importClause.isTypeOnly
-        ? []
-        : importBindingNames(statement.importClause, { includeTypeOnly: false });
+      const runtimeBindingNames =
+        statement.importClause.phaseModifier === ts.SyntaxKind.TypeKeyword
+          ? []
+          : importBindingNames(statement.importClause, { includeTypeOnly: false });
       const hasRuntimeUse = runtimeBindingNames.some((name) => countIdentifier(parsed, name) > 1);
       current.hasRuntimeUse ||= hasRuntimeUse;
       current.hasTypeUse ||= allBindingNames.some((name) => countIdentifier(parsed, name) > 1);

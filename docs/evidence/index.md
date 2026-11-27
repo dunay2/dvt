@@ -53,6 +53,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ordered UNION inputs and bounded composition concerns](ED-20261004-union-inputs-composition-concerns.md)
 - [Pending integration and quality reconciliation](ED-20261123-pending-dependency-cohort.md)
 - [Pending Source Output And Shared Edit](ED-20261026-pending-source-output-selection.md)
+- [Preserve import classification with TypeScript import phases](ED-20261127-typescript-import-phase.md)
 - [Preserve unfinished Canvas Models across save and reopen](ED-20261127-incomplete-model-draft-recovery.md)
 - [Producer Input and passive Output boundary](ED-20260926-producer-consumer-input-boundary.md)
 - [Project template discovery](ED-20261118-workspace-directory-pages.md)

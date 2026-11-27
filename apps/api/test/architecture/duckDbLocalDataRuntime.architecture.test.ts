@@ -45,7 +45,9 @@ function dependencies(filename: string, content: string): Dependency[] {
         named.elements.every((item) => item.isTypeOnly);
       const hasDefault = isImport && node.importClause?.name !== undefined;
       const typeOnly =
-        (isImport ? node.importClause?.isTypeOnly : node.isTypeOnly) ||
+        (isImport
+          ? node.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword
+          : node.isTypeOnly) ||
         (!hasDefault && inlineTypes);
       found.push({ specifier: node.moduleSpecifier.text, eager: typeOnly !== true });
     } else if (

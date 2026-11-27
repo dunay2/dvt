@@ -88,7 +88,7 @@ describe('CanvasShell architecture', () => {
           ts.ScriptKind.TSX
         )
         .statements.filter(ts.isImportDeclaration)
-        .filter((statement) => !statement.importClause?.isTypeOnly)
+        .filter((statement) => statement.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword)
         .map((statement) => (statement.moduleSpecifier as ts.StringLiteral).text);
 
     const shell = imports('CanvasShell.tsx');

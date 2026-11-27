@@ -18,7 +18,7 @@ function importsOf(relativePath: string, mode: 'all' | 'runtime' = 'all'): Reado
     source.statements.flatMap((statement) =>
       ts.isImportDeclaration(statement) &&
       ts.isStringLiteral(statement.moduleSpecifier) &&
-      (mode === 'all' || !statement.importClause?.isTypeOnly)
+      (mode === 'all' || statement.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword)
         ? [statement.moduleSpecifier.text]
         : []
     )

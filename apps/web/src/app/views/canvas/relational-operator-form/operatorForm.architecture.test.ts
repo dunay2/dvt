@@ -17,7 +17,7 @@ describe('operator form component boundary', () => {
     const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const runtimeImports = source.statements
       .filter(ts.isImportDeclaration)
-      .filter((node) => !node.importClause?.isTypeOnly)
+      .filter((node) => node.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword)
       .map((node) => (node.moduleSpecifier as ts.StringLiteral).text);
     expect(runtimeImports).not.toEqual(
       expect.arrayContaining([
@@ -34,7 +34,7 @@ describe('operator form component boundary', () => {
     const source = ts.createSourceFile('controller.ts', text, ts.ScriptTarget.Latest, true);
     const infrastructureImports = source.statements
       .filter(ts.isImportDeclaration)
-      .filter((node) => !node.importClause?.isTypeOnly)
+      .filter((node) => node.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword)
       .filter((node) =>
         /@bufbuild\/protobuf|postgres-projection|\/(ports|services)\//.test(
           (node.moduleSpecifier as ts.StringLiteral).text

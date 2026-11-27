@@ -14,7 +14,7 @@ function importsOf(path: string): ReadonlyArray<Readonly<{ module: string; typeO
   );
   return source.statements.filter(ts.isImportDeclaration).map((declaration) => ({
     module: (declaration.moduleSpecifier as ts.StringLiteral).text,
-    typeOnly: declaration.importClause?.isTypeOnly === true,
+    typeOnly: declaration.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword,
   }));
 }
 

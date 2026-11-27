@@ -13,6 +13,7 @@ Open technical and delivery risks that still need mitigation or explicit accepta
 
 - [Adapters](adapters/index.md)
 - [Quality](quality/index.md)
+- [An import phase could be misclassified by architecture checks](typescript-import-phase-20261127.md)
 - [Candidate security boundary is not end-to-end enforcement](local-authorization-consumer-gap-20261017.md)
 - [Canvas Save And Readiness Risks](canvas-save-readiness-20261023.md)
 - [Canvas Transform SQL Inspection](canvas-transform-sql-query-20261108.md)

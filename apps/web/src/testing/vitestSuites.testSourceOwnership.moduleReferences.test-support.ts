@@ -82,7 +82,11 @@ export function moduleReferences(facts: TestSourceFacts): {
         ts.isNamedImports(bindings) &&
         bindings.elements.length > 0 &&
         bindings.elements.every((item) => item.isTypeOnly);
-      if (!clause?.isTypeOnly && !allTypes && !node.moduleSpecifier.text.includes('?raw'))
+      if (
+        clause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
+        !allTypes &&
+        !node.moduleSpecifier.text.includes('?raw')
+      )
         runtime.add(node.moduleSpecifier.text);
     }
     if (

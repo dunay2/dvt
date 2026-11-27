@@ -36,7 +36,9 @@ describe('web Vitest suite governance documentation', () => {
     expect(ast.statements.some(ts.isFunctionDeclaration)).toBe(false);
     expect(ast.statements.some(ts.isExportDeclaration)).toBe(false);
     expect(
-      ast.statements.filter(ts.isImportDeclaration).every((node) => node.importClause?.isTypeOnly)
+      ast.statements
+        .filter(ts.isImportDeclaration)
+        .every((node) => node.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword)
     ).toBe(true);
     expect(componentGuide).toContain('exactly one primary suite');
     expect(webIndex).toContain('Frontend test governance component');

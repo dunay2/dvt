@@ -126,6 +126,24 @@ function assertSingleRegistration(expected: readonly string[]): void {
 
 export function registerBrowserRoutingHelperClosure(): void {
   describe('transitive browser helper consumer closure', () => {
+    it('keeps deferred and side-effect dependencies distinct from type imports', () => {
+      const path = resolve('cypress/support/import-phases.ts');
+      const source = [
+        "import type { Options } from './types';",
+        "import { type InlineOptions } from './inline-types';",
+        "import { build } from './builder';",
+        "import defer * as feature from './deferred';",
+        "import './setup';",
+      ].join('\n');
+      const ast = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
+
+      expect(runtimeImports(path, ast)).toEqual([
+        resolve('cypress/support/builder.ts'),
+        resolve('cypress/support/deferred.ts'),
+        resolve('cypress/support/setup.ts'),
+      ]);
+    });
+
     it('includes every shared-helper consumer once in its admitted runtime command', () => {
       const { samples, revisits } = sharedHelperConsumers();
       const expected = savedSampleConsumers.map(webPath);

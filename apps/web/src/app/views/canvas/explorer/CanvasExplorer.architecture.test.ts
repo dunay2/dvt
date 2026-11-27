@@ -63,7 +63,7 @@ describe('Canvas explorer ownership', () => {
     expect(source.statements.length).toBeGreaterThan(0);
     for (const statement of source.statements) {
       if (ts.isImportDeclaration(statement)) {
-        expect(statement.importClause?.isTypeOnly).toBe(true);
+        expect(statement.importClause?.phaseModifier).toBe(ts.SyntaxKind.TypeKeyword);
       } else {
         expect(ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)).toBe(
           true
