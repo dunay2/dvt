@@ -247,6 +247,8 @@ describe('Workbench SQL inspection', () => {
       '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-collapse"]'
     ).click();
     cy.get(`${draftViewport} [data-slot="canvas-relational-output-edge-action"]`).focus();
+    pressNativeKey('Enter');
+    cy.get('[data-slot="canvas-model-output-inspector"]').should('not.exist');
     cy.press(Cypress.Keyboard.Keys.DELETE);
     cy.get(outputButton).click();
     cy.get('[data-slot="canvas-model-output-inspector"] [data-value="output"]:visible')

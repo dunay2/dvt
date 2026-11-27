@@ -19,6 +19,7 @@ export function CanvasRelationalTreeOutput({
   outputName,
   copy,
   onOpen,
+  onInspectConnection,
   connected,
   selectedSource,
   onConnect,
@@ -29,6 +30,7 @@ export function CanvasRelationalTreeOutput({
   outputName: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onOpen?: () => void;
+  onInspectConnection?: () => void;
   connected: boolean;
   selectedSource: string | null;
   onConnect?: (relationId: string) => void;
@@ -53,7 +55,7 @@ export function CanvasRelationalTreeOutput({
       aria-keyshortcuts="Delete Backspace"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={() => {
-        if (connected) onOpen?.();
+        if (connected) onInspectConnection?.();
         else if (selectedSource != null) onConnect?.(selectedSource);
       }}
       onKeyDown={(event) => {

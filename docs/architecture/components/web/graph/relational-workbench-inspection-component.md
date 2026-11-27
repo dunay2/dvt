@@ -49,8 +49,9 @@ inspector does not implicitly apply or replace that transaction.
 
 The final Output card opens inspection in both the applied and staged views.
 During a staged edit, the inspector reads the connected draft producer and
-retains the operation editor and its local form state while hidden. A
-disconnected or unresolved output exposes its current availability. Protected
+retains the operation editor and its local form state while hidden. The draft
+Input port and its connection own the connect and remove actions. A disconnected
+or unresolved output exposes its current availability. Protected
 SQL remains tied to the acknowledged Model revision and requires Apply first.
 
 ```mermaid

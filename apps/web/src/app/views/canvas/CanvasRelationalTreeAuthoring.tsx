@@ -64,17 +64,15 @@ export function CanvasRelationalTreeAuthoring({
       }
       inspector={
         <>
-          <div hidden={modelOutput.open} className={modelOutput.open ? 'hidden' : 'contents'}>
-            <CanvasRelationalOperationDraftInspector
-              data={data}
-              actions={actions}
-              copy={copy}
-              expanded={expanded}
-              onExpandedChange={onExpandedChange}
-              onPendingConditionChange={onPendingConditionChange}
-              sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
-            />
-          </div>
+          <CanvasRelationalOperationDraftInspector
+            data={data}
+            actions={actions}
+            copy={copy}
+            expanded={expanded}
+            onExpandedChange={onExpandedChange}
+            onPendingConditionChange={onPendingConditionChange}
+            sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
+          />
           {modelOutput.open ? (
             <CanvasDraftModelOutputInspector
               data={data}

@@ -111,6 +111,7 @@ function TreeView({
               zoom={viewport.zoom}
               onManualLayout={viewport.stopAutoFit}
               onOpenOutput={onOpenOutput}
+              onInspectOutputConnection={onOpenOutput}
               onDisconnectOutput={onDisconnectOutput}
               semanticContext={transformNode == null ? undefined : { transformNode }}
             />

@@ -8,6 +8,11 @@
   background-color: var(--surface-panel);
 }
 
+.draftWorkspace:has(> [data-slot='canvas-model-output-inspector'])
+  > :not(:first-child, [data-slot='canvas-model-output-inspector']) {
+  display: none;
+}
+
 .compositionSurface {
   position: relative;
   width: 100%;
