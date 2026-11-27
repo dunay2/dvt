@@ -203,7 +203,7 @@ describe('DvtOperationalWorkloadProjector', () => {
   ])('rejects Run with $state and retained semantics', ({ state: _state, ...pending }) => {
     const saved = runDraft();
     const model = saved.nodes.find((node) => node.id === 'transform-a')!;
-    const withAuthoring = (relationalAuthoringDraft: object) =>
+    const withAuthoring = (relationalAuthoringDraft: object): WorkspaceGraphAuthoringDraft =>
       WorkspaceGraphAuthoringDraftSchema.parse({
         ...saved,
         nodes: saved.nodes.map((node) =>

@@ -183,7 +183,7 @@ function assertSavedUnfinishedComposition(
   ).to.equal(false);
 }
 
-function stubUnplacedSource() {
+function stubUnplacedSource(): ReturnType<typeof buildCanvasAuthoringDraft>['nodes'][number] {
   const initial = buildCanvasAuthoringDraft({ substraitNInputJoin: true });
   const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
   const context = {

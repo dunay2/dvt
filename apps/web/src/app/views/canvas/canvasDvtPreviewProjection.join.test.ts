@@ -65,7 +65,7 @@ describe('N-input protected Preview intent', () => {
     const input = fixture(2);
     const model = input.canonicalNodes.at(-1)!;
     const layout = { version: 'v1', sources: [], operations: [], positions: { p: { x: 1, y: 1 } } };
-    const withAuthoring = (relationalAuthoringDraft: object) => ({
+    const withAuthoring = (relationalAuthoringDraft: object): ReturnType<typeof fixture> => ({
       ...input,
       canonicalNodes: input.canonicalNodes.map((node) =>
         node === model
