@@ -108,6 +108,7 @@ a set operation needs the input schema, or the removal changes the final output.
   exactly the requested GET calls and no implicit writes or runs.
 
 Behavioral proof belongs to `CanvasRelationalTreeWorkbench.model-composition.test.tsx`,
+`CanvasRelationalTreeWorkbench.draft-output.test.tsx`,
 `CanvasRelationalTreeWorkbench.apply.test.tsx`, `CanvasModelSqlOutput.test.tsx`,
 `canvas-model-sql-authoring.cy.ts` and `canvas-relational-workbench-output-code.cy.ts`.
 The [executed evidence](../../../../evidence/ED-20261117-model-sql-authoring.md)
