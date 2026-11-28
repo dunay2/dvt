@@ -1,4 +1,10 @@
 /** Owned concern: drive real browser pointer capture, including the Cypress iframe scale. */
+const copyDragOperationMasks: Partial<Record<DataTransfer['effectAllowed'], number>> = {
+  copy: 1,
+  copyLink: 3,
+  copyMove: 17,
+};
+
 function browserPoint(
   element: HTMLElement | undefined,
   verticalFraction = 0.5,
@@ -170,12 +176,7 @@ export function dragWorkbenchField(
                 0
               );
               const transfer = writer.firstCall.thisValue as DataTransfer;
-              const operationMasks: Partial<Record<DataTransfer['effectAllowed'], number>> = {
-                copy: 1,
-                copyLink: 3,
-                copyMove: 17,
-              };
-              const dragOperationsMask = operationMasks[transfer.effectAllowed];
+              const dragOperationsMask = copyDragOperationMasks[transfer.effectAllowed];
               expect(dragOperationsMask, 'production drag allows copying').to.be.a('number');
               const items = writer
                 .getCalls()
