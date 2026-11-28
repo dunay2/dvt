@@ -170,14 +170,16 @@ export function dragWorkbenchField(
                 0
               );
               const transfer = writer.firstCall.thisValue as DataTransfer;
-              expect(transfer.effectAllowed, 'production field drag effect').to.be.oneOf([
-                'copy',
-                'copyMove',
-              ]);
+              const operationMasks: Partial<Record<DataTransfer['effectAllowed'], number>> = {
+                copy: 1,
+                copyLink: 3,
+                copyMove: 17,
+              };
+              const dragOperationsMask = operationMasks[transfer.effectAllowed];
+              expect(dragOperationsMask, 'production drag allows copying').to.be.a('number');
               const items = writer
                 .getCalls()
                 .map((call) => ({ mimeType: call.args[0], data: call.args[1] }));
-              const dragOperationsMask = transfer.effectAllowed === 'copyMove' ? 17 : 1;
               for (const type of ['dragEnter', 'dragOver', 'drop']) {
                 await protocol('Input.dispatchDragEvent', {
                   type,

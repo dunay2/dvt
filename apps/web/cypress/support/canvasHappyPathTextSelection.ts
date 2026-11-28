@@ -57,11 +57,10 @@ export function copySelectedCanvasText(selectedTerm: string): void {
     });
   let scrollBeforeActivation = 0;
   cy.window().then((window) => {
-    window.focus();
     scrollBeforeActivation = window.scrollY;
   });
   // Native defaults must neither scroll on Space nor dispatch a second Copy after keyup.
-  cy.press(Cypress.Keyboard.Keys.SPACE);
+  pressNativeKey('Space');
   cy.get('@copySelectedText').should((clipboard) => {
     expect(clipboard).to.have.been.calledOnceWithExactly(selectedTerm);
   });
@@ -93,10 +92,10 @@ export function activateCanvasDictionaryLink(
 ): void {
   if (key === Cypress.Keyboard.Keys.ENTER) cy.get('#canvas-workspace-tab').rightclick();
   const activations: string[] = [];
-  let nativeKey: KeyboardEvent | undefined;
   cy.get<HTMLAnchorElement>('[data-slot="shell-text-selection-menu"] a')
     .first()
     .focus()
+    .should('be.focused')
     .then(($link) => {
       const link = $link[0]!;
       link.addEventListener(
@@ -107,25 +106,11 @@ export function activateCanvasDictionaryLink(
         },
         { once: true }
       );
-      link.addEventListener(
-        'keydown',
-        (event) => {
-          nativeKey = event;
-        },
-        { once: true }
-      );
     });
-  cy.window().then((window) => {
-    window.focus();
-  });
-  cy.press(key);
+  pressNativeKey(key === Cypress.Keyboard.Keys.SPACE ? 'Space' : 'Enter');
   cy.get('[data-slot="shell-text-selection-menu"]').should('not.exist');
   cy.get('#canvas-workspace-tab').should('be.focused');
   cy.then(() => {
-    expect(nativeKey?.isTrusted, 'dictionary activation uses a real keyboard gesture').to.equal(
-      true
-    );
-    expect(nativeKey?.key).to.equal(key === Cypress.Keyboard.Keys.SPACE ? ' ' : 'Enter');
     expect(activations).to.deep.equal([`https://dle.rae.es/${encodeURIComponent(selectedTerm)}`]);
   });
 }

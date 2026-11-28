@@ -1,9 +1,20 @@
 /** Send complete native keys when Chromium's default action needs more than Cypress supplies. */
 export function pressNativeKey(
-  key: 'Enter' | 'Escape' | 'Home' | 'End' | 'ArrowUp' | 'ArrowDown',
+  key: 'Enter' | 'Space' | 'Escape' | 'Home' | 'End' | 'ArrowUp' | 'ArrowDown',
   modifiers: Readonly<{ alt?: boolean; shift?: boolean }> = {}
 ): void {
-  const keyCode = { Enter: 13, Escape: 27, Home: 36, End: 35, ArrowUp: 38, ArrowDown: 40 }[key];
+  const keyCode = {
+    Enter: 13,
+    Space: 32,
+    Escape: 27,
+    Home: 36,
+    End: 35,
+    ArrowUp: 38,
+    ArrowDown: 40,
+  }[key];
+  const nativeKey = key === 'Space' ? ' ' : key;
+  const textByKey: Partial<Record<typeof key, string>> = { Enter: '\r', Space: ' ' };
+  const text = textByKey[key];
   // Chromium's protocol mask is Alt=1 and Shift=8; zero also clears stale modifier intent.
   const modifierMask = (modifiers.alt === true ? 1 : 0) | (modifiers.shift === true ? 8 : 0);
   let received: KeyboardEvent | undefined;
@@ -37,18 +48,18 @@ export function pressNativeKey(
         command: 'Input.dispatchKeyEvent',
         params: {
           type,
-          key,
+          key: nativeKey,
           code: key,
           windowsVirtualKeyCode: keyCode,
           nativeVirtualKeyCode: keyCode,
           modifiers: modifierMask,
-          ...(key === 'Enter' && type === 'keyDown' ? { text: '\r', unmodifiedText: '\r' } : {}),
+          ...(type === 'keyDown' && text != null ? { text, unmodifiedText: text } : {}),
         },
       })
     );
   }
   cy.then(() => {
-    expect(received?.key, 'the application received the requested native key').to.equal(key);
+    expect(received?.key, 'the application received the requested native key').to.equal(nativeKey);
     expect(received?.code, 'the application received the requested key code').to.equal(key);
     expect(received?.isTrusted, 'the key originated in Chromium').to.equal(true);
     expect(received?.target, 'the focused application control received the key').to.equal(
