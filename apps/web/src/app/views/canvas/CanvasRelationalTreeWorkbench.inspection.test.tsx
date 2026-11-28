@@ -82,7 +82,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(
       container
         .querySelector('[data-slot="canvas-relational-tree-source-list"]')
-        ?.closest('section')
+        ?.closest('[data-slot="canvas-explorer-panel"]')
         ?.hasAttribute('hidden')
     ).toBe(true);
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
@@ -104,7 +104,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(
       container
         .querySelector('[data-slot="canvas-relational-tree-source-list"]')
-        ?.closest('section')
+        ?.closest('[data-slot="canvas-explorer-panel"]')
         ?.hasAttribute('hidden')
     ).toBe(false);
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
