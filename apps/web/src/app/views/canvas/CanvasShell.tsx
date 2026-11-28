@@ -210,8 +210,6 @@ export default function CanvasShell({
   return (
     <CanvasModelBrowserProvider
       navigation={modelBrowser}
-      nodes={panels.inspectorGraphNodes}
-      canvasId={panels.activeCanvasId}
       selectedId={model.selected?.id}
       active={model.active && !code.active}
       projectRoot={projectRoot}

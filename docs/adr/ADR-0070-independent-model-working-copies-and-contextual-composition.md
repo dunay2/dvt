@@ -9,7 +9,8 @@ owners:
 
 # ADR-0070 - Independent Model Working Copies And Contextual Composition
 
-**Governing issue:** [#3950](https://github.com/dunay2/dvt/issues/3950).
+**Governing issues:** [#3950](https://github.com/dunay2/dvt/issues/3950) and
+[#4014](https://github.com/dunay2/dvt/issues/4014).
 
 ## Context
 
@@ -71,8 +72,12 @@ another catalogue. Connections remain shared project resources.
 | Drop inside Model 1's semantic workbench      | Prepare an independent working definition and a local Read towards that copy inside Model 1; keep Model 1 active. |
 | Connect that local Read to an operation input | Use the existing typed port, dependency and cycle admission.                                                      |
 
-The Models catalogue inside the semantic workbench adds cards by drop. The
-project-level command to create a Model remains available in the project Canvas.
+The project Canvas owns the Models catalogue and the Model creation command.
+Drag a project row over an open Model tab to reveal its semantic workbench and
+drop onto the graph. The gesture carries the current project scope. The semantic
+Explorer displays Connections followed by the active Model's searchable Inputs,
+including physical sources and linked outputs already admitted to the Model.
+An input staged by the active draft appears there before Apply.
 
 The drop preview names the destination and whether it will create a working copy
 or add one to the open Model. Nested surfaces consume their accepted drop; it
@@ -87,9 +92,9 @@ the Read as an inline copy of those operations.
 
 ```mermaid
 flowchart TD
-  Drag[Drop catalogue Model] --> Destination{Destination}
+  Drag[Drag from project Canvas catalogue] --> Destination{Destination}
   Destination -->|Project Canvas| Project[Prepare working definition and dependencies]
-  Destination -->|Model 1 workbench| Candidate[Prepare working definition, dependencies and local Read]
+  Destination -->|Open Model tab then workbench| Candidate[Prepare working definition, dependencies and local Read]
   Candidate --> Session[Model 1 discardable session]
   Session -->|Cancel| Discard[Discard entire candidate]
   Session -->|Apply| Validate[Validate entire candidate]
@@ -150,14 +155,14 @@ this ADR alone does not declare an implementation or replace that authority.
 
 ## Required evidence before implementation acceptance
 
-| Scenario                         | Opportunity and pattern                        | Required proof                                                                                                           |
-| -------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Native copy and subsequent edits | Hidden authority; Value Object and copy policy | Semantic equivalence, independent IDs, original unchanged, valid producer field remapping and copied dependency context. |
-| Workbench drop                   | Boundary drift; application transaction        | Receiver stays active, one candidate, Apply/Cancel and no orphan nodes/edges.                                            |
-| Destination arbitration          | Duplicate semantics; typed intent              | One nested drop stages one card. Activating a Model row selects it. The workbench catalogue has no add button.           |
-| Denied or stale context          | Policy and protected port                      | Permission, scope, ambiguity, invalid authority, unavailable dependencies and CAS rejection publish nothing.             |
-| File authority and output        | Separate authority boundaries                  | No shared-file fork claim, inherited durable destination or borrowed execution evidence.                                 |
-| Save and reload                  | Aggregate / repository                         | Real contract roundtrip and browser workflow through the protected application.                                          |
+| Scenario                         | Opportunity and pattern                        | Required proof                                                                                                                             |
+| -------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Native copy and subsequent edits | Hidden authority; Value Object and copy policy | Semantic equivalence, independent IDs, original unchanged, valid producer field remapping and copied dependency context.                   |
+| Workbench drop                   | Boundary drift; application transaction        | Receiver stays active, one candidate, Apply/Cancel and no orphan nodes/edges.                                                              |
+| Destination arbitration          | Duplicate semantics; typed intent              | One nested drop stages one card. Activating a project Model row selects it. The semantic Explorer shows only Model inputs and Connections. |
+| Denied or stale context          | Policy and protected port                      | Permission, scope, ambiguity, invalid authority, unavailable dependencies and CAS rejection publish nothing.                               |
+| File authority and output        | Separate authority boundaries                  | No shared-file fork claim, inherited durable destination or borrowed execution evidence.                                                   |
+| Save and reload                  | Aggregate / repository                         | Real contract roundtrip and browser workflow through the protected application.                                                            |
 
 Package tests, lint, types, architecture evidence and `pnpm verify:prepush` remain
 required. A design record or unit-only copy test does not prove the drag workflow.

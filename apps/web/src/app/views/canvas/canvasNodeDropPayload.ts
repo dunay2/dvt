@@ -8,14 +8,16 @@ import {
 } from '../../types/canonicalGuards';
 
 export const CANVAS_CATALOG_NODE_DRAG_MIME_TYPE = 'application/x-dvt-catalog-node-id';
+export const CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE = 'application/x-dvt-model-composition-id';
 
 export const CANVAS_NODE_DROP_GRAPH_ANCHOR = { x: 100, y: 40 } as const;
 
 export function readCanvasCatalogNodeDragReference(
-  transfer: Pick<DataTransfer, 'getData'>
+  transfer: Pick<DataTransfer, 'getData'>,
+  mime = CANVAS_CATALOG_NODE_DRAG_MIME_TYPE
 ): Readonly<{ id: string; scopeKey?: string }> | null {
   try {
-    const value: unknown = JSON.parse(transfer.getData(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE));
+    const value: unknown = JSON.parse(transfer.getData(mime));
     if (
       !isRecord(value) ||
       typeof value.id !== 'string' ||
@@ -30,6 +32,16 @@ export function readCanvasCatalogNodeDragReference(
   } catch {
     return null;
   }
+}
+
+export function writeCanvasModelCompositionDrag(
+  transfer: Pick<DataTransfer, 'setData'>,
+  id: string,
+  scopeKey: string | undefined
+): boolean {
+  if (scopeKey == null) return false;
+  transfer.setData(CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE, JSON.stringify({ id, scopeKey }));
+  return true;
 }
 
 type ParsedCanonicalDropPayload = {

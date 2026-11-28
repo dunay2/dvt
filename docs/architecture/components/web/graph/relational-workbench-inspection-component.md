@@ -55,6 +55,11 @@ Input port and its connection own the connect and remove actions. A disconnected
 or unresolved output exposes its current availability. Protected
 SQL remains tied to the acknowledged Model revision and requires Apply first.
 
+The semantic Explorer places the current Model's searchable Inputs below
+Connections. It includes available linked outputs and local draft inputs.
+Project Models remain in the main Canvas Explorer. A scoped drag from that
+catalogue through an open Model tab delegates to the existing authoring session.
+
 ```mermaid
 stateDiagram-v2
     Inspect --> Edit: Edit

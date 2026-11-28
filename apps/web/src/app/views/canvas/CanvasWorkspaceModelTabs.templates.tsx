@@ -1,6 +1,6 @@
 /** Passive workspace tab strip: markup, accessibility and semantic class names. */
 import './canvasWorkspaceTabs.css';
-import type { FocusEvent, MouseEvent, Ref } from 'react';
+import type { DragEvent, FocusEvent, MouseEvent, Ref } from 'react';
 import { Code2, Table2, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -14,6 +14,7 @@ export function CanvasWorkspaceModelTabsTemplate({
   stripRef,
   onTabFocus,
   onTabPointerDown,
+  onModelDragOver,
 }: Readonly<{
   tabs: readonly Readonly<{
     key: string;
@@ -29,6 +30,7 @@ export function CanvasWorkspaceModelTabsTemplate({
   stripRef: Ref<HTMLDivElement>;
   onTabFocus: (event: FocusEvent<HTMLButtonElement>, key: string) => void;
   onTabPointerDown: (event: MouseEvent<HTMLButtonElement>, key: string) => void;
+  onModelDragOver: (event: DragEvent<HTMLButtonElement>, key: string) => void;
 }>) {
   return (
     <Tabs
@@ -56,6 +58,9 @@ export function CanvasWorkspaceModelTabsTemplate({
               data-closable={item.close != null || undefined}
               className="workspace-navigation-tab"
               onMouseDown={(event) => onTabPointerDown(event, item.key)}
+              onDragOver={
+                item.kind === 'model' ? (event) => onModelDragOver(event, item.key) : undefined
+              }
               onFocus={(event) => onTabFocus(event, item.key)}
               onKeyDown={(event) => {
                 if (event.key !== 'Delete' || item.close == null) return;

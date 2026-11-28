@@ -5,15 +5,17 @@
  * @consequence One occurrence rail owns identity and admission without duplicate controls.
  * @version 1.0.0
  */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { useCanvasRelationalTreeWorkbenchModel } from '../useCanvasRelationalTreeWorkbenchModel';
 import type { CanvasRelationalTreeWorkbenchCopy } from '../canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSourceCatalogue } from '../CanvasRelationalTreeSourceCatalogue';
 import { CanvasExplorer } from './CanvasExplorer';
 import { useCanvasModelBrowserPresentation } from '../CanvasModelBrowser';
-import { CanvasModelInputsPalette } from './CanvasModelInputsPalette';
+import { CanvasExplorerSection } from './CanvasExplorerCatalog.templates';
+import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import styles from './CanvasExplorer.module.css';
 
 export function CanvasRelationalExplorer({
   model,
@@ -27,34 +29,38 @@ export function CanvasRelationalExplorer({
   children: ReactNode;
 }>): JSX.Element {
   const browser = useCanvasModelBrowserPresentation();
+  const [inputsOpen, setInputsOpen] = useState(true);
   const language = useApplicationLanguageStore((state) => state.language);
   const explorerCopy = resolveCanvasExplorerCopy(language);
-  const composition = pending ? undefined : model.modelComposition;
+  const editable = model.authoringAvailable && !pending;
   const catalogue = (
     <CanvasRelationalTreeSourceCatalogue
       items={model.catalogue}
       copy={copy}
-      draggable={model.authoringAvailable && !pending}
+      draggable={editable}
       onSelect={(item) => {
         if (!pending) model.selectCatalogueItem(item);
       }}
-      occurrences={model.authoringAvailable && !pending ? model.session.occurrences : undefined}
+      occurrences={editable ? model.session.occurrences : undefined}
     />
   );
   return (
     <CanvasExplorer
-      heading={
-        browser == null
-          ? undefined
-          : { label: explorerCopy.explorerTitle, contextLabel: explorerCopy.project }
-      }
+      heading={{ label: explorerCopy.explorerTitle }}
       elements={
-        browser == null
-          ? catalogue
-          : browser.catalog(
-              composition,
-              <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
-            )
+        <div className={styles.listPanel}>
+          {browser == null ? null : (
+            <CanvasWarehouseConnections onManage={browser.onManageConnections} />
+          )}
+          <CanvasExplorerSection
+            title={explorerCopy.modelInputs}
+            slot="canvas-model-inputs"
+            open={inputsOpen}
+            onOpenChange={setInputsOpen}
+          >
+            {catalogue}
+          </CanvasExplorerSection>
+        </div>
       }
     >
       {children}

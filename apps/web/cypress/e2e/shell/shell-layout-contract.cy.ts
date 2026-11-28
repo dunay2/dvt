@@ -582,24 +582,32 @@ describe('Shell layout contract', () => {
     });
   });
 
-  it('keeps Model inputs beside Connections with compact spacing', () => {
+  it('shows Model inputs inline below Connections and keeps Models on Canvas', () => {
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
     visitShellRouteWithUiLayout('/canvas');
     openWorkbenchModel();
-    const input = '[data-slot="canvas-model-inputs-command"]';
+    const input = '[data-slot="canvas-model-inputs"]';
+    const sources = '[data-slot="canvas-relational-tree-sources"]';
+    const models = '[data-slot="canvas-explorer-models"]';
     const explorer =
       '[data-slot="canvas-model-editor"] [data-slot="canvas-explorer-panel"]:visible';
     cy.get(explorer).should(($panel) => {
       const connections = $panel.find('[data-slot="canvas-explorer-connections"]')[0]!;
       const modelInputs = $panel.find(input)[0]!;
-      const models = $panel.find('[data-slot="canvas-explorer-models"]')[0]!;
+      expect($panel.find(models)).to.have.length(0);
       const inputsBounds = modelInputs.getBoundingClientRect();
       expect(inputsBounds.top - connections.getBoundingClientRect().bottom).to.be.within(0, 8);
-      expect(models.getBoundingClientRect().top - inputsBounds.bottom).to.be.within(0, 8);
     });
-    cy.get(`${explorer} ${input}`).focus();
+    cy.get(`${explorer} ${input} ${sources}`).should('be.visible');
+    const trigger = `${explorer} ${input} button[aria-expanded]`;
+    cy.get(trigger).should('have.attr', 'aria-expanded', 'true').focus();
     pressNativeKey('Enter');
-    cy.get(`${explorer} ${input}`).should('have.attr', 'aria-expanded', 'true');
+    cy.get(trigger).should('have.attr', 'aria-expanded', 'false');
+    cy.get(`${explorer} ${input} ${sources}`).should('not.be.visible');
+    pressNativeKey('Enter');
+    cy.get(`${explorer} ${input} ${sources}`).should('be.visible');
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
+    cy.get(`[data-slot="canvas-workspace-surface"] ${models}`).should('be.visible');
   });
 
   it('enters Semantic directly from SQL and project Git Code', () => {

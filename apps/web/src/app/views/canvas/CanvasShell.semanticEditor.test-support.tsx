@@ -1,7 +1,5 @@
 /** Shared production shell setup for opening and draft-protection behaviors. */
 import { beforeEach, afterEach, vi } from 'vitest';
-import { act } from 'react';
-import { fireEvent, within } from '@testing-library/dom';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import {
@@ -23,11 +21,12 @@ export function setupSemanticEditorShell(): void {
   });
 }
 
-export async function openModelInputs(): Promise<HTMLElement> {
-  await act(async () => {
-    fireEvent.click(within(harness.container).getByRole('button', { name: 'Model inputs' }));
-  });
-  return within(document.body).getByRole('dialog', { name: 'Model inputs' });
+export function readModelInputs(): HTMLElement {
+  const section = harness.container.querySelector<HTMLElement>('[data-slot="canvas-model-inputs"]');
+  const trigger = section?.querySelector<HTMLButtonElement>('button[aria-expanded]');
+  if (section == null || trigger?.getAttribute('aria-expanded') !== 'true')
+    throw new Error('Expected expanded Model inputs in the Explorer.');
+  return section;
 }
 
 export async function mountModel(

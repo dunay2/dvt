@@ -208,14 +208,12 @@ function assertSqlViewRetainsSelection(model: ModelSqlJourney['model']): void {
   );
   cy.get('[data-slot="left-navigation-nav"] [data-active="true"]').should('have.length', 1);
   cy.get(panel).should('be.visible');
-  cy.get('[data-slot="canvas-explorer-panel"]:visible input[type="search"]').should(
-    'have.value',
+  cy.get(
+    '[data-slot="canvas-workspace-surface"] [data-slot="canvas-explorer-models"] input'
+  ).should('have.value', model.name);
+  cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
+    'have.text',
     model.name
-  );
-  cy.get('[data-slot="canvas-explorer-panel"]:visible [data-element-id="' + model.id + '"]').should(
-    'have.attr',
-    'aria-pressed',
-    'true'
   );
 }
 

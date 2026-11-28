@@ -1,3 +1,4 @@
+import { canvasModelWorkspaceTabIds } from '../../../src/app/views/canvas/canvasWorkspaceTabs';
 import { getE2eApiCalls, installE2eApiFetchStub } from '../../support/e2eApiStub';
 import { registerEmptyModelDeletionJourney } from '../../support/emptyModelDeletion';
 import {
@@ -12,6 +13,22 @@ import {
 } from '../../support/relationalWorkbench/operationMenu';
 import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
+
+const canvasNavigation = '#shell-canvas-navigation';
+const projectRow = (id: string): string =>
+  `[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]`;
+
+function enterSemantic(): void {
+  cy.get('[data-slot="shell-model-semantic-command"]')
+    .should('have.attr', 'aria-disabled', 'false')
+    .click();
+}
+
+function selectModelFromCanvas(id: string): void {
+  cy.get(canvasNavigation).click();
+  cy.get(projectRow(id)).click();
+  enterSemantic();
+}
 
 describe('model-session', () => {
   registerEmptyModelDeletionJourney();
@@ -40,17 +57,13 @@ describe('model-session', () => {
   });
   it('opens the first Model and restores the last chosen Model after route exit and reload', () => {
     stubWorkbenchScenario('generated', { includeLooseNode: true });
-    const enterSemantic = (): void => {
-      cy.get('[data-slot="shell-model-semantic-command"]')
-        .should('have.attr', 'aria-disabled', 'false')
-        .click();
-    };
-    const canvas = '#shell-canvas-navigation';
     const inspector = '[data-slot="canvas-node-workbench-overlay"]:visible';
-    const row = (id: string): string =>
-      `[data-slot="canvas-explorer-panel"]:visible [data-element-id="${id}"]`;
     const assertModel = (id: string, name: string): void => {
-      cy.get(row(id)).should('have.attr', 'aria-pressed', 'true');
+      cy.get(`[id="${canvasModelWorkspaceTabIds(id).tabId}"]`).should(
+        'have.attr',
+        'aria-selected',
+        'true'
+      );
       cy.get('[data-slot="canvas-model-editor"]:visible')
         .should('have.attr', 'aria-label')
         .and('include', name);
@@ -59,12 +72,12 @@ describe('model-session', () => {
     visitWorkbenchCanvas();
     enterSemantic();
     assertModel('dvt-transform-1', 'Transform 1');
-    cy.get(canvas).click();
-    cy.get(row('dvt-transform-1')).click();
+    cy.get(canvasNavigation).click();
+    cy.get(projectRow('dvt-transform-1')).click();
     cy.get(inspector).should('contain.text', 'Transform 1');
     enterSemantic();
     assertModel('dvt-transform-1', 'Transform 1');
-    cy.get(row('orphan-transform-1')).click();
+    selectModelFromCanvas('orphan-transform-1');
     assertModel('orphan-transform-1', 'Orphan transform');
     const modelTabs = '[data-slot="canvas-model-main-tab"]';
     cy.get(modelTabs).should('have.length', 2);
@@ -74,28 +87,27 @@ describe('model-session', () => {
     assertModel('orphan-transform-1', 'Orphan transform');
     cy.get('[data-slot="left-navigation-link"][href="/admin"]').click();
     cy.location('pathname').should('eq', '/admin');
-    cy.get(canvas).click();
+    cy.get(canvasNavigation).click();
     enterSemantic();
     assertModel('orphan-transform-1', 'Orphan transform');
-    cy.get(canvas).click();
-    cy.get(row('dvt-transform-1')).click();
-    enterSemantic();
+    selectModelFromCanvas('dvt-transform-1');
     assertModel('dvt-transform-1', 'Transform 1');
-    cy.get(row('orphan-transform-1')).click();
+    selectModelFromCanvas('orphan-transform-1');
     assertModel('orphan-transform-1', 'Orphan transform');
     cy.on('window:before:load', installE2eApiFetchStub);
     cy.reload();
     enterSemantic();
     assertModel('orphan-transform-1', 'Orphan transform');
-    cy.get(row('source-1')).click();
-    assertModel('orphan-transform-1', 'Orphan transform');
+    cy.get('[data-slot="canvas-model-editor"]:visible [data-slot="canvas-explorer-models"]').should(
+      'not.exist'
+    );
     cy.get('[data-slot="canvas-workspace-tab"]').click();
     cy.get('[data-slot="shell-model-semantic-command"]').should(
       'have.attr',
       'aria-pressed',
       'false'
     );
-    cy.get(row('source-1')).click();
+    cy.get(projectRow('source-1')).click();
     cy.get(inspector).should('contain.text', 'Source 1');
     enterSemantic();
     assertModel('orphan-transform-1', 'Orphan transform');

@@ -20,7 +20,7 @@ import {
   harness,
   navigation,
   mountModel,
-  openModelInputs,
+  readModelInputs,
 } from './CanvasShell.semanticEditor.test-support';
 
 function modelPanels(
@@ -137,7 +137,7 @@ describe('Canvas Model inspection', () => {
         editor.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
       ).not.toBeNull();
       expect(editor.textContent).toContain('INNER JOIN');
-      const inputs = await openModelInputs();
+      const inputs = readModelInputs();
       const sources = [
         ...inputs.querySelectorAll<HTMLButtonElement>(
           '[data-slot="canvas-relational-tree-source"]'
@@ -200,7 +200,7 @@ describe('Canvas Model inspection', () => {
       expect(
         editor.querySelector('[data-slot="canvas-relational-tree-inspection"]')
       ).not.toBeNull();
-      const inputs = await openModelInputs();
+      const inputs = readModelInputs();
       const sources = [
         ...inputs.querySelectorAll<HTMLButtonElement>(
           '[data-slot="canvas-relational-tree-source"]'
@@ -551,7 +551,7 @@ describe('Canvas Model inspection', () => {
   it('does not enter authoring when selecting an already participating source', async () => {
     const { data, fixture, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
-    const inputs = await openModelInputs();
+    const inputs = readModelInputs();
     await act(async () =>
       inputs
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!

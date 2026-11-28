@@ -171,13 +171,11 @@ describe('CanvasShell operational drawer registration', () => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
     expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
-    const inputControl = document.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-model-inputs-command"]'
+    const inputs = document.querySelector('[data-slot="canvas-model-inputs"]');
+    expect(inputs?.querySelector('button[aria-expanded]')?.getAttribute('aria-expanded')).toBe(
+      'true'
     );
-    expect(inputControl).not.toBeNull();
-    act(() => inputControl!.click());
-    const palette = document.getElementById(inputControl!.getAttribute('aria-controls')!);
-    expect(palette?.textContent).toContain('Missing');
+    expect(inputs?.textContent).toContain('Missing');
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {

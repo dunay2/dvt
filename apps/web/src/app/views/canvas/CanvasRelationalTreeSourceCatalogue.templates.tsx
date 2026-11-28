@@ -23,7 +23,7 @@ export function CanvasRelationalSourceCatalogueTemplate({
     onSearch: (value: string) => void;
   }>): JSX.Element {
   return (
-    <div data-slot="canvas-relational-tree-sources" className={styles.listPanel}>
+    <div data-slot="canvas-relational-tree-sources">
       <label className={styles.search}>
         <Search aria-hidden="true" />
         <input

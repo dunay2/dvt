@@ -17,7 +17,7 @@ import styles from './CanvasExplorer.module.css';
 import { CanvasExplorerRemoveEmptyModelAction } from './CanvasExplorerRemoveEmptyModelAction';
 import { CanvasExplorerModelStatus } from './CanvasExplorerModelStatus';
 
-/** Shared disclosure structure for project connection and model sections. */
+/** Shared disclosure structure for Explorer sections. */
 export function CanvasExplorerSection({
   title,
   count,
@@ -31,7 +31,7 @@ export function CanvasExplorerSection({
 }: Readonly<{
   title: string;
   count?: number;
-  countSlot: string;
+  countSlot?: string;
   slot: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -197,7 +197,6 @@ export function CanvasExplorerListTemplate({
   onQuery,
   onSelect,
   onDragStart,
-  hideAddModel,
   onAddModel,
   onRemoveEmptyModel,
   connections,
@@ -217,7 +216,6 @@ export function CanvasExplorerListTemplate({
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  hideAddModel?: boolean;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onRemoveEmptyModel?: (id: string) => void;
   connections?: ReactNode;
@@ -245,18 +243,16 @@ export function CanvasExplorerListTemplate({
               pending={pending}
               label={copy.details}
             />
-            {hideAddModel ? null : (
-              <button
-                type="button"
-                className={styles.headerAction}
-                aria-label={copy.addModel}
-                title={copy.addModel}
-                disabled={disabled || onAddModel == null}
-                onClick={(event) => onAddModel?.(event.currentTarget)}
-              >
-                <Plus aria-hidden="true" />
-              </button>
-            )}
+            <button
+              type="button"
+              className={styles.headerAction}
+              aria-label={copy.addModel}
+              title={copy.addModel}
+              disabled={disabled || onAddModel == null}
+              onClick={(event) => onAddModel?.(event.currentTarget)}
+            >
+              <Plus aria-hidden="true" />
+            </button>
           </>
         }
       >

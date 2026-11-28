@@ -34,8 +34,7 @@ export type CanvasProjectElementsInput = Readonly<{
   catalogueScopeKey?: string;
   presentation?: CanvasExplorerCatalogPresentation;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  canDragModel?: (id: string) => boolean;
-  hideAddModel?: boolean;
+  modelCompositionScope?: string;
   onAddModel?: (opener: HTMLButtonElement) => void;
   onRemoveEmptyModel?: (id: string) => void;
   onImport?: () => void;

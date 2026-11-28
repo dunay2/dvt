@@ -15,9 +15,8 @@ import { CanvasModelBrowserProvider } from './CanvasModelBrowser';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
-import { projectCanvasExplorerModels } from './explorer/canvasExplorerItems';
 import { useCanvasExplorerCatalogPresentation } from './explorer/useCanvasExplorerCatalogPresentation';
-import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 import {
@@ -74,7 +73,6 @@ function physicalScenario(
       scopeKey: 'physical-test',
       mode: 'semantic' as const,
       cataloguePresentation,
-      catalogue: projectCanvasExplorerModels(nodes, 'canvas'),
       onBrowse: vi.fn(),
       onSelect: vi.fn(() => false),
       contexts: [],
@@ -84,13 +82,7 @@ function physicalScenario(
     return (
       <QueryClientProvider client={client}>
         <AppServicesProvider overrides={services}>
-          <CanvasModelBrowserProvider
-            navigation={navigation}
-            nodes={nodes}
-            canvasId="canvas"
-            selectedId={node.id}
-            active
-          >
+          <CanvasModelBrowserProvider navigation={navigation} selectedId={node.id} active>
             <CanvasRelationalTreeWorkbench
               transformNode={node}
               nodes={nodes}
@@ -116,7 +108,7 @@ async function dropPhysicalSource(id: string, scopeKey = 'physical-test'): Promi
   const event = new MouseEvent('drop', { bubbles: true, cancelable: true });
   Object.defineProperty(event, 'dataTransfer', {
     value: {
-      types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+      types: [CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE],
       getData: () => JSON.stringify({ id, scopeKey }),
     },
   });
@@ -151,9 +143,11 @@ describe('Explorer physical Input occurrences', () => {
       before = structuredClone(graph);
     const scenario = physicalScenario(graph);
     await scenario.render();
-    const sourceRow = container.querySelector(`[data-element-id="${graph.source.id}"]`);
+    const sourceRow = container.querySelector(
+      `[data-slot="canvas-relational-tree-source"][data-node-id="${graph.source.id}"]`
+    );
     expect(sourceRow?.getAttribute('draggable')).toBe('true');
-    expect(screen.queryByRole('button', { name: 'Añadir instancia: sales_calendar' })).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-explorer-models"]')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Añadir modelo' })).toBeNull();
     await dropPhysicalSource(graph.source.id);
     await dropPhysicalSource(graph.source.id);

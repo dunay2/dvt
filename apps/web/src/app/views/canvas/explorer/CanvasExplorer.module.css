@@ -12,23 +12,6 @@
   text-overflow: ellipsis;
   font-size: var(--text-ui-caption);
 }
-.paletteAction {
-  flex-shrink: 0;
-  justify-content: flex-start;
-  font-size: var(--text-ui-caption);
-  line-height: var(--text-ui-caption-line-height);
-}
-.palette {
-  width: calc(var(--spacing) * 72);
-  max-width: calc(100vw - var(--spacing) * 4);
-  max-height: var(--radix-popover-content-available-height);
-  overflow: auto;
-  padding: calc(var(--spacing) * 2);
-  background: var(--surface-panel);
-  color: var(--text-default);
-  font-size: var(--text-ui-caption);
-  line-height: var(--text-ui-caption-line-height);
-}
 .layout {
   display: flex;
   flex: 1;

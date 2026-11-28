@@ -15,7 +15,7 @@ import {
   setupWorkbenchTest,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
-import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 import { CanvasModelBrowser, type CanvasModelBrowserPresentation } from './CanvasModelBrowser';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { dbtModelProjection } from './canvasDbtModelReference.test-fixtures';
@@ -23,15 +23,41 @@ import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
 import { canvasDbtModelDefinitionId } from './canvasDbtModelReference';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 
-async function dropModel(id: string, scopeKey?: string): Promise<void> {
+const workspaceScope = 'project/native';
+const modelBrowser: CanvasModelBrowserPresentation = {
+  scopeKey: workspaceScope,
+  mode: 'semantic',
+  onSelect: () => false,
+  cataloguePresentation: {
+    query: '',
+    open: true,
+    expandedIds: new Set(),
+    onQuery: () => {},
+    onOpenChange: () => {},
+    onToggleDetails: () => {},
+  },
+};
+
+async function renderDropTarget(
+  props: React.ComponentProps<typeof CanvasRelationalTreeWorkbench>,
+  browser = modelBrowser
+): Promise<void> {
+  await act(async () => {
+    root.render(
+      <CanvasModelBrowser.Provider value={browser}>
+        <CanvasRelationalTreeWorkbench {...props} />
+      </CanvasModelBrowser.Provider>
+    );
+  });
+}
+
+async function dropModel(id: string, scopeKey = workspaceScope): Promise<void> {
   const event = new MouseEvent('drop', { bubbles: true, cancelable: true });
   Object.defineProperty(event, 'dataTransfer', {
     value: {
-      types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+      types: [CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE],
       getData: (type: string) =>
-        type === CANVAS_CATALOG_NODE_DRAG_MIME_TYPE
-          ? JSON.stringify({ id, ...(scopeKey == null ? {} : { scopeKey }) })
-          : '',
+        type === CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE ? JSON.stringify({ id, scopeKey }) : '',
     },
   });
   await act(async () => {
@@ -59,36 +85,22 @@ describe('working Models inside the open Model', () => {
       outcome: 'no_changes',
     }));
     const context: CanvasModelBrowserPresentation = {
-      scopeKey: 'project/native',
-      mode: 'semantic',
-      onSelect: () => false,
-      catalog: () => null,
-      cataloguePresentation: {
-        query: '',
-        open: true,
-        expandedIds: new Set(),
-        onQuery: () => {},
-        onOpenChange: () => {},
-        onToggleDetails: () => {},
-      },
+      ...modelBrowser,
       fileModels: { projection, refresh },
     };
     const id = canvasDbtModelDefinitionId(
       projection.authorityBinding.canvasId,
       'model.demo.clientes'
     );
-    await act(async () =>
-      root.render(
-        <CanvasModelBrowser.Provider value={context}>
-          <CanvasRelationalTreeWorkbench
-            transformNode={graph.producer}
-            nodes={graph.nodes}
-            edges={graph.edges}
-            copy={COPY}
-            authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
-          />
-        </CanvasModelBrowser.Provider>
-      )
+    await renderDropTarget(
+      {
+        transformNode: graph.producer,
+        nodes: graph.nodes,
+        edges: graph.edges,
+        copy: COPY,
+        authoring: { canEditNode: true, onApplyNodeDraft: apply },
+      },
+      context
     );
     await dropModel(id, context.scopeKey!);
     expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
@@ -136,17 +148,13 @@ describe('working Models inside the open Model', () => {
       },
     };
     const apply = vi.fn();
-    await act(async () =>
-      root.render(
-        <CanvasRelationalTreeWorkbench
-          transformNode={graph.producer}
-          nodes={[...graph.nodes, definition]}
-          edges={graph.edges}
-          copy={COPY}
-          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
-        />
-      )
-    );
+    await renderDropTarget({
+      transformNode: graph.producer,
+      nodes: [...graph.nodes, definition],
+      edges: graph.edges,
+      copy: COPY,
+      authoring: { canEditNode: true, onApplyNodeDraft: apply },
+    });
     await dropModel(definition.id);
     expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
     expect(container.querySelector('[data-pending="true"]')?.textContent).toContain('clientes');
@@ -219,16 +227,12 @@ describe('working Models inside the open Model', () => {
     const graph = await createModelOutputDependencyFixture();
     const original = structuredClone(graph.producer);
     const apply = vi.fn();
-    await act(async () => {
-      root.render(
-        <CanvasRelationalTreeWorkbench
-          transformNode={graph.consumer}
-          nodes={graph.nodes}
-          edges={graph.edges}
-          copy={COPY}
-          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
-        />
-      );
+    await renderDropTarget({
+      transformNode: graph.consumer,
+      nodes: graph.nodes,
+      edges: graph.edges,
+      copy: COPY,
+      authoring: { canEditNode: true, onApplyNodeDraft: apply },
     });
     await dropModel(graph.producer.id);
     await dropModel(graph.producer.id);
@@ -254,18 +258,14 @@ describe('working Models inside the open Model', () => {
     async (editable) => {
       const graph = await createModelOutputDependencyFixture();
       const apply = vi.fn();
-      await act(async () => {
-        root.render(
-          <CanvasRelationalTreeWorkbench
-            transformNode={graph.consumer}
-            nodes={graph.nodes}
-            edges={graph.edges}
-            copy={COPY}
-            authoring={{ canEditNode: editable, onApplyNodeDraft: apply }}
-          />
-        );
+      await renderDropTarget({
+        transformNode: graph.consumer,
+        nodes: graph.nodes,
+        edges: graph.edges,
+        copy: COPY,
+        authoring: { canEditNode: editable, onApplyNodeDraft: apply },
       });
-      await dropModel(graph.producer.id, editable ? 'another-canvas' : undefined);
+      await dropModel(graph.producer.id, editable ? 'another-canvas' : workspaceScope);
       expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
       expect(apply).not.toHaveBeenCalled();
     }
@@ -275,18 +275,8 @@ describe('working Models inside the open Model', () => {
     const graph = await createModelOutputDependencyFixture();
     const apply = vi.fn();
     const context: CanvasModelBrowserPresentation = {
+      ...modelBrowser,
       scopeKey: 'tenant-A/project-A/main',
-      mode: 'semantic',
-      onSelect: () => false,
-      catalog: () => null,
-      cataloguePresentation: {
-        query: '',
-        open: true,
-        expandedIds: new Set(),
-        onQuery: () => {},
-        onOpenChange: () => {},
-        onToggleDetails: () => {},
-      },
     };
     const render = (scopeKey: string): React.ReactElement => (
       <CanvasModelBrowser.Provider value={{ ...context, scopeKey }}>

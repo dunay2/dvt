@@ -220,7 +220,6 @@ export function useCanvasModelBrowser({
   return {
     scopeKey: model.scopeKey,
     onBrowse,
-    catalogue,
     cataloguePresentation,
     mode,
     onSelect,
