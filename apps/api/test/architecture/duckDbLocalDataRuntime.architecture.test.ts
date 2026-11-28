@@ -27,47 +27,68 @@ function sourceFiles(directory: string): string[] {
     .map((entry) => path.join(directory, entry));
 }
 
+function onlyTypeSpecifiers(
+  elements: readonly (ts.ImportSpecifier | ts.ExportSpecifier)[]
+): boolean {
+  return elements.length > 0 && elements.every((item) => item.isTypeOnly);
+}
+
+function typeOnlyImport(clause: ts.ImportClause | undefined): boolean {
+  if (clause?.phaseModifier === ts.SyntaxKind.TypeKeyword) return true;
+  if (clause?.name !== undefined) return false;
+  const bindings = clause?.namedBindings;
+  if (bindings === undefined || !ts.isNamedImports(bindings)) return false;
+  return onlyTypeSpecifiers(bindings.elements);
+}
+
+function typeOnlyExport(node: ts.ExportDeclaration): boolean {
+  if (node.isTypeOnly) return true;
+  const bindings = node.exportClause;
+  if (bindings === undefined || !ts.isNamedExports(bindings)) return false;
+  return onlyTypeSpecifiers(bindings.elements);
+}
+
+function declaredDependency(
+  node: ts.ImportDeclaration | ts.ExportDeclaration
+): Dependency | undefined {
+  const name = node.moduleSpecifier;
+  if (name === undefined || !ts.isStringLiteral(name)) return undefined;
+  const typeOnly = ts.isImportDeclaration(node)
+    ? typeOnlyImport(node.importClause)
+    : typeOnlyExport(node);
+  return { specifier: name.text, eager: !typeOnly };
+}
+
+function calledDependency(node: ts.CallExpression): Dependency | undefined {
+  const [name] = node.arguments;
+  if (name === undefined || !ts.isStringLiteral(name)) return undefined;
+  const callee = node.expression;
+  if (callee.kind === ts.SyntaxKind.ImportKeyword) return { specifier: name.text, eager: false };
+  if (ts.isIdentifier(callee) && callee.text === 'require') {
+    return { specifier: name.text, eager: true };
+  }
+  return undefined;
+}
+
+function importTypeDependency(node: ts.ImportTypeNode): Dependency | undefined {
+  if (!ts.isLiteralTypeNode(node.argument)) return undefined;
+  const name = node.argument.literal;
+  return ts.isStringLiteral(name) ? { specifier: name.text, eager: false } : undefined;
+}
+
+function literalDependency(node: ts.Node): Dependency | undefined {
+  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) return declaredDependency(node);
+  if (ts.isCallExpression(node)) return calledDependency(node);
+  if (ts.isImportTypeNode(node)) return importTypeDependency(node);
+  return undefined;
+}
+
 function dependencies(filename: string, content: string): Dependency[] {
   const found: Dependency[] = [];
   const source = ts.createSourceFile(filename, content, ts.ScriptTarget.Latest, true);
   const visit = (node: ts.Node): void => {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      const isImport = ts.isImportDeclaration(node);
-      const named = isImport ? node.importClause?.namedBindings : node.exportClause;
-      const inlineTypes =
-        named &&
-        (ts.isNamedImports(named) || ts.isNamedExports(named)) &&
-        named.elements.length > 0 &&
-        named.elements.every((item) => item.isTypeOnly);
-      const hasDefault = isImport && node.importClause?.name !== undefined;
-      const typeOnly =
-        (isImport
-          ? node.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword
-          : node.isTypeOnly) ||
-        (!hasDefault && inlineTypes);
-      found.push({ specifier: node.moduleSpecifier.text, eager: typeOnly !== true });
-    } else if (
-      ts.isCallExpression(node) &&
-      node.arguments[0] &&
-      ts.isStringLiteral(node.arguments[0]) &&
-      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === 'require'))
-    ) {
-      found.push({
-        specifier: node.arguments[0].text,
-        eager: node.expression.kind !== ts.SyntaxKind.ImportKeyword,
-      });
-    } else if (
-      ts.isImportTypeNode(node) &&
-      ts.isLiteralTypeNode(node.argument) &&
-      ts.isStringLiteral(node.argument.literal)
-    ) {
-      found.push({ specifier: node.argument.literal.text, eager: false });
-    }
+    const dependency = literalDependency(node);
+    if (dependency !== undefined) found.push(dependency);
     ts.forEachChild(node, visit);
   };
   visit(source);
@@ -103,36 +124,34 @@ function findNativeDependency(
   return undefined;
 }
 
-function assertNativeBoundary(sources: SourceMap): void {
-  const graph = new Map<string, string[]>();
-  for (const [filename, content] of sources) {
-    const imports = dependencies(filename, content);
-    for (const dependency of imports.filter((item) => item.specifier.startsWith('@duckdb/'))) {
-      assert.ok(
-        filename.startsWith('infrastructure/duckdb/'),
-        `Native addon dependency outside infrastructure: ${filename}`
-      );
-      assert.equal(
-        dependency.eager,
-        false,
-        `Native addon must remain lazily imported: ${filename}`
-      );
-    }
-    graph.set(
-      filename,
-      imports.flatMap((dependency) => {
-        const resolved = resolveDependency(filename, dependency.specifier, sources);
-        return resolved ? [resolved] : [];
-      })
+function assertAddonOwnership(filename: string, imports: readonly Dependency[]): void {
+  for (const dependency of imports.filter((item) => item.specifier.startsWith('@duckdb/'))) {
+    assert.ok(
+      filename.startsWith('infrastructure/duckdb/'),
+      `Native addon dependency outside infrastructure: ${filename}`
     );
+    assert.equal(dependency.eager, false, `Native addon must remain lazily imported: ${filename}`);
   }
-  for (const filename of sources.keys()) {
-    if (
-      !filename.startsWith('application/') &&
-      !filename.startsWith('entrypoints/') &&
-      filename !== 'modules/types.ts'
-    )
-      continue;
+}
+
+function directDependencies(filename: string, content: string, sources: SourceMap): string[] {
+  const imports = dependencies(filename, content);
+  assertAddonOwnership(filename, imports);
+  return imports.flatMap((dependency) => {
+    const resolved = resolveDependency(filename, dependency.specifier, sources);
+    return resolved ? [resolved] : [];
+  });
+}
+
+function assertNativeBoundary(sources: SourceMap): void {
+  const graph = new Map(
+    [...sources].map(([filename, content]) => [
+      filename,
+      directDependencies(filename, content, sources),
+    ])
+  );
+  const protectedPaths = /^(?:application\/|entrypoints\/|modules\/types\.ts$)/u;
+  for (const filename of [...graph.keys()].filter((file) => protectedPaths.test(file))) {
     const leak = findNativeDependency(filename, graph);
     assert.equal(
       leak,
@@ -194,15 +213,24 @@ describe('native dependency boundary regression cases', () => {
     );
   });
 
-  it('rejects a public native type hidden behind a wrapper import alias', () => {
+  it.each([
+    [
+      'a public native type hidden behind a wrapper import alias',
+      'import type { Gateway as Alias } from "./wrapper.js"; export interface ProtectedRuntimeModule { gateway: Alias }',
+      'Gateway',
+    ],
+    [
+      'a public import-type native connection through a wrapper',
+      'export type Gateway = import("./wrapper.js").Connection;',
+      'Connection',
+    ],
+  ])('rejects %s', (_label, publicType, alias) => {
     assert.throws(
       () =>
         assertNativeBoundary(
           fixtureSources({
-            'modules/types.ts':
-              'import type { Gateway as Alias } from "./wrapper.js"; export interface ProtectedRuntimeModule { gateway: Alias }',
-            'modules/wrapper.ts':
-              'export type { DuckDbLocalDataRuntime as Gateway } from "../infrastructure/duckdb/DuckDbLocalDataRuntime.js";',
+            'modules/types.ts': publicType,
+            'modules/wrapper.ts': `export type { DuckDbLocalDataRuntime as ${alias} } from "../infrastructure/duckdb/DuckDbLocalDataRuntime.js";`,
           })
         ),
       /Native dependency crossed/
@@ -217,20 +245,6 @@ describe('native dependency boundary regression cases', () => {
             'entrypoints/http/leak.ts': 'const gateway = await import("../../modules/wrapper.js");',
             'modules/wrapper.ts':
               'export * from "../infrastructure/duckdb/DuckDbLocalDataRuntime.js";',
-          })
-        ),
-      /Native dependency crossed/
-    );
-  });
-
-  it('rejects a public import-type native connection through a wrapper', () => {
-    assert.throws(
-      () =>
-        assertNativeBoundary(
-          fixtureSources({
-            'modules/types.ts': 'export type Gateway = import("./wrapper.js").Connection;',
-            'modules/wrapper.ts':
-              'export type { DuckDbLocalDataRuntime as Connection } from "../infrastructure/duckdb/DuckDbLocalDataRuntime.js";',
           })
         ),
       /Native dependency crossed/

@@ -12,23 +12,27 @@ export const CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE = 'application/x-dvt-model-
 
 export const CANVAS_NODE_DROP_GRAPH_ANCHOR = { x: 100, y: 40 } as const;
 
+function readNonEmptyDragString(value: unknown): string | undefined {
+  return readOptionalString(value) || undefined;
+}
+
+type CatalogDropReference = Readonly<{ id: string; scopeKey?: string }>;
+
+function readCatalogDropReference(value: unknown): CatalogDropReference | null {
+  if (!isRecord(value)) return null;
+  const id = readNonEmptyDragString(value.id);
+  if (id === undefined) return null;
+  if (value.scopeKey === undefined) return { id };
+  const scopeKey = readNonEmptyDragString(value.scopeKey);
+  return scopeKey === undefined ? null : { id, scopeKey };
+}
+
 export function readCanvasCatalogNodeDragReference(
   transfer: Pick<DataTransfer, 'getData'>,
   mime = CANVAS_CATALOG_NODE_DRAG_MIME_TYPE
-): Readonly<{ id: string; scopeKey?: string }> | null {
+): CatalogDropReference | null {
   try {
-    const value: unknown = JSON.parse(transfer.getData(mime));
-    if (
-      !isRecord(value) ||
-      typeof value.id !== 'string' ||
-      !value.id ||
-      (value.scopeKey !== undefined && (typeof value.scopeKey !== 'string' || !value.scopeKey))
-    )
-      return null;
-    return {
-      id: value.id,
-      ...(typeof value.scopeKey === 'string' ? { scopeKey: value.scopeKey } : {}),
-    };
+    return readCatalogDropReference(parseCanvasDropPayloadJson(transfer.getData(mime)));
   } catch {
     return null;
   }
@@ -137,7 +141,7 @@ function buildCanonicalNodeFromDropPayload(
   };
 }
 
-function parseCanonicalDropPayloadJson(payload: string): unknown {
+function parseCanvasDropPayloadJson(payload: string): unknown {
   if (!payload) {
     return null;
   }
@@ -150,7 +154,7 @@ function parseCanonicalDropPayloadJson(payload: string): unknown {
 }
 
 export function parseCanonicalNodeDragPayload(payload: string): CanonicalNode | null {
-  const parsed = parseCanonicalDropPayloadJson(payload);
+  const parsed = parseCanvasDropPayloadJson(payload);
   if (!isParsedCanonicalDropPayload(parsed)) {
     return null;
   }

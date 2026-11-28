@@ -1,89 +1,105 @@
-/** Owned concern: drive real browser pointer capture, including the Cypress iframe scale. */
-const copyDragOperationMasks: Partial<Record<DataTransfer['effectAllowed'], number>> = {
-  copy: 1,
-  copyLink: 3,
-  copyMove: 17,
-};
+/** Native pointer gestures for Workbench cards and its viewport background. */
+import {
+  browserPoint,
+  moveBrowserPointer,
+  pressBrowserPointer,
+  releaseBrowserPointer,
+  type BrowserPoint,
+  type Point,
+} from './browserPointer';
+import { dragWorkbenchField } from './nativeWorkbenchFieldDrag';
 
-function browserPoint(
-  element: HTMLElement | undefined,
-  verticalFraction = 0.5,
-  horizontalFraction = 0.5
-): { x: number; y: number; scale: number } {
-  if (element === undefined) throw new Error('Expected a browser pointer target.');
-  const bounds = element.getBoundingClientRect();
-  const window = element.ownerDocument.defaultView!;
-  const frame = window.parent.document.querySelector('iframe.aut-iframe')!.getBoundingClientRect();
-  const scale = frame.width / window.innerWidth;
-  return {
-    x: frame.left + (bounds.left + bounds.width * horizontalFraction) * scale,
-    y: frame.top + (bounds.top + bounds.height * verticalFraction) * scale,
-    scale,
-  };
-}
+export { dragWorkbenchField };
+
+type ViewportFraction = Readonly<Partial<Point>>;
+type ObserveCardMovement = (element: HTMLElement, dx: number, dy: number) => void;
+type WorkbenchDragHooks = [
+  observe?: ObserveCardMovement,
+  beforeRelease?: () => void,
+  at?: ViewportFraction,
+];
 
 export function hoverWorkbenchCard(selector: string, verticalFraction = 0.5): void {
-  cy.get(selector).then(($card) => {
-    const { x, y } = browserPoint($card[0], verticalFraction);
-    return Cypress.automation('remote:debugger:protocol', {
-      command: 'Input.dispatchMouseEvent',
-      params: { type: 'mouseMoved', x, y, buttons: 0 },
-    }) as Promise<unknown>;
+  cy.get(selector).then(($card) =>
+    moveBrowserPointer(browserPoint($card[0], { y: verticalFraction }))
+  );
+}
+
+function observeCardMovement(selector: string, observe: ObserveCardMovement, delta: Point): void {
+  cy.get(selector).should(($held) => {
+    const held = $held[0];
+    if (held === undefined) throw new Error('Expected the held workbench card.');
+    observe(held, delta.x, delta.y);
   });
+}
+
+function queueHeldMovement(
+  selector: string,
+  start: BrowserPoint,
+  distance: Point,
+  observe: ObserveCardMovement | undefined
+): void {
+  const { scale } = start;
+  for (let step = 1; step <= 10; step += 1) {
+    const fraction = step / 10;
+    const position = {
+      x: start.x + distance.x * fraction * scale,
+      y: start.y + distance.y * fraction * scale,
+    };
+    cy.then(() => moveBrowserPointer(position, 1));
+    if (observe != null) {
+      observeCardMovement(selector, observe, {
+        x: (position.x - start.x) / scale,
+        y: (position.y - start.y) / scale,
+      });
+    }
+  }
 }
 
 export function moveWorkbenchCard(
   selector: string,
   dx: number,
   dy: number,
-  observe?: (element: HTMLElement, dx: number, dy: number) => void,
-  beforeRelease?: () => void,
-  at: Readonly<{ x?: number; y?: number }> = {}
+  ...[observe, beforeRelease, at]: WorkbenchDragHooks
 ): void {
   cy.get(selector)
     .should('be.visible')
     .then(($card) => {
-      const { x, y, scale } = browserPoint($card[0], at.y, at.x);
-      const events = [
-        { type: 'mouseMoved', x, y, buttons: 0 },
-        { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },
-        ...Array.from({ length: 10 }, (_, index) => {
-          const fraction = (index + 1) / 10;
-          return {
-            type: 'mouseMoved',
-            x: x + dx * fraction * scale,
-            y: y + dy * fraction * scale,
-            buttons: 1,
-            button: 'left',
-          };
-        }),
-        {
-          type: 'mouseReleased',
-          x: x + dx * scale,
-          y: y + dy * scale,
-          buttons: 0,
-          button: 'left',
-          clickCount: 1,
-        },
-      ];
-      events.forEach((params) => {
-        if (params.type === 'mouseReleased') beforeRelease?.();
-        cy.then(
-          () =>
-            Cypress.automation('remote:debugger:protocol', {
-              command: 'Input.dispatchMouseEvent',
-              params,
-            }) as Promise<unknown>
-        );
-        if (params.type === 'mouseMoved' && params.buttons === 1 && observe != null) {
-          cy.get(selector).should(($held) => {
-            const held = $held[0];
-            if (held === undefined) throw new Error('Expected the held workbench card.');
-            observe(held, (params.x - x) / scale, (params.y - y) / scale);
-          });
-        }
-      });
+      const start = browserPoint($card[0], at);
+      const { scale } = start;
+      cy.then(() => moveBrowserPointer(start));
+      cy.then(() => pressBrowserPointer(start));
+      queueHeldMovement(selector, start, { x: dx, y: dy }, observe);
+      beforeRelease?.();
+      cy.then(() => releaseBrowserPointer({ x: start.x + dx * scale, y: start.y + dy * scale }));
     });
+}
+
+function findBackgroundX(
+  doc: Document,
+  bounds: DOMRect,
+  background: ReadonlySet<Element | null>,
+  y: number
+): number | undefined {
+  for (let x = 8; x < bounds.width; x += 24) {
+    const hit = doc.elementFromPoint(bounds.left + x, bounds.top + y);
+    if (hit !== null && background.has(hit)) return x;
+  }
+  return undefined;
+}
+
+function findBackgroundPoint(surface: HTMLElement): Point {
+  const bounds = surface.getBoundingClientRect();
+  const background = new Set([
+    surface,
+    surface.firstElementChild,
+    surface.querySelector('[data-slot="canvas-relational-tree-layout"]'),
+  ]);
+  for (let y = 8; y < bounds.height; y += 24) {
+    const x = findBackgroundX(surface.ownerDocument, bounds, background, y);
+    if (x !== undefined) return { x: x / bounds.width, y: y / bounds.height };
+  }
+  throw new Error('Expected visible Canvas background for a native pan.');
 }
 
 /** Locate visible background before using the same native drag driver as cards. */
@@ -94,115 +110,7 @@ export function panWorkbenchViewport(
   beforeRelease?: () => void
 ): void {
   cy.get(selector).then(($surface) => {
-    const surface = $surface[0]!;
-    const bounds = surface.getBoundingClientRect();
-    const background = new Set<Element | null>([
-      surface,
-      surface.firstElementChild,
-      surface.querySelector('[data-slot="canvas-relational-tree-layout"]'),
-    ]);
-    let at: { x: number; y: number } | undefined;
-    for (let y = 8; y < bounds.height && at == null; y += 24) {
-      for (let x = 8; x < bounds.width && at == null; x += 24) {
-        const hit = surface.ownerDocument.elementFromPoint(bounds.left + x, bounds.top + y);
-        if (hit != null && background.has(hit)) at = { x: x / bounds.width, y: y / bounds.height };
-      }
-    }
-    if (at == null) throw new Error('Expected visible Canvas background for a native pan.');
+    const at = findBackgroundPoint($surface[0]!);
     moveWorkbenchCard(selector, dx, dy, undefined, beforeRelease, at);
   });
-}
-
-/** Native HTML drag: capture the real writer, never synthesize a field reference. */
-export function dragWorkbenchField(
-  sourceSelector: string,
-  targetSelector: string,
-  targetOffset?: Readonly<{ x: number; y: number }>
-): void {
-  cy.get(sourceSelector)
-    .should('be.visible')
-    .then(($source) => {
-      const source = $source[0]!;
-      const window = source.ownerDocument.defaultView! as Cypress.AUTWindow;
-      const writer = cy.spy(window.DataTransfer.prototype, 'setData');
-      cy.get(targetSelector)
-        .should('be.visible')
-        .then(($target) => {
-          const from = browserPoint(source);
-          const to = browserPoint($target[0]!);
-          const bounds = $target[0]!.getBoundingClientRect();
-          const x =
-            to.x + (targetOffset == null ? 0 : (targetOffset.x - bounds.width / 2) * to.scale);
-          const y =
-            to.y + (targetOffset == null ? 0 : (targetOffset.y - bounds.height / 2) * to.scale);
-          cy.then({ timeout: 15_000 }, async () => {
-            const protocol = (command: string, params = {}): Promise<unknown> =>
-              Cypress.automation('remote:debugger:protocol', {
-                command,
-                params,
-              }) as Promise<unknown>;
-            await protocol('Input.setInterceptDrags', { enabled: true });
-            try {
-              await protocol('Input.dispatchMouseEvent', {
-                type: 'mouseMoved',
-                x: from.x,
-                y: from.y,
-                buttons: 0,
-              });
-              await protocol('Input.dispatchMouseEvent', {
-                type: 'mousePressed',
-                x: from.x,
-                y: from.y,
-                buttons: 1,
-                button: 'left',
-                clickCount: 1,
-              });
-              await protocol('Input.dispatchMouseEvent', {
-                type: 'mouseMoved',
-                x: from.x + 10,
-                y: from.y + 10,
-                buttons: 1,
-                button: 'left',
-              });
-              await protocol('Input.dispatchMouseEvent', {
-                type: 'mouseMoved',
-                x,
-                y,
-                buttons: 1,
-                button: 'left',
-              });
-              expect(source.isConnected, 'field token identity during native drag').to.equal(true);
-              expect(writer.callCount, 'production dragstart writes its payload').to.be.greaterThan(
-                0
-              );
-              const transfer = writer.firstCall.thisValue as DataTransfer;
-              const dragOperationsMask = copyDragOperationMasks[transfer.effectAllowed];
-              expect(dragOperationsMask, 'production drag allows copying').to.be.a('number');
-              const items = writer
-                .getCalls()
-                .map((call) => ({ mimeType: call.args[0], data: call.args[1] }));
-              for (const type of ['dragEnter', 'dragOver', 'drop']) {
-                await protocol('Input.dispatchDragEvent', {
-                  type,
-                  x,
-                  y,
-                  data: { items, dragOperationsMask },
-                });
-              }
-            } finally {
-              writer.restore();
-              await protocol('Input.cancelDragging');
-              await protocol('Input.dispatchMouseEvent', {
-                type: 'mouseReleased',
-                x,
-                y,
-                buttons: 0,
-                button: 'left',
-                clickCount: 1,
-              });
-              await protocol('Input.setInterceptDrags', { enabled: false });
-            }
-          });
-        });
-    });
 }
