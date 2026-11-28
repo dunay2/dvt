@@ -191,6 +191,11 @@ export const SUPPORT_CAPABILITIES: Readonly<Record<string, BrowserCoverage>> = {
   'apps/web/cypress/support/relationalWorkbench/fieldSelection.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/geometry.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/inspectorCodeLayout.ts': ['available'],
+  'apps/web/cypress/support/relationalWorkbench/browserPointer.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/relationalWorkbench/nativeWorkbenchFieldDrag.ts': [
+    'controlled',
+    'available',
+  ],
   'apps/web/cypress/support/relationalWorkbench/pointer.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/pendingComposition.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/formulaLineageJourney.ts': [

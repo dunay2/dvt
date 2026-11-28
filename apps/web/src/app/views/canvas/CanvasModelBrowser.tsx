@@ -5,35 +5,20 @@
  * @consequence Native input controls remain independently available in the Model workspace.
  * @version 1.0.0
  */
-import { createContext, useContext, useMemo, type ReactNode, type DragEvent } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { CanvasInspectorCommand } from '../../stores/canvasInspectorTarget';
 import type { CanvasModelView } from './canvasWorkspaceMenuContributionStore';
-import type { CanonicalNode } from '../../types/canonical';
 import type { useCanvasModelBrowser } from './useCanvasModelBrowser';
-import { CanvasProjectElementsExplorerView } from './explorer/CanvasProjectElementsExplorer';
 import { useWorkspaceDbtProjectContext } from '../code/useWorkspaceDbtProjectContext';
 import type { CanvasDbtModelPublication } from './canvasDbtModelCompositionDiscovery';
-import { CanvasWarehouseConnections } from './explorer/CanvasWarehouseConnections';
-import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CanvasModelContextPicker } from './CanvasModelContextPicker';
 import type { CanvasExplorerCatalogPresentation } from './explorer/CanvasExplorer.types';
-import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 export type CanvasModelBrowserPresentation = Readonly<{
   scopeKey: string | null;
   mode: CanvasModelView | null;
   onSelect: CanvasInspectorCommand;
-  catalog: (
-    composition?: Readonly<{
-      nodeIds: ReadonlySet<string>;
-      copy: (id: string) => boolean;
-      label: string;
-      referenceLabel?: string;
-      linkedNodeIds?: ReadonlySet<string>;
-      occurrenceNodeIds?: ReadonlySet<string>;
-      labelFor?: (id: string) => string;
-    }>
-  ) => ReactNode;
+  onManageConnections?: () => void;
   cataloguePresentation: CanvasExplorerCatalogPresentation;
   fileModels?: CanvasDbtModelPublication;
 }>;
@@ -42,25 +27,8 @@ export function useCanvasModelBrowserPresentation(): CanvasModelBrowserPresentat
   return useContext(CanvasModelBrowser);
 }
 
-function startCompositionDrag(
-  composition: Parameters<CanvasModelBrowserPresentation['catalog']>[0],
-  scopeKey: string | null,
-  id: string,
-  event: DragEvent<HTMLButtonElement>
-): void {
-  if (!composition?.nodeIds.has(id) || scopeKey == null) {
-    event.preventDefault();
-    return;
-  }
-  event.dataTransfer.setData(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE, JSON.stringify({ id, scopeKey }));
-  event.dataTransfer.effectAllowed =
-    composition.linkedNodeIds?.has(id) || composition.occurrenceNodeIds?.has(id) ? 'link' : 'copy';
-}
-
 export function CanvasModelBrowserProvider({
   navigation,
-  nodes,
-  canvasId,
   selectedId,
   active,
   projectRoot,
@@ -68,64 +36,32 @@ export function CanvasModelBrowserProvider({
   children,
 }: Readonly<{
   navigation: ReturnType<typeof useCanvasModelBrowser>;
-  nodes: readonly CanonicalNode[];
-  canvasId: string | null;
   selectedId?: string;
   active: boolean;
   projectRoot?: string;
   onManageConnections?: () => void;
   children: ReactNode;
 }>): JSX.Element {
-  const { scopeKey, cataloguePresentation, catalogue } = navigation;
+  const { scopeKey, mode, onSelect, cataloguePresentation } = navigation;
+  const enabled = active && selectedId != null;
   const projectContext = useWorkspaceDbtProjectContext({
-    enabled: active && selectedId != null,
+    enabled,
     projectRoot,
   });
-  const items = useMemo(() => {
-    const selected = nodes.find((node) => node.id === selectedId);
-    const definitionId = workspaceNodeDefinitionId(selected) ?? selectedId;
-    return catalogue.map((item) => ({
-      ...item,
-      selected: item.id === definitionId,
-      draggable: false,
-    }));
-  }, [nodes, catalogue, selectedId]);
+  const { projection, refresh } = projectContext;
+  const value = useMemo(
+    () => ({
+      scopeKey,
+      mode,
+      onSelect,
+      cataloguePresentation,
+      onManageConnections,
+      fileModels: { projection, refresh },
+    }),
+    [scopeKey, mode, onSelect, cataloguePresentation, onManageConnections, projection, refresh]
+  );
   return (
-    <CanvasModelBrowser.Provider
-      value={{
-        ...navigation,
-        fileModels: { projection: projectContext.projection, refresh: projectContext.refresh },
-        catalog: (composition) => (
-          <CanvasProjectElementsExplorerView
-            projectContext={projectContext}
-            enabled={active && selectedId != null}
-            projectRoot={projectRoot}
-            items={items.map((item) => ({
-              ...item,
-              draggable: composition?.nodeIds.has(item.id) === true,
-            }))}
-            modelAction={
-              composition == null
-                ? undefined
-                : {
-                    label: composition.label,
-                    ...(composition.labelFor == null ? {} : { labelFor: composition.labelFor }),
-                    ...(composition.referenceLabel == null
-                      ? {}
-                      : { referenceLabel: composition.referenceLabel }),
-                    onActivate: composition.copy,
-                    canActivate: (id) => composition.nodeIds.has(id),
-                  }
-            }
-            onDragStart={(id, event) => startCompositionDrag(composition, scopeKey, id, event)}
-            presentation={cataloguePresentation}
-            catalogueScopeKey={canvasId ?? undefined}
-            onInspectNode={navigation.onSelect}
-            connections={<CanvasWarehouseConnections onManage={onManageConnections} />}
-          />
-        ),
-      }}
-    >
+    <CanvasModelBrowser.Provider value={value}>
       {children}
       <CanvasModelContextPicker
         contexts={navigation.contexts}

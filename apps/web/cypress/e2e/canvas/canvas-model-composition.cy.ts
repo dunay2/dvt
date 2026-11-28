@@ -10,7 +10,9 @@ import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/w
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
 import { buildDraftReadOkResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import { buildProtectedDvtPreviewProjection } from '../../../src/app/views/canvas/canvasDvtPreviewProjection';
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
+import { canvasModelWorkspaceTabIds } from '../../../src/app/views/canvas/canvasWorkspaceTabs';
 import { stubCanvasDraftSave } from '../../support/canvasDraftAuthoring';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
 import {
@@ -20,9 +22,10 @@ import {
   captureDiscoveredDbtComposition,
   type DbtCompositionSeed,
 } from '../../support/dbtModelComposition';
-import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import { pressNativeKey } from '../../support/nativeKeyboard';
 import {
+  dragWorkbenchSource,
   openWorkbenchModel,
   revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
@@ -36,28 +39,39 @@ import {
 } from '../../support/workspaceSession';
 
 const receiver = 'join-transform';
+const canvasTab = '[data-slot="canvas-workspace-tab"]';
 const row = (id: string): string =>
-  `[data-slot="canvas-explorer-panel"]:visible [data-element-id="${id}"]`;
+  `[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]`;
 const pending = '[data-slot="canvas-model-editor"]:visible [data-pending="true"]';
 
 function openModel(id = receiver): void {
-  cy.get('[data-slot="shell-model-semantic-command"]').click();
+  cy.get(canvasTab).click();
   cy.get(row(id)).click();
-  cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+  cy.get('[data-slot="shell-model-semantic-command"]').click();
+  cy.get(`[id="${canvasModelWorkspaceTabIds(id).tabId}"]`).should(
+    'have.attr',
+    'aria-selected',
+    'true'
+  );
 }
 
-function dragModel(id: string): void {
+function dragProjectInput(id: string): void {
+  const target = `[id="${canvasModelWorkspaceTabIds(receiver).tabId}"]`;
+  cy.get(canvasTab).click();
   cy.window().then((window) => {
     const transfer = new window.DataTransfer();
     cy.get(row(id))
       .should('have.attr', 'draggable', 'true')
       .trigger('dragstart', { dataTransfer: transfer });
+    cy.get(target)
+      .should('have.attr', 'aria-selected', 'false')
+      .trigger('dragover', { dataTransfer: transfer });
+    cy.get(target).should('have.attr', 'aria-selected', 'true');
     cy.get(
       '[data-slot="canvas-model-composition-target"]:visible [data-slot="canvas-relational-tree-surface"]'
     )
       .trigger('dragover', { dataTransfer: transfer })
       .trigger('drop', { dataTransfer: transfer });
-    cy.get(row(id)).trigger('dragend', { dataTransfer: transfer });
   });
 }
 
@@ -148,6 +162,101 @@ function assertSavedPhysicalOccurrences(
   };
 }
 
+function assertSavedUnfinishedComposition(
+  request: unknown,
+  sourceId: string,
+  expectedIds: readonly string[]
+): void {
+  const { draft } = WorkspaceGraphDraftSaveRequestSchema.parse(request);
+  const metadata = draft.nodes.find((node) => node.id === receiver)?.metadata;
+  const pendingDraft = DvtRelationalAuthoringDraftV1Schema.parse(
+    metadata?.relationalAuthoringDraft
+  );
+  expect(pendingDraft.outputRelationId).to.equal(null);
+  expect(pendingDraft.sources.map((source) => source.relationId)).to.have.members(expectedIds);
+  expect(
+    DvtTransformAuthoringAuthorityV1Schema.safeParse(metadata?.transformAuthoring).success
+  ).to.equal(true);
+  const producerIds = [...new Set(pendingDraft.sources.map((source) => source.sourceNodeId))];
+  expect(producerIds, 'one dependency shared by the two Reads').to.have.length(1);
+  expect(draft.nodeIds).not.to.include(sourceId);
+  expect(
+    draft.edges.filter((edge) => edge.sourceId === producerIds[0] && edge.targetId === receiver)
+  ).to.have.length(1);
+  const graph = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
+  expect(
+    buildProtectedDvtPreviewProjection({
+      canvasId: draft.activeCanvasId ?? draft.canvas.id ?? null,
+      canonicalNodes: graph.canonicalNodes,
+      canonicalEdges: graph.canonicalEdges,
+      workspaceNodeIds: draft.nodeIds,
+      selectionIntent: { mode: 'explicit', nodeIds: [receiver] },
+    }).ok,
+    'the retained document cannot be used to execute the unfinished model'
+  ).to.equal(false);
+}
+
+function stubUnplacedSource(): ReturnType<typeof buildCanvasAuthoringDraft>['nodes'][number] {
+  const initial = buildCanvasAuthoringDraft({ substraitNInputJoin: true });
+  const source = {
+    ...initial.nodes.find((node) => node.id === 'source-shipments')!,
+    name: 'sales_calendar',
+    path: 'models/sources/src_demo_sales_stage.yml',
+  };
+  const context = {
+    ...initial,
+    nodes: initial.nodes.map((node) => (node.id === source.id ? source : node)),
+    nodeIds: initial.nodeIds.filter((id) => id !== source.id),
+    nodePositions: Object.fromEntries(
+      Object.entries(initial.nodePositions).filter(([id]) => id !== source.id)
+    ),
+    edges: initial.edges.filter(
+      (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
+    ),
+  };
+  const { canonicalNodes } = projectWorkspaceGraphAuthoringDraftSemanticGraph(context);
+  const draft = normalizeProjectCanvasDraft({
+    ...context,
+    nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
+  });
+  const response = WorkspaceGraphDraftReadResponseSchema.parse(
+    buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
+      record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
+        draft,
+        revision: 'rev-e2e-graph-ready',
+      }),
+    })
+  );
+  stubShellBootstrapApis({
+    capabilities: {
+      body: {
+        apiVersion: '1.0.0',
+        minFrontendVersion: '0.0.1',
+        plugins: { dvt: { available: true } },
+      },
+    },
+  });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+  });
+  stubE2eApi('GET', '/workspace/graph/draft', () => {
+    const write = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
+    if (write == null) return { body: response };
+    const { draft: saved } = WorkspaceGraphDraftSaveRequestSchema.parse(write.body);
+    return {
+      body: buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
+        record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
+          draft: saved,
+          revision: 'rev-e2e-graph-ready-2',
+        }),
+      }),
+    };
+  });
+  stubCanvasDraftSave();
+  return source;
+}
+
 describe('Model composition inside the selected Model', () => {
   it('registers a file-only published model on one Apply and reopens the same linked input', () => {
     const seed = stubDiscoveredDbtComposition();
@@ -156,22 +265,19 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
-    cy.get(action).filter(':visible').should('be.enabled');
-    cy.then(() =>
+    cy.wrap(null).should(() =>
       expect(
         getE2eApiCalls('/workspace/dbt/graph', 'GET'),
         'one catalogue acquisition'
       ).to.have.length(1)
     );
-    dragModel(seed.definitionId);
+    dragProjectInput(seed.definitionId);
     cy.get(pending).should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.then(() => expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1));
-    cy.get(action).filter(':visible').focus();
-    pressNativeKey('Enter');
+    dragProjectInput(seed.definitionId);
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {
       saved = captureDiscoveredDbtComposition(seed);
@@ -199,15 +305,12 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${seed.definitionId}"] button[aria-label="Use as input: clientes"]`;
-    cy.get(action).filter(':visible').should('be.enabled');
-    dragModel(seed.definitionId);
+    dragProjectInput(seed.definitionId);
     cy.get(pending).should('have.length', 1).and('contain.text', 'clientes');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
-    cy.get(action).filter(':visible').focus();
-    pressNativeKey('Enter');
+    dragProjectInput(seed.definitionId);
     cy.get(pending).should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {
@@ -234,13 +337,16 @@ describe('Model composition inside the selected Model', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openWorkbenchModel();
-    cy.get(row(receiver)).should('be.visible').and('have.attr', 'aria-pressed', 'true');
-    dragModel(receiver);
+    cy.get(canvasTab).click();
+    cy.get(row(receiver)).should('be.visible').focus();
+    pressNativeKey('Enter');
+    cy.get(pending).should('not.exist');
+    dragProjectInput(receiver);
     cy.get(pending).should('have.length', 1);
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
-    dragModel(receiver);
+    dragProjectInput(receiver);
     cy.get(pending).should('have.length', 1);
     cy.screenshot('model-composition-private', { capture: 'viewport' });
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
@@ -271,7 +377,7 @@ describe('Model composition inside the selected Model', () => {
     const pendingRead = '[data-pending="true"]';
     cy.get(editor).then(($editor) => {
       const before = $editor.find(pendingRead).length;
-      dragModel(copyId);
+      dragProjectInput(copyId);
       cy.get(pending).should('have.length', before + 1);
       cy.get('[data-slot="canvas-model-main-tab"][aria-selected="true"]').should(
         'have.text',
@@ -284,90 +390,68 @@ describe('Model composition inside the selected Model', () => {
     });
   });
 
-  it('offers the same command by keyboard for a Source Model without selecting another Model', () => {
-    const initial = buildCanvasAuthoringDraft({ substraitNInputJoin: true });
-    const source = initial.nodes.find((node) => node.id === 'source-shipments')!;
-    const context = {
-      ...initial,
-      nodes: initial.nodes.map((node) =>
-        node.id === source.id
-          ? { ...node, name: 'sales_calendar', path: 'models/sources/src_demo_sales_stage.yml' }
-          : node
-      ),
-      nodeIds: initial.nodeIds.filter((id) => id !== source.id),
-      nodePositions: Object.fromEntries(
-        Object.entries(initial.nodePositions).filter(([id]) => id !== source.id)
-      ),
-      edges: initial.edges.filter(
-        (edge) => edge.sourceId !== source.id || edge.targetId !== receiver
-      ),
-    };
-    const { canonicalNodes } = projectWorkspaceGraphAuthoringDraftSemanticGraph(context);
-    const draft = normalizeProjectCanvasDraft({
-      ...context,
-      nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
-    });
-    const response = WorkspaceGraphDraftReadResponseSchema.parse(
-      buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
-        record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
-          draft,
-          revision: 'rev-e2e-graph-ready',
-        }),
-      })
-    );
-    stubShellBootstrapApis({
-      capabilities: {
-        body: {
-          apiVersion: '1.0.0',
-          minFrontendVersion: '0.0.1',
-          plugins: { dvt: { available: true } },
-        },
-      },
-    });
-    stubE2eJsonApi('GET', '/workspace/context', {
-      defaultWorkspace: E2E_PROJECT_WORKSPACE,
-      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-    });
-    stubE2eJsonApi('GET', '/workspace/graph/draft', response);
-    stubCanvasDraftSave();
+  it('saves an unfinished Model with two Reads of an unplaced Source when closing the editor', () => {
+    const source = stubUnplacedSource();
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    dragModel(source.id);
+    dragProjectInput(source.id);
     cy.get(pending).should('have.length', 1);
-    cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
-    cy.get(pending).should('not.exist');
-    cy.get(
-      `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add working copy: sales_calendar"]`
-    )
-      .filter(':visible')
-      .focus();
-    pressNativeKey('Enter');
-    cy.get(pending).should('have.length', 1);
-    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    dragProjectInput(source.id);
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'not.have.attr',
+      'data-connected'
+    );
+    dragWorkbenchSource(source.name);
+    const pendingReads = `${pending}[data-operator="read"]`;
+    let ids: string[];
+    cy.get(pendingReads)
+      .should('have.length', 2)
+      .then(($reads) => {
+        ids = [...$reads].map((read) => read.getAttribute('data-relation-id')!);
+      });
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[data-slot="canvas-draft-apply"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.wrap(null).should(() => {
+      const writes = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+      expect(writes, 'one protected draft save').to.have.length(1);
+      assertSavedUnfinishedComposition(writes[0]!.body, source.id, ids);
+    });
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get(pendingReads).should(($reads) => {
+      expect([...$reads].map((read) => read.getAttribute('data-relation-id'))).to.have.members(ids);
+    });
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'not.have.attr',
+      'data-connected'
+    );
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1));
   });
 
-  it('reuses one incoming physical dependency for action and drag occurrences through Cancel, Apply and reopen', () => {
+  it('reuses one physical dependency for repeated drops through Cancel, Apply and reopen', () => {
     const initial = stubWorkbenchScenario('saved-join');
     const source = initial.nodes.find((node) => node.role === 'input')!;
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openModel();
-    const action = `[data-slot="canvas-explorer-model-row"][data-model-id="${source.id}"] button[aria-label="Add instance: ${source.name}"]`;
     let saved: ReturnType<typeof assertSavedPhysicalOccurrences>;
-    cy.get(row(source.id)).should('have.attr', 'draggable', 'true');
-    cy.get(action).filter(':visible').should('be.enabled').focus();
-    pressNativeKey('Enter');
-    dragModel(source.id);
+    cy.get('[data-slot="canvas-model-editor"]:visible [data-slot="canvas-explorer-models"]').should(
+      'not.exist'
+    );
+    dragProjectInput(source.id);
+    dragWorkbenchSource(source.name);
     cy.get(pending).should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-cancel"]:visible').click();
     cy.get(pending).should('not.exist');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
-    cy.get(action).filter(':visible').click();
-    dragModel(source.id);
+    dragProjectInput(source.id);
+    dragWorkbenchSource(source.name);
     cy.get(pending).should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-apply"]:visible').click();
     cy.wrap(null).should(() => {

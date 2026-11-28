@@ -235,7 +235,7 @@ export function dragWorkbenchSource(
 }
 
 export function setWorkbenchInputsOpen(open: boolean): void {
-  const trigger = '[data-slot="canvas-model-inputs-command"]:visible';
+  const trigger = '[data-slot="canvas-model-inputs"] button[aria-expanded]:visible';
   cy.get(trigger).then(($trigger) => {
     if ($trigger.attr('aria-expanded') !== String(open)) cy.wrap($trigger).click();
   });

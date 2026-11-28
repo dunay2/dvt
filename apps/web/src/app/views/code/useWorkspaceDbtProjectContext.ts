@@ -124,5 +124,8 @@ export function useWorkspaceDbtProjectContext({
     const current = await refetch();
     return current.isSuccess ? currentProjectPublication(binding, current.data) : undefined;
   }, [binding, refetch]);
-  return { binding, projection, displayProjection, unavailable, loading, refresh };
+  return useMemo(
+    () => ({ binding, projection, displayProjection, unavailable, loading, refresh }),
+    [binding, projection, displayProjection, unavailable, loading, refresh]
+  );
 }

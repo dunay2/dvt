@@ -5,17 +5,17 @@
  * @consequence One occurrence rail owns identity and admission without duplicate controls.
  * @version 1.0.0
  */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { useCanvasRelationalTreeWorkbenchModel } from '../useCanvasRelationalTreeWorkbenchModel';
 import type { CanvasRelationalTreeWorkbenchCopy } from '../canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSourceCatalogue } from '../CanvasRelationalTreeSourceCatalogue';
 import { CanvasExplorer } from './CanvasExplorer';
 import { useCanvasModelBrowserPresentation } from '../CanvasModelBrowser';
-import { CanvasModelInputsPalette } from './CanvasModelInputsPalette';
+import { CanvasExplorerSection } from './CanvasExplorerCatalog.templates';
+import { CanvasWarehouseConnections } from './CanvasWarehouseConnections';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import { resolveCanvasViewCopy } from '../copy';
-import { toast } from 'sonner';
+import styles from './CanvasExplorer.module.css';
 
 export function CanvasRelationalExplorer({
   model,
@@ -29,55 +29,38 @@ export function CanvasRelationalExplorer({
   children: ReactNode;
 }>): JSX.Element {
   const browser = useCanvasModelBrowserPresentation();
+  const [inputsOpen, setInputsOpen] = useState(true);
   const language = useApplicationLanguageStore((state) => state.language);
   const explorerCopy = resolveCanvasExplorerCopy(language);
-  const viewCopy = resolveCanvasViewCopy(language);
+  const editable = model.authoringAvailable && !pending;
   const catalogue = (
     <CanvasRelationalTreeSourceCatalogue
       items={model.catalogue}
       copy={copy}
-      draggable={model.authoringAvailable && !pending}
+      draggable={editable}
       onSelect={(item) => {
         if (!pending) model.selectCatalogueItem(item);
       }}
-      occurrences={model.authoringAvailable && !pending ? model.session.occurrences : undefined}
+      occurrences={editable ? model.session.occurrences : undefined}
     />
   );
   return (
     <CanvasExplorer
-      heading={
-        browser == null
-          ? undefined
-          : { label: explorerCopy.explorerTitle, contextLabel: explorerCopy.project }
-      }
+      heading={{ label: explorerCopy.explorerTitle }}
       elements={
-        browser == null ? (
-          catalogue
-        ) : (
-          <>
-            {browser.catalog(
-              pending
-                ? undefined
-                : {
-                    ...model.modelComposition,
-                    label: viewCopy.relationalModelCopyAddLabel,
-                    referenceLabel: viewCopy.relationalModelReferenceAddLabel,
-                    labelFor: (id) =>
-                      model.modelComposition.occurrenceNodeIds.has(id)
-                        ? viewCopy.sourceOccurrenceAdd
-                        : model.modelComposition.linkedNodeIds.has(id)
-                          ? viewCopy.relationalModelReferenceAddLabel
-                          : viewCopy.relationalModelCopyAddLabel,
-                    copy: (id) => {
-                      const accepted = model.modelComposition.copy(id);
-                      if (!accepted) toast.error(viewCopy.relationalModelCopyUnavailableMessage);
-                      return accepted;
-                    },
-                  }
-            )}
-            <CanvasModelInputsPalette>{catalogue}</CanvasModelInputsPalette>
-          </>
-        )
+        <div className={styles.listPanel}>
+          {browser == null ? null : (
+            <CanvasWarehouseConnections onManage={browser.onManageConnections} />
+          )}
+          <CanvasExplorerSection
+            title={explorerCopy.modelInputs}
+            slot="canvas-model-inputs"
+            open={inputsOpen}
+            onOpenChange={setInputsOpen}
+          >
+            {catalogue}
+          </CanvasExplorerSection>
+        </div>
       }
     >
       {children}

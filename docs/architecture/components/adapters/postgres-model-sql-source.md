@@ -42,10 +42,10 @@ flowchart LR
 | `SYS-API-CANVAS-MODEL-SQL-AUTHORING`     | Protected context and compilation query objects in API application services | Model SQL query admission or currentness policy changes |
 | `SYS-WEB-CANVAS-MODEL-SQL-AUTHORING`     | Buffer, explicit actions and presentation in `views/canvas/model-sql`       | SQL authoring interaction changes                       |
 
-`ProjectCanvasModelSqlContext` reads the protected saved draft without requiring
-an already executable target. It resolves connected Source publications and
-native/file Model publications through their real authorities. The application
-context and compilation ports separate this policy from HTTP, parsing and UI.
+`ProjectCanvasModelSqlContext` resolves a protected saved draft and its connected
+Source and Model publications. The context query renders the editable SQL seed.
+Compilation and row preview reuse the same protected input preparation and
+revision check. They consume the user buffer and skip the editor seed projection.
 
 `CompileCanvasModelSql` reauthorizes and resolves the expected context, parses one
 SELECT with the existing PostgreSQL parser, and proposes a complete canonical
@@ -62,10 +62,16 @@ service, connection configuration or warehouse migration is introduced.
 
 ## Source and identity admission
 
-SQL names refer to explicitly prepared logical Model inputs. Names are syntax;
-Read occurrences, SourceRefs, producerRefs and FieldIds retain their real
-identities. Unknown, ambiguous, stale, unauthorized and cross-connection inputs
-fail closed. A similarly named physical table is not a fallback authority.
+SQL names refer to prepared Model inputs in the current protected context.
+An unqualified logical identifier takes precedence. A physical Source can also
+be addressed by a unique table name, schema and table, or its published catalog,
+schema and table. PostgreSQL quoting and aliases apply. Qualified columns and
+stars can use the relation path supplied in FROM when that relation has no alias.
+When several prepared Read occurrences share a physical name, an explicit alias
+can select a unique matching logical occurrence. Ambiguous references are rejected.
+Either spelling preserves the published fields, Read occurrence, SourceRef,
+producerRef and FieldId. Unknown, ambiguous, stale, unauthorized and
+cross-connection inputs fail closed.
 
 Context reads allocate no authoring identities. An explicit compilation proposal
 reuses valid current occurrences and allocates opaque IDs for new occurrences
@@ -155,10 +161,10 @@ resizing; the template remains passive.
 
 Model SQL inspection exposes one Edit SQL action in an authoring workspace.
 That explicit gesture requests the existing protected readable SQL projection
-and opens the logical editor with its expanded state and controlled section.
+and opens the SQL editor with its expanded state and controlled section.
 The scoped inspector retains generated SQL, original/readable presentation and
-simplification evidence. The editable source uses the protected context's
-logical input names; generated physical SQL is never copied into that buffer.
+simplification evidence. The editor starts with the logical SQL seed and accepts
+physical names from the same prepared inputs.
 Projection failure does not prevent opening authoring. A read-only host retains
 its existing explicit generation action. Both paths reuse the shared Button,
 icons, language catalog and existing query rails.
@@ -166,6 +172,13 @@ SQL results use the existing compact sample grid: search and actions precede
 rows, with identity, counts and LIVE provenance in the footer. Revision and
 execution semantics remain available in its disclosure. No additional heading,
 summary block or query controller consumes the data drawer's working area.
+
+Generate compiles the current buffer independently of loaded preview rows. If
+compilation detects a stale context, the editor may refresh it once and compile
+the same buffer against that context. Revision, cancellation and buffer guards
+remain active across both attempts. A second stale response or other denial
+leaves the SQL available to edit. Retained rows stay attributed to the previous
+execution until explicitly refreshed.
 
 Only one owner publishes into the data host at a time. Buffer, scope, Model or
 input changes invalidate compilation receipts and mark retained rows stale.

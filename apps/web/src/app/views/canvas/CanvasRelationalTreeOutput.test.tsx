@@ -26,8 +26,9 @@ describe('CanvasRelationalTreeOutput', () => {
     container.remove();
   });
 
-  it('opens Output on left click and disconnects its port with Delete or the context menu', async () => {
+  it('handles card activation, port inspection and connection removal independently', async () => {
     const onOpen = vi.fn();
+    const onInspectConnection = vi.fn();
     const onDisconnect = vi.fn();
     act(() => {
       root.render(
@@ -36,6 +37,7 @@ describe('CanvasRelationalTreeOutput', () => {
           outputName="Model"
           copy={resolveCanvasViewCopy('en')}
           onOpen={onOpen}
+          onInspectConnection={onInspectConnection}
           connected
           selectedSource={null}
           onConnect={vi.fn()}
@@ -47,11 +49,21 @@ describe('CanvasRelationalTreeOutput', () => {
     const port = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-output-input-port"]'
     )!;
+    const card = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-tree-output-open"]'
+    )!;
+
+    act(() => {
+      fireEvent.click(card);
+    });
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(onInspectConnection).not.toHaveBeenCalled();
 
     act(() => {
       fireEvent.click(port);
     });
     expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(onInspectConnection).toHaveBeenCalledTimes(1);
     expect(onDisconnect).not.toHaveBeenCalled();
 
     act(() => {

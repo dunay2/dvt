@@ -30,16 +30,20 @@ export function useCanvasExplorerCatalogPresentation(
     },
     [initial]
   );
-  return {
-    ...(stored.owner === initial ? stored.value : initial),
-    onQuery: (query) => update((value) => ({ ...value, query })),
-    onOpenChange: (open) => update((value) => ({ ...value, open })),
-    onToggleDetails: (id) =>
-      update((value) => {
-        const expandedIds = new Set(value.expandedIds);
-        if (expandedIds.has(id)) expandedIds.delete(id);
-        else expandedIds.add(id);
-        return { ...value, expandedIds };
-      }),
-  };
+  const values = stored.owner === initial ? stored.value : initial;
+  return useMemo<CanvasExplorerCatalogPresentation>(
+    () => ({
+      ...values,
+      onQuery: (query) => update((value) => ({ ...value, query })),
+      onOpenChange: (open) => update((value) => ({ ...value, open })),
+      onToggleDetails: (id) =>
+        update((value) => {
+          const expandedIds = new Set(value.expandedIds);
+          if (expandedIds.has(id)) expandedIds.delete(id);
+          else expandedIds.add(id);
+          return { ...value, expandedIds };
+        }),
+    }),
+    [values, update]
+  );
 }

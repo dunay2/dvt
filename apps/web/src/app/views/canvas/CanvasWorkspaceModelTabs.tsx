@@ -1,5 +1,5 @@
 /** Prepare workspace tab identity, localized copy and navigation callbacks. */
-import { useLayoutEffect, useRef, type FocusEvent, type MouseEvent } from 'react';
+import { useLayoutEffect, useRef, type DragEvent, type FocusEvent, type MouseEvent } from 'react';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabsTemplate } from './CanvasWorkspaceModelTabs.templates';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -11,6 +11,7 @@ import type {
 import { canvasModelWorkspaceTabIds, canvasWorkspaceTabs } from './canvasWorkspaceTabs';
 import { resolveCodeViewCopy } from '../code/codeViewCopy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 export function CanvasWorkspaceModelTabs({
   canvasTitle,
@@ -77,6 +78,11 @@ export function CanvasWorkspaceModelTabs({
   const stripRef = useRef<HTMLDivElement>(null);
   const pointerFocus = useRef(false);
   const selectTab = (key: string) => tabs.find((item) => item.key === key)?.select?.();
+  const revealModelDropTarget = (event: DragEvent<HTMLButtonElement>, key: string): void => {
+    if (activeKey !== 'canvas') return;
+    if (!event.dataTransfer.types.includes(CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE)) return;
+    selectTab(key);
+  };
   const focusTab = (event: FocusEvent<HTMLButtonElement>, key: string) => {
     if (pointerFocus.current) {
       event.preventDefault();
@@ -124,6 +130,7 @@ export function CanvasWorkspaceModelTabs({
       onSelect={selectTab}
       onTabFocus={focusTab}
       onTabPointerDown={activatePointerTab}
+      onModelDragOver={revealModelDropTarget}
     />
   );
 }

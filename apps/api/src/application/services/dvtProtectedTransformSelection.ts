@@ -5,6 +5,7 @@ import {
   resolveWorkspaceNodeInstances,
   readWorkspaceDbtModelReference,
   DvtTransformAuthoringAuthorityV1Schema,
+  hasIncompleteDvtRelationalAuthoring,
   isSourceFreeDvtSubstraitDocumentV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
@@ -52,6 +53,8 @@ function selectReceiver(
       throw new Error('Selection must contain DVT Sources and one rooted consumer closure.');
     return target;
   }
+  if (transforms.some(({ metadata }) => hasIncompleteDvtRelationalAuthoring(metadata)))
+    throw new Error('Operational selection requires completed Model authoring.');
   const native = transforms.filter((node) => readWorkspaceDbtModelReference(node) == null);
   if (native.length !== 1)
     throw new Error('Operational workloads require exactly one Transform authority.');

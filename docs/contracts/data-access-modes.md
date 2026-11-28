@@ -342,10 +342,12 @@ never a query-string parameter. Responses bind both context and SQL digests to
 the existing LIVE sample; neither those digests nor a proposed document grant
 authorization.
 
-`ProjectCanvasModelSqlContext` prepares the authorized connected logical input
+`ProjectCanvasModelSqlContext` prepares the authorized connected input
 namespace without requiring executable target semantics. `CompileCanvasModelSql`
 reauthorizes that context and returns a complete pinned Substrait proposal or
-diagnostics. Unknown types, withdrawn fields, stale signatures, ambiguous names,
+diagnostics. Logical and physical PostgreSQL names bind to the same prepared
+publication. Physical names grant no catalog lookup or access outside this set.
+Unknown types, withdrawn fields, stale signatures, ambiguous names,
 cross-connection inputs and unsupported syntax fail closed. Physical metadata
 completion uses the existing authorized exact Source object catalog query; it
 does not alter the graph or acquire rows. File Models keep their existing
@@ -359,7 +361,9 @@ bounded first page, with no cursor or future freshness promise.
 
 Generate Model is a separate explicit application of the proposal through the
 existing Model draft command, output-dependency guard, autosave and revision CAS.
-The SQL buffer is locked during that transaction. Its acknowledgement is not
+Generate does not need a current row preview. The editor may refresh a context
+once after a stale compilation response and retry the same current buffer.
+The SQL buffer is locked during the Apply transaction. Its acknowledgement is not
 discarded because the command itself advanced the graph revision. Conflicting
 unapplied visual edits block generation; the existing navigation decision owns
 Apply, discard and keep-editing behavior for both editors. Context or text

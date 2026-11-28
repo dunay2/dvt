@@ -422,7 +422,7 @@ describe('Workbench viewport', () => {
     const canvasEntry = 'a[data-slot="left-navigation-link"][href="/canvas"]';
     const modelViewport = '[data-slot="canvas-relational-tree-viewport"]';
     const modelZoom = '[data-slot="canvas-relational-tree-zoom"]';
-    const modelSearch = `${model} [data-slot="canvas-explorer-models"] input`;
+    const modelSearch = `${model} [data-slot="canvas-model-inputs"] input[type="search"]`;
 
     beforeEach(() => {
       cy.viewport(1280, 720);
@@ -633,6 +633,7 @@ describe('Workbench viewport', () => {
       cy.screenshot('semantic-editor-card-expressions');
       verifyCompleteTreeFit(modelViewport);
       cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
+      setWorkbenchInputsOpen(true);
       cy.get(modelSearch).type('customers');
       resizeExplorer(model, 'RIGHT', 32);
       assertCollapsedModelRailKeepsCamera();

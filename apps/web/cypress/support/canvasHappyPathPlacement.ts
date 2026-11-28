@@ -31,12 +31,11 @@ export function reopenAndDragCreatedModel(nodeId: string, projectionGapTitle: st
 }
 
 export function inspectAndDuplicateModel(nodeId: string): void {
+  const model = `[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`;
   cy.get('a[data-slot="left-navigation-link"][href="/canvas"]')
     .click()
     .should('have.attr', 'aria-expanded', 'true');
-  cy.get(`[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`)
-    .should('be.visible')
-    .click();
+  cy.get(model).should('be.visible').click();
   cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
     'have.attr',
     'aria-selected',
@@ -44,10 +43,9 @@ export function inspectAndDuplicateModel(nodeId: string): void {
   );
   cy.get('.react-flow__node').should('have.length', 1);
   cy.get('[data-slot="canvas-node-workbench-close"]').click();
-  dragWorkbenchField(
-    `[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`,
-    '[data-testid="canvas-viewport"]'
-  );
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+  cy.get(model).should('have.attr', 'draggable', 'true').and('be.enabled');
+  dragWorkbenchField(model, '[data-testid="canvas-viewport"]');
   cy.get('.react-flow__node').should('have.length', 2);
   cy.wrap(null).should(() => {
     const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as

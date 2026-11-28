@@ -1,7 +1,9 @@
 /** Owned concern: present the active authoring or inspection view of one Model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
+import type {
+  CanvasRelationalTreeAuthoringContract,
+  CanvasRelationalTreeWorkbenchCopy,
+} from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasJoinTypeChangeProvider } from './CanvasJoinTypeChangeContext';
 import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
@@ -60,13 +62,15 @@ function CanvasRelationalTreeContentView(
   }
 ): JSX.Element {
   const { model } = props;
-  if (model.authoringAvailable && (model.projection == null || model.session.active)) {
+  const showsDraft = model.projection == null || model.session.active;
+  if (model.authoringAvailable && showsDraft) {
     return (
       <CanvasRelationalTreeAuthoring
         {...props.authoringView}
         onPendingConditionChange={props.onPendingConditionChange}
         expanded={props.expanded}
         onExpandedChange={props.onExpandedChange}
+        modelOutput={props.modelOutput}
         copy={props.copy}
         sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
       />
@@ -81,18 +85,5 @@ function CanvasRelationalTreeContentView(
         {model.unavailableMessage}
       </section>
     );
-  return (
-    <CanvasRelationalTreeInspection
-      model={model}
-      authoring={props.authoring}
-      transformNode={props.transformNode}
-      nodes={props.nodes}
-      edges={props.edges}
-      codeProjection={props.codeProjection}
-      copy={props.copy}
-      expanded={props.expanded}
-      onExpandedChange={props.onExpandedChange}
-      modelOutput={props.modelOutput}
-    />
-  );
+  return <CanvasRelationalTreeInspection {...props} />;
 }

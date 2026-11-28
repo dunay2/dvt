@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import {
+  DvtSubstraitSemanticDocumentV1Schema,
+  type ConnectedSourceRef,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts';
 
 import documents from '../../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
 import type { CanonicalNode } from '../../types/canonical';
@@ -9,34 +13,27 @@ import { createSourceSet } from './canvasSourceSet';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { createCanvasNodeInstance } from './canvasNodeInstance';
 
-function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
-  const document = DvtSubstraitSemanticDocumentV1Schema.parse(
-    count === 2 ? documents.two : documents.three
-  );
-  const sources: CanonicalNode[] = document.sidecar.relations.flatMap((relation) =>
-    relation.sourceRef === undefined
-      ? []
-      : [
-          {
-            id: `source-${relation.displayName}`,
-            name: relation.displayName!,
-            pluginId: 'dvt.warehouse-source',
-            kind: 'dvt:source',
-            role: 'input',
-            status: 'idle',
-            tags: [],
-            metadata: {
-              connectedSourceRef: relation.sourceRef,
-              schema: 'raw',
-              tableName: relation.displayName,
-            },
-          },
-        ]
-  );
+function sourceNode(name: string, sourceRef: ConnectedSourceRef): CanonicalNode {
+  return {
+    id: `source-${name}`,
+    name,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    metadata: { connectedSourceRef: sourceRef, schema: 'raw', tableName: name },
+  };
+}
+
+function previewInput(
+  sources: readonly CanonicalNode[],
+  target: { id: string; name: string },
+  document: DvtSubstraitSemanticDocumentV1
+): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
   const transform = applyDvtSubstraitSemanticDocument(
     {
-      id: 'transform-orders',
-      name: 'Joined orders',
+      ...target,
       pluginId: 'dvt',
       kind: 'dvt:transform',
       role: 'transform',
@@ -50,17 +47,74 @@ function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjec
     canvasId: 'canvas-main',
     canonicalNodes: nodes,
     workspaceNodeIds: nodes.map((node) => node.id),
-    selectionIntent: { mode: 'explicit' as const, nodeIds: [transform.id] },
+    selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
     canonicalEdges: sources.map((source) => ({
       id: `${source.id}-transform`,
       sourceId: source.id,
       targetId: transform.id,
-      relation: 'lineage' as const,
+      relation: 'lineage',
     })),
   };
 }
 
+function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
+  const document = DvtSubstraitSemanticDocumentV1Schema.parse(
+    count === 2 ? documents.two : documents.three
+  );
+  const sources = document.sidecar.relations.flatMap((relation) =>
+    relation.sourceRef === undefined ? [] : [sourceNode(relation.displayName!, relation.sourceRef)]
+  );
+  return previewInput(sources, { id: 'transform-orders', name: 'Joined orders' }, document);
+}
+
+function unionFixture(): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
+  const target = { id: 'transform-customers', name: 'Distinct customers' };
+  const connectionRef = {
+    schemaVersion: 'connection-ref.v1' as const,
+    connectionId: 'warehouse-main',
+    provider: 'postgres' as const,
+  };
+  const sourceSpecs = ['north', 'south', 'west'].map((table) => ({
+    nodeId: `source-${table}`,
+    schema: 'raw',
+    table,
+    fields: [{ name: 'customer_id', type: 'string' as const }],
+    sourceRef: {
+      schemaVersion: 'connected-source-ref.v1' as const,
+      connectionRef,
+      sourceObjectId: `raw.${table}`,
+    },
+  }));
+  const document = encodeDvtSubstraitSemanticDocument(
+    createSourceSet({
+      inputs: sourceSpecs,
+      targetNodeId: target.id,
+      operation: 'union_distinct',
+    })
+  );
+  const sources = sourceSpecs.map((source) => sourceNode(source.table, source.sourceRef));
+  return previewInput(sources, target, document);
+}
+
 describe('N-input protected Preview intent', () => {
+  it('keeps retained semantics editable while an unfinished Model cannot be selected for a Plan', () => {
+    const input = fixture(2);
+    const model = input.canonicalNodes.at(-1)!;
+    const layout = { version: 'v1', sources: [], operations: [], positions: { p: { x: 1, y: 1 } } };
+    const withAuthoring = (relationalAuthoringDraft: object): ReturnType<typeof fixture> => ({
+      ...input,
+      canonicalNodes: input.canonicalNodes.map((node) =>
+        node === model
+          ? { ...node, metadata: { ...node.metadata, relationalAuthoringDraft } }
+          : node
+      ),
+    });
+    expect(buildProtectedDvtPreviewProjection(withAuthoring(layout)).ok).toBe(true);
+    expect(
+      buildProtectedDvtPreviewProjection(withAuthoring({ ...layout, outputRelationId: null })).ok
+    ).toBe(false);
+  });
+
   it.each([true, false])(
     'admits an instance without a diagram edge to its definition (definition visible=%s)',
     (visible) => {
@@ -132,71 +186,7 @@ describe('N-input protected Preview intent', () => {
   });
 
   it('admits persisted UNION DISTINCT through the same protected Preview rail', () => {
-    const connectionRef = {
-      schemaVersion: 'connection-ref.v1' as const,
-      connectionId: 'warehouse-main',
-      provider: 'postgres' as const,
-    };
-    const sourceSpecs = ['north', 'south', 'west'].map((table) => ({
-      nodeId: `source-${table}`,
-      schema: 'raw',
-      table,
-      fields: [{ name: 'customer_id', type: 'string' as const }],
-      sourceRef: {
-        schemaVersion: 'connected-source-ref.v1' as const,
-        connectionRef,
-        sourceObjectId: `raw.${table}`,
-      },
-    }));
-    const document = encodeDvtSubstraitSemanticDocument(
-      createSourceSet({
-        ...{
-          inputs: sourceSpecs,
-          targetNodeId: 'transform-customers',
-        },
-        operation: 'union_distinct',
-      })
-    );
-    const sources: CanonicalNode[] = sourceSpecs.map((source) => ({
-      id: source.nodeId,
-      name: source.table,
-      pluginId: 'dvt.warehouse-source',
-      kind: 'dvt:source',
-      role: 'input',
-      status: 'idle',
-      tags: [],
-      metadata: {
-        connectedSourceRef: source.sourceRef,
-        schema: source.schema,
-        tableName: source.table,
-      },
-    }));
-    const transform = applyDvtSubstraitSemanticDocument(
-      {
-        id: 'transform-customers',
-        name: 'Distinct customers',
-        pluginId: 'dvt',
-        kind: 'dvt:transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-      },
-      document
-    );
-    const nodes = [...sources, transform];
-    const result = buildProtectedDvtPreviewProjection({
-      canvasId: 'canvas-main',
-      canonicalNodes: nodes,
-      workspaceNodeIds: nodes.map((node) => node.id),
-      selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
-      canonicalEdges: sources.map((source) => ({
-        id: `${source.id}-transform`,
-        sourceId: source.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      })),
-    });
-
+    const result = buildProtectedDvtPreviewProjection(unionFixture());
     expect(result).toMatchObject({
       ok: true,
       selection: { mode: 'upstream', nodeIds: ['transform-customers'] },

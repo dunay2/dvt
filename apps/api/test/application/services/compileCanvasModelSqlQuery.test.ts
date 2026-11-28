@@ -43,10 +43,32 @@ describe('CompileCanvasModelSql', () => {
     expect(h.projection.execute).not.toHaveBeenCalled();
   });
   it.each([
+    'SELECT client.client_id AS client_id, client.country AS country FROM raw.client',
+    'SELECT raw.client.client_id, raw.client.country FROM "raw"."client"',
+    'SELECT raw.client.* FROM raw.client',
+  ])('compiles a prepared physical reference with its original provenance: %s', async (sql) => {
+    const h = await fixture();
+    const result = await h.query.execute({ ...h.input, sql }, sqlAuth);
+    if (result.status !== 'valid') throw new Error(JSON.stringify(result.diagnostics));
+    expect(result.columns.map(({ name }) => name)).toEqual(['client_id', 'country']);
+    expect(result.inputAdditions).toEqual([
+      { nodeId: 'source-client', columnId: 'client_id' },
+      { nodeId: 'source-client', columnId: 'country' },
+    ]);
+    expect(result.semanticDocument.sidecar.relations).toContainEqual(
+      expect.objectContaining({
+        sourceRef: h.draft.nodes.find((node) => node.id === 'source-client')?.metadata
+          ?.connectedSourceRef,
+      })
+    );
+  });
+  it.each([
     'SELECT FROM',
     'DELETE FROM client',
     'SELECT upper(country) FROM client',
     'SELECT country FROM public.client',
+    'SELECT country FROM unrelated.raw.client',
+    'SELECT raw.client.country FROM raw.client AS c',
   ])('rejects syntax or unrepresentable SQL atomically: %s', async (sql) => {
     const h = await fixture();
     const result = await h.query.execute({ ...h.input, sql }, sqlAuth);
@@ -64,6 +86,41 @@ describe('CompileCanvasModelSql', () => {
         sqlAuth
       )
     ).rejects.toMatchObject({ code: 'stale_context' });
+  });
+  it('projects the editable seed only for the context query and keeps the compilation identity', async () => {
+    const h = modelSqlHarness();
+    const initial = await h.query.execute(sqlTarget, sqlAuth);
+    const compiler = new CompileCanvasModelSqlQuery(h.query);
+    const sql = 'SELECT country FROM raw.client';
+    const input = {
+      ...sqlTarget,
+      draftRevision: initial.draftRevision,
+      contextSha256: initial.contextSha256,
+      sql,
+    };
+    const proposal = await compiler.execute(input, sqlAuth);
+    if (proposal.status !== 'valid') throw new Error('Expected a valid Model fixture.');
+    const target = h.draft.nodes.find((node) => node.id === sqlTarget.transformNodeId)!;
+    target.metadata = {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument: proposal.semanticDocument,
+      },
+    };
+
+    const editor = await h.query.execute(sqlTarget, sqlAuth);
+    const { prepared, response } = await compiler.prepare(
+      { ...input, contextSha256: editor.contextSha256 },
+      sqlAuth
+    );
+    expect(editor.sql).toContain('client');
+    expect(prepared.response).toMatchObject({
+      contextSha256: editor.contextSha256,
+      draftRevision: editor.draftRevision,
+      sql: null,
+    });
+    expect(response.status).toBe('valid');
   });
   it('does not coerce an unknown publication type into a supported one', async () => {
     const h = modelSqlHarness();
@@ -123,7 +180,7 @@ describe('CompileCanvasModelSql', () => {
           ...sqlTarget,
           draftRevision: limited.draftRevision,
           contextSha256: limited.contextSha256,
-          sql: 'SELECT client_id FROM client',
+          sql: 'SELECT client_id FROM raw.client',
         },
         sqlAuth
       )

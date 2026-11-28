@@ -21,7 +21,7 @@ const en = {
   valid: 'Valid',
   inputs: 'Inputs',
   noInputs: 'Connect a Source or Model on the canvas to prepare SQL inputs.',
-  hint: 'Use the logical input names shown here. Validate and query explicitly; Generate Model applies the semantic proposal.',
+  hint: 'Use a logical or physical name for a prepared input. Generate Model validates and applies the SQL.',
   unsupported:
     'Initial profile: SELECT fields, aliases, joins, filters, ordering and limits. Functions, aggregation and CTEs are not yet representable.',
   tooLong:
@@ -43,7 +43,8 @@ const en = {
     contract: 'The server response does not match this SQL request. No result was applied.',
   },
   dataHint: 'Rows from this SQL draft; the semantic Model has not been changed by Execute.',
-  staleData: 'SQL or its input context changed. Execute again to refresh these rows.',
+  staleDataTitle: 'Previous results',
+  staleData: 'These rows are from a previous execution. Execute to refresh them.',
 };
 export type ModelSqlCopy = typeof en;
 const es: ModelSqlCopy = {
@@ -66,7 +67,7 @@ const es: ModelSqlCopy = {
   valid: 'Válido',
   inputs: 'Entradas',
   noInputs: 'Conecta una fuente o un modelo en el canvas para preparar las entradas SQL.',
-  hint: 'Utiliza los nombres lógicos de estas entradas. Valida y consulta explícitamente; Generar modelo aplica la propuesta semántica.',
+  hint: 'Usa el nombre lógico o físico de una entrada preparada. Generar modelo valida y aplica el SQL.',
   unsupported:
     'Perfil inicial: SELECT de campos, alias, joins, filtros, ordenación y límites. Todavía no se representan funciones, agregaciones ni CTE.',
   tooLong: 'El SQL supera la longitud admitida. Se conserva tu texto; redúcelo antes de continuar.',
@@ -90,7 +91,8 @@ const es: ModelSqlCopy = {
       'La respuesta del servidor no corresponde a este SQL. No se ha aplicado ningún resultado.',
   },
   dataHint: 'Filas de este borrador SQL; Ejecutar no modifica el modelo semántico.',
-  staleData: 'Han cambiado el SQL o sus entradas. Ejecuta de nuevo para actualizar estas filas.',
+  staleDataTitle: 'Resultados anteriores',
+  staleData: 'Estas filas son de una ejecución anterior. Ejecuta para actualizarlas.',
 };
 const catalog: Record<ApplicationLanguage, ModelSqlCopy> = { en, es };
 export const resolveModelSqlCopy = (language: ApplicationLanguage) => catalog[language];

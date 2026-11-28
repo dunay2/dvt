@@ -1,7 +1,6 @@
 /**
- * Owned concern: present and activate the final Model Output card.
- * Reason: its activating button must also own native drag capture.
- * Corner invariant: the connection port remains an independent sibling control.
+ * Owned concern: present the Model Output card and capture its activation and drag gestures.
+ * The sibling input port owns connection gestures.
  */
 import { Table2 } from 'lucide-react';
 import {
@@ -19,6 +18,7 @@ export function CanvasRelationalTreeOutput({
   outputName,
   copy,
   onOpen,
+  onInspectConnection,
   connected,
   selectedSource,
   onConnect,
@@ -29,6 +29,7 @@ export function CanvasRelationalTreeOutput({
   outputName: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onOpen?: () => void;
+  onInspectConnection?: () => void;
   connected: boolean;
   selectedSource: string | null;
   onConnect?: (relationId: string) => void;
@@ -53,7 +54,7 @@ export function CanvasRelationalTreeOutput({
       aria-keyshortcuts="Delete Backspace"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={() => {
-        if (connected) onOpen?.();
+        if (connected) onInspectConnection?.();
         else if (selectedSource != null) onConnect?.(selectedSource);
       }}
       onKeyDown={(event) => {
@@ -77,6 +78,17 @@ export function CanvasRelationalTreeOutput({
       className={portStyles.centeredInputPort}
     />
   );
+  const connectionPort =
+    connected && onDisconnect != null ? (
+      <RelationalConnectionMenu
+        removeLabel={copy.canvasContextMenuRemoveEdgeLabel}
+        onDisconnect={onDisconnect}
+      >
+        {inputPort}
+      </RelationalConnectionMenu>
+    ) : (
+      inputPort
+    );
   return (
     <div
       data-slot="canvas-relational-tree-output"
@@ -100,16 +112,7 @@ export function CanvasRelationalTreeOutput({
           {content}
         </button>
       )}
-      {onConnect == null && onDisconnect == null ? null : connected && onDisconnect != null ? (
-        <RelationalConnectionMenu
-          removeLabel={copy.canvasContextMenuRemoveEdgeLabel}
-          onDisconnect={onDisconnect}
-        >
-          {inputPort}
-        </RelationalConnectionMenu>
-      ) : (
-        inputPort
-      )}
+      {(onConnect != null || onDisconnect != null) && connectionPort}
     </div>
   );
 }

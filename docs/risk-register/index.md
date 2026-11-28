@@ -13,6 +13,7 @@ Open technical and delivery risks that still need mitigation or explicit accepta
 
 - [Adapters](adapters/index.md)
 - [Quality](quality/index.md)
+- [An import phase could be misclassified by architecture checks](typescript-import-phase-20261127.md)
 - [Candidate security boundary is not end-to-end enforcement](local-authorization-consumer-gap-20261017.md)
 - [Canvas Save And Readiness Risks](canvas-save-readiness-20261023.md)
 - [Canvas Transform SQL Inspection](canvas-transform-sql-query-20261108.md)
@@ -28,6 +29,7 @@ Open technical and delivery risks that still need mitigation or explicit accepta
 - [Pending Source Output Risks](pending-source-output-selection-20261026.md)
 - [Per-Plan Admission Changes Temporal Command Ordering](temporal-plan-concurrency-20261015.md)
 - [Readable SQL inspection](readable-model-sql-20261116.md)
+- [Retained Model configuration can appear operational](incomplete-model-draft-execution-20261127.md)
 - [Scoped directory discovery](workspace-directory-pages-20261118.md)
 - [Temporal layer outcome ordering requires a drained rollout](temporal-layer-result-evidence-20261015.md)
 - [Test runner and runtime adapter dependency drift](pending-dependency-cohort-20261123.md)

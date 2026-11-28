@@ -90,16 +90,6 @@ export function useCanvasModelCompositionDrop(
   );
   return {
     nodeIds,
-    occurrenceNodeIds: new Set(
-      [...physicalInputs]
-        .filter(([id, input]) => input != null && nodeIds.has(id))
-        .map(([id]) => id)
-    ),
-    linkedNodeIds: new Set(
-      nodes
-        .filter((node) => nodeIds.has(node.id) && readWorkspaceDbtModelReference(node) != null)
-        .map((node) => node.id)
-    ),
     copy: (sourceId: string): boolean => {
       if (!args.enabled || !nodeIds.has(sourceId)) return false;
       try {

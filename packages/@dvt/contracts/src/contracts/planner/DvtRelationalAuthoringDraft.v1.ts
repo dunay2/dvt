@@ -203,3 +203,15 @@ export const DvtRelationalAuthoringDraftV1Schema = z
   });
 
 export type DvtRelationalAuthoringDraftV1 = z.infer<typeof DvtRelationalAuthoringDraftV1Schema>;
+
+/** Retained configuration and layout do not confer operational readiness. */
+export function hasIncompleteDvtRelationalAuthoring(
+  metadata: Readonly<Record<string, unknown>> | undefined
+): boolean {
+  const raw = metadata?.[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY];
+  if (raw === undefined) return false;
+  const draft = DvtRelationalAuthoringDraftV1Schema.safeParse(raw);
+  if (!draft.success) return true;
+  const { outputRelationId, sources, operations } = draft.data;
+  return outputRelationId === null || sources.length > 0 || operations.length > 0;
+}

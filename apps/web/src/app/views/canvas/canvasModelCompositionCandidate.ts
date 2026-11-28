@@ -129,17 +129,13 @@ export function admitCanvasModelCopiesToSession(
     const { copy } = addition;
     if (addition.receiverEdge.targetId !== args.targetId)
       throw new Error('Working-copy receiver has changed.');
-    const visibleNodes = resolveCanvasDraftNodes(session, args.canonicalNodesById);
-    const linkedDefinition =
-      'linkedReference' in copy
-        ? (session.localNodeCatalog?.[copy.sourceId] ??
-          args.canonicalNodesById.get(copy.sourceId) ??
-          copy.discovery?.definition)
-        : undefined;
-    const nodes =
-      linkedDefinition != null && !visibleNodes.some((node) => node.id === linkedDefinition.id)
-        ? [...visibleNodes, linkedDefinition]
-        : visibleNodes;
+    const nodes = resolveCanvasDraftNodes(session, args.canonicalNodesById);
+    // The origin can be a catalogue resource without a placement in this Canvas.
+    const origin =
+      session.localNodeCatalog?.[copy.sourceId] ??
+      args.canonicalNodesById.get(copy.sourceId) ??
+      ('linkedReference' in copy ? copy.discovery?.definition : undefined);
+    if (origin != null && !nodes.some((node) => node.id === origin.id)) nodes.push(origin);
     const candidate = prepareCanvasModelCompositionCandidate({
       ...args,
       copy,

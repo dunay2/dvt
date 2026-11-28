@@ -10,6 +10,7 @@ import { useState, type DragEvent } from 'react';
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../../types/canonical';
 import { createCanvasDbtModelDefinition } from '../canvasDbtModelReference';
 import { projectCanvasExplorerFileModels, mergeCanvasExplorerModels } from './canvasExplorerItems';
+import { writeCanvasModelCompositionDrag } from '../canvasNodeDropPayload';
 
 export function CanvasProjectElementsExplorer({
   ...props
@@ -29,7 +30,7 @@ export function CanvasProjectElementsExplorerView({
   catalogueScopeKey,
   presentation,
   onDragStart,
-  modelAction,
+  modelCompositionScope,
   onAddModel,
   onRemoveEmptyModel,
   onImport,
@@ -53,10 +54,9 @@ export function CanvasProjectElementsExplorerView({
     binding,
     canCreateInstances,
     inspectorTarget,
-    modelAction,
   });
   function dragModel(id: string, event: DragEvent<HTMLButtonElement>): void {
-    if (currentIds.has(id) || modelAction?.canActivate?.(id)) {
+    if (currentIds.has(id)) {
       onDragStart?.(id, event);
       return;
     }
@@ -72,6 +72,8 @@ export function CanvasProjectElementsExplorerView({
         canCreateInstances,
         event
       );
+      if (writeCanvasModelCompositionDrag(event.dataTransfer, id, modelCompositionScope))
+        event.dataTransfer.effectAllowed = 'copyLink';
       setCreationError(false);
     } catch {
       event.preventDefault();
@@ -100,7 +102,6 @@ export function CanvasProjectElementsExplorerView({
         presentation={presentation}
         onAddModel={onAddModel}
         onRemoveEmptyModel={onRemoveEmptyModel}
-        modelAction={modelAction}
         onImport={onImport}
         connections={connections}
         countKnown={!loading && !unavailable}
@@ -138,7 +139,7 @@ function startFileModelPlacement(
 
 type FileExplorerProjectionContext = Pick<
   CanvasProjectElementsInput,
-  'enabled' | 'canCreateInstances' | 'inspectorTarget' | 'modelAction'
+  'enabled' | 'canCreateInstances' | 'inspectorTarget'
 > &
   Pick<
     ReturnType<typeof useWorkspaceDbtProjectContext>,
@@ -156,19 +157,11 @@ function projectFileExplorerModels(context: FileExplorerProjectionContext) {
 
 function projectFileExplorerModel(
   item: ReturnType<typeof projectCanvasExplorerFileModels>[number],
-  {
-    projection,
-    binding,
-    canCreateInstances,
-    inspectorTarget,
-    modelAction,
-  }: FileExplorerProjectionContext
+  { projection, binding, canCreateInstances, inspectorTarget }: FileExplorerProjectionContext
 ) {
   // A retained row is presentation only; the current publication still owns placement admission.
   const canPlace =
-    projection != null &&
-    (modelAction?.canActivate?.(item.id) === true ||
-      (canCreateInstances && projection.executionTarget?.connectionRef != null));
+    canCreateInstances === true && projection?.executionTarget?.connectionRef != null;
   const selected = binding != null && isSelectedFileExplorerModel(item, binding, inspectorTarget);
   return { ...item, selected, draggable: canPlace, disabled: false };
 }

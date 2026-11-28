@@ -257,7 +257,12 @@ function CanvasModelSqlData({
         <CanvasModelDataPanel
           compact
           nodeName={`${nodeName} · ${copy.data}`}
-          copy={{ ...dataCopy, previewHint: copy.dataHint, staleHint: copy.staleData }}
+          copy={{
+            ...dataCopy,
+            previewHint: copy.dataHint,
+            stale: copy.staleDataTitle,
+            staleHint: copy.staleData,
+          }}
           data={{
             sample: model.state.data?.result.sample ?? null,
             loading: model.pending === 'execute',

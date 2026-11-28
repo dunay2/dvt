@@ -13,9 +13,17 @@ import {
   sqlList,
   sqlObject,
   type SqlCompilationState,
+  type SqlNameBinding,
   type SqlScope,
   type SqlNameScope,
 } from './context.js';
+
+export function matchesSqlQualifier(binding: SqlNameBinding, parts: readonly string[]): boolean {
+  if (parts.length === 0) return true;
+  if (parts.length === 1) return binding.qualifier === parts[0];
+  const path = binding.physicalPath;
+  return path?.length === parts.length && parts.every((part, index) => part === path[index]);
+}
 
 export function sqlIdentifier(value: unknown): string {
   const node = sqlObject(value);
@@ -33,10 +41,10 @@ export function sqlColumnParts(node: PostgresAstNode): readonly string[] {
     );
   const reference = sqlObject(node['ColumnRef']);
   const parts = sqlList(reference['fields']);
-  if (parts.length < 1 || parts.length > 2)
+  if (parts.length < 1 || parts.length > 4)
     return sourceError(
       'unknown_column',
-      'Use a column or a logical-input-qualified column.',
+      'Use a column from a prepared input or its alias.',
       reference
     );
   return parts.map(sqlIdentifier);
@@ -48,9 +56,9 @@ export function resolveSourceOrdinal(
 ): number {
   const parts = sqlColumnParts(node);
   const name = parts.at(-1)!;
-  const qualifier = parts.length === 2 ? parts[0] : null;
+  const qualifier = parts.slice(0, -1);
   const candidates = scope.bindings.filter(
-    (binding) => binding.name === name && (qualifier == null || binding.qualifier === qualifier)
+    (binding) => binding.name === name && matchesSqlQualifier(binding, qualifier)
   );
   if (candidates.length !== 1)
     return sourceError(
@@ -81,17 +89,15 @@ export function sourceFieldExpression(ordinal: number): Expression {
 export function sourceAlias(value: unknown): string | null {
   if (value == null) return null;
   const alias = sqlObject(value);
-  if (
-    sqlList(alias['colnames']).length > 0 ||
-    typeof alias['aliasname'] !== 'string' ||
-    alias['aliasname'].length === 0
-  )
-    return sourceError(
-      'unsupported_sql',
-      'Column-list aliases are outside the source profile.',
-      alias
-    );
-  return alias['aliasname'];
+  if (sqlList(alias['colnames']).length === 0) {
+    const name = alias['aliasname'];
+    if (typeof name === 'string' && name.length > 0) return name;
+  }
+  return sourceError(
+    'unsupported_sql',
+    'Column-list aliases are outside the source profile.',
+    alias
+  );
 }
 export function mergeSourceScopes(
   left: SqlScope,

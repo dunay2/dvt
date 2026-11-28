@@ -9,7 +9,10 @@ import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'reac
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
 import { workspaceNodeDefinitionId } from '@dvt/contracts';
-import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
+import {
+  CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+  writeCanvasModelCompositionDrag,
+} from '../canvasNodeDropPayload';
 import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
 import { CanvasExplorer } from './CanvasExplorer';
 import type {
@@ -93,7 +96,12 @@ export function CanvasGraphExplorer({
   });
   const connections = <CanvasWarehouseConnections onManage={onManageConnections} />;
   const draggableIds = new Set(items.filter((item) => item.draggable).map((item) => item.id));
-  const dragResource = createGraphExplorerDragHandler(draggableIds, referencePlacementScope);
+  const modelCompositionScope = browser?.scopeKey ?? undefined;
+  const dragResource = createGraphExplorerDragHandler(
+    draggableIds,
+    referencePlacementScope,
+    modelCompositionScope
+  );
   useEffect(
     function revealImportedSource() {
       if (importedSourceIds.length === 0) return;
@@ -121,6 +129,7 @@ export function CanvasGraphExplorer({
         connections,
         onInspectNode: inspect,
         onDragStart: dragResource,
+        modelCompositionScope,
         canCreateInstances: canPlaceSource && referencePlacementScope == null,
         inspectorTarget,
         catalogueScopeKey,
@@ -196,7 +205,8 @@ function projectGraphExplorerItems(
 
 function createGraphExplorerDragHandler(
   draggableIds: ReadonlySet<string>,
-  referencePlacementScope: string | undefined
+  referencePlacementScope: string | undefined,
+  modelCompositionScope: string | undefined
 ) {
   return draggableIds.size > 0
     ? (id: string, event: DragEvent<HTMLButtonElement>) => {
@@ -208,6 +218,7 @@ function createGraphExplorerDragHandler(
           CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
           JSON.stringify({ id, scopeKey: referencePlacementScope })
         );
+        writeCanvasModelCompositionDrag(event.dataTransfer, id, modelCompositionScope);
         event.dataTransfer.effectAllowed = 'copy';
       }
     : undefined;

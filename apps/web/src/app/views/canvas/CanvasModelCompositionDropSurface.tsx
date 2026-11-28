@@ -9,7 +9,7 @@
 import { useRef, useState, type ReactNode, type DragEvent } from 'react';
 import {
   readCanvasCatalogNodeDragReference,
-  CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+  CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE,
 } from './canvasNodeDropPayload';
 import { useCanvasModelBrowserPresentation } from './CanvasModelBrowser';
 import { resolveCanvasViewCopy } from './copy';
@@ -19,7 +19,7 @@ import styles from './CanvasRelationalTreeWorkbench.module.css';
 type CatalogDrag = DragEvent<HTMLDivElement>;
 
 function consumeCatalogGesture(event: CatalogDrag): boolean {
-  if (!event.dataTransfer.types.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return false;
+  if (!event.dataTransfer.types.includes(CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE)) return false;
   event.preventDefault();
   event.stopPropagation();
   return true;
@@ -32,9 +32,17 @@ function admitCatalogDrop(
   onCopy: (id: string) => boolean
 ): boolean {
   if (!enabled) return false;
-  const reference = readCanvasCatalogNodeDragReference(event.dataTransfer);
-  if (reference == null || reference.scopeKey !== scopeKey) return false;
+  if (scopeKey == null) return false;
+  const reference = readCanvasCatalogNodeDragReference(
+    event.dataTransfer,
+    CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE
+  );
+  if (reference?.scopeKey !== scopeKey) return false;
   return onCopy(reference.id);
+}
+
+function compositionDropEffect(transfer: DataTransfer): 'link' | 'copy' {
+  return transfer.effectAllowed === 'copyLink' ? 'link' : 'copy';
 }
 
 function useCompositionHover() {
@@ -45,9 +53,9 @@ function useCompositionHover() {
     hover,
     linked,
     enter(event: CatalogDrag): void {
-      if (!event.dataTransfer.types.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)) return;
+      if (!event.dataTransfer.types.includes(CANVAS_MODEL_COMPOSITION_DRAG_MIME_TYPE)) return;
       depth.current += 1;
-      setLinked(event.dataTransfer.effectAllowed === 'link');
+      setLinked(compositionDropEffect(event.dataTransfer) === 'link');
       setHover(true);
     },
     leave(): void {
@@ -107,9 +115,7 @@ export function CanvasModelCompositionDropSurface({
       onDragOverCapture={(event) => {
         if (!consumeCatalogGesture(event)) return;
         event.dataTransfer.dropEffect = enabled
-          ? event.dataTransfer.effectAllowed === 'link'
-            ? 'link'
-            : 'copy'
+          ? compositionDropEffect(event.dataTransfer)
           : 'none';
       }}
       onDropCapture={(event) => {

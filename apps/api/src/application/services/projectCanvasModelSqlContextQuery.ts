@@ -35,6 +35,7 @@ import { worksheetScope } from './worksheetCanvasModelInputs.js';
 type ResolvedInputs = Awaited<ReturnType<ResolveCanvasModelSqlInputs['execute']>>;
 type SqlBuffer = Pick<PreparedCanvasModelSqlContext['response'], 'sql' | 'diagnostics'>;
 type Scope = ReturnType<typeof worksheetScope>;
+const emptySqlBuffer: SqlBuffer = { sql: null, diagnostics: [] };
 
 function unavailable(): never {
   throw new CanvasModelSqlUnavailableError('model_unavailable');
@@ -50,7 +51,7 @@ function nativeTarget(draft: WorkspaceGraphAuthoringDraft, id: string): string {
 }
 
 async function savedSqlBuffer(source: ResolvedInputs['source']): Promise<SqlBuffer> {
-  if (!source.currentDocument) return { sql: null, diagnostics: [] };
+  if (!source.currentDocument) return emptySqlBuffer;
   try {
     return {
       sql: await projectModelSqlSource(source.currentDocument, source.inputs),
@@ -129,25 +130,20 @@ export class ProjectCanvasModelSqlContextQuery implements ICanvasModelSqlContext
   ) {}
 
   public async execute(input: ModelSqlTarget, context: AuthorizedExecutionContext) {
-    return (await this.prepare(input, context)).response;
+    const { target, record, prepared } = await this.readContext(input, context);
+    const buffer = await savedSqlBuffer(prepared.source);
+    await this.requireCurrentRevision(record);
+    return contextResponse(target, record, prepared, buffer);
   }
 
   public async prepare(
     input: ModelSqlTarget,
     context: AuthorizedExecutionContext
   ): Promise<PreparedCanvasModelSqlContext> {
-    const targetIdentity = { canvasId: input.canvasId, transformNodeId: input.transformNodeId };
-    const scope = worksheetScope(context);
-    const { draft, revision } = await this.readDraft(scope, input.canvasId);
-    const targetId = nativeTarget(draft, input.transformNodeId);
-    const prepared = await this.deps.inputs.execute(draft, targetId, revision, context);
-    if (prepared.graph.literalConnections?.size && prepared.connectionRef != null)
-      await authorizeCanvasLiteralModelConnection(this.deps, prepared.connectionRef, context);
-    const buffer = await savedSqlBuffer(prepared.source);
-    const current = await this.deps.store.read(scope);
-    if (current?.revision !== revision) throw new CanvasModelSqlUnavailableError('stale_context');
+    const { target, record, prepared } = await this.readContext(input, context);
+    await this.requireCurrentRevision(record);
     return {
-      response: contextResponse(targetIdentity, { revision, scope }, prepared, buffer),
+      response: contextResponse(target, record, prepared, emptySqlBuffer),
       source: prepared.source,
       graph: prepared.graph,
       externalProjections: prepared.externalProjections,
@@ -156,10 +152,38 @@ export class ProjectCanvasModelSqlContextQuery implements ICanvasModelSqlContext
     };
   }
 
+  private async readContext(
+    input: ModelSqlTarget,
+    context: AuthorizedExecutionContext
+  ): Promise<{
+    target: ModelSqlTarget;
+    record: { scope: Scope; revision: string };
+    prepared: ResolvedInputs;
+  }> {
+    const target = { canvasId: input.canvasId, transformNodeId: input.transformNodeId };
+    const scope = worksheetScope(context);
+    const { draft, revision } = await this.readDraft(scope, input.canvasId);
+    const targetId = nativeTarget(draft, input.transformNodeId);
+    const prepared = await this.deps.inputs.execute(draft, targetId, revision, context);
+    if (prepared.graph.literalConnections?.size && prepared.connectionRef != null)
+      await authorizeCanvasLiteralModelConnection(this.deps, prepared.connectionRef, context);
+    return { target, record: { scope, revision }, prepared };
+  }
+
+  private async requireCurrentRevision({
+    scope,
+    revision,
+  }: {
+    scope: Scope;
+    revision: string;
+  }): Promise<void> {
+    const current = await this.deps.store.read(scope);
+    if (current?.revision !== revision) throw new CanvasModelSqlUnavailableError('stale_context');
+  }
+
   private async readDraft(scope: Scope, canvasId: string) {
     const stored = await this.deps.store.read(scope);
-    if (!stored || stored.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION)
-      return unavailable();
+    if (stored?.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION) return unavailable();
     if (jcsCanonicalize(stored.scope) !== jcsCanonicalize(scope)) return unavailable();
     const parsed = WorkspaceGraphAuthoringDraftSchema.safeParse(stored.draftPayload);
     if (!parsed.success) return unavailable();

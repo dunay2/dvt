@@ -25,6 +25,7 @@ export function CanvasRelationalTreeLayout({
   zoom = 1,
   onManualLayout,
   onOpenOutput,
+  onInspectOutputConnection,
   occurrences,
   stagedOperations = EMPTY_STAGED_OPERATIONS,
   selectedStagedOperationId = null,
@@ -59,6 +60,7 @@ export function CanvasRelationalTreeLayout({
   zoom?: number;
   onManualLayout?: () => void;
   onOpenOutput?: () => void;
+  onInspectOutputConnection?: () => void;
 }>): JSX.Element {
   const {
     layout,
@@ -97,7 +99,7 @@ export function CanvasRelationalTreeLayout({
         onDisconnectStagedOperation={onDisconnectStagedOperation}
         onDisconnectRelation={onDisconnectRelation}
         outputRelationId={effectiveOutputRelationId}
-        onSelectOutput={onOpenOutput}
+        onSelectOutput={onInspectOutputConnection}
         onDisconnectOutput={onDisconnectOutput}
       />
       {layout.output == null ? null : (
@@ -106,6 +108,7 @@ export function CanvasRelationalTreeLayout({
           outputName={outputName}
           copy={copy}
           onOpen={onOpenOutput}
+          onInspectConnection={onInspectOutputConnection}
           connected={effectiveOutputRelationId != null}
           selectedSource={selectedConnectionSource}
           onConnect={

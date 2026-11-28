@@ -1,6 +1,7 @@
 /** Prove composition prepares one atomic graph without changing the original session. */
 import { describe, expect, it } from 'vitest';
 import { getPluginPortMap } from '../../plugins/registry';
+import { sourceNode } from './canvasColumnOutputAuthoring.test-support';
 import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
 import { prepareCanvasModelWorkingCopy } from './canvasModelWorkingCopy';
 import {
@@ -45,6 +46,44 @@ describe('Model composition candidate', () => {
     expect(session.localNodeCatalog?.[copy.node.id]).toEqual(copy.node);
     expect(graph.draftSession).toEqual(before);
     expect(graph.nodes).not.toContainEqual(copy.node);
+  });
+
+  it('admits a current physical source from the catalogue without placing the original', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const source = sourceNode('sales_calendar');
+    const nodes = [...graph.nodes, source];
+    const copy = prepareCanvasModelWorkingCopy({ sourceId: source.id, nodes, edges: graph.edges });
+    const { addition } = prepareCanvasModelCompositionCandidate({
+      ...graph,
+      nodes,
+      copy,
+      targetId: graph.consumer.id,
+      pluginPorts: getPluginPortMap(),
+    });
+    const args = {
+      draftSession: graph.draftSession,
+      canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+      copies: [addition],
+      targetId: graph.consumer.id,
+      pluginPorts: getPluginPortMap(),
+    };
+    const saved = admitCanvasModelCopiesToSession(args);
+    expect(saved.workingSet.visibleNodeIds).toContain(copy.node.id);
+    expect(saved.workingSet.visibleNodeIds).not.toContain(source.id);
+    expect(saved.workingSet.visibleEdges).toContainEqual(
+      expect.objectContaining({ sourceId: copy.node.id, targetId: graph.consumer.id })
+    );
+
+    args.canonicalNodesById.set(
+      source.id,
+      sourceNode(source.id, [{ name: 'changed', type: 'text' }])
+    );
+    expect(() => admitCanvasModelCopiesToSession(args)).toThrow(
+      'Working-copy source context has changed.'
+    );
+    args.canonicalNodesById.delete(source.id);
+    expect(() => admitCanvasModelCopiesToSession(args)).toThrow();
+    expect(graph.draftSession.localNodeCatalog).toBeUndefined();
   });
 
   it('rejects a stale original and leaves no partial copy or connection', async () => {

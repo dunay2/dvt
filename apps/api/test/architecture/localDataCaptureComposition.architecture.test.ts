@@ -12,6 +12,34 @@ import type { ProtectedRuntimeModule } from '../../src/modules/types.js';
 
 const directory = fileURLToPath(new globalThis.URL('../../src/', import.meta.url));
 
+function importedNames(clause: ts.ImportClause | undefined): string[] {
+  if (clause?.phaseModifier === ts.SyntaxKind.TypeKeyword) return [];
+  const bindings = clause?.namedBindings;
+  if (bindings === undefined || !ts.isNamedImports(bindings)) return [];
+  return bindings.elements
+    .filter((binding) => !binding.isTypeOnly)
+    .map((binding) => binding.name.text);
+}
+
+function namedRuntimeImports(source: ts.SourceFile): Map<string, string> {
+  const imports = new Map<string, string>();
+  for (const node of source.statements.filter(ts.isImportDeclaration)) {
+    if (!ts.isStringLiteral(node.moduleSpecifier)) continue;
+    const target = path
+      .resolve(path.dirname(source.fileName), node.moduleSpecifier.text)
+      .replace(/\.js$/u, '.ts');
+    for (const name of importedNames(node.importClause)) {
+      imports.set(name, target);
+    }
+  }
+  return imports;
+}
+
+function invokedName(node: ts.Node): string | undefined {
+  if (!ts.isCallExpression(node) && !ts.isNewExpression(node)) return undefined;
+  return ts.isIdentifier(node.expression) ? node.expression.text : undefined;
+}
+
 function invokedImports(relative: string): Set<string> {
   const filename = path.join(directory, relative);
   const source = ts.createSourceFile(
@@ -20,33 +48,12 @@ function invokedImports(relative: string): Set<string> {
     ts.ScriptTarget.Latest,
     true
   );
-  const imports = new Map<string, string>();
-  for (const node of source.statements) {
-    if (
-      !ts.isImportDeclaration(node) ||
-      !ts.isStringLiteral(node.moduleSpecifier) ||
-      node.importClause?.isTypeOnly
-    )
-      continue;
-    const bindings = node.importClause?.namedBindings;
-    if (!bindings || !ts.isNamedImports(bindings)) continue;
-    for (const binding of bindings.elements) {
-      if (!binding.isTypeOnly)
-        imports.set(
-          binding.name.text,
-          path.resolve(path.dirname(filename), node.moduleSpecifier.text).replace(/\.js$/u, '.ts')
-        );
-    }
-  }
+  const imports = namedRuntimeImports(source);
   const called = new Set<string>();
   const visit = (node: ts.Node): void => {
-    if (
-      (ts.isCallExpression(node) || ts.isNewExpression(node)) &&
-      ts.isIdentifier(node.expression)
-    ) {
-      const target = imports.get(node.expression.text);
-      if (target) called.add(target);
-    }
+    const name = invokedName(node);
+    const target = name === undefined ? undefined : imports.get(name);
+    if (target !== undefined) called.add(target);
     ts.forEachChild(node, visit);
   };
   visit(source);

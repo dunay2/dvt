@@ -1,5 +1,6 @@
 /** Passive workspace layout; controllers supply the existing toolbar, graph and inspector. */
 import type { ReactNode } from 'react';
+import styles from './CanvasRelationalTreeWorkbench.module.css';
 
 export function CanvasRelationalTreeAuthoringTemplate({
   label,
@@ -19,7 +20,9 @@ export function CanvasRelationalTreeAuthoringTemplate({
       className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
       {toolbar}
-      <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div
+        className={`canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden ${styles.draftWorkspace}`}
+      >
         {viewport}
         {inspector}
       </div>

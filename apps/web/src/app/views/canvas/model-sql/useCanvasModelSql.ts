@@ -1,6 +1,10 @@
 /** Coordinate an explicit SQL buffer transaction with existing query and Model command ports. */
 import { useEffect, useReducer, useRef } from 'react';
-import { MODEL_SQL_MAX_LENGTH, type ModelSqlCompilationResponse } from '@dvt/contracts';
+import {
+  MODEL_SQL_MAX_LENGTH,
+  type ModelSqlCompilationResponse,
+  type ModelSqlContextResponse,
+} from '@dvt/contracts';
 
 import type { ICanvasModelSqlQueryPort, ModelSqlFailure } from '../../../ports/canvasModelSql';
 import type { CanonicalNode } from '../../../types/canonical';
@@ -17,7 +21,7 @@ import {
   hasModelSqlChanges,
   currentModelSqlAnalysis,
 } from './modelSqlDraftState';
-import { useModelSqlAnalysis } from './useModelSqlAnalysis';
+import { compileWithCurrentModelSqlContext, useModelSqlAnalysis } from './useModelSqlAnalysis';
 import { applyModelSqlProposal, useModelSqlApplyCommand } from './modelSqlApplyCommand';
 
 function hasCanvasModelSqlVisualConflict(
@@ -90,7 +94,7 @@ export function useCanvasModelSql(
   }, [args.open, args.revision, command.applying]);
 
   const perform = async (
-    action: 'validate' | 'execute'
+    action: 'validate' | 'execute' | 'generate'
   ): Promise<ModelSqlCompilationResponse | null> => {
     const sql = latest.current.sql;
     if (
@@ -102,33 +106,46 @@ export function useCanvasModelSql(
     )
       return null;
     setProblem(null);
-    dispatch({ type: 'pending', action });
+    dispatch({ type: 'pending', action: action === 'generate' ? 'validate' : action });
     return request.run(
       sql,
       async (signal, current) => {
         const saved = await args.preparePreview?.();
         if (!current()) return null;
         if (saved != null && !saved.ok) throw new Error('Model save was rejected.');
-        const context = latest.current.context ?? (await args.query!.context(target, signal));
+        const refresh = async () => {
+          const context = await args.query!.context(target, signal);
+          if (current()) dispatch({ type: 'context', context });
+          return context;
+        };
+        const context = latest.current.context ?? (await refresh());
         if (!current()) return null;
-        if (latest.current.context == null) dispatch({ type: 'context', context });
-        const input = {
+        const input = (context: ModelSqlContextResponse) => ({
           ...target,
           draftRevision: context.draftRevision,
           contextSha256: context.contextSha256,
           sql,
-        };
+        });
         if (action === 'execute') {
           args.onOpenData();
           const result = await args.query!.preview(
-            { ...input, schemaVersion: 'canvas-transform-sql-draft-data-sample.v1', limit: 20 },
+            {
+              ...input(context),
+              schemaVersion: 'canvas-transform-sql-draft-data-sample.v1',
+              limit: 20,
+            },
             signal
           );
           if (current()) dispatch({ type: 'data', sql, result });
           return null;
         }
-        const proposal = await args.query!.compile(input, signal);
-        if (!current()) return null;
+        const compile = (context: ModelSqlContextResponse) =>
+          args.query!.compile(input(context), signal);
+        const proposal =
+          action === 'generate'
+            ? await compileWithCurrentModelSqlContext(context, compile, refresh, current)
+            : await compile(context);
+        if (proposal == null || !current()) return null;
         dispatch({ type: 'analysis', sql, result: proposal });
         return proposal;
       },
@@ -138,7 +155,7 @@ export function useCanvasModelSql(
   const generate = async (): Promise<CanvasRelationalTreeApplyResult | null> => {
     if (hasCanvasModelSqlVisualConflict(args.visual, setProblem)) return null;
     const sql = latest.current.sql;
-    const proposal = await perform('validate');
+    const proposal = await perform('generate');
     if (!isCurrentCanvasModelSqlProposal(proposal, sql, latest.current.sql)) return null;
     if (hasCanvasModelSqlVisualConflict(args.visual, setProblem)) return null;
     try {
@@ -162,13 +179,13 @@ export function useCanvasModelSql(
       return null;
     }
   };
-  const pending = command.applying ? 'generate' : request.busy ? state.pending : null;
+  const pendingQuery = request.busy ? state.pending : null;
   const analysis = currentModelSqlAnalysis(state);
   return {
     state,
     analysis,
     diagnostics: analysis?.diagnostics ?? state.context?.diagnostics ?? [],
-    pending,
+    pending: command.applying ? 'generate' : pendingQuery,
     problem,
     dirty: hasModelSqlChanges(state),
     staleData:

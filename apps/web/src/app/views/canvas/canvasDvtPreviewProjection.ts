@@ -1,5 +1,6 @@
 /** Owned concern: derive the bounded protected DVT Preview intent from Canvas state. */
 import {
+  hasIncompleteDvtRelationalAuthoring,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   parseExecutionSelection,
   type ExecutionSelection,
@@ -100,7 +101,6 @@ function resolveTerminalSources(
   nodesById: ReadonlyMap<string, CanonicalNode>
 ): CanonicalNode[] | null {
   if (readWorkspaceDbtModelReference(transform) != null) return null;
-  if (incoming.length === 0) return null;
   if (incoming.some((edge) => edge.relation !== 'lineage')) return null;
   const sources = incoming.map((edge) => nodesById.get(edge.sourceId)).filter(isProjectionSource);
   if (sources.length !== incoming.length) return null;
@@ -142,6 +142,7 @@ function hasValidProjectionSources(
   transform: CanonicalNode,
   sources: readonly CanonicalNode[]
 ): boolean {
+  if (hasIncompleteDvtRelationalAuthoring(transform.metadata)) return false;
   try {
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority == null) return false;

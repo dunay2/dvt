@@ -48,8 +48,14 @@ export function useCanvasRelationalTreeCatalogue({
             nodes,
             root: projection.root,
           });
+    const visibleIds = new Set(base.map((item) => item.sourceNodeId));
+    const additionalInputs =
+      projection == null ? [] : inputs.filter((input) => !visibleIds.has(input.nodeId));
     return projectCanvasRelationalCatalogueSelection({
-      catalogue: base,
+      catalogue:
+        additionalInputs.length === 0
+          ? base
+          : [...base, ...projectPendingCanvasRelationalTreeCatalogue(additionalInputs, nodes)],
       authoringAvailable,
       selectedLocator,
       pending: occurrences.pending,

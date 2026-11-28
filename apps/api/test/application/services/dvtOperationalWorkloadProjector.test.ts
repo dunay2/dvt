@@ -2,6 +2,7 @@ import {
   DVT_REJECTIONS,
   DvtOperationalWorkloadContractV1,
   KNOWN_STEP_KINDS,
+  WorkspaceGraphAuthoringDraftSchema,
   type ConnectionRef,
   type ConnectedSourceRef,
   type DvtSubstraitSemanticDocumentV1,
@@ -152,6 +153,39 @@ function runDraft(
   };
 }
 
+function downstreamDraft(
+  metadata?: Readonly<Record<string, unknown>>
+): WorkspaceGraphAuthoringDraft {
+  const base = draft();
+  return {
+    ...base,
+    nodeIds: [...base.nodeIds, 'downstream-a'],
+    nodePositions: { ...base.nodePositions, 'downstream-a': { x: 400, y: 0 } },
+    nodes: [
+      ...base.nodes,
+      {
+        id: 'downstream-a',
+        name: 'Downstream',
+        pluginId: 'dvt',
+        kind: 'transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+      },
+    ],
+    edges: [
+      ...base.edges,
+      {
+        id: 'transform-downstream',
+        sourceId: 'transform-a',
+        targetId: 'downstream-a',
+        relation: 'lineage',
+        ...(metadata === undefined ? {} : { metadata }),
+      },
+    ],
+  };
+}
+
 describe('DvtOperationalWorkloadProjector', () => {
   it('lowers one terminal Transform closure to one ephemeral workload', () => {
     const result = new DvtOperationalWorkloadProjector().project(input());
@@ -190,6 +224,34 @@ describe('DvtOperationalWorkloadProjector', () => {
       target: { schema: 'analytics', relation: 'orders_result' },
     });
     expect(workload).toHaveProperty('publicationBoundaries', []);
+  });
+
+  it.each([
+    { state: 'disconnected Output', outputRelationId: null, operations: [] },
+    {
+      state: 'pending Filter',
+      outputRelationId: 'pending-filter',
+      operations: [{ relationId: 'pending-filter', operation: 'filter', inputs: [null] }],
+    },
+  ])('rejects Run with $state and retained semantics', ({ state: _state, ...pending }) => {
+    const saved = runDraft();
+    const model = saved.nodes.find((node) => node.id === 'transform-a')!;
+    const withAuthoring = (relationalAuthoringDraft: object): WorkspaceGraphAuthoringDraft =>
+      WorkspaceGraphAuthoringDraftSchema.parse({
+        ...saved,
+        nodes: saved.nodes.map((node) =>
+          node === model
+            ? { ...node, metadata: { ...node.metadata, relationalAuthoringDraft } }
+            : node
+        ),
+      });
+    const layout = { version: 'v1', sources: [], operations: [], positions: { p: { x: 1, y: 1 } } };
+    const projector = new DvtOperationalWorkloadProjector();
+    expect(projector.project(input({ draft: withAuthoring(layout) })).ok).toBe(true);
+    expect(projector.project(input({ draft: withAuthoring({ ...layout, ...pending }) }))).toEqual({
+      ok: false,
+      ...DVT_REJECTIONS.previewWorkloadProjectionFailed,
+    });
   });
 
   it.each([
@@ -240,37 +302,7 @@ describe('DvtOperationalWorkloadProjector', () => {
     ['closed execution gate', { executionGate: 'closed' }],
     ['disabled execution dependency', { executionDependency: false }],
   ])('ignores an outgoing edge with %s when resolving terminality', (_label, metadata) => {
-    const base = draft();
-    const candidate = input({
-      draft: {
-        ...base,
-        nodeIds: [...base.nodeIds, 'downstream-a'],
-        nodePositions: { ...base.nodePositions, 'downstream-a': { x: 400, y: 0 } },
-        nodes: [
-          ...base.nodes,
-          {
-            id: 'downstream-a',
-            name: 'Downstream',
-            pluginId: 'dvt',
-            kind: 'transform',
-            role: 'transform',
-            status: 'idle',
-            tags: [],
-          },
-        ],
-        edges: [
-          ...base.edges,
-          {
-            id: 'transform-downstream',
-            sourceId: 'transform-a',
-            targetId: 'downstream-a',
-            relation: 'lineage',
-            metadata,
-          },
-        ],
-      },
-    });
-
+    const candidate = input({ draft: downstreamDraft(metadata) });
     expect(new DvtOperationalWorkloadProjector().project(candidate).ok).toBe(true);
   });
 
@@ -296,40 +328,7 @@ describe('DvtOperationalWorkloadProjector', () => {
         }),
     ],
     ['closed execution gate', () => input({ draft: draft({ executionGate: 'closed' }) })],
-    [
-      'non-terminal Transform',
-      () => {
-        const base = draft();
-        return input({
-          draft: {
-            ...base,
-            nodeIds: [...base.nodeIds, 'downstream-a'],
-            nodePositions: { ...base.nodePositions, 'downstream-a': { x: 400, y: 0 } },
-            nodes: [
-              ...base.nodes,
-              {
-                id: 'downstream-a',
-                name: 'Downstream',
-                pluginId: 'dvt',
-                kind: 'transform',
-                role: 'transform',
-                status: 'idle',
-                tags: [],
-              },
-            ],
-            edges: [
-              ...base.edges,
-              {
-                id: 'transform-downstream',
-                sourceId: 'transform-a',
-                targetId: 'downstream-a',
-                relation: 'lineage',
-              },
-            ],
-          },
-        });
-      },
-    ],
+    ['non-terminal Transform', () => input({ draft: downstreamDraft() })],
     [
       'foreign Source plugin',
       () => {

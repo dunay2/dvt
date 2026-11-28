@@ -58,13 +58,10 @@ function ScopedExplorer({
   const cataloguePresentation = useCanvasExplorerCatalogPresentation(scopeKey!);
   return (
     <CanvasModelBrowserProvider
-      nodes={[]}
-      canvasId={canvasId}
       active={true}
       navigation={{
         scopeKey,
         cataloguePresentation,
-        catalogue: [],
         mode: 'semantic',
         onBrowse: vi.fn(),
         onSelect: vi.fn(),

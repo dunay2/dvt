@@ -29,7 +29,9 @@ describe('start-run concern boundaries', () => {
     const text = source('runMaintenance/decideStartRunIntentReconciliation');
     const ast = ts.createSourceFile('decision.ts', text, ts.ScriptTarget.Latest, true);
     const runtimeImports = ast.statements.filter(
-      (node) => ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly
+      (node) =>
+        ts.isImportDeclaration(node) &&
+        node.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword
     );
     // Shared lifecycle and retry-budget constants are values, not collaborators.
     // Exact bindings prevent admitting an adapter, service or other runtime dependency.

@@ -7,6 +7,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
+import { classifyImportClause } from './vitestSuites.moduleImports.test-support';
 
 function readBrowserModules(): Map<string, ts.SourceFile> {
   return new Map(
@@ -25,24 +26,13 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 export const browserModules = readBrowserModules();
 
 export function runtimeImports(path: string, ast: ts.SourceFile): string[] {
+  const directory = dirname(path);
   return ast.statements.flatMap((statement) => {
-    if (
-      !ts.isImportDeclaration(statement) ||
-      !ts.isStringLiteral(statement.moduleSpecifier) ||
-      !statement.moduleSpecifier.text.startsWith('.') ||
-      statement.importClause?.isTypeOnly
-    )
-      return [];
-    const clause = statement.importClause;
-    const bindings = clause?.namedBindings;
-    if (
-      !clause?.name &&
-      bindings &&
-      ts.isNamedImports(bindings) &&
-      bindings.elements.every((binding) => binding.isTypeOnly)
-    )
-      return [];
-    const target = resolve(dirname(path), statement.moduleSpecifier.text);
+    if (!ts.isImportDeclaration(statement)) return [];
+    if (classifyImportClause(statement.importClause) !== 'runtime') return [];
+    const specifier = statement.moduleSpecifier;
+    if (!ts.isStringLiteral(specifier) || !specifier.text.startsWith('.')) return [];
+    const target = resolve(directory, specifier.text);
     return [target.endsWith('.ts') ? target : `${target}.ts`];
   });
 }
