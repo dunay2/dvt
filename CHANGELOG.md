@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.25.0 (2026-11-28)
+
+## What's Changed
+* fix(web): Keep Explorer model selection in the foreground editor by @dunay2 in https://github.com/dunay2/dvt/pull/3990
+* feat(web): Integrate the SQL worksheet and reconcile local workspace changes by @dunay2 in https://github.com/dunay2/dvt/pull/3998
+* fix(web): Integrate Canvas authoring and inline Model inputs by @dunay2 in https://github.com/dunay2/dvt/pull/4015
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.24.3...v0.25.0
+
 ## 0.24.3 (2026-11-21)
 
 ## What's Changed
